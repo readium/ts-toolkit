@@ -6,7 +6,7 @@ For integration testing and demonstration, the project (as reference implementat
 
 Emphasis is on design efficiency, modularization, and code clarity. 
 With the aim to achieve ease of maintenance and lower the barrier to entry for collaboration. 
-Simplifed approaches with the least effort and resistance to be prioritized.
+Simplified approaches with the least effort and resistance to be prioritized.
 
 The project is rationalized by the large number of organizations looking at Readium or working with Readium with the intent to develop very similar publication viewer applications. 
 
@@ -64,7 +64,7 @@ The philosophy is to get things done right, and do things well. To achieve long-
 - HTTPS, CORS, CSP and other web security concerns
 - Content rights management
 
-## Localization, Internatioalization, Accessibility
+## Localization, Internationalization, Accessibility
 
 - Localized strings
 - RTL support
@@ -73,6 +73,6 @@ The philosophy is to get things done right, and do things well. To achieve long-
 ## True to print
 
 - Clean presentation of content and typography
-- Thoughtfull reading experience
+- Thoughtful reading experience
 - Use Readium CSS as a baseline
 - Consistent text/page flow and breaks

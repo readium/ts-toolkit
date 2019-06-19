@@ -43,15 +43,15 @@ Besides the cover art display for a track, there is no concern for rendering vis
 
 Progression is mapped to time points instead of a visual points.
 
-Playback runs as a continous track, which can be stopped or paused.
+Playback runs as a continuous track, which can be stopped or paused.
 
 - Time based progression
 - Play / pause control
 - No visual content rendering
 
 ## Optimization
-- Visual prerender
-- Resource preload
+- Visual pre-render
+- Resource pre-load
 - Offline caching
 - Web security policy
 - Rights management
