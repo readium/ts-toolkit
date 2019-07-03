@@ -74,15 +74,16 @@ The philosophy is to get things done right, and do things well. To achieve long-
 - RTL support
 - WCAG (AA+) accessibility compliance
 
-## True to print
+## Quality content presentation
 
 - Clean presentation of content and typography
 - Thoughtful reading experience
 - Use Readium CSS as a baseline
 - Consistent text/page flow and breaks
+- Supersede print edition, don't regress
 
-## Content Protection
+## Sensible content protection
 
 - Handle protected publications
 - Access control support
-- Apply protection schemes
+- Apply sensible protection schemes
