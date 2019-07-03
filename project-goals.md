@@ -86,4 +86,4 @@ The philosophy is to get things done right, and do things well. To achieve long-
 
 - Handle protected publications
 - Access control support
-- Apply sensible protection schemes
+- Apply realistic protection schemes
