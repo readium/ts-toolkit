@@ -1,4 +1,4 @@
-# Readium Web
+# readium-web
 
 Table of Contents
 
