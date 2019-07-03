@@ -21,6 +21,11 @@ The philosophy is to get things done right, and do things well. To achieve long-
 - Well-defined interfaces and APIs
 - Basic implementations swappable for full-fledged replacements
 
+## Efficient and high-performing
+- Lean and pragmatic
+- Follows best practices
+- Focus on performance and speed
+
 ## Easy to configure, remix capable
 
 - Centralized, well-defined configuration
