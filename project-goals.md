@@ -67,7 +67,6 @@ The philosophy is to get things done right, and do things well. To achieve long-
 - Limit the obstacles for offline capabilities
 - Low connectivity considerations
 - HTTPS, CORS, CSP and other web security concerns
-- Content rights management
 
 ## Localization, Internationalization, Accessibility
 
@@ -81,3 +80,9 @@ The philosophy is to get things done right, and do things well. To achieve long-
 - Thoughtful reading experience
 - Use Readium CSS as a baseline
 - Consistent text/page flow and breaks
+
+## Content Protection
+
+- Handle protected publications
+- Access control support
+- Apply protection schemes
