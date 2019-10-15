@@ -56,11 +56,13 @@ With the module that implements a Publication Model you can read and manipulate 
 
 ## 4. Fetching Resources
 
-Resources are fetched from a server given a [web origin](https://readium.org/architecture/server/origin.html). Typically via HTTPS initiated by the HTML processing model, and programmatically using the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
+Resources are fetched from a server given a [web origin](https://readium.org/architecture/server/origin.html). Typically via HTTPS, initiated by the HTML processing model, and programmatically using the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
 
 ### 4.1 Download Constraints
 
-Publication resources are streamed or downloaded over networking protocols. Contrary to other implementations that run on devices with file-system access, publication resources on the web are not, as a whole, directly or immediately accessible.
+Publication resources are streamed or downloaded over networking protocols.
+
+Contrary to other implementations that run on devices with file-system access, publication resources on the web are not, as a whole, directly or immediately accessible.
 
 ## 5. Loading Content
 
@@ -78,6 +80,8 @@ List of content types with suggested embed elements, or other:
 Sequencing and layout of content in reading order progression.
 
 Match [Presentation Hints](https://readium.org/webpub-manifest/extensions/presentation.html).
+
+Fragment, paginate and apply synthetic spreads.
 
 ### 6.1 Prefetching and Virtualization
 
