@@ -89,13 +89,25 @@ An element could be an image or other types of HTML block elements.
 
 #### 2.2.4 Recognizer
 
-Recognize gestures on tap surfaces, and when a text selection is made.
+Recognize interactions, gestures on tap surfaces, when a text selection is made, when focus changes, and more.
+Emits [Pointer events](https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events), which includes Mouse/Pen/Touch events.
+
+**Element Interaction**
+- Pointer Events
+- Focus Events
 
 **Tap Regions**
+- Pointer Events
 
 **Gestures**
+- Pointer Events
+  - Start/Move/End (specifically)
 
 **Text Selection**
+- [Selection API](https://developer.mozilla.org/en-US/docs/Web/API/Selection_API)
+  - [Select Start](https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onselectstart) Event
+  - [Selection Change](https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onselectionchange) Event
+  - Select End Event (debounced, custom event for convenience)
 
 ## 3. Processing Publications
 
