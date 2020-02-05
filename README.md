@@ -8,8 +8,8 @@ Guidelines for an implementation of the Readium Architecture for Web-based platf
 
 **Participate:**
 
-- [GitHub jccr/readium-web](https://github.com/jccr/readium-web)
-- [File an issue](https://github.com/jccr/readium-web/issues)
+- [GitHub readium/readium-web](https://github.com/readium/readium-web)
+- [File an issue](https://github.com/readium/readium-web/issues)
 
 **Document status:** `DRAFT`
 
