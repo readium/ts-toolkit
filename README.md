@@ -37,12 +37,65 @@ Guidelines for an implementation of the Readium Architecture for Web-based platf
 
 - Publication
 - Locators
+- Injectables
 
 ### 2.2 Main Modules
+
+#### 2.2.1 Publication Parser
+
+Turns the manifest into a working in-memory model.
+Understands publication structure, resources, metadata.
+
+**API:**
+
+- Parse
+- Get Metadata
+- Get Reading Order
+- Get Resources
+- Get Cover Page
+- Get ToC
+- Get Page List
+
+#### 2.2.2 Navigators
+
+Require Publication's Reading Order and Resource collections. Starts from a resource Link.
 
 - HTML Navigator
 - Audio Navigator
 - Image Navigator
+
+**API:**
+- Set Reading Order & Resources
+- Get Current Location
+- Go Forward
+- Go Backward
+- Go To Location
+- Set View Settings
+- Location Changed Event
+- Error Event
+- Open External URL Event
+
+#### 2.2.3 Decorator
+
+**Text Highlights**
+
+Given a location (as a range) it will render highlights over the target text nodes.
+
+**Anchored Elements**
+
+Given a location (as a point) it will anchor an element over that location.
+
+An element could be an image or other types of HTML block elements.
+
+#### 2.2.4 Recognizer
+
+Recognize gestures on tap surfaces, and when a text selection is made.
+
+**Tap Regions**
+
+**Gestures**
+
+**Text Selection**
 
 ## 3. Processing Publications
 
