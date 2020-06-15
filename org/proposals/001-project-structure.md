@@ -131,19 +131,84 @@ TODO: Explain the structure and features for the developer experience.
 
 #### Lerna
 
+For managing the package architecture as a [workspace](https://yarnpkg.com/features/workspaces).
+
+Lerna can be used with Yarn or NPM.
+In this proposal it is used with NPM as default.
+
+##### Alternatives
+
+- Yarn 2 [workspaces](https://yarnpkg.com/features/workspaces).
+- Lerna with Yarn 2.
+
 #### TypeScript Compiler
 
-#### Karma
+The primary implementation language will be TypeScript for this project.
+A TypeScript compiler (transpiler) is needed.
+
+Use the official [TypeScript](https://www.typescriptlang.org/) compiler.
+
+##### Alternatives
+
+- Babel + [typescript preset/plugin](https://babeljs.io/docs/en/babel-preset-typescript).
+  - Blog [post](https://devblogs.microsoft.com/typescript/typescript-and-babel-7/) from Microsoft
+
+#### Karma + Jasmine
+
+Browser-based test runner.
+
+Tests for this project will benefit from running in a full browser environment.
+
+[Karma](https://karma-runner.github.io/latest/index.html) is the choice for this as it's very well supported.
+
+With a runner, you'll need tests to run them in. 
+
+[Jasmine](https://jasmine.github.io/) is the choice for a testing framework since it promotes clean tests and comes built-in with assertions and mocking. The built-ins are two less components to configure and integrate.
+
+##### Alternatives
+
+- [Jest](https://jestjs.io/) + JSDOM
+  - Jest is delightful and modern, and has a Jasmine-based framework with everything built-in.
+  - Unfortunately for us it runs in a Node environment, which means you can't use a real DOM implementation in that environment, the best you have is JSDOM, and that can't render anything.
+- [Mocha](https://mochajs.org/) + [Chai](https://www.chaijs.com/) + [Sinon](https://sinonjs.org/) instead of Jasmine.
 
 #### Rollup.js
 
+The project will be using ES modules to organize code in the canonical source code.
+For this to work as the final output in a browser all the modules would need to be bundled together.
+
+[Rollup.js] is the best for this as it's the most lightweight since this is its single purpose.
+
 #### Prettier
+
+Most modern programming language platforms now a days adopt an official code formatter.
+
+[Gofmt](https://blog.golang.org/gofmt) is such an example for Go.
+
+[Prettier](https://prettier.io/) fulfills this role for the Javascript community.
+It is the defacto standard for this job.
 
 #### ESLint
 
-#### Husky
+[ESLint](https://eslint.org/) is the choice for a Javascript static code analyzer.
 
-#### Lint Staged
+It now has [TypeScript support](https://typescript-eslint.io/) (TSLint used to be the choice for this), and it has a plugin for Prettier, and for understanding the package resolution with Lerna.
+
+##### Alternatives
+
+- [TSLint](https://palantir.github.io/tslint/) (now deprecated)
+
+#### Husky + Lint Staged
+
+Husky will allow the declaration and configuration of Git commit hooks.
+
+One such use for this is with [Lint Staged](https://github.com/okonet/lint-staged).
+
+This runs linters (and other tools) against files that will be committed.
+
+##### Alternatives
+
+- Manual setup
 
 #### GitHub Actions
 
