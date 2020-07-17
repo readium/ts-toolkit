@@ -47,7 +47,7 @@ export class Link {
   public title?: string;
   
   /** Relation between the linked resource and its containing collection. */
-  public rels?: Set<string>;
+  public rels: Set<string>;
   
   /** Properties associated to the linked resource. */
   public properties: Properties;
