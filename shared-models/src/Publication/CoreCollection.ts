@@ -11,11 +11,11 @@ import { Links } from "./Link";
  *  Can be used as extension point in the Readium Web Publication Manifest.
  */
 export class CoreCollection {
-  public metadata?: {[key: string]: any};
+  public metadata?: { [key: string]: any };
   public links?: Links;
 
   /** Subcollections indexed by their role in this collection. */
-  public subcollections?: {[collection: string]: CoreCollection};
+  public subcollections?: { [collection: string]: CoreCollection };
 
   constructor(json: any) {
     if (Array.isArray(json)) {
@@ -28,7 +28,7 @@ export class CoreCollection {
     }
   }
 
-  public static makeCollections(json: any): {[collection: string]: CoreCollection} {
+  public static makeCollections(json: any): { [collection: string]: CoreCollection } {
     let collection = {};
     for (const key in json) {
       collection[key] = new this(json[key]);

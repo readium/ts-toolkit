@@ -37,7 +37,7 @@ export interface ILocations {
   position?: number;
 
   /** Additional locations for extensions. */
-  otherLocations?: {[key: string]: any}
+  otherLocations?: { [key: string]: any }
 
   /** otherLocators currently in use in Thorium/R2D2BC */
   cssSelector?: string;

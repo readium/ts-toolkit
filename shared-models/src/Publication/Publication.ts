@@ -25,7 +25,7 @@ export class Publication {
   /** Identifies the collection that contains a table of contents. */
   public tableOfContents: Links = this.manifest.tableOfContents;
 
-  public subcollections: {[collection: string]: CoreCollection} = this.manifest.subcollections;
+  public subcollections: { [collection: string]: CoreCollection } = this.manifest.subcollections;
 
   constructor(manifest: Manifest) {
     this.manifest = manifest;

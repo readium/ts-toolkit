@@ -26,7 +26,7 @@ export class Manifest {
   /** Identifies the collection that contains a table of contents. */
   public readonly tableOfContents: Links;
 
-  public readonly subcollections: {[collection: string]: CoreCollection}
+  public readonly subcollections: { [collection: string]: CoreCollection }
 
   constructor(manifestJSON: any) {
     const json = new JSONDictionary(manifestJSON);
