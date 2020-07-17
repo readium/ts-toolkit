@@ -23,6 +23,13 @@ export default class Format {
     this.fileExtension = params.fileExtension;
   };
 
+  /** Checks the format equals another one */
+  public equals(other: Format): boolean {
+    return this.name === other.name 
+        && this.mediaType.equals(other.mediaType) 
+        && this.fileExtension === other.fileExtension;
+  }
+
   // Formats used by Readium. Reading apps are welcome 
   // to extend the static constants with additional formats.
 

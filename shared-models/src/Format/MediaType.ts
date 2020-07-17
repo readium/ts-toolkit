@@ -99,6 +99,11 @@ export class MediaType {
     return this.contains(other) || other.contains(this);
   }
 
+  /** Checks the MediaType equals another one (comparing their string) */
+  public equals(other: MediaType): boolean {
+    return this.string === other.string;
+  }
+
   /** Returns whether this media type is structured as a ZIP archive. */
   public isZIP(): boolean {
     return this.matches(MediaType.zip())
