@@ -5,6 +5,7 @@
 
 import { EPUBLayout } from "../epub/Layout";
 import { Link } from "../Link";
+import "../epub/Properties+EPUB";
 
 export type Orientation = "auto" | "landscape" | "portrait";
 export type Overflow = "auto" | "clipped" | "paginated" | "scrolled";
