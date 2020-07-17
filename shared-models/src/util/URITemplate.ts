@@ -37,7 +37,7 @@ export class URITemplate {
    *  Any extra parameter is appended as query parameters.
    *  See RFC 6570 on URI template: https://tools.ietf.org/html/rfc6570
    */
-  public expand(parameters: { [param: string]: string} ): string {
+  public expand(parameters: { [param: string]: string }): string {
     const expandSimpleString = (string: string): string => {
       return string.split(",")
         .map(parameter => {
