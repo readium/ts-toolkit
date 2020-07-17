@@ -74,7 +74,7 @@ export class Metadata {
   public readingProgression: ReadingProgression;
   public duration: number | null;
   public numberOfPages: number | null;
-  public otherMetadata: JSONDictionary;
+  private otherMetadata: JSONDictionary;
 
   /* public otherMetadata */
 
@@ -131,5 +131,9 @@ export class Metadata {
     }
 
     return ReadingProgression.ltr;
+  }
+
+  public getOtherMetadata(): { [key: string]: any } {
+    return this.otherMetadata.json;
   }
 }
