@@ -32,7 +32,7 @@ export interface ILink {
 /** Link Object for the Readium Web Publication Manifest.
  *  https://readium.org/webpub-manifest/schema/link.schema.json
  */
-export class Link implements ILink {
+export class Link {
 
   /** URI or URI template of the linked resource. */
   public href: string;
@@ -47,7 +47,7 @@ export class Link implements ILink {
   public title?: string;
   
   /** Relation between the linked resource and its containing collection. */
-  public rels?: Array<string>;
+  public rels?: Set<string>;
   
   /** Properties associated to the linked resource. */
   public properties: Properties;
@@ -83,7 +83,7 @@ export class Link implements ILink {
     this.templated = link.templated;
     this.type = link.type;
     this.title = link.title;
-    this.rels = link.rel;
+    this.rels = new Set(link.rel);
     this.properties = new Properties(link.properties);
     this.height = link.height;
     this.width = link.width;
@@ -137,13 +137,13 @@ export class Links extends Array<Link> {
 
   /** Finds the first link with the given relation. */
   public findWithRel(rel: string): Link | null {
-    const predicate = (el: Link) => el.rels.includes(rel);
+    const predicate = (el: Link) => el.rels.has(rel);
     return this.find(predicate) || null;
   }
 
   /** Finds all the links with the given relation. */
   public filterByRel(rel: string): Array<Link> {
-    const predicate = (el: Link) => el.rels.includes(rel);
+    const predicate = (el: Link) => el.rels.has(rel);
     return this.filter(predicate);
   }
 
