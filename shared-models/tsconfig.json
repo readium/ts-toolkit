@@ -19,6 +19,6 @@
     "lib": ["es2019", "DOM", "DOM.Iterable"]
   },
   "include": [
-    "shared-models/**/*"
+    "src/**/*"
   ]
 }
