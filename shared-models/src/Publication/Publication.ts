@@ -34,12 +34,12 @@ export class Publication {
   /** The URL where this publication is served, computed from the `Link` with `self` relation.
    *  e.g. https://provider.com/pub1293/manifest.json gives https://provider.com/pub1293/
    */
-  public baseURL(): string {
-    const selfLink = this.manifest.links.find(el => el.rels.includes("self"));
+  public baseURL(): string | null {
+    const selfLink = this.manifest.links.find(el => el.rels.has("self"));
     if (selfLink) {
       return selfLink.href;
     } else {
-      return window.location.href;
+      return null;
     }
   };
 
