@@ -3,7 +3,7 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-export const findValue = (object: { [key: string]: any}, key: string): any => {
+export const findValue = (object: { [key: string]: any }, key: string): any => {
   let value: any;
   Object.keys(object).some((k) => {
     if (k === key) {

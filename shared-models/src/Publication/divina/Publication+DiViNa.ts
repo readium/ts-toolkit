@@ -21,5 +21,6 @@ declare module "../Publication" {
 }
 
 Publication.prototype.getGuided = function() {
-  return findValue(this.subcollections, "guided") || new Links([]);
+  const match = findValue(this.subcollections, "guided");
+  return match ? new Links(match) : new Links([]);
 }
