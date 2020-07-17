@@ -74,7 +74,7 @@ export class Metadata {
   public readingProgression: ReadingProgression;
   public duration: number | null;
   public numberOfPages: number | null;
-  private otherMetadata: JSONDictionary;
+  private otherMetadata: { [key: string]: any };
 
   /* public otherMetadata */
 
@@ -111,7 +111,7 @@ export class Metadata {
     this.readingProgression = json.parseRaw("readingProgression") || ReadingProgression.auto;
     this.duration = json.parsePositive("duration");
     this.numberOfPages = json.parsePositive("numberOfPages");
-    this.otherMetadata = json;
+    this.otherMetadata = json.json;
   }
 
   /** Computes a `ReadingProgression` when the value of `readingProgression` is set to `auto`,
@@ -134,6 +134,6 @@ export class Metadata {
   }
 
   public getOtherMetadata(): { [key: string]: any } {
-    return this.otherMetadata.json;
+    return this.otherMetadata;
   }
 }
