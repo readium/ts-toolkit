@@ -13,7 +13,7 @@ declare module "../Metadata" {
 }
 
 Metadata.prototype.getPresentation = function () {
-  return (this.otherMetadata && this.otherMetadata.json["presentation"])
-    ? new Presentation(this.otherMetadata.json["presentation"])
+  return (this.getOtherMetadata()["presentation"])
+    ? new Presentation(this.getOtherMetadata()["presentation"])
     : new Presentation({});
 }
