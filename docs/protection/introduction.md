@@ -20,11 +20,24 @@ Note also that care has been taken to avoid heavy processing which would drastic
 
 This work is therefore split into three parts:
 
-- A list of aspects of Web content which allow free copy in the absence of protection techniques (the "problems");
-- Server and client techniques recommended for the protection of Web content (the "solutions");
-- An online Proof of Concept of the differents recommended "solutions". This sample is online at https://webpub-protect.herokuapp.com/app/ and will be updated during the year 2021. 
+- A list of aspects of Web content which allow free copy in the absence of protection techniques ([the "problems"](../problems.md));
+- Server and client techniques recommended for the protection of Web content ([the "solutions"](../solutions.md));
+- An online Proof of Concept of the differents recommended "solutions" (the online [demo tool](https://webpub-protect.herokuapp.com/app/)). 
 
 Publishers who think that the solutions presented here provide an insufficient level of protection for their content should consider distributing their publications to [LCP](https://www.edrlab.org/readium-lcp/) compliant mobile / desktop applications and e-ink devices only. 
+
+## Acknowledgments
+
+This work would not have been possible without the financial support of the [Korean Copyright COmmission](https://www.copyright.or.kr/eng/main.do), for the third consecutive year.
+
+The following people were involved in this project:
+
+- Laurent Le Meur: CTO of EDRLab, involved in every EDRLab and Readium project, including Readium LCP, Readium Mobile, Readium Desktop, Readium Web, Readium Web Publications.
+- Daniel Weck: senior developer at EDRLab; who developed the demo tool.
+- Taehyun Kim: CTO of DRM Inside, Korea.
+- Hadrien Gardeur: Product manager at De Marque, a Canadian solution provider for the publishing industry, member of the Readium Foundation and EDRLab.
+
+
 
 
 

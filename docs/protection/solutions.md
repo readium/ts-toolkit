@@ -1,5 +1,11 @@
 # Proposed solutions for limiting over-sharing of Web Publications
 
+## Introduction
+
+This section lists techniques adequate for solving the [problems detailed in the previous part of this work](../problems.md).
+
+These techniques are implemented in a [demo tool available online](https://webpub-protect.herokuapp.com/app/). This demo tool will be updated during the year 2021, in the course of the developement of Readium Web. 
+
 ## Control access to the publication
 
 1.1/ Allow access to publications to authorized users only.
@@ -134,4 +140,10 @@ Even though  source URLs can be made inaccessible from a Web browser, an HTTP an
 
 Even if 3rd party (and complex) anti-capture applications may prevent screen capture on some operating systems, there is no proper way to fill the analog hole, which consists in capturing screen content (including video content) and recreate the content of a publication semi-automatically, using OCR techniques on textual content. People can also re-type the content, use a camera to grab the screen, use OCR on a print book ...
 
+## Links
 
+### Next
+Play with the [demo tool available online](https://webpub-protect.herokuapp.com/app/)
+
+### Previous
+Read the list of aspects of Web content which allow free copy in the absence of protection techniques ([the "problems"](../problems.md)).

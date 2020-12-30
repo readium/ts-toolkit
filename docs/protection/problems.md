@@ -50,4 +50,12 @@
 
 8.2/ Screen capture tools (including video capture like Snagit or Camtasia), associated with proper OCR for textual content, allows user to recreate the content of a publication semi-automatically.
 
+## Links
+
+### Next
+Read the server and client techniques recommended for the protection of Web content ([the "solutions"](../solutions.md)).
+
+### Previous
+Read the [introduction to the project](../introduction.md).
+
 
