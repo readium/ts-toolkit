@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This section lists techniques adequate for solving the [problems detailed in the previous part of this work](../problems.md).
+This section lists techniques adequate for solving the [problems detailed in the previous part of this work](./problems.html).
 
 These techniques are implemented in a [demo tool available online](https://webpub-protect.herokuapp.com/app/). This demo tool will be updated during the year 2021, in the course of the developement of Readium Web. 
 
