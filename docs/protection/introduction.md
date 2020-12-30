@@ -1,4 +1,4 @@
-# Introduction to the protection of Web Publication
+# Introduction to the protection of Web Publications
 
 The concept of reading books - i.e. long-form publications - in a Web browser emerged around 2010. It rapidly got some traction and the organization of the [Books in Browsers](https://booksinbrowsers.org/past-bibs/) event, between 2011 and 2016, is a good illustration of the raise and fall of the concept. 
 
@@ -20,8 +20,8 @@ Note also that care has been taken to avoid heavy processing which would drastic
 
 This work is therefore split into three parts:
 
-- A list of aspects of Web content which allow free copy in the absence of protection techniques ([the "problems"](../problems.md));
-- Server and client techniques recommended for the protection of Web content ([the "solutions"](../solutions.md));
+- A list of aspects of Web content which allow free copy in the absence of protection techniques ([the "problems"](./problems.html));
+- Server and client techniques recommended for the protection of Web content ([the "solutions"](./solutions.html));
 - An online Proof of Concept of the differents recommended "solutions" (the online [demo tool](https://webpub-protect.herokuapp.com/app/)). 
 
 Publishers who think that the solutions presented here provide an insufficient level of protection for their content should consider distributing their publications to [LCP](https://www.edrlab.org/readium-lcp/) compliant mobile / desktop applications and e-ink devices only. 

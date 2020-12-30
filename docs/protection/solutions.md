@@ -146,4 +146,4 @@ Even if 3rd party (and complex) anti-capture applications may prevent screen cap
 Play with the [demo tool available online](https://webpub-protect.herokuapp.com/app/)
 
 ### Previous
-Read the list of aspects of Web content which allow free copy in the absence of protection techniques ([the "problems"](../problems.md)).
+Read the list of aspects of Web content which allow free copy in the absence of protection techniques ([the "problems"](./problems.html)).

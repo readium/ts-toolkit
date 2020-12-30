@@ -53,9 +53,9 @@
 ## Links
 
 ### Next
-Read the server and client techniques recommended for the protection of Web content ([the "solutions"](../solutions.md)).
+Read the server and client techniques recommended for the protection of Web content ([the "solutions"](./solutions.html)).
 
 ### Previous
-Read the [introduction to the project](../introduction.md).
+Read the [introduction to the project](./introduction.html).
 
 
