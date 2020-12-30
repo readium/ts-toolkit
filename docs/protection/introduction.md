@@ -1,4 +1,4 @@
-# Introduction to the protection of Web Publications
+# Protecting Web Publications against content copy
 
 The concept of reading books - i.e. long-form publications - in a Web browser emerged around 2010. It rapidly got some traction and the organization of the [Books in Browsers](https://booksinbrowsers.org/past-bibs/) event, between 2011 and 2016, is a good illustration of the raise and fall of the concept. 
 
