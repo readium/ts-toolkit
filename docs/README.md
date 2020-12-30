@@ -19,12 +19,13 @@ Guidelines for an implementation of the Readium Architecture for Web-based platf
 
 - Build on the [Open Web Platform](https://www.w3.org/wiki/Open_Web_Platform)
 - Follow modern web development practices
-- Pragmatic use of latest web standards
-- Use with or _without_ a Readium Publication Server
+- Make pragmatic use of latest web standards
+- Be usable with or _without_ a Readium Publication Server
 - Support offline use cases
 - Consider limited connectivity, low-spec clients
-- Compatible with [Assistive Technologies](https://www.w3.org/WAI/people-use-web/tools-techniques/)
-- Mindful of performance [jank](http://jankfree.org/), focus on speed
+- Be compatible with [Assistive Technologies](https://www.w3.org/WAI/people-use-web/tools-techniques/)
+- Be mindful of performance [jank](http://jankfree.org/), focus on speed
+- Offer a acceptable level of content protection.
 
 ### 1.2 Non-Goals
 
@@ -133,7 +134,7 @@ Contrary to other implementations that run on devices with file-system access, p
 
 Publication resources generally need to be loaded (embedded) into the render tree (DOM) of a web-based reading system.
 
-### 5.1 Embedding
+### 5.1 Embedding multimedia elements
 List of content types with suggested embed elements, or other:
 
 - HTML documents: [`<iframe>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe), or other means of document [transclusion](https://en.wikipedia.org/wiki/Transclusion)
@@ -161,3 +162,7 @@ When loading or rendering additional resources for the purposes of prefetching a
 Given the linear progression of a user's reading activity it is advisable to limit the prefetching to the adjacent (previous and next) resources of a resource  set in the reading progression. To effectively benefit from this approach, the adjacent resources can be fetched with high priority, as soon as or after the primary resource to render is ready. 
 
 The prefetch range could increase, with lower priority prefetching, given the known or inferred capabilities of the connected client.
+
+## 7. Protecting content
+
+[Detailed guidelines](./protection/introduction.html) are provided to developers of Web Readers who need to achieve some level of protection for copyright protected Web Publications consumed by Web applications. 
