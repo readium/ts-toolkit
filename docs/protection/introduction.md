@@ -28,7 +28,7 @@ Publishers who think that the solutions presented here provide an insufficient l
 
 ## Acknowledgments
 
-This work would not have been possible without the financial support of the [Korean Copyright COmmission](https://www.copyright.or.kr/eng/main.do), for the third consecutive year.
+This work would not have been possible without the financial support of the [Korea Copyright Commission](https://www.copyright.or.kr/eng/main.do), for the third consecutive year.
 
 The following people were involved in this project:
 
