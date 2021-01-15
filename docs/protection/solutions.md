@@ -1,5 +1,14 @@
 # Proposed solutions for limiting over-sharing of Web Publications
 
+**Editors:**
+
+- Daniel Weck ([EDRLab](https://edrlab.org))
+- Laurent Le Meur ([EDRLab](https://edrlab.org))
+
+**Version:** `V1.0`
+
+**Release date:** `2020-12-15`
+
 ## Introduction
 
 This section lists techniques adequate for solving the [problems detailed in the previous part of this work](./problems.html).
