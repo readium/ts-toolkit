@@ -1,5 +1,14 @@
 # Aspects of Web content which allow over-sharing of Web Publications
 
+**Editors:**
+
+- Laurent Le Meur ([EDRLab](https://edrlab.org))
+
+**Version:** `V1.0`
+
+**Release date:** `2020-12-15`
+
+
 ## Uncontrolled access to the publication
 
 1.1/ The Web Publication manifest and all resources of a publication are accessible without proper authorization.
