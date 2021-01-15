@@ -1,5 +1,13 @@
 # Protecting Web Publications against content copy
 
+**Editors:**
+
+- Laurent Le Meur ([EDRLab](https://edrlab.org))
+
+**Version:** `V1.0`
+
+**Release date:** `2020-12-15`
+
 The concept of reading books - i.e. long-form publications - in a Web browser emerged around 2010. It rapidly got some traction and the organization of the [Books in Browsers](https://booksinbrowsers.org/past-bibs/) event, between 2011 and 2016, is a good illustration of the raise and fall of the concept. 
 
 The idea of moving ebooks to the Web was reactivated in 2017 by W3C members of the Publishing Working Group ([Charter](https://www.w3.org/2017/04/publ-wg-charter/)). EDRLab was member of this Working Group and promoted there the use of the Readium Web Publication Manifest for representing Web Publications. But the result of this work, the [Web Publications specification](https://www.w3.org/TR/wpub/), wasn't adopted by content providers and was therefore published as a W3C Note, not a Recommandation.    
