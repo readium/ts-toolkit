@@ -165,4 +165,4 @@ The prefetch range could increase, with lower priority prefetching, given the kn
 
 ## 7. Protecting content
 
-[Detailed guidelines](./protection/introduction.html) are provided to developers of Web Readers who need to achieve some level of protection for copyright protected Web Publications consumed by Web applications. 
+[Detailed guidelines](./protection/introduction.md) are provided to developers of Web Readers who need to achieve some level of protection for copyright protected Web Publications consumed by Web applications. 
