@@ -13,22 +13,25 @@ export class Publication {
   private manifest: Manifest;
 
   // Aliases
-  public metadata: Metadata = this.manifest.metadata;
-  public links: Links = this.manifest.links;
-
-  /** Identifies a list of resources in reading order for the publication. */
-  public readingOrder: Links = this.manifest.readingOrder;
-
-  /** Identifies resources that are necessary for rendering the publication. */
-  public resources: Links = this.manifest.resources;
-
-  /** Identifies the collection that contains a table of contents. */
-  public tableOfContents: Links = this.manifest.tableOfContents;
-
-  public subcollections: { [collection: string]: CoreCollection } = this.manifest.subcollections;
+  public metadata: Metadata;
+  public links: Links;
+  public readingOrder: Links;
+  public resources: Links;
+  public tableOfContents: Links;
+  public subcollections: {[collection: string]: CoreCollection};
 
   constructor(manifest: Manifest) {
     this.manifest = manifest;
+
+    this.metadata = this.manifest.metadata;
+    this.links = this.manifest.links;
+    /** Identifies a list of resources in reading order for the publication. */
+    this.readingOrder = this.manifest.readingOrder;
+    /** Identifies resources that are necessary for rendering the publication. */
+    this.resources = this.manifest.resources;
+    /** Identifies the collection that contains a table of contents. */
+    this.tableOfContents = this.manifest.tableOfContents;
+    this.subcollections = this.manifest.subcollections;
   }
 
   /** The URL where this publication is served, computed from the `Link` with `self` relation.
