@@ -1,0 +1,24 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
+    "module": "es6",
+    "noEmitOnError": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": false,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "moduleResolution": "node",
+    "outDir": "./dist/",
+    "sourceMap": true,
+    "preserveConstEnums": true,
+    "strictNullChecks": false,
+    "target": "es6",
+    "lib": ["es2019", "DOM", "DOM.Iterable"]
+  },
+  "include": [
+    "src/**/*"
+  ]
+}
