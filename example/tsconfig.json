@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "outDir": "./dist",
+        "lib":["es2019","DOM", "DOM.Iterable"],
+        "sourceMap": true,
+        "noImplicitAny": true,
+        "target": "es5",
+        "module": "commonjs",
+        "strict": true
+    }
+}

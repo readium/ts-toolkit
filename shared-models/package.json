@@ -1,19 +1,67 @@
 {
-  "name": "@readium/shared-web",
-  "version": "1.0.0",
+  "name": "@jellybooks/shared-test",
+  "version": "1.0.3",
   "description": "Next generation SDK for publications in Web Apps",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "author": "Jellybooks",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/readium/web.git"
+    "url": "git+https://github.com/Jellybooks/web.git"
   },
-  "author": "Readium",
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/readium/web/issues"
+    "url": "https://github.com/Jellybooks/web/issues"
   },
-  "homepage": "https://github.com/readium/web"
+  "homepage": "https://github.com/Jellybooks/web",
+  "keywords": [
+    "jellybooks"
+  ],
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "test": "tsdx test",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build",
+    "size": "size-limit",
+    "analyze": "size-limit --why"
+  },
+  "peerDependencies": {},
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "module": "dist/shared-test.esm.js",
+  "size-limit": [
+    {
+      "path": "dist/shared-test.cjs.production.min.js",
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/shared-test.esm.js",
+      "limit": "10 KB"
+    }
+  ],
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^4.11.0",
+    "husky": "^6.0.0",
+    "size-limit": "^4.11.0",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.2.0",
+    "typescript": "^3.9.9"
+  }
 }
