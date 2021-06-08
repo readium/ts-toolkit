@@ -18,7 +18,7 @@ export default function api(): JellybooksAPI {
 
   //for test
   const getData = (x: string): string => {
-    return `hi ${x}`
+    return `hi - ${x}`
   }
 
   const _api = {
