@@ -3,6 +3,10 @@ on: pull_request
       paths:
         - "shared-models/**"
         - ".github/workflows/size-shared-model.yaml"
+defaults:
+  run:
+    working-directory: ./shared-models
+    
 jobs:
   size:
     runs-on: ubuntu-latest

@@ -4,6 +4,10 @@ on: push
         - "shared-models/**"
         - ".github/workflows/CI-shared-model.yaml"
 
+defaults:
+  run:
+    working-directory: ./shared-models
+
 jobs:
   build:
     name: Build, lint, and test on Node ${{ matrix.node }} and ${{ matrix.os }}
