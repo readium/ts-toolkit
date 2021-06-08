@@ -3,10 +3,10 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { Fit, Orientation, Overflow, Page, Spread } from "./Presentation";
-import { Properties } from "../Properties";
+import { Fit, Orientation, Overflow, Page, Spread } from './Presentation';
+import { Properties } from '../Properties';
 
-declare module "../Properties" {
+declare module '../Properties' {
   export interface Properties {
     getClipped: () => boolean;
     getFit: () => Fit | null;
@@ -18,25 +18,25 @@ declare module "../Properties" {
 }
 
 Properties.prototype.getClipped = function() {
-  return this.otherProperties["clipped"] || false;
-}
+  return this.otherProperties['clipped'] || false;
+};
 
 Properties.prototype.getFit = function() {
-  return this.otherProperties["fit"] || null;
-}
+  return this.otherProperties['fit'] || null;
+};
 
 Properties.prototype.getOrientation = function() {
-  return this.otherProperties["orientation"] || null;
-}
+  return this.otherProperties['orientation'] || null;
+};
 
 Properties.prototype.getOverflow = function() {
-  return this.otherProperties["overflow"] || null;
-}
+  return this.otherProperties['overflow'] || null;
+};
 
 Properties.prototype.getPage = function() {
-  return this.otherProperties["page"] || null;
-}
+  return this.otherProperties['page'] || null;
+};
 
 Properties.prototype.getSpread = function() {
-  return this.otherProperties["spread"] || null;
-}
+  return this.otherProperties['spread'] || null;
+};

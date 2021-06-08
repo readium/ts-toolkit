@@ -3,11 +3,10 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { MediaType } from "./MediaType";
+import { MediaType } from './MediaType';
 
 /** Represents a known file format, uniquely identified by a media type. */
 export default class Format {
-
   /** A human readable name identifying the format, which might be presented to the user. */
   public name: string;
 
@@ -17,211 +16,217 @@ export default class Format {
   /** The default file extension to use for this format. */
   public fileExtension: string;
 
-  constructor(params: { name: string; mediaType: MediaType; fileExtension: string }) {
+  constructor(params: {
+    name: string;
+    mediaType: MediaType;
+    fileExtension: string;
+  }) {
     this.name = params.name;
     this.mediaType = params.mediaType;
     this.fileExtension = params.fileExtension;
-  };
+  }
 
   /** Checks the format equals another one */
   public equals(other: Format): boolean {
-    return this.name === other.name 
-        && this.mediaType.equals(other.mediaType) 
-        && this.fileExtension === other.fileExtension;
+    return (
+      this.name === other.name &&
+      this.mediaType.equals(other.mediaType) &&
+      this.fileExtension === other.fileExtension
+    );
   }
 
-  // Formats used by Readium. Reading apps are welcome 
+  // Formats used by Readium. Reading apps are welcome
   // to extend the static constants with additional formats.
 
   public static readiumAudiobook(): Format {
     return new this({
-      name: "Readium Audiobook",
+      name: 'Readium Audiobook',
       mediaType: MediaType.readiumAudiobook(),
-      fileExtension: "audiobook"
+      fileExtension: 'audiobook',
     });
   }
 
   public static readiumAudiobookManifest(): Format {
     return new this({
-      name: "Readium Audiobook",
+      name: 'Readium Audiobook',
       mediaType: MediaType.readiumAudiobookManifest(),
-      fileExtension: "json"
+      fileExtension: 'json',
     });
   }
 
   public static bmp(): Format {
     return new this({
-      name: "BMP",
+      name: 'BMP',
       mediaType: MediaType.bmp(),
-      fileExtension: "bmp"
-    })
+      fileExtension: 'bmp',
+    });
   }
 
   public static cbz(): Format {
     return new this({
-      name: "Comic Book Archive",
+      name: 'Comic Book Archive',
       mediaType: MediaType.cbz(),
-      fileExtension: "cbz"
-    })
+      fileExtension: 'cbz',
+    });
   }
 
   public static divina(): Format {
     return new this({
-      name: "Digital Visual Narratives",
+      name: 'Digital Visual Narratives',
       mediaType: MediaType.divina(),
-      fileExtension: "divina"
-    })
+      fileExtension: 'divina',
+    });
   }
 
   public static divinaManifest(): Format {
     return new this({
-      name: "Digital Visual Narratives",
+      name: 'Digital Visual Narratives',
       mediaType: MediaType.divinaManifest(),
-      fileExtension: "json"
+      fileExtension: 'json',
     });
   }
 
   public static epub(): Format {
     return new this({
-      name: "EPUB",
+      name: 'EPUB',
       mediaType: MediaType.epub(),
-      fileExtension: "epub"
-    })
+      fileExtension: 'epub',
+    });
   }
 
   public static gif(): Format {
     return new this({
-      name: "GIF",
+      name: 'GIF',
       mediaType: MediaType.gif(),
-      fileExtension: "gif"
+      fileExtension: 'gif',
     });
   }
 
   public static html(): Format {
     return new this({
-      name: "HTML",
+      name: 'HTML',
       mediaType: MediaType.html(),
-      fileExtension: "html"
+      fileExtension: 'html',
     });
   }
 
   public static jpeg(): Format {
     return new this({
-      name: "JPEG",
+      name: 'JPEG',
       mediaType: MediaType.jpeg(),
-      fileExtension: "jpg"
+      fileExtension: 'jpg',
     });
   }
 
   public static lpf(): Format {
     return new this({
-      name: "Lightweight Packaging Format",
+      name: 'Lightweight Packaging Format',
       mediaType: MediaType.lpf(),
-      fileExtension: "lpf"
-    })
+      fileExtension: 'lpf',
+    });
   }
 
   public static opds1Feed(): Format {
     return new this({
-      name: "OPDS",
+      name: 'OPDS',
       mediaType: MediaType.opds1(),
-      fileExtension: "atom"
+      fileExtension: 'atom',
     });
   }
 
   public static opds1Entry(): Format {
     return new this({
-      name: "OPDS",
+      name: 'OPDS',
       mediaType: MediaType.opds1Entry(),
-      fileExtension: "atom"
+      fileExtension: 'atom',
     });
   }
 
   public static opds2Feed(): Format {
     return new this({
-      name: "OPDS",
+      name: 'OPDS',
       mediaType: MediaType.opds2(),
-      fileExtension: "json"
+      fileExtension: 'json',
     });
   }
 
   public static opds2Publication(): Format {
     return new this({
-      name: "OPDS",
+      name: 'OPDS',
       mediaType: MediaType.opds2Publication(),
-      fileExtension: "json"
+      fileExtension: 'json',
     });
   }
 
   public static opdsAuthentication(): Format {
     return new this({
-      name: "OPDS Authentication Document",
+      name: 'OPDS Authentication Document',
       mediaType: MediaType.opdsAuthentication(),
-      fileExtension: "json"
+      fileExtension: 'json',
     });
   }
 
   public static pdf(): Format {
     return new this({
-      name: "PDF",
+      name: 'PDF',
       mediaType: MediaType.pdf(),
-      fileExtension: "pdf"
+      fileExtension: 'pdf',
     });
   }
 
   public static png(): Format {
     return new this({
-      name: "PNG",
+      name: 'PNG',
       mediaType: MediaType.png(),
-      fileExtension: "png"
+      fileExtension: 'png',
     });
   }
 
   public static tiff(): Format {
     return new this({
-      name: "TIFF",
+      name: 'TIFF',
       mediaType: MediaType.tiff(),
-      fileExtension: "tiff"
+      fileExtension: 'tiff',
     });
   }
 
   public static w3cWPUBManifest(): Format {
     return new this({
-      name: "Web Publication",
+      name: 'Web Publication',
       mediaType: MediaType.w3cWPUBManifest(),
-      fileExtension: "json"
-    })
+      fileExtension: 'json',
+    });
   }
 
   public static webp(): Format {
     return new this({
-      name: "WEBP",
+      name: 'WEBP',
       mediaType: MediaType.webp(),
-      fileExtension: "webp"
+      fileExtension: 'webp',
     });
   }
 
   public static readiumWebPub(): Format {
     return new this({
-      name: "Readium Web Publication",
+      name: 'Readium Web Publication',
       mediaType: MediaType.readiumWebPub(),
-      fileExtension: "webpub"
-    })
+      fileExtension: 'webpub',
+    });
   }
 
   public static readiumWebPubManifest(): Format {
     return new this({
-      name: "Readium Web Publication",
+      name: 'Readium Web Publication',
       mediaType: MediaType.readiumWebPubManifest(),
-      fileExtension: "json"
+      fileExtension: 'json',
     });
   }
 
   public static zab(): Format {
     return new this({
-      name: "Zipped Audio Book",
+      name: 'Zipped Audio Book',
       mediaType: MediaType.zab(),
-      fileExtension: "zab"
-    })
+      fileExtension: 'zab',
+    });
   }
 }

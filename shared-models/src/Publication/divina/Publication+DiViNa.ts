@@ -3,16 +3,15 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { findValue } from "../../util/FindValue";
-import { Links } from "../Link";
-import { Publication } from "../Publication";
+import { findValue } from '../../util/FindValue';
+import { Links } from '../Link';
+import { Publication } from '../Publication';
 
-/** DiViNa Web Publication Extension 
+/** DiViNa Web Publication Extension
  *  https://readium.org/webpub-manifest/schema/extensions/epub/subcollections.schema.json
  */
-declare module "../Publication" {
+declare module '../Publication' {
   export interface Publication {
-
     /** Provides navigation to positions in the Publication content that correspond to the locations
      *  of page boundaries present in a print source being represented by this EPUB Publication.
      */
@@ -21,6 +20,6 @@ declare module "../Publication" {
 }
 
 Publication.prototype.getGuided = function() {
-  const match = findValue(this.subcollections, "guided");
+  const match = findValue(this.subcollections, 'guided');
   return match ? new Links(match) : new Links([]);
-}
+};

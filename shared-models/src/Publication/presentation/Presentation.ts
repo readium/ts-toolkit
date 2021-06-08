@@ -3,15 +3,15 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { EPUBLayout } from "../epub/Layout";
-import { Link } from "../Link";
-import "../epub/Properties+EPUB";
+import { EPUBLayout } from '../epub/Layout';
+import { Link } from '../Link';
+import '../epub/Properties+EPUB';
 
-export type Orientation = "auto" | "landscape" | "portrait";
-export type Overflow = "auto" | "clipped" | "paginated" | "scrolled";
-export type Page = "left" | "right" | "center";
-export type Spread = "auto" | "both" | "none" | "landscape";
-export type Fit = "contain" | "cover" | "width" | "height";
+export type Orientation = 'auto' | 'landscape' | 'portrait';
+export type Overflow = 'auto' | 'clipped' | 'paginated' | 'scrolled';
+export type Page = 'left' | 'right' | 'center';
+export type Spread = 'auto' | 'both' | 'none' | 'landscape';
+export type Fit = 'contain' | 'cover' | 'width' | 'height';
 
 export interface IPresentationMetadata {
   clipped?: boolean;
@@ -25,16 +25,15 @@ export interface IPresentationMetadata {
 
 /** The Presentation Hints extension defines a number of hints for User Agents about the way content
  *  should be presented to the user.
- * 
+ *
  *  https://readium.org/webpub-manifest/extensions/presentation.html
  *  https://readium.org/webpub-manifest/schema/extensions/presentation/metadata.schema.json
- * 
+ *
  *  These properties are nullable to avoid having default values when it doesn't make sense for a
  *  given `Publication`. If a navigator needs a default value when not specified,
  *  `Presentation.defaultX` and `Presentation.X.default` can be used.
  */
 export class Presentation {
-
   /** Specifies whether or not the parts of a linked resource that flow out of the viewport are clipped */
   public clipped?: boolean;
 
@@ -44,7 +43,7 @@ export class Presentation {
   /** Suggested orientation for the device when displaying the linked resource. */
   public orientation?: Orientation;
 
-  /** Indicates the condition to be met for the linked resource to be rendered 
+  /** Indicates the condition to be met for the linked resource to be rendered
    *  within a synthetic spread
    */
   public spread?: Spread;
@@ -75,7 +74,7 @@ export class Presentation {
    */
   public layoutOf(link: Link): EPUBLayout {
     let result = EPUBLayout.reflowable;
-    if (link.properties && (link.properties.getLayout() !== null)) {
+    if (link.properties && link.properties.getLayout() !== null) {
       result = link.properties.getLayout() as EPUBLayout;
     } else if (this.layout) {
       result = this.layout;

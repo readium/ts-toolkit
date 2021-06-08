@@ -4,6 +4,6 @@
  */
 
 export interface ILocalizedString {
-   // Todo: this should be a class with a helper getting lang (with fallback)
-  [key: string]: string
+  // Todo: this should be a class with a helper getting lang (with fallback)
+  [key: string]: string;
 }

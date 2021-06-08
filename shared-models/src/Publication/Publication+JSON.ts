@@ -8,7 +8,7 @@ export class JSONDictionary {
   public json: any;
 
   constructor(json: any) {
-    if (typeof json === "string") {
+    if (typeof json === 'string') {
       this.json = JSON.parse(json);
     } else {
       this.json = json;
@@ -27,9 +27,9 @@ export class JSONDictionary {
     return this.pop(key);
   }
 
-  /** Parses the given array and removes it 
+  /** Parses the given array and removes it
    *  Parameter allowingSingle: If true, then allows the parsing of both a single value and an array.
-  */
+   */
   public parseArray(key: string, allowingSingle: boolean = false): Array<any> {
     const result = this.pop(key);
     if (Array.isArray(result)) {
@@ -61,8 +61,8 @@ export class JSONDictionary {
   /** Parses the given key and returns a Date (or null if it’s not a string) */
   public parseDate(key: string): Date | null {
     const result = this.pop(key);
-    if (typeof result === "string") {
-      return new Date(result)
+    if (typeof result === 'string') {
+      return new Date(result);
     }
     return null;
   }

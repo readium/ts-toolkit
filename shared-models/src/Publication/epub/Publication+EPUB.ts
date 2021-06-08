@@ -3,16 +3,15 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { findValue } from "../../util/FindValue";
-import { Links } from "../Link";
-import { Publication } from "../Publication";
+import { findValue } from '../../util/FindValue';
+import { Links } from '../Link';
+import { Publication } from '../Publication';
 
-/** EPUB Web Publication Extension 
+/** EPUB Web Publication Extension
  *  https://readium.org/webpub-manifest/schema/extensions/epub/subcollections.schema.json
  */
-declare module "../Publication" {
+declare module '../Publication' {
   export interface Publication {
-
     /** Provides navigation to positions in the Publication content that correspond to the locations
      *  of page boundaries present in a print source being represented by this EPUB Publication.
      */
@@ -31,25 +30,25 @@ declare module "../Publication" {
 }
 
 Publication.prototype.getPageList = function() {
-  return findValue(this.subcollections, "pageList") || new Links([]);
-}
+  return findValue(this.subcollections, 'pageList') || new Links([]);
+};
 
 Publication.prototype.getLandmarks = function() {
-  return findValue(this.subcollections, "landmarks") || new Links([]);
-}
+  return findValue(this.subcollections, 'landmarks') || new Links([]);
+};
 
 Publication.prototype.getListOfAudioClips = function() {
-  return findValue(this.subcollections, "loa") || new Links([]);
-}
+  return findValue(this.subcollections, 'loa') || new Links([]);
+};
 
 Publication.prototype.getListOfIllustrations = function() {
-  return findValue(this.subcollections, "loi") || new Links([]);
-}
+  return findValue(this.subcollections, 'loi') || new Links([]);
+};
 
 Publication.prototype.getListOfTables = function() {
-  return findValue(this.subcollections, "lot") || new Links([]);
-}
+  return findValue(this.subcollections, 'lot') || new Links([]);
+};
 
 Publication.prototype.getListOfVideoClips = function() {
-  return findValue(this.subcollections, "lov") || new Links([]);
-}
+  return findValue(this.subcollections, 'lov') || new Links([]);
+};

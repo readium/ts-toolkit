@@ -3,12 +3,12 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { CoreCollection } from "./CoreCollection";
-import { JSONDictionary } from "./Publication+JSON";
-import { Link, Links } from "./Link";
-import { Metadata } from "./Metadata";
+import { CoreCollection } from './CoreCollection';
+import { JSONDictionary } from './Publication+JSON';
+import { Link, Links } from './Link';
+import { Metadata } from './Metadata';
 
-/** Holds the metadata of a Readium publication, as described in 
+/** Holds the metadata of a Readium publication, as described in
  *  the Readium Web Publication Manifest.
  *  See. https://readium.org/webpub-manifest/
  */
@@ -26,17 +26,17 @@ export class Manifest {
   /** Identifies the collection that contains a table of contents. */
   public readonly tableOfContents: Links;
 
-  public readonly subcollections: { [collection: string]: CoreCollection }
+  public readonly subcollections: { [collection: string]: CoreCollection };
 
   constructor(manifestJSON: any) {
     const json = new JSONDictionary(manifestJSON);
 
-    this.context = json.parseArray("@context");
-    this.metadata = new Metadata(json.parseRaw("metadata"));
-    this.links = new Links(json.parseArray("links"));
-    this.readingOrder = new Links(json.parseArray("readingOrder"));
-    this.resources = new Links(json.parseArray("resources"));
-    this.tableOfContents = new Links(json.parseArray("toc"));
+    this.context = json.parseArray('@context');
+    this.metadata = new Metadata(json.parseRaw('metadata'));
+    this.links = new Links(json.parseArray('links'));
+    this.readingOrder = new Links(json.parseArray('readingOrder'));
+    this.resources = new Links(json.parseArray('resources'));
+    this.tableOfContents = new Links(json.parseArray('toc'));
     this.subcollections = CoreCollection.makeCollections(json.json);
   }
 
@@ -58,7 +58,11 @@ export class Manifest {
   /** Finds all the links with the given relation in the manifest's links. */
   public linksWithRel(rel: string): Array<Link> {
     let result = [];
-    result.push(this.readingOrder.filterByRel(rel), this.resources.filterByRel(rel), this.links.filterByRel(rel));
+    result.push(
+      this.readingOrder.filterByRel(rel),
+      this.resources.filterByRel(rel),
+      this.links.filterByRel(rel)
+    );
     return result.reduce((acc, val) => acc.concat(val), []);
   }
 }

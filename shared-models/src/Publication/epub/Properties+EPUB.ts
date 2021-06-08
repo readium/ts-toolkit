@@ -3,10 +3,10 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { EPUBLayout } from "./Layout";
-import { Properties } from "../Properties";
+import { EPUBLayout } from './Layout';
+import { Properties } from '../Properties';
 
-declare module "../Properties" {
+declare module '../Properties' {
   export interface Properties {
     getContains: () => Array<string>;
     getLayout: () => EPUBLayout | null;
@@ -14,9 +14,9 @@ declare module "../Properties" {
 }
 
 Properties.prototype.getContains = function() {
-  return this.otherProperties["contains"] || [];
-}
+  return this.otherProperties['contains'] || [];
+};
 
 Properties.prototype.getLayout = function() {
-  return this.otherProperties["layout"] || null
-}
+  return this.otherProperties['layout'] || null;
+};

@@ -7,7 +7,6 @@
  *  for decryption.
  */
 export interface IEncryption {
-
   /** Identifies the algorithm used to encrypt the resource. */
   algorithm: string;
 

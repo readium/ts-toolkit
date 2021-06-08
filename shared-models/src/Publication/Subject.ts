@@ -3,8 +3,8 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { ILink } from "./Link";
-import { ILocalizedString } from "./LocalizedString";
+import { ILink } from './Link';
+import { ILocalizedString } from './LocalizedString';
 
 /** https://github.com/readium/webpub-manifest/tree/master/contexts/default#subjects */
 export interface Subject {

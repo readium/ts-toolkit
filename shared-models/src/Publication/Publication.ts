@@ -3,10 +3,10 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { CoreCollection } from "./CoreCollection";
-import { Link, Links } from "./Link";
-import { Manifest } from "./Manifest";
-import { Metadata } from "./Metadata";
+import { CoreCollection } from './CoreCollection';
+import { Link, Links } from './Link';
+import { Manifest } from './Manifest';
+import { Metadata } from './Metadata';
 
 /** Shared model for a Readium Publication. */
 export class Publication {
@@ -18,7 +18,7 @@ export class Publication {
   public readingOrder: Links;
   public resources: Links;
   public tableOfContents: Links;
-  public subcollections: {[collection: string]: CoreCollection};
+  public subcollections: { [collection: string]: CoreCollection };
 
   constructor(manifest: Manifest) {
     this.manifest = manifest;
@@ -38,13 +38,13 @@ export class Publication {
    *  e.g. https://provider.com/pub1293/manifest.json gives https://provider.com/pub1293/
    */
   public baseURL(): string | null {
-    const selfLink = this.manifest.links.find(el => el.rels.has("self"));
+    const selfLink = this.manifest.links.find(el => el.rels.has('self'));
     if (selfLink) {
       return selfLink.href;
     } else {
       return null;
     }
-  };
+  }
 
   /** Finds the first Link having the given `href` in the publication's links. */
   public linkWithHref(href: string): Link | null {
@@ -62,10 +62,10 @@ export class Publication {
         let arr = [];
         for (const link of item) {
           if (link.alternates) {
-            arr.push(link.alternates)
+            arr.push(link.alternates);
           }
           if (link.children) {
-            arr.push(link.children)
+            arr.push(link.children);
           }
         }
         return arr;
@@ -74,9 +74,13 @@ export class Publication {
       find(children);
 
       return result;
-    }
+    };
 
-    const links: Array<Links> = [this.manifest.readingOrder, this.manifest.resources, this.manifest.links];
+    const links: Array<Links> = [
+      this.manifest.readingOrder,
+      this.manifest.resources,
+      this.manifest.links,
+    ];
 
     const link = find(links);
 

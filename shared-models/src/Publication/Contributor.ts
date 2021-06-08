@@ -3,12 +3,11 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { ILink } from "./Link";
-import { ILocalizedString } from "./LocalizedString";
+import { ILink } from './Link';
+import { ILocalizedString } from './LocalizedString';
 
 /** https://readium.org/webpub-manifest/schema/contributor-object.schema.json */
 export interface IContributor {
-
   /** The name of the contributor. */
   name: string | ILocalizedString;
 
