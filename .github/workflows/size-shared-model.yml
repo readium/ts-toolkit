@@ -1,12 +1,5 @@
 name: size-shared-model
-on: pull_request
-      paths:
-        - "shared-models/**"
-        - ".github/workflows/size-shared-model.yaml"
-defaults:
-  run:
-    working-directory: ./shared-models
-    
+on: [pull_request]
 jobs:
   size:
     runs-on: ubuntu-latest
@@ -17,3 +10,5 @@ jobs:
       - uses: andresz1/size-limit-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          directory: shared-models/
+          
