@@ -1,5 +1,5 @@
- import { Manifest } from './Publication/Manifest';
- import { Publication } from './Publication/Publication';
+import { Manifest } from './Publication/Manifest';
+import { Publication } from './Publication/Publication';
 
 export interface JellybooksAPI {
   createManifest(json: string): Manifest;
@@ -30,7 +30,7 @@ export default function api(): JellybooksAPI {
   return _api;
 }
 
-export { Manifest, Publication }
+export { Manifest, Publication };
 
 // export const sum = (a: number, b: number) => {
 //   if ('development' === process.env.NODE_ENV) {
