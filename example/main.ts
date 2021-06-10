@@ -1,6 +1,5 @@
-import api, { JellybooksAPI } from "@jellybooks/shared-test";
-import { Manifest } from "@jellybooks/shared-test/dist/Publication/Manifest";
-import { Publication } from "@jellybooks/shared-test/dist/Publication/Publication";
+import api from "@jellybooks/shared-test";
+import { JellybooksAPI, Publication, Manifest } from "@jellybooks/shared-test";
 
 let textElement: HTMLDivElement = document.getElementById("text") as HTMLDivElement;
 
