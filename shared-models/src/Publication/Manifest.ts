@@ -2,9 +2,6 @@
  * Use of this source code is governed by a BSD-style license,
  * available in the LICENSE file present in the Github repository of the project.
  */
-
-//import { CoreCollection } from './CoreCollection';
-//import { JSONDictionary } from './Publication+JSON';
 import { Link, Links } from './Link';
 import { Metadata } from './Metadata';
 
@@ -48,11 +45,8 @@ export class Manifest {
     //this.subcollections = CoreCollection.makeCollections(json.json);
   }
 
-  public static fromJSON(json: any): Manifest {
-    //const dictionary = new JSONDictionary(json);
-    //TODO: accept onşy Json object, dont parse
-    //let _json = typeof json === "string" ? JSON.parse(json) : json;
 
+  public static fromJSON(json: any) : Manifest {
     return new Manifest({
       context: json['@context'], // dictionary.parseArray('@context'),
       metadata: Metadata.fromJSON(json.metadata),
@@ -64,24 +58,8 @@ export class Manifest {
     });
   }
 
-  public static fromJSON2<T extends Manifest>(type: (new (values: any) => T), json: any): T {
-    //let _json = typeof json === "string" ? JSON.parse(json) : json;
-
-    let result = new type({
-      context: json['@context'], // dictionary.parseArray('@context'),
-      metadata: Metadata.fromJSON(json.metadata),
-      links: Links.fromJSON(json.links) as Links,
-      readingOrder: Links.fromJSON(json.readingOrder ? json.readingOrder : json.spine) as Links,
-      resources: Links.fromJSON(json.resources),
-      tableOfContents: Links.fromJSON(json.toc)
-      //this.subcollections = CoreCollection.makeCollections(dictionary.json);
-    });
-
-    return result;
-  }
-
   public toJSON(): any {
-    let json:any = { };
+    let json: any = {};
     if (this.context) json.context = this.context;
     json.metadata = this.metadata.toJSON();
     json.links = this.links.toJSON();

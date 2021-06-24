@@ -65,7 +65,7 @@ describe('library', () => {
     // });
 
 
-    const manifest = Manifest.fromJSON({
+    const manifest = Manifest.fromJSON2({
       metadata: {
         title: {"en": "Alice's Adventures in Wonderland"},
         rendition: {
@@ -112,10 +112,10 @@ describe('library', () => {
 
 
 
-    let s = new Set<string>(["ali","veli"]);
-    let y=new Array<string>();
-    s.forEach(x=>y.push(x))
-    console.log(y);
+    // let s = new Set<string>(["ali","veli"]);
+    // let y=new Array<string>();
+    // s.forEach(x=>y.push(x))
+    // console.log(y);
     //let x = Array<string>();
 
 
