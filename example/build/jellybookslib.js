@@ -82,33 +82,1359 @@ var jellybookslib =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./main.ts");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/main.ts");
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ "../shared-models/dist/shared-test.esm.js":
-/*!************************************************!*\
-  !*** ../shared-models/dist/shared-test.esm.js ***!
-  \************************************************/
-/*! exports provided: default, Manifest, Publication */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"Manifest\", function() { return Manifest; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"Publication\", function() { return Publication; });\n/* Copyright 2020 Readium Foundation. All rights reserved.\r\n * Use of this source code is governed by a BSD-style license,\r\n * available in the LICENSE file present in the Github repository of the project.\r\n */\n\n/** Wraps a dictionary parsed from a JSON string or a JSON Object */\nvar JSONDictionary = /*#__PURE__*/function () {\n  function JSONDictionary(json) {\n    if (typeof json === 'string') {\n      this.json = JSON.parse(json);\n    } else {\n      this.json = json;\n    }\n  }\n  /** Removes the given property and returns its value */\n\n\n  var _proto = JSONDictionary.prototype;\n\n  _proto.pop = function pop(key) {\n    var value = this.json[key];\n    delete this.json[key];\n    return value;\n  }\n  /** Parses the given property AS-IS and removes it */\n  ;\n\n  _proto.parseRaw = function parseRaw(key) {\n    return this.pop(key);\n  }\n  /** Parses the given array and removes it\r\n   *  Parameter allowingSingle: If true, then allows the parsing of both a single value and an array.\r\n   */\n  ;\n\n  _proto.parseArray = function parseArray(key, allowingSingle) {\n    if (allowingSingle === void 0) {\n      allowingSingle = false;\n    }\n\n    var result = this.pop(key);\n\n    if (Array.isArray(result)) {\n      return result;\n    } else if (allowingSingle) {\n      return [result];\n    }\n\n    return [];\n  }\n  /** Parses a numeric value, but returns null if it is not */\n  ;\n\n  _proto.parseNumber = function parseNumber(key) {\n    var result = this.pop(key);\n\n    if (!isNaN(result)) {\n      return result;\n    }\n\n    return null;\n  }\n  /** Parses a numeric value, but returns null if it is not a positive number. */\n  ;\n\n  _proto.parsePositive = function parsePositive(key) {\n    var result = this.pop(key);\n\n    if (!isNaN(result) && Math.sign(result) >= 0) {\n      return result;\n    }\n\n    return null;\n  }\n  /** Parses the given key and returns a Date (or null if it’s not a string) */\n  ;\n\n  _proto.parseDate = function parseDate(key) {\n    var result = this.pop(key);\n\n    if (typeof result === 'string') {\n      return new Date(result);\n    }\n\n    return null;\n  };\n\n  return JSONDictionary;\n}();\n\nfunction _inheritsLoose(subClass, superClass) {\n  subClass.prototype = Object.create(superClass.prototype);\n  subClass.prototype.constructor = subClass;\n\n  _setPrototypeOf(subClass, superClass);\n}\n\nfunction _getPrototypeOf(o) {\n  _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {\n    return o.__proto__ || Object.getPrototypeOf(o);\n  };\n  return _getPrototypeOf(o);\n}\n\nfunction _setPrototypeOf(o, p) {\n  _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {\n    o.__proto__ = p;\n    return o;\n  };\n\n  return _setPrototypeOf(o, p);\n}\n\nfunction _isNativeReflectConstruct() {\n  if (typeof Reflect === \"undefined\" || !Reflect.construct) return false;\n  if (Reflect.construct.sham) return false;\n  if (typeof Proxy === \"function\") return true;\n\n  try {\n    Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));\n    return true;\n  } catch (e) {\n    return false;\n  }\n}\n\nfunction _construct(Parent, args, Class) {\n  if (_isNativeReflectConstruct()) {\n    _construct = Reflect.construct;\n  } else {\n    _construct = function _construct(Parent, args, Class) {\n      var a = [null];\n      a.push.apply(a, args);\n      var Constructor = Function.bind.apply(Parent, a);\n      var instance = new Constructor();\n      if (Class) _setPrototypeOf(instance, Class.prototype);\n      return instance;\n    };\n  }\n\n  return _construct.apply(null, arguments);\n}\n\nfunction _isNativeFunction(fn) {\n  return Function.toString.call(fn).indexOf(\"[native code]\") !== -1;\n}\n\nfunction _wrapNativeSuper(Class) {\n  var _cache = typeof Map === \"function\" ? new Map() : undefined;\n\n  _wrapNativeSuper = function _wrapNativeSuper(Class) {\n    if (Class === null || !_isNativeFunction(Class)) return Class;\n\n    if (typeof Class !== \"function\") {\n      throw new TypeError(\"Super expression must either be null or a function\");\n    }\n\n    if (typeof _cache !== \"undefined\") {\n      if (_cache.has(Class)) return _cache.get(Class);\n\n      _cache.set(Class, Wrapper);\n    }\n\n    function Wrapper() {\n      return _construct(Class, arguments, _getPrototypeOf(this).constructor);\n    }\n\n    Wrapper.prototype = Object.create(Class.prototype, {\n      constructor: {\n        value: Wrapper,\n        enumerable: false,\n        writable: true,\n        configurable: true\n      }\n    });\n    return _setPrototypeOf(Wrapper, Class);\n  };\n\n  return _wrapNativeSuper(Class);\n}\n\nfunction _assertThisInitialized(self) {\n  if (self === void 0) {\n    throw new ReferenceError(\"this hasn't been initialised - super() hasn't been called\");\n  }\n\n  return self;\n}\n\nfunction _unsupportedIterableToArray(o, minLen) {\n  if (!o) return;\n  if (typeof o === \"string\") return _arrayLikeToArray(o, minLen);\n  var n = Object.prototype.toString.call(o).slice(8, -1);\n  if (n === \"Object\" && o.constructor) n = o.constructor.name;\n  if (n === \"Map\" || n === \"Set\") return Array.from(o);\n  if (n === \"Arguments\" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);\n}\n\nfunction _arrayLikeToArray(arr, len) {\n  if (len == null || len > arr.length) len = arr.length;\n\n  for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];\n\n  return arr2;\n}\n\nfunction _createForOfIteratorHelperLoose(o, allowArrayLike) {\n  var it = typeof Symbol !== \"undefined\" && o[Symbol.iterator] || o[\"@@iterator\"];\n  if (it) return (it = it.call(o)).next.bind(it);\n\n  if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === \"number\") {\n    if (it) o = it;\n    var i = 0;\n    return function () {\n      if (i >= o.length) return {\n        done: true\n      };\n      return {\n        done: false,\n        value: o[i++]\n      };\n    };\n  }\n\n  throw new TypeError(\"Invalid attempt to iterate non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.\");\n}\n\n/* Copyright 2020 Readium Foundation. All rights reserved.\r\n * Use of this source code is governed by a BSD-style license,\r\n * available in the LICENSE file present in the Github repository of the project.\r\n */\n\n/** Represents a string media type.\r\n *  `MediaType` handles:\r\n *  - components parsing – eg. type, subtype and parameters,\r\n *  - media types comparison.\r\n */\nvar MediaType = /*#__PURE__*/function () {\n  function MediaType(mediaType) {\n    var components = mediaType.replace(/\\s/g, '').split(';');\n    var types = components[0].split('/');\n\n    if (types.length === 2) {\n      this.type = types[0].toLowerCase();\n      this.subtype = types[1].toLowerCase();\n    }\n\n    var parameters = {};\n\n    for (var i = 1; i < components.length; i++) {\n      var component = components[i].split('=');\n\n      if (component.length === 2) {\n        var key = component[0];\n        var value = component[1];\n        parameters[key] = value;\n      }\n    }\n\n    this.parameters = parameters;\n    var parametersString = '';\n\n    for (var p in parameters) {\n      var _value = parameters[p];\n      parametersString += \";\" + p + \"=\" + _value;\n    }\n\n    this.string = this.type + \"/\" + this.subtype + parametersString;\n    this.encoding = parameters['encoding'];\n  }\n  /** Structured syntax suffix, e.g. `+zip` in `application/epub+zip`.\r\n   *  Gives a hint on the underlying structure of this media type.\r\n   *  See. https://tools.ietf.org/html/rfc6838#section-4.2.8\r\n   */\n\n\n  var _proto = MediaType.prototype;\n\n  _proto.structuredSyntaxSuffix = function structuredSyntaxSuffix() {\n    var parts = this.subtype.split('+');\n    return parts.length > 1 ? \"+\" + parts[parts.length - 1] : null;\n  }\n  /** Returns whether the given `other` media type is included in this media type.\r\n   *  For example, `text/html` contains `text/html;charset=utf-8`.\r\n   *  - `other` must match the parameters in the `parameters` property, but extra parameters\r\n   *  are ignored.\r\n   *  - Order of parameters is ignored.\r\n   *  - Wildcards are supported, meaning that `image/*` contains `image/png`\r\n   */\n  ;\n\n  _proto.contains = function contains(other) {\n    if (typeof other === 'string' || other instanceof String) {\n      other = new MediaType(other);\n    }\n\n    if ((this.type === '*' || this.type === other.type) && (this.subtype === '*' || this.subtype === other.subtype)) {\n      return true;\n    }\n\n    return false;\n  }\n  /** Returns whether this media type and `other` are the same, ignoring parameters that\r\n   *  are not in both media types.\r\n   *  For example, `text/html` matches `text/html;charset=utf-8`, but `text/html;charset=ascii`\r\n   *  doesn't. This is basically like `contains`, but working in both direction.\r\n   */\n  ;\n\n  _proto.matches = function matches(other) {\n    if (typeof other === 'string' || other instanceof String) {\n      other = new MediaType(other);\n    }\n\n    return this.contains(other) || other.contains(this);\n  }\n  /** Checks the MediaType equals another one (comparing their string) */\n  ;\n\n  _proto.equals = function equals(other) {\n    return this.string === other.string;\n  }\n  /** Returns whether this media type is structured as a ZIP archive. */\n  ;\n\n  _proto.isZIP = function isZIP() {\n    return this.matches(MediaType.zip()) || this.structuredSyntaxSuffix() === '+zip';\n  }\n  /** Returns whether this media type is structured as a JSON file. */\n  ;\n\n  _proto.isJSON = function isJSON() {\n    return this.matches(MediaType.json()) || this.structuredSyntaxSuffix() === '+json';\n  }\n  /** Returns whether this media type is of an OPDS feed. */\n  ;\n\n  _proto.isOPDS = function isOPDS() {\n    return this.matches(MediaType.opds1()) || this.matches(MediaType.opds1Entry()) || this.matches(MediaType.opds2()) || this.matches(MediaType.opds2Publication()) || this.matches(MediaType.opdsAuthentication());\n  }\n  /** Returns whether this media type is of an audio clip. */\n  ;\n\n  _proto.isAudio = function isAudio() {\n    return this.type === 'audio';\n  }\n  /** Returns whether this media type is of a bitmap image, so excluding vectorial formats. */\n  ;\n\n  _proto.isBitmap = function isBitmap() {\n    return this.matches(MediaType.bmp()) || this.matches(MediaType.gif()) || this.matches(MediaType.jpeg()) || this.matches(MediaType.png()) || this.matches(MediaType.tiff()) || this.matches(MediaType.webp());\n  }\n  /** Returns whether this media type is of an HTML document. */\n  ;\n\n  _proto.isHTML = function isHTML() {\n    return this.matches(MediaType.html()) || this.matches(MediaType.xhtml());\n  }\n  /** Returns whether this media type is of a video clip. */\n  ;\n\n  _proto.isVideo = function isVideo() {\n    return this.type === 'video';\n  }\n  /** Returns whether this media type is of a Readium Web Publication Manifest. */\n  ;\n\n  _proto.isRWPM = function isRWPM() {\n    return this.matches(MediaType.readiumAudiobookManifest()) || this.matches(MediaType.divinaManifest()) || this.matches(MediaType.readiumWebPubManifest());\n  } // Known Media Types\n  ;\n\n  MediaType.aac = function aac() {\n    return new this('audio/aac');\n  };\n\n  MediaType.aiff = function aiff() {\n    return new this('audio/aiff');\n  };\n\n  MediaType.readiumAudiobook = function readiumAudiobook() {\n    return new this('application/audiobook+zip');\n  };\n\n  MediaType.readiumAudiobookManifest = function readiumAudiobookManifest() {\n    return new this('application/audiobook+json');\n  };\n\n  MediaType.avi = function avi() {\n    return new this('video/x-msvideo');\n  };\n\n  MediaType.binary = function binary() {\n    return new this('application/octet-stream');\n  };\n\n  MediaType.bmp = function bmp() {\n    return new this('image/bmp');\n  };\n\n  MediaType.cbz = function cbz() {\n    return new this('application/vnd.comicbook+zip');\n  };\n\n  MediaType.css = function css() {\n    return new this('text/css');\n  };\n\n  MediaType.divina = function divina() {\n    return new this('application/divina+zip');\n  };\n\n  MediaType.divinaManifest = function divinaManifest() {\n    return new this('application/divina+json');\n  };\n\n  MediaType.epub = function epub() {\n    return new this('application/epub+zip');\n  };\n\n  MediaType.gif = function gif() {\n    return new this('image/gif');\n  };\n\n  MediaType.gz = function gz() {\n    return new this('application/gzip');\n  };\n\n  MediaType.html = function html() {\n    return new this('text/html');\n  };\n\n  MediaType.javascript = function javascript() {\n    return new this('text/javascript');\n  };\n\n  MediaType.jpeg = function jpeg() {\n    return new this('image/jpeg');\n  };\n\n  MediaType.json = function json() {\n    return new this('application/json');\n  };\n\n  MediaType.lpf = function lpf() {\n    return new this('application/audiobook+lcp');\n  };\n\n  MediaType.mp3 = function mp3() {\n    return new this('audio/mpeg');\n  };\n\n  MediaType.mpeg = function mpeg() {\n    return new this('video/mpeg');\n  };\n\n  MediaType.ncx = function ncx() {\n    return new this('application/x-dtbncx+xml');\n  };\n\n  MediaType.ogg = function ogg() {\n    return new this('audio/ogg');\n  };\n\n  MediaType.ogv = function ogv() {\n    return new this('video/ogg');\n  };\n\n  MediaType.opds1 = function opds1() {\n    return new this('application/atom+xml;profile=opds-catalog');\n  };\n\n  MediaType.opds1Entry = function opds1Entry() {\n    return new this('application/atom+xml;type=entry;profile=opds-catalog');\n  };\n\n  MediaType.opds2 = function opds2() {\n    return new this('application/opds+json');\n  };\n\n  MediaType.opds2Publication = function opds2Publication() {\n    return new this('application/opds-publication+json');\n  };\n\n  MediaType.opdsAuthentication = function opdsAuthentication() {\n    return new this('application/opds-authentication+json');\n  };\n\n  MediaType.opus = function opus() {\n    return new this('audio/opus');\n  };\n\n  MediaType.otf = function otf() {\n    return new this('font/otf');\n  };\n\n  MediaType.pdf = function pdf() {\n    return new this('application/pdf');\n  };\n\n  MediaType.png = function png() {\n    return new this('image/png');\n  };\n\n  MediaType.smil = function smil() {\n    return new this('application/smil+xml');\n  };\n\n  MediaType.svg = function svg() {\n    return new this('image/svg+xml');\n  };\n\n  MediaType.text = function text() {\n    return new this('text/plain');\n  };\n\n  MediaType.tiff = function tiff() {\n    return new this('image/tiff');\n  };\n\n  MediaType.ttf = function ttf() {\n    return new this('font/ttf');\n  };\n\n  MediaType.wav = function wav() {\n    return new this('audio/wav');\n  };\n\n  MediaType.webmAudio = function webmAudio() {\n    return new this('audio/webm');\n  };\n\n  MediaType.webmVideo = function webmVideo() {\n    return new this('video/webm');\n  };\n\n  MediaType.webp = function webp() {\n    return new this('image/webp');\n  };\n\n  MediaType.readiumWebPub = function readiumWebPub() {\n    return new this('application/webpub+zip');\n  };\n\n  MediaType.readiumWebPubManifest = function readiumWebPubManifest() {\n    return new this('application/webpub+json');\n  };\n\n  MediaType.w3cWPUBManifest = function w3cWPUBManifest() {\n    return new this('application/x.readium.w3c.wpub+json');\n  };\n\n  MediaType.woff = function woff() {\n    return new this('font/woff');\n  };\n\n  MediaType.woff2 = function woff2() {\n    return new this('font/woff2');\n  };\n\n  MediaType.xhtml = function xhtml() {\n    return new this('application/xhtml+xml');\n  };\n\n  MediaType.xml = function xml() {\n    return new this('application/xml');\n  };\n\n  MediaType.zab = function zab() {\n    return new this('application/x.readium.zab+zip');\n  };\n\n  MediaType.zip = function zip() {\n    return new this('application/zip');\n  };\n\n  return MediaType;\n}();\n\n/* Copyright 2020 Readium Foundation. All rights reserved.\r\n * Use of this source code is governed by a BSD-style license,\r\n * available in the LICENSE file present in the Github repository of the project.\r\n */\nvar Properties = /*#__PURE__*/function () {\n  function Properties(json) {\n    if (typeof json === 'string') {\n      this.otherProperties = JSON.parse(json);\n    } else {\n      this.otherProperties = json;\n    }\n  }\n\n  var _proto = Properties.prototype;\n\n  _proto.adding = function adding(properties) {\n    var copy = JSON.parse(JSON.stringify(this.otherProperties));\n\n    for (var property in properties) {\n      copy[property] = properties[property];\n    }\n\n    return new Properties(copy);\n  };\n\n  return Properties;\n}();\n\n/* Copyright 2020 Readium Foundation. All rights reserved.\r\n * Use of this source code is governed by a BSD-style license,\r\n * available in the LICENSE file present in the Github repository of the project.\r\n */\n\n/** A lightweight implementation of URI Template (RFC 6570).\r\n *  Only handles simple cases, fitting Readium's use cases.\r\n *  See https://tools.ietf.org/html/rfc6570\r\n *\r\n *  TODO: extensive testing\r\n */\nvar URITemplate = /*#__PURE__*/function () {\n  function URITemplate(uri) {\n    this.uri = uri;\n    /** List of URI template parameter keys. */\n\n    this.parameters = this.getParameters(uri);\n  }\n\n  var _proto = URITemplate.prototype;\n\n  _proto.getParameters = function getParameters(uri) {\n    var regex = /\\{\\??([^}]+)\\}/g;\n    var match = uri.match(regex);\n\n    if (match) {\n      return new Set(match.join(',').replace(regex, '$1').split(',').map(function (m) {\n        return m.trim();\n      }));\n    }\n\n    return new Set();\n  }\n  /** Expands the URI by replacing the template variables by the given parameters.\r\n   *  Any extra parameter is appended as query parameters.\r\n   *  See RFC 6570 on URI template: https://tools.ietf.org/html/rfc6570\r\n   */\n  ;\n\n  _proto.expand = function expand(parameters) {\n    var expandSimpleString = function expandSimpleString(string) {\n      return string.split(',').map(function (parameter) {\n        return parameters[parameter] || '';\n      }).join(',');\n    };\n\n    var expandFormStyle = function expandFormStyle(string) {\n      return '?' + string.split(',').map(function (expression) {\n        var parameter = expression.split('=')[0];\n\n        if (parameters[parameter]) {\n          return parameter + \"=\" + parameters[parameter];\n        } else {\n          return '';\n        }\n      }).join('&');\n    };\n\n    return this.uri.replace(/\\{(\\??)([^}]+)\\}/g, function () {\n      return !(arguments.length <= 1 ? undefined : arguments[1]) ? expandSimpleString(arguments.length <= 2 ? undefined : arguments[2]) : expandFormStyle(arguments.length <= 2 ? undefined : arguments[2]);\n    });\n  };\n\n  return URITemplate;\n}();\n\n/** Link Object for the Readium Web Publication Manifest.\r\n *  https://readium.org/webpub-manifest/schema/link.schema.json\r\n */\n\nvar Link = /*#__PURE__*/function () {\n  function Link(link) {\n    this.href = link.href;\n    this.templated = link.templated;\n    this.type = link.type;\n    this.title = link.title;\n    this.rels = new Set(link.rel);\n    this.properties = new Properties(link.properties);\n    this.height = link.height;\n    this.width = link.width;\n    this.duration = link.duration;\n    this.bitrate = link.bitrate;\n    this.languages = link.language;\n    this.alternates = link.alternate ? new Links(link.alternate) : new Links([]);\n    this.children = link.children ? new Links(link.children) : new Links([]);\n    this.mediaType = link.type ? new MediaType(link.type) : undefined;\n    this.templateParameters = this.getTemplateParameters();\n  }\n  /** Computes an absolute URL to the link, relative to the given `baseURL`.\r\n   *  If the link's `href` is already absolute, the `baseURL` is ignored.\r\n   */\n\n\n  var _proto = Link.prototype;\n\n  _proto.toAbsoluteHREF = function toAbsoluteHREF(baseUrl) {\n    return new URL(this.href, baseUrl).href;\n  }\n  /** List of URI template parameter keys, if the `Link` is templated. */\n  ;\n\n  _proto.getTemplateParameters = function getTemplateParameters() {\n    if (!this.templated) {\n      return new Set();\n    } else {\n      return new URITemplate(this.href).parameters;\n    }\n  }\n  /** Expands the `Link`'s HREF by replacing URI template variables by the given parameters.\r\n   *  See RFC 6570 on URI template: https://tools.ietf.org/html/rfc6570\r\n   */\n  ;\n\n  _proto.expandTemplate = function expandTemplate(parameters) {\n    // Probably make copy instead of a new one\n    return new Link({\n      href: new URITemplate(this.href).expand(parameters),\n      templated: false\n    });\n  };\n\n  return Link;\n}();\n/** Parses multiple JSON links into an array of Link. */\n\nvar Links = /*#__PURE__*/function (_Array) {\n  _inheritsLoose(Links, _Array);\n\n  function Links(items) {\n    var _this;\n\n    if (items instanceof Array) {\n      _this = _Array.call.apply(_Array, [this].concat(items.map(function (item) {\n        return new Link(item);\n      }))) || this;\n    } else {\n      _this = _Array.call(this, items) || this;\n    }\n\n    Object.setPrototypeOf(_assertThisInitialized(_this), (this instanceof Links ? this.constructor : void 0).prototype);\n    return _assertThisInitialized(_this);\n  }\n  /** Finds the first link with the given relation. */\n\n\n  var _proto2 = Links.prototype;\n\n  _proto2.findWithRel = function findWithRel(rel) {\n    var predicate = function predicate(el) {\n      return el.rels.has(rel);\n    };\n\n    return this.find(predicate) || null;\n  }\n  /** Finds all the links with the given relation. */\n  ;\n\n  _proto2.filterByRel = function filterByRel(rel) {\n    var predicate = function predicate(el) {\n      return el.rels.has(rel);\n    };\n\n    return this.filter(predicate);\n  }\n  /** Finds the first link matching the given HREF. */\n  ;\n\n  _proto2.findWithHref = function findWithHref(href) {\n    var predicate = function predicate(el) {\n      return el.href === href;\n    };\n\n    return this.find(predicate) || null;\n  }\n  /** Finds the index of the first link matching the given HREF. */\n  ;\n\n  _proto2.findIndexWithHref = function findIndexWithHref(href) {\n    var predicate = function predicate(el) {\n      return el.href === href;\n    };\n\n    return this.findIndex(predicate);\n  }\n  /** Finds the first link matching the given media type. */\n  ;\n\n  _proto2.findWithMediaType = function findWithMediaType(mediaType) {\n    var predicate = function predicate(el) {\n      return el.mediaType ? el.mediaType.matches(mediaType) : false;\n    };\n\n    return this.find(predicate) || null;\n  }\n  /** Finds all the links matching the given media type. */\n  ;\n\n  _proto2.filterByMediaType = function filterByMediaType(mediaType) {\n    var predicate = function predicate(el) {\n      return el.mediaType ? el.mediaType.matches(mediaType) : false;\n    };\n\n    return this.filter(predicate);\n  }\n  /** Finds all the links matching any of the given media types. */\n  ;\n\n  _proto2.filterByMediaTypes = function filterByMediaTypes(mediaTypes) {\n    var predicate = function predicate(el) {\n      for (var _iterator = _createForOfIteratorHelperLoose(mediaTypes), _step; !(_step = _iterator()).done;) {\n        var mediaType = _step.value;\n        return el.mediaType ? el.mediaType.matches(mediaType) : false;\n      }\n\n      return false;\n    };\n\n    return this.filter(predicate);\n  }\n  /** Returns whether all the resources in the collection are audio clips. */\n  ;\n\n  _proto2.everyIsAudio = function everyIsAudio() {\n    var predicate = function predicate(el) {\n      return el.mediaType ? el.mediaType.isAudio() : false;\n    };\n\n    return this.every(predicate);\n  }\n  /** Returns whether all the resources in the collection are bitmaps. */\n  ;\n\n  _proto2.everyIsBitmap = function everyIsBitmap() {\n    var predicate = function predicate(el) {\n      return el.mediaType ? el.mediaType.isBitmap() : false;\n    };\n\n    return this.every(predicate);\n  }\n  /** Returns whether all the resources in the collection are HTML documents. */\n  ;\n\n  _proto2.everyIsHTML = function everyIsHTML() {\n    var predicate = function predicate(el) {\n      return el.mediaType ? el.mediaType.isHTML() : false;\n    };\n\n    return this.every(predicate);\n  }\n  /** Returns whether all the resources in the collection are video clips. */\n  ;\n\n  _proto2.everyIsVideo = function everyIsVideo() {\n    var predicate = function predicate(el) {\n      return el.mediaType ? el.mediaType.isVideo() : false;\n    };\n\n    return this.every(predicate);\n  }\n  /** Returns whether all the resources in the collection are matching any of the given media types. */\n  ;\n\n  _proto2.everyMatchesMediaType = function everyMatchesMediaType(mediaTypes) {\n    if (Array.isArray(mediaTypes)) {\n      return this.every(function (el) {\n        for (var _iterator2 = _createForOfIteratorHelperLoose(mediaTypes), _step2; !(_step2 = _iterator2()).done;) {\n          var mediaType = _step2.value;\n          return el.mediaType ? el.mediaType.matches(mediaType) : false;\n        }\n\n        return false;\n      });\n    } else {\n      return this.every(function (el) {\n        return el.mediaType ? el.mediaType.matches(mediaTypes) : false;\n      });\n    }\n  };\n\n  return Links;\n}( /*#__PURE__*/_wrapNativeSuper(Array));\n\n/* Copyright 2020 Readium Foundation. All rights reserved.\r\n * Use of this source code is governed by a BSD-style license,\r\n * available in the LICENSE file present in the Github repository of the project.\r\n */\n/** Core Collection Model\r\n *  https://readium.org/webpub-manifest/schema/subcollection.schema.json\r\n *  Can be used as extension point in the Readium Web Publication Manifest.\r\n */\n\nvar CoreCollection = /*#__PURE__*/function () {\n  function CoreCollection(json) {\n    if (Array.isArray(json)) {\n      this.links = new Links(json);\n    } else {\n      var jsonCollection = new JSONDictionary(json);\n      this.metadata = jsonCollection.parseRaw('metadata');\n      this.links = new Links(jsonCollection.parseArray('links'));\n      this.subcollections = CoreCollection.makeCollections(jsonCollection);\n    }\n  }\n\n  CoreCollection.makeCollections = function makeCollections(json) {\n    var collection = {};\n\n    for (var key in json) {\n      collection[key] = new this(json[key]);\n    }\n\n    return collection;\n  };\n\n  return CoreCollection;\n}();\n\n/* Copyright 2020 Readium Foundation. All rights reserved.\r\n * Use of this source code is governed by a BSD-style license,\r\n * available in the LICENSE file present in the Github repository of the project.\r\n */\nvar ReadingProgression;\n\n(function (ReadingProgression) {\n  ReadingProgression[\"auto\"] = \"auto\";\n  ReadingProgression[\"btt\"] = \"btt\";\n  ReadingProgression[\"ltr\"] = \"ltr\";\n  ReadingProgression[\"rtl\"] = \"rtl\";\n  ReadingProgression[\"ttb\"] = \"ttb\";\n})(ReadingProgression || (ReadingProgression = {})); // Note: Babel doesn’t really like that at all so disabling for the time being\n // }\n\n/* Copyright 2020 Readium Foundation. All rights reserved.\r\n * Use of this source code is governed by a BSD-style license,\r\n * available in the LICENSE file present in the Github repository of the project.\r\n */\nvar Metadata = /*#__PURE__*/function () {\n  function Metadata(metadata) {\n    var json = new JSONDictionary(metadata);\n    this.title = json.parseRaw('title');\n    this['@type'] = json.parseRaw('@type');\n    this.identifier = json.parseRaw('identifier');\n    this.subtitle = json.parseRaw('subtitle');\n    this.artists = json.parseArray('artist');\n    this.authors = json.parseArray('author');\n    this.colorists = json.parseArray('colorist');\n    this.contributors = json.parseArray('contributor');\n    this.editors = json.parseArray('editor');\n    this.illustrators = json.parseArray('illustrator');\n    this.inkers = json.parseArray('inker');\n    this.letterers = json.parseArray('letterer');\n    this.narrators = json.parseArray('narrator');\n    this.pencilers = json.parseArray('penciler');\n    this.translators = json.parseArray('translator');\n    this.languages = json.parseArray('language');\n    this.description = json.parseRaw('description');\n    this.publishers = json.parseArray('publisher');\n    this.imprints = json.parseArray('imprint');\n    this.published = json.parseDate('published');\n    this.modified = json.parseDate('modified');\n    this.subjects = json.parseArray('subject');\n    var belongsTo = json.parseRaw('belongsTo');\n    this.belongsToCollection = belongsTo ? belongsTo['collection'] : [];\n    this.belongsToSeries = belongsTo ? belongsTo['series'] : [];\n    this.readingProgression = json.parseRaw('readingProgression') || ReadingProgression.auto;\n    this.duration = json.parsePositive('duration');\n    this.numberOfPages = json.parsePositive('numberOfPages');\n    this.otherMetadata = json.json;\n  }\n  /** Computes a `ReadingProgression` when the value of `readingProgression` is set to `auto`,\r\n   *  using the publication language.\r\n   */\n\n\n  var _proto = Metadata.prototype;\n\n  _proto.effectiveReadingProgression = function effectiveReadingProgression() {\n    if (this.readingProgression && this.readingProgression !== ReadingProgression.auto) {\n      return this.readingProgression;\n    }\n\n    if (this.languages.length > 0) {\n      var primaryLang = this.languages[0];\n      var lang = primaryLang.includes('zh') ? primaryLang : primaryLang.split('-')[0];\n\n      if (Metadata.RTLLanguages.includes(lang)) {\n        return ReadingProgression.rtl;\n      }\n    }\n\n    return ReadingProgression.ltr;\n  };\n\n  _proto.getOtherMetadata = function getOtherMetadata() {\n    return this.otherMetadata;\n  };\n\n  return Metadata;\n}();\n/* public otherMetadata */\n\nMetadata.RTLLanguages = ['ar', 'fa', 'he', 'zh-Hant', 'zh-TW'];\n\n/* Copyright 2020 Readium Foundation. All rights reserved.\r\n * Use of this source code is governed by a BSD-style license,\r\n * available in the LICENSE file present in the Github repository of the project.\r\n */\n/** Holds the metadata of a Readium publication, as described in\r\n *  the Readium Web Publication Manifest.\r\n *  See. https://readium.org/webpub-manifest/\r\n */\n\nvar Manifest = /*#__PURE__*/function () {\n  function Manifest(manifestJSON) {\n    var json = new JSONDictionary(manifestJSON);\n    this.context = json.parseArray('@context');\n    this.metadata = new Metadata(json.parseRaw('metadata'));\n    this.links = new Links(json.parseArray('links'));\n    this.readingOrder = new Links(json.parseArray('readingOrder'));\n    this.resources = new Links(json.parseArray('resources'));\n    this.tableOfContents = new Links(json.parseArray('toc'));\n    this.subcollections = CoreCollection.makeCollections(json.json);\n  }\n  /** Finds the first link with the given relation in the manifest's links. */\n\n\n  var _proto = Manifest.prototype;\n\n  _proto.linkWithRel = function linkWithRel(rel) {\n    var links = [this.readingOrder, this.resources, this.links];\n    var result = null;\n\n    for (var _i = 0, _links = links; _i < _links.length; _i++) {\n      var collection = _links[_i];\n      result = collection.findWithRel(rel);\n\n      if (result !== null) {\n        return result;\n      }\n    }\n\n    return result;\n  }\n  /** Finds all the links with the given relation in the manifest's links. */\n  ;\n\n  _proto.linksWithRel = function linksWithRel(rel) {\n    var result = [];\n    result.push(this.readingOrder.filterByRel(rel), this.resources.filterByRel(rel), this.links.filterByRel(rel));\n    return result.reduce(function (acc, val) {\n      return acc.concat(val);\n    }, []);\n  };\n\n  return Manifest;\n}();\n\n/* Copyright 2020 Readium Foundation. All rights reserved.\r\n * Use of this source code is governed by a BSD-style license,\r\n * available in the LICENSE file present in the Github repository of the project.\r\n */\n\n/** Shared model for a Readium Publication. */\nvar Publication = /*#__PURE__*/function () {\n  function Publication(manifest) {\n    this.manifest = manifest;\n    this.metadata = this.manifest.metadata;\n    this.links = this.manifest.links;\n    /** Identifies a list of resources in reading order for the publication. */\n\n    this.readingOrder = this.manifest.readingOrder;\n    /** Identifies resources that are necessary for rendering the publication. */\n\n    this.resources = this.manifest.resources;\n    /** Identifies the collection that contains a table of contents. */\n\n    this.tableOfContents = this.manifest.tableOfContents;\n    this.subcollections = this.manifest.subcollections;\n  }\n  /** The URL where this publication is served, computed from the `Link` with `self` relation.\r\n   *  e.g. https://provider.com/pub1293/manifest.json gives https://provider.com/pub1293/\r\n   */\n\n\n  var _proto = Publication.prototype;\n\n  _proto.baseURL = function baseURL() {\n    var selfLink = this.manifest.links.find(function (el) {\n      return el.rels.has('self');\n    });\n\n    if (selfLink) {\n      return selfLink.href;\n    } else {\n      return null;\n    }\n  }\n  /** Finds the first Link having the given `href` in the publication's links. */\n  ;\n\n  _proto.linkWithHref = function linkWithHref(href) {\n    var find = function find(links) {\n      var result = null;\n\n      for (var _iterator = _createForOfIteratorHelperLoose(links), _step; !(_step = _iterator()).done;) {\n        var collection = _step.value;\n        result = collection.findWithHref(href);\n\n        if (result !== null) {\n          return result;\n        }\n      }\n\n      var children = links.flatMap(function (item) {\n        var arr = [];\n\n        for (var _iterator2 = _createForOfIteratorHelperLoose(item), _step2; !(_step2 = _iterator2()).done;) {\n          var _link = _step2.value;\n\n          if (_link.alternates) {\n            arr.push(_link.alternates);\n          }\n\n          if (_link.children) {\n            arr.push(_link.children);\n          }\n        }\n\n        return arr;\n      });\n      find(children);\n      return result;\n    };\n\n    var links = [this.manifest.readingOrder, this.manifest.resources, this.manifest.links];\n    var link = find(links);\n\n    if (link !== null) {\n      return link;\n    }\n\n    var shortHref = href.split(/[#\\?]/)[0];\n    this.linkWithHref(shortHref);\n    return link;\n  }\n  /** Finds the first link with the given relation in the publication's links. */\n  ;\n\n  _proto.linkWithRel = function linkWithRel(rel) {\n    return this.manifest.linkWithRel(rel);\n  }\n  /** Finds all the links with the given relation in the publication's links. */\n  ;\n\n  _proto.linksWithRel = function linksWithRel(rel) {\n    return this.manifest.linksWithRel(rel);\n  };\n\n  return Publication;\n}();\n\nfunction api() {\n  var createManifest = function createManifest(json) {\n    return new Manifest(json);\n  };\n\n  var createPublication = function createPublication(manifest) {\n    return new Publication(manifest);\n  }; //for test\n\n\n  var getData = function getData(x) {\n    return \"hi - \" + x;\n  };\n\n  var _api = {\n    createManifest: createManifest,\n    createPublication: createPublication,\n    getData: getData\n  };\n  return _api;\n}\n//   if ('development' === process.env.NODE_ENV) {\n//     console.log('boop');\n//   }\n//   return a + b;\n// };\n\n/* harmony default export */ __webpack_exports__[\"default\"] = (api);\n\n//# sourceMappingURL=shared-test.esm.js.map\n\n\n//# sourceURL=webpack://jellybookslib/../shared-models/dist/shared-test.esm.js?");
-
-/***/ }),
-
-/***/ "./main.ts":
-/*!*****************!*\
-  !*** ./main.ts ***!
-  \*****************/
+/***/ "../shared-models/dist/index.js":
+/*!**************************************!*\
+  !*** ../shared-models/dist/index.js ***!
+  \**************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("\nObject.defineProperty(exports, \"__esModule\", { value: true });\nvar shared_test_1 = __webpack_require__(/*! @jellybooks/shared-test */ \"../shared-models/dist/shared-test.esm.js\");\nvar textElement = document.getElementById(\"text\");\nvar lib = shared_test_1.default();\n//textElement.innerText = lib.getData('test');\nfetch(\"manifest.json\")\n    .then(function (response) { return response.json(); })\n    .then(function (json) {\n    var manifest = lib.createManifest(json);\n    var pubObj = lib.createPublication(manifest);\n    textElement.innerText = JSON.stringify(pubObj, null, 2);\n});\n\n\n//# sourceURL=webpack://jellybookslib/./main.ts?");
+
+
+
+if (false) {} else {
+  module.exports = __webpack_require__(/*! ./shared-test.cjs.development.js */ "../shared-models/dist/shared-test.cjs.development.js")
+}
+
+
+/***/ }),
+
+/***/ "../shared-models/dist/shared-test.cjs.development.js":
+/*!************************************************************!*\
+  !*** ../shared-models/dist/shared-test.cjs.development.js ***!
+  \************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+/* Copyright 2020 Readium Foundation. All rights reserved.
+ * Use of this source code is governed by a BSD-style license,
+ * available in the LICENSE file present in the Github repository of the project.
+ */
+
+/** Wraps a dictionary parsed from a JSON string or a JSON Object */
+var JSONDictionary = /*#__PURE__*/function () {
+  function JSONDictionary(json) {
+    if (typeof json === 'string') {
+      this.json = JSON.parse(json);
+    } else {
+      this.json = json;
+    }
+  }
+  /** Removes the given property and returns its value */
+
+
+  var _proto = JSONDictionary.prototype;
+
+  _proto.pop = function pop(key) {
+    var value = this.json[key];
+    delete this.json[key];
+    return value;
+  }
+  /** Parses the given property AS-IS and removes it */
+  ;
+
+  _proto.parseRaw = function parseRaw(key) {
+    return this.pop(key);
+  }
+  /** Parses the given array and removes it
+   *  Parameter allowingSingle: If true, then allows the parsing of both a single value and an array.
+   */
+  ;
+
+  _proto.parseArray = function parseArray(key, allowingSingle) {
+    if (allowingSingle === void 0) {
+      allowingSingle = false;
+    }
+
+    var result = this.pop(key);
+
+    if (Array.isArray(result)) {
+      return result;
+    } else if (allowingSingle) {
+      return [result];
+    }
+
+    return [];
+  }
+  /** Parses a numeric value, but returns null if it is not */
+  ;
+
+  _proto.parseNumber = function parseNumber(key) {
+    var result = this.pop(key);
+
+    if (!isNaN(result)) {
+      return result;
+    }
+
+    return null;
+  }
+  /** Parses a numeric value, but returns null if it is not a positive number. */
+  ;
+
+  _proto.parsePositive = function parsePositive(key) {
+    var result = this.pop(key);
+
+    if (!isNaN(result) && Math.sign(result) >= 0) {
+      return result;
+    }
+
+    return null;
+  }
+  /** Parses the given key and returns a Date (or null if it’s not a string) */
+  ;
+
+  _proto.parseDate = function parseDate(key) {
+    var result = this.pop(key);
+
+    if (typeof result === 'string') {
+      return new Date(result);
+    }
+
+    return null;
+  };
+
+  return JSONDictionary;
+}();
+
+function _inheritsLoose(subClass, superClass) {
+  subClass.prototype = Object.create(superClass.prototype);
+  subClass.prototype.constructor = subClass;
+
+  _setPrototypeOf(subClass, superClass);
+}
+
+function _getPrototypeOf(o) {
+  _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+    return o.__proto__ || Object.getPrototypeOf(o);
+  };
+  return _getPrototypeOf(o);
+}
+
+function _setPrototypeOf(o, p) {
+  _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+    o.__proto__ = p;
+    return o;
+  };
+
+  return _setPrototypeOf(o, p);
+}
+
+function _isNativeReflectConstruct() {
+  if (typeof Reflect === "undefined" || !Reflect.construct) return false;
+  if (Reflect.construct.sham) return false;
+  if (typeof Proxy === "function") return true;
+
+  try {
+    Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function _construct(Parent, args, Class) {
+  if (_isNativeReflectConstruct()) {
+    _construct = Reflect.construct;
+  } else {
+    _construct = function _construct(Parent, args, Class) {
+      var a = [null];
+      a.push.apply(a, args);
+      var Constructor = Function.bind.apply(Parent, a);
+      var instance = new Constructor();
+      if (Class) _setPrototypeOf(instance, Class.prototype);
+      return instance;
+    };
+  }
+
+  return _construct.apply(null, arguments);
+}
+
+function _isNativeFunction(fn) {
+  return Function.toString.call(fn).indexOf("[native code]") !== -1;
+}
+
+function _wrapNativeSuper(Class) {
+  var _cache = typeof Map === "function" ? new Map() : undefined;
+
+  _wrapNativeSuper = function _wrapNativeSuper(Class) {
+    if (Class === null || !_isNativeFunction(Class)) return Class;
+
+    if (typeof Class !== "function") {
+      throw new TypeError("Super expression must either be null or a function");
+    }
+
+    if (typeof _cache !== "undefined") {
+      if (_cache.has(Class)) return _cache.get(Class);
+
+      _cache.set(Class, Wrapper);
+    }
+
+    function Wrapper() {
+      return _construct(Class, arguments, _getPrototypeOf(this).constructor);
+    }
+
+    Wrapper.prototype = Object.create(Class.prototype, {
+      constructor: {
+        value: Wrapper,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+    return _setPrototypeOf(Wrapper, Class);
+  };
+
+  return _wrapNativeSuper(Class);
+}
+
+function _assertThisInitialized(self) {
+  if (self === void 0) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+
+  return self;
+}
+
+function _unsupportedIterableToArray(o, minLen) {
+  if (!o) return;
+  if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+  var n = Object.prototype.toString.call(o).slice(8, -1);
+  if (n === "Object" && o.constructor) n = o.constructor.name;
+  if (n === "Map" || n === "Set") return Array.from(o);
+  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+}
+
+function _arrayLikeToArray(arr, len) {
+  if (len == null || len > arr.length) len = arr.length;
+
+  for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+
+  return arr2;
+}
+
+function _createForOfIteratorHelperLoose(o, allowArrayLike) {
+  var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"];
+  if (it) return (it = it.call(o)).next.bind(it);
+
+  if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
+    if (it) o = it;
+    var i = 0;
+    return function () {
+      if (i >= o.length) return {
+        done: true
+      };
+      return {
+        done: false,
+        value: o[i++]
+      };
+    };
+  }
+
+  throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+
+/* Copyright 2020 Readium Foundation. All rights reserved.
+ * Use of this source code is governed by a BSD-style license,
+ * available in the LICENSE file present in the Github repository of the project.
+ */
+
+/** Represents a string media type.
+ *  `MediaType` handles:
+ *  - components parsing – eg. type, subtype and parameters,
+ *  - media types comparison.
+ */
+var MediaType = /*#__PURE__*/function () {
+  function MediaType(mediaType) {
+    this.type = '';
+    this.subtype = '';
+    var components = mediaType.replace(/\s/g, '').split(';');
+    var types = components[0].split('/');
+
+    if (types.length === 2) {
+      this.type = types[0].toLowerCase();
+      this.subtype = types[1].toLowerCase();
+    }
+
+    var parameters = {};
+
+    for (var i = 1; i < components.length; i++) {
+      var component = components[i].split('=');
+
+      if (component.length === 2) {
+        var key = component[0];
+        var value = component[1];
+        parameters[key] = value;
+      }
+    }
+
+    this.parameters = parameters;
+    var parametersString = '';
+
+    for (var p in parameters) {
+      var _value = parameters[p];
+      parametersString += ";" + p + "=" + _value;
+    }
+
+    this.string = this.type + "/" + this.subtype + parametersString;
+    this.encoding = parameters['encoding'];
+  }
+  /** Structured syntax suffix, e.g. `+zip` in `application/epub+zip`.
+   *  Gives a hint on the underlying structure of this media type.
+   *  See. https://tools.ietf.org/html/rfc6838#section-4.2.8
+   */
+
+
+  var _proto = MediaType.prototype;
+
+  _proto.structuredSyntaxSuffix = function structuredSyntaxSuffix() {
+    var parts = this.subtype.split('+');
+    return parts.length > 1 ? "+" + parts[parts.length - 1] : null;
+  }
+  /** Returns whether the given `other` media type is included in this media type.
+   *  For example, `text/html` contains `text/html;charset=utf-8`.
+   *  - `other` must match the parameters in the `parameters` property, but extra parameters
+   *  are ignored.
+   *  - Order of parameters is ignored.
+   *  - Wildcards are supported, meaning that `image/*` contains `image/png`
+   */
+  ;
+
+  _proto.contains = function contains(other) {
+    if (typeof other === 'string' || other instanceof String) {
+      other = new MediaType(other);
+    }
+
+    if ((this.type === '*' || this.type === other.type) && (this.subtype === '*' || this.subtype === other.subtype)) {
+      return true;
+    }
+
+    return false;
+  }
+  /** Returns whether this media type and `other` are the same, ignoring parameters that
+   *  are not in both media types.
+   *  For example, `text/html` matches `text/html;charset=utf-8`, but `text/html;charset=ascii`
+   *  doesn't. This is basically like `contains`, but working in both direction.
+   */
+  ;
+
+  _proto.matches = function matches(other) {
+    if (typeof other === 'string' || other instanceof String) {
+      other = new MediaType(other);
+    }
+
+    return this.contains(other) || other.contains(this);
+  }
+  /** Checks the MediaType equals another one (comparing their string) */
+  ;
+
+  _proto.equals = function equals(other) {
+    return this.string === other.string;
+  }
+  /** Returns whether this media type is structured as a ZIP archive. */
+  ;
+
+  _proto.isZIP = function isZIP() {
+    return this.matches(MediaType.zip()) || this.structuredSyntaxSuffix() === '+zip';
+  }
+  /** Returns whether this media type is structured as a JSON file. */
+  ;
+
+  _proto.isJSON = function isJSON() {
+    return this.matches(MediaType.json()) || this.structuredSyntaxSuffix() === '+json';
+  }
+  /** Returns whether this media type is of an OPDS feed. */
+  ;
+
+  _proto.isOPDS = function isOPDS() {
+    return this.matches(MediaType.opds1()) || this.matches(MediaType.opds1Entry()) || this.matches(MediaType.opds2()) || this.matches(MediaType.opds2Publication()) || this.matches(MediaType.opdsAuthentication());
+  }
+  /** Returns whether this media type is of an audio clip. */
+  ;
+
+  _proto.isAudio = function isAudio() {
+    return this.type === 'audio';
+  }
+  /** Returns whether this media type is of a bitmap image, so excluding vectorial formats. */
+  ;
+
+  _proto.isBitmap = function isBitmap() {
+    return this.matches(MediaType.bmp()) || this.matches(MediaType.gif()) || this.matches(MediaType.jpeg()) || this.matches(MediaType.png()) || this.matches(MediaType.tiff()) || this.matches(MediaType.webp());
+  }
+  /** Returns whether this media type is of an HTML document. */
+  ;
+
+  _proto.isHTML = function isHTML() {
+    return this.matches(MediaType.html()) || this.matches(MediaType.xhtml());
+  }
+  /** Returns whether this media type is of a video clip. */
+  ;
+
+  _proto.isVideo = function isVideo() {
+    return this.type === 'video';
+  }
+  /** Returns whether this media type is of a Readium Web Publication Manifest. */
+  ;
+
+  _proto.isRWPM = function isRWPM() {
+    return this.matches(MediaType.readiumAudiobookManifest()) || this.matches(MediaType.divinaManifest()) || this.matches(MediaType.readiumWebPubManifest());
+  } // Known Media Types
+  ;
+
+  MediaType.aac = function aac() {
+    return new this('audio/aac');
+  };
+
+  MediaType.aiff = function aiff() {
+    return new this('audio/aiff');
+  };
+
+  MediaType.readiumAudiobook = function readiumAudiobook() {
+    return new this('application/audiobook+zip');
+  };
+
+  MediaType.readiumAudiobookManifest = function readiumAudiobookManifest() {
+    return new this('application/audiobook+json');
+  };
+
+  MediaType.avi = function avi() {
+    return new this('video/x-msvideo');
+  };
+
+  MediaType.binary = function binary() {
+    return new this('application/octet-stream');
+  };
+
+  MediaType.bmp = function bmp() {
+    return new this('image/bmp');
+  };
+
+  MediaType.cbz = function cbz() {
+    return new this('application/vnd.comicbook+zip');
+  };
+
+  MediaType.css = function css() {
+    return new this('text/css');
+  };
+
+  MediaType.divina = function divina() {
+    return new this('application/divina+zip');
+  };
+
+  MediaType.divinaManifest = function divinaManifest() {
+    return new this('application/divina+json');
+  };
+
+  MediaType.epub = function epub() {
+    return new this('application/epub+zip');
+  };
+
+  MediaType.gif = function gif() {
+    return new this('image/gif');
+  };
+
+  MediaType.gz = function gz() {
+    return new this('application/gzip');
+  };
+
+  MediaType.html = function html() {
+    return new this('text/html');
+  };
+
+  MediaType.javascript = function javascript() {
+    return new this('text/javascript');
+  };
+
+  MediaType.jpeg = function jpeg() {
+    return new this('image/jpeg');
+  };
+
+  MediaType.json = function json() {
+    return new this('application/json');
+  };
+
+  MediaType.lpf = function lpf() {
+    return new this('application/audiobook+lcp');
+  };
+
+  MediaType.mp3 = function mp3() {
+    return new this('audio/mpeg');
+  };
+
+  MediaType.mpeg = function mpeg() {
+    return new this('video/mpeg');
+  };
+
+  MediaType.ncx = function ncx() {
+    return new this('application/x-dtbncx+xml');
+  };
+
+  MediaType.ogg = function ogg() {
+    return new this('audio/ogg');
+  };
+
+  MediaType.ogv = function ogv() {
+    return new this('video/ogg');
+  };
+
+  MediaType.opds1 = function opds1() {
+    return new this('application/atom+xml;profile=opds-catalog');
+  };
+
+  MediaType.opds1Entry = function opds1Entry() {
+    return new this('application/atom+xml;type=entry;profile=opds-catalog');
+  };
+
+  MediaType.opds2 = function opds2() {
+    return new this('application/opds+json');
+  };
+
+  MediaType.opds2Publication = function opds2Publication() {
+    return new this('application/opds-publication+json');
+  };
+
+  MediaType.opdsAuthentication = function opdsAuthentication() {
+    return new this('application/opds-authentication+json');
+  };
+
+  MediaType.opus = function opus() {
+    return new this('audio/opus');
+  };
+
+  MediaType.otf = function otf() {
+    return new this('font/otf');
+  };
+
+  MediaType.pdf = function pdf() {
+    return new this('application/pdf');
+  };
+
+  MediaType.png = function png() {
+    return new this('image/png');
+  };
+
+  MediaType.smil = function smil() {
+    return new this('application/smil+xml');
+  };
+
+  MediaType.svg = function svg() {
+    return new this('image/svg+xml');
+  };
+
+  MediaType.text = function text() {
+    return new this('text/plain');
+  };
+
+  MediaType.tiff = function tiff() {
+    return new this('image/tiff');
+  };
+
+  MediaType.ttf = function ttf() {
+    return new this('font/ttf');
+  };
+
+  MediaType.wav = function wav() {
+    return new this('audio/wav');
+  };
+
+  MediaType.webmAudio = function webmAudio() {
+    return new this('audio/webm');
+  };
+
+  MediaType.webmVideo = function webmVideo() {
+    return new this('video/webm');
+  };
+
+  MediaType.webp = function webp() {
+    return new this('image/webp');
+  };
+
+  MediaType.readiumWebPub = function readiumWebPub() {
+    return new this('application/webpub+zip');
+  };
+
+  MediaType.readiumWebPubManifest = function readiumWebPubManifest() {
+    return new this('application/webpub+json');
+  };
+
+  MediaType.w3cWPUBManifest = function w3cWPUBManifest() {
+    return new this('application/x.readium.w3c.wpub+json');
+  };
+
+  MediaType.woff = function woff() {
+    return new this('font/woff');
+  };
+
+  MediaType.woff2 = function woff2() {
+    return new this('font/woff2');
+  };
+
+  MediaType.xhtml = function xhtml() {
+    return new this('application/xhtml+xml');
+  };
+
+  MediaType.xml = function xml() {
+    return new this('application/xml');
+  };
+
+  MediaType.zab = function zab() {
+    return new this('application/x.readium.zab+zip');
+  };
+
+  MediaType.zip = function zip() {
+    return new this('application/zip');
+  };
+
+  return MediaType;
+}();
+
+/* Copyright 2020 Readium Foundation. All rights reserved.
+ * Use of this source code is governed by a BSD-style license,
+ * available in the LICENSE file present in the Github repository of the project.
+ */
+var Properties = /*#__PURE__*/function () {
+  function Properties(json) {
+    if (typeof json === 'string') {
+      this.otherProperties = JSON.parse(json);
+    } else {
+      this.otherProperties = json;
+    }
+  }
+
+  var _proto = Properties.prototype;
+
+  _proto.adding = function adding(properties) {
+    var copy = JSON.parse(JSON.stringify(this.otherProperties));
+
+    for (var property in properties) {
+      copy[property] = properties[property];
+    }
+
+    return new Properties(copy);
+  };
+
+  return Properties;
+}();
+
+/* Copyright 2020 Readium Foundation. All rights reserved.
+ * Use of this source code is governed by a BSD-style license,
+ * available in the LICENSE file present in the Github repository of the project.
+ */
+
+/** A lightweight implementation of URI Template (RFC 6570).
+ *  Only handles simple cases, fitting Readium's use cases.
+ *  See https://tools.ietf.org/html/rfc6570
+ *
+ *  TODO: extensive testing
+ */
+var URITemplate = /*#__PURE__*/function () {
+  function URITemplate(uri) {
+    this.uri = uri;
+    /** List of URI template parameter keys. */
+
+    this.parameters = this.getParameters(uri);
+  }
+
+  var _proto = URITemplate.prototype;
+
+  _proto.getParameters = function getParameters(uri) {
+    var regex = /\{\??([^}]+)\}/g;
+    var match = uri.match(regex);
+
+    if (match) {
+      return new Set(match.join(',').replace(regex, '$1').split(',').map(function (m) {
+        return m.trim();
+      }));
+    }
+
+    return new Set();
+  }
+  /** Expands the URI by replacing the template variables by the given parameters.
+   *  Any extra parameter is appended as query parameters.
+   *  See RFC 6570 on URI template: https://tools.ietf.org/html/rfc6570
+   */
+  ;
+
+  _proto.expand = function expand(parameters) {
+    var expandSimpleString = function expandSimpleString(string) {
+      return string.split(',').map(function (parameter) {
+        return parameters[parameter] || '';
+      }).join(',');
+    };
+
+    var expandFormStyle = function expandFormStyle(string) {
+      return '?' + string.split(',').map(function (expression) {
+        var parameter = expression.split('=')[0];
+
+        if (parameters[parameter]) {
+          return parameter + "=" + parameters[parameter];
+        } else {
+          return '';
+        }
+      }).join('&');
+    };
+
+    return this.uri.replace(/\{(\??)([^}]+)\}/g, function () {
+      return !(arguments.length <= 1 ? undefined : arguments[1]) ? expandSimpleString(arguments.length <= 2 ? undefined : arguments[2]) : expandFormStyle(arguments.length <= 2 ? undefined : arguments[2]);
+    });
+  };
+
+  return URITemplate;
+}();
+
+/** Link Object for the Readium Web Publication Manifest.
+ *  https://readium.org/webpub-manifest/schema/link.schema.json
+ */
+
+var Link = /*#__PURE__*/function () {
+  function Link(link) {
+    this.href = link.href;
+    this.templated = link.templated;
+    this.type = link.type;
+    this.title = link.title;
+    this.rels = new Set(link.rel);
+    this.properties = new Properties(link.properties);
+    this.height = link.height;
+    this.width = link.width;
+    this.duration = link.duration;
+    this.bitrate = link.bitrate;
+    this.languages = link.language;
+    this.alternates = link.alternate ? new Links(link.alternate) : new Links([]);
+    this.children = link.children ? new Links(link.children) : new Links([]);
+    this.mediaType = link.type ? new MediaType(link.type) : undefined;
+    this.templateParameters = this.getTemplateParameters();
+  }
+  /** Computes an absolute URL to the link, relative to the given `baseURL`.
+   *  If the link's `href` is already absolute, the `baseURL` is ignored.
+   */
+
+
+  var _proto = Link.prototype;
+
+  _proto.toAbsoluteHREF = function toAbsoluteHREF(baseUrl) {
+    return new URL(this.href, baseUrl).href;
+  }
+  /** List of URI template parameter keys, if the `Link` is templated. */
+  ;
+
+  _proto.getTemplateParameters = function getTemplateParameters() {
+    if (!this.templated) {
+      return new Set();
+    } else {
+      return new URITemplate(this.href).parameters;
+    }
+  }
+  /** Expands the `Link`'s HREF by replacing URI template variables by the given parameters.
+   *  See RFC 6570 on URI template: https://tools.ietf.org/html/rfc6570
+   */
+  ;
+
+  _proto.expandTemplate = function expandTemplate(parameters) {
+    // Probably make copy instead of a new one
+    return new Link({
+      href: new URITemplate(this.href).expand(parameters),
+      templated: false
+    });
+  };
+
+  return Link;
+}();
+/** Parses multiple JSON links into an array of Link. */
+
+var Links = /*#__PURE__*/function (_Array) {
+  _inheritsLoose(Links, _Array);
+
+  function Links(items) {
+    var _this;
+
+    if (items instanceof Array) {
+      _this = _Array.call.apply(_Array, [this].concat(items.map(function (item) {
+        return new Link(item);
+      }))) || this;
+    } else {
+      _this = _Array.call(this, items) || this;
+    }
+
+    Object.setPrototypeOf(_assertThisInitialized(_this), (this instanceof Links ? this.constructor : void 0).prototype);
+    return _assertThisInitialized(_this);
+  }
+  /** Finds the first link with the given relation. */
+
+
+  var _proto2 = Links.prototype;
+
+  _proto2.findWithRel = function findWithRel(rel) {
+    var predicate = function predicate(el) {
+      return el.rels.has(rel);
+    };
+
+    return this.find(predicate) || null;
+  }
+  /** Finds all the links with the given relation. */
+  ;
+
+  _proto2.filterByRel = function filterByRel(rel) {
+    var predicate = function predicate(el) {
+      return el.rels.has(rel);
+    };
+
+    return this.filter(predicate);
+  }
+  /** Finds the first link matching the given HREF. */
+  ;
+
+  _proto2.findWithHref = function findWithHref(href) {
+    var predicate = function predicate(el) {
+      return el.href === href;
+    };
+
+    return this.find(predicate) || null;
+  }
+  /** Finds the index of the first link matching the given HREF. */
+  ;
+
+  _proto2.findIndexWithHref = function findIndexWithHref(href) {
+    var predicate = function predicate(el) {
+      return el.href === href;
+    };
+
+    return this.findIndex(predicate);
+  }
+  /** Finds the first link matching the given media type. */
+  ;
+
+  _proto2.findWithMediaType = function findWithMediaType(mediaType) {
+    var predicate = function predicate(el) {
+      return el.mediaType ? el.mediaType.matches(mediaType) : false;
+    };
+
+    return this.find(predicate) || null;
+  }
+  /** Finds all the links matching the given media type. */
+  ;
+
+  _proto2.filterByMediaType = function filterByMediaType(mediaType) {
+    var predicate = function predicate(el) {
+      return el.mediaType ? el.mediaType.matches(mediaType) : false;
+    };
+
+    return this.filter(predicate);
+  }
+  /** Finds all the links matching any of the given media types. */
+  ;
+
+  _proto2.filterByMediaTypes = function filterByMediaTypes(mediaTypes) {
+    var predicate = function predicate(el) {
+      for (var _iterator = _createForOfIteratorHelperLoose(mediaTypes), _step; !(_step = _iterator()).done;) {
+        var mediaType = _step.value;
+        return el.mediaType ? el.mediaType.matches(mediaType) : false;
+      }
+
+      return false;
+    };
+
+    return this.filter(predicate);
+  }
+  /** Returns whether all the resources in the collection are audio clips. */
+  ;
+
+  _proto2.everyIsAudio = function everyIsAudio() {
+    var predicate = function predicate(el) {
+      return el.mediaType ? el.mediaType.isAudio() : false;
+    };
+
+    return this.every(predicate);
+  }
+  /** Returns whether all the resources in the collection are bitmaps. */
+  ;
+
+  _proto2.everyIsBitmap = function everyIsBitmap() {
+    var predicate = function predicate(el) {
+      return el.mediaType ? el.mediaType.isBitmap() : false;
+    };
+
+    return this.every(predicate);
+  }
+  /** Returns whether all the resources in the collection are HTML documents. */
+  ;
+
+  _proto2.everyIsHTML = function everyIsHTML() {
+    var predicate = function predicate(el) {
+      return el.mediaType ? el.mediaType.isHTML() : false;
+    };
+
+    return this.every(predicate);
+  }
+  /** Returns whether all the resources in the collection are video clips. */
+  ;
+
+  _proto2.everyIsVideo = function everyIsVideo() {
+    var predicate = function predicate(el) {
+      return el.mediaType ? el.mediaType.isVideo() : false;
+    };
+
+    return this.every(predicate);
+  }
+  /** Returns whether all the resources in the collection are matching any of the given media types. */
+  ;
+
+  _proto2.everyMatchesMediaType = function everyMatchesMediaType(mediaTypes) {
+    if (Array.isArray(mediaTypes)) {
+      return this.every(function (el) {
+        for (var _iterator2 = _createForOfIteratorHelperLoose(mediaTypes), _step2; !(_step2 = _iterator2()).done;) {
+          var mediaType = _step2.value;
+          return el.mediaType ? el.mediaType.matches(mediaType) : false;
+        }
+
+        return false;
+      });
+    } else {
+      return this.every(function (el) {
+        return el.mediaType ? el.mediaType.matches(mediaTypes) : false;
+      });
+    }
+  };
+
+  return Links;
+}( /*#__PURE__*/_wrapNativeSuper(Array));
+
+/* Copyright 2020 Readium Foundation. All rights reserved.
+ * Use of this source code is governed by a BSD-style license,
+ * available in the LICENSE file present in the Github repository of the project.
+ */
+/** Core Collection Model
+ *  https://readium.org/webpub-manifest/schema/subcollection.schema.json
+ *  Can be used as extension point in the Readium Web Publication Manifest.
+ */
+
+var CoreCollection = /*#__PURE__*/function () {
+  function CoreCollection(json) {
+    if (Array.isArray(json)) {
+      this.links = new Links(json);
+    } else {
+      var jsonCollection = new JSONDictionary(json);
+      this.metadata = jsonCollection.parseRaw('metadata');
+      this.links = new Links(jsonCollection.parseArray('links'));
+      this.subcollections = CoreCollection.makeCollections(jsonCollection);
+    }
+  }
+
+  CoreCollection.makeCollections = function makeCollections(json) {
+    var collection = {};
+
+    for (var key in json) {
+      collection[key] = new this(json[key]);
+    }
+
+    return collection;
+  };
+
+  return CoreCollection;
+}();
+
+/* Copyright 2020 Readium Foundation. All rights reserved.
+ * Use of this source code is governed by a BSD-style license,
+ * available in the LICENSE file present in the Github repository of the project.
+ */
+
+/** Hint about the nature of the layout for the linked resources. */
+var EPUBLayout;
+
+(function (EPUBLayout) {
+  EPUBLayout["fixed"] = "fixed";
+  EPUBLayout["reflowable"] = "reflowable";
+})(EPUBLayout || (EPUBLayout = {}));
+
+/* Copyright 2020 Readium Foundation. All rights reserved.
+ * Use of this source code is governed by a BSD-style license,
+ * available in the LICENSE file present in the Github repository of the project.
+ */
+
+Properties.prototype.getContains = function () {
+  return this.otherProperties['contains'] || [];
+};
+
+Properties.prototype.getLayout = function () {
+  return this.otherProperties['layout'] || null;
+};
+
+/* Copyright 2020 Readium Foundation. All rights reserved.
+ * Use of this source code is governed by a BSD-style license,
+ * available in the LICENSE file present in the Github repository of the project.
+ */
+/** The Presentation Hints extension defines a number of hints for User Agents about the way content
+ *  should be presented to the user.
+ *
+ *  https://readium.org/webpub-manifest/extensions/presentation.html
+ *  https://readium.org/webpub-manifest/schema/extensions/presentation/metadata.schema.json
+ *
+ *  These properties are nullable to avoid having default values when it doesn't make sense for a
+ *  given `Publication`. If a navigator needs a default value when not specified,
+ *  `Presentation.defaultX` and `Presentation.X.default` can be used.
+ */
+
+var Presentation = /*#__PURE__*/function () {
+  function Presentation(presentation) {
+    this.clipped = presentation.clipped;
+    this.fit = presentation.fit;
+    this.orientation = presentation.orientation;
+    this.spread = presentation.spread;
+    this.layout = presentation.layout;
+    this.continuous = presentation.continuous;
+    this.overflow = presentation.overflow;
+  }
+  /** Determines the layout of the given resource in this publication.
+   *  Default layout is reflowable.
+   */
+
+
+  var _proto = Presentation.prototype;
+
+  _proto.layoutOf = function layoutOf(link) {
+    var result = EPUBLayout.reflowable;
+
+    if (link.properties && link.properties.getLayout() !== null) {
+      result = link.properties.getLayout();
+    } else if (this.layout) {
+      result = this.layout;
+    }
+
+    return result;
+  };
+
+  return Presentation;
+}();
+
+/* Copyright 2020 Readium Foundation. All rights reserved.
+ * Use of this source code is governed by a BSD-style license,
+ * available in the LICENSE file present in the Github repository of the project.
+ */
+var ReadingProgression;
+
+(function (ReadingProgression) {
+  ReadingProgression["auto"] = "auto";
+  ReadingProgression["btt"] = "btt";
+  ReadingProgression["ltr"] = "ltr";
+  ReadingProgression["rtl"] = "rtl";
+  ReadingProgression["ttb"] = "ttb";
+})(ReadingProgression || (ReadingProgression = {})); // Note: Babel doesn’t really like that at all so disabling for the time being
+ // }
+
+/* Copyright 2020 Readium Foundation. All rights reserved.
+ * Use of this source code is governed by a BSD-style license,
+ * available in the LICENSE file present in the Github repository of the project.
+ */
+var Metadata = /*#__PURE__*/function () {
+  function Metadata(metadata) {
+    var json = new JSONDictionary(metadata);
+    this.title = json.parseRaw('title');
+    this['@type'] = json.parseRaw('@type');
+    this.identifier = json.parseRaw('identifier');
+    this.subtitle = json.parseRaw('subtitle');
+    this.artists = json.parseArray('artist');
+    this.authors = json.parseArray('author');
+    this.colorists = json.parseArray('colorist');
+    this.contributors = json.parseArray('contributor');
+    this.editors = json.parseArray('editor');
+    this.illustrators = json.parseArray('illustrator');
+    this.inkers = json.parseArray('inker');
+    this.letterers = json.parseArray('letterer');
+    this.narrators = json.parseArray('narrator');
+    this.pencilers = json.parseArray('penciler');
+    this.translators = json.parseArray('translator');
+    this.languages = json.parseArray('language');
+    this.description = json.parseRaw('description');
+    this.publishers = json.parseArray('publisher');
+    this.imprints = json.parseArray('imprint');
+    this.published = json.parseDate('published');
+    this.modified = json.parseDate('modified');
+    this.subjects = json.parseArray('subject');
+    var belongsTo = json.parseRaw('belongsTo');
+    this.belongsToCollection = belongsTo ? belongsTo['collection'] : [];
+    this.belongsToSeries = belongsTo ? belongsTo['series'] : [];
+    this.readingProgression = json.parseRaw('readingProgression') || ReadingProgression.auto;
+    this.duration = json.parsePositive('duration');
+    this.numberOfPages = json.parsePositive('numberOfPages');
+    this.otherMetadata = json.json;
+  }
+
+  var _proto = Metadata.prototype;
+
+  _proto.getPresentation = function getPresentation() {
+    return this.getOtherMetadata()['presentation'] ? new Presentation(this.getOtherMetadata()['presentation']) : new Presentation({});
+  }
+  /** Computes a `ReadingProgression` when the value of `readingProgression` is set to `auto`,
+   *  using the publication language.
+   */
+  ;
+
+  _proto.effectiveReadingProgression = function effectiveReadingProgression() {
+    if (this.readingProgression && this.readingProgression !== ReadingProgression.auto) {
+      return this.readingProgression;
+    }
+
+    if (this.languages.length > 0) {
+      var primaryLang = this.languages[0];
+      var lang = primaryLang.includes('zh') ? primaryLang : primaryLang.split('-')[0];
+
+      if (Metadata.RTLLanguages.includes(lang)) {
+        return ReadingProgression.rtl;
+      }
+    }
+
+    return ReadingProgression.ltr;
+  };
+
+  _proto.getOtherMetadata = function getOtherMetadata() {
+    return this.otherMetadata;
+  };
+
+  return Metadata;
+}();
+/* public otherMetadata */
+
+Metadata.RTLLanguages = ['ar', 'fa', 'he', 'zh-Hant', 'zh-TW'];
+
+/* Copyright 2020 Readium Foundation. All rights reserved.
+ * Use of this source code is governed by a BSD-style license,
+ * available in the LICENSE file present in the Github repository of the project.
+ */
+/** Holds the metadata of a Readium publication, as described in
+ *  the Readium Web Publication Manifest.
+ *  See. https://readium.org/webpub-manifest/
+ */
+
+var Manifest = /*#__PURE__*/function () {
+  function Manifest(manifestJSON) {
+    var json = new JSONDictionary(manifestJSON);
+    this.context = json.parseArray('@context');
+    this.metadata = new Metadata(json.parseRaw('metadata'));
+    this.links = new Links(json.parseArray('links'));
+    this.readingOrder = new Links(json.parseArray('readingOrder'));
+    this.resources = new Links(json.parseArray('resources'));
+    this.tableOfContents = new Links(json.parseArray('toc'));
+    this.subcollections = CoreCollection.makeCollections(json.json);
+  }
+  /** Finds the first link with the given relation in the manifest's links. */
+
+
+  var _proto = Manifest.prototype;
+
+  _proto.linkWithRel = function linkWithRel(rel) {
+    var links = [this.readingOrder, this.resources, this.links];
+    var result = null;
+
+    for (var _i = 0, _links = links; _i < _links.length; _i++) {
+      var collection = _links[_i];
+      result = collection.findWithRel(rel);
+
+      if (result !== null) {
+        return result;
+      }
+    }
+
+    return result;
+  }
+  /** Finds all the links with the given relation in the manifest's links. */
+  ;
+
+  _proto.linksWithRel = function linksWithRel(rel) {
+    var result = [];
+    result.push(this.readingOrder.filterByRel(rel), this.resources.filterByRel(rel), this.links.filterByRel(rel));
+    return result.reduce(function (acc, val) {
+      return acc.concat(val);
+    }, []);
+  };
+
+  return Manifest;
+}();
+
+/* Copyright 2020 Readium Foundation. All rights reserved.
+ * Use of this source code is governed by a BSD-style license,
+ * available in the LICENSE file present in the Github repository of the project.
+ */
+
+/** Shared model for a Readium Publication. */
+var Publication = /*#__PURE__*/function () {
+  function Publication(manifest) {
+    this.manifest = manifest;
+    this.metadata = this.manifest.metadata;
+    this.links = this.manifest.links;
+    /** Identifies a list of resources in reading order for the publication. */
+
+    this.readingOrder = this.manifest.readingOrder;
+    /** Identifies resources that are necessary for rendering the publication. */
+
+    this.resources = this.manifest.resources;
+    /** Identifies the collection that contains a table of contents. */
+
+    this.tableOfContents = this.manifest.tableOfContents;
+    this.subcollections = this.manifest.subcollections;
+  }
+  /** The URL where this publication is served, computed from the `Link` with `self` relation.
+   *  e.g. https://provider.com/pub1293/manifest.json gives https://provider.com/pub1293/
+   */
+
+
+  var _proto = Publication.prototype;
+
+  _proto.baseURL = function baseURL() {
+    var selfLink = this.manifest.links.find(function (el) {
+      return el.rels.has('self');
+    });
+
+    if (selfLink) {
+      return selfLink.href;
+    } else {
+      return null;
+    }
+  }
+  /** Finds the first Link having the given `href` in the publication's links. */
+  ;
+
+  _proto.linkWithHref = function linkWithHref(href) {
+    var find = function find(links) {
+      var result = null;
+
+      for (var _iterator = _createForOfIteratorHelperLoose(links), _step; !(_step = _iterator()).done;) {
+        var collection = _step.value;
+        result = collection.findWithHref(href);
+
+        if (result !== null) {
+          return result;
+        }
+      }
+
+      var children = links.flatMap(function (item) {
+        var arr = [];
+
+        for (var _iterator2 = _createForOfIteratorHelperLoose(item), _step2; !(_step2 = _iterator2()).done;) {
+          var _link = _step2.value;
+
+          if (_link.alternates) {
+            arr.push(_link.alternates);
+          }
+
+          if (_link.children) {
+            arr.push(_link.children);
+          }
+        }
+
+        return arr;
+      });
+      find(children);
+      return result;
+    };
+
+    var links = [this.manifest.readingOrder, this.manifest.resources, this.manifest.links];
+    var link = find(links);
+
+    if (link !== null) {
+      return link;
+    }
+
+    var shortHref = href.split(/[#\?]/)[0];
+    this.linkWithHref(shortHref);
+    return link;
+  }
+  /** Finds the first link with the given relation in the publication's links. */
+  ;
+
+  _proto.linkWithRel = function linkWithRel(rel) {
+    return this.manifest.linkWithRel(rel);
+  }
+  /** Finds all the links with the given relation in the publication's links. */
+  ;
+
+  _proto.linksWithRel = function linksWithRel(rel) {
+    return this.manifest.linksWithRel(rel);
+  };
+
+  return Publication;
+}();
+
+function api() {
+  var createManifest = function createManifest(json) {
+    return new Manifest(json);
+  };
+
+  var createPublication = function createPublication(manifest) {
+    return new Publication(manifest);
+  }; //for test
+
+
+  var getData = function getData(x) {
+    //let m:Metadata;
+    //m.getPresentation()
+    return "hi1 - " + x;
+  };
+
+  var _api = {
+    createManifest: createManifest,
+    createPublication: createPublication,
+    getData: getData
+  };
+  return _api;
+}
+//   if ('development' === "development") {
+//     console.log('boop');
+//   }
+//   return a + b;
+// };
+
+exports.Manifest = Manifest;
+exports.Metadata = Metadata;
+exports.Publication = Publication;
+exports.default = api;
+
+
+/***/ }),
+
+/***/ "./src/main.ts":
+/*!*********************!*\
+  !*** ./src/main.ts ***!
+  \*********************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var shared_test_1 = __webpack_require__(/*! @jellybooks/shared-test */ "../shared-models/dist/index.js");
+// import { JellybooksAPI, Publication, Manifest } from "@jellybooks/shared-test";
+//import "@jellybooks/shared-test";
+//import   "@jellybooks/shared-test/types/Publication/presentation/Metadata+Presentation";
+//import * as ddd from "@jellybooks/shared-test/types/Publication/presentation/Metadata+Presentation";
+//import { x } from "@jellybooks/shared-test/types/Publication/presentation/Metadata+Presentation";
+var textElement = document.getElementById("text");
+var lib = shared_test_1.default();
+//textElement.innerText = lib.getData('test');
+fetch("manifest.json")
+    .then(function (response) { return response.json(); })
+    .then(function (json) {
+    //console.log(ddd.x);
+    console.log(json);
+    var manifest = lib.createManifest(json);
+    var pubObj = lib.createPublication(manifest);
+    //console.log(manifest.metadata.get);
+    var y = manifest.metadata.getPresentation();
+    console.log(y);
+    console.log(pubObj);
+    textElement.innerText = JSON.stringify(pubObj, null, 2);
+});
+
 
 /***/ })
 
 /******/ });
+//# sourceMappingURL=jellybookslib.js.map

@@ -3,7 +3,6 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { JSONDictionary } from './Publication+JSON';
 import { Links } from './Link';
 
 /** Core Collection Model
@@ -21,17 +20,17 @@ export class CoreCollection {
     if (Array.isArray(json)) {
       this.links = new Links(json);
     } else {
-      const jsonCollection = new JSONDictionary(json);
-      this.metadata = jsonCollection.parseRaw('metadata');
-      this.links = new Links(jsonCollection.parseArray('links'));
-      this.subcollections = CoreCollection.makeCollections(jsonCollection);
+      //const jsonCollection = new JSONDictionary(json);
+      this.metadata = json.metadata;
+      this.links = Links.fromJSON(json.links);
+      this.subcollections = CoreCollection.makeCollections(json);
     }
   }
 
   public static makeCollections(
     json: any
   ): { [collection: string]: CoreCollection } {
-    let collection = {};
+    let collection: { [key: string]: any } = {};
     for (const key in json) {
       collection[key] = new this(json[key]);
     }

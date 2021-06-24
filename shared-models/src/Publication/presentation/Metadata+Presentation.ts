@@ -3,17 +3,17 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { Metadata } from '../Metadata';
-import { Presentation } from './Presentation';
+//import { Metadata } from '../Metadata';
+// import { Presentation } from './Presentation';
 
-declare module '../Metadata' {
-  export interface Metadata {
-    getPresentation: () => Presentation;
-  }
-}
+// declare module '../Metadata' {
+//   export interface Metadata {
+//     getPresentation: () => Presentation;
+//   }
+// }
 
-Metadata.prototype.getPresentation = function() {
-  return this.getOtherMetadata()['presentation']
-    ? new Presentation(this.getOtherMetadata()['presentation'])
-    : new Presentation({});
-};
+// Metadata.prototype.getPresentation = function() {
+//   return this.getOtherMetadata()['presentation']
+//     ? new Presentation(this.getOtherMetadata()['presentation'])
+//     : new Presentation({});
+// };

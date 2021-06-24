@@ -1,0 +1,68 @@
+{
+  "@context": "http://readium.org/webpub/default.jsonld",
+  "metadata": {
+      "@type": "http://schema.org/Book",
+      "title": "Backstop Test Sample",
+      "identifier": "urn:uuid:A0AAF6B6-7B3A-4700-BCC5-71EC15195A9A",
+      "author": {
+          "name": "Jack London"
+      },
+      "language": [
+          "en"
+      ],
+      "modified": "2018-08-02T07:59:41.111Z",
+      "published": "2008-07-01T22:00:00.000Z"
+  },
+  "links": [
+      {
+          "href": "manifest.json",
+          "type": "application/webpub+json",
+          "templated": false,
+          "rel": "self"
+      }
+  ],
+  "readingOrder": [
+      {
+          "href": "OEBPS/Text/Section001.xhtml",
+          "type": "application/xhtml+xml"
+      },
+      {
+          "href": "OEBPS/Text/Section002.xhtml",
+          "type": "application/xhtml+xml"
+    }
+  ],
+  "resources": [
+      {
+          "href": "OEBPS/toc.ncx",
+          "type": "application/x-dtbncx+xml"
+      },
+      {
+          "href": "OEBPS/Text/nav.xhtml",
+          "type": "application/xhtml+xml",
+          "rel": "contents"
+      },
+      {
+          "href": "OEBPS/Images/asterism.svg",
+          "type": "image/svg+xml"
+      },
+      {
+          "href": "OEBPS/Images/dots.svg",
+          "type": "image/svg+xml"
+      },
+      {
+          "href": "OEBPS/Styles/crabapple.css",
+          "type": "text/css"
+      }
+  ],
+  "toc": [
+      {
+          "href": "OEBPS/Text/Section001.xhtml",
+          "title": "Chapter I. Into the Primitive"
+      },
+      {
+          "href": "OEBPS/Text/Section002.xhtml",
+          "title": "Chapter 2. The Law of Club and Fang"
+    }
+  ],
+  "landmarks": []
+}

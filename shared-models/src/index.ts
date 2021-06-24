@@ -1,5 +1,12 @@
+import { Contributors } from './Publication/Contributor';
+import { EPUBLayout } from './Publication/epub/Layout';
+import { Link, Links } from './Publication/Link';
+import { LocalizedString } from './Publication/LocalizedString';
 import { Manifest } from './Publication/Manifest';
+import { Metadata } from './Publication/Metadata';
+import { IPresentationMetadata } from './Publication/presentation/Presentation';
 import { Publication } from './Publication/Publication';
+
 
 export interface JellybooksAPI {
   createManifest(json: string): Manifest;
@@ -9,7 +16,7 @@ export interface JellybooksAPI {
 
 export default function api(): JellybooksAPI {
   const createManifest = (json: string): Manifest => {
-    return new Manifest(json);
+    return Manifest.fromJSON(json);
   };
 
   const createPublication = (manifest: Manifest): Publication => {
@@ -18,7 +25,11 @@ export default function api(): JellybooksAPI {
 
   //for test
   const getData = (x: string): string => {
-    return `hi - ${x}`;
+      //let m:Metadata;
+      
+      //m.getPresentation()
+
+    return `hi1 - ${x}`;
   };
 
   const _api = {
@@ -30,7 +41,7 @@ export default function api(): JellybooksAPI {
   return _api;
 }
 
-export { Manifest, Publication };
+export { Manifest, Publication, Metadata, Link, Links, LocalizedString, IPresentationMetadata, EPUBLayout, Contributors };
 
 // export const sum = (a: number, b: number) => {
 //   if ('development' === process.env.NODE_ENV) {

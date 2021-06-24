@@ -3,8 +3,8 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { CoreCollection } from './CoreCollection';
-import { JSONDictionary } from './Publication+JSON';
+//import { CoreCollection } from './CoreCollection';
+//import { JSONDictionary } from './Publication+JSON';
 import { Link, Links } from './Link';
 import { Metadata } from './Metadata';
 
@@ -13,7 +13,8 @@ import { Metadata } from './Metadata';
  *  See. https://readium.org/webpub-manifest/
  */
 export class Manifest {
-  public readonly context: Array<string>;
+  public readonly context?: Array<string>;
+
   public readonly metadata: Metadata;
   public readonly links: Links;
 
@@ -21,28 +22,86 @@ export class Manifest {
   public readonly readingOrder: Links;
 
   /** Identifies resources that are necessary for rendering the publication. */
-  public readonly resources: Links;
+  public readonly resources?: Links;
 
   /** Identifies the collection that contains a table of contents. */
-  public readonly tableOfContents: Links;
+  public readonly tableOfContents?: Links;
 
-  public readonly subcollections: { [collection: string]: CoreCollection };
+  //TODO : fix
+  //public readonly subcollections: { [collection: string]: CoreCollection };
 
-  constructor(manifestJSON: any) {
-    const json = new JSONDictionary(manifestJSON);
+  constructor(values: {
+    context?: Array<string>,
+    metadata: Metadata,
+    links: Links,
+    readingOrder: Links,
+    resources?: Links,
+    tableOfContents?: Links
+  }
+  ) {
+    this.context = values.context;
+    this.metadata = values.metadata;
+    this.links = values.links;
+    this.readingOrder = values.readingOrder;
+    this.resources = values.resources;
+    this.tableOfContents = values.tableOfContents;
+    //this.subcollections = CoreCollection.makeCollections(json.json);
+  }
 
-    this.context = json.parseArray('@context');
-    this.metadata = new Metadata(json.parseRaw('metadata'));
-    this.links = new Links(json.parseArray('links'));
-    this.readingOrder = new Links(json.parseArray('readingOrder'));
-    this.resources = new Links(json.parseArray('resources'));
-    this.tableOfContents = new Links(json.parseArray('toc'));
-    this.subcollections = CoreCollection.makeCollections(json.json);
+  public static fromJSON(json: any): Manifest {
+    //const dictionary = new JSONDictionary(json);
+    //TODO: accept onşy Json object, dont parse
+    //let _json = typeof json === "string" ? JSON.parse(json) : json;
+
+    return new Manifest({
+      context: json['@context'], // dictionary.parseArray('@context'),
+      metadata: Metadata.fromJSON(json.metadata),
+      links: Links.fromJSON(json.links) as Links,
+      readingOrder: Links.fromJSON(json.readingOrder ? json.readingOrder : json.spine) as Links,
+      resources: Links.fromJSON(json.resources),
+      tableOfContents: Links.fromJSON(json.toc)
+      //this.subcollections = CoreCollection.makeCollections(dictionary.json);
+    });
+  }
+
+  public static fromJSON2<T extends Manifest>(type: (new (values: any) => T), json: any): T {
+    //let _json = typeof json === "string" ? JSON.parse(json) : json;
+
+    let result = new type({
+      context: json['@context'], // dictionary.parseArray('@context'),
+      metadata: Metadata.fromJSON(json.metadata),
+      links: Links.fromJSON(json.links) as Links,
+      readingOrder: Links.fromJSON(json.readingOrder ? json.readingOrder : json.spine) as Links,
+      resources: Links.fromJSON(json.resources),
+      tableOfContents: Links.fromJSON(json.toc)
+      //this.subcollections = CoreCollection.makeCollections(dictionary.json);
+    });
+
+    return result;
+  }
+
+  public toJSON(): any {
+    let json:any = { };
+    if (this.context) json.context = this.context;
+    json.metadata = this.metadata.toJSON();
+    json.links = this.links.toJSON();
+    json.readingOrder = this.readingOrder.toJSON();
+    if (this.resources) json.resources = this.resources.toJSON();
+    if (this.tableOfContents) json.toc = this.tableOfContents.toJSON();
+    return json;
   }
 
   /** Finds the first link with the given relation in the manifest's links. */
   public linkWithRel(rel: string): Link | null {
-    const links: Array<Links> = [this.readingOrder, this.resources, this.links];
+    const links = new Array<Links>();
+    links.push(this.readingOrder);
+    if (this.resources) {
+      links.push(this.resources);
+    }
+    links.push(this.links);
+
+    //[this.readingOrder, this.resources , this.links];
+
     let result = null;
 
     for (const collection of links) {
@@ -58,11 +117,22 @@ export class Manifest {
   /** Finds all the links with the given relation in the manifest's links. */
   public linksWithRel(rel: string): Array<Link> {
     let result = [];
-    result.push(
-      this.readingOrder.filterByRel(rel),
-      this.resources.filterByRel(rel),
-      this.links.filterByRel(rel)
-    );
+    result.push(this.readingOrder.filterByRel(rel));
+    if (this.resources) {
+      result.push(this.resources.filterByRel(rel));
+    }
+    result.push(this.links.filterByRel(rel));
+
     return result.reduce((acc, val) => acc.concat(val), []);
   }
+
+  // private getAllLinks() : Array<Links> {
+  //   const result = new Array<Links>();
+  //   result.push(this.readingOrder);
+  //   if (this.resources) {
+  //     result.push(this.resources);
+  //   }
+  //   result.push(this.links);
+  //   return result;
+  // }
 }

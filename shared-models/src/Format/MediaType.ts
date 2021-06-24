@@ -29,6 +29,8 @@ export class MediaType {
   public encoding?: string;
 
   constructor(mediaType: string) {
+    this.type = '';
+    this.subtype = '';
     const components = mediaType.replace(/\s/g, '').split(';');
     const types = components[0].split('/');
     if (types.length === 2) {

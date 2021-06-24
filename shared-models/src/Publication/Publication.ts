@@ -3,7 +3,7 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { CoreCollection } from './CoreCollection';
+//import { CoreCollection } from './CoreCollection';
 import { Link, Links } from './Link';
 import { Manifest } from './Manifest';
 import { Metadata } from './Metadata';
@@ -16,9 +16,9 @@ export class Publication {
   public metadata: Metadata;
   public links: Links;
   public readingOrder: Links;
-  public resources: Links;
-  public tableOfContents: Links;
-  public subcollections: { [collection: string]: CoreCollection };
+  public resources?: Links;
+  public tableOfContents?: Links;
+  //public subcollections: { [collection: string]: CoreCollection };
 
   constructor(manifest: Manifest) {
     this.manifest = manifest;
@@ -31,14 +31,14 @@ export class Publication {
     this.resources = this.manifest.resources;
     /** Identifies the collection that contains a table of contents. */
     this.tableOfContents = this.manifest.tableOfContents;
-    this.subcollections = this.manifest.subcollections;
+    //this.subcollections = this.manifest.subcollections;
   }
 
   /** The URL where this publication is served, computed from the `Link` with `self` relation.
    *  e.g. https://provider.com/pub1293/manifest.json gives https://provider.com/pub1293/
    */
   public baseURL(): string | null {
-    const selfLink = this.manifest.links.find(el => el.rels.has('self'));
+    const selfLink = this.manifest.links.items.find(el => el.rels && el.rels.has('self'));
     if (selfLink) {
       return selfLink.href;
     } else {
@@ -60,7 +60,7 @@ export class Publication {
 
       const children: Array<Links> = links.flatMap(item => {
         let arr = [];
-        for (const link of item) {
+        for (const link of item.items) {
           if (link.alternates) {
             arr.push(link.alternates);
           }
@@ -76,11 +76,14 @@ export class Publication {
       return result;
     };
 
-    const links: Array<Links> = [
-      this.manifest.readingOrder,
-      this.manifest.resources,
-      this.manifest.links,
-    ];
+    const links: Array<Links> = [];
+    links.push(this.manifest.readingOrder);
+    if (this.manifest.resources) {
+      links.push(this.manifest.resources);
+    }
+    links.push(this.manifest.links);
+
+
 
     const link = find(links);
 

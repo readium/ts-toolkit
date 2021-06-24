@@ -1,6 +1,6 @@
 {
   "name": "@jellybooks/shared-test",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Next generation SDK for publications in Web Apps",
   "author": "Jellybooks",
   "repository": {
@@ -16,10 +16,11 @@
     "jellybooks"
   ],
   "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
+  "typings": "types/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "src",
+    "types"
   ],
   "engines": {
     "node": ">=10"
@@ -31,9 +32,9 @@
     "lint": "tsdx lint",
     "prepare": "tsdx build",
     "size": "size-limit",
-    "analyze": "size-limit --why"
+    "analyze": "size-limit --why",
+    "test:debug": "DEBUG=true node --inspect-brk node_modules/.bin/jest --runInBand"
   },
-  "peerDependencies": {},
   "husky": {
     "hooks": {
       "pre-commit": "tsdx lint"
@@ -45,7 +46,7 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "module": "dist/shared-test.esm.js",
+  "module": "dist/index.js",
   "size-limit": [
     {
       "path": "dist/shared-test.cjs.production.min.js",
@@ -57,7 +58,9 @@
     }
   ],
   "devDependencies": {
+    "@babel/preset-typescript": "^7.14.5",
     "@size-limit/preset-small-lib": "^4.11.0",
+    "@types/jest": "^25.2.3",
     "husky": "^6.0.0",
     "size-limit": "^4.11.0",
     "tsdx": "^0.14.1",

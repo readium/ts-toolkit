@@ -1,18 +1,19 @@
 {
   // see https://www.typescriptlang.org/tsconfig to better understand tsconfigs
-  "include": ["src", "types"],
+  "include": ["src"],
   "compilerOptions": {
-    "module": "es6",
-    "lib": ["es2019","DOM", "DOM.Iterable"],
+    "module": "esnext",
+    "lib": ["esnext","dom"],
     "importHelpers": true,
     // output .d.ts declaration files for consumers
     "declaration": true,
+    "declarationDir": "./types",
     // output .js.map sourcemap files for consumers
     "sourceMap": true,
     // match output dir to input dir. e.g. dist/index instead of dist/src/index
     "rootDir": "./src",
     // stricter type-checking for stronger correctness. Recommended by TS
-    //"strict": true,
+    "strict": true,
     // linter checks for common issues
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
@@ -31,5 +32,5 @@
     "forceConsistentCasingInFileNames": true,
     // `tsdx build` ignores this option, but it is commonly used when type-checking separately with `tsc`
     "noEmit": true,
-  }
+  },
 }
