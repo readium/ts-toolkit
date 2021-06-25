@@ -38,7 +38,9 @@ export class Publication {
    *  e.g. https://provider.com/pub1293/manifest.json gives https://provider.com/pub1293/
    */
   public baseURL(): string | null {
-    const selfLink = this.manifest.links.items.find(el => el.rels && el.rels.has('self'));
+    const selfLink = this.manifest.links.items.find(
+      el => el.rels && el.rels.has('self')
+    );
     if (selfLink) {
       return selfLink.href;
     } else {
@@ -83,15 +85,14 @@ export class Publication {
     }
     links.push(this.manifest.links);
 
-
-
     const link = find(links);
 
     if (link !== null) {
       return link;
     }
 
-    const shortHref = href.split(/[#\?]/)[0];
+    const shortHref = href.split(/[#]/)[0];
+    //const shortHref = href.split(/[#\?]/)[0];
 
     this.linkWithHref(shortHref);
 

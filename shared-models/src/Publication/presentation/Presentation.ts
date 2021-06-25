@@ -10,34 +10,34 @@ import '../epub/Properties+EPUB';
 export enum Orientation {
   auto = 'auto',
   landscape = 'landscape',
-  portrait = 'portrait'
+  portrait = 'portrait',
 }
 
 export enum Overflow {
   auto = 'auto',
   clipped = 'clipped',
   paginated = 'paginated',
-  scrolled = 'scrolled'
+  scrolled = 'scrolled',
 }
 
 export enum Page {
   left = 'left',
   right = 'right',
-  center = 'center'
+  center = 'center',
 }
 
 export enum Spread {
   auto = 'auto',
   both = 'both',
   none = 'none',
-  landscape = 'landscape'
+  landscape = 'landscape',
 }
 
 export enum Fit {
   contain = 'contain',
   cover = 'cover',
   width = 'width',
-  height = 'height'
+  height = 'height',
 }
 
 export interface IPresentationMetadata {

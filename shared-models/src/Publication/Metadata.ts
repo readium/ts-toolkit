@@ -3,7 +3,11 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { arrayfromJSON, datefromJSON, positiveNumberfromJSON } from '../util/JSONParse';
+import {
+  arrayfromJSON,
+  datefromJSON,
+  positiveNumberfromJSON,
+} from '../util/JSONParse';
 import { BelongsTo } from './BelongsTo';
 import { Contributors } from './Contributor';
 import { LocalizedString } from './LocalizedString';
@@ -86,45 +90,68 @@ export class Metadata {
 
   private static readonly RTLLanguages = ['ar', 'fa', 'he', 'zh-Hant', 'zh-TW'];
 
-  private static readonly mappedProperties = ['title', '@type', 'identifier', 'subtitle', 'artists',
-    'authors', 'colorists', 'contributors', 'editors', 'illustrators', 'inkers', 'letterers',
-    'letterers', 'narrators', 'pencilers', 'translators', 'languages', 'description', 'publishers',
-    'imprints', 'published', 'modified', 'subjects', 'belongsTo', 'readingProgression', 'duration',
+  private static readonly mappedProperties = [
+    'title',
+    '@type',
+    'identifier',
+    'subtitle',
+    'artists',
+    'authors',
+    'colorists',
+    'contributors',
+    'editors',
+    'illustrators',
+    'inkers',
+    'letterers',
+    'letterers',
+    'narrators',
+    'pencilers',
+    'translators',
+    'languages',
+    'description',
+    'publishers',
+    'imprints',
+    'published',
+    'modified',
+    'subjects',
+    'belongsTo',
+    'readingProgression',
+    'duration',
     'numberOfPages',
   ];
 
   constructor(values: {
-    title: LocalizedString,
-    typeUri?: string,
-    identifier?: string,
-    subtitle?: LocalizedString,
-    artists?: Contributors,
-    authors?: Contributors,
-    colorists?: Contributors,
-    contributors?: Contributors,
-    editors?: Contributors,
-    illustrators?: Contributors,
-    inkers?: Contributors,
-    letterers?: Contributors,
-    narrators?: Contributors,
-    pencilers?: Contributors,
-    translators?: Contributors,
-    languages?: Array<string>,
-    description?: string,
-    publishers?: Contributors,
-    imprints?: Contributors,
-    published?: Date,
-    modified?: Date,
-    subjects?: Subjects,
-    belongsTo?: BelongsTo,
+    title: LocalizedString;
+    typeUri?: string;
+    identifier?: string;
+    subtitle?: LocalizedString;
+    artists?: Contributors;
+    authors?: Contributors;
+    colorists?: Contributors;
+    contributors?: Contributors;
+    editors?: Contributors;
+    illustrators?: Contributors;
+    inkers?: Contributors;
+    letterers?: Contributors;
+    narrators?: Contributors;
+    pencilers?: Contributors;
+    translators?: Contributors;
+    languages?: Array<string>;
+    description?: string;
+    publishers?: Contributors;
+    imprints?: Contributors;
+    published?: Date;
+    modified?: Date;
+    subjects?: Subjects;
+    belongsTo?: BelongsTo;
     // belongsToCollections?: Array<Collection>,
     // belongsToSeries?: Array<Collection>,
     // belongsToCollection?: Array<Collection>,
     // belongsToSeries?: Array<Collection>
-    readingProgression?: ReadingProgression,
-    duration?: number,
-    numberOfPages?: number,
-    otherMetadata?: { [key: string]: any }
+    readingProgression?: ReadingProgression;
+    duration?: number;
+    numberOfPages?: number;
+    otherMetadata?: { [key: string]: any };
   }) {
     this.title = values.title as LocalizedString; //title always required
     this.typeUri = values.typeUri;
@@ -182,9 +209,7 @@ export class Metadata {
     // this.duration = dictionary.parsePositive('duration');
     // this.numberOfPages = dictionary.parsePositive('numberOfPages');
     // this.otherMetadata = dictionary.json;
-
   }
-
 
   public static fromJSON(json: any): Metadata {
     let title = LocalizedString.fromJSON(json.title) as LocalizedString;
@@ -224,7 +249,7 @@ export class Metadata {
 
     let otherMetadata = Object.assign({}, json);
     Metadata.mappedProperties.forEach(x => delete otherMetadata[x]);
-    if (Object.keys(otherMetadata).length == 0) {
+    if (Object.keys(otherMetadata).length === 0) {
       otherMetadata = undefined;
     }
 
@@ -258,12 +283,12 @@ export class Metadata {
       readingProgression,
       duration,
       numberOfPages,
-      otherMetadata
+      otherMetadata,
     });
   }
 
   public toJSON(): any {
-    let json:any = {title : this.title.toJSON() };
+    let json: any = { title: this.title.toJSON() };
     if (this.typeUri) json['@type'] = this.typeUri;
     if (this.identifier) json.identifier = this.identifier;
     if (this.subtitle) json.subtitle = this.subtitle.toJSON();
@@ -284,13 +309,14 @@ export class Metadata {
     if (this.modified) json.modified = this.modified;
     if (this.subjects) json.subjects = this.subjects.toJSON();
     if (this.belongsTo) json.belongsTo = this.belongsTo.toJSON();
-    if (this.readingProgression) json.readingProgression = this.readingProgression;
+    if (this.readingProgression)
+      json.readingProgression = this.readingProgression;
     if (this.duration) json.duration = this.duration;
     if (this.numberOfPages) json.numberOfPages = this.numberOfPages;
 
     if (this.otherMetadata) {
       let metadata = this.otherMetadata;
-      Object.keys(metadata).forEach((x) => json[x]=metadata[x]);
+      Object.keys(metadata).forEach(x => (json[x] = metadata[x]));
     }
 
     return json;
@@ -298,7 +324,8 @@ export class Metadata {
 
   public getPresentation(): Presentation | undefined {
     if (this.otherMetadata) {
-      let presentation = this.otherMetadata['presentation'] || this.otherMetadata['rendition'];
+      let presentation =
+        this.otherMetadata['presentation'] || this.otherMetadata['rendition'];
       if (presentation) {
         return new Presentation(presentation);
       }
@@ -335,5 +362,4 @@ export class Metadata {
 
     return ReadingProgression.ltr;
   }
-
 }

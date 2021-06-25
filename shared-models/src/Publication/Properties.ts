@@ -18,8 +18,7 @@ export class Properties {
   public static fromJSON(json: any): Properties | undefined {
     if (json) {
       return new Properties(json);
-    }
-    else {
+    } else {
       return undefined;
     }
   }

@@ -29,14 +29,13 @@ export class Manifest {
   //public readonly subcollections: { [collection: string]: CoreCollection };
 
   constructor(values: {
-    context?: Array<string>,
-    metadata: Metadata,
-    links: Links,
-    readingOrder: Links,
-    resources?: Links,
-    tableOfContents?: Links
-  }
-  ) {
+    context?: Array<string>;
+    metadata: Metadata;
+    links: Links;
+    readingOrder: Links;
+    resources?: Links;
+    tableOfContents?: Links;
+  }) {
     this.context = values.context;
     this.metadata = values.metadata;
     this.links = values.links;
@@ -46,14 +45,16 @@ export class Manifest {
     //this.subcollections = CoreCollection.makeCollections(json.json);
   }
 
-  public static fromJSON(json: any) : Manifest {
+  public static fromJSON(json: any): Manifest {
     return new Manifest({
       context: arrayfromJSONorString(json['@context']),
       metadata: Metadata.fromJSON(json.metadata),
       links: Links.fromJSON(json.links) as Links,
-      readingOrder: Links.fromJSON(json.readingOrder ? json.readingOrder : json.spine) as Links,
+      readingOrder: Links.fromJSON(
+        json.readingOrder ? json.readingOrder : json.spine
+      ) as Links,
       resources: Links.fromJSON(json.resources),
-      tableOfContents: Links.fromJSON(json.toc)
+      tableOfContents: Links.fromJSON(json.toc),
       //this.subcollections = CoreCollection.makeCollections(dictionary.json);
     });
   }

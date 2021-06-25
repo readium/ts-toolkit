@@ -29,10 +29,15 @@ export class Subject {
   }
 
   public static fromJSON(json: any): Subject | undefined {
-    return json ? (typeof json == "string" ?
-      new Subject({ name: LocalizedString.fromJSON(json) as LocalizedString }) :
-      new Subject({ name: LocalizedString.fromJSON(json.name) as LocalizedString })
-    ) : undefined;
+    return json
+      ? typeof json == 'string'
+        ? new Subject({
+            name: LocalizedString.fromJSON(json) as LocalizedString,
+          })
+        : new Subject({
+            name: LocalizedString.fromJSON(json.name) as LocalizedString,
+          })
+      : undefined;
   }
 
   public toJSON(): any {
@@ -50,14 +55,15 @@ export class Subjects {
   public static fromJSON(json: any): Subjects | undefined {
     if (json) {
       let items = json instanceof Array ? json : [json];
-      return new Subjects(items.map<Subject>(item => Subject.fromJSON(item) as Subject));
-    }
-    else {
+      return new Subjects(
+        items.map<Subject>(item => Subject.fromJSON(item) as Subject)
+      );
+    } else {
       return undefined;
     }
   }
 
   public toJSON(): any {
-    return this.items.map((x) => x.toJSON());
+    return this.items.map(x => x.toJSON());
   }
 }

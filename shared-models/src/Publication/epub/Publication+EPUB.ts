@@ -11,22 +11,22 @@ import { Links } from '../Link';
  *  https://readium.org/webpub-manifest/schema/extensions/epub/subcollections.schema.json
  */
 // declare module '../Publication' {
-  export class Publicationx {
-    /** Provides navigation to positions in the Publication content that correspond to the locations
-     *  of page boundaries present in a print source being represented by this EPUB Publication.
-     */
-    getPageList: () => Links;
+export class Publicationx {
+  /** Provides navigation to positions in the Publication content that correspond to the locations
+   *  of page boundaries present in a print source being represented by this EPUB Publication.
+   */
+  getPageList: () => Links;
 
-    /** Identifies fundamental structural components of the publication in order to enable Reading
-     *  Systems to provide the User efficient access to them.
-     */
-    getLandmarks: () => Links;
+  /** Identifies fundamental structural components of the publication in order to enable Reading
+   *  Systems to provide the User efficient access to them.
+   */
+  getLandmarks: () => Links;
 
-    getListOfAudioClips: () => Links;
-    getListOfIllustrations: () => Links;
-    getListOfTables: () => Links;
-    getListOfVideoClips: () => Links;
-  }
+  getListOfAudioClips: () => Links;
+  getListOfIllustrations: () => Links;
+  getListOfTables: () => Links;
+  getListOfVideoClips: () => Links;
+}
 // }
 
 Publicationx.prototype.getPageList = function() {

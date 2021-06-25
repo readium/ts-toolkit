@@ -133,10 +133,10 @@ export class Link {
         templated: json.templated,
         type: json.type,
         title: json.title,
-        rels: json.rel ?
-          (json.rel instanceof Array ?
-            new Set<string>(json.rel as Array<string>)
-            : new Set<string>([json.rel as string]))
+        rels: json.rel
+          ? json.rel instanceof Array
+            ? new Set<string>(json.rel as Array<string>)
+            : new Set<string>([json.rel as string])
           : undefined,
         properties: Properties.fromJSON(json.properties),
         height: json.height,
@@ -145,11 +145,9 @@ export class Link {
         bitrate: json.bitrate,
         languages: json.language,
         alternates: Links.fromJSON(json.alternate),
-        children: Links.fromJSON(json.children)
-      }
-      );
-    }
-    else {
+        children: Links.fromJSON(json.children),
+      });
+    } else {
       return undefined;
     }
   }
@@ -161,7 +159,7 @@ export class Link {
     if (this.title) json.title = this.title;
     if (this.rels) {
       let relList = new Array<string>();
-      this.rels.forEach((x) => relList.push(x))
+      this.rels.forEach(x => relList.push(x));
       json.rel = relList;
     }
     if (this.properties) json.properties = this.properties.toJSON();
@@ -214,14 +212,13 @@ export class Links {
   public static fromJSON(json: any): Links | undefined {
     if (json && json instanceof Array) {
       return new Links(json.map<Link>(item => Link.fromJSON(item) as Link));
-    }
-    else {
+    } else {
       return undefined;
     }
   }
 
   public toJSON(): any {
-    return this.items.map((x) => x.toJSON());
+    return this.items.map(x => x.toJSON());
   }
 
   /** Finds the first link with the given relation. */

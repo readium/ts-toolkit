@@ -13,9 +13,9 @@
 export class LocalizedString {
   public items: { [key: string]: string };
 
-
   constructor(items: string | { [key: string]: string }) {
-    this.items = typeof items === "string" ? { "undefined_language": items } : items;
+    this.items =
+      typeof items === 'string' ? { undefined_language: items } : items;
   }
 
   public static fromJSON(json: any): undefined | LocalizedString {
@@ -24,11 +24,13 @@ export class LocalizedString {
 
   public toJSON(): any {
     let keys = Object.keys(this.items);
-    return keys.length == 1 && keys[0] === "undefined_language" ? this.items["undefined_language"] : this.items;
+    return keys.length === 1 && keys[0] === 'undefined_language'
+      ? this.items['undefined_language']
+      : this.items;
   }
 
   public getAsString(language?: string): string {
-    return this.items[language || "en"] || Object.values(this.items)[0] || "";
+    return this.items[language || 'en'] || Object.values(this.items)[0] || '';
   }
 }
 
@@ -37,10 +39,6 @@ export class LocalizedString {
 //     localizedString["en"] || Object.values(localizedString)[0] || "";
 // }
 
-
 // export function getLocalizedStringFromJSON(value: any): ILocalizedString {
 //   return (typeof value == "string") ? { "default": value } : value;
 // }
-
-
-

@@ -55,10 +55,15 @@ export class Contributor {
   }
 
   public static fromJSON(json: any): Contributor | undefined {
-    return json ? (typeof json == "string" ?
-      new Contributor({ name: LocalizedString.fromJSON(json) as LocalizedString }) :
-      new Contributor({ name: LocalizedString.fromJSON(json.name) as LocalizedString })
-    ) : undefined;
+    return json
+      ? typeof json == 'string'
+        ? new Contributor({
+            name: LocalizedString.fromJSON(json) as LocalizedString,
+          })
+        : new Contributor({
+            name: LocalizedString.fromJSON(json.name) as LocalizedString,
+          })
+      : undefined;
   }
 
   public toJSON(): any {
@@ -76,14 +81,17 @@ export class Contributors {
   public static fromJSON(json: any): Contributors | undefined {
     if (json) {
       let items = json instanceof Array ? json : [json];
-      return new Contributors(items.map<Contributor>(item => Contributor.fromJSON(item) as Contributor));
-    }
-    else {
+      return new Contributors(
+        items.map<Contributor>(
+          item => Contributor.fromJSON(item) as Contributor
+        )
+      );
+    } else {
       return undefined;
     }
   }
 
   public toJSON(): any {
-    return this.items.map((x) => x.toJSON());
+    return this.items.map(x => x.toJSON());
   }
 }
