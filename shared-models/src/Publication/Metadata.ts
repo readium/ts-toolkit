@@ -44,8 +44,6 @@ import { Subjects } from './Subject';
 //   numberOfPages?: number;
 // }
 
-
-
 export class Metadata {
   public title: LocalizedString;
   public typeUri?: string;
@@ -155,7 +153,7 @@ export class Metadata {
     // this.belongsToSeries = values.belongsToSeries;
     // this.belongsToCollection = values.belongsToCollection;
     // this.belongsToSeries = values.belongsToSeries;
-    this.readingProgression = values.readingProgression || ReadingProgression.auto;
+    this.readingProgression = values.readingProgression; // || ReadingProgression.auto;
     this.duration = values.duration;
     this.numberOfPages = values.numberOfPages;
     this.otherMetadata = values.otherMetadata;

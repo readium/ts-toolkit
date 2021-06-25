@@ -2,6 +2,7 @@
  * Use of this source code is governed by a BSD-style license,
  * available in the LICENSE file present in the Github repository of the project.
  */
+import { arrayfromJSONorString } from '../util/JSONParse';
 import { Link, Links } from './Link';
 import { Metadata } from './Metadata';
 
@@ -45,10 +46,9 @@ export class Manifest {
     //this.subcollections = CoreCollection.makeCollections(json.json);
   }
 
-
   public static fromJSON(json: any) : Manifest {
     return new Manifest({
-      context: json['@context'], // dictionary.parseArray('@context'),
+      context: arrayfromJSONorString(json['@context']),
       metadata: Metadata.fromJSON(json.metadata),
       links: Links.fromJSON(json.links) as Links,
       readingOrder: Links.fromJSON(json.readingOrder ? json.readingOrder : json.spine) as Links,

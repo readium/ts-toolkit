@@ -4,6 +4,10 @@ export function arrayfromJSON(json: any): Array<any> | undefined {
     return json && json instanceof Array ? json : undefined;
 }
 
+export function arrayfromJSONorString(json: any): Array<any> | undefined {
+    return json && typeof json === "string" ? [json] : arrayfromJSON(json);
+}
+
 /** Parses the given key and returns a Date (or undefined if it’s not a string) */
 export function datefromJSON(json: any): Date | undefined {
     return typeof json === "string" ? new Date(json) : undefined;

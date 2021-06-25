@@ -20,12 +20,12 @@ export function leadingPage(readingProgression: ReadingProgression): Page {
     case ReadingProgression.auto:
     case ReadingProgression.ttb:
     case ReadingProgression.ltr:
-      return 'left';
+      return Page.left;
     case ReadingProgression.rtl:
     case ReadingProgression.btt:
-      return 'right';
+      return Page.right;
     default:
-      return 'left';
+      return Page.left;
   }
 }
 // }

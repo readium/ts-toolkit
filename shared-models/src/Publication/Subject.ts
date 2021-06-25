@@ -14,8 +14,6 @@ import { LocalizedString } from './LocalizedString';
 //   links?: Array<Link>;
 // }
 
-
-
 export class Subject {
   /** The name of the contributor. */
   public readonly name: LocalizedString;
