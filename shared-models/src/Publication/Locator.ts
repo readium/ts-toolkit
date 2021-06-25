@@ -3,19 +3,19 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-interface ILocatorText {
+export interface IText {
   after?: string;
   before?: string;
   highlight?: string;
 }
 
-interface IDOMRangePoint {
+export interface IDOMRangePoint {
   cssSelector: string;
   textNodeIndex: number;
   charOffset?: number;
 }
 
-interface IDOMRange {
+export interface IDOMRange {
   start: IDOMRangePoint;
   end?: IDOMRangePoint;
 }
@@ -60,5 +60,5 @@ export interface ILocator {
   locations: ILocations;
 
   /** Textual context of the locator. */
-  text: ILocatorText;
+  text: IText;
 }

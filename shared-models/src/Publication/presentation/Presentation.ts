@@ -7,11 +7,38 @@ import { EPUBLayout } from '../epub/Layout';
 import { Link } from '../Link';
 import '../epub/Properties+EPUB';
 
-export type Orientation = 'auto' | 'landscape' | 'portrait';
-export type Overflow = 'auto' | 'clipped' | 'paginated' | 'scrolled';
-export type Page = 'left' | 'right' | 'center';
-export type Spread = 'auto' | 'both' | 'none' | 'landscape';
-export type Fit = 'contain' | 'cover' | 'width' | 'height';
+export enum Orientation {
+  auto = 'auto',
+  landscape = 'landscape',
+  portrait = 'portrait'
+}
+
+export enum Overflow {
+  auto = 'auto',
+  clipped = 'clipped',
+  paginated = 'paginated',
+  scrolled = 'scrolled'
+}
+
+export enum Page {
+  left = 'left',
+  right = 'right',
+  center = 'center'
+}
+
+export enum Spread {
+  auto = 'auto',
+  both = 'both',
+  none = 'none',
+  landscape = 'landscape'
+}
+
+export enum Fit {
+  contain = 'contain',
+  cover = 'cover',
+  width = 'width',
+  height = 'height'
+}
 
 export interface IPresentationMetadata {
   clipped?: boolean;
