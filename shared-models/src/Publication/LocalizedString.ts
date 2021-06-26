@@ -3,42 +3,57 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-//type StringKV = {[key: string]: string};
+import { typeIs } from '../util/TypeCheckers';
 
-// export interface ILocalizedString {
-//   // Todo: this should be a class with a helper getting lang (with fallback)
-//   [key: string]: string;
-// }
-
+/**
+ * Represents a string with multiple translations indexed by a BCP 47 language tag.
+ */
 export class LocalizedString {
-  public items: { [key: string]: string };
+  public translations: { [key: string]: string };
 
-  constructor(items: string | { [key: string]: string }) {
-    this.items =
-      typeof items === 'string' ? { undefined_language: items } : items;
+  public static readonly UNDEFINED_LANGUAGE = 'undefined';
+  public static readonly LANGUAGE_EN = 'en';
+
+  /**
+   * translations can be a string or a collection of language/translation pairs,
+   * for a single string the language is assumed to be undefined
+   */
+  constructor(translations: string | { [key: string]: string }) {
+    this.translations =
+      typeof translations === 'string'
+        ? { [LocalizedString.UNDEFINED_LANGUAGE]: translations }
+        : translations;
   }
 
   public static fromJSON(json: any): undefined | LocalizedString {
-    return json ? new LocalizedString(json) : undefined;
+    return typeIs(json, [String, Object])
+      ? new LocalizedString(json)
+      : undefined;
   }
 
   public toJSON(): any {
-    let keys = Object.keys(this.items);
-    return keys.length === 1 && keys[0] === 'undefined_language'
-      ? this.items['undefined_language']
-      : this.items;
+    let keys = Object.keys(this.translations);
+    return keys.length === 1 && keys[0] === LocalizedString.UNDEFINED_LANGUAGE
+      ? this.translations[LocalizedString.UNDEFINED_LANGUAGE]
+      : this.translations;
   }
 
-  public getAsString(language?: string): string {
-    return this.items[language || 'en'] || Object.values(this.items)[0] || '';
+  /**
+   * Returns the first translation for the given [language] BCP–47 tag.
+   * If not found, then fallback:
+   *    1. on the undefined language
+   *    2. on the English language
+   *    3. the first translation found
+   *    4. returns empty string
+   */
+  public getTranslation(language?: string): string {
+    return (
+      this.translations[language || LocalizedString.UNDEFINED_LANGUAGE] ||
+      this.translations[LocalizedString.UNDEFINED_LANGUAGE] ||
+      this.translations[LocalizedString.LANGUAGE_EN] ||
+      (Object.values(this.translations).length === 0
+        ? ''
+        : Object.values(this.translations)[0])
+    );
   }
 }
-
-// export function getLocalizedStringTranslation(localizedString: any, language: string): string {
-//   return localizedString[language] ||
-//     localizedString["en"] || Object.values(localizedString)[0] || "";
-// }
-
-// export function getLocalizedStringFromJSON(value: any): ILocalizedString {
-//   return (typeof value == "string") ? { "default": value } : value;
-// }
