@@ -3,7 +3,7 @@
   "include": ["src"],
   "compilerOptions": {
     "module": "esnext",
-    "lib": ["esnext","dom"],
+    "lib": ["esnext","dom","dom.iterable"],
     "importHelpers": true,
     // output .d.ts declaration files for consumers
     "declaration": true,

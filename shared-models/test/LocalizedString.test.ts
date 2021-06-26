@@ -1,4 +1,4 @@
-import { LocalizedString } from '../src';
+import { LocalizedString, UNDEFINED_LANGUAGE } from '../src';
 
 describe('LocalizedString Tests', () => {
   it('parse JSON string', () => {
@@ -40,12 +40,12 @@ describe('LocalizedString Tests', () => {
       new LocalizedString({
         en: 'a string',
         fr: 'une chaîne',
-        [LocalizedString.UNDEFINED_LANGUAGE]: 'bir metin',
+        [UNDEFINED_LANGUAGE]: 'bir metin',
       }).toJSON()
     ).toEqual({
       en: 'a string',
       fr: 'une chaîne',
-      [LocalizedString.UNDEFINED_LANGUAGE]: 'bir metin',
+      [UNDEFINED_LANGUAGE]: 'bir metin',
     });
   });
 
@@ -72,7 +72,7 @@ describe('LocalizedString Tests', () => {
       new LocalizedString({
         foo: 'a string',
         bar: 'une chaîne',
-        [LocalizedString.UNDEFINED_LANGUAGE]: 'Surgh',
+        [UNDEFINED_LANGUAGE]: 'Surgh',
       }).getTranslation()
     ).toEqual('Surgh');
   });

@@ -14,9 +14,20 @@ import { LocalizedString } from './LocalizedString';
 //   links?: Array<Link>;
 // }
 
+/**
+ * https://github.com/readium/webpub-manifest/blob/master/schema/subject-object.schema.json
+ *
+ * name The name of the subject.
+ * sortAs Provides a string that a machine can sort.
+ * scheme EPUB 3.1 opf:authority.
+ * code EPUB 3.1 opf:term.
+ * links Used to retrieve similar publications for the given subjects.
+ */
 export class Subject {
-  /** The name of the contributor. */
   public readonly name: LocalizedString;
+  public readonly sortAs?: string;
+  public readonly code?: string;
+  public readonly scheme?: string;
 
   // sortAs?: string;
   // code?: string;
@@ -45,6 +56,11 @@ export class Subject {
   }
 }
 
+/**
+ * https://github.com/readium/webpub-manifest/blob/master/schema/subject.schema.json
+ *
+ * Collection of [Subject]
+ */
 export class Subjects {
   public readonly items: Array<Subject>;
 
