@@ -3,35 +3,41 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
+/**
+ * Properties associated to the linked resource.
+ *
+ * This is opened for extensions.
+ * https://readium.org/webpub-manifest/schema/link.schema.json
+ */
 export class Properties {
   public otherProperties: { [key: string]: any };
 
   constructor(values: { [key: string]: any }) {
     this.otherProperties = values;
-    // if (typeof json === 'string') {
-    //   this.otherProperties = JSON.parse(json);
-    // } else {
-    //   this.otherProperties = json;
-    // }
   }
 
+  /**
+   * Creates a [Properties] from its RWPM JSON representation.
+   */
   public static fromJSON(json: any): Properties | undefined {
-    if (json) {
-      return new Properties(json);
-    } else {
-      return undefined;
-    }
+    return json ? new Properties(json) : undefined;
   }
 
+  /**
+   * Serializes a [Properties] to its RWPM JSON representation.
+   */
   public toJSON(): any {
     return this.otherProperties;
   }
 
-  // public adding(properties: { [key: string]: any }): Properties {
-  //   let copy = JSON.parse(JSON.stringify(this.otherProperties));
-  //   for (const property in properties) {
-  //     copy[property] = properties[property];
-  //   }
-  //   return new Properties(copy);
-  // }
+  /**
+   * Makes a copy of this [Properties] after merging in the given additional other [properties].
+   */
+  public add(properties: { [key: string]: any }): Properties {
+    let _properties = Object.assign({}, this.otherProperties);
+    for (const property in properties) {
+      _properties[property] = properties[property];
+    }
+    return new Properties(_properties);
+  }
 }

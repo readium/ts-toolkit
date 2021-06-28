@@ -3,35 +3,32 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { MediaType } from '../Format/MediaType';
+import { MediaType } from '../util/mediatype/MediaType';
 import { Properties } from './Properties';
 import { URITemplate } from '../util/URITemplate';
-// import { JSONDictionary } from './Publication+JSON';
+import {
+  arrayfromJSONorString,
+  positiveNumberfromJSON,
+} from '../util/JSONParse';
 
-/*  
-    Keeping as ref list of values we know are currently used, per webpub doc:
-    https://github.com/readium/webpub-manifest/blob/master/relationships.md
-    type LinkRel = "alternate" | "contents" | "cover" | "manifest" | "search" | "self"; 
-*/
-
-// export interface ILink {
-//   href: string;
-//   templated?: boolean;
-//   type?: string;
-//   title?: string;
-//   rel?: Array<string>;
-//   properties?: Properties;
-//   height?: number;
-//   width?: number;
-//   duration?: number;
-//   bitrate?: number;
-//   language?: Array<string>;
-//   alternate?: Array<ILink>;
-//   children?: Array<ILink>;
-// }
-
-/** Link Object for the Readium Web Publication Manifest.
- *  https://readium.org/webpub-manifest/schema/link.schema.json
+/**
+ * Link Object for the Readium Web Publication Manifest.
+ * https://readium.org/webpub-manifest/schema/link.schema.json
+ *
+ * href URI or URI template of the linked resource.
+ * type MIME type of the linked resource.
+ * templated Indicates that a URI template is used in href.
+ * title Title of the linked resource.
+ * rels Relation between the linked resource and its containing collection.
+ * properties Properties associated to the linked resource.
+ * height Height of the linked resource in pixels.
+ * width Width of the linked resource in pixels.
+ * bitrate Bitrate of the linked resource in kbps.
+ * duration Length of the linked resource in seconds.
+ * languages Expected language of the linked resource (BCP 47 tag).
+ * alternates Alternate resources for the linked resource.
+ * children Resources that are children of the linked resource, in the context of a given
+ *     collection role.
  */
 export class Link {
   /** URI or URI template of the linked resource. */
@@ -76,8 +73,6 @@ export class Link {
   /** MediaType of the linked resource. */
   public mediaType?: MediaType;
 
-  // public templateParameters: Set<string>;
-
   constructor(values: {
     href: string;
     templated?: boolean;
@@ -106,50 +101,30 @@ export class Link {
     this.languages = values.languages;
     this.alternates = values.alternates;
     this.children = values.children;
-
-    // this.href = link.href;
-    // this.templated = link.templated;
-    // this.type = link.type;
-    // this.title = link.title;
-    // this.rels = new Set(link.rel);
-    // this.properties = new Properties(link.properties);
-    // this.height = link.height;
-    // this.width = link.width;
-    // this.duration = link.duration;
-    // this.bitrate = link.bitrate;
-    // this.languages = link.languages;
-    // this.alternates = link.alternates
-    //   ? new Links(link.alternate)
-    //   : new Links([]);
-    // this.children = link.children ? new Links(link.children) : new Links([]);
-    // this.mediaType = link.type ? new MediaType(link.type) : undefined;
-    // this.templateParameters = this.getTemplateParameters();
   }
 
   public static fromJSON(json: any): Link | undefined {
-    if (json) {
-      return new Link({
-        href: json.href,
-        templated: json.templated,
-        type: json.type,
-        title: json.title,
-        rels: json.rel
-          ? json.rel instanceof Array
-            ? new Set<string>(json.rel as Array<string>)
-            : new Set<string>([json.rel as string])
-          : undefined,
-        properties: Properties.fromJSON(json.properties),
-        height: json.height,
-        width: json.width,
-        duration: json.duration,
-        bitrate: json.bitrate,
-        languages: json.language,
-        alternates: Links.fromJSON(json.alternate),
-        children: Links.fromJSON(json.children),
-      });
-    } else {
-      return undefined;
-    }
+    return json && json.href && typeof json.href === 'string'
+      ? new Link({
+          href: json.href,
+          templated: json.templated,
+          type: json.type,
+          title: json.title,
+          rels: json.rel
+            ? json.rel instanceof Array
+              ? new Set<string>(json.rel as Array<string>)
+              : new Set<string>([json.rel as string])
+            : undefined,
+          properties: Properties.fromJSON(json.properties),
+          height: positiveNumberfromJSON(json.height),
+          width: positiveNumberfromJSON(json.width),
+          duration: positiveNumberfromJSON(json.duration),
+          bitrate: positiveNumberfromJSON(json.bitrate),
+          languages: arrayfromJSONorString(json.language),
+          alternates: Links.fromJSON(json.alternate),
+          children: Links.fromJSON(json.children),
+        })
+      : undefined;
   }
 
   public toJSON(): any {
@@ -167,8 +142,8 @@ export class Link {
     if (this.width) json.width = this.width;
     if (this.duration) json.duration = this.duration;
     if (this.bitrate) json.bitrate = this.bitrate;
-    if (this.languages) json.languages = this.languages;
-    if (this.alternates) json.alternates = this.alternates.toJSON();
+    if (this.languages) json.language = this.languages;
+    if (this.alternates) json.alternate = this.alternates.toJSON();
     if (this.children) json.children = this.children.toJSON();
     return json;
   }
@@ -176,18 +151,22 @@ export class Link {
   /** Computes an absolute URL to the link, relative to the given `baseURL`.
    *  If the link's `href` is already absolute, the `baseURL` is ignored.
    */
-  public toAbsoluteHREF(baseUrl: string): string {
-    return new URL(this.href, baseUrl).href;
+  public toAbsoluteHREF(baseUrl?: string): string | undefined {
+    let href = this.href.replace(/^(\/)/, '');
+    if (href.length === 0) return undefined;
+    let _baseUrl = baseUrl ? baseUrl : '/';
+
+    if (_baseUrl.startsWith('/')) {
+      _baseUrl = 'file://' + _baseUrl;
+    }
+
+    return new URL(href, _baseUrl).href.replace(/^(file:\/\/)/, '');
   }
 
   /** List of URI template parameter keys, if the `Link` is templated. */
-  // private getTemplateParameters(): Set<string> {
-  //   if (!this.templated) {
-  //     return new Set();
-  //   } else {
-  //     return new URITemplate(this.href).parameters;
-  //   }
-  // }
+  public getTemplateParameters(): Set<string> {
+    return this.templated ? new URITemplate(this.href).parameters : new Set();
+  }
 
   /** Expands the `Link`'s HREF by replacing URI template variables by the given parameters.
    *  See RFC 6570 on URI template: https://tools.ietf.org/html/rfc6570
@@ -198,6 +177,17 @@ export class Link {
       href: new URITemplate(this.href).expand(parameters),
       templated: false,
     });
+  }
+
+  /**
+   * Makes a copy of this [Link] after merging in the given additional other [properties].
+   */
+  public addProperties(properties: { [key: string]: any }): Link {
+    let link = Link.fromJSON(this.toJSON()) as Link;
+    link.properties = link.properties
+      ? link.properties?.add(properties)
+      : new Properties(properties);
+    return link;
   }
 }
 
@@ -211,7 +201,11 @@ export class Links {
 
   public static fromJSON(json: any): Links | undefined {
     if (json && json instanceof Array) {
-      return new Links(json.map<Link>(item => Link.fromJSON(item) as Link));
+      return new Links(
+        json
+          .map<Link>(item => Link.fromJSON(item) as Link)
+          .filter(x => x !== undefined)
+      );
     } else {
       return undefined;
     }
@@ -287,7 +281,7 @@ export class Links {
   /** Returns whether all the resources in the collection are HTML documents. */
   public everyIsHTML(): boolean {
     const predicate = (el: Link) =>
-      el.mediaType ? el.mediaType.isHTML() : false;
+      el.mediaType ? el.mediaType.isHtml() : false;
     return this.items.every(predicate);
   }
 

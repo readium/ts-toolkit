@@ -1,4 +1,4 @@
-import { URITemplate } from '../src/util/URITemplate';
+import { URITemplate } from '../../src/util/URITemplate';
 
 describe('URITemplate Tests', () => {
   it('parameters works fine', () => {

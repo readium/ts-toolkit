@@ -3,7 +3,7 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { MediaType } from './MediaType';
+import { MediaType } from '../util/mediatype/MediaType';
 
 /** Represents a known file format, uniquely identified by a media type. */
 export default class Format {

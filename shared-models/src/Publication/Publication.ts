@@ -38,7 +38,7 @@ export class Publication {
    *  e.g. https://provider.com/pub1293/manifest.json gives https://provider.com/pub1293/
    */
   public baseURL(): string | null {
-    const selfLink = this.manifest.links.items.find(
+    const selfLink = this.links.items.find(
       el => el.rels && el.rels.has('self')
     );
     if (selfLink) {
@@ -79,11 +79,11 @@ export class Publication {
     };
 
     const links: Array<Links> = [];
-    links.push(this.manifest.readingOrder);
-    if (this.manifest.resources) {
-      links.push(this.manifest.resources);
+    links.push(this.readingOrder);
+    if (this.resources) {
+      links.push(this.resources);
     }
-    links.push(this.manifest.links);
+    links.push(this.links);
 
     const link = find(links);
 
@@ -101,11 +101,11 @@ export class Publication {
 
   /** Finds the first link with the given relation in the publication's links. */
   public linkWithRel(rel: string): Link | null {
-    return this.manifest.linkWithRel(rel);
+    return this.linkWithRel(rel);
   }
 
   /** Finds all the links with the given relation in the publication's links. */
   public linksWithRel(rel: string): Array<Link> {
-    return this.manifest.linksWithRel(rel);
+    return this.linksWithRel(rel);
   }
 }
