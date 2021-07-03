@@ -3,6 +3,10 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
+import { IEncryption } from "./Encryption/Encryption";
+import { EPUBLayout } from "./epub/Layout";
+import { Fit, Orientation, Overflow, Page, Spread } from "./presentation/Presentation";
+
 /**
  * Properties associated to the linked resource.
  *
@@ -41,4 +45,49 @@ export class Properties {
     }
     return new Properties(_properties);
   }
+
+  //Presentation Properties :
+
+  public getClipped(): boolean {
+    return this.otherProperties['clipped'] || false;
+  }
+
+  public getFit(): Fit | undefined {
+    return this.otherProperties['fit'];
+  }
+
+  public getOrientation(): Orientation | undefined {
+    return this.otherProperties['orientation'];
+  }
+
+  public getOverflow(): Overflow | undefined {
+    return this.otherProperties['overflow'];
+  }
+
+  public getPage(): Page | undefined {
+    return this.otherProperties['page'] || null;
+  }
+
+  public getSpread(): Spread | undefined {
+    return this.otherProperties['spread'] || null;
+  }
+
+  //Encryption Properties :
+
+  public getEncryption(): IEncryption | undefined {
+    return this.otherProperties['encryption'];
+  }
+
+  //EPUB properties : 
+
+  public getContains(): Array<string> | undefined {
+    return this.otherProperties['contains'];
+  }
+
+  public getLayout(): EPUBLayout | undefined {
+    return this.otherProperties['layout'];
+  }
+
+  
+
 }

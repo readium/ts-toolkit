@@ -5,7 +5,6 @@
 
 import { EPUBLayout } from '../epub/Layout';
 import { Link } from '../Link';
-import '../epub/Properties+EPUB';
 
 export enum Orientation {
   auto = 'auto',

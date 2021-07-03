@@ -315,7 +315,7 @@ export class Metadata {
 
     const primaryLang = this.languages[0].toLowerCase();
 
-    if (primaryLang === 'zh-hant' || primaryLang == 'zh-tw') {
+    if (primaryLang === 'zh-hant' || primaryLang === 'zh-tw') {
       return ReadingProgression.rtl;
     }
 

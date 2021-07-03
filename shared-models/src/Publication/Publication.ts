@@ -3,35 +3,38 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-//import { CoreCollection } from './CoreCollection';
 import { Link, Links } from './Link';
 import { Manifest } from './Manifest';
 import { Metadata } from './Metadata';
+import { SubCollection } from './SubCollection';
 
 /** Shared model for a Readium Publication. */
 export class Publication {
-  private manifest: Manifest;
+  /** The manifest holding the publication metadata extracted from the publication file */
+  public manifest: Manifest;
 
-  // Aliases
-  public metadata: Metadata;
-  public links: Links;
-  public readingOrder: Links;
-  public resources?: Links;
-  public tableOfContents?: Links;
-  //public subcollections: { [collection: string]: CoreCollection };
+  // Shortcuts to manifest properties
+  public readonly context?: Array<string>;
+  public readonly metadata: Metadata;
+  public readonly links: Links;
+  /** Identifies a list of resources in reading order for the publication. */
+  public readonly readingOrder: Links;
+  /** Identifies resources that are necessary for rendering the publication. */
+  public readonly resources?: Links;
+  /** Identifies the collection that contains a table of contents. */
+  public readonly tableOfContents?: Links;
+  /** Identifies the collection that contains sub collections. */
+  public readonly subcollections?: SubCollection;
 
   constructor(manifest: Manifest) {
     this.manifest = manifest;
-
-    this.metadata = this.manifest.metadata;
-    this.links = this.manifest.links;
-    /** Identifies a list of resources in reading order for the publication. */
-    this.readingOrder = this.manifest.readingOrder;
-    /** Identifies resources that are necessary for rendering the publication. */
-    this.resources = this.manifest.resources;
-    /** Identifies the collection that contains a table of contents. */
-    this.tableOfContents = this.manifest.tableOfContents;
-    //this.subcollections = this.manifest.subcollections;
+    this.context = manifest.context;
+    this.metadata = manifest.metadata;
+    this.links = manifest.links;
+    this.readingOrder = manifest.readingOrder;
+    this.resources = manifest.resources;
+    this.tableOfContents = manifest.tableOfContents;
+    this.subcollections = manifest.subcollections;
   }
 
   /** The URL where this publication is served, computed from the `Link` with `self` relation.
@@ -92,20 +95,76 @@ export class Publication {
     }
 
     const shortHref = href.split(/[#]/)[0];
-    //const shortHref = href.split(/[#\?]/)[0];
 
     this.linkWithHref(shortHref);
 
     return link;
   }
 
-  /** Finds the first link with the given relation in the publication's links. */
-  public linkWithRel(rel: string): Link | null {
-    return this.linkWithRel(rel);
+
+
+  /**
+ * Returns the [links] of the first child [PublicationCollection] with the given role, or an
+ * empty list.
+ */
+  public linksWithRole(_role: string): Links | undefined {
+    //TODO : 
+    return undefined;
+    //let list = this.subcollections?.subcollections?.get(role);
+    //  return list.
+    // return undefined;
   }
 
-  /** Finds all the links with the given relation in the publication's links. */
-  public linksWithRel(rel: string): Array<Link> {
-    return this.linksWithRel(rel);
-  }
+  //  internal fun linksWithRole(role: String): List<Link> =
+  //  subcollections[role]?.firstOrNull()?.links ?: emptyList()
+
+  // /** Finds the first link with the given relation in the publication's links. */
+  // public linkWithRel(rel: string): Link | null {
+  //   return this.linkWithRel(rel);
+  // }
+
+  // /** Finds all the links with the given relation in the publication's links. */
+  // public linksWithRel(rel: string): Array<Link> {
+  //   return this.linksWithRel(rel);
+  // }
+
+
+
+  /** EPUB Web Publication Extension
+  *  https://readium.org/webpub-manifest/schema/extensions/epub/subcollections.schema.json
+  */
+
+  /** Provides navigation to positions in the Publication content that correspond to the locations
+    *  of page boundaries present in a print source being represented by this EPUB Publication.
+    */
+  public getPageList(): Links | undefined {
+    return this.linksWithRole('pageList');
+  };
+
+  /** Identifies fundamental structural components of the publication in order to enable Reading
+ *  Systems to provide the User efficient access to them.
+ */
+  public getLandmarks(): Links | undefined {
+    return this.linksWithRole('landmarks');
+  };
+
+  public getListOfAudioClips(): Links | undefined {
+    return this.linksWithRole('loa');
+  };
+
+  public getListOfIllustrations(): Links | undefined {
+    return this.linksWithRole('loi');
+  };
+
+  public getListOfTables(): Links | undefined {
+    return this.linksWithRole('lot');
+  };
+
+  public getListOfVideoClips(): Links | undefined {
+    return this.linksWithRole('lov');
+  };
+
+
+
+
 }
