@@ -20,7 +20,8 @@ export class Properties {
    * Creates a [Properties] from its RWPM JSON representation.
    */
   public static fromJSON(json: any): Properties | undefined {
-    return json ? new Properties(json) : undefined;
+    if (!json) return;
+    return new Properties(json);
   }
 
   /**

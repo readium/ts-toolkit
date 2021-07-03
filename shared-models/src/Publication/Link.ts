@@ -9,26 +9,12 @@ import { URITemplate } from '../util/URITemplate';
 import {
   arrayfromJSONorString,
   positiveNumberfromJSON,
+  setToArray,
 } from '../util/JSONParse';
 
 /**
  * Link Object for the Readium Web Publication Manifest.
  * https://readium.org/webpub-manifest/schema/link.schema.json
- *
- * href URI or URI template of the linked resource.
- * type MIME type of the linked resource.
- * templated Indicates that a URI template is used in href.
- * title Title of the linked resource.
- * rels Relation between the linked resource and its containing collection.
- * properties Properties associated to the linked resource.
- * height Height of the linked resource in pixels.
- * width Width of the linked resource in pixels.
- * bitrate Bitrate of the linked resource in kbps.
- * duration Length of the linked resource in seconds.
- * languages Expected language of the linked resource (BCP 47 tag).
- * alternates Alternate resources for the linked resource.
- * children Resources that are children of the linked resource, in the context of a given
- *     collection role.
  */
 export class Link {
   /** URI or URI template of the linked resource. */
@@ -73,6 +59,9 @@ export class Link {
   /** MediaType of the linked resource. */
   public mediaType?: MediaType;
 
+  /**
+   * Creates a [Link].
+   */
   constructor(values: {
     href: string;
     templated?: boolean;
@@ -103,40 +92,41 @@ export class Link {
     this.children = values.children;
   }
 
+  /**
+   * Parses a [Link] from its RWPM JSON representation.
+   */
   public static fromJSON(json: any): Link | undefined {
-    return json && json.href && typeof json.href === 'string'
-      ? new Link({
-          href: json.href,
-          templated: json.templated,
-          type: json.type,
-          title: json.title,
-          rels: json.rel
-            ? json.rel instanceof Array
-              ? new Set<string>(json.rel as Array<string>)
-              : new Set<string>([json.rel as string])
-            : undefined,
-          properties: Properties.fromJSON(json.properties),
-          height: positiveNumberfromJSON(json.height),
-          width: positiveNumberfromJSON(json.width),
-          duration: positiveNumberfromJSON(json.duration),
-          bitrate: positiveNumberfromJSON(json.bitrate),
-          languages: arrayfromJSONorString(json.language),
-          alternates: Links.fromJSON(json.alternate),
-          children: Links.fromJSON(json.children),
-        })
-      : undefined;
+    if (!(json && json.href && typeof json.href === 'string')) return;
+    return new Link({
+      href: json.href,
+      templated: json.templated,
+      type: json.type,
+      title: json.title,
+      rels: json.rel
+        ? json.rel instanceof Array
+          ? new Set<string>(json.rel as Array<string>)
+          : new Set<string>([json.rel as string])
+        : undefined,
+      properties: Properties.fromJSON(json.properties),
+      height: positiveNumberfromJSON(json.height),
+      width: positiveNumberfromJSON(json.width),
+      duration: positiveNumberfromJSON(json.duration),
+      bitrate: positiveNumberfromJSON(json.bitrate),
+      languages: arrayfromJSONorString(json.language),
+      alternates: Links.fromJSON(json.alternate),
+      children: Links.fromJSON(json.children),
+    });
   }
 
+  /**
+   * Serializes a [Link] to its RWPM JSON representation.
+   */
   public toJSON(): any {
     let json: any = { href: this.href };
     if (this.templated) json.templated = this.templated;
     if (this.type) json.type = this.type;
     if (this.title) json.title = this.title;
-    if (this.rels) {
-      let relList = new Array<string>();
-      this.rels.forEach(x => relList.push(x));
-      json.rel = relList;
-    }
+    if (this.rels) json.rel = setToArray(this.rels);
     if (this.properties) json.properties = this.properties.toJSON();
     if (this.height) json.height = this.height;
     if (this.width) json.width = this.width;
@@ -153,7 +143,7 @@ export class Link {
    */
   public toAbsoluteHREF(baseUrl?: string): string | undefined {
     let href = this.href.replace(/^(\/)/, '');
-    if (href.length === 0) return undefined;
+    if (href.length === 0) return;
     let _baseUrl = baseUrl ? baseUrl : '/';
 
     if (_baseUrl.startsWith('/')) {
@@ -191,26 +181,34 @@ export class Link {
   }
 }
 
-/** Parses multiple JSON links into an array of Link. */
+/**
+ * Parses multiple JSON links into an array of Link.
+ */
 export class Links {
   public readonly items: Array<Link>;
 
+  /**
+   * Creates a [Links].
+   */
   constructor(items: Array<Link>) {
     this.items = items;
   }
 
+  /**
+   * Creates a list of [Link] from its RWPM JSON representation.
+   */
   public static fromJSON(json: any): Links | undefined {
-    if (json && json instanceof Array) {
-      return new Links(
-        json
-          .map<Link>(item => Link.fromJSON(item) as Link)
-          .filter(x => x !== undefined)
-      );
-    } else {
-      return undefined;
-    }
+    if (!(json && json instanceof Array)) return;
+    return new Links(
+      json
+        .map<Link>(item => Link.fromJSON(item) as Link)
+        .filter(x => x !== undefined)
+    );
   }
 
+  /**
+   * Serializes an array of [Link] to its RWPM JSON representation.
+   */
   public toJSON(): any {
     return this.items.map(x => x.toJSON());
   }
@@ -306,5 +304,9 @@ export class Links {
         el.mediaType ? el.mediaType.matches(mediaTypes) : false
       );
     }
+  }
+
+  public filterLinksHasType(): Array<Link> {
+    return this.items.filter(x => x.type);
   }
 }

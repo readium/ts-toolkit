@@ -14,11 +14,6 @@ describe('Link Tests', () => {
   it('expand works fine', () => {
     expect(
       new Link({
-        href: '/url?x=aaa&hello=Hello%2C%20world&y=bname',
-        templated: false,
-      })
-    ).toEqual(
-      new Link({
         href: '/url{?x,hello,y}name',
         templated: true,
       }).expandTemplate({
@@ -26,19 +21,42 @@ describe('Link Tests', () => {
         hello: 'Hello, world',
         y: 'b',
       })
+    ).toEqual(
+      new Link({
+        href: '/url?x=aaa&hello=Hello%2C%20world&y=bname',
+        templated: false,
+      })
     );
   });
 
   it('parse minimal JSON', () => {
-    expect(
+    expect(Link.fromJSON({ href: 'http://href' })).toEqual(
       new Link({
         href: 'http://href',
       })
-    ).toEqual(Link.fromJSON({ href: 'http://href' }));
+    );
   });
 
   it('parse full JSON', () => {
     expect(
+      Link.fromJSON({
+        href: 'http://href',
+        type: 'application/pdf',
+        templated: true,
+        title: 'Link Title',
+        rel: ['publication', 'cover'],
+        properties: {
+          orientation: 'landscape',
+        },
+        height: 1024,
+        width: 768,
+        bitrate: 74.2,
+        duration: 45.6,
+        language: 'fr',
+        alternate: [{ href: '/alternate1' }, { href: '/alternate2' }],
+        children: [{ href: 'http://child1' }, { href: 'http://child2' }],
+      })
+    ).toEqual(
       new Link({
         href: 'http://href',
         type: 'application/pdf',
@@ -60,24 +78,6 @@ describe('Link Tests', () => {
           new Link({ href: 'http://child2' }),
         ]),
       })
-    ).toEqual(
-      Link.fromJSON({
-        href: 'http://href',
-        type: 'application/pdf',
-        templated: true,
-        title: 'Link Title',
-        rel: ['publication', 'cover'],
-        properties: {
-          orientation: 'landscape',
-        },
-        height: 1024,
-        width: 768,
-        bitrate: 74.2,
-        duration: 45.6,
-        language: 'fr',
-        alternate: [{ href: '/alternate1' }, { href: '/alternate2' }],
-        children: [{ href: 'http://child1' }, { href: 'http://child2' }],
-      })
     );
   });
 
@@ -86,8 +86,8 @@ describe('Link Tests', () => {
   });
 
   it('parse JSON {rel} as single string', () => {
-    expect(new Link({ href: 'a', rels: new Set(['publication']) })).toEqual(
-      Link.fromJSON({ href: 'a', rel: 'publication' })
+    expect(Link.fromJSON({ href: 'a', rel: 'publication' })).toEqual(
+      new Link({ href: 'a', rels: new Set(['publication']) })
     );
   });
 
@@ -98,8 +98,8 @@ describe('Link Tests', () => {
   });
 
   it('parse JSON multiple languages', () => {
-    expect(new Link({ href: 'a', languages: ['fr', 'en'] })).toEqual(
-      Link.fromJSON({ href: 'a', language: ['fr', 'en'] })
+    expect(Link.fromJSON({ href: 'a', language: ['fr', 'en'] })).toEqual(
+      new Link({ href: 'a', languages: ['fr', 'en'] })
     );
   });
 
@@ -133,23 +133,23 @@ describe('Link Tests', () => {
 
   it('parse JSON array', () => {
     expect(
+      Links.fromJSON([{ href: 'http://child1' }, { href: 'http://child2' }])
+    ).toEqual(
       new Links([
         new Link({ href: 'http://child1' }),
         new Link({ href: 'http://child2' }),
       ])
-    ).toEqual(
-      Links.fromJSON([{ href: 'http://child1' }, { href: 'http://child2' }])
     );
   });
 
   it('parse undefined JSON array', () => {
-    expect(Links.fromJSON({})).toBeUndefined();
+    expect(Links.fromJSON(undefined)).toBeUndefined();
   });
 
   it('parse JSON array ignores invalid links', () => {
-    expect(new Links([new Link({ href: 'http://child2' })])).toEqual(
+    expect(
       Links.fromJSON([{ title: 'Title' }, { href: 'http://child2' }])
-    );
+    ).toEqual(new Links([new Link({ href: 'http://child2' })]));
   });
 
   it('get minimal JSON', () => {
@@ -200,7 +200,7 @@ describe('Link Tests', () => {
     });
   });
 
-  it('parse JSON array', () => {
+  it('get JSON array', () => {
     expect(
       new Links([
         new Link({ href: 'http://child1' }),

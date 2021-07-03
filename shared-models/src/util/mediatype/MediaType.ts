@@ -34,6 +34,7 @@ export class MediaType {
   /** The default file extension to use for this media type. */
   public fileExtension?: string;
 
+  /** Creates a MediaType object. */
   constructor(values: {
     mediaType: string;
     name?: string;

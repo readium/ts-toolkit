@@ -21,3 +21,10 @@ export function numberfromJSON(json: any): number | undefined {
 export function positiveNumberfromJSON(json: any): number | undefined {
   return numberfromJSON(json) && Math.sign(json) >= 0 ? json : undefined;
 }
+
+/** Converts a Set of a string to a string Array object */
+export function setToArray(obj: Set<string>): Array<string> {
+  let list = new Array<string>();
+  obj.forEach(x => list.push(x));
+  return list;
+}

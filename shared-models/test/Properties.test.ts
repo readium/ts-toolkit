@@ -1,22 +1,22 @@
 import { Properties } from '../src/Publication/Properties';
 
 describe('Properties Tests', () => {
-  it('parse null JSON', () => {
-    expect(undefined).toEqual(Properties.fromJSON(undefined));
+  it('parse undefined JSON', () => {
+    expect(Properties.fromJSON(undefined)).toEqual(undefined);
   });
 
   it('parse minimal JSON', () => {
-    expect(new Properties({})).toEqual(Properties.fromJSON({}));
+    expect(Properties.fromJSON({})).toEqual(new Properties({}));
   });
 
   it('parse full JSON', () => {
     expect(
-      new Properties({
+      Properties.fromJSON({
         'other-property1': 'value',
         'other-property2': [42],
       })
     ).toEqual(
-      Properties.fromJSON({
+      new Properties({
         'other-property1': 'value',
         'other-property2': [42],
       })

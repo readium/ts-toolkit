@@ -2,9 +2,11 @@
  * Use of this source code is governed by a BSD-style license,
  * available in the LICENSE file present in the Github repository of the project.
  */
-import { arrayfromJSONorString } from '../util/JSONParse';
-import { Link, Links } from './Link';
+
 import { Metadata } from './Metadata';
+import { Link, Links } from './Link';
+import { SubCollection } from './SubCollection';
+import { arrayfromJSONorString } from '../util/JSONParse';
 
 /** Holds the metadata of a Readium publication, as described in
  *  the Readium Web Publication Manifest.
@@ -14,6 +16,7 @@ export class Manifest {
   public readonly context?: Array<string>;
 
   public readonly metadata: Metadata;
+
   public readonly links: Links;
 
   /** Identifies a list of resources in reading order for the publication. */
@@ -25,8 +28,7 @@ export class Manifest {
   /** Identifies the collection that contains a table of contents. */
   public readonly tableOfContents?: Links;
 
-  //TODO : fix
-  //public readonly subcollections: { [collection: string]: CoreCollection };
+  public readonly subcollections?: SubCollection;
 
   constructor(values: {
     context?: Array<string>;
@@ -35,6 +37,7 @@ export class Manifest {
     readingOrder: Links;
     resources?: Links;
     tableOfContents?: Links;
+    subcollections?: SubCollection;
   }) {
     this.context = values.context;
     this.metadata = values.metadata;
@@ -42,31 +45,55 @@ export class Manifest {
     this.readingOrder = values.readingOrder;
     this.resources = values.resources;
     this.tableOfContents = values.tableOfContents;
-    //this.subcollections = CoreCollection.makeCollections(json.json);
+    this.subcollections = values.subcollections;
   }
 
-  public static fromJSON(json: any): Manifest {
+  /**
+   * Parses a [Publication] from its RWPM JSON representation.
+   *
+   * https://readium.org/webpub-manifest/
+   * https://readium.org/webpub-manifest/schema/publication.schema.json
+   */
+  public static fromJSON(json: any): Manifest | undefined {
+    if (!json) return;
+
+    const metadata = Metadata.fromJSON(json.metadata);
+
+    if (!metadata) return;
+
+    const links = Links.fromJSON(json.links);
+
+    if (!links) return;
+
+    const readingOrder = Links.fromJSON(
+      json.readingOrder ? json.readingOrder : json.spine
+    );
+
+    if (!readingOrder) return;
+
     return new Manifest({
       context: arrayfromJSONorString(json['@context']),
-      metadata: Metadata.fromJSON(json.metadata),
-      links: Links.fromJSON(json.links) as Links,
-      readingOrder: Links.fromJSON(
-        json.readingOrder ? json.readingOrder : json.spine
-      ) as Links,
+      metadata,
+      links,
+      readingOrder,
       resources: Links.fromJSON(json.resources),
       tableOfContents: Links.fromJSON(json.toc),
-      //this.subcollections = CoreCollection.makeCollections(dictionary.json);
+      subcollections: SubCollection.fromJSON(json.sub),
     });
   }
 
+  /**
+   * Serializes a [Publication] to its RWPM JSON representation.
+   */
   public toJSON(): any {
     let json: any = {};
-    if (this.context) json.context = this.context;
+    if (this.context) json['@context'] = this.context;
     json.metadata = this.metadata.toJSON();
     json.links = this.links.toJSON();
     json.readingOrder = this.readingOrder.toJSON();
     if (this.resources) json.resources = this.resources.toJSON();
     if (this.tableOfContents) json.toc = this.tableOfContents.toJSON();
+    if (this.subcollections) json.sub = this.subcollections.toJSON();
     return json;
   }
 
@@ -105,6 +132,7 @@ export class Manifest {
     return result.reduce((acc, val) => acc.concat(val), []);
   }
 
+  //TODO : remove
   // private getAllLinks() : Array<Links> {
   //   const result = new Array<Links>();
   //   result.push(this.readingOrder);

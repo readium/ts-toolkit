@@ -23,6 +23,9 @@ export class URITemplate {
     this.parameters = this.getParameters(uri);
   }
 
+  /**
+   * List of URI template parameter keys, if the [Link] is templated.
+   */
   private getParameters(uri: string): Set<string> {
     const regex = /\{\??([^}]+)\}/g;
     const match = uri.match(regex);

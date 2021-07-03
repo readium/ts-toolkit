@@ -2,20 +2,20 @@ import { LocalizedString } from '../src';
 
 describe('LocalizedString Tests', () => {
   it('parse JSON string', () => {
-    expect(new LocalizedString('a string')).toEqual(
-      LocalizedString.fromJSON('a string')
+    expect(LocalizedString.fromJSON('a string')).toEqual(
+      new LocalizedString('a string')
     );
   });
 
   it('parse JSON localized strings', () => {
     expect(
-      new LocalizedString({
+      LocalizedString.fromJSON({
         en: 'a string',
         fr: 'une chaîne',
         tr: 'bir metin',
       })
     ).toEqual(
-      LocalizedString.fromJSON({
+      new LocalizedString({
         en: 'a string',
         fr: 'une chaîne',
         tr: 'bir metin',
@@ -27,12 +27,14 @@ describe('LocalizedString Tests', () => {
     expect(LocalizedString.fromJSON([1, 2])).toBeUndefined();
   });
 
-  it('parse null JSON', () => {
-    expect(LocalizedString.fromJSON(null)).toBeUndefined();
+  it('parse undefined JSON', () => {
+    expect(LocalizedString.fromJSON(undefined)).toBeUndefined();
   });
 
   it('get JSON with one translation and no language', () => {
-    expect(new LocalizedString('a string').toJSON()).toEqual('a string');
+    expect(new LocalizedString('a string').toJSON()).toEqual({
+      undefined: 'a string',
+    });
   });
 
   it('get JSON', () => {
@@ -40,12 +42,12 @@ describe('LocalizedString Tests', () => {
       new LocalizedString({
         en: 'a string',
         fr: 'une chaîne',
-        [LocalizedString.UNDEFINED_LANGUAGE]: 'bir metin',
+        undefined: 'bir metin',
       }).toJSON()
     ).toEqual({
       en: 'a string',
       fr: 'une chaîne',
-      [LocalizedString.UNDEFINED_LANGUAGE]: 'bir metin',
+      undefined: 'bir metin',
     });
   });
 
@@ -72,7 +74,7 @@ describe('LocalizedString Tests', () => {
       new LocalizedString({
         foo: 'a string',
         bar: 'une chaîne',
-        [LocalizedString.UNDEFINED_LANGUAGE]: 'Surgh',
+        undefined: 'Surgh',
       }).getTranslation()
     ).toEqual('Surgh');
   });

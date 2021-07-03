@@ -3,7 +3,7 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { typeIs } from '../util/TypeCheckers';
+declare type ttt = { [key: string]: string };
 
 /**
  * Represents a string with multiple translations indexed by a BCP 47 language tag.
@@ -46,16 +46,13 @@ export class LocalizedString {
    * ]
    */
   public static fromJSON(json: any): undefined | LocalizedString {
-    return typeIs(json, [String, Object])
-      ? new LocalizedString(json)
-      : undefined;
+    if (!(json && (typeof json === 'string' || json.constructor === Object)))
+      return;
+    return new LocalizedString(json);
   }
 
   public toJSON(): any {
-    let keys = Object.keys(this.translations);
-    return keys.length === 1 && keys[0] === LocalizedString.UNDEFINED_LANGUAGE
-      ? this.translations[LocalizedString.UNDEFINED_LANGUAGE]
-      : this.translations;
+    return this.translations;
   }
 
   /**
