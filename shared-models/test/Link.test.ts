@@ -1,5 +1,4 @@
-import { Link, Links } from '../src';
-import { Properties } from '../src/Publication/Properties';
+import { Link, Links, Properties } from '../src';
 
 describe('Link Tests', () => {
   it('templateParameters works fine', () => {

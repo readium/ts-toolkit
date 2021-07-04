@@ -1,5 +1,4 @@
-import { Link, Links, LocalizedString } from '../src';
-import { Subject, Subjects } from '../src/Publication/Subject';
+import { Link, Links, LocalizedString, Subject, Subjects } from '../src';
 
 describe('Subject Tests', () => {
   it('parse JSON string', () => {

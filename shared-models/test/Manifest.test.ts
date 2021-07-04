@@ -1,5 +1,11 @@
-import { Link, Links, LocalizedString, Manifest, Metadata } from '../src';
-import { SubCollection } from '../src/Publication/SubCollection';
+import {
+  Link,
+  Links,
+  LocalizedString,
+  Manifest,
+  Metadata,
+  PublicationCollection,
+} from '../src';
 
 describe('Manifest Tests', () => {
   it('parse minimal JSON', () => {
@@ -48,9 +54,16 @@ describe('Manifest Tests', () => {
           new Link({ href: '/cover.html' }),
           new Link({ href: '/chap1.html' }),
         ]),
-        subcollections: new SubCollection({
-          links: new Links([new Link({ href: '/sublink' })]),
-        }),
+        subcollections: new Map([
+          [
+            'sub',
+            [
+              new PublicationCollection({
+                links: new Links([new Link({ href: '/sublink' })]),
+              }),
+            ],
+          ],
+        ]),
       })
     );
   });
@@ -139,9 +152,16 @@ describe('Manifest Tests', () => {
           new Link({ href: '/cover.html' }),
           new Link({ href: '/chap1.html' }),
         ]),
-        subcollections: new SubCollection({
-          links: new Links([new Link({ href: '/sublink' })]),
-        }),
+        subcollections: new Map([
+          [
+            'sub',
+            [
+              new PublicationCollection({
+                links: new Links([new Link({ href: '/sublink' })]),
+              }),
+            ],
+          ],
+        ]),
       }).toJSON()
     ).toEqual({
       '@context': ['https://readium.org/webpub-manifest/context.jsonld'],

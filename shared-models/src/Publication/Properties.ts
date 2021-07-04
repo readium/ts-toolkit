@@ -3,9 +3,13 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { IEncryption } from "./Encryption/Encryption";
-import { EPUBLayout } from "./epub/Layout";
-import { Fit, Orientation, Overflow, Page, Spread } from "./presentation/Presentation";
+import {
+  Fit,
+  Orientation,
+  Overflow,
+  Page,
+  Spread,
+} from './presentation/Presentation';
 
 /**
  * Properties associated to the linked resource.
@@ -71,23 +75,4 @@ export class Properties {
   public getSpread(): Spread | undefined {
     return this.otherProperties['spread'] || null;
   }
-
-  //Encryption Properties :
-
-  public getEncryption(): IEncryption | undefined {
-    return this.otherProperties['encryption'];
-  }
-
-  //EPUB properties : 
-
-  public getContains(): Array<string> | undefined {
-    return this.otherProperties['contains'];
-  }
-
-  public getLayout(): EPUBLayout | undefined {
-    return this.otherProperties['layout'];
-  }
-
-  
-
 }

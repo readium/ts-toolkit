@@ -6,7 +6,7 @@
 import { Link, Links } from './Link';
 import { Manifest } from './Manifest';
 import { Metadata } from './Metadata';
-import { SubCollection } from './SubCollection';
+import { PublicationCollection } from './PublicationCollection';
 
 /** Shared model for a Readium Publication. */
 export class Publication {
@@ -24,7 +24,7 @@ export class Publication {
   /** Identifies the collection that contains a table of contents. */
   public readonly tableOfContents?: Links;
   /** Identifies the collection that contains sub collections. */
-  public readonly subcollections?: SubCollection;
+  public readonly subcollections?: Map<string, Array<PublicationCollection>>;
 
   constructor(manifest: Manifest) {
     this.manifest = manifest;
@@ -101,23 +101,16 @@ export class Publication {
     return link;
   }
 
-
-
   /**
- * Returns the [links] of the first child [PublicationCollection] with the given role, or an
- * empty list.
- */
-  public linksWithRole(_role: string): Links | undefined {
-    //TODO : 
-    return undefined;
-    //let list = this.subcollections?.subcollections?.get(role);
-    //  return list.
-    // return undefined;
+   * Returns the [links] of the first child [PublicationCollection] with the given role, or an
+   * empty list.
+   */
+  public linksWithRole(role: string): Links | undefined {
+    let list = this.subcollections?.get(role);
+    return list && list.length > 0 ? list[0].links : undefined;
   }
 
-  //  internal fun linksWithRole(role: String): List<Link> =
-  //  subcollections[role]?.firstOrNull()?.links ?: emptyList()
-
+  //TODO: remove
   // /** Finds the first link with the given relation in the publication's links. */
   // public linkWithRel(rel: string): Link | null {
   //   return this.linkWithRel(rel);
@@ -128,43 +121,7 @@ export class Publication {
   //   return this.linksWithRel(rel);
   // }
 
-
-
   /** EPUB Web Publication Extension
-  *  https://readium.org/webpub-manifest/schema/extensions/epub/subcollections.schema.json
-  */
-
-  /** Provides navigation to positions in the Publication content that correspond to the locations
-    *  of page boundaries present in a print source being represented by this EPUB Publication.
-    */
-  public getPageList(): Links | undefined {
-    return this.linksWithRole('pageList');
-  };
-
-  /** Identifies fundamental structural components of the publication in order to enable Reading
- *  Systems to provide the User efficient access to them.
- */
-  public getLandmarks(): Links | undefined {
-    return this.linksWithRole('landmarks');
-  };
-
-  public getListOfAudioClips(): Links | undefined {
-    return this.linksWithRole('loa');
-  };
-
-  public getListOfIllustrations(): Links | undefined {
-    return this.linksWithRole('loi');
-  };
-
-  public getListOfTables(): Links | undefined {
-    return this.linksWithRole('lot');
-  };
-
-  public getListOfVideoClips(): Links | undefined {
-    return this.linksWithRole('lov');
-  };
-
-
-
-
+   *  https://readium.org/webpub-manifest/schema/extensions/epub/subcollections.schema.json
+   */
 }

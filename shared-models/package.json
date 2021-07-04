@@ -29,7 +29,7 @@
     "start": "tsdx watch",
     "build": "tsdx build",
     "test": "tsdx test",
-    "test:one": "tsdx test Manifest.test.ts",
+    "test:one": "tsdx test epub/PublicationTest.test.ts",
     "lint": "tsdx lint",
     "lint:fix": "tsdx lint --fix",
     "prepare": "tsdx build",

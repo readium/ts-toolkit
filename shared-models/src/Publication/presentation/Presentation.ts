@@ -3,8 +3,7 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { EPUBLayout } from '../epub/Layout';
-import { Link } from '../Link';
+import { EpubLayout } from '../epub/EpubLayout';
 
 export enum Orientation {
   auto = 'auto',
@@ -46,7 +45,7 @@ export interface IPresentationMetadata {
   orientation?: Orientation;
   overflow?: Overflow;
   spread?: Spread;
-  layout?: EPUBLayout;
+  layout?: EpubLayout;
 }
 
 /** The Presentation Hints extension defines a number of hints for User Agents about the way content
@@ -75,7 +74,7 @@ export class Presentation {
   public spread?: Spread;
 
   /** Hint about the nature of the layout for the linked resources (EPUB extension). */
-  public layout?: EPUBLayout;
+  public layout?: EpubLayout;
 
   /** Indicates how the progression between resources from the [readingOrder] should be handled */
   public continuous?: boolean;
@@ -93,18 +92,5 @@ export class Presentation {
     this.layout = presentation.layout;
     this.continuous = presentation.continuous;
     this.overflow = presentation.overflow;
-  }
-
-  /** Determines the layout of the given resource in this publication.
-   *  Default layout is reflowable.
-   */
-  public layoutOf(link: Link): EPUBLayout {
-    let result = EPUBLayout.reflowable;
-    if (link.properties && link.properties.getLayout() !== null) {
-      result = link.properties.getLayout() as EPUBLayout;
-    } else if (this.layout) {
-      result = this.layout;
-    }
-    return result;
   }
 }

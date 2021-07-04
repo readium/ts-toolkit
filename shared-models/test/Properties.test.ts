@@ -1,4 +1,4 @@
-import { Properties } from '../src/Publication/Properties';
+import { Properties } from '../src';
 
 describe('Properties Tests', () => {
   it('parse undefined JSON', () => {

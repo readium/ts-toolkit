@@ -6,19 +6,62 @@
 /** Indicates that a resource is encrypted/obfuscated and provides relevant information
  *  for decryption.
  */
-export interface IEncryption {
+export class Encryption {
   /** Identifies the algorithm used to encrypt the resource. */
-  algorithm: string;
+  public readonly algorithm: string;
 
   /** Compression method used on the resource. */
-  compression?: string;
+  public readonly compression?: string;
 
   /** Original length of the resource in bytes before compression and/or encryption. */
-  originalLength?: number;
+  public readonly originalLength?: number;
 
   /** Identifies the encryption profile used to encrypt the resource. */
-  profile?: string;
+  public readonly profile?: string;
 
   /** Identifies the encryption scheme used to encrypt the resource. */
-  scheme?: string;
+  public readonly scheme?: string;
+
+  /**
+   * Creates a [Encryption].
+   */
+  constructor(values: {
+    algorithm: string;
+    compression?: string;
+    originalLength?: number;
+    profile?: string;
+    scheme?: string;
+  }) {
+    this.algorithm = values.algorithm;
+    this.compression = values.compression;
+    this.originalLength = values.originalLength;
+    this.profile = values.profile;
+    this.scheme = values.scheme;
+  }
+
+  /**
+   * Parses a [Encryption] from its RWPM JSON representation.
+   */
+  public static fromJSON(json: any): Encryption | undefined {
+    if (!(json && json.algorithm)) return;
+    return new Encryption({
+      algorithm: json.algorithm,
+      compression: json.compression,
+      originalLength: json.originalLength,
+      profile: json.profile,
+      scheme: json.scheme,
+    });
+  }
+
+  /**
+   * Serializes a [Encryption] to its RWPM JSON representation.
+   */
+  public toJSON(): any {
+    let json: any = { algorithm: this.algorithm };
+    if (this.compression) json.compression = this.compression;
+    if (this.originalLength) json.originalLength = this.originalLength;
+    if (this.profile) json.profile = this.profile;
+    if (this.scheme) json.scheme = this.scheme;
+    return json;
+  }
 }

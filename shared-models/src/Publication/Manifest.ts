@@ -5,8 +5,8 @@
 
 import { Metadata } from './Metadata';
 import { Link, Links } from './Link';
-import { SubCollection } from './SubCollection';
 import { arrayfromJSONorString } from '../util/JSONParse';
+import { PublicationCollection } from './PublicationCollection';
 
 /** Holds the metadata of a Readium publication, as described in
  *  the Readium Web Publication Manifest.
@@ -28,7 +28,7 @@ export class Manifest {
   /** Identifies the collection that contains a table of contents. */
   public readonly tableOfContents?: Links;
 
-  public readonly subcollections?: SubCollection;
+  public readonly subcollections?: Map<string, Array<PublicationCollection>>;
 
   constructor(values: {
     context?: Array<string>;
@@ -37,7 +37,7 @@ export class Manifest {
     readingOrder: Links;
     resources?: Links;
     tableOfContents?: Links;
-    subcollections?: SubCollection;
+    subcollections?: Map<string, Array<PublicationCollection>>;
   }) {
     this.context = values.context;
     this.metadata = values.metadata;
@@ -78,7 +78,9 @@ export class Manifest {
       readingOrder,
       resources: Links.fromJSON(json.resources),
       tableOfContents: Links.fromJSON(json.toc),
-      subcollections: SubCollection.fromJSON(json.sub),
+      subcollections: PublicationCollection.collectionsFromJSON({
+        sub: json.sub,
+      }),
     });
   }
 
@@ -93,7 +95,7 @@ export class Manifest {
     json.readingOrder = this.readingOrder.toJSON();
     if (this.resources) json.resources = this.resources.toJSON();
     if (this.tableOfContents) json.toc = this.tableOfContents.toJSON();
-    if (this.subcollections) json.sub = this.subcollections.toJSON();
+    PublicationCollection.appendCollectionToJSON(json, this.subcollections);
     return json;
   }
 

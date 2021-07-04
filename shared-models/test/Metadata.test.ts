@@ -1,7 +1,13 @@
-import { Contributor, Contributors, LocalizedString, Metadata } from '../src';
-import { BelongsTo } from '../src/Publication/BelongsTo';
-import { ReadingProgression } from '../src/Publication/ReadingProgression';
-import { Subject, Subjects } from '../src/Publication/Subject';
+import {
+  Contributor,
+  Contributors,
+  LocalizedString,
+  Metadata,
+  BelongsTo,
+  ReadingProgression,
+  Subject,
+  Subjects,
+} from '../src';
 
 describe('Metadata Tests', () => {
   it('parse minimal JSON', () => {
