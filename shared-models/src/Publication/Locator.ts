@@ -28,7 +28,7 @@ export interface IDOMRange {
  *
  * https://github.com/readium/architecture/tree/master/locators
  */
-export class ILocator {
+export class Locator {
   /** The URI of the resource that the Locator Object points to. */
   public href: string;
 
@@ -39,10 +39,10 @@ export class ILocator {
   public title?: string;
 
   /** One or more alternative expressions of the location. */
-  public locations: ILocations;
+  public locations: Locations;
 
   /** Textual context of the locator. */
-  public text?: IText;
+  public text?: Text;
 
   /**
    * Creates a [Locator].
@@ -51,27 +51,27 @@ export class ILocator {
     href: string;
     type: string;
     title?: string;
-    locations?: ILocations;
-    text?: IText;
+    locations?: Locations;
+    text?: Text;
   }) {
     this.href = values.href;
     this.type = values.type;
     this.title = values.title;
-    this.locations = values.locations ? values.locations : new ILocations({});
+    this.locations = values.locations ? values.locations : new Locations({});
     this.text = values.text; // ? values.text : new IText({});
   }
 
   /**
    * Parses a [Link] from its RWPM JSON representation.
    */
-  public static deserialize(json: any): ILocator | undefined {
+  public static deserialize(json: any): Locator | undefined {
     if (!(json && json.href && json.type)) return;
-    return new ILocator({
+    return new Locator({
       href: json.href,
       type: json.type,
       title: json.title,
-      locations: ILocations.deserialize(json.locations),
-      text: IText.deserialize(json.text),
+      locations: Locations.deserialize(json.locations),
+      text: Text.deserialize(json.text),
     });
   }
 
@@ -91,7 +91,7 @@ export class ILocator {
  * One or more alternative expressions of the location.
  * https://github.com/readium/architecture/tree/master/models/locators#the-location-object
  */
-export class ILocations {
+export class Locations {
   /** Contains one or more fragment in the resource referenced by the `Locator`. */
   public fragments: Array<string>;
 
@@ -127,7 +127,7 @@ export class ILocations {
   /**
    * Parses a [Locations] from its RWPM JSON representation.
    */
-  public static deserialize(json: any): ILocations | undefined {
+  public static deserialize(json: any): Locations | undefined {
     if (!json) return;
     const progression = numberfromJSON(json.progression);
     const totalProgression = numberfromJSON(json.totalProgression);
@@ -147,7 +147,7 @@ export class ILocations {
       }
     });
 
-    return new ILocations({
+    return new Locations({
       fragments: arrayfromJSONorString(json.fragments),
       progression:
         progression && progression >= 0 && progression <= 1
@@ -185,7 +185,7 @@ export class ILocations {
   // domRange?: IDOMRange;
 }
 
-export class IText {
+export class Text {
   public after?: string;
   public before?: string;
   public highlight?: string;
@@ -202,9 +202,9 @@ export class IText {
   /**
    * Parses a [Locations] from its RWPM JSON representation.
    */
-  public static deserialize(json: any): IText | undefined {
+  public static deserialize(json: any): Text | undefined {
     if (!json) return;
-    return new IText({
+    return new Text({
       after: json.after,
       before: json.before,
       highlight: json.highlight,
