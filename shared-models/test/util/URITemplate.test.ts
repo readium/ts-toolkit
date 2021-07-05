@@ -30,24 +30,24 @@ describe('URITemplate Tests', () => {
   });
 
   it('expand works fine with form-style ampersand-separated templates', () => {
-    let parameters = {
+    const parameters = {
       id: '38dfd7ba-a80b-4253-a047-e6aa9c21d6f0',
       name: 'Pixel 3a',
       end: '2020-11-12T16:02:00.000+01:00',
     };
 
-    let urlPart =
+    const urlPart =
       'https://lsd-test.edrlab.org/licenses/39ef1ff2-cda2-4219-a26a-d504fbb24c17/renew';
 
-    let url = new URITemplate(`${urlPart}{?end,id,name}`).expand(parameters);
+    const url = new URITemplate(`${urlPart}{?end,id,name}`).expand(parameters);
 
-    let urlParts = url.split('?');
+    const urlParts = url.split('?');
 
     expect(urlParts[0]).toEqual(urlPart);
 
     const query = new URLSearchParams(urlParts[1]);
 
-    let parametersParsed: any = {};
+    const parametersParsed: any = {};
 
     query.forEach((v, k) => (parametersParsed[k] = v));
 

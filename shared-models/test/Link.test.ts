@@ -29,7 +29,7 @@ describe('Link Tests', () => {
   });
 
   it('parse minimal JSON', () => {
-    expect(Link.fromJSON({ href: 'http://href' })).toEqual(
+    expect(Link.deserialize({ href: 'http://href' })).toEqual(
       new Link({
         href: 'http://href',
       })
@@ -38,7 +38,7 @@ describe('Link Tests', () => {
 
   it('parse full JSON', () => {
     expect(
-      Link.fromJSON({
+      Link.deserialize({
         href: 'http://href',
         type: 'application/pdf',
         templated: true,
@@ -81,58 +81,58 @@ describe('Link Tests', () => {
   });
 
   it('parse undefined JSON', () => {
-    expect(Link.fromJSON(undefined)).toBeUndefined();
+    expect(Link.deserialize(undefined)).toBeUndefined();
   });
 
   it('parse JSON {rel} as single string', () => {
-    expect(Link.fromJSON({ href: 'a', rel: 'publication' })).toEqual(
+    expect(Link.deserialize({ href: 'a', rel: 'publication' })).toEqual(
       new Link({ href: 'a', rels: new Set(['publication']) })
     );
   });
 
   it('parse JSON {templated} defaults to false', () => {
-    let link = Link.fromJSON({ href: 'a' });
+    const link = Link.deserialize({ href: 'a' });
     expect(link).toBeDefined();
     expect(link?.templated).toBeFalsy();
   });
 
   it('parse JSON multiple languages', () => {
-    expect(Link.fromJSON({ href: 'a', language: ['fr', 'en'] })).toEqual(
+    expect(Link.deserialize({ href: 'a', language: ['fr', 'en'] })).toEqual(
       new Link({ href: 'a', languages: ['fr', 'en'] })
     );
   });
 
   it('parse JSON requires href', () => {
-    expect(Link.fromJSON({ type: 'application/pdf' })).toBeUndefined();
+    expect(Link.deserialize({ type: 'application/pdf' })).toBeUndefined();
   });
 
   it('parse JSON requires positive width', () => {
-    let link = Link.fromJSON({ href: 'a', width: -20 });
+    const link = Link.deserialize({ href: 'a', width: -20 });
     expect(link).toBeDefined();
     expect(link?.width).toBeUndefined();
   });
 
   it('parse JSON requires positive height', () => {
-    let link = Link.fromJSON({ href: 'a', height: -20 });
+    const link = Link.deserialize({ href: 'a', height: -20 });
     expect(link).toBeDefined();
     expect(link?.height).toBeUndefined();
   });
 
   it('parse JSON requires positive bitrate', () => {
-    let link = Link.fromJSON({ href: 'a', bitrate: -20 });
+    const link = Link.deserialize({ href: 'a', bitrate: -20 });
     expect(link).toBeDefined();
     expect(link?.bitrate).toBeUndefined();
   });
 
   it('parse JSON requires positive duration', () => {
-    let link = Link.fromJSON({ href: 'a', duration: -20 });
+    const link = Link.deserialize({ href: 'a', duration: -20 });
     expect(link).toBeDefined();
     expect(link?.duration).toBeUndefined();
   });
 
   it('parse JSON array', () => {
     expect(
-      Links.fromJSON([{ href: 'http://child1' }, { href: 'http://child2' }])
+      Links.deserialize([{ href: 'http://child1' }, { href: 'http://child2' }])
     ).toEqual(
       new Links([
         new Link({ href: 'http://child1' }),
@@ -142,17 +142,17 @@ describe('Link Tests', () => {
   });
 
   it('parse undefined JSON array', () => {
-    expect(Links.fromJSON(undefined)).toBeUndefined();
+    expect(Links.deserialize(undefined)).toBeUndefined();
   });
 
   it('parse JSON array ignores invalid links', () => {
     expect(
-      Links.fromJSON([{ title: 'Title' }, { href: 'http://child2' }])
+      Links.deserialize([{ title: 'Title' }, { href: 'http://child2' }])
     ).toEqual(new Links([new Link({ href: 'http://child2' })]));
   });
 
   it('get minimal JSON', () => {
-    expect(new Link({ href: 'http://href' }).toJSON()).toEqual({
+    expect(new Link({ href: 'http://href' }).serialize()).toEqual({
       href: 'http://href',
     });
   });
@@ -179,7 +179,7 @@ describe('Link Tests', () => {
           new Link({ href: 'http://child1' }),
           new Link({ href: 'http://child2' }),
         ]),
-      }).toJSON()
+      }).serialize()
     ).toEqual({
       href: 'http://href',
       type: 'application/pdf',
@@ -204,7 +204,7 @@ describe('Link Tests', () => {
       new Links([
         new Link({ href: 'http://child1' }),
         new Link({ href: 'http://child2' }),
-      ]).toJSON()
+      ]).serialize()
     ).toEqual([{ href: 'http://child1' }, { href: 'http://child2' }]);
   });
 
@@ -272,7 +272,7 @@ describe('Link Tests', () => {
         ]),
       })
         .addProperties({ additional: 'property' })
-        .toJSON()
+        .serialize()
     ).toEqual({
       href: 'http://href',
       type: 'application/pdf',

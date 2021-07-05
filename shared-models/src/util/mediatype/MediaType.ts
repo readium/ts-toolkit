@@ -42,7 +42,7 @@ export class MediaType {
   }) {
     let type: string;
     let subtype: string;
-    const components = values.mediaType.replace(/\s/g, '').split(';');
+    let components = values.mediaType.replace(/\s/g, '').split(';');
     const types = components[0].split('/');
     if (types.length === 2) {
       type = types[0].toLowerCase().trim();
@@ -55,7 +55,7 @@ export class MediaType {
       throw new Error('Invalid media type');
     }
 
-    let _parameters: ParametersMap = {};
+    const _parameters: ParametersMap = {};
     for (let i = 1; i < components.length; i++) {
       const component = components[i].split('=');
       if (component.length === 2) {
@@ -66,8 +66,8 @@ export class MediaType {
       }
     }
 
-    let parameters: ParametersMap = {};
-    let keys = Object.keys(_parameters);
+    const parameters: ParametersMap = {};
+    const keys = Object.keys(_parameters);
     keys.sort((a, b) => a.localeCompare(b));
 
     keys.forEach(x => (parameters[x] = _parameters[x]));
@@ -77,9 +77,9 @@ export class MediaType {
       const value = parameters[p];
       parametersString += `;${p}=${value}`;
     }
-    let string = `${type}/${subtype}${parametersString}`;
+    const string = `${type}/${subtype}${parametersString}`;
 
-    let encoding = parameters['encoding'];
+    const encoding = parameters['encoding'];
 
     this.string = string;
     this.type = type;
@@ -128,7 +128,7 @@ export class MediaType {
    *  - Wildcards are supported, meaning that `image/*` contains `image/png`
    */
   public contains(other: MediaType | string): boolean {
-    let _other =
+    const _other =
       typeof other === 'string' ? MediaType.parse({ mediaType: other }) : other;
 
     if (
@@ -140,10 +140,10 @@ export class MediaType {
       return false;
     }
 
-    let paramSet = new Set(
+    const paramSet = new Set(
       Object.entries(this.parameters).map(([key, value]) => `${key}=${value}`)
     );
-    let otherParamSet = new Set(
+    const otherParamSet = new Set(
       Object.entries(_other.parameters).map(([key, value]) => `${key}=${value}`)
     );
 
@@ -163,7 +163,7 @@ export class MediaType {
    *  doesn't. This is basically like `contains`, but working in both direction.
    */
   public matches(other: MediaType | string): boolean {
-    let _other =
+    const _other =
       typeof other === 'string' ? MediaType.parse({ mediaType: other }) : other;
     return this.contains(_other) || _other.contains(this);
   }

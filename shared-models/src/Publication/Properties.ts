@@ -27,7 +27,7 @@ export class Properties {
   /**
    * Creates a [Properties] from its RWPM JSON representation.
    */
-  public static fromJSON(json: any): Properties | undefined {
+  public static deserialize(json: any): Properties | undefined {
     if (!json) return;
     return new Properties(json);
   }
@@ -35,7 +35,7 @@ export class Properties {
   /**
    * Serializes a [Properties] to its RWPM JSON representation.
    */
-  public toJSON(): any {
+  public serialize(): any {
     return this.otherProperties;
   }
 
@@ -43,7 +43,7 @@ export class Properties {
    * Makes a copy of this [Properties] after merging in the given additional other [properties].
    */
   public add(properties: { [key: string]: any }): Properties {
-    let _properties = Object.assign({}, this.otherProperties);
+    const _properties = Object.assign({}, this.otherProperties);
     for (const property in properties) {
       _properties[property] = properties[property];
     }

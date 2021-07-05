@@ -32,7 +32,7 @@ export class PublicationCollection {
   /**
    * Parses a [PublicationCollection] from its RWPM JSON representation.
    */
-  public static fromJSON(json: any): PublicationCollection | undefined {
+  public static deserialize(json: any): PublicationCollection | undefined {
     if (!json) return;
 
     let links: Links | undefined;
@@ -41,10 +41,10 @@ export class PublicationCollection {
 
     if (json instanceof Array) {
       // Parses an array of links.
-      links = Links.fromJSON(json);
+      links = Links.deserialize(json);
     } else if (json instanceof Object) {
       // Parses a sub-collection object.
-      links = Links.fromJSON(json.links);
+      links = Links.deserialize(json.links);
 
       metadata = new Map<string, any>();
 
@@ -76,11 +76,11 @@ export class PublicationCollection {
     json: any
   ): Map<string, Array<PublicationCollection>> | undefined {
     if (!json) return;
-    let collections = new Map<string, Array<PublicationCollection>>();
+    const collections = new Map<string, Array<PublicationCollection>>();
     Object.entries(json).forEach(([role, subJSON]) => {
       if (role !== 'links' && role !== 'metadata') {
         // Parses a list of links or a single collection object.
-        let collection = PublicationCollection.fromJSON(subJSON);
+        const collection = PublicationCollection.deserialize(subJSON);
 
         if (collection) {
           const list = new Array<PublicationCollection>();
@@ -88,10 +88,10 @@ export class PublicationCollection {
           collections.set(role, list);
         } else if (subJSON instanceof Array) {
           // Parses a list of collection objects.
-          let list = subJSON
+          const list = subJSON
             .map<PublicationCollection>(
               item =>
-                PublicationCollection.fromJSON(item) as PublicationCollection
+                PublicationCollection.deserialize(item) as PublicationCollection
             )
             .filter(x => x !== undefined);
 
@@ -106,8 +106,8 @@ export class PublicationCollection {
   /**
    * Serializes a [PublicationCollection] to its RWPM JSON representation.
    */
-  public toJSON(): any {
-    let json: any = {};
+  public serialize(): any {
+    const json: any = {};
 
     if (this.metadata) {
       json.metadata = {};
@@ -117,7 +117,7 @@ export class PublicationCollection {
     }
 
     if (this.links.items.length) {
-      json.links = this.links.toJSON();
+      json.links = this.links.serialize();
     }
 
     PublicationCollection.appendCollectionToJSON(json, this.subcollections);
@@ -133,9 +133,9 @@ export class PublicationCollection {
       subcollections.forEach(
         (value: Array<PublicationCollection>, key: string) => {
           if (value.length === 1) {
-            json[key] = value[0].toJSON();
+            json[key] = value[0].serialize();
           } else {
-            json[key] = value.map(x => x.toJSON());
+            json[key] = value.map(x => x.serialize());
           }
         }
       );

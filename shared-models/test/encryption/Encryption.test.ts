@@ -2,14 +2,14 @@ import { Encryption } from '../../src';
 
 describe('Encryption Tests', () => {
   it('parse minimal JSON', () => {
-    expect(Encryption.fromJSON({ algorithm: 'http://algo' })).toEqual(
+    expect(Encryption.deserialize({ algorithm: 'http://algo' })).toEqual(
       new Encryption({ algorithm: 'http://algo' })
     );
   });
 
   it('parse full JSON', () => {
     expect(
-      Encryption.fromJSON({
+      Encryption.deserialize({
         algorithm: 'http://algo',
         compression: 'gzip',
         originalLength: 42099,
@@ -28,15 +28,15 @@ describe('Encryption Tests', () => {
   });
 
   it('parse undefined JSON', () => {
-    expect(Encryption.fromJSON(undefined)).toBeUndefined();
+    expect(Encryption.deserialize(undefined)).toBeUndefined();
   });
 
   it('parse JSON requires {algorithm}', () => {
-    expect(Encryption.fromJSON({ compression: 'gzip' })).toBeUndefined();
+    expect(Encryption.deserialize({ compression: 'gzip' })).toBeUndefined();
   });
 
   it('get minimal JSON', () => {
-    expect(new Encryption({ algorithm: 'http://algo' }).toJSON()).toEqual({
+    expect(new Encryption({ algorithm: 'http://algo' }).serialize()).toEqual({
       algorithm: 'http://algo',
     });
   });
@@ -49,7 +49,7 @@ describe('Encryption Tests', () => {
         originalLength: 42099,
         profile: 'http://profile',
         scheme: 'http://scheme',
-      }).toJSON()
+      }).serialize()
     ).toEqual({
       algorithm: 'http://algo',
       compression: 'gzip',

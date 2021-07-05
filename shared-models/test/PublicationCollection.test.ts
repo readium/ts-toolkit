@@ -3,7 +3,7 @@ import { Link, Links, PublicationCollection } from '../src';
 describe('PublicationCollection Tests', () => {
   it('parse minimal JSON', () => {
     expect(
-      PublicationCollection.fromJSON({
+      PublicationCollection.deserialize({
         metadata: {},
         links: [{ href: '/link' }],
       })
@@ -16,7 +16,7 @@ describe('PublicationCollection Tests', () => {
 
   it('parse full JSON', () => {
     expect(
-      PublicationCollection.fromJSON({
+      PublicationCollection.deserialize({
         metadata: {
           metadata1: 'value',
         },
@@ -75,7 +75,7 @@ describe('PublicationCollection Tests', () => {
   });
 
   it('parse undefined JSON', () => {
-    expect(PublicationCollection.fromJSON(undefined)).toBeUndefined();
+    expect(PublicationCollection.deserialize(undefined)).toBeUndefined();
   });
 
   it('parse full JSON', () => {
@@ -135,7 +135,7 @@ describe('PublicationCollection Tests', () => {
       new PublicationCollection({
         metadata: new Map<string, any>(),
         links: new Links([new Link({ href: '/link' })]),
-      }).toJSON()
+      }).serialize()
     ).toEqual({
       metadata: {},
       links: [{ href: '/link' }],
@@ -179,7 +179,7 @@ describe('PublicationCollection Tests', () => {
             ],
           ],
         ]),
-      }).toJSON()
+      }).serialize()
     ).toEqual({
       metadata: {
         metadata1: 'value',
@@ -203,7 +203,7 @@ describe('PublicationCollection Tests', () => {
   });
 
   it('get multiple JSON collections', () => {
-    let json: any = {};
+    const json: any = {};
     PublicationCollection.appendCollectionToJSON(
       json,
       new Map<string, Array<PublicationCollection>>([

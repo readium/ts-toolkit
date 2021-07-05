@@ -2,14 +2,14 @@ import { LocalizedString } from '../src';
 
 describe('LocalizedString Tests', () => {
   it('parse JSON string', () => {
-    expect(LocalizedString.fromJSON('a string')).toEqual(
+    expect(LocalizedString.deserialize('a string')).toEqual(
       new LocalizedString('a string')
     );
   });
 
   it('parse JSON localized strings', () => {
     expect(
-      LocalizedString.fromJSON({
+      LocalizedString.deserialize({
         en: 'a string',
         fr: 'une chaîne',
         tr: 'bir metin',
@@ -24,15 +24,15 @@ describe('LocalizedString Tests', () => {
   });
 
   it('parse invalid JSON', () => {
-    expect(LocalizedString.fromJSON([1, 2])).toBeUndefined();
+    expect(LocalizedString.deserialize([1, 2])).toBeUndefined();
   });
 
   it('parse undefined JSON', () => {
-    expect(LocalizedString.fromJSON(undefined)).toBeUndefined();
+    expect(LocalizedString.deserialize(undefined)).toBeUndefined();
   });
 
   it('get JSON with one translation and no language', () => {
-    expect(new LocalizedString('a string').toJSON()).toEqual({
+    expect(new LocalizedString('a string').serialize()).toEqual({
       undefined: 'a string',
     });
   });
@@ -43,7 +43,7 @@ describe('LocalizedString Tests', () => {
         en: 'a string',
         fr: 'une chaîne',
         undefined: 'bir metin',
-      }).toJSON()
+      }).serialize()
     ).toEqual({
       en: 'a string',
       fr: 'une chaîne',

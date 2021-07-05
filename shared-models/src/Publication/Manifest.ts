@@ -54,18 +54,18 @@ export class Manifest {
    * https://readium.org/webpub-manifest/
    * https://readium.org/webpub-manifest/schema/publication.schema.json
    */
-  public static fromJSON(json: any): Manifest | undefined {
+  public static deserialize(json: any): Manifest | undefined {
     if (!json) return;
 
-    const metadata = Metadata.fromJSON(json.metadata);
+    const metadata = Metadata.deserialize(json.metadata);
 
     if (!metadata) return;
 
-    const links = Links.fromJSON(json.links);
+    const links = Links.deserialize(json.links);
 
     if (!links) return;
 
-    const readingOrder = Links.fromJSON(
+    const readingOrder = Links.deserialize(
       json.readingOrder ? json.readingOrder : json.spine
     );
 
@@ -76,8 +76,8 @@ export class Manifest {
       metadata,
       links,
       readingOrder,
-      resources: Links.fromJSON(json.resources),
-      tableOfContents: Links.fromJSON(json.toc),
+      resources: Links.deserialize(json.resources),
+      tableOfContents: Links.deserialize(json.toc),
       subcollections: PublicationCollection.collectionsFromJSON({
         sub: json.sub,
       }),
@@ -87,14 +87,14 @@ export class Manifest {
   /**
    * Serializes a [Publication] to its RWPM JSON representation.
    */
-  public toJSON(): any {
-    let json: any = {};
-    if (this.context) json['@context'] = this.context;
-    json.metadata = this.metadata.toJSON();
-    json.links = this.links.toJSON();
-    json.readingOrder = this.readingOrder.toJSON();
-    if (this.resources) json.resources = this.resources.toJSON();
-    if (this.tableOfContents) json.toc = this.tableOfContents.toJSON();
+  public serialize(): any {
+    const json: any = {};
+    if (this.context !== undefined) json['@context'] = this.context;
+    json.metadata = this.metadata.serialize();
+    json.links = this.links.serialize();
+    json.readingOrder = this.readingOrder.serialize();
+    if (this.resources) json.resources = this.resources.serialize();
+    if (this.tableOfContents) json.toc = this.tableOfContents.serialize();
     PublicationCollection.appendCollectionToJSON(json, this.subcollections);
     return json;
   }
@@ -124,7 +124,7 @@ export class Manifest {
 
   /** Finds all the links with the given relation in the manifest's links. */
   public linksWithRel(rel: string): Array<Link> {
-    let result = [];
+    const result = [];
     result.push(this.readingOrder.filterByRel(rel));
     if (this.resources) {
       result.push(this.resources.filterByRel(rel));

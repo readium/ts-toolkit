@@ -95,7 +95,7 @@ export class Link {
   /**
    * Parses a [Link] from its RWPM JSON representation.
    */
-  public static fromJSON(json: any): Link | undefined {
+  public static deserialize(json: any): Link | undefined {
     if (!(json && json.href && typeof json.href === 'string')) return;
     return new Link({
       href: json.href,
@@ -107,34 +107,34 @@ export class Link {
           ? new Set<string>(json.rel as Array<string>)
           : new Set<string>([json.rel as string])
         : undefined,
-      properties: Properties.fromJSON(json.properties),
+      properties: Properties.deserialize(json.properties),
       height: positiveNumberfromJSON(json.height),
       width: positiveNumberfromJSON(json.width),
       duration: positiveNumberfromJSON(json.duration),
       bitrate: positiveNumberfromJSON(json.bitrate),
       languages: arrayfromJSONorString(json.language),
-      alternates: Links.fromJSON(json.alternate),
-      children: Links.fromJSON(json.children),
+      alternates: Links.deserialize(json.alternate),
+      children: Links.deserialize(json.children),
     });
   }
 
   /**
    * Serializes a [Link] to its RWPM JSON representation.
    */
-  public toJSON(): any {
-    let json: any = { href: this.href };
-    if (this.templated) json.templated = this.templated;
-    if (this.type) json.type = this.type;
-    if (this.title) json.title = this.title;
+  public serialize(): any {
+    const json: any = { href: this.href };
+    if (this.templated !== undefined) json.templated = this.templated;
+    if (this.type !== undefined) json.type = this.type;
+    if (this.title !== undefined) json.title = this.title;
     if (this.rels) json.rel = setToArray(this.rels);
-    if (this.properties) json.properties = this.properties.toJSON();
-    if (this.height) json.height = this.height;
-    if (this.width) json.width = this.width;
-    if (this.duration) json.duration = this.duration;
-    if (this.bitrate) json.bitrate = this.bitrate;
+    if (this.properties) json.properties = this.properties.serialize();
+    if (this.height !== undefined) json.height = this.height;
+    if (this.width !== undefined) json.width = this.width;
+    if (this.duration !== undefined) json.duration = this.duration;
+    if (this.bitrate !== undefined) json.bitrate = this.bitrate;
     if (this.languages) json.language = this.languages;
-    if (this.alternates) json.alternate = this.alternates.toJSON();
-    if (this.children) json.children = this.children.toJSON();
+    if (this.alternates) json.alternate = this.alternates.serialize();
+    if (this.children) json.children = this.children.serialize();
     return json;
   }
 
@@ -142,7 +142,7 @@ export class Link {
    *  If the link's `href` is already absolute, the `baseURL` is ignored.
    */
   public toAbsoluteHREF(baseUrl?: string): string | undefined {
-    let href = this.href.replace(/^(\/)/, '');
+    const href = this.href.replace(/^(\/)/, '');
     if (href.length === 0) return;
     let _baseUrl = baseUrl ? baseUrl : '/';
 
@@ -173,7 +173,7 @@ export class Link {
    * Makes a copy of this [Link] after merging in the given additional other [properties].
    */
   public addProperties(properties: { [key: string]: any }): Link {
-    let link = Link.fromJSON(this.toJSON()) as Link;
+    const link = Link.deserialize(this.serialize()) as Link;
     link.properties = link.properties
       ? link.properties?.add(properties)
       : new Properties(properties);
@@ -197,11 +197,11 @@ export class Links {
   /**
    * Creates a list of [Link] from its RWPM JSON representation.
    */
-  public static fromJSON(json: any): Links | undefined {
+  public static deserialize(json: any): Links | undefined {
     if (!(json && json instanceof Array)) return;
     return new Links(
       json
-        .map<Link>(item => Link.fromJSON(item) as Link)
+        .map<Link>(item => Link.deserialize(item) as Link)
         .filter(x => x !== undefined)
     );
   }
@@ -209,8 +209,8 @@ export class Links {
   /**
    * Serializes an array of [Link] to its RWPM JSON representation.
    */
-  public toJSON(): any {
-    return this.items.map(x => x.toJSON());
+  public serialize(): any {
+    return this.items.map(x => x.serialize());
   }
 
   /** Finds the first link with the given relation. */

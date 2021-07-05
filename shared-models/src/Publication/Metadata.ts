@@ -175,36 +175,36 @@ export class Metadata {
    *
    * If the metadata can't be parsed, a warning will be logged with [warnings].
    */
-  public static fromJSON(json: any): Metadata | undefined {
+  public static deserialize(json: any): Metadata | undefined {
     if (!(json && json.title)) return;
 
-    let title = LocalizedString.fromJSON(json.title) as LocalizedString;
-    let typeUri = json['@type'];
-    let identifier = json.identifier;
-    let subtitle = LocalizedString.fromJSON(json.subtitle);
-    let sortAs = LocalizedString.fromJSON(json.sortAs);
-    let artists = Contributors.fromJSON(json.artist);
-    let authors = Contributors.fromJSON(json.author);
-    let colorists = Contributors.fromJSON(json.colorist);
-    let contributors = Contributors.fromJSON(json.contributor);
-    let editors = Contributors.fromJSON(json.editor);
-    let illustrators = Contributors.fromJSON(json.illustrator);
-    let inkers = Contributors.fromJSON(json.inker);
-    let letterers = Contributors.fromJSON(json.letterer);
-    let narrators = Contributors.fromJSON(json.narrator);
-    let pencilers = Contributors.fromJSON(json.penciler);
-    let translators = Contributors.fromJSON(json.translator);
-    let languages = arrayfromJSONorString(json.language);
-    let description = json.description;
-    let publishers = Contributors.fromJSON(json.publisher);
-    let imprints = Contributors.fromJSON(json.imprint);
-    let published = datefromJSON(json.published);
-    let modified = datefromJSON(json.modified);
-    let subjects = Subjects.fromJSON(json.subject);
-    let belongsTo = BelongsTo.fromJSON(json.belongsTo);
-    let readingProgression = json.readingProgression;
-    let duration = positiveNumberfromJSON(json.duration);
-    let numberOfPages = positiveNumberfromJSON(json.numberOfPages);
+    const title = LocalizedString.deserialize(json.title) as LocalizedString;
+    const typeUri = json['@type'];
+    const identifier = json.identifier;
+    const subtitle = LocalizedString.deserialize(json.subtitle);
+    const sortAs = LocalizedString.deserialize(json.sortAs);
+    const artists = Contributors.deserialize(json.artist);
+    const authors = Contributors.deserialize(json.author);
+    const colorists = Contributors.deserialize(json.colorist);
+    const contributors = Contributors.deserialize(json.contributor);
+    const editors = Contributors.deserialize(json.editor);
+    const illustrators = Contributors.deserialize(json.illustrator);
+    const inkers = Contributors.deserialize(json.inker);
+    const letterers = Contributors.deserialize(json.letterer);
+    const narrators = Contributors.deserialize(json.narrator);
+    const pencilers = Contributors.deserialize(json.penciler);
+    const translators = Contributors.deserialize(json.translator);
+    const languages = arrayfromJSONorString(json.language);
+    const description = json.description;
+    const publishers = Contributors.deserialize(json.publisher);
+    const imprints = Contributors.deserialize(json.imprint);
+    const published = datefromJSON(json.published);
+    const modified = datefromJSON(json.modified);
+    const subjects = Subjects.deserialize(json.subject);
+    const belongsTo = BelongsTo.deserialize(json.belongsTo);
+    const readingProgression = json.readingProgression;
+    const duration = positiveNumberfromJSON(json.duration);
+    const numberOfPages = positiveNumberfromJSON(json.numberOfPages);
 
     let otherMetadata = Object.assign({}, json);
     Metadata.mappedProperties.forEach(x => delete otherMetadata[x]);
@@ -247,38 +247,41 @@ export class Metadata {
   /**
    * Serializes a [Metadata] to its RWPM JSON representation.
    */
-  public toJSON(): any {
-    let json: any = { title: this.title.toJSON() };
-    if (this.typeUri) json['@type'] = this.typeUri;
-    if (this.identifier) json.identifier = this.identifier;
-    if (this.subtitle) json.subtitle = this.subtitle.toJSON();
-    if (this.sortAs) json.sortAs = this.sortAs.toJSON();
-    if (this.editors) json.editor = this.editors.toJSON();
-    if (this.artists) json.artist = this.artists.toJSON();
-    if (this.authors) json.author = this.authors.toJSON();
-    if (this.colorists) json.colorist = this.colorists.toJSON();
-    if (this.contributors) json.contributor = this.contributors.toJSON();
-    if (this.illustrators) json.illustrator = this.illustrators.toJSON();
-    if (this.letterers) json.letterer = this.letterers.toJSON();
-    if (this.narrators) json.narrator = this.narrators.toJSON();
-    if (this.pencilers) json.penciler = this.pencilers.toJSON();
-    if (this.translators) json.translator = this.translators.toJSON();
-    if (this.inkers) json.inker = this.inkers.toJSON();
+  public serialize(): any {
+    const json: any = { title: this.title.serialize() };
+    if (this.typeUri !== undefined) json['@type'] = this.typeUri;
+    if (this.identifier !== undefined) json.identifier = this.identifier;
+    if (this.subtitle) json.subtitle = this.subtitle.serialize();
+    if (this.sortAs) json.sortAs = this.sortAs.serialize();
+    if (this.editors) json.editor = this.editors.serialize();
+    if (this.artists) json.artist = this.artists.serialize();
+    if (this.authors) json.author = this.authors.serialize();
+    if (this.colorists) json.colorist = this.colorists.serialize();
+    if (this.contributors) json.contributor = this.contributors.serialize();
+    if (this.illustrators) json.illustrator = this.illustrators.serialize();
+    if (this.letterers) json.letterer = this.letterers.serialize();
+    if (this.narrators) json.narrator = this.narrators.serialize();
+    if (this.pencilers) json.penciler = this.pencilers.serialize();
+    if (this.translators) json.translator = this.translators.serialize();
+    if (this.inkers) json.inker = this.inkers.serialize();
     if (this.languages) json.language = this.languages;
-    if (this.description) json.description = this.description;
-    if (this.publishers) json.publisher = this.publishers.toJSON();
-    if (this.imprints) json.imprint = this.imprints.toJSON();
-    if (this.published) json.published = this.published.toISOString();
-    if (this.modified) json.modified = this.modified.toISOString();
-    if (this.subjects) json.subject = this.subjects.toJSON();
-    if (this.belongsTo) json.belongsTo = this.belongsTo.toJSON();
+    if (this.description !== undefined) json.description = this.description;
+    if (this.publishers) json.publisher = this.publishers.serialize();
+    if (this.imprints) json.imprint = this.imprints.serialize();
+    if (this.published !== undefined)
+      json.published = this.published.toISOString();
+    if (this.modified !== undefined)
+      json.modified = this.modified.toISOString();
+    if (this.subjects) json.subject = this.subjects.serialize();
+    if (this.belongsTo) json.belongsTo = this.belongsTo.serialize();
     if (this.readingProgression)
       json.readingProgression = this.readingProgression;
-    if (this.duration) json.duration = this.duration;
-    if (this.numberOfPages) json.numberOfPages = this.numberOfPages;
+    if (this.duration !== undefined) json.duration = this.duration;
+    if (this.numberOfPages !== undefined)
+      json.numberOfPages = this.numberOfPages;
 
     if (this.otherMetadata) {
-      let metadata = this.otherMetadata;
+      const metadata = this.otherMetadata;
       Object.keys(metadata).forEach(x => (json[x] = metadata[x]));
     }
 
@@ -288,7 +291,7 @@ export class Metadata {
   // Presentation
   public getPresentation(): Presentation | undefined {
     if (!this.otherMetadata) return;
-    let presentation =
+    const presentation =
       this.otherMetadata['presentation'] || this.otherMetadata['rendition'];
     if (!presentation) return;
     return new Presentation(presentation);

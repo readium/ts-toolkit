@@ -11,14 +11,14 @@ import {
 
 describe('Metadata Tests', () => {
   it('parse minimal JSON', () => {
-    expect(Metadata.fromJSON({ title: 'Title' })).toEqual(
+    expect(Metadata.deserialize({ title: 'Title' })).toEqual(
       new Metadata({ title: new LocalizedString('Title') })
     );
   });
 
   it('parse full JSON', () => {
     expect(
-      Metadata.fromJSON({
+      Metadata.deserialize({
         identifier: '1234',
         '@type': 'epub',
         title: { en: 'Title', fr: 'Titre' },
@@ -155,12 +155,12 @@ describe('Metadata Tests', () => {
   });
 
   it('parse undefined JSON', () => {
-    expect(Metadata.fromJSON(null)).toBeUndefined();
+    expect(Metadata.deserialize(null)).toBeUndefined();
   });
 
   it('parse JSON with single language', () => {
     expect(
-      Metadata.fromJSON({
+      Metadata.deserialize({
         title: 'Title',
         language: 'fr',
       })
@@ -173,11 +173,11 @@ describe('Metadata Tests', () => {
   });
 
   it('parse JSON requires {title}', () => {
-    expect(Metadata.fromJSON({ duration: 4.24 })).toBeUndefined();
+    expect(Metadata.deserialize({ duration: 4.24 })).toBeUndefined();
   });
 
   it('parse JSON {duration} requires positive', () => {
-    expect(Metadata.fromJSON({ title: 't', duration: -20 })).toEqual(
+    expect(Metadata.deserialize({ title: 't', duration: -20 })).toEqual(
       new Metadata({
         title: new LocalizedString('t'),
       })
@@ -185,7 +185,7 @@ describe('Metadata Tests', () => {
   });
 
   it('parse JSON {numberOfPages} requires positive', () => {
-    expect(Metadata.fromJSON({ title: 't', numberOfPages: -20 })).toEqual(
+    expect(Metadata.deserialize({ title: 't', numberOfPages: -20 })).toEqual(
       new Metadata({
         title: new LocalizedString('t'),
       })
@@ -196,7 +196,7 @@ describe('Metadata Tests', () => {
     expect(
       new Metadata({
         title: new LocalizedString('Title'),
-      }).toJSON()
+      }).serialize()
     ).toEqual({
       title: { undefined: 'Title' },
     });
@@ -295,7 +295,7 @@ describe('Metadata Tests', () => {
           'other-metadata1': 'value',
           'other-metadata2': [42],
         },
-      }).toJSON()
+      }).serialize()
     ).toEqual({
       identifier: '1234',
       '@type': 'epub',
@@ -340,7 +340,7 @@ describe('Metadata Tests', () => {
     expect(
       new Metadata({
         title: new LocalizedString('Title'),
-      }).toJSON()
+      }).serialize()
     ).toEqual({
       title: { undefined: 'Title' },
     });
@@ -354,7 +354,7 @@ describe('Metadata Tests', () => {
   }
 
   it('effectiveReadingProgression falls back on LTR', () => {
-    let metadata = createMetadata({
+    const metadata = createMetadata({
       readingProgression: ReadingProgression.auto,
     });
     expect(metadata.effectiveReadingProgression()).toEqual(
@@ -363,7 +363,7 @@ describe('Metadata Tests', () => {
   });
 
   it('effectiveReadingProgression falls back on priveded reading progression', () => {
-    let metadata = createMetadata({
+    const metadata = createMetadata({
       readingProgression: ReadingProgression.rtl,
     });
     expect(metadata.effectiveReadingProgression()).toEqual(

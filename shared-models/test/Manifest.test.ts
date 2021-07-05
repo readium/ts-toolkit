@@ -10,7 +10,7 @@ import {
 describe('Manifest Tests', () => {
   it('parse minimal JSON', () => {
     expect(
-      Manifest.fromJSON({
+      Manifest.deserialize({
         metadata: { title: 'Title' },
         links: [],
         readingOrder: [],
@@ -26,7 +26,7 @@ describe('Manifest Tests', () => {
 
   it('parse full JSON', () => {
     expect(
-      Manifest.fromJSON({
+      Manifest.deserialize({
         '@context': 'https://readium.org/webpub-manifest/context.jsonld',
         metadata: { title: 'Title' },
         links: [{ href: '/manifest.json', rel: 'self' }],
@@ -70,7 +70,7 @@ describe('Manifest Tests', () => {
 
   it('parse JSON {context} as array', () => {
     expect(
-      Manifest.fromJSON({
+      Manifest.deserialize({
         '@context': ['context1', 'context2'],
         metadata: { title: 'Title' },
         links: [{ href: '/manifest.json', rel: 'self' }],
@@ -92,7 +92,7 @@ describe('Manifest Tests', () => {
 
   it('parse JSON requires {metadata}', () => {
     expect(
-      Manifest.fromJSON({
+      Manifest.deserialize({
         links: [{ href: '/manifest.json', rel: 'self' }],
         readingOrder: [{ href: '/chap1.html', type: 'text/html' }],
       })
@@ -102,7 +102,7 @@ describe('Manifest Tests', () => {
   // {readingOrder} used to be {spine}, so we parse {spine} as a fallback.
   it('parse JSON {spine} as {readingOrder}', () => {
     expect(
-      Manifest.fromJSON({
+      Manifest.deserialize({
         metadata: { title: 'Title' },
         links: [{ href: '/manifest.json', rel: 'self' }],
         spine: [{ href: '/chap1.html', type: 'text/html' }],
@@ -126,7 +126,7 @@ describe('Manifest Tests', () => {
         metadata: new Metadata({ title: new LocalizedString('Title') }),
         links: new Links([]),
         readingOrder: new Links([]),
-      }).toJSON()
+      }).serialize()
     ).toEqual({
       metadata: { title: { undefined: 'Title' } },
       links: [],
@@ -162,7 +162,7 @@ describe('Manifest Tests', () => {
             ],
           ],
         ]),
-      }).toJSON()
+      }).serialize()
     ).toEqual({
       '@context': ['https://readium.org/webpub-manifest/context.jsonld'],
       metadata: { title: { undefined: 'Title' } },

@@ -2,7 +2,7 @@ import { Link, Links, LocalizedString, Subject, Subjects } from '../src';
 
 describe('Subject Tests', () => {
   it('parse JSON string', () => {
-    expect(Subject.fromJSON('Fantasy')).toEqual(
+    expect(Subject.deserialize('Fantasy')).toEqual(
       new Subject({
         name: new LocalizedString('Fantasy'),
       })
@@ -10,7 +10,7 @@ describe('Subject Tests', () => {
   });
 
   it('parse minimal JSON', () => {
-    expect(Subject.fromJSON({ name: 'Science Fiction' })).toEqual(
+    expect(Subject.deserialize({ name: 'Science Fiction' })).toEqual(
       new Subject({
         name: new LocalizedString('Science Fiction'),
       })
@@ -19,7 +19,7 @@ describe('Subject Tests', () => {
 
   it('parse full JSON', () => {
     expect(
-      Subject.fromJSON({
+      Subject.deserialize({
         name: 'Science Fiction',
         sortAs: 'science-fiction',
         scheme: 'http://scheme',
@@ -41,16 +41,16 @@ describe('Subject Tests', () => {
   });
 
   it('parse undefined JSON', () => {
-    expect(Subject.fromJSON(undefined)).toBeUndefined();
+    expect(Subject.deserialize(undefined)).toBeUndefined();
   });
 
   it('parse requires {name}', () => {
-    expect(Subject.fromJSON({ sortAs: 'science-fiction' })).toBeUndefined();
+    expect(Subject.deserialize({ sortAs: 'science-fiction' })).toBeUndefined();
   });
 
   it('parse JSON array', () => {
     expect(
-      Subjects.fromJSON([
+      Subjects.deserialize([
         'Fantasy',
         {
           name: 'Science Fiction',
@@ -69,12 +69,12 @@ describe('Subject Tests', () => {
   });
 
   it('parse undefined JSON array', () => {
-    expect(Subjects.fromJSON(undefined)).toBeUndefined();
+    expect(Subjects.deserialize(undefined)).toBeUndefined();
   });
 
   it('parse JSON array ignores invalid contributors', () => {
     expect(
-      Subjects.fromJSON([
+      Subjects.deserialize([
         'Fantasy',
         {
           code: 'CODE',
@@ -86,14 +86,14 @@ describe('Subject Tests', () => {
   });
 
   it('parse array from string', () => {
-    expect(Subjects.fromJSON(['Fantasy'])).toEqual(
+    expect(Subjects.deserialize(['Fantasy'])).toEqual(
       new Subjects([new Subject({ name: new LocalizedString('Fantasy') })])
     );
   });
 
   it('parse array from single object', () => {
     expect(
-      Subjects.fromJSON({
+      Subjects.deserialize({
         name: 'Fantasy',
         code: 'CODE',
       })
@@ -122,7 +122,7 @@ describe('Subject Tests', () => {
     expect(
       new Subject({
         name: new LocalizedString('Science Fiction'),
-      }).toJSON()
+      }).serialize()
     ).toEqual({
       name: { undefined: 'Science Fiction' },
     });
@@ -139,7 +139,7 @@ describe('Subject Tests', () => {
           new Link({ href: 'pub1' }),
           new Link({ href: 'pub2' }),
         ]),
-      }).toJSON()
+      }).serialize()
     ).toEqual({
       name: { undefined: 'Science Fiction' },
       sortAs: 'science-fiction',
@@ -157,7 +157,7 @@ describe('Subject Tests', () => {
           name: new LocalizedString('Science Fiction'),
           scheme: 'http://scheme',
         }),
-      ]).toJSON()
+      ]).serialize()
     ).toEqual([
       {
         name: { undefined: 'Fantasy' },

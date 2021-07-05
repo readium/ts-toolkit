@@ -2,16 +2,16 @@ import { Properties } from '../src';
 
 describe('Properties Tests', () => {
   it('parse undefined JSON', () => {
-    expect(Properties.fromJSON(undefined)).toEqual(undefined);
+    expect(Properties.deserialize(undefined)).toEqual(undefined);
   });
 
   it('parse minimal JSON', () => {
-    expect(Properties.fromJSON({})).toEqual(new Properties({}));
+    expect(Properties.deserialize({})).toEqual(new Properties({}));
   });
 
   it('parse full JSON', () => {
     expect(
-      Properties.fromJSON({
+      Properties.deserialize({
         'other-property1': 'value',
         'other-property2': [42],
       })
@@ -24,7 +24,7 @@ describe('Properties Tests', () => {
   });
 
   it('get minimal JSON', () => {
-    expect(new Properties({}).toJSON()).toEqual({});
+    expect(new Properties({}).serialize()).toEqual({});
   });
 
   it('get full JSON', () => {
@@ -32,7 +32,7 @@ describe('Properties Tests', () => {
       new Properties({
         'other-property1': 'value',
         'other-property2': [42],
-      }).toJSON()
+      }).serialize()
     ).toEqual({
       'other-property1': 'value',
       'other-property2': [42],
@@ -40,12 +40,12 @@ describe('Properties Tests', () => {
   });
 
   it('copy after adding the given {properties}', () => {
-    let properties = new Properties({
+    const properties = new Properties({
       'other-property1': 'value',
       'other-property2': [42],
     });
 
-    expect(properties.add({ additional: 'property' }).toJSON()).toEqual({
+    expect(properties.add({ additional: 'property' }).serialize()).toEqual({
       'other-property1': 'value',
       'other-property2': [42],
       additional: 'property',

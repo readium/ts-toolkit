@@ -42,7 +42,7 @@ export class Encryption {
   /**
    * Parses a [Encryption] from its RWPM JSON representation.
    */
-  public static fromJSON(json: any): Encryption | undefined {
+  public static deserialize(json: any): Encryption | undefined {
     if (!(json && json.algorithm)) return;
     return new Encryption({
       algorithm: json.algorithm,
@@ -56,12 +56,13 @@ export class Encryption {
   /**
    * Serializes a [Encryption] to its RWPM JSON representation.
    */
-  public toJSON(): any {
-    let json: any = { algorithm: this.algorithm };
-    if (this.compression) json.compression = this.compression;
-    if (this.originalLength) json.originalLength = this.originalLength;
-    if (this.profile) json.profile = this.profile;
-    if (this.scheme) json.scheme = this.scheme;
+  public serialize(): any {
+    const json: any = { algorithm: this.algorithm };
+    if (this.compression !== undefined) json.compression = this.compression;
+    if (this.originalLength !== undefined)
+      json.originalLength = this.originalLength;
+    if (this.profile !== undefined) json.profile = this.profile;
+    if (this.scheme !== undefined) json.scheme = this.scheme;
     return json;
   }
 }

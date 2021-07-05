@@ -14,5 +14,5 @@ declare module '../Properties' {
 }
 
 Properties.prototype.getEncryption = function(): Encryption | undefined {
-  return Encryption.fromJSON(this.otherProperties.encrypted);
+  return Encryption.deserialize(this.otherProperties.encrypted);
 };

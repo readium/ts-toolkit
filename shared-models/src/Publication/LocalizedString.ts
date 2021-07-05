@@ -45,13 +45,13 @@ export class LocalizedString {
    *   }
    * ]
    */
-  public static fromJSON(json: any): undefined | LocalizedString {
+  public static deserialize(json: any): undefined | LocalizedString {
     if (!(json && (typeof json === 'string' || json.constructor === Object)))
       return;
     return new LocalizedString(json);
   }
 
-  public toJSON(): any {
+  public serialize(): any {
     return this.translations;
   }
 

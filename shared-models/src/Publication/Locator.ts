@@ -3,11 +3,7 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-export interface IText {
-  after?: string;
-  before?: string;
-  highlight?: string;
-}
+import { arrayfromJSONorString, numberfromJSON } from '../util/JSONParse';
 
 export interface IDOMRangePoint {
   cssSelector: string;
@@ -20,45 +16,209 @@ export interface IDOMRange {
   end?: IDOMRangePoint;
 }
 
-/** One or more alternative expressions of the location.
- *  https://github.com/readium/architecture/tree/master/models/locators#the-location-object
+/**
+ * Provides a precise location in a publication in a format that can be stored and shared.
+ *
+ * There are many different use cases for locators:
+ *  - getting back to the last position in a publication
+ *  - bookmarks
+ *  - highlights & annotations
+ *  - search results
+ *  - human-readable (and shareable) reference in a publication
+ *
+ * https://github.com/readium/architecture/tree/master/locators
  */
-export interface ILocations {
-  /** Contains one or more fragment in the resource referenced by the `Locator`. */
-  fragments: Array<string>;
-
-  /** Progression in the resource expressed as a percentage (between 0 and 1). */
-  progression?: number;
-
-  /** Progression in the publication expressed as a percentage (between 0 and 1). */
-  totalProgression?: number;
-
-  /** An index in the publication. */
-  position?: number;
-
-  /** Additional locations for extensions. */
-  otherLocations?: { [key: string]: any };
-
-  /** otherLocators currently in use in Thorium/R2D2BC */
-  cssSelector?: string;
-  partialCfi?: string;
-  domRange?: IDOMRange;
-}
-
-/** https://github.com/readium/architecture/tree/master/locators */
-export interface ILocator {
+export class ILocator {
   /** The URI of the resource that the Locator Object points to. */
-  href: string;
+  public href: string;
 
   /** The media type of the resource that the Locator Object points to. */
-  type: string;
+  public type: string;
 
   /** The title of the chapter or section which is more relevant in the context of this locator. */
-  title?: string;
+  public title?: string;
 
   /** One or more alternative expressions of the location. */
-  locations: ILocations;
+  public locations: ILocations;
 
   /** Textual context of the locator. */
-  text: IText;
+  public text?: IText;
+
+  /**
+   * Creates a [Locator].
+   */
+  constructor(values: {
+    href: string;
+    type: string;
+    title?: string;
+    locations?: ILocations;
+    text?: IText;
+  }) {
+    this.href = values.href;
+    this.type = values.type;
+    this.title = values.title;
+    this.locations = values.locations ? values.locations : new ILocations({});
+    this.text = values.text; // ? values.text : new IText({});
+  }
+
+  /**
+   * Parses a [Link] from its RWPM JSON representation.
+   */
+  public static deserialize(json: any): ILocator | undefined {
+    if (!(json && json.href && json.type)) return;
+    return new ILocator({
+      href: json.href,
+      type: json.type,
+      title: json.title,
+      locations: ILocations.deserialize(json.locations),
+      text: IText.deserialize(json.text),
+    });
+  }
+
+  /**
+   * Serializes a [Link] to its RWPM JSON representation.
+   */
+  public serialize(): any {
+    const json: any = { href: this.href, type: this.type };
+    if (this.title !== undefined) json.title = this.title;
+    if (this.locations) json.locations = this.locations.serialize();
+    if (this.text) json.text = this.text.serialize();
+    return json;
+  }
+}
+
+/**
+ * One or more alternative expressions of the location.
+ * https://github.com/readium/architecture/tree/master/models/locators#the-location-object
+ */
+export class ILocations {
+  /** Contains one or more fragment in the resource referenced by the `Locator`. */
+  public fragments: Array<string>;
+
+  /** Progression in the resource expressed as a percentage (between 0 and 1). */
+  public progression?: number;
+
+  /** Progression in the publication expressed as a percentage (between 0 and 1). */
+  public totalProgression?: number;
+
+  /** An index in the publication (>= 1).*/
+  public position?: number;
+
+  /** Additional locations for extensions. */
+  public otherLocations?: Map<string, any>;
+
+  /**
+   * Creates a [Locations].
+   */
+  constructor(values: {
+    fragments?: Array<string>;
+    progression?: number;
+    totalProgression?: number;
+    position?: number;
+    otherLocations?: Map<string, any>;
+  }) {
+    this.fragments = values.fragments ? values.fragments : new Array<string>();
+    this.progression = values.progression;
+    this.totalProgression = values.totalProgression;
+    this.position = values.position;
+    this.otherLocations = values.otherLocations;
+  }
+
+  /**
+   * Parses a [Locations] from its RWPM JSON representation.
+   */
+  public static deserialize(json: any): ILocations | undefined {
+    if (!json) return;
+    const progression = numberfromJSON(json.progression);
+    const totalProgression = numberfromJSON(json.totalProgression);
+    const position = numberfromJSON(json.position);
+
+    const otherLocations = new Map<string, any>();
+
+    const reservedKeys = new Set([
+      'fragments',
+      'progression',
+      'totalProgression',
+      'position',
+    ]);
+    Object.entries(json).forEach(([key, value]) => {
+      if (!reservedKeys.has(key)) {
+        otherLocations.set(key, value);
+      }
+    });
+
+    return new ILocations({
+      fragments: arrayfromJSONorString(json.fragments),
+      progression:
+        progression && progression >= 0 && progression <= 1
+          ? progression
+          : undefined,
+      totalProgression:
+        totalProgression && totalProgression >= 0 && totalProgression <= 1
+          ? totalProgression
+          : undefined,
+      position: position && position > 0 ? position : undefined,
+      otherLocations: otherLocations.size === 0 ? undefined : otherLocations,
+    });
+  }
+
+  /**
+   * Serializes a [Locations] to its RWPM JSON representation.
+   */
+  public serialize(): any {
+    const json: any = {};
+    if (this.fragments) json.fragments = this.fragments;
+    if (this.progression !== undefined) json.progression = this.progression;
+    if (this.totalProgression !== undefined)
+      json.totalProgression = this.totalProgression;
+    if (this.position !== undefined) json.position = this.position;
+    if (this.otherLocations) {
+      this.otherLocations.forEach(([key, value]) => (json[key] = value));
+    }
+    return json;
+  }
+
+  //TODO :Extend
+  /** otherLocators currently in use in Thorium/R2D2BC */
+  // cssSelector?: string;
+  // partialCfi?: string;
+  // domRange?: IDOMRange;
+}
+
+export class IText {
+  public after?: string;
+  public before?: string;
+  public highlight?: string;
+
+  /**
+   * Creates a [Text].
+   */
+  constructor(values: { after?: string; before?: string; highlight?: string }) {
+    this.after = values.after;
+    this.before = values.before;
+    this.highlight = values.highlight;
+  }
+
+  /**
+   * Parses a [Locations] from its RWPM JSON representation.
+   */
+  public static deserialize(json: any): IText | undefined {
+    if (!json) return;
+    return new IText({
+      after: json.after,
+      before: json.before,
+      highlight: json.highlight,
+    });
+  }
+
+  /**
+   * Serializes a [Locations] to its RWPM JSON representation.
+   */
+  public serialize(): any {
+    const json: any = {};
+    if (this.after !== undefined) json.after = this.after;
+    if (this.before !== undefined) json.before = this.before;
+    if (this.highlight !== undefined) json.highlight = this.highlight;
+    return json;
+  }
 }

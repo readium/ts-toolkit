@@ -45,19 +45,19 @@ export class Subject {
    *
    * A [Subject] can be parsed from a single string, or a full-fledged object.
    */
-  public static fromJSON(json: any): Subject | undefined {
+  public static deserialize(json: any): Subject | undefined {
     return json
       ? typeof json === 'string'
         ? new Subject({
-            name: LocalizedString.fromJSON(json) as LocalizedString,
+            name: LocalizedString.deserialize(json) as LocalizedString,
           })
         : json.name
         ? new Subject({
-            name: LocalizedString.fromJSON(json.name) as LocalizedString,
+            name: LocalizedString.deserialize(json.name) as LocalizedString,
             sortAs: json.sortAs,
             code: json.code,
             scheme: json.scheme,
-            links: Links.fromJSON(json.links),
+            links: Links.deserialize(json.links),
           })
         : undefined
       : undefined;
@@ -66,12 +66,12 @@ export class Subject {
   /**
    * Serializes a [Subject] to its RWPM JSON representation.
    */
-  public toJSON(): any {
-    let json: any = { name: this.name.toJSON() };
-    if (this.sortAs) json.sortAs = this.sortAs;
-    if (this.code) json.code = this.code;
-    if (this.scheme) json.scheme = this.scheme;
-    if (this.links) json.links = this.links.toJSON();
+  public serialize(): any {
+    const json: any = { name: this.name.serialize() };
+    if (this.sortAs !== undefined) json.sortAs = this.sortAs;
+    if (this.code !== undefined) json.code = this.code;
+    if (this.scheme !== undefined) json.scheme = this.scheme;
+    if (this.links) json.links = this.links.serialize();
     return json;
   }
 }
@@ -95,12 +95,12 @@ export class Subjects {
   /**
    * Parses a [Subjects] from its RWPM JSON representation.
    */
-  public static fromJSON(json: any): Subjects | undefined {
+  public static deserialize(json: any): Subjects | undefined {
     if (!json) return;
-    let items = json instanceof Array ? json : [json];
+    const items = json instanceof Array ? json : [json];
     return new Subjects(
       items
-        .map<Subject>(item => Subject.fromJSON(item) as Subject)
+        .map<Subject>(item => Subject.deserialize(item) as Subject)
         .filter(x => x !== undefined)
     );
   }
@@ -108,7 +108,7 @@ export class Subjects {
   /**
    * Serializes a [Subjects] to its RWPM JSON representation.
    */
-  public toJSON(): any {
-    return this.items.map(x => x.toJSON());
+  public serialize(): any {
+    return this.items.map(x => x.serialize());
   }
 }

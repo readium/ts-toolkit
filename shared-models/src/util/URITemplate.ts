@@ -50,7 +50,7 @@ export class URITemplate {
       return string
         .split(',')
         .map(parameter => {
-          let parameterValue = parameters[parameter];
+          const parameterValue = parameters[parameter];
           return parameterValue ? encodeURIComponent(parameterValue) : '';
         })
         .join(',');
@@ -63,7 +63,7 @@ export class URITemplate {
           .split(',')
           .map(expression => {
             const parameter = expression.split('=')[0];
-            let parameterValue = parameters[parameter];
+            const parameterValue = parameters[parameter];
             if (parameterValue) {
               return `${parameter}=${encodeURIComponent(parameterValue)}`;
             } else {

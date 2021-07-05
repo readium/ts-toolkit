@@ -58,22 +58,22 @@ export class Contributor {
    *
    * A contributor can be parsed from a single string, or a full-fledged object.
    */
-  public static fromJSON(json: any): Contributor | undefined {
+  public static deserialize(json: any): Contributor | undefined {
     if (!json) return;
     if (typeof json === 'string') {
       return new Contributor({
-        name: LocalizedString.fromJSON(json) as LocalizedString,
+        name: LocalizedString.deserialize(json) as LocalizedString,
       });
     } else {
       if (!json.name) return;
       return new Contributor({
-        name: LocalizedString.fromJSON(json.name) as LocalizedString,
+        name: LocalizedString.deserialize(json.name) as LocalizedString,
         sortAs: json.sortAs,
         identifier: json.identifier,
         roles: json.role
           ? new Set<string>(arrayfromJSONorString(json.role))
           : undefined,
-        links: Links.fromJSON(json.links),
+        links: Links.deserialize(json.links),
         position: numberfromJSON(json.position),
       });
     }
@@ -82,13 +82,13 @@ export class Contributor {
   /**
    * Serializes a [Contributor] to its RWPM JSON representation.
    */
-  public toJSON(): any {
-    let json: any = { name: this.name.toJSON() };
-    if (this.sortAs) json.sortAs = this.sortAs;
-    if (this.identifier) json.identifier = this.identifier;
+  public serialize(): any {
+    const json: any = { name: this.name.serialize() };
+    if (this.sortAs !== undefined) json.sortAs = this.sortAs;
+    if (this.identifier !== undefined) json.identifier = this.identifier;
     if (this.roles) json.role = setToArray(this.roles);
-    if (this.links) json.links = this.links.toJSON();
-    if (this.position) json.position = this.position;
+    if (this.links) json.links = this.links.serialize();
+    if (this.position !== undefined) json.position = this.position;
     return json;
   }
 }
@@ -110,12 +110,12 @@ export class Contributors {
    * Parses a [Contributors] from its RWPM JSON representation.
    *
    */
-  public static fromJSON(json: any): Contributors | undefined {
+  public static deserialize(json: any): Contributors | undefined {
     if (!json) return;
-    let items = json instanceof Array ? json : [json];
+    const items = json instanceof Array ? json : [json];
     return new Contributors(
       items
-        .map<Contributor>(item => Contributor.fromJSON(item) as Contributor)
+        .map<Contributor>(item => Contributor.deserialize(item) as Contributor)
         .filter(x => x !== undefined)
     );
   }
@@ -123,7 +123,7 @@ export class Contributors {
   /**
    * Serializes a [Contributors] to its RWPM JSON representation.
    */
-  public toJSON(): any {
-    return this.items.map(x => x.toJSON());
+  public serialize(): any {
+    return this.items.map(x => x.serialize());
   }
 }

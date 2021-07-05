@@ -8,7 +8,7 @@ import {
 
 describe('Contributor Tests', () => {
   it('parse JSON string', () => {
-    expect(Contributor.fromJSON('Thom Yorke')).toEqual(
+    expect(Contributor.deserialize('Thom Yorke')).toEqual(
       new Contributor({
         name: new LocalizedString('Thom Yorke'),
       })
@@ -16,7 +16,7 @@ describe('Contributor Tests', () => {
   });
 
   it('parse minimal JSON', () => {
-    expect(Contributor.fromJSON({ name: 'Colin Greenwood' })).toEqual(
+    expect(Contributor.deserialize({ name: 'Colin Greenwood' })).toEqual(
       new Contributor({
         name: new LocalizedString('Colin Greenwood'),
       })
@@ -25,7 +25,7 @@ describe('Contributor Tests', () => {
 
   it('parse full JSON', () => {
     expect(
-      Contributor.fromJSON({
+      Contributor.deserialize({
         name: 'Colin Greenwood',
         identifier: 'colin',
         sortAs: 'greenwood',
@@ -50,7 +50,7 @@ describe('Contributor Tests', () => {
 
   it('parse JSON with multiple roles', () => {
     expect(
-      Contributor.fromJSON({
+      Contributor.deserialize({
         name: 'Thom Yorke',
         role: ['singer', 'guitarist', 'guitarist'],
       })
@@ -63,16 +63,16 @@ describe('Contributor Tests', () => {
   });
 
   it('parse undefined JSON', () => {
-    expect(Contributor.fromJSON(undefined)).toBeUndefined();
+    expect(Contributor.deserialize(undefined)).toBeUndefined();
   });
 
   it('parse requires {name}', () => {
-    expect(Contributor.fromJSON({ identifier: 'c1' })).toBeUndefined();
+    expect(Contributor.deserialize({ identifier: 'c1' })).toBeUndefined();
   });
 
   it('parse JSON array', () => {
     expect(
-      Contributors.fromJSON([
+      Contributors.deserialize([
         'Thom Yorke',
         {
           name: { en: 'Jonny Greenwood', fr: 'Jean Boisvert' },
@@ -94,12 +94,12 @@ describe('Contributor Tests', () => {
   });
 
   it('parse undefined JSON array', () => {
-    expect(Contributors.fromJSON(undefined)).toBeUndefined();
+    expect(Contributors.deserialize(undefined)).toBeUndefined();
   });
 
   it('parse JSON array ignores invalid contributors', () => {
     expect(
-      Contributors.fromJSON([
+      Contributors.deserialize([
         'Thom Yorke',
         {
           role: 'guitarist',
@@ -113,7 +113,7 @@ describe('Contributor Tests', () => {
   });
 
   it('parse array from string', () => {
-    expect(Contributors.fromJSON(['Thom Yorke'])).toEqual(
+    expect(Contributors.deserialize(['Thom Yorke'])).toEqual(
       new Contributors([
         new Contributor({ name: new LocalizedString('Thom Yorke') }),
       ])
@@ -122,7 +122,7 @@ describe('Contributor Tests', () => {
 
   it('parse array from single object', () => {
     expect(
-      Contributors.fromJSON({
+      Contributors.deserialize({
         name: { en: 'Jonny Greenwood', fr: 'Jean Boisvert' },
         role: 'guitarist',
       })
@@ -154,7 +154,7 @@ describe('Contributor Tests', () => {
     expect(
       new Contributor({
         name: new LocalizedString('Colin Greenwood'),
-      }).toJSON()
+      }).serialize()
     ).toEqual({
       name: { undefined: 'Colin Greenwood' },
     });
@@ -172,7 +172,7 @@ describe('Contributor Tests', () => {
           new Link({ href: 'http://link1' }),
           new Link({ href: 'http://link2' }),
         ]),
-      }).toJSON()
+      }).serialize()
     ).toEqual({
       name: { undefined: 'Colin Greenwood' },
       sortAs: 'greenwood',
@@ -194,7 +194,7 @@ describe('Contributor Tests', () => {
           }),
           roles: new Set<string>(['guitarist']),
         }),
-      ]).toJSON()
+      ]).serialize()
     ).toEqual([
       {
         name: { undefined: 'Thom Yorke' },

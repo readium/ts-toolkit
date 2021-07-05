@@ -111,7 +111,7 @@ describe('MediaType Tests', () => {
   });
 
   it('type, subtype and parameter names are lowercased', () => {
-    let mediaType = MediaType.parse({
+    const mediaType = MediaType.parse({
       mediaType: 'APPLICATION/ATOM+XML;PROFILE=OPDS-CATALOG',
     });
     expect(mediaType.type).toBe('application');

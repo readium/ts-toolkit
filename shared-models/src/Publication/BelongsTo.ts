@@ -24,12 +24,12 @@ export class BelongsTo {
   /**
    * Parses a [BelongsTo] from its RWPM JSON representation.
    */
-  public static fromJSON(json: any): BelongsTo | undefined {
+  public static deserialize(json: any): BelongsTo | undefined {
     if (!(json && json instanceof Object)) return;
 
-    let items = new Map<string, Contributors>();
+    const items = new Map<string, Contributors>();
     Object.entries(json).forEach(([key, value]) => {
-      let obj = Contributors.fromJSON(value);
+      const obj = Contributors.deserialize(value);
       if (obj && obj.items.length > 0) {
         items.set(key, obj);
       }
@@ -41,10 +41,10 @@ export class BelongsTo {
   /**
    * Serializes a [BelongsTo] to its RWPM JSON representation.
    */
-  public toJSON(): any {
-    let json: any = {};
+  public serialize(): any {
+    const json: any = {};
     this.items.forEach(
-      (value: Contributors, key: string) => (json[key] = value.toJSON())
+      (value: Contributors, key: string) => (json[key] = value.serialize())
     );
     return json;
   }

@@ -64,7 +64,7 @@ export class Publication {
       }
 
       const children: Array<Links> = links.flatMap(item => {
-        let arr = [];
+        const arr = [];
         for (const link of item.items) {
           if (link.alternates) {
             arr.push(link.alternates);
@@ -106,7 +106,7 @@ export class Publication {
    * empty list.
    */
   public linksWithRole(role: string): Links | undefined {
-    let list = this.subcollections?.get(role);
+    const list = this.subcollections?.get(role);
     return list && list.length > 0 ? list[0].links : undefined;
   }
 
