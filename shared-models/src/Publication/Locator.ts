@@ -17,77 +17,6 @@ export interface IDOMRange {
 }
 
 /**
- * Provides a precise location in a publication in a format that can be stored and shared.
- *
- * There are many different use cases for locators:
- *  - getting back to the last position in a publication
- *  - bookmarks
- *  - highlights & annotations
- *  - search results
- *  - human-readable (and shareable) reference in a publication
- *
- * https://github.com/readium/architecture/tree/master/locators
- */
-export class Locator {
-  /** The URI of the resource that the Locator Object points to. */
-  public href: string;
-
-  /** The media type of the resource that the Locator Object points to. */
-  public type: string;
-
-  /** The title of the chapter or section which is more relevant in the context of this locator. */
-  public title?: string;
-
-  /** One or more alternative expressions of the location. */
-  public locations: Locations;
-
-  /** Textual context of the locator. */
-  public text?: Text;
-
-  /**
-   * Creates a [Locator].
-   */
-  constructor(values: {
-    href: string;
-    type: string;
-    title?: string;
-    locations?: Locations;
-    text?: Text;
-  }) {
-    this.href = values.href;
-    this.type = values.type;
-    this.title = values.title;
-    this.locations = values.locations ? values.locations : new Locations({});
-    this.text = values.text; // ? values.text : new IText({});
-  }
-
-  /**
-   * Parses a [Link] from its RWPM JSON representation.
-   */
-  public static deserialize(json: any): Locator | undefined {
-    if (!(json && json.href && json.type)) return;
-    return new Locator({
-      href: json.href,
-      type: json.type,
-      title: json.title,
-      locations: Locations.deserialize(json.locations),
-      text: Text.deserialize(json.text),
-    });
-  }
-
-  /**
-   * Serializes a [Link] to its RWPM JSON representation.
-   */
-  public serialize(): any {
-    const json: any = { href: this.href, type: this.type };
-    if (this.title !== undefined) json.title = this.title;
-    if (this.locations) json.locations = this.locations.serialize();
-    if (this.text) json.text = this.text.serialize();
-    return json;
-  }
-}
-
-/**
  * One or more alternative expressions of the location.
  * https://github.com/readium/architecture/tree/master/models/locators#the-location-object
  */
@@ -136,6 +65,7 @@ export class Locations {
     const otherLocations = new Map<string, any>();
 
     const reservedKeys = new Set([
+      'fragment',
       'fragments',
       'progression',
       'totalProgression',
@@ -148,16 +78,18 @@ export class Locations {
     });
 
     return new Locations({
-      fragments: arrayfromJSONorString(json.fragments),
+      fragments: arrayfromJSONorString(json.fragments || json.fragment),
       progression:
-        progression && progression >= 0 && progression <= 1
+        progression !== undefined && progression >= 0 && progression <= 1
           ? progression
           : undefined,
       totalProgression:
-        totalProgression && totalProgression >= 0 && totalProgression <= 1
+        totalProgression !== undefined &&
+        totalProgression >= 0 &&
+        totalProgression <= 1
           ? totalProgression
           : undefined,
-      position: position && position > 0 ? position : undefined,
+      position: position !== undefined && position > 0 ? position : undefined,
       otherLocations: otherLocations.size === 0 ? undefined : otherLocations,
     });
   }
@@ -173,7 +105,7 @@ export class Locations {
       json.totalProgression = this.totalProgression;
     if (this.position !== undefined) json.position = this.position;
     if (this.otherLocations) {
-      this.otherLocations.forEach(([key, value]) => (json[key] = value));
+      this.otherLocations.forEach((value, key) => (json[key] = value));
     }
     return json;
   }
@@ -220,5 +152,106 @@ export class Text {
     if (this.before !== undefined) json.before = this.before;
     if (this.highlight !== undefined) json.highlight = this.highlight;
     return json;
+  }
+}
+
+/**
+ * Provides a precise location in a publication in a format that can be stored and shared.
+ *
+ * There are many different use cases for locators:
+ *  - getting back to the last position in a publication
+ *  - bookmarks
+ *  - highlights & annotations
+ *  - search results
+ *  - human-readable (and shareable) reference in a publication
+ *
+ * https://github.com/readium/architecture/tree/master/locators
+ */
+export class Locator {
+  /** The URI of the resource that the Locator Object points to. */
+  public href: string;
+
+  /** The media type of the resource that the Locator Object points to. */
+  public type: string;
+
+  /** The title of the chapter or section which is more relevant in the context of this locator. */
+  public title?: string;
+
+  /** One or more alternative expressions of the location. */
+  public locations: Locations;
+
+  /** Textual context of the locator. */
+  public text?: Text;
+
+  /**
+   * Creates a [Locator].
+   */
+  constructor(values: {
+    href: string;
+    type: string;
+    title?: string;
+    locations?: Locations;
+    text?: Text;
+  }) {
+    this.href = values.href;
+    this.type = values.type;
+    this.title = values.title;
+    this.locations = values.locations ? values.locations : new Locations({});
+    this.text = values.text;
+  }
+
+  /**
+   * Parses a [Link] from its RWPM JSON representation.
+   */
+  public static deserialize(json: any): Locator | undefined {
+    if (!(json && json.href && json.type)) return;
+    return new Locator({
+      href: json.href,
+      type: json.type,
+      title: json.title,
+      locations: Locations.deserialize(json.locations),
+      text: Text.deserialize(json.text),
+    });
+  }
+
+  /**
+   * Serializes a [Link] to its RWPM JSON representation.
+   */
+  public serialize(): any {
+    const json: any = { href: this.href, type: this.type };
+    if (this.title !== undefined) json.title = this.title;
+    if (this.locations) json.locations = this.locations.serialize();
+    if (this.text) json.text = this.text.serialize();
+    return json;
+  }
+
+  /**
+   * Shortcut to get a copy of the [Locator] with different [Locations] sub-properties.
+   */
+  public copyWithLocations(values: any): Locator {
+    const params = new Set(Object.keys(values));
+    return new Locator({
+      href: this.href,
+      type: this.type,
+      title: this.title,
+      text: this.text,
+      locations: new Locations({
+        fragments: params.has('fragments')
+          ? values.fragments
+          : this.locations?.fragments,
+        progression: params.has('progression')
+          ? values.progression
+          : this.locations?.progression,
+        position: params.has('position')
+          ? values.position
+          : this.locations?.position,
+        totalProgression: params.has('totalProgression')
+          ? values.totalProgression
+          : this.locations?.totalProgression,
+        otherLocations: params.has('otherLocations')
+          ? values.otherLocations
+          : this.locations?.otherLocations,
+      }),
+    });
   }
 }

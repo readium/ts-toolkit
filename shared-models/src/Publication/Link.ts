@@ -11,6 +11,7 @@ import {
   positiveNumberfromJSON,
   setToArray,
 } from '../util/JSONParse';
+import { Locations, Locator } from './Locator';
 
 /**
  * Link Object for the Readium Web Publication Manifest.
@@ -178,6 +179,21 @@ export class Link {
       ? link.properties?.add(properties)
       : new Properties(properties);
     return link;
+  }
+
+  /**
+   * Creates a [Locator] from a reading order [Link].
+   */
+  public toLocator(): Locator {
+    let parts = this.href.split('#');
+    return new Locator({
+      href: parts.length > 0 && parts[0] !== undefined ? parts[0] : this.href,
+      type: this.type ?? '',
+      title: this.title,
+      locations: new Locations({
+        fragments: parts.length > 1 && parts[1] !== undefined ? [parts[1]] : [],
+      }),
+    });
   }
 }
 

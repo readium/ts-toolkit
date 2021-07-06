@@ -2,6 +2,7 @@ export * from './Publication/Publication';
 export * from './Publication/Manifest';
 export * from './Publication/Metadata';
 export * from './Publication/Locator';
+export * from './Publication/LocatorCollection';
 export * from './Publication/Contributor';
 export * from './Publication/epub/EpubLayout';
 export * from './Publication/Link';

@@ -3,8 +3,6 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-declare type ttt = { [key: string]: string };
-
 /**
  * Represents a string with multiple translations indexed by a BCP 47 language tag.
  */
