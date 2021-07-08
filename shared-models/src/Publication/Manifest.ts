@@ -147,7 +147,7 @@ export class Manifest {
 
       const children = new Array<Links>();
 
-      links.forEach((item) => {
+      links.forEach(item => {
         const arr = [];
         for (const link of item.items) {
           if (link.alternates) {
