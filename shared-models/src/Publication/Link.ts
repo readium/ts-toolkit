@@ -1,4 +1,4 @@
-/* Copyright 2020 Readium Foundation. All rights reserved.
+/* Copyright 2021 Readium Foundation. All rights reserved.
  * Use of this source code is governed by a BSD-style license,
  * available in the LICENSE file present in the Github repository of the project.
  */
@@ -56,9 +56,6 @@ export class Link {
 
   /** Resources that are children of the linked resource, in the context of a given collection role. */
   public children?: Links;
-
-  /** MediaType of the linked resource. */
-  public mediaType?: MediaType;
 
   /**
    * Creates a [Link].
@@ -139,6 +136,13 @@ export class Link {
     return json;
   }
 
+  /** MediaType of the linked resource. */
+  public getMediaType(): MediaType {
+    return this.type !== undefined
+      ? MediaType.parse({ mediaType: this.type })
+      : MediaType.BINARY;
+  }
+
   /** Computes an absolute URL to the link, relative to the given `baseURL`.
    *  If the link's `href` is already absolute, the `baseURL` is ignored.
    */
@@ -201,7 +205,7 @@ export class Link {
  * Parses multiple JSON links into an array of Link.
  */
 export class Links {
-  public readonly items: Array<Link>;
+  public items: Array<Link>;
 
   /**
    * Creates a [Links].
@@ -230,9 +234,9 @@ export class Links {
   }
 
   /** Finds the first link with the given relation. */
-  public findWithRel(rel: string): Link | null {
+  public findWithRel(rel: string): Link | undefined {
     const predicate = (el: Link) => el.rels && el.rels.has(rel);
-    return this.items.find(predicate) || null;
+    return this.items.find(predicate);
   }
 
   /** Finds all the links with the given relation. */
@@ -242,9 +246,9 @@ export class Links {
   }
 
   /** Finds the first link matching the given HREF. */
-  public findWithHref(href: string): Link | null {
+  public findWithHref(href: string): Link | undefined {
     const predicate = (el: Link) => el.href === href;
-    return this.items.find(predicate) || null;
+    return this.items.find(predicate);
   }
 
   /** Finds the index of the first link matching the given HREF. */
@@ -254,16 +258,14 @@ export class Links {
   }
 
   /** Finds the first link matching the given media type. */
-  public findWithMediaType(mediaType: string): Link | null {
-    const predicate = (el: Link) =>
-      el.mediaType ? el.mediaType.matches(mediaType) : false;
-    return this.items.find(predicate) || null;
+  public findWithMediaType(mediaType: string): Link | undefined {
+    const predicate = (el: Link) => el.getMediaType().matches(mediaType);
+    return this.items.find(predicate);
   }
 
   /** Finds all the links matching the given media type. */
   public filterByMediaType(mediaType: string): Array<Link> {
-    const predicate = (el: Link) =>
-      el.mediaType ? el.mediaType.matches(mediaType) : false;
+    const predicate = (el: Link) => el.getMediaType().matches(mediaType);
     return this.items.filter(predicate);
   }
 
@@ -271,7 +273,7 @@ export class Links {
   public filterByMediaTypes(mediaTypes: Array<string>): Array<Link> {
     const predicate = (el: Link) => {
       for (const mediaType of mediaTypes) {
-        return el.mediaType ? el.mediaType.matches(mediaType) : false;
+        return el.getMediaType().matches(mediaType);
       }
       return false;
     };
@@ -280,44 +282,44 @@ export class Links {
 
   /** Returns whether all the resources in the collection are audio clips. */
   public everyIsAudio(): boolean {
-    const predicate = (el: Link) =>
-      el.mediaType ? el.mediaType.isAudio() : false;
-    return this.items.every(predicate);
+    const predicate = (el: Link) => el.getMediaType().isAudio();
+    return this.items.length > 0 && this.items.every(predicate);
   }
 
   /** Returns whether all the resources in the collection are bitmaps. */
   public everyIsBitmap(): boolean {
-    const predicate = (el: Link) =>
-      el.mediaType ? el.mediaType.isBitmap() : false;
-    return this.items.every(predicate);
+    const predicate = (el: Link) => el.getMediaType().isBitmap();
+    return this.items.length > 0 && this.items.every(predicate);
   }
 
   /** Returns whether all the resources in the collection are HTML documents. */
   public everyIsHTML(): boolean {
-    const predicate = (el: Link) =>
-      el.mediaType ? el.mediaType.isHtml() : false;
-    return this.items.every(predicate);
+    const predicate = (el: Link) => el.getMediaType().isHtml();
+    return this.items.length > 0 && this.items.every(predicate);
   }
 
   /** Returns whether all the resources in the collection are video clips. */
   public everyIsVideo(): boolean {
-    const predicate = (el: Link) =>
-      el.mediaType ? el.mediaType.isVideo() : false;
-    return this.items.every(predicate);
+    const predicate = (el: Link) => el.getMediaType().isVideo();
+    return this.items.length > 0 && this.items.every(predicate);
   }
 
   /** Returns whether all the resources in the collection are matching any of the given media types. */
   public everyMatchesMediaType(mediaTypes: string | Array<string>): boolean {
     if (Array.isArray(mediaTypes)) {
-      return this.items.every((el: Link) => {
-        for (const mediaType of mediaTypes) {
-          return el.mediaType ? el.mediaType.matches(mediaType) : false;
-        }
-        return false;
-      });
+      return (
+        this.items.length > 0 &&
+        this.items.every((el: Link) => {
+          for (const mediaType of mediaTypes) {
+            return el.getMediaType().matches(mediaType);
+          }
+          return false;
+        })
+      );
     } else {
-      return this.items.every((el: Link) =>
-        el.mediaType ? el.mediaType.matches(mediaTypes) : false
+      return (
+        this.items.length > 0 &&
+        this.items.every((el: Link) => el.getMediaType().matches(mediaTypes))
       );
     }
   }

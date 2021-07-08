@@ -1,15 +1,7 @@
-/* Copyright 2020 Readium Foundation. All rights reserved.
+/* Copyright 2021 Readium Foundation. All rights reserved.
  * Use of this source code is governed by a BSD-style license,
  * available in the LICENSE file present in the Github repository of the project.
  */
-
-import {
-  Fit,
-  Orientation,
-  Overflow,
-  Page,
-  Spread,
-} from './presentation/Presentation';
 
 /**
  * Properties associated to the linked resource.
@@ -48,31 +40,5 @@ export class Properties {
       _properties[property] = properties[property];
     }
     return new Properties(_properties);
-  }
-
-  //Presentation Properties :
-
-  public getClipped(): boolean {
-    return this.otherProperties['clipped'] || false;
-  }
-
-  public getFit(): Fit | undefined {
-    return this.otherProperties['fit'];
-  }
-
-  public getOrientation(): Orientation | undefined {
-    return this.otherProperties['orientation'];
-  }
-
-  public getOverflow(): Overflow | undefined {
-    return this.otherProperties['overflow'];
-  }
-
-  public getPage(): Page | undefined {
-    return this.otherProperties['page'] || null;
-  }
-
-  public getSpread(): Spread | undefined {
-    return this.otherProperties['spread'] || null;
   }
 }

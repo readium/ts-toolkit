@@ -1,6 +1,6 @@
 {
   "name": "@jellybooks/shared-test",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "Next generation SDK for publications in Web Apps",
   "author": "Jellybooks",
   "repository": {
@@ -29,13 +29,14 @@
     "start": "tsdx watch",
     "build": "tsdx build",
     "test": "tsdx test",
-    "test:one": "tsdx test LocatorCollection.test.ts",
+    "test:coverage": "tsdx test --coverage",
+    "test:one": "tsdx test Publication.test.ts",
     "lint": "tsdx lint",
     "lint:fix": "tsdx lint --fix",
     "prepare": "tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why",
-    "test:debug": "DEBUG=true node --inspect-brk node_modules/.bin/jest --runInBand"
+    "test:debug": "DEBUG=true node --inspect-brk node_modules/.bin/jest --runInBand test Publication.test.ts"
   },
   "husky": {
     "hooks": {

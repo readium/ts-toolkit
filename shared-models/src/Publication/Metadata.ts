@@ -1,4 +1,4 @@
-/* Copyright 2020 Readium Foundation. All rights reserved.
+/* Copyright 2021 Readium Foundation. All rights reserved.
  * Use of this source code is governed by a BSD-style license,
  * available in the LICENSE file present in the Github repository of the project.
  */
@@ -11,7 +11,6 @@ import {
 import { BelongsTo } from './BelongsTo';
 import { Contributors } from './Contributor';
 import { LocalizedString } from './LocalizedString';
-import { Presentation } from './presentation/Presentation';
 import { ReadingProgression } from './ReadingProgression';
 import { Subjects } from './Subject';
 
@@ -286,15 +285,6 @@ export class Metadata {
     }
 
     return json;
-  }
-
-  // Presentation
-  public getPresentation(): Presentation | undefined {
-    if (!this.otherMetadata) return;
-    const presentation =
-      this.otherMetadata['presentation'] || this.otherMetadata['rendition'];
-    if (!presentation) return;
-    return new Presentation(presentation);
   }
 
   /**

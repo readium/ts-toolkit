@@ -1,20 +1,9 @@
-/* Copyright 2020 Readium Foundation. All rights reserved.
+/* Copyright 2021 Readium Foundation. All rights reserved.
  * Use of this source code is governed by a BSD-style license,
  * available in the LICENSE file present in the Github repository of the project.
  */
 
 import { arrayfromJSONorString, numberfromJSON } from '../util/JSONParse';
-
-export interface IDOMRangePoint {
-  cssSelector: string;
-  textNodeIndex: number;
-  charOffset?: number;
-}
-
-export interface IDOMRange {
-  start: IDOMRangePoint;
-  end?: IDOMRangePoint;
-}
 
 /**
  * One or more alternative expressions of the location.

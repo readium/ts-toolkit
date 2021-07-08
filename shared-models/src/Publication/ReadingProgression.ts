@@ -1,4 +1,4 @@
-/* Copyright 2020 Readium Foundation. All rights reserved.
+/* Copyright 2021 Readium Foundation. All rights reserved.
  * Use of this source code is governed by a BSD-style license,
  * available in the LICENSE file present in the Github repository of the project.
  */
@@ -13,8 +13,6 @@ export enum ReadingProgression {
   ttb = 'ttb',
 }
 
-// Note: Babel doesn’t really like that at all so disabling for the time being
-// export namespace ReadingProgression {
 export function leadingPage(readingProgression: ReadingProgression): Page {
   switch (readingProgression) {
     case ReadingProgression.auto:
@@ -28,4 +26,3 @@ export function leadingPage(readingProgression: ReadingProgression): Page {
       return Page.left;
   }
 }
-// }

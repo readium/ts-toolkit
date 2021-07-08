@@ -4,4 +4,4 @@ node_modules
 dist
 example/build/jellybookslib.js
 types
-
+coverage

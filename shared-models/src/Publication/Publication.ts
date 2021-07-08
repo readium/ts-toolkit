@@ -1,4 +1,4 @@
-/* Copyright 2020 Readium Foundation. All rights reserved.
+/* Copyright 2021 Readium Foundation. All rights reserved.
  * Use of this source code is governed by a BSD-style license,
  * available in the LICENSE file present in the Github repository of the project.
  */
@@ -7,6 +7,15 @@ import { Link, Links } from './Link';
 import { Manifest } from './Manifest';
 import { Metadata } from './Metadata';
 import { PublicationCollection } from './PublicationCollection';
+
+export enum PublicationType {
+  EPUB = 'EPUB',
+  CBZ = 'CBZ',
+  FXL = 'FXL',
+  WEBPUB = 'WEBPUB',
+  AUDIO = 'AUDIO',
+  DiViNa = 'DiViNa',
+}
 
 /** Shared model for a Readium Publication. */
 export class Publication {
@@ -26,79 +35,27 @@ export class Publication {
   /** Identifies the collection that contains sub collections. */
   public readonly subcollections?: Map<string, Array<PublicationCollection>>;
 
-  constructor(manifest: Manifest) {
-    this.manifest = manifest;
-    this.context = manifest.context;
-    this.metadata = manifest.metadata;
-    this.links = manifest.links;
-    this.readingOrder = manifest.readingOrder;
-    this.resources = manifest.resources;
-    this.tableOfContents = manifest.tableOfContents;
-    this.subcollections = manifest.subcollections;
+  constructor(values: { manifest: Manifest }) {
+    this.manifest = values.manifest;
+    this.context = values.manifest.context;
+    this.metadata = values.manifest.metadata;
+    this.links = values.manifest.links;
+    this.readingOrder = values.manifest.readingOrder;
+    this.resources = values.manifest.resources;
+    this.tableOfContents = values.manifest.tableOfContents;
+    this.subcollections = values.manifest.subcollections;
   }
 
   /** The URL where this publication is served, computed from the `Link` with `self` relation.
    *  e.g. https://provider.com/pub1293/manifest.json gives https://provider.com/pub1293/
    */
-  public baseURL(): string | null {
-    const selfLink = this.links.items.find(
-      el => el.rels && el.rels.has('self')
-    );
-    if (selfLink) {
-      return selfLink.href;
-    } else {
-      return null;
-    }
+  public getBaseURL(): string | undefined {
+    return this.manifest.getBaseURL();
   }
 
   /** Finds the first Link having the given `href` in the publication's links. */
-  public linkWithHref(href: string): Link | null {
-    const find = (links: Array<Links>): Link | null => {
-      let result = null;
-
-      for (const collection of links) {
-        result = collection.findWithHref(href);
-        if (result !== null) {
-          return result;
-        }
-      }
-
-      const children: Array<Links> = links.flatMap(item => {
-        const arr = [];
-        for (const link of item.items) {
-          if (link.alternates) {
-            arr.push(link.alternates);
-          }
-          if (link.children) {
-            arr.push(link.children);
-          }
-        }
-        return arr;
-      });
-
-      find(children);
-
-      return result;
-    };
-
-    const links: Array<Links> = [];
-    links.push(this.readingOrder);
-    if (this.resources) {
-      links.push(this.resources);
-    }
-    links.push(this.links);
-
-    const link = find(links);
-
-    if (link !== null) {
-      return link;
-    }
-
-    const shortHref = href.split(/[#]/)[0];
-
-    this.linkWithHref(shortHref);
-
-    return link;
+  public linkWithHref(href: string): Link | undefined {
+    return this.manifest.linkWithHref(href);
   }
 
   /**
@@ -110,18 +67,35 @@ export class Publication {
     return list && list.length > 0 ? list[0].links : undefined;
   }
 
-  //TODO: remove
-  // /** Finds the first link with the given relation in the publication's links. */
-  // public linkWithRel(rel: string): Link | null {
-  //   return this.linkWithRel(rel);
-  // }
-
-  // /** Finds all the links with the given relation in the publication's links. */
-  // public linksWithRel(rel: string): Array<Link> {
-  //   return this.linksWithRel(rel);
-  // }
-
-  /** EPUB Web Publication Extension
-   *  https://readium.org/webpub-manifest/schema/extensions/epub/subcollections.schema.json
+  /**
+   * Sets the URL where this [Publication]'s RWPM manifest is served.
    */
+  public setSelfLink(href: string): void {
+    this.manifest.setSelfLink(href);
+  }
+
+  /** Finds all the links with the given relation in the publication's links. */
+  public linksWithRel(rel: string): Array<Link> {
+    return this.manifest.linksWithRel(rel);
+  }
+
+  /**
+   * Finds the first [Link] having the given [rel] in the publications's links.
+   */
+  public linkWithRel(rel: string): Link | undefined {
+    return this.manifest.linkWithRel(rel);
+  }
+
+  /**
+   * Returns Type of publication
+   */
+  public getType(): PublicationType {
+    if (
+      this.metadata.typeUri === 'http://schema.org/Audiobook' ||
+      this.readingOrder.everyIsAudio()
+    )
+      return PublicationType.AUDIO;
+    if (this.readingOrder.everyIsBitmap()) return PublicationType.DiViNa;
+    return PublicationType.WEBPUB;
+  }
 }

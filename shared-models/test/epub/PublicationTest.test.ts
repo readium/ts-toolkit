@@ -15,14 +15,14 @@ describe('Epub Publication Tests', () => {
       Array<PublicationCollection>
     >()
   ): Publication {
-    return new Publication(
-      new Manifest({
+    return new Publication({
+      manifest: new Manifest({
         metadata: new Metadata({ title: new LocalizedString('Title') }),
         links: new Links([]),
         readingOrder: new Links([]),
         subcollections,
-      })
-    );
+      }),
+    });
   }
 
   it('get {pageList}', () => {

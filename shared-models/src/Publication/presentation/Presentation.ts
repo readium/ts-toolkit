@@ -1,16 +1,22 @@
-/* Copyright 2020 Readium Foundation. All rights reserved.
+/* Copyright 2021 Readium Foundation. All rights reserved.
  * Use of this source code is governed by a BSD-style license,
  * available in the LICENSE file present in the Github repository of the project.
  */
 
 import { EpubLayout } from '../epub/EpubLayout';
 
+/**
+ * Suggested orientation for the device when displaying the linked resource.
+ */
 export enum Orientation {
   auto = 'auto',
   landscape = 'landscape',
   portrait = 'portrait',
 }
 
+/**
+ * Suggested method for handling overflow while displaying the linked resource.
+ */
 export enum Overflow {
   auto = 'auto',
   clipped = 'clipped',
@@ -18,12 +24,20 @@ export enum Overflow {
   scrolled = 'scrolled',
 }
 
+/**
+ * Indicates how the linked resource should be displayed in a reading environment that displays
+ * synthetic spreads.
+ */
 export enum Page {
   left = 'left',
   right = 'right',
   center = 'center',
 }
 
+/**
+ * Indicates the condition to be met for the linked resource to be rendered within a synthetic
+ * spread.
+ */
 export enum Spread {
   auto = 'auto',
   both = 'both',
@@ -31,6 +45,9 @@ export enum Spread {
   landscape = 'landscape',
 }
 
+/**
+ * Suggested method for constraining a resource inside the viewport.
+ */
 export enum Fit {
   contain = 'contain',
   cover = 'cover',
@@ -38,15 +55,15 @@ export enum Fit {
   height = 'height',
 }
 
-export interface IPresentationMetadata {
-  clipped?: boolean;
-  continuous?: boolean;
-  fit?: Fit;
-  orientation?: Orientation;
-  overflow?: Overflow;
-  spread?: Spread;
-  layout?: EpubLayout;
-}
+// export interface IPresentationMetadata {
+//   clipped?: boolean;
+//   continuous?: boolean;
+//   fit?: Fit;
+//   orientation?: Orientation;
+//   overflow?: Overflow;
+//   spread?: Spread;
+//   layout?: EpubLayout;
+// }
 
 /** The Presentation Hints extension defines a number of hints for User Agents about the way content
  *  should be presented to the user.
@@ -54,7 +71,7 @@ export interface IPresentationMetadata {
  *  https://readium.org/webpub-manifest/extensions/presentation.html
  *  https://readium.org/webpub-manifest/schema/extensions/presentation/metadata.schema.json
  *
- *  These properties are nullable to avoid having default values when it doesn't make sense for a
+ *  These properties can be undefined to avoid having default values when it doesn't make sense for a
  *  given `Publication`. If a navigator needs a default value when not specified,
  *  `Presentation.defaultX` and `Presentation.X.default` can be used.
  */
@@ -84,13 +101,55 @@ export class Presentation {
    */
   public overflow?: Overflow;
 
-  constructor(presentation: IPresentationMetadata) {
-    this.clipped = presentation.clipped;
-    this.fit = presentation.fit;
-    this.orientation = presentation.orientation;
-    this.spread = presentation.spread;
-    this.layout = presentation.layout;
-    this.continuous = presentation.continuous;
-    this.overflow = presentation.overflow;
+  /** Creates a [Presentation]. */
+  constructor(values: {
+    clipped?: boolean;
+    continuous?: boolean;
+    fit?: Fit;
+    orientation?: Orientation;
+    overflow?: Overflow;
+    spread?: Spread;
+    layout?: EpubLayout;
+  }) {
+    this.clipped = values.clipped;
+    this.fit = values.fit;
+    this.orientation = values.orientation;
+    this.spread = values.spread;
+    this.layout = values.layout;
+    this.continuous = values.continuous;
+    this.overflow = values.overflow;
+  }
+
+  /**
+   * Parses a [Presentation] from its RWPM JSON representation.
+   *
+   */
+  public static deserialize(json: any): Presentation | undefined {
+    if (!json) return;
+
+    return new Presentation({
+      clipped: json.clipped,
+      continuous: json.continuous,
+      fit: json.fit,
+      orientation: json.orientation,
+      overflow: json.overflow,
+      spread: json.spread,
+      layout: json.layout,
+    });
+  }
+
+  /**
+   * Serializes a [Presentation] to its RWPM JSON representation.
+   */
+  public serialize(): any {
+    const json: any = {};
+    if (this.clipped !== undefined) json.clipped = this.clipped;
+    if (this.continuous !== undefined) json.continuous = this.continuous;
+    if (this.fit !== undefined) json.fit = this.fit;
+    if (this.orientation !== undefined) json.orientation = this.orientation;
+    if (this.overflow !== undefined) json.overflow = this.overflow;
+    if (this.spread !== undefined) json.spread = this.spread;
+    if (this.layout !== undefined) json.layout = this.layout;
+    return json;
   }
 }

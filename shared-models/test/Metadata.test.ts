@@ -155,7 +155,7 @@ describe('Metadata Tests', () => {
   });
 
   it('parse undefined JSON', () => {
-    expect(Metadata.deserialize(null)).toBeUndefined();
+    expect(Metadata.deserialize(undefined)).toBeUndefined();
   });
 
   it('parse JSON with single language', () => {

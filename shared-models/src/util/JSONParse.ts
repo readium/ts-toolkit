@@ -19,7 +19,8 @@ export function numberfromJSON(json: any): number | undefined {
 
 /** Parses a numeric value, but returns undefined if it is not a positive number. */
 export function positiveNumberfromJSON(json: any): number | undefined {
-  return numberfromJSON(json) && Math.sign(json) >= 0 ? json : undefined;
+  let num = numberfromJSON(json);
+  return num !== undefined && Math.sign(json) >= 0 ? json : undefined;
 }
 
 /** Converts a Set of a string to a string Array object */

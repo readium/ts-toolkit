@@ -1,4 +1,4 @@
-/* Copyright 2020 Readium Foundation. All rights reserved.
+/* Copyright 2021 Readium Foundation. All rights reserved.
  * Use of this source code is governed by a BSD-style license,
  * available in the LICENSE file present in the Github repository of the project.
  */
@@ -46,21 +46,22 @@ export class Subject {
    * A [Subject] can be parsed from a single string, or a full-fledged object.
    */
   public static deserialize(json: any): Subject | undefined {
-    return json
-      ? typeof json === 'string'
-        ? new Subject({
-            name: LocalizedString.deserialize(json) as LocalizedString,
-          })
-        : json.name
-        ? new Subject({
-            name: LocalizedString.deserialize(json.name) as LocalizedString,
-            sortAs: json.sortAs,
-            code: json.code,
-            scheme: json.scheme,
-            links: Links.deserialize(json.links),
-          })
-        : undefined
-      : undefined;
+    if (!json) return;
+
+    if (typeof json === 'string') {
+      return new Subject({
+        name: LocalizedString.deserialize(json) as LocalizedString,
+      });
+    } else {
+      if (!json.name) return;
+      return new Subject({
+        name: LocalizedString.deserialize(json.name) as LocalizedString,
+        sortAs: json.sortAs,
+        code: json.code,
+        scheme: json.scheme,
+        links: Links.deserialize(json.links),
+      });
+    }
   }
 
   /**

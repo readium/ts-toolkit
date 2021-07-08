@@ -1,4 +1,4 @@
-/* Copyright 2020 Readium Foundation. All rights reserved.
+/* Copyright 2021 Readium Foundation. All rights reserved.
  * Use of this source code is governed by a BSD-style license,
  * available in the LICENSE file present in the Github repository of the project.
  */
@@ -7,6 +7,7 @@ import { Metadata } from './Metadata';
 import { Link, Links } from './Link';
 import { arrayfromJSONorString } from '../util/JSONParse';
 import { PublicationCollection } from './PublicationCollection';
+import { MediaType } from '../util/mediatype/MediaType';
 
 /** Holds the metadata of a Readium publication, as described in
  *  the Readium Web Publication Manifest.
@@ -100,7 +101,7 @@ export class Manifest {
   }
 
   /** Finds the first link with the given relation in the manifest's links. */
-  public linkWithRel(rel: string): Link | null {
+  public linkWithRel(rel: string): Link | undefined {
     const links = new Array<Links>();
     links.push(this.readingOrder);
     if (this.resources) {
@@ -108,13 +109,11 @@ export class Manifest {
     }
     links.push(this.links);
 
-    //[this.readingOrder, this.resources , this.links];
-
-    let result = null;
+    let result: Link | undefined;
 
     for (const collection of links) {
       result = collection.findWithRel(rel);
-      if (result !== null) {
+      if (result !== undefined) {
         return result;
       }
     }
@@ -134,14 +133,98 @@ export class Manifest {
     return result.reduce((acc, val) => acc.concat(val), []);
   }
 
-  //TODO : remove
-  // private getAllLinks() : Array<Links> {
-  //   const result = new Array<Links>();
-  //   result.push(this.readingOrder);
-  //   if (this.resources) {
-  //     result.push(this.resources);
-  //   }
-  //   result.push(this.links);
-  //   return result;
-  // }
+  /** Finds the first Link having the given `href` in the publication's links. */
+  public linkWithHref(href: string): Link | undefined {
+    const find = (links: Array<Links>): Link | undefined => {
+      let result = undefined;
+
+      for (const collection of links) {
+        result = collection.findWithHref(href);
+        if (result !== undefined) {
+          return result;
+        }
+      }
+
+      const children: Array<Links> = links.flatMap(item => {
+        const arr = [];
+        for (const link of item.items) {
+          if (link.alternates) {
+            arr.push(link.alternates);
+          }
+          if (link.children) {
+            arr.push(link.children);
+          }
+        }
+        return arr;
+      });
+
+      if (children.length > 0) {
+        result = find(children);
+      }
+
+      return result;
+    };
+
+    const links: Array<Links> = [];
+    links.push(this.readingOrder);
+    if (this.resources) {
+      links.push(this.resources);
+    }
+    links.push(this.links);
+
+    const link = find(links);
+
+    if (link !== undefined) {
+      return link;
+    }
+
+    const parts = href.split(/[#]/);
+
+    if (parts.length < 2) return;
+
+    const shortHref = parts[0];
+
+    return this.linkWithHref(shortHref);
+  }
+
+  /** The URL where this publication is served, computed from the `Link` with `self` relation.
+   *  e.g. https://provider.com/pub1293/manifest.json gives https://provider.com/pub1293/
+   */
+  public getBaseURL(): string | undefined {
+    const selfLink = this.links.items.find(
+      el => el.rels && el.rels.has('self')
+    );
+    if (selfLink) {
+      let href = selfLink.href;
+      if (href) {
+        const li = href.lastIndexOf('/');
+        const lastpart =
+          li === -1 ? undefined : href.substring(href.lastIndexOf('/') + 1);
+
+        href = href.replace(new RegExp('/?$query$'), '');
+        href = href.replace(new RegExp('//$'), '');
+        if (lastpart) {
+          href = href.replace(new RegExp(lastpart + '$'), '');
+        }
+      }
+      return href;
+    }
+    return;
+  }
+
+  /**
+   * Sets the URL where this [Publication]'s RWPM manifest is served.
+   */
+  public setSelfLink(href: string): void {
+    this.links.items = this.links.items.filter(
+      x => x.rels === undefined || !x.rels?.has('self')
+    );
+    this.links.items.push(
+      new Link({
+        href,
+        type: MediaType.READIUM_WEBPUB_MANIFEST.string,
+        rels: new Set<string>(['self']),
+      })
+    );
+  }
 }
