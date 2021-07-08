@@ -145,7 +145,9 @@ export class Manifest {
         }
       }
 
-      const children: Array<Links> = links.flatMap(item => {
+      const children = new Array<Links>();
+
+      links.forEach((item) => {
         const arr = [];
         for (const link of item.items) {
           if (link.alternates) {
@@ -155,7 +157,7 @@ export class Manifest {
             arr.push(link.children);
           }
         }
-        return arr;
+        children.push(...arr);
       });
 
       if (children.length > 0) {
