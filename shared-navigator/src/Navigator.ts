@@ -1,6 +1,10 @@
 import { Locator, Publication } from '@jellybooks/shared-test';
 import { Controller } from './Controller';
 
+/**
+ * Navigator for navigation of e-book
+ * Manages the controller to render content
+ */
 export abstract class Navigator {
   public publication: Publication;
   public controller?: Controller;
