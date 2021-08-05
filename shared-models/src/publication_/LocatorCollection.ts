@@ -11,7 +11,7 @@ import { Locator } from './Locator';
 /**
  * Holds the metadata of a `LocatorCollection`.
  */
-export class LocatorMetadata {
+export class LocatorCollectionMetadata {
   public title?: LocalizedString;
 
   /** numberOfItems Indicates the total number of locators in the collection. */
@@ -35,7 +35,7 @@ export class LocatorMetadata {
   /**
    * Parses a [LocatorMetadata] from its RWPM JSON representation.
    */
-  public static deserialize(json: any): LocatorMetadata | undefined {
+  public static deserialize(json: any): LocatorCollectionMetadata | undefined {
     if (!json) return;
 
     const otherMetadata = new Map<string, any>();
@@ -47,7 +47,7 @@ export class LocatorMetadata {
       }
     });
 
-    return new LocatorMetadata({
+    return new LocatorCollectionMetadata({
       title: LocalizedString.deserialize(json.title),
       numberOfItems: numberfromJSON(json.numberOfItems),
       otherMetadata: otherMetadata.size === 0 ? undefined : otherMetadata,
@@ -75,7 +75,7 @@ export class LocatorMetadata {
  * For example, a search result or a list of positions.
  */
 export class LocatorCollection {
-  public metadata: LocatorMetadata;
+  public metadata: LocatorCollectionMetadata;
   public links: Links;
   public locators: Array<Locator>;
 
@@ -83,11 +83,11 @@ export class LocatorCollection {
    * Creates a [LocatorCollection].
    */
   constructor(values: {
-    metadata?: LocatorMetadata;
+    metadata?: LocatorCollectionMetadata;
     links?: Links;
     locators?: Array<Locator>;
   }) {
-    this.metadata = values.metadata ?? new LocatorMetadata({});
+    this.metadata = values.metadata ?? new LocatorCollectionMetadata({});
     this.links = values.links ?? new Links([]);
     this.locators = values.locators ?? [];
   }
@@ -109,7 +109,7 @@ export class LocatorCollection {
     }
 
     return new LocatorCollection({
-      metadata: LocatorMetadata.deserialize(json.metadata),
+      metadata: LocatorCollectionMetadata.deserialize(json.metadata),
       links: Links.deserialize(json.links),
       locators,
     });

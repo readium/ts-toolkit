@@ -5,7 +5,7 @@ import {
   Locations,
   Locator,
   LocatorCollection,
-  LocatorMetadata,
+  LocatorCollectionMetadata,
   Text,
 } from '../src';
 
@@ -70,7 +70,7 @@ describe('Locator Collection Tests', () => {
       })
     ).toEqual(
       new LocatorCollection({
-        metadata: new LocatorMetadata({
+        metadata: new LocatorCollectionMetadata({
           title: new LocalizedString({
             en: 'Searching <riddle> in Alice in Wonderlands - Page 1',
             fr: 'Recherche <riddle> dans Alice in Wonderlands – Page 1',
@@ -129,7 +129,7 @@ describe('Locator Collection Tests', () => {
   it('get {LocatorCollection} full JSON', () => {
     expect(
       new LocatorCollection({
-        metadata: new LocatorMetadata({
+        metadata: new LocatorCollectionMetadata({
           title: new LocalizedString({
             en: 'Searching <riddle> in Alice in Wonderlands - Page 1',
             fr: 'Recherche <riddle> dans Alice in Wonderlands – Page 1',
