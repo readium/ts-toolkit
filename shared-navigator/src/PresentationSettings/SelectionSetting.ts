@@ -1,5 +1,4 @@
-import { ISettingsConfig } from './ISetting';
-import { Setting } from './Setting';
+import { ISettingsConfig, Setting } from './Setting';
 
 export class SelectionSetting<T> extends Setting<T> {
   public readonly items: Map<string, T>;

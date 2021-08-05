@@ -1,5 +1,4 @@
-import { ISettingsConfig } from './ISetting';
-import { Setting } from './Setting';
+import { ISettingsConfig, Setting } from './Setting';
 
 export class BooleanSetting extends Setting<boolean> {
   public readonly trueValue: any;

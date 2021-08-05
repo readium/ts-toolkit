@@ -4,11 +4,9 @@ import { HyphenType } from './HyphenType';
 import { TextAlign } from './TextAlign';
 import { View } from './View';
 
-export interface PresentationSettingsConfig {
+export interface ReadiumCssSettings {
   columnCountType?: ColumnCountType;
-  advancedSettings?: boolean;
   hyphens?: HyphenType;
-  fontOverride?: boolean;
   fontSize?: number;
   fontFamily?: string;
   appearance?: Appearance;

@@ -1,5 +1,4 @@
-import { ISettingsConfig } from './ISetting';
-import { Setting } from './Setting';
+import { ISettingsConfig, Setting } from './Setting';
 
 export class NumericSetting extends Setting<number> {
   public readonly minValue: number;
