@@ -1,6 +1,6 @@
 import { Link } from '../Link';
 import { Presentation } from '../presentation/Presentation';
-import { EPUBLayout } from './EPUBLayout';
+import { EPUBLayout } from './_EPUBLayout';
 
 declare module '../presentation/Presentation' {
   export interface Presentation {

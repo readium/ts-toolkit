@@ -1,5 +1,5 @@
 import { Properties } from '../Properties';
-import { EPUBLayout } from './EPUBLayout';
+import { EPUBLayout } from './_EPUBLayout';
 
 // EPUB extensions for link [Properties].
 // https://readium.org/webpub-manifest/schema/extensions/epub/properties.schema.json

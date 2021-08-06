@@ -3,7 +3,7 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { EPUBLayout } from '../epub/EPUBLayout';
+import { EPUBLayout } from '../epub/_EPUBLayout';
 
 /**
  * Suggested orientation for the device when displaying the linked resource.
