@@ -385,9 +385,7 @@ describe('MediaType Tests', () => {
 
   it('is ZIP', () => {
     expect(MediaType.parse({ mediaType: 'text/plain' }).isZIP).toBe(false);
-    expect(MediaType.parse({ mediaType: 'application/zip' }).isZIP).toBe(
-      true
-    );
+    expect(MediaType.parse({ mediaType: 'application/zip' }).isZIP).toBe(true);
     expect(
       MediaType.parse({ mediaType: 'application/zip;charset=utf-8' }).isZIP
     ).toBe(true);
@@ -411,9 +409,9 @@ describe('MediaType Tests', () => {
     expect(
       MediaType.parse({ mediaType: 'application/json;charset=utf-8' }).isJSON
     ).toBe(true);
-    expect(
-      MediaType.parse({ mediaType: 'application/opds+json' }).isJSON
-    ).toBe(true);
+    expect(MediaType.parse({ mediaType: 'application/opds+json' }).isJSON).toBe(
+      true
+    );
   });
 
   it('is OPDS', () => {
@@ -428,9 +426,9 @@ describe('MediaType Tests', () => {
         mediaType: 'application/atom+xml;type=entry;profile=opds-catalog',
       }).isOPDS
     ).toBe(true);
-    expect(
-      MediaType.parse({ mediaType: 'application/opds+json' }).isOPDS
-    ).toBe(true);
+    expect(MediaType.parse({ mediaType: 'application/opds+json' }).isOPDS).toBe(
+      true
+    );
     expect(
       MediaType.parse({
         mediaType: 'application/opds-publication+json',
@@ -449,13 +447,13 @@ describe('MediaType Tests', () => {
   });
 
   it('is HTML', () => {
-    expect(
-      MediaType.parse({ mediaType: 'application/opds+json' }).isHTML
-    ).toBe(false);
+    expect(MediaType.parse({ mediaType: 'application/opds+json' }).isHTML).toBe(
+      false
+    );
     expect(MediaType.parse({ mediaType: 'text/html' }).isHTML).toBe(true);
-    expect(
-      MediaType.parse({ mediaType: 'application/xhtml+xml' }).isHTML
-    ).toBe(true);
+    expect(MediaType.parse({ mediaType: 'application/xhtml+xml' }).isHTML).toBe(
+      true
+    );
     expect(
       MediaType.parse({ mediaType: 'text/html;charset=utf-8' }).isHTML
     ).toBe(true);
@@ -475,9 +473,7 @@ describe('MediaType Tests', () => {
 
   it('is audio', () => {
     expect(MediaType.parse({ mediaType: 'text/html' }).isAudio).toBe(false);
-    expect(MediaType.parse({ mediaType: 'audio/unknown' }).isAudio).toBe(
-      true
-    );
+    expect(MediaType.parse({ mediaType: 'audio/unknown' }).isAudio).toBe(true);
     expect(
       MediaType.parse({ mediaType: 'audio/mpeg;param=value' }).isAudio
     ).toBe(true);
@@ -485,9 +481,7 @@ describe('MediaType Tests', () => {
 
   it('is video', () => {
     expect(MediaType.parse({ mediaType: 'text/html' }).isVideo).toBe(false);
-    expect(MediaType.parse({ mediaType: 'video/unknown' }).isVideo).toBe(
-      true
-    );
+    expect(MediaType.parse({ mediaType: 'video/unknown' }).isVideo).toBe(true);
     expect(
       MediaType.parse({ mediaType: 'video/mpeg;param=value' }).isVideo
     ).toBe(true);

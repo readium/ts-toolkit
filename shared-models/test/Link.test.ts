@@ -221,15 +221,13 @@ describe('Link Tests', () => {
   });
 
   it('to URL relative to undefined', () => {
-    expect(
-      new Link({ href: 'folder/file.html' }).toURL(undefined)
-    ).toEqual('/folder/file.html');
+    expect(new Link({ href: 'folder/file.html' }).toURL(undefined)).toEqual(
+      '/folder/file.html'
+    );
   });
 
   it('to URL with invalid HREF', () => {
-    expect(
-      new Link({ href: '' }).toURL('http://test.com')
-    ).toBeUndefined();
+    expect(new Link({ href: '' }).toURL('http://test.com')).toBeUndefined();
   });
 
   it('to URL with absolute HREF', () => {

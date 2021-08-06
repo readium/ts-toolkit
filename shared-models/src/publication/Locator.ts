@@ -179,7 +179,9 @@ export class Locator {
     this.href = values.href;
     this.type = values.type;
     this.title = values.title;
-    this.locations = values.locations ? values.locations : new LocatorLocations({});
+    this.locations = values.locations
+      ? values.locations
+      : new LocatorLocations({});
     this.text = values.text;
   }
 
@@ -217,9 +219,7 @@ export class Locator {
       type: this.type,
       title: this.title,
       text: this.text,
-      locations: new LocatorLocations(
-        {...this.locations , ...values}      
-      ),
+      locations: new LocatorLocations({ ...this.locations, ...values }),
     });
   }
 }

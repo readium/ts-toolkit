@@ -194,8 +194,12 @@ describe('Locator Tests', () => {
     expect(LocatorLocations.deserialize({ position: 1 })).toEqual(
       new LocatorLocations({ position: 1 })
     );
-    expect(LocatorLocations.deserialize({ position: 0 })).toEqual(new LocatorLocations({}));
-    expect(LocatorLocations.deserialize({ position: -1 })).toEqual(new LocatorLocations({}));
+    expect(LocatorLocations.deserialize({ position: 0 })).toEqual(
+      new LocatorLocations({})
+    );
+    expect(LocatorLocations.deserialize({ position: -1 })).toEqual(
+      new LocatorLocations({})
+    );
   });
 
   it('parse {Locations} ignores {progression} outside of 0-1 range', () => {
@@ -235,7 +239,9 @@ describe('Locator Tests', () => {
   });
 
   it('get {Locations} minimal JSON', () => {
-    expect(new LocatorLocations({}).serialize()).toEqual(new LocatorLocations({}));
+    expect(new LocatorLocations({}).serialize()).toEqual(
+      new LocatorLocations({})
+    );
   });
 
   it('get {Locations} full JSON', () => {

@@ -16,5 +16,5 @@ declare module '../Properties' {
 Object.defineProperty(Properties.prototype, 'encryption', {
   get: function(): Encryption | undefined {
     return Encryption.deserialize(this.otherProperties.encrypted);
-  }
+  },
 });
