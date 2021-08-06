@@ -384,195 +384,195 @@ describe('MediaType Tests', () => {
   });
 
   it('is ZIP', () => {
-    expect(MediaType.parse({ mediaType: 'text/plain' }).isZIP()).toBe(false);
-    expect(MediaType.parse({ mediaType: 'application/zip' }).isZIP()).toBe(
+    expect(MediaType.parse({ mediaType: 'text/plain' }).isZIP).toBe(false);
+    expect(MediaType.parse({ mediaType: 'application/zip' }).isZIP).toBe(
       true
     );
     expect(
-      MediaType.parse({ mediaType: 'application/zip;charset=utf-8' }).isZIP()
+      MediaType.parse({ mediaType: 'application/zip;charset=utf-8' }).isZIP
     ).toBe(true);
-    expect(MediaType.parse({ mediaType: 'application/epub+zip' }).isZIP()).toBe(
+    expect(MediaType.parse({ mediaType: 'application/epub+zip' }).isZIP).toBe(
       true
     );
     // These media types must be explicitly matched since they don't have any ZIP hint
     expect(
-      MediaType.parse({ mediaType: 'application/audiobook+lcp' }).isZIP()
+      MediaType.parse({ mediaType: 'application/audiobook+lcp' }).isZIP
     ).toBe(true);
-    expect(MediaType.parse({ mediaType: 'application/pdf+lcp' }).isZIP()).toBe(
+    expect(MediaType.parse({ mediaType: 'application/pdf+lcp' }).isZIP).toBe(
       true
     );
   });
 
   it('is JSON', () => {
-    expect(MediaType.parse({ mediaType: 'text/plain' }).isJson()).toBe(false);
-    expect(MediaType.parse({ mediaType: 'application/json' }).isJson()).toBe(
+    expect(MediaType.parse({ mediaType: 'text/plain' }).isJSON).toBe(false);
+    expect(MediaType.parse({ mediaType: 'application/json' }).isJSON).toBe(
       true
     );
     expect(
-      MediaType.parse({ mediaType: 'application/json;charset=utf-8' }).isJson()
+      MediaType.parse({ mediaType: 'application/json;charset=utf-8' }).isJSON
     ).toBe(true);
     expect(
-      MediaType.parse({ mediaType: 'application/opds+json' }).isJson()
+      MediaType.parse({ mediaType: 'application/opds+json' }).isJSON
     ).toBe(true);
   });
 
   it('is OPDS', () => {
-    expect(MediaType.parse({ mediaType: 'text/html' }).isOpds()).toBe(false);
+    expect(MediaType.parse({ mediaType: 'text/html' }).isOPDS).toBe(false);
     expect(
       MediaType.parse({
         mediaType: 'application/atom+xml;profile=opds-catalog',
-      }).isOpds()
+      }).isOPDS
     ).toBe(true);
     expect(
       MediaType.parse({
         mediaType: 'application/atom+xml;type=entry;profile=opds-catalog',
-      }).isOpds()
+      }).isOPDS
     ).toBe(true);
     expect(
-      MediaType.parse({ mediaType: 'application/opds+json' }).isOpds()
+      MediaType.parse({ mediaType: 'application/opds+json' }).isOPDS
     ).toBe(true);
     expect(
       MediaType.parse({
         mediaType: 'application/opds-publication+json',
-      }).isOpds()
+      }).isOPDS
     ).toBe(true);
     expect(
       MediaType.parse({
         mediaType: 'application/opds+json;charset=utf-8',
-      }).isOpds()
+      }).isOPDS
     ).toBe(true);
     expect(
       MediaType.parse({
         mediaType: 'application/opds-authentication+json',
-      }).isOpds()
+      }).isOPDS
     ).toBe(true);
   });
 
   it('is HTML', () => {
     expect(
-      MediaType.parse({ mediaType: 'application/opds+json' }).isHtml()
+      MediaType.parse({ mediaType: 'application/opds+json' }).isHTML
     ).toBe(false);
-    expect(MediaType.parse({ mediaType: 'text/html' }).isHtml()).toBe(true);
+    expect(MediaType.parse({ mediaType: 'text/html' }).isHTML).toBe(true);
     expect(
-      MediaType.parse({ mediaType: 'application/xhtml+xml' }).isHtml()
+      MediaType.parse({ mediaType: 'application/xhtml+xml' }).isHTML
     ).toBe(true);
     expect(
-      MediaType.parse({ mediaType: 'text/html;charset=utf-8' }).isHtml()
+      MediaType.parse({ mediaType: 'text/html;charset=utf-8' }).isHTML
     ).toBe(true);
   });
 
   it('is bitmap', () => {
-    expect(MediaType.parse({ mediaType: 'text/html' }).isBitmap()).toBe(false);
-    expect(MediaType.parse({ mediaType: 'image/bmp' }).isBitmap()).toBe(true);
-    expect(MediaType.parse({ mediaType: 'image/gif' }).isBitmap()).toBe(true);
-    expect(MediaType.parse({ mediaType: 'image/jpeg' }).isBitmap()).toBe(true);
-    expect(MediaType.parse({ mediaType: 'image/png' }).isBitmap()).toBe(true);
-    expect(MediaType.parse({ mediaType: 'image/tiff' }).isBitmap()).toBe(true);
+    expect(MediaType.parse({ mediaType: 'text/html' }).isBitmap).toBe(false);
+    expect(MediaType.parse({ mediaType: 'image/bmp' }).isBitmap).toBe(true);
+    expect(MediaType.parse({ mediaType: 'image/gif' }).isBitmap).toBe(true);
+    expect(MediaType.parse({ mediaType: 'image/jpeg' }).isBitmap).toBe(true);
+    expect(MediaType.parse({ mediaType: 'image/png' }).isBitmap).toBe(true);
+    expect(MediaType.parse({ mediaType: 'image/tiff' }).isBitmap).toBe(true);
     expect(
-      MediaType.parse({ mediaType: 'image/tiff;charset=utf-8' }).isBitmap()
+      MediaType.parse({ mediaType: 'image/tiff;charset=utf-8' }).isBitmap
     ).toBe(true);
   });
 
   it('is audio', () => {
-    expect(MediaType.parse({ mediaType: 'text/html' }).isAudio()).toBe(false);
-    expect(MediaType.parse({ mediaType: 'audio/unknown' }).isAudio()).toBe(
+    expect(MediaType.parse({ mediaType: 'text/html' }).isAudio).toBe(false);
+    expect(MediaType.parse({ mediaType: 'audio/unknown' }).isAudio).toBe(
       true
     );
     expect(
-      MediaType.parse({ mediaType: 'audio/mpeg;param=value' }).isAudio()
+      MediaType.parse({ mediaType: 'audio/mpeg;param=value' }).isAudio
     ).toBe(true);
   });
 
   it('is video', () => {
-    expect(MediaType.parse({ mediaType: 'text/html' }).isVideo()).toBe(false);
-    expect(MediaType.parse({ mediaType: 'video/unknown' }).isVideo()).toBe(
+    expect(MediaType.parse({ mediaType: 'text/html' }).isVideo).toBe(false);
+    expect(MediaType.parse({ mediaType: 'video/unknown' }).isVideo).toBe(
       true
     );
     expect(
-      MediaType.parse({ mediaType: 'video/mpeg;param=value' }).isVideo()
+      MediaType.parse({ mediaType: 'video/mpeg;param=value' }).isVideo
     ).toBe(true);
   });
 
   it('is RWPM', () => {
-    expect(MediaType.parse({ mediaType: 'text/html' }).isRwpm()).toBe(false);
+    expect(MediaType.parse({ mediaType: 'text/html' }).isRwpm).toBe(false);
     expect(
-      MediaType.parse({ mediaType: 'application/audiobook+json' }).isRwpm()
+      MediaType.parse({ mediaType: 'application/audiobook+json' }).isRwpm
     ).toBe(true);
     expect(
-      MediaType.parse({ mediaType: 'application/divina+json' }).isRwpm()
+      MediaType.parse({ mediaType: 'application/divina+json' }).isRwpm
     ).toBe(true);
     expect(
-      MediaType.parse({ mediaType: 'application/webpub+json' }).isRwpm()
+      MediaType.parse({ mediaType: 'application/webpub+json' }).isRwpm
     ).toBe(true);
     expect(
       MediaType.parse({
         mediaType: 'application/webpub+json;charset=utf-8',
-      }).isRwpm()
+      }).isRwpm
     ).toBe(true);
   });
 
   it('is RWPM', () => {
-    expect(MediaType.parse({ mediaType: 'text/html' }).isPublication()).toBe(
+    expect(MediaType.parse({ mediaType: 'text/html' }).isPublication).toBe(
       false
     );
     expect(
       MediaType.parse({
         mediaType: 'application/audiobook+zip',
-      }).isPublication()
+      }).isPublication
     ).toBe(true);
     expect(
       MediaType.parse({
         mediaType: 'application/audiobook+json',
-      }).isPublication()
+      }).isPublication
     ).toBe(true);
     expect(
       MediaType.parse({
         mediaType: 'application/audiobook+lcp',
-      }).isPublication()
+      }).isPublication
     ).toBe(true);
     expect(
       MediaType.parse({
         mediaType: 'application/audiobook+json;charset=utf-8',
-      }).isPublication()
+      }).isPublication
     ).toBe(true);
     expect(
-      MediaType.parse({ mediaType: 'application/divina+zip' }).isPublication()
+      MediaType.parse({ mediaType: 'application/divina+zip' }).isPublication
     ).toBe(true);
     expect(
-      MediaType.parse({ mediaType: 'application/divina+json' }).isPublication()
+      MediaType.parse({ mediaType: 'application/divina+json' }).isPublication
     ).toBe(true);
     expect(
-      MediaType.parse({ mediaType: 'application/webpub+zip' }).isPublication()
+      MediaType.parse({ mediaType: 'application/webpub+zip' }).isPublication
     ).toBe(true);
     expect(
-      MediaType.parse({ mediaType: 'application/webpub+json' }).isPublication()
+      MediaType.parse({ mediaType: 'application/webpub+json' }).isPublication
     ).toBe(true);
     expect(
       MediaType.parse({
         mediaType: 'application/vnd.comicbook+zip',
-      }).isPublication()
+      }).isPublication
     ).toBe(true);
     expect(
-      MediaType.parse({ mediaType: 'application/epub+zip' }).isPublication()
+      MediaType.parse({ mediaType: 'application/epub+zip' }).isPublication
     ).toBe(true);
     expect(
-      MediaType.parse({ mediaType: 'application/lpf+zip' }).isPublication()
+      MediaType.parse({ mediaType: 'application/lpf+zip' }).isPublication
     ).toBe(true);
     expect(
-      MediaType.parse({ mediaType: 'application/pdf' }).isPublication()
+      MediaType.parse({ mediaType: 'application/pdf' }).isPublication
     ).toBe(true);
     expect(
-      MediaType.parse({ mediaType: 'application/pdf+lcp' }).isPublication()
+      MediaType.parse({ mediaType: 'application/pdf+lcp' }).isPublication
     ).toBe(true);
     expect(
       MediaType.parse({
         mediaType: 'application/x.readium.w3c.wpub+json',
-      }).isPublication()
+      }).isPublication
     ).toBe(true);
     expect(
       MediaType.parse({
         mediaType: 'application/x.readium.zab+zip',
-      }).isPublication()
+      }).isPublication
     ).toBe(true);
   });
 });

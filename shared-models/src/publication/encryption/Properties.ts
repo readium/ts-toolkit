@@ -9,10 +9,12 @@ declare module '../Properties' {
      * Indicates that a resource is encrypted/obfuscated and provides relevant information for
      * decryption.
      */
-    getEncryption(): Encryption | undefined;
+    encryption: Encryption | undefined;
   }
 }
 
-Properties.prototype.getEncryption = function(): Encryption | undefined {
-  return Encryption.deserialize(this.otherProperties.encrypted);
-};
+Object.defineProperty(Properties.prototype, 'encryption', {
+  get: function(): Encryption | undefined {
+    return Encryption.deserialize(this.otherProperties.encrypted);
+  }
+});

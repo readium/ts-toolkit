@@ -8,21 +8,21 @@ describe('Encryption Properties Tests', () => {
           algorithm: 'http://algo',
           compression: 'gzip',
         },
-      }).getEncryption()
+      }).encryption
     ).toEqual(
       new Encryption({ algorithm: 'http://algo', compression: 'gzip' })
     );
   });
 
   it('get Properties {encryption} when missing', () => {
-    expect(new Properties({}).getEncryption()).toBeUndefined();
+    expect(new Properties({}).encryption).toBeUndefined();
   });
 
   it('get Properties {encryption} when not valid', () => {
     expect(
       new Properties({
         encrypted: 'invalid',
-      }).getEncryption()
+      }).encryption
     ).toBeUndefined();
   });
 });

@@ -54,7 +54,7 @@ export class PublicationCollection {
         });
       }
 
-      subcollections = PublicationCollection.collectionsFromJSON(json);
+      subcollections = PublicationCollection.deserializeCollections(json);
     } else {
       return;
     }
@@ -72,7 +72,7 @@ export class PublicationCollection {
    * Parses a map of [PublicationCollection] indexed by their roles from its RWPM JSON representation.
    *
    */
-  public static collectionsFromJSON(
+  public static deserializeCollections(
     json: any
   ): Map<string, Array<PublicationCollection>> | undefined {
     if (!json) return;
@@ -120,12 +120,12 @@ export class PublicationCollection {
       json.links = this.links.serialize();
     }
 
-    PublicationCollection.appendCollectionToJSON(json, this.subcollections);
+    PublicationCollection.serializeCollection(json, this.subcollections);
 
     return json;
   }
 
-  public static appendCollectionToJSON(
+  public static serializeCollection(
     json: any,
     subcollections?: Map<string, Array<PublicationCollection>>
   ) {

@@ -79,7 +79,7 @@ export class Manifest {
       readingOrder,
       resources: Links.deserialize(json.resources),
       tableOfContents: Links.deserialize(json.toc),
-      subcollections: PublicationCollection.collectionsFromJSON({
+      subcollections: PublicationCollection.deserializeCollections({
         sub: json.sub,
       }),
     });
@@ -96,7 +96,7 @@ export class Manifest {
     json.readingOrder = this.readingOrder.serialize();
     if (this.resources) json.resources = this.resources.serialize();
     if (this.tableOfContents) json.toc = this.tableOfContents.serialize();
-    PublicationCollection.appendCollectionToJSON(json, this.subcollections);
+    PublicationCollection.serializeCollection(json, this.subcollections);
     return json;
   }
 
@@ -192,7 +192,7 @@ export class Manifest {
   /** The URL where this publication is served, computed from the `Link` with `self` relation.
    *  e.g. https://provider.com/pub1293/manifest.json gives https://provider.com/pub1293/
    */
-  public getBaseURL(): string | undefined {
+  public get baseURL(): string | undefined {
     const selfLink = this.links.items.find(
       el => el.rels && el.rels.has('self')
     );

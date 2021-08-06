@@ -293,7 +293,7 @@ export class Metadata {
    *
    * See this issue for more details: https://github.com/readium/architecture/issues/113
    */
-  public effectiveReadingProgression(): ReadingProgression {
+  public get effectiveReadingProgression(): ReadingProgression {
     if (
       this.readingProgression &&
       this.readingProgression !== ReadingProgression.auto

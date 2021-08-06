@@ -186,7 +186,7 @@ export class MediaType {
   }
 
   /** Returns whether this media type is structured as a ZIP archive. */
-  public isZIP(): boolean {
+  public get isZIP(): boolean {
     return (
       this.matchesAny(
         MediaType.ZIP,
@@ -197,14 +197,14 @@ export class MediaType {
   }
 
   /** Returns whether this media type is structured as a JSON file. */
-  public isJson(): boolean {
+  public get isJSON(): boolean {
     return (
       this.matchesAny(MediaType.JSON) || this.structuredSyntaxSuffix === '+json'
     );
   }
 
   /** Returns whether this media type is of an OPDS feed. */
-  public isOpds(): boolean {
+  public get isOPDS(): boolean {
     return (
       this.matchesAny(
         MediaType.OPDS1,
@@ -217,12 +217,12 @@ export class MediaType {
   }
 
   /** Returns whether this media type is of an HTML document. */
-  public isHtml(): boolean {
+  public get isHTML(): boolean {
     return this.matchesAny(MediaType.HTML, MediaType.XHTML);
   }
 
   /** Returns whether this media type is of a bitmap image, so excluding vectorial formats. */
-  public isBitmap(): boolean {
+  public get isBitmap(): boolean {
     return this.matchesAny(
       MediaType.BMP,
       MediaType.GIF,
@@ -234,17 +234,17 @@ export class MediaType {
   }
 
   /** Returns whether this media type is of an audio clip. */
-  public isAudio(): boolean {
+  public get isAudio(): boolean {
     return this.type === 'audio';
   }
 
   /** Returns whether this media type is of a video clip. */
-  public isVideo(): boolean {
+  public get isVideo(): boolean {
     return this.type === 'video';
   }
 
   /** Returns whether this media type is of a Readium Web Publication Manifest. */
-  public isRwpm(): boolean {
+  public get isRwpm(): boolean {
     return this.matchesAny(
       MediaType.READIUM_AUDIOBOOK_MANIFEST,
       MediaType.DIVINA_MANIFEST,
@@ -253,7 +253,7 @@ export class MediaType {
   }
 
   /** Returns whether this media type is of a publication file. */
-  public isPublication(): boolean {
+  public get isPublication(): boolean {
     return this.matchesAny(
       MediaType.READIUM_AUDIOBOOK,
       MediaType.READIUM_AUDIOBOOK_MANIFEST,

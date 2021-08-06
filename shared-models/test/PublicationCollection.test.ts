@@ -80,7 +80,7 @@ describe('PublicationCollection Tests', () => {
 
   it('parse full JSON', () => {
     expect(
-      PublicationCollection.collectionsFromJSON({
+      PublicationCollection.deserializeCollections({
         sub1: {
           links: [{ href: '/sublink' }],
         },
@@ -204,7 +204,7 @@ describe('PublicationCollection Tests', () => {
 
   it('get multiple JSON collections', () => {
     const json: any = {};
-    PublicationCollection.appendCollectionToJSON(
+    PublicationCollection.serializeCollection(
       json,
       new Map<string, Array<PublicationCollection>>([
         [

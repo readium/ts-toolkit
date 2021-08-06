@@ -6,7 +6,7 @@ describe('Link Tests', () => {
       new Link({
         href: '/url{?x,hello,y}name{z,y,w}',
         templated: true,
-      }).getTemplateParameters()
+      }).templateParameters
     ).toEqual(new Set(['x', 'hello', 'y', 'z', 'w']));
   });
 
@@ -210,31 +210,31 @@ describe('Link Tests', () => {
 
   it('to URL relative to base URL', () => {
     expect(
-      new Link({ href: 'folder/file.html' }).toAbsoluteHREF('http://host/')
+      new Link({ href: 'folder/file.html' }).toURL('http://host/')
     ).toEqual('http://host/folder/file.html');
   });
 
   it('to URL relative to base URL with root prefix', () => {
     expect(
-      new Link({ href: '/file.html' }).toAbsoluteHREF('http://host/folder/')
+      new Link({ href: '/file.html' }).toURL('http://host/folder/')
     ).toEqual('http://host/folder/file.html');
   });
 
   it('to URL relative to undefined', () => {
     expect(
-      new Link({ href: 'folder/file.html' }).toAbsoluteHREF(undefined)
+      new Link({ href: 'folder/file.html' }).toURL(undefined)
     ).toEqual('/folder/file.html');
   });
 
   it('to URL with invalid HREF', () => {
     expect(
-      new Link({ href: '' }).toAbsoluteHREF('http://test.com')
+      new Link({ href: '' }).toURL('http://test.com')
     ).toBeUndefined();
   });
 
   it('to URL with absolute HREF', () => {
     expect(
-      new Link({ href: 'http://test.com/folder/file.html' }).toAbsoluteHREF(
+      new Link({ href: 'http://test.com/folder/file.html' }).toURL(
         'http://host/'
       )
     ).toEqual('http://test.com/folder/file.html');
@@ -242,7 +242,7 @@ describe('Link Tests', () => {
 
   it('to URL with HREF containing invalid characters', () => {
     expect(
-      new Link({ href: "/Cory Doctorow's/a-fc.jpg" }).toAbsoluteHREF(
+      new Link({ href: "/Cory Doctorow's/a-fc.jpg" }).toURL(
         'http://host/folder/'
       )
     ).toEqual("http://host/folder/Cory%20Doctorow's/a-fc.jpg");

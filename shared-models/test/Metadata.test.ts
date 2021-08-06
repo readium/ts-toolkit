@@ -357,7 +357,7 @@ describe('Metadata Tests', () => {
     const metadata = createMetadata({
       readingProgression: ReadingProgression.auto,
     });
-    expect(metadata.effectiveReadingProgression()).toEqual(
+    expect(metadata.effectiveReadingProgression).toEqual(
       ReadingProgression.ltr
     );
   });
@@ -366,7 +366,7 @@ describe('Metadata Tests', () => {
     const metadata = createMetadata({
       readingProgression: ReadingProgression.rtl,
     });
-    expect(metadata.effectiveReadingProgression()).toEqual(
+    expect(metadata.effectiveReadingProgression).toEqual(
       ReadingProgression.rtl
     );
   });
@@ -376,37 +376,37 @@ describe('Metadata Tests', () => {
       createMetadata({
         languages: ['zh-Hant'],
         readingProgression: ReadingProgression.auto,
-      }).effectiveReadingProgression()
+      }).effectiveReadingProgression
     ).toEqual(ReadingProgression.rtl);
     expect(
       createMetadata({
         languages: ['zh-TW'],
         readingProgression: ReadingProgression.auto,
-      }).effectiveReadingProgression()
+      }).effectiveReadingProgression
     ).toEqual(ReadingProgression.rtl);
     expect(
       createMetadata({
         languages: ['ar'],
         readingProgression: ReadingProgression.auto,
-      }).effectiveReadingProgression()
+      }).effectiveReadingProgression
     ).toEqual(ReadingProgression.rtl);
     expect(
       createMetadata({
         languages: ['fa'],
         readingProgression: ReadingProgression.auto,
-      }).effectiveReadingProgression()
+      }).effectiveReadingProgression
     ).toEqual(ReadingProgression.rtl);
     expect(
       createMetadata({
         languages: ['he'],
         readingProgression: ReadingProgression.auto,
-      }).effectiveReadingProgression()
+      }).effectiveReadingProgression
     ).toEqual(ReadingProgression.rtl);
     expect(
       createMetadata({
         languages: ['he'],
         readingProgression: ReadingProgression.ltr,
-      }).effectiveReadingProgression()
+      }).effectiveReadingProgression
     ).toEqual(ReadingProgression.ltr);
   });
 
@@ -415,7 +415,7 @@ describe('Metadata Tests', () => {
       createMetadata({
         languages: ['ar', 'fa'],
         readingProgression: ReadingProgression.auto,
-      }).effectiveReadingProgression()
+      }).effectiveReadingProgression
     ).toEqual(ReadingProgression.ltr);
   });
 
@@ -424,7 +424,7 @@ describe('Metadata Tests', () => {
       createMetadata({
         languages: ['AR'],
         readingProgression: ReadingProgression.auto,
-      }).effectiveReadingProgression()
+      }).effectiveReadingProgression
     ).toEqual(ReadingProgression.rtl);
   });
 
@@ -433,13 +433,13 @@ describe('Metadata Tests', () => {
       createMetadata({
         languages: ['ar-foo'],
         readingProgression: ReadingProgression.auto,
-      }).effectiveReadingProgression()
+      }).effectiveReadingProgression
     ).toEqual(ReadingProgression.rtl);
     expect(
       createMetadata({
         languages: ['zh-foo'],
         readingProgression: ReadingProgression.auto,
-      }).effectiveReadingProgression()
+      }).effectiveReadingProgression
     ).toEqual(ReadingProgression.ltr);
   });
 });
