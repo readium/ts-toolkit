@@ -1,19 +1,19 @@
 {
-  "name": "@jellybooks/shared-test",
-  "version": "1.1.0",
+  "name": "@readium/shared",
+  "version": "1.2.0",
   "description": "Next generation SDK for publications in Web Apps",
-  "author": "Jellybooks",
+  "author": "readium",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Jellybooks/web.git"
+    "url": "git+https://github.com/readium/web.git"
   },
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/Jellybooks/web/issues"
+    "url": "https://github.com/readium/web/issues"
   },
-  "homepage": "https://github.com/Jellybooks/web",
+  "homepage": "https://github.com/readium/web",
   "keywords": [
-    "jellybooks"
+    "readium"
   ],
   "main": "dist/index.js",
   "typings": "types/index.d.ts",
@@ -29,19 +29,10 @@
     "start": "tsdx watch",
     "build": "tsdx build",
     "test": "tsdx test",
-    "test:coverage": "tsdx test --coverage",
-    "test:one": "tsdx test Publication.test.ts",
     "lint": "tsdx lint",
-    "lint:fix": "tsdx lint --fix",
     "prepare": "tsdx build",
     "size": "size-limit",
-    "analyze": "size-limit --why",
-    "test:debug": "DEBUG=true node --inspect-brk node_modules/.bin/jest --runInBand test Publication.test.ts"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "tsdx lint"
-    }
+    "analyze": "size-limit --why"
   },
   "prettier": {
     "printWidth": 80,
@@ -52,19 +43,18 @@
   "module": "dist/index.js",
   "size-limit": [
     {
-      "path": "dist/shared-test.cjs.production.min.js",
-      "limit": "10 KB"
+      "path": "dist/shared.cjs.production.min.js",
+      "limit": "50 KB"
     },
     {
-      "path": "dist/shared-test.esm.js",
-      "limit": "10 KB"
+      "path": "dist/shared.esm.js",
+      "limit": "50 KB"
     }
   ],
   "devDependencies": {
     "@babel/preset-typescript": "^7.14.5",
     "@size-limit/preset-small-lib": "^4.11.0",
     "@types/jest": "^25.2.3",
-    "husky": "^6.0.0",
     "size-limit": "^4.11.0",
     "tsdx": "^0.14.1",
     "tslib": "^2.2.0",
