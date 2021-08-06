@@ -1,4 +1,4 @@
-import { Link, Locations, Locator, Text } from '../src';
+import { Link, LocatorLocations, Locator, LocatorText } from '../src';
 
 describe('Locator Tests', () => {
   it('parse {Locator} minimal JSON', () => {
@@ -28,8 +28,8 @@ describe('Locator Tests', () => {
         href: 'http://locator',
         type: 'text/html',
         title: 'My Locator',
-        locations: new Locations({ position: 42 }),
-        text: new Text({ highlight: 'Excerpt' }),
+        locations: new LocatorLocations({ position: 42 }),
+        text: new LocatorText({ highlight: 'Excerpt' }),
       })
     );
   });
@@ -43,7 +43,7 @@ describe('Locator Tests', () => {
   });
 
   it('create {Locator} from minimal {Link}', () => {
-    expect(new Link({ href: 'http://locator' }).toLocator()).toEqual(
+    expect(new Link({ href: 'http://locator' }).locator).toEqual(
       new Locator({ href: 'http://locator', type: '' })
     );
   });
@@ -54,13 +54,13 @@ describe('Locator Tests', () => {
         href: 'http://locator#page=42',
         type: 'text/html',
         title: 'My Link',
-      }).toLocator()
+      }).locator
     ).toEqual(
       new Locator({
         href: 'http://locator',
         type: 'text/html',
         title: 'My Link',
-        locations: new Locations({ fragments: ['page=42'] }),
+        locations: new LocatorLocations({ fragments: ['page=42'] }),
       })
     );
   });
@@ -82,8 +82,8 @@ describe('Locator Tests', () => {
         href: 'http://locator',
         type: 'text/html',
         title: 'My Locator',
-        locations: new Locations({ position: 42 }),
-        text: new Text({ highlight: 'Excerpt' }),
+        locations: new LocatorLocations({ position: 42 }),
+        text: new LocatorText({ highlight: 'Excerpt' }),
       }).serialize()
     ).toEqual(
       Locator.deserialize({
@@ -105,7 +105,7 @@ describe('Locator Tests', () => {
       new Locator({
         href: 'http://locator',
         type: 'text/html',
-        locations: new Locations({
+        locations: new LocatorLocations({
           progression: 2.0,
           position: 42,
         }),
@@ -120,7 +120,7 @@ describe('Locator Tests', () => {
       new Locator({
         href: 'http://locator',
         type: 'text/html',
-        locations: new Locations({
+        locations: new LocatorLocations({
           fragments: ['p=4', 'frag34'],
           progression: 0.74,
           position: 42,
@@ -136,7 +136,7 @@ describe('Locator Tests', () => {
       new Locator({
         href: 'http://locator',
         type: 'text/html',
-        locations: new Locations({
+        locations: new LocatorLocations({
           progression: 2.0,
           position: 42,
         }),
@@ -151,18 +151,18 @@ describe('Locator Tests', () => {
       new Locator({
         href: 'http://locator',
         type: 'text/html',
-        locations: new Locations({}),
+        locations: new LocatorLocations({}),
       })
     );
   });
 
   it('parse {Locations} minimal JSON', () => {
-    expect(Locations.deserialize({})).toEqual(new Locations({}));
+    expect(LocatorLocations.deserialize({})).toEqual(new LocatorLocations({}));
   });
 
   it('parse {Locations} full JSON', () => {
     expect(
-      Locations.deserialize({
+      LocatorLocations.deserialize({
         fragments: ['p=4', 'frag34'],
         progression: 0.74,
         totalProgression: 0.32,
@@ -170,7 +170,7 @@ describe('Locator Tests', () => {
         other: 'other-location',
       })
     ).toEqual(
-      new Locations({
+      new LocatorLocations({
         fragments: ['p=4', 'frag34'],
         progression: 0.74,
         position: 42,
@@ -181,66 +181,72 @@ describe('Locator Tests', () => {
   });
 
   it('parse {Locations} undefined JSON', () => {
-    expect(Locations.deserialize(undefined)).toBeUndefined();
+    expect(LocatorLocations.deserialize(undefined)).toBeUndefined();
   });
 
   it('parse {Locations} single fragment JSON', () => {
-    expect(Locations.deserialize({ fragment: 'frag34' })).toEqual(
-      new Locations({ fragments: ['frag34'] })
+    expect(LocatorLocations.deserialize({ fragment: 'frag34' })).toEqual(
+      new LocatorLocations({ fragments: ['frag34'] })
     );
   });
 
   it('parse {Locations} ignores {position} smaller than 1', () => {
-    expect(Locations.deserialize({ position: 1 })).toEqual(
-      new Locations({ position: 1 })
+    expect(LocatorLocations.deserialize({ position: 1 })).toEqual(
+      new LocatorLocations({ position: 1 })
     );
-    expect(Locations.deserialize({ position: 0 })).toEqual(new Locations({}));
-    expect(Locations.deserialize({ position: -1 })).toEqual(new Locations({}));
+    expect(LocatorLocations.deserialize({ position: 0 })).toEqual(
+      new LocatorLocations({})
+    );
+    expect(LocatorLocations.deserialize({ position: -1 })).toEqual(
+      new LocatorLocations({})
+    );
   });
 
   it('parse {Locations} ignores {progression} outside of 0-1 range', () => {
-    expect(Locations.deserialize({ progression: 0.5 })).toEqual(
-      new Locations({ progression: 0.5 })
+    expect(LocatorLocations.deserialize({ progression: 0.5 })).toEqual(
+      new LocatorLocations({ progression: 0.5 })
     );
-    expect(Locations.deserialize({ progression: 0 })).toEqual(
-      new Locations({ progression: 0 })
+    expect(LocatorLocations.deserialize({ progression: 0 })).toEqual(
+      new LocatorLocations({ progression: 0 })
     );
-    expect(Locations.deserialize({ progression: 1 })).toEqual(
-      new Locations({ progression: 1.0 })
+    expect(LocatorLocations.deserialize({ progression: 1 })).toEqual(
+      new LocatorLocations({ progression: 1.0 })
     );
-    expect(Locations.deserialize({ progression: -0.5 })).toEqual(
-      new Locations({})
+    expect(LocatorLocations.deserialize({ progression: -0.5 })).toEqual(
+      new LocatorLocations({})
     );
-    expect(Locations.deserialize({ progression: 1.2 })).toEqual(
-      new Locations({})
+    expect(LocatorLocations.deserialize({ progression: 1.2 })).toEqual(
+      new LocatorLocations({})
     );
   });
 
   it('parse {Locations} ignores {totalProgression} outside of 0-1 range', () => {
-    expect(Locations.deserialize({ totalProgression: 0.5 })).toEqual(
-      new Locations({ totalProgression: 0.5 })
+    expect(LocatorLocations.deserialize({ totalProgression: 0.5 })).toEqual(
+      new LocatorLocations({ totalProgression: 0.5 })
     );
-    expect(Locations.deserialize({ totalProgression: 0 })).toEqual(
-      new Locations({ totalProgression: 0 })
+    expect(LocatorLocations.deserialize({ totalProgression: 0 })).toEqual(
+      new LocatorLocations({ totalProgression: 0 })
     );
-    expect(Locations.deserialize({ totalProgression: 1 })).toEqual(
-      new Locations({ totalProgression: 1.0 })
+    expect(LocatorLocations.deserialize({ totalProgression: 1 })).toEqual(
+      new LocatorLocations({ totalProgression: 1.0 })
     );
-    expect(Locations.deserialize({ totalProgression: -0.5 })).toEqual(
-      new Locations({})
+    expect(LocatorLocations.deserialize({ totalProgression: -0.5 })).toEqual(
+      new LocatorLocations({})
     );
-    expect(Locations.deserialize({ totalProgression: 1.2 })).toEqual(
-      new Locations({})
+    expect(LocatorLocations.deserialize({ totalProgression: 1.2 })).toEqual(
+      new LocatorLocations({})
     );
   });
 
   it('get {Locations} minimal JSON', () => {
-    expect(new Locations({}).serialize()).toEqual(new Locations({}));
+    expect(new LocatorLocations({}).serialize()).toEqual(
+      new LocatorLocations({})
+    );
   });
 
   it('get {Locations} full JSON', () => {
     expect(
-      new Locations({
+      new LocatorLocations({
         fragments: ['p=4', 'frag34'],
         progression: 0.74,
         position: 42,
@@ -257,18 +263,18 @@ describe('Locator Tests', () => {
   });
 
   it('parse {Text} minimal JSON', () => {
-    expect(Text.deserialize({})).toEqual(new Text({}));
+    expect(LocatorText.deserialize({})).toEqual(new LocatorText({}));
   });
 
   it('parse {Text} full JSON', () => {
     expect(
-      Text.deserialize({
+      LocatorText.deserialize({
         before: 'Text before',
         highlight: 'Highlighted text',
         after: 'Text after',
       })
     ).toEqual(
-      new Text({
+      new LocatorText({
         before: 'Text before',
         highlight: 'Highlighted text',
         after: 'Text after',
@@ -277,16 +283,16 @@ describe('Locator Tests', () => {
   });
 
   it('parse {Text} undefined JSON', () => {
-    expect(Text.deserialize(undefined)).toBeUndefined();
+    expect(LocatorText.deserialize(undefined)).toBeUndefined();
   });
 
   it('get {Text} minimal JSON', () => {
-    expect(new Text({}).serialize()).toEqual(new Text({}));
+    expect(new LocatorText({}).serialize()).toEqual(new LocatorText({}));
   });
 
   it('get {Text} full JSON', () => {
     expect(
-      new Text({
+      new LocatorText({
         before: 'Text before',
         highlight: 'Highlighted text',
         after: 'Text after',

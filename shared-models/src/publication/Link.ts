@@ -11,7 +11,7 @@ import {
   positiveNumberfromJSON,
   setToArray,
 } from '../util/JSONParse';
-import { Locations, Locator } from './Locator';
+import { LocatorLocations, Locator } from './Locator';
 
 /**
  * Link Object for the Readium Web Publication Manifest.
@@ -19,43 +19,43 @@ import { Locations, Locator } from './Locator';
  */
 export class Link {
   /** URI or URI template of the linked resource. */
-  public href: string;
+  public readonly href: string;
 
   /** Indicates that a URI template is used in href. */
-  public templated?: boolean;
+  public readonly templated?: boolean;
 
   /** MIME type of the linked resource. */
-  public type?: string;
+  public readonly type?: string;
 
   /** Title of the linked resource. */
-  public title?: string;
+  public readonly title?: string;
 
   /** Relation between the linked resource and its containing collection. */
-  public rels?: Set<string>;
+  public readonly rels?: Set<string>;
 
   /** Properties associated to the linked resource. */
   public properties?: Properties;
 
   /** Height of the linked resource in pixels. */
-  public height?: number;
+  public readonly height?: number;
 
   /** Width of the linked resource in pixels. */
-  public width?: number;
+  public readonly width?: number;
 
   /** Length of the linked resource in seconds. */
-  public duration?: number;
+  public readonly duration?: number;
 
   /** Bitrate of the linked resource in kbps. */
-  public bitrate?: number;
+  public readonly bitrate?: number;
 
   /** Expected language of the linked resource. */
-  public languages?: Array<string>;
+  public readonly languages?: Array<string>;
 
   /** Alternate resources for the linked resource. */
-  public alternates?: Links;
+  public readonly alternates?: Links;
 
   /** Resources that are children of the linked resource, in the context of a given collection role. */
-  public children?: Links;
+  public readonly children?: Links;
 
   /**
    * Creates a [Link].
@@ -137,7 +137,7 @@ export class Link {
   }
 
   /** MediaType of the linked resource. */
-  public getMediaType(): MediaType {
+  public get mediaType(): MediaType {
     return this.type !== undefined
       ? MediaType.parse({ mediaType: this.type })
       : MediaType.BINARY;
@@ -146,7 +146,7 @@ export class Link {
   /** Computes an absolute URL to the link, relative to the given `baseURL`.
    *  If the link's `href` is already absolute, the `baseURL` is ignored.
    */
-  public toAbsoluteHREF(baseUrl?: string): string | undefined {
+  public toURL(baseUrl?: string): string | undefined {
     const href = this.href.replace(/^(\/)/, '');
     if (href.length === 0) return;
     let _baseUrl = baseUrl ? baseUrl : '/';
@@ -159,7 +159,7 @@ export class Link {
   }
 
   /** List of URI template parameter keys, if the `Link` is templated. */
-  public getTemplateParameters(): Set<string> {
+  public get templateParameters(): Set<string> {
     return this.templated ? new URITemplate(this.href).parameters : new Set();
   }
 
@@ -188,13 +188,13 @@ export class Link {
   /**
    * Creates a [Locator] from a reading order [Link].
    */
-  public toLocator(): Locator {
+  public get locator(): Locator {
     let parts = this.href.split('#');
     return new Locator({
       href: parts.length > 0 && parts[0] !== undefined ? parts[0] : this.href,
       type: this.type ?? '',
       title: this.title,
-      locations: new Locations({
+      locations: new LocatorLocations({
         fragments: parts.length > 1 && parts[1] !== undefined ? [parts[1]] : [],
       }),
     });
@@ -259,13 +259,13 @@ export class Links {
 
   /** Finds the first link matching the given media type. */
   public findWithMediaType(mediaType: string): Link | undefined {
-    const predicate = (el: Link) => el.getMediaType().matches(mediaType);
+    const predicate = (el: Link) => el.mediaType.matches(mediaType);
     return this.items.find(predicate);
   }
 
   /** Finds all the links matching the given media type. */
   public filterByMediaType(mediaType: string): Array<Link> {
-    const predicate = (el: Link) => el.getMediaType().matches(mediaType);
+    const predicate = (el: Link) => el.mediaType.matches(mediaType);
     return this.items.filter(predicate);
   }
 
@@ -273,7 +273,7 @@ export class Links {
   public filterByMediaTypes(mediaTypes: Array<string>): Array<Link> {
     const predicate = (el: Link) => {
       for (const mediaType of mediaTypes) {
-        return el.getMediaType().matches(mediaType);
+        return el.mediaType.matches(mediaType);
       }
       return false;
     };
@@ -282,25 +282,25 @@ export class Links {
 
   /** Returns whether all the resources in the collection are audio clips. */
   public everyIsAudio(): boolean {
-    const predicate = (el: Link) => el.getMediaType().isAudio();
+    const predicate = (el: Link) => el.mediaType.isAudio;
     return this.items.length > 0 && this.items.every(predicate);
   }
 
   /** Returns whether all the resources in the collection are bitmaps. */
   public everyIsBitmap(): boolean {
-    const predicate = (el: Link) => el.getMediaType().isBitmap();
+    const predicate = (el: Link) => el.mediaType.isBitmap;
     return this.items.length > 0 && this.items.every(predicate);
   }
 
   /** Returns whether all the resources in the collection are HTML documents. */
   public everyIsHTML(): boolean {
-    const predicate = (el: Link) => el.getMediaType().isHtml();
+    const predicate = (el: Link) => el.mediaType.isHTML;
     return this.items.length > 0 && this.items.every(predicate);
   }
 
   /** Returns whether all the resources in the collection are video clips. */
   public everyIsVideo(): boolean {
-    const predicate = (el: Link) => el.getMediaType().isVideo();
+    const predicate = (el: Link) => el.mediaType.isVideo;
     return this.items.length > 0 && this.items.every(predicate);
   }
 
@@ -311,7 +311,7 @@ export class Links {
         this.items.length > 0 &&
         this.items.every((el: Link) => {
           for (const mediaType of mediaTypes) {
-            return el.getMediaType().matches(mediaType);
+            return el.mediaType.matches(mediaType);
           }
           return false;
         })
@@ -319,7 +319,7 @@ export class Links {
     } else {
       return (
         this.items.length > 0 &&
-        this.items.every((el: Link) => el.getMediaType().matches(mediaTypes))
+        this.items.every((el: Link) => el.mediaType.matches(mediaTypes))
       );
     }
   }

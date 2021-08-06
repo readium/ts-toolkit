@@ -1,15 +1,15 @@
-import { EpubLayout } from '../../src';
+import { EPUBLayout } from '../../src';
 
-describe('EpubLayout Tests', () => {
+describe('EPUBLayout Tests', () => {
   it('parse layout', () => {
-    expect(EpubLayout['fixed']).toEqual(EpubLayout.fixed);
-    expect(EpubLayout['reflowable']).toEqual(EpubLayout.reflowable);
-    expect((EpubLayout as any)['foobar']).toBeUndefined();
-    expect((EpubLayout as any)['']).toBeUndefined();
+    expect(EPUBLayout['fixed']).toEqual(EPUBLayout.fixed);
+    expect(EPUBLayout['reflowable']).toEqual(EPUBLayout.reflowable);
+    expect((EPUBLayout as any)['foobar']).toBeUndefined();
+    expect((EPUBLayout as any)['']).toBeUndefined();
   });
 
   it('get layout value', () => {
-    expect(EpubLayout.fixed).toEqual('fixed');
-    expect(EpubLayout.reflowable).toEqual('reflowable');
+    expect(EPUBLayout.fixed).toEqual('fixed');
+    expect(EPUBLayout.reflowable).toEqual('reflowable');
   });
 });

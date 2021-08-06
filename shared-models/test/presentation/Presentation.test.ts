@@ -1,5 +1,5 @@
 import {
-  EpubLayout,
+  EPUBLayout,
   Fit,
   Orientation,
   Overflow,
@@ -36,7 +36,7 @@ describe('Presentation Tests', () => {
         orientation: Orientation.landscape,
         overflow: Overflow.paginated,
         spread: Spread.both,
-        layout: EpubLayout.fixed,
+        layout: EPUBLayout.fixed,
       })
     );
   });
@@ -54,7 +54,7 @@ describe('Presentation Tests', () => {
         orientation: Orientation.landscape,
         overflow: Overflow.paginated,
         spread: Spread.both,
-        layout: EpubLayout.fixed,
+        layout: EPUBLayout.fixed,
       }).serialize()
     ).toEqual({
       clipped: true,

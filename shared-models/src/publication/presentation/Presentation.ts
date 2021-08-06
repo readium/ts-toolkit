@@ -3,7 +3,7 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { EpubLayout } from '../epub/EpubLayout';
+import { EPUBLayout } from '../epub/EPUBLayout';
 
 /**
  * Suggested orientation for the device when displaying the linked resource.
@@ -91,7 +91,7 @@ export class Presentation {
   public spread?: Spread;
 
   /** Hint about the nature of the layout for the linked resources (EPUB extension). */
-  public layout?: EpubLayout;
+  public layout?: EPUBLayout;
 
   /** Indicates how the progression between resources from the [readingOrder] should be handled */
   public continuous?: boolean;
@@ -109,7 +109,7 @@ export class Presentation {
     orientation?: Orientation;
     overflow?: Overflow;
     spread?: Spread;
-    layout?: EpubLayout;
+    layout?: EPUBLayout;
   }) {
     this.clipped = values.clipped;
     this.fit = values.fit;
