@@ -3,7 +3,7 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { Contributors } from './Contributor';
+import { Contributors as Collection } from './Contributor';
 
 /**
  * BelongsTo Object for the Readium Web Publication Manifest.
@@ -13,12 +13,12 @@ export class BelongsTo {
   /**
    * Map of [BelongsTo] items.
    */
-  public readonly items: Map<string, Contributors>;
+  public readonly items: Map<string, Collection>;
 
   /** Creates an Array of [Subject]. */
-  constructor(values?: { items?: Map<string, Contributors> }) {
+  constructor(values?: { items?: Map<string, Collection> }) {
     this.items =
-      values && values.items ? values.items : new Map<string, Contributors>();
+      values && values.items ? values.items : new Map<string, Collection>();
   }
 
   /**
@@ -27,9 +27,9 @@ export class BelongsTo {
   public static deserialize(json: any): BelongsTo | undefined {
     if (!(json && json instanceof Object)) return;
 
-    const items = new Map<string, Contributors>();
+    const items = new Map<string, Collection>();
     Object.entries(json).forEach(([key, value]) => {
-      const obj = Contributors.deserialize(value);
+      const obj = Collection.deserialize(value);
       if (obj && obj.items.length > 0) {
         items.set(key, obj);
       }
@@ -44,7 +44,7 @@ export class BelongsTo {
   public serialize(): any {
     const json: any = {};
     this.items.forEach(
-      (value: Contributors, key: string) => (json[key] = value.serialize())
+      (value: Collection, key: string) => (json[key] = value.serialize())
     );
     return json;
   }

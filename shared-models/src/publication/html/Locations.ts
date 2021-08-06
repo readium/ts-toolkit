@@ -1,11 +1,11 @@
-import { Locations } from '../Locator';
+import { LocatorLocations } from '../Locator';
 import { DomRange } from './DomRange';
 
 // HTML extensions for [Locations].
 // https://github.com/readium/architecture/blob/master/models/locators/extensions/html.md
 
 declare module '../Locator' {
-  export interface Locations {
+  export interface LocatorLocations {
     /**
      * A CSS Selector.
      */
@@ -27,14 +27,14 @@ declare module '../Locator' {
   }
 }
 
-Locations.prototype.getCssSelector = function(): string | undefined {
+LocatorLocations.prototype.getCssSelector = function(): string | undefined {
   return this.otherLocations?.get('cssSelector');
 };
 
-Locations.prototype.getPartialCfi = function(): string | undefined {
+LocatorLocations.prototype.getPartialCfi = function(): string | undefined {
   return this.otherLocations?.get('partialCfi');
 };
 
-Locations.prototype.getDomRange = function(): DomRange | undefined {
+LocatorLocations.prototype.getDomRange = function(): DomRange | undefined {
   return DomRange.deserialize(this.otherLocations?.get('domRange'));
 };

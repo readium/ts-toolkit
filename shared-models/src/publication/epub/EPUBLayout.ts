@@ -4,7 +4,7 @@
  */
 
 /** Hint about the nature of the layout for the linked resources. */
-export enum EpubLayout {
+export enum EPUBLayout {
   fixed = 'fixed',
   reflowable = 'reflowable',
 }

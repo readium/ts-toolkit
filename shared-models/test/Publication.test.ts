@@ -5,7 +5,6 @@ import {
   Manifest,
   Metadata,
   Publication,
-  PublicationType,
   ReadingProgression,
 } from '../src';
 
@@ -33,47 +32,6 @@ describe('Publication Tests', () => {
     });
   }
 
-  it('get the type computed from the manifest content', () => {
-    const loadPublication = (jsonfile: string): Publication => {
-      let json = require(`./resources/format/${jsonfile}`);
-      let manifest = Manifest.deserialize(json);
-      expect(manifest).toBeDefined();
-      return new Publication({ manifest: manifest as Manifest });
-    };
-    expect(loadPublication('divina.json').getType()).toEqual(
-      PublicationType.DiViNa
-    );
-    expect(loadPublication('audiobook.json').getType()).toEqual(
-      PublicationType.AUDIO
-    );
-    expect(loadPublication('webpub.json').getType()).toEqual(
-      PublicationType.WEBPUB
-    );
-    expect(loadPublication('opds2-publication.json').getType()).toEqual(
-      PublicationType.WEBPUB
-    );
-  });
-
-  it('set {self} link', () => {
-    let publication = createPublication();
-    publication.setSelfLink('http://manifest.json');
-    expect(publication.linkWithRel('self')?.href).toEqual(
-      'http://manifest.json'
-    );
-  });
-
-  it('set {self} link replaces existing {self} link', () => {
-    let publication = createPublication({
-      links: new Links([
-        new Link({ href: 'previous', rels: new Set(['self']) }),
-      ]),
-    });
-    publication.setSelfLink('http://manifest.json');
-    expect(publication.linkWithRel('self')?.href).toEqual(
-      'http://manifest.json'
-    );
-  });
-
   it('get {baseUrl} computes the URL from the {self} link', () => {
     let publication = createPublication({
       links: new Links([
@@ -83,12 +41,12 @@ describe('Publication Tests', () => {
         }),
       ]),
     });
-    expect(publication.getBaseURL()).toEqual('http://domain.com/path/');
+    expect(publication.baseURL).toEqual('http://domain.com/path/');
   });
 
   it('get {baseUrl} when missing', () => {
     let publication = createPublication();
-    expect(publication.getBaseURL()).toBeUndefined();
+    expect(publication.baseURL).toBeUndefined();
   });
 
   it("get {baseUrl} when it's a root", () => {
@@ -100,7 +58,7 @@ describe('Publication Tests', () => {
         }),
       ]),
     });
-    expect(publication.getBaseURL()).toEqual('http://domain.com/');
+    expect(publication.baseURL).toEqual('http://domain.com/');
   });
 
   it('find the first {Link} with the given {rel}', () => {

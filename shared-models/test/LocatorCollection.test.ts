@@ -2,11 +2,11 @@ import {
   Link,
   Links,
   LocalizedString,
-  Locations,
+  LocatorLocations,
   Locator,
   LocatorCollection,
-  LocatorMetadata,
-  Text,
+  LocatorCollectionMetadata,
+  LocatorText,
 } from '../src';
 
 describe('Locator Collection Tests', () => {
@@ -70,7 +70,7 @@ describe('Locator Collection Tests', () => {
       })
     ).toEqual(
       new LocatorCollection({
-        metadata: new LocatorMetadata({
+        metadata: new LocatorCollectionMetadata({
           title: new LocalizedString({
             en: 'Searching <riddle> in Alice in Wonderlands - Page 1',
             fr: 'Recherche <riddle> dans Alice in Wonderlands – Page 1',
@@ -94,11 +94,11 @@ describe('Locator Collection Tests', () => {
           new Locator({
             href: '/978-1503222687/chap7.html',
             type: 'application/xhtml+xml',
-            locations: new Locations({
+            locations: new LocatorLocations({
               fragments: [":~:text=riddle,-yet%3F'"],
               progression: 0.43,
             }),
-            text: new Text({
+            text: new LocatorText({
               before: "'Have you guessed the ",
               highlight: 'riddle',
               after: " yet?' the Hatter said, turning to Alice again.",
@@ -107,11 +107,11 @@ describe('Locator Collection Tests', () => {
           new Locator({
             href: '/978-1503222687/chap7.html',
             type: 'application/xhtml+xml',
-            locations: new Locations({
+            locations: new LocatorLocations({
               fragments: [':~:text=in%20asking-,riddles'],
               progression: 0.47,
             }),
-            text: new Text({
+            text: new LocatorText({
               before: "I'm glad they've begun asking ",
               highlight: 'riddles',
               after: '.--I believe I can guess that,',
@@ -129,7 +129,7 @@ describe('Locator Collection Tests', () => {
   it('get {LocatorCollection} full JSON', () => {
     expect(
       new LocatorCollection({
-        metadata: new LocatorMetadata({
+        metadata: new LocatorCollectionMetadata({
           title: new LocalizedString({
             en: 'Searching <riddle> in Alice in Wonderlands - Page 1',
             fr: 'Recherche <riddle> dans Alice in Wonderlands – Page 1',
@@ -153,11 +153,11 @@ describe('Locator Collection Tests', () => {
           new Locator({
             href: '/978-1503222687/chap7.html',
             type: 'application/xhtml+xml',
-            locations: new Locations({
+            locations: new LocatorLocations({
               fragments: [":~:text=riddle,-yet%3F'"],
               progression: 0.43,
             }),
-            text: new Text({
+            text: new LocatorText({
               before: "'Have you guessed the ",
               highlight: 'riddle',
               after: " yet?' the Hatter said, turning to Alice again.",
@@ -166,11 +166,11 @@ describe('Locator Collection Tests', () => {
           new Locator({
             href: '/978-1503222687/chap7.html',
             type: 'application/xhtml+xml',
-            locations: new Locations({
+            locations: new LocatorLocations({
               fragments: [':~:text=in%20asking-,riddles'],
               progression: 0.47,
             }),
-            text: new Text({
+            text: new LocatorText({
               before: "I'm glad they've begun asking ",
               highlight: 'riddles',
               after: '.--I believe I can guess that,',

@@ -49,8 +49,8 @@ export class Publication {
   /** The URL where this publication is served, computed from the `Link` with `self` relation.
    *  e.g. https://provider.com/pub1293/manifest.json gives https://provider.com/pub1293/
    */
-  public getBaseURL(): string | undefined {
-    return this.manifest.getBaseURL();
+  public get baseURL(): string | undefined {
+    return this.manifest.baseURL;
   }
 
   /** Finds the first Link having the given `href` in the publication's links. */
@@ -67,13 +67,6 @@ export class Publication {
     return list && list.length > 0 ? list[0].links : undefined;
   }
 
-  /**
-   * Sets the URL where this [Publication]'s RWPM manifest is served.
-   */
-  public setSelfLink(href: string): void {
-    this.manifest.setSelfLink(href);
-  }
-
   /** Finds all the links with the given relation in the publication's links. */
   public linksWithRel(rel: string): Array<Link> {
     return this.manifest.linksWithRel(rel);
@@ -84,18 +77,5 @@ export class Publication {
    */
   public linkWithRel(rel: string): Link | undefined {
     return this.manifest.linkWithRel(rel);
-  }
-
-  /**
-   * Returns Type of publication
-   */
-  public getType(): PublicationType {
-    if (
-      this.metadata.typeUri === 'http://schema.org/Audiobook' ||
-      this.readingOrder.everyIsAudio()
-    )
-      return PublicationType.AUDIO;
-    if (this.readingOrder.everyIsBitmap()) return PublicationType.DiViNa;
-    return PublicationType.WEBPUB;
   }
 }

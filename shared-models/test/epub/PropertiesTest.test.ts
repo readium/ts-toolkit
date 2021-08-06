@@ -1,4 +1,4 @@
-import { EpubLayout, Properties } from '../../src';
+import { EPUBLayout, Properties } from '../../src';
 
 describe('Epub Properties Tests', () => {
   it('get Properties {contains} when available', () => {
@@ -25,7 +25,7 @@ describe('Epub Properties Tests', () => {
 
   it('get Properties {layout} when available', () => {
     expect(new Properties({ layout: 'fixed' }).getLayout()).toEqual(
-      EpubLayout.fixed
+      EPUBLayout.fixed
     );
   });
 
