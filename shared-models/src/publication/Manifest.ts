@@ -211,7 +211,7 @@ export class Manifest {
       }
       return href;
     }
-    return;
+    return undefined;
   }
 
   /**

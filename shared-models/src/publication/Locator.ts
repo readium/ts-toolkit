@@ -101,9 +101,9 @@ export class LocatorLocations {
 }
 
 export class LocatorText {
-  public after?: string;
-  public before?: string;
-  public highlight?: string;
+  public readonly after?: string;
+  public readonly before?: string;
+  public readonly highlight?: string;
 
   /**
    * Creates a [Text].
@@ -152,19 +152,19 @@ export class LocatorText {
  */
 export class Locator {
   /** The URI of the resource that the Locator Object points to. */
-  public href: string;
+  public readonly href: string;
 
   /** The media type of the resource that the Locator Object points to. */
-  public type: string;
+  public readonly type: string;
 
   /** The title of the chapter or section which is more relevant in the context of this locator. */
-  public title?: string;
+  public readonly title?: string;
 
   /** One or more alternative expressions of the location. */
-  public locations: LocatorLocations;
+  public readonly locations: LocatorLocations;
 
   /** Textual context of the locator. */
-  public text?: LocatorText;
+  public readonly text?: LocatorText;
 
   /**
    * Creates a [Locator].
