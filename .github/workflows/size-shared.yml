@@ -1,4 +1,4 @@
-name: size-shared-model
+name: size-shared
 on: [pull_request]
 jobs:
   size:
