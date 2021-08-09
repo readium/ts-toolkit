@@ -273,7 +273,9 @@ export class Links {
   public filterByMediaTypes(mediaTypes: Array<string>): Array<Link> {
     const predicate = (el: Link) => {
       for (const mediaType of mediaTypes) {
-        return el.mediaType.matches(mediaType);
+        if (el.mediaType.matches(mediaType)) {
+          return true;
+        }
       }
       return false;
     };
