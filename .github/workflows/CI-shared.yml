@@ -1,9 +1,9 @@
-name: CI-shared-models
+name: CI-shared
 on: 
   push:
     paths:
-      - 'shared-models/**'
-      - '.github/workflows/CI-shared-models.yml'
+      - 'shared/**'
+      - '.github/workflows/CI-shared.yml'
 
 jobs:
   build:
@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     defaults:
       run:
-        working-directory: ./shared-models
+        working-directory: ./shared
     strategy:
       matrix:
         node: ['10.x', '12.x', '14.x']
@@ -30,7 +30,7 @@ jobs:
       - name: Install deps and build (with cache)
         uses: bahmutov/npm-install@v1
         with:
-          working-directory: shared-models        
+          working-directory: shared        
 
       - name: Lint
         run: yarn lint
