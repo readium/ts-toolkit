@@ -201,7 +201,7 @@ export class Manifest {
       if (href) {
         const li = href.lastIndexOf('/');
         const lastpart =
-          li === -1 ? undefined : href.substring(href.lastIndexOf('/') + 1);
+          li === -1 ? undefined : href.substring(li + 1);
 
         href = href.replace(new RegExp('/?$query$'), '');
         href = href.replace(new RegExp('//$'), '');
