@@ -244,7 +244,7 @@ export class MediaType {
   }
 
   /** Returns whether this media type is of a Readium Web Publication Manifest. */
-  public get isRwpm(): boolean {
+  public get isRWPM(): boolean {
     return this.matchesAny(
       MediaType.READIUM_AUDIOBOOK_MANIFEST,
       MediaType.DIVINA_MANIFEST,

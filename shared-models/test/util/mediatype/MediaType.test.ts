@@ -488,20 +488,20 @@ describe('MediaType Tests', () => {
   });
 
   it('is RWPM', () => {
-    expect(MediaType.parse({ mediaType: 'text/html' }).isRwpm).toBe(false);
+    expect(MediaType.parse({ mediaType: 'text/html' }).isRWPM).toBe(false);
     expect(
-      MediaType.parse({ mediaType: 'application/audiobook+json' }).isRwpm
+      MediaType.parse({ mediaType: 'application/audiobook+json' }).isRWPM
     ).toBe(true);
     expect(
-      MediaType.parse({ mediaType: 'application/divina+json' }).isRwpm
+      MediaType.parse({ mediaType: 'application/divina+json' }).isRWPM
     ).toBe(true);
     expect(
-      MediaType.parse({ mediaType: 'application/webpub+json' }).isRwpm
+      MediaType.parse({ mediaType: 'application/webpub+json' }).isRWPM
     ).toBe(true);
     expect(
       MediaType.parse({
         mediaType: 'application/webpub+json;charset=utf-8',
-      }).isRwpm
+      }).isRWPM
     ).toBe(true);
   });
 
