@@ -8,15 +8,6 @@ import { Manifest } from './Manifest';
 import { Metadata } from './Metadata';
 import { PublicationCollection } from './PublicationCollection';
 
-export enum PublicationType {
-  EPUB = 'EPUB',
-  CBZ = 'CBZ',
-  FXL = 'FXL',
-  WEBPUB = 'WEBPUB',
-  AUDIO = 'AUDIO',
-  DiViNa = 'DiViNa',
-}
-
 /** Shared model for a Readium Publication. */
 export class Publication {
   /** The manifest holding the publication metadata extracted from the publication file */

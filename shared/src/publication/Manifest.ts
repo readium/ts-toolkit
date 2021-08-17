@@ -200,8 +200,7 @@ export class Manifest {
       let href = selfLink.href;
       if (href) {
         const li = href.lastIndexOf('/');
-        const lastpart =
-          li === -1 ? undefined : href.substring(href.lastIndexOf('/') + 1);
+        const lastpart = li === -1 ? undefined : href.substring(li + 1);
 
         href = href.replace(new RegExp('/?$query$'), '');
         href = href.replace(new RegExp('//$'), '');
@@ -211,7 +210,7 @@ export class Manifest {
       }
       return href;
     }
-    return;
+    return undefined;
   }
 
   /**
