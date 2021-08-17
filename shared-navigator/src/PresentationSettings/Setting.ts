@@ -1,3 +1,8 @@
+/* Copyright 2021 Readium Foundation. All rights reserved.
+ * Use of this source code is governed by a BSD-style license,
+ * available in the LICENSE file present in the Github repository of the project.
+ */
+
 export declare type SettingChanged<T> = (
   setting: ISetting<T>,
   previousValue?: T
@@ -11,7 +16,7 @@ export interface IRequiredSettingValue<T> {
 export interface ISetting<T> {
   value?: T;
   defaultValue?: T;
-  desciption: string;
+  description: string;
   requiredSettings?: Array<IRequiredSettingValue<T>>;
   getEffectiveValue(): T | undefined;
   reset(): void;
@@ -20,10 +25,15 @@ export interface ISetting<T> {
 }
 
 export interface ISettingsConfig<T> {
-  desciption: string;
+  description: string;
   value?: T;
   defaultValue?: T;
   requiredSettings?: Array<IRequiredSettingValue<any>>;
+  additionalSettings?: IAdditionalSettings;
+}
+
+export interface IAdditionalSettings {
+  [key: string]: any;
 }
 
 export abstract class Setting<T extends Object> implements ISetting<T> {
@@ -46,17 +56,20 @@ export abstract class Setting<T extends Object> implements ISetting<T> {
 
   public readonly defaultValue?: T;
 
-  public readonly desciption: string;
+  public readonly description: string;
 
   public readonly requiredSettings?: Array<IRequiredSettingValue<any>>;
+
+  public readonly additionalSettings?: IAdditionalSettings;
 
   public OnSettingChange?: SettingChanged<T>;
 
   constructor(config: ISettingsConfig<T>) {
-    this.desciption = config.desciption;
+    this.description = config.description;
     this.defaultValue = config.defaultValue;
     this.value = config.value;
     this.requiredSettings = config.requiredSettings;
+    this.additionalSettings = config.additionalSettings;
   }
 
   public isDefault(): boolean {
@@ -69,13 +82,13 @@ export abstract class Setting<T extends Object> implements ISetting<T> {
 
   public getEffectiveValue(): T | undefined {
     const requiredSetting =
-      !this.requiredSettings ||
+      !this.requiredSettings ??
       this.requiredSettings?.reduce<boolean>(
         (p, c) => p && c.setting.getEffectiveValue() === c.value,
         true
       );
     return requiredSetting
-      ? this.value || this.defaultValue
+      ? this.value ?? this.defaultValue
       : this.defaultValue;
   }
 }

@@ -1,47 +1,16 @@
-import {
-  ColumnCountType,
-  HyphenType,
-  PresentationSettings,
-} from '../src/csswrapper/variables/ColumnCount';
+import { ReadiumCss, ColumnCountType, HyphenType } from '../src';
 
 describe('Readium Css Tests', () => {
-  // it('test', async () => {
-
-  //   let r:ReadiumCss=new ReadiumCss();
-
-  //   r.columnCountType.value = ColumnCountType.OneColumn;
-  //   r.hyphens.value = HyphenType.Auto;
-  //    r.hyphens.value = HyphenType.None;
-  //    //r.hyphens.value = undefined;
-
-  //   console.log(r.getCssVariables());
-
-  //   //expect(await settings.getSetting(key)).toEqual(value);
-  // });
-
   it('test', async () => {
-    let ps = new PresentationSettings({
-      values: {},
-      initialValues: {
-        columnCountType: ColumnCountType.Auto,
-        advancedSettings: false,
-        //hyphens:HyphenType.Auto
-      },
+    let readium = new ReadiumCss({
+      columnCountType: ColumnCountType.OneColumn,
+      hyphens: HyphenType.Auto,
     });
 
-    ps.printValues();
-    //ps.columnCountType.value = ColumnCountType.OneColumn;
-    ps.hyphens.value = HyphenType.Auto;
-    //ps.hyphens.value = undefined;
+    let css = readium.toCss();
 
-    ps.printValues();
-
-    //console.log(ps.hyphens.getEffectiveValue());
-
-    let css = ps.toCss();
-
-    console.log(css);
-
-    //expect(await settings.getSetting(key)).toEqual(value);
+    expect(css).toEqual(
+      '--USER__colCount: 1; --USER__bodyHyphens: auto; --USER__advancedSettings: readium-advanced-on; '
+    );
   });
 });

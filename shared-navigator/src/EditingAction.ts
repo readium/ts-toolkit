@@ -3,8 +3,6 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-export enum Appearance {
-  ReadiumDayOn = 'readium-day-on',
-  ReadiumSepiaOn = 'readium-sepia-on',
-  ReadiumNightOn = 'readium-night-on',
-}
+/// An `EditingAction` is an item in the text selection menu.
+///
+export class EditingAction {}

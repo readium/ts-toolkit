@@ -3,8 +3,11 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-export enum Appearance {
-  ReadiumDayOn = 'readium-day-on',
-  ReadiumSepiaOn = 'readium-sepia-on',
-  ReadiumNightOn = 'readium-night-on',
+import { IPoint } from './IPoint';
+import { ISize } from './ISize';
+
+export interface IRect {
+  origin?: IPoint;
+
+  size?: ISize;
 }
