@@ -1,6 +1,6 @@
 import { PresentationSettings } from '../src';
 
-describe('Settings Tests', () => {
+describe('Presentation Settings Tests', () => {
   const testConfig = {
     setting1: {
       type: 'string',

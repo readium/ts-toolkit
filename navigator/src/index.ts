@@ -10,7 +10,8 @@ export * from './SelectableNavigator';
 export * from './EditingAction';
 export * from './presentationSettings';
 export * from './readiumCss';
+export * from './injections';
 export * from './ui';
 export * from './utils';
 
-//export * from './localtest';
+
