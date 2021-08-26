@@ -1,42 +1,42 @@
-# name: CI-shared
-# on: 
-#   push:
-#     paths:
-#       - 'shared/**'
-#       - '.github/workflows/CI-shared.yml'
+name: CI-shared
+on: 
+  push:
+    paths:
+      - 'shared/**'
+      - '.github/workflows/CI-shared.yml'
 
-# jobs:
-#   build:
-#     name: Build, lint, and test on Node ${{ matrix.node }} and ${{ matrix.os }}
+jobs:
+  build:
+    name: Build, lint, and test on Node ${{ matrix.node }} and ${{ matrix.os }}
 
-#     runs-on: ${{ matrix.os }}
-#     defaults:
-#       run:
-#         working-directory: ./shared
-#     strategy:
-#       matrix:
-#         node: ['10.x', '12.x', '14.x']
-#         os: [ubuntu-latest, windows-latest, macOS-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: ./shared
+    strategy:
+      matrix:
+        node: ['10.x', '12.x', '14.x']
+        os: [ubuntu-latest, windows-latest, macOS-latest]
 
-#     steps:
-#       - name: Checkout repo
-#         uses: actions/checkout@v2
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
 
-#       - name: Use Node ${{ matrix.node }}
-#         uses: actions/setup-node@v1
-#         with:
-#           node-version: ${{ matrix.node }}
+      - name: Use Node ${{ matrix.node }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
 
-#       - name: Install deps and build (with cache)
-#         uses: bahmutov/npm-install@v1
-#         with:
-#           working-directory: shared        
+      - name: Install deps and build (with cache)
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: shared        
 
-#       - name: Lint
-#         run: yarn lint
+      - name: Lint
+        run: yarn lint
 
-#       - name: Test
-#         run: yarn test --ci --coverage --maxWorkers=2
+      - name: Test
+        run: yarn test --ci --coverage --maxWorkers=2
 
-#       - name: Build
-#         run: yarn build
+      - name: Build
+        run: yarn build
