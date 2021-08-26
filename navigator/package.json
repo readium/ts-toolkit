@@ -44,11 +44,11 @@
   "size-limit": [
     {
       "path": "dist/navigator.cjs.production.min.js",
-      "limit": "10 KB"
+      "limit": "50 KB"
     },
     {
       "path": "dist/navigator.esm.js",
-      "limit": "10 KB"
+      "limit": "50 KB"
     }
   ],
   "dependencies": {
