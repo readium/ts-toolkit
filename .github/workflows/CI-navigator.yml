@@ -32,7 +32,7 @@ jobs:
 
       - name: Lint
         run: yarn lint
-          working-directory: ./shared
+          working-directory: shared
 
       - name: Test
         run: yarn test --ci --coverage --maxWorkers=2
