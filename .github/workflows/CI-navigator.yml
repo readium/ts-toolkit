@@ -31,19 +31,16 @@ jobs:
           working-directory: shared        
 
       - name: Lint
+        working-directory: ./shared      
         run: yarn lint
-        with:
-          working-directory: ./shared
 
       - name: Test
+        working-directory: ./shared      
         run: yarn test --ci --coverage --maxWorkers=2
-        with:
-          working-directory: ./shared
 
       - name: Build
+        working-directory: ./shared      
         run: yarn build
-        with:
-          working-directory: ./shared
 
       - name: Install deps and build (with cache)
         uses: bahmutov/npm-install@v1
@@ -51,16 +48,13 @@ jobs:
           working-directory: navigator        
 
       - name: Lint
+        working-directory: ./navigator      
         run: yarn lint
-        with:
-          working-directory: ./navigator
 
       - name: Test
+        working-directory: ./navigator      
         run: yarn test --ci --coverage --maxWorkers=2
-        with:
-          working-directory: ./navigator
 
       - name: Build
+        working-directory: ./navigator      
         run: yarn build
-        with:
-          working-directory: ./navigator
