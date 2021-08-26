@@ -6,13 +6,11 @@ on:
       - '.github/workflows/CI-navigator.yml'
 
 jobs:
-  build_shared:
-    name: Build Shared, lint, and test on Node ${{ matrix.node }} and ${{ matrix.os }}
+  build:
+    name: Build, lint, and test on Node ${{ matrix.node }} and ${{ matrix.os }}
 
     runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        working-directory: ./shared
+
     strategy:
       matrix:
         node: ['14.x']
@@ -34,34 +32,15 @@ jobs:
 
       - name: Lint
         run: yarn lint
+          working-directory: ./shared
 
       - name: Test
         run: yarn test --ci --coverage --maxWorkers=2
+          working-directory: ./shared
 
       - name: Build
         run: yarn build
-
-  build_navigator:
-    name: Build Navigator, lint, and test on Node ${{ matrix.node }} and ${{ matrix.os }}
-    needs: build_shared
-
-    runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        working-directory: ./navigator
-    strategy:
-      matrix:
-        node: ['14.x']
-        os: [ubuntu-latest]
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v2
-
-      - name: Use Node ${{ matrix.node }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node }}
+          working-directory: ./shared
 
       - name: Install deps and build (with cache)
         uses: bahmutov/npm-install@v1
@@ -70,9 +49,12 @@ jobs:
 
       - name: Lint
         run: yarn lint
+          working-directory: ./navigator
 
       - name: Test
         run: yarn test --ci --coverage --maxWorkers=2
+          working-directory: ./navigator
 
       - name: Build
         run: yarn build
+          working-directory: ./navigator
