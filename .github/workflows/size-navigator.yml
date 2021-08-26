@@ -1,10 +1,5 @@
 name: size-navigator
-on: 
-  push:
-    paths:
-      - 'navigator/**'
-      - '.github/workflows/CI-navigator.yml'
-# on: [pull_request]
+on: [pull_request]
 jobs:
   size:
     runs-on: ubuntu-latest
