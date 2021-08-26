@@ -5,10 +5,21 @@
 // import { ISetting } from './PresentationSettings/Setting';
 // import { ColumnCountType, HyphenType, ReadiumCss } from './readiumCss';
 
-import {  Injections } from './injections/Injection';
-
+import {
+  PresentationController,
+  PresentationNavigator,
+  PresentationSettings,
+} from './presentation';
+import { PresentationKeys } from './presentation/standart/PresentationKeys';
 
 export const ___y = '';
+
+class TestNavigator extends PresentationNavigator {
+  apply(setting: PresentationSettings): void {
+    console.log('applying presentation settings : ');
+    console.log(setting);
+  }
+}
 
 // let rcss = new ReadiumCss({
 //   columnCountType: ColumnCountType.OneColumn,
@@ -19,78 +30,117 @@ export const ___y = '';
 
 // console.log(css);
 
+// Set up a list of app-level default settings statically.
+let appSettings: PresentationSettings = new PresentationSettings({
+  [PresentationKeys.PUBLISHER_DEFAULTS]: true,
+  [PresentationKeys.FONT_SIZE]: 0.4,
+  [PresentationKeys.LETTER_SPACING]: 0.7,
+});
 
-const injections = [
-  /*
-    for each link with type 'text/html' and property 'contains: mathml'
-      inject resource '/lib/mathjax.js' in a <script>, as the last element in <body>
-  */
-  {
-      predicates: [
-          {
-              type: 'text/html',
-              properties: {
-                  contains: 'mathml'
-              }
-          }
-      ],
-      resources: [
-          {
-              href: '/lib/mathjax.js',
-              type: 'application/javascript',
-              target: 'body',
-              insertion: 'append'
-          }
-      ]
-  },
-  /*
-    for each link with type 'text/html' or type 'application/xhtml+xml'
-      inject resource '/rs/epubReadingSystem.js' in a <script>, as the last element in <body>
-      inject resource '/readium-css/ReadiumCSS-before.css' in a <link rel='stylesheet'>, as the first element in <head>
-      inject resource '/readium-css/ReadiumCSS-after.css' in a <link rel='stylesheet'>, as the last element in <head>
-  */
-  {
-      predicates: [
-          {
-              type: 'text/html'
-          },
-          {
-              type: 'application/xhtml+xml'
-          }
-      ],
-      resources: [
-          {
-              href: '/rs/epubReadingSystem.js',
-              type: 'application/javascript',
-              target: 'head',
-              insertion: 'prepend'
-          },
-          {
-              href: '/readium-css/ReadiumCSS-before.css',
-              type: 'text/css',
-              target: 'head',
-              insertion: 'prepend',
-              preload: true
-          },
-          {
-              href: '/readium-css/ReadiumCSS-after.css',
-              type: 'text/css',
-              target: 'head',
-              insertion: 'append',
-              preload: true
-          }
-      ]
+// Load the saved user settings.
+let userSettings: PresentationSettings = new PresentationSettings({
+  [PresentationKeys.PUBLISHER_DEFAULTS]: true,
+  [PresentationKeys.FONT_SIZE]: 0.5,
+  [PresentationKeys.LETTER_SPACING]: 0.2,
+});
+
+let navigator = new TestNavigator();
+
+let presentation = new PresentationController(
+  navigator,
+  appSettings,
+  userSettings
+);
+
+presentation.userSettings.observe(settings => {
+  //console.log('Save user settings', settings);
+});
+
+// if (presentation.fontSize)
+//   presentation.fontSize.value = undefined;
+
+presentation.publisherDefaults.observe(setting => {
+  if (setting) {
+    console.log(setting);
   }
-]
+});
 
-const injs = Injections.deserialize(injections);
+class MockControl {
+  public color?: string;
+  public text?: string;
+  public onClick?: () => void;
+}
 
-console.log(injs);
+let fontSizeControl = new MockControl();
 
+fontSizeControl.onClick = () => {
+  console.log('onClick 1');
+  presentation.increment(presentation.fontSize.value);
+  presentation.apply();
+};
 
+presentation.fontSize.observe(setting => {
+  if (setting) {
+    // If the font size is currently inactive in the
+    // Navigator, we can show it in the user interface.
+    fontSizeControl.color = setting.isActive ? 'black' : 'gray';
+    // Display the current value for the font size
+    //  as a localized user string, e.g. 14 pt
+    fontSizeControl.text = setting
+      .labelForValue(setting.value)
+      .getTranslation();
 
+    // Setup the action when the user clicks on the "+" button.
+    // We increase the font size and then update the Navigator.
+    fontSizeControl.onClick = () => {
+      console.log('onClick 2');
+      presentation.increment(setting);
+      presentation.apply();
+    };
+  } else {
+    // Font size is not supported by this Navigator.
+    // We should hide the views.
+  }
+});
 
+fontSizeControl.onClick();
+// fontSizeControl.onClick();
 
+let letterSpacingControl = new MockControl();
+
+letterSpacingControl.onClick = () => {
+  console.log('onClick 1');
+  presentation.increment(presentation.letterSpacing.value);
+  presentation.apply();
+};
+
+presentation.letterSpacing.observe(setting => {
+  if (setting) {
+    console.log(setting);
+    // If the font size is currently inactive in the
+    // Navigator, we can show it in the user interface.
+    letterSpacingControl.color = setting.isActive ? 'black' : 'gray';
+    // Display the current value for the font size
+    //  as a localized user string, e.g. 14 pt
+    letterSpacingControl.text = setting
+      .labelForValue(setting.value)
+      .getTranslation();
+
+    // Setup the action when the user clicks on the "+" button.
+    // We increase the font size and then update the Navigator.
+    letterSpacingControl.onClick = () => {
+      console.log('onClick 2');
+      presentation.increment(setting);
+      presentation.apply();
+    };
+  } else {
+    // Font size is not supported by this Navigator.
+    // We should hide the views.
+  }
+});
+
+letterSpacingControl.onClick();
+letterSpacingControl.onClick();
 
 // const testConfig = {
 //   setting1: {
@@ -137,9 +187,6 @@ console.log(injs);
 // }
 
 // console.log(settings);
-
-
-
 
 // const printSetting = (setting: ISetting<any>) => {
 //   console.log(

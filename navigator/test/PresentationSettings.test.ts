@@ -1,45 +1,108 @@
-import { PresentationSettings } from '../src';
+/* Copyright 2021 Readium Foundation. All rights reserved.
+ * Use of this source code is governed by a BSD-style license,
+ * available in the LICENSE file present in the Github repository of the project.
+ */
+
+import {
+  PresentationController,
+  PresentationNavigator,
+  PresentationSettings,
+} from '../src';
+
+class TestNavigator extends PresentationNavigator {
+  public settingsApplied?: boolean;
+
+  apply(setting: PresentationSettings): void {
+    this.settingsApplied = true;
+  }
+}
 
 describe('Presentation Settings Tests', () => {
-  const testConfig = {
-    setting1: {
-      type: 'string',
-      description: 'Setting1',
-      value: 'value1',
-      defaultValue: 'value1',
-      additionalSettings: {
-        additionalKey1: 'additionalValue1',
-        additionalKey2: 'additionalValue2',
-      },
-    },
-    setting2: {
-      type: 'selection',
-      description: 'Setting2',
-      value: 'value2',
-      defaultValue: 'value1',
-      items: { value1: 'Value1', value2: 'Value2', value3: 'Value3' },
-    },
-    setting3: {
-      type: 'boolean',
-      description: 'Setting3',
-      value: true,
-      defaultValue: false,
-    },
-    setting4: {
-      type: 'numeric',
-      description: 'Setting4',
-      value: 4,
-      defaultValue: 0,
-      minValue: 0,
-      maxValue: 10,
-      stepValue: 1,
-      unit: 'px',
-      requiredSettings: { setting3: true },
-    },
-  };
+  it('Navigator test', () => {
+    const appSettings: PresentationSettings = new PresentationSettings({
+      publisherDefaults: true,
+      fontSize: 0.4,
+      letterSpacing: 0.7,
+    });
 
-  it('Should deserialize settings', () => {
-    const settings = PresentationSettings.deserialize(testConfig);
-    expect(settings.getSetting('setting1')?.value).toEqual('value1');
+    const userSettings: PresentationSettings = new PresentationSettings({
+      publisherDefaults: true,
+      fontSize: 0.5,
+      letterSpacing: 0.2,
+    });
+
+    const navigator = new TestNavigator();
+
+    let presentation = new PresentationController(
+      navigator,
+      appSettings,
+      userSettings
+    );
+
+    let changesSaved = false;
+
+    presentation.userSettings.observe(settings => {
+      changesSaved = true;
+    });
+
+    class MockControl {
+      public onClick?: () => void;
+    }
+
+    let fontSizeControl = new MockControl();
+
+    fontSizeControl.onClick = () => {
+      presentation.increment(presentation.fontSize.value);
+      presentation.apply();
+    };
+
+    presentation.fontSize.observe(setting => {
+      if (setting) {
+        fontSizeControl.onClick = () => {
+          presentation.increment(setting);
+          presentation.apply();
+        };
+      }
+    });
+
+    fontSizeControl.onClick();
+    fontSizeControl.onClick();
+
+    let letterSpacingControl = new MockControl();
+
+    letterSpacingControl.onClick = () => {
+      presentation.increment(presentation.letterSpacing.value);
+      presentation.apply();
+    };
+
+    presentation.letterSpacing.observe(setting => {
+      if (setting) {
+        letterSpacingControl.onClick = () => {
+          presentation.increment(setting);
+          presentation.apply();
+        };
+      }
+    });
+
+    letterSpacingControl.onClick();
+    letterSpacingControl.onClick();
+
+    expect(navigator.settingsApplied).toBeTruthy();
+    expect(changesSaved).toBeTruthy();
+    expect(presentation.fontSize.value).toEqual({
+      isActive: true,
+      key: 'fontSize',
+      value: 0.7,
+    });
+    expect(presentation.publisherDefaults.value).toEqual({
+      isActive: true,
+      key: 'publisherDefaults',
+      value: false,
+    });
+    expect(presentation.letterSpacing.value).toEqual({
+      isActive: true,
+      key: 'letterSpacing',
+      value: 0.4,
+    });
   });
 });

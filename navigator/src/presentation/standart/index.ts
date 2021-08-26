@@ -3,6 +3,8 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { Setting } from './Setting';
-
-export class StringSetting extends Setting<string> {}
+export * from './PresentationSettings';
+export * from './PresentationProperties';
+export * from './PresentationNavigator';
+export * from './PresentationController';
+export * from './PresentationKeys';

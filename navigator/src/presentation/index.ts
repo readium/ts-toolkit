@@ -3,10 +3,9 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-export * from './BooleanSetting';
-export * from './NumericSetting';
-export * from './PresentationSettingTypes';
 export * from './PresentationSettings';
-export * from './SelectionSetting';
-export * from './Setting';
-export * from './StringSetting';
+export * from './PresentationProperty';
+export * from './PresentationController';
+export * from './Observable';
+export * from './PresentationSetting';
+export * from './standart';

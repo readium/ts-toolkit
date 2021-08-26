@@ -8,10 +8,9 @@ export * from './VisualNavigator';
 export * from './MediaNavigator';
 export * from './SelectableNavigator';
 export * from './EditingAction';
-export * from './presentationSettings';
+export * from './PresentationNavigator';
+export * from './presentation';
 export * from './readiumCss';
 export * from './injections';
 export * from './ui';
 export * from './utils';
-
-
