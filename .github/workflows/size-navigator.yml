@@ -6,12 +6,17 @@ jobs:
     env:
       CI_JOB_NUMBER: 1
     steps:
-      - uses: actions/checkout@v1
-      - uses: andresz1/size-limit-action@v1
+      - name: Checkout repo
+        uses: actions/checkout@v1
+
+      - name: Size shared
+        uses: andresz1/size-limit-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           directory: shared/
-      - uses: andresz1/size-limit-action@v1
+
+      - name: Size navigator
+        uses: andresz1/size-limit-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           directory: navigator/
