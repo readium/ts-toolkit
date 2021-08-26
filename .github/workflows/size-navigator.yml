@@ -1,18 +1,7 @@
 name: size-navigator
 on: [pull_request]
 jobs:
-  size_shared:
-    runs-on: ubuntu-latest
-    env:
-      CI_JOB_NUMBER: 1
-    steps:
-      - uses: actions/checkout@v1
-      - uses: andresz1/size-limit-action@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          directory: shared/
-  size_navigator:
-    needs: size_shared
+  size:
     runs-on: ubuntu-latest
     env:
       CI_JOB_NUMBER: 1
