@@ -29,15 +29,10 @@
     "start": "tsdx watch",
     "build": "tsdx build",
     "test": "tsdx test",
-    "test:coverage": "tsdx test --coverage",
-    "test:one": "tsdx test ReadiumCss.test.ts",
-    "localtest": "tsdx build && node ./dist/index.js",
     "lint": "tsdx lint",
-    "lint:fix": "tsdx lint --fix",
     "prepare": "tsdx build",
     "size": "size-limit",
-    "analyze": "size-limit --why",
-    "test:debug": "DEBUG=true node --inspect-brk node_modules/.bin/jest --runInBand test x.test.ts"
+    "analyze": "size-limit --why"
   },
   "prettier": {
     "printWidth": 80,
