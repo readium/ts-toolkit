@@ -32,14 +32,17 @@ jobs:
 
       - name: Lint
         run: yarn lint
-          working-directory: shared
+        with:
+          working-directory: ./shared
 
       - name: Test
         run: yarn test --ci --coverage --maxWorkers=2
+        with:
           working-directory: ./shared
 
       - name: Build
         run: yarn build
+        with:
           working-directory: ./shared
 
       - name: Install deps and build (with cache)
@@ -49,12 +52,15 @@ jobs:
 
       - name: Lint
         run: yarn lint
+        with:
           working-directory: ./navigator
 
       - name: Test
         run: yarn test --ci --coverage --maxWorkers=2
+        with:
           working-directory: ./navigator
 
       - name: Build
         run: yarn build
+        with:
           working-directory: ./navigator
