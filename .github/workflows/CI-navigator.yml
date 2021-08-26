@@ -7,7 +7,7 @@ on:
 
 jobs:
   build_shared:
-    name: Build, lint, and test on Node ${{ matrix.node }} and ${{ matrix.os }}
+    name: Build Shared, lint, and test on Node ${{ matrix.node }} and ${{ matrix.os }}
 
     runs-on: ${{ matrix.os }}
     defaults:
@@ -42,7 +42,8 @@ jobs:
         run: yarn build
 
   build_navigator:
-    name: Build, lint, and test on Node ${{ matrix.node }} and ${{ matrix.os }}
+    name: Build Navigator, lint, and test on Node ${{ matrix.node }} and ${{ matrix.os }}
+    needs: build_shared
 
     runs-on: ${{ matrix.os }}
     defaults:
