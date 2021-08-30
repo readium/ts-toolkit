@@ -25,6 +25,6 @@ export class Color {
   }
 
   public static get white(): Color {
-    return new Color(0, 0, 0, 0);
+    return new Color(255, 255, 255, 1);
   }
 }

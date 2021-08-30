@@ -15,7 +15,6 @@ export abstract class EPUBNavigator extends VisualNavigator {
 
   public initialLocation?: Locator;
 
-  //TODO : userSettings: UserSettings
   constructor(publication: Publication, initialLocation?: Locator) {
     super();
     this.publication = publication;
