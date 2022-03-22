@@ -13,10 +13,10 @@
   },
   "homepage": "https://github.com/readium/web",
   "keywords": [
-    "readium"
+    "readium", "web", "epub"
   ],
   "main": "dist/index.js",
-  "typings": "types/index.d.ts",
+  "types": "types/index.d.ts",
   "files": [
     "dist",
     "src",
