@@ -9,7 +9,7 @@ import { Manifest } from './Manifest';
 import { Metadata } from './Metadata';
 import { EmptyFetcher, Fetcher } from '../fetcher/Fetcher';
 import { PublicationCollection } from './PublicationCollection';
-import { Resource } from "../fetcher/Resource";
+import { Resource } from '../fetcher/Resource';
 
 export type ServiceFactory = () => null;
 
@@ -33,7 +33,7 @@ export class Publication {
   public readonly subcollections?: Map<string, Array<PublicationCollection>>;
 
   constructor(values: { manifest: Manifest; fetcher?: Fetcher }) {
-    if(values.fetcher) this.fetcher = values.fetcher;
+    if (values.fetcher) this.fetcher = values.fetcher;
     this.manifest = values.manifest;
     this.context = values.manifest.context;
     this.metadata = values.manifest.metadata;
@@ -82,7 +82,9 @@ export class Publication {
       'application/vnd.readium.position-list+json'
     );
     if (positionListLink === undefined) return [];
-    const positionListJSON = await this.get(positionListLink).readAsJSON() as {positions: unknown[]};
+    const positionListJSON = (await this.get(
+      positionListLink
+    ).readAsJSON()) as { positions: unknown[] };
     return (positionListJSON['positions'] as unknown[]) // Get the array for the positions key
       .map(pos => Locator.deserialize(pos)) // Parse locators
       .filter(l => l !== undefined) as Locator[]; // Filter out failures
