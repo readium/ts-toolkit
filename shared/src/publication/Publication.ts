@@ -9,6 +9,7 @@ import { Manifest } from './Manifest';
 import { Metadata } from './Metadata';
 import { EmptyFetcher, Fetcher } from '../fetcher/Fetcher';
 import { PublicationCollection } from './PublicationCollection';
+import { Resource } from "../fetcher/Resource";
 
 export type ServiceFactory = () => null;
 
@@ -76,13 +77,12 @@ export class Publication {
     return this.manifest.linkWithRel(rel);
   }
 
-  public positionsFromManifest(): Locator[] {
+  public async positionsFromManifest(): Promise<Locator[]> {
     const positionListLink = this.manifest.linkWithRel(
       'application/vnd.readium.position-list+json'
     );
     if (positionListLink === undefined) return [];
-    const val = this.get(positionListLink);
-    const positionListJSON = JSON.parse(val); // Parse the response as JSON
+    const positionListJSON = await this.get(positionListLink).readAsJSON() as {positions: unknown[]};
     return (positionListJSON['positions'] as unknown[]) // Get the array for the positions key
       .map(pos => Locator.deserialize(pos)) // Parse locators
       .filter(l => l !== undefined) as Locator[]; // Filter out failures
@@ -91,9 +91,8 @@ export class Publication {
   /**
    * Returns the resource targeted by the given non-templated [link].
    */
-  public get(link: Link): any {
-    // TODO Resource type
+  public get(link: Link): Resource {
     // TODO warn about expanding templated links
-    this.fetcher.get(link);
+    return this.fetcher.get(link);
   }
 }
