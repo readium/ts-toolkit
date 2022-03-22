@@ -31,8 +31,8 @@ export class Publication {
   /** Identifies the collection that contains sub collections. */
   public readonly subcollections?: Map<string, Array<PublicationCollection>>;
 
-  constructor(values: { manifest: Manifest; fetcher: Fetcher }) {
-    this.fetcher = values.fetcher;
+  constructor(values: { manifest: Manifest; fetcher?: Fetcher }) {
+    if(values.fetcher) this.fetcher = values.fetcher;
     this.manifest = values.manifest;
     this.context = values.manifest.context;
     this.metadata = values.manifest.metadata;
