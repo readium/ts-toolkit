@@ -78,7 +78,7 @@ export class Publication {
   }
 
   public async positionsFromManifest(): Promise<Locator[]> {
-    const positionListLink = this.manifest.linkWithRel(
+    const positionListLink = this.manifest.links.findWithMediaType(
       'application/vnd.readium.position-list+json'
     );
     if (positionListLink === undefined) return [];
