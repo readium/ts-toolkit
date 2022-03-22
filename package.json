@@ -31,7 +31,7 @@
     "start": "tsdx watch",
     "build": "tsdx build",
     "test": "tsdx test",
-    "lint": "tsdx lint",
+    "lint": "tsdx lint src shared/src",
     "prepare": "tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why"
@@ -56,6 +56,8 @@
   "devDependencies": {
     "@babel/preset-typescript": "^7.16.7",
     "@size-limit/esbuild": "^7.0.8",
+    "@size-limit/file": "^7.0.8",
+    "@size-limit/webpack": "^7.0.8",
     "@size-limit/webpack-why": "^7.0.8",
     "@types/jest": "^27.4.1",
     "size-limit": "^7.0.8",
