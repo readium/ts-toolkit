@@ -4,7 +4,11 @@ export type CommsSendKey =
     "_pong" |
     "_unhandled" |
     "error" |
-    "click"
+    "click" |
+    "tap_more" |
+    "no_more" |
+    "no_less" |
+    "swipe";
 ;
 
 export type CommsReceiveKey =
