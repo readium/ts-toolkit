@@ -1,11 +1,12 @@
-import { CommsReceiveKey, CommsMessage, COMMS_VERSION } from "./comms";
+import { CommsCommandKey, CommsMessage, COMMS_VERSION } from "./comms";
 import { Comms } from "./comms/comms";
+import mid from "./comms/mid";
 import { Module, ModuleDerived, ModuleLibrary, ModuleName } from "./modules";
 
 /**
  * The Module loader. Not really sure what else to say right now
  */
-export class Loader {
+export class Loader<T extends string = ModuleName> {
     private loadedModules: Module[] = [];
     private readonly wnd: Window;
     private readonly comms: Comms;
@@ -43,7 +44,7 @@ export class Loader {
      * @param moduleName Module name
      * @returns Success
      */
-    public addModule(moduleName: ModuleName): boolean {
+    public addModule(moduleName: T): boolean {
         const m = ModuleLibrary.get(moduleName); // Find a module with this name
         if(m === undefined) {
             console.warn(`Module "${moduleName} does not exist in the library"`)
@@ -60,7 +61,7 @@ export class Loader {
      * @param moduleName Module name
      * @returns Success
      */
-    public removeModule(moduleName: ModuleName): boolean {
+    public removeModule(moduleName: T): boolean {
         const m = ModuleLibrary.get(moduleName) as ModuleDerived; // Get the right class
         if(m === undefined) {
             console.warn(`Module "${moduleName} does not exist in the library"`)
@@ -79,20 +80,5 @@ export class Loader {
     public destroy() {
         this.loadedModules.forEach(m => m.unmount(this.wnd, this.comms));
         this.loadedModules = [];
-    }
-
-    /**
-     * Send a message to the window using postMessage-based comms communication
-     */
-    public send(key: CommsReceiveKey, data: unknown, strict: boolean = false, transfer: Transferable[] = []) {
-        this.wnd.postMessage({
-            _readium: COMMS_VERSION,
-            data,
-            key,
-            strict
-        } as CommsMessage, {
-            // TODO lock targetOrigin!
-            transfer
-        });
     }
 }

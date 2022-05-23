@@ -1,6 +1,6 @@
 import { Comms } from "../../comms/comms";
 import { Setup } from "./Setup";
-import { setProperty } from "../../helpers/css";
+import { removeProperty, setProperty } from "../../helpers/css";
 
 const VIEWPORT_META_TAG_ID = "readium-viewport";
 
@@ -26,22 +26,32 @@ export class ReflowableSetup extends Setup {
         );
         wnd.document.head.appendChild(meta);
 
-        // Listen for resize/orientatiochange to update viewport width
+        // Listen for resize/orientationchange to update viewport width
         wnd.addEventListener("orientationchange", this.onViewportWidthChanged);
         wnd.addEventListener("resize", this.onViewportWidthChanged);
         this.onViewportWidthChanged({
             target: wnd
         } as any); // Cheat!
 
+        comms.register("set_property", "setup", (data, ack) => {
+            const kv = data as string[];
+            setProperty(wnd, kv[0], kv[1]);
+            ack(true);
+        })
+        comms.register("remove_property", "setup", (data, ack) => {
+            removeProperty(wnd, data as string);
+            ack(true);
+        })
+
         console.log("ReflowableSetup Mounted");
         return true;
     }
 
-    unmount(wnd: Window): boolean {
+    unmount(wnd: Window, comms: Comms): boolean {
         wnd.document.head.querySelector(`#${VIEWPORT_META_TAG_ID}`)?.remove();
         wnd.removeEventListener("orientationchange", this.onViewportWidthChanged);
 
         console.log("ReflowableSetup Unmounted");
-        return super.unmount(wnd);
+        return super.unmount(wnd, comms);
     }
 }

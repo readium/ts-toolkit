@@ -1,17 +1,19 @@
 
 
-export type CommsSendKey =
+export type CommsEventKey =
     "_pong" |
     "_unhandled" |
+    "_ack" |
     "error" |
     "click" |
+    "tap" |
     "tap_more" |
     "no_more" |
     "no_less" |
     "swipe";
 ;
 
-export type CommsReceiveKey =
+export type CommsCommandKey =
     "_ping" |
     "go_prev" |
     "go_next" |
@@ -19,7 +21,7 @@ export type CommsReceiveKey =
     "go_text" |
     "go_end" |
     "go_start" |
-    "go_position" |
+    "go_progression" |
     "set_property" |
     "remove_property";
 ;

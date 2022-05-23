@@ -1,5 +1,4 @@
 import { Comms } from "../../comms/comms";
-import { removeProperty, setProperty } from "../../helpers/css";
 import { Module } from "../Module";
 
 export abstract class Setup extends Module {
@@ -24,14 +23,6 @@ export abstract class Setup extends Module {
             this.wndOnErr,
             false
         );
-
-        comms.register("set_property", "setup", (data: unknown) => {
-            const kv = data as string[];
-            setProperty(wnd, kv[0], kv[1]);
-        })
-        comms.register("remove_property", "setup", (data: unknown) => {
-            removeProperty(wnd, data as string);
-        })
 
         return true;
     }

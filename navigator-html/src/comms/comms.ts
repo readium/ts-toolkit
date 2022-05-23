@@ -1,11 +1,13 @@
-import { CommsSendKey, CommsReceiveKey } from "./keys";
+import { CommsEventKey, CommsCommandKey } from "./keys";
+import { mid } from "./mid";
 
 export const COMMS_VERSION = 1;
 
 export interface CommsMessage {
     _readium: number; // Sanity/version-checking field
+    id?: string; // Optional (but recommended!) unique identifier
     strict?: boolean; // Whether or not the event *must* be handled by the receiver
-    key: CommsSendKey | CommsReceiveKey; // The "key" for identification to the listener
+    key: CommsEventKey | CommsCommandKey; // The "key" for identification to the listener
     data: unknown; // The data to be sent to the module
 }
 
@@ -13,7 +15,8 @@ export interface Registrant {
     module: string;
     cb: CommsCallback;
 }
-export type CommsCallback = (data: unknown) => void; // TODO: maybe more than void?
+export type CommsAck = (ok: boolean) => void;
+export type CommsCallback = (data: unknown, ack: CommsAck) => void; // TODO: maybe more than void?
 
 /**
  * Comms is basically a wrapper around window.postMessage that 
@@ -21,12 +24,12 @@ export type CommsCallback = (data: unknown) => void; // TODO: maybe more than vo
  */
 export class Comms {
     private destination: MessageEventSource | null = null;
-    private registrar = new Map<CommsReceiveKey, Registrant[]>();
+    private registrar = new Map<CommsCommandKey, Registrant[]>();
 
     constructor(wnd: Window) {
         wnd.addEventListener("message", (event) => {
             if(event.source === null) throw Error("Event source is null");
-            if(typeof event.data !== "object") return; // Skip events whose data is not an object
+            if(typeof event.data !== "object") return;
             // console.log("Received message", event.data);
             const data = event.data as CommsMessage; // Cast it as a CommsMessage
             if(!("_readium" in data) || !data._readium || data._readium <= 0) return; // Not for us
@@ -44,15 +47,17 @@ export class Comms {
     }
 
     private handle(data: CommsMessage) {
-        const listeners = this.registrar.get(data.key as CommsReceiveKey);
+        const listeners = this.registrar.get(data.key as CommsCommandKey);
         if(!listeners || listeners.length === 0) {
             if(data.strict) this.send("_unhandled", data); // Let the sender know the data was not handled by any listener
             return;
         }
-        listeners.forEach(l => l.cb(data.data));
+        listeners.forEach(l => l.cb(data.data, (ok: boolean) => {
+            this.send("_ack", ok, data.id); // Acknowledge handling of the event
+        }));
     }
 
-    public register(key: CommsReceiveKey, module: string, callback: CommsCallback) {
+    public register(key: CommsCommandKey, module: string, callback: CommsCallback) {
         const listeners = this.registrar.get(key);
         if(listeners && listeners.length >= 0) {
             const existing = listeners.find(l => l.module === module);
@@ -69,17 +74,18 @@ export class Comms {
             }]);
     }
 
-    public unregister(key: CommsReceiveKey, module: string) {
+    public unregister(key: CommsCommandKey, module: string) {
         const listeners = this.registrar.get(key);
         if(!listeners || listeners.length === 0) return;
         listeners.splice(listeners.findIndex(l => l.module === module), 1);
     }
 
-    public send(key: CommsSendKey, data: unknown, strict: boolean = false, transfer: Transferable[] = []) {
+    public send(key: CommsEventKey, data: unknown, id: unknown = undefined, transfer: Transferable[] = []) {
         if(!this.destination) throw Error("Attempted to send comms message before destination has been initialized");
         this.destination.postMessage({
             _readium: COMMS_VERSION,
-            strict,
+            id: id ?? mid(),
+            // scrict,
             key,
             data
         } as CommsMessage, {

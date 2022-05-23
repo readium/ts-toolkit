@@ -179,43 +179,47 @@ export class ColumnSnapper extends Snapper {
             this.snapCurrentOffset();
         });
 
-        comms.register("go_position", ColumnSnapper.moduleName, (data: unknown) => {
+        comms.register("go_progression", ColumnSnapper.moduleName, (data, ack) => {
             const position = data as number;
             if (position < 0 || position > 1) {
                 comms.send("error", {
-                    message: "go_position must be given a position from 0.0 to 1.0"
+                    message: "go_progression must be given a position from 0.0 to 1.0"
                 });
+                ack(false);
                 return;
             }
             const documentWidth = wnd.document.scrollingElement!.scrollWidth;
             const factor = isRTL(wnd) ? -1 : 1;
             const offset = documentWidth * position * factor;
             wnd.document.scrollingElement!.scrollLeft = this.snapOffset(offset);
+            ack(true);
         })
 
-        comms.register("go_end", ColumnSnapper.moduleName, () => {
+        comms.register("go_end", ColumnSnapper.moduleName, (_, ack) => {
             const factor = isRTL(wnd) ? -1 : 1;
             wnd.document.scrollingElement!.scrollLeft = this.snapOffset(
                 wnd.document.scrollingElement!.scrollWidth * factor
             );
+            ack(true);
         })
 
-        comms.register("go_start", ColumnSnapper.moduleName, () => {
+        comms.register("go_start", ColumnSnapper.moduleName, (_, ack) => {
             wnd.document.scrollingElement!.scrollLeft = 0;
+            ack(true);
         })
 
-        comms.register("go_prev", ColumnSnapper.moduleName, () => {
+        comms.register("go_prev", ColumnSnapper.moduleName, (_, ack) => {
             const documentWidth = wnd.document.scrollingElement?.scrollWidth!;
             var offset = wnd.scrollX - wnd.innerWidth;
             var minOffset = isRTL(wnd) ? - (documentWidth - wnd.innerWidth) : 0;
-            return scrollToOffset(Math.max(offset, minOffset));
+            ack(!scrollToOffset(Math.max(offset, minOffset)));
         });
 
-        comms.register("go_next", ColumnSnapper.moduleName, () => {
+        comms.register("go_next", ColumnSnapper.moduleName, (_, ack) => {
             const documentWidth = wnd.document.scrollingElement?.scrollWidth!;
             var offset = wnd.scrollX + wnd.innerWidth;
             var maxOffset = isRTL(wnd) ? 0 : documentWidth - wnd.innerWidth;
-            return scrollToOffset(Math.min(offset, maxOffset));
+            ack(!scrollToOffset(Math.min(offset, maxOffset)));
         });
 
         // Add interaction listeners
@@ -232,7 +236,7 @@ export class ColumnSnapper extends Snapper {
         comms.unregister("go_prev", ColumnSnapper.moduleName);
         comms.unregister("go_start", ColumnSnapper.moduleName);
         comms.unregister("go_end", ColumnSnapper.moduleName);
-        comms.unregister("go_position", ColumnSnapper.moduleName);
+        comms.unregister("go_progression", ColumnSnapper.moduleName);
         this.observer.disconnect();
 
         wnd.removeEventListener("touchstart", this.onTouchStarter);
