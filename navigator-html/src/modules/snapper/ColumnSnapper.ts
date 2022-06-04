@@ -90,7 +90,11 @@ export class ColumnSnapper extends Snapper {
     private startingX: number | undefined = undefined;
     private endingX: number | undefined = undefined;
     private dragOffset() { return (this.startingX ?? 0) - (this.endingX ?? 0) - this.alreadyLeft; }
-    private clearTouches() { this.startingX = undefined; this.endingX = undefined; this.alreadyLeft = 0; }
+    private clearTouches() {
+        this.startingX = undefined; this.endingX = undefined;
+        this.alreadyLeft = 0;
+        this.doc().style.removeProperty("will-change");
+    }
 
     onTouchStart(e: TouchEvent) {
         e.stopPropagation();
@@ -106,6 +110,7 @@ export class ColumnSnapper extends Snapper {
             }
         }
 
+        this.doc().style.willChange = "left, scroll-position";
         this.startingX = e.touches[0].pageX;
         this.touchState = ScrollTouchState.START;
     }
