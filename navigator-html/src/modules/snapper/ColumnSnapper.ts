@@ -1,43 +1,16 @@
 import { Comms } from "../../comms";
 import { Snapper } from "./Snapper";
-import { getColumnCountPerScreen, isRTL } from "../../helpers/document";
+import { getColumnCountPerScreen, isRTL, appendVirtualColumnIfNeeded } from "../../helpers/document";
+import { easeInOutQuad } from "../../helpers/animation";
 
-/**
- * Having an odd number of columns when displaying two columns per screen causes snapping and page
- * turning issues. To fix this, we insert a blank virtual column at the end of the resource.
- */
- function appendVirtualColumnIfNeeded(wnd: Window) {
-    const id = "readium-virtual-page";
-    let virtualCol = wnd.document.getElementById(id);
-    if (getColumnCountPerScreen(wnd) !== 2) {
-        if (virtualCol) {
-            virtualCol.remove();
-        }
-    } else {
-        const documentWidth = wnd.document.scrollingElement!.scrollWidth;
-        const colCount = documentWidth / wnd.innerWidth;
-        const hasOddColCount = (Math.round(colCount * 2) / 2) % 1 > 0.1;
-        if (hasOddColCount) {
-            if (virtualCol)
-                virtualCol.remove();
-            else {
-                virtualCol = wnd.document.createElement("div");
-                virtualCol.setAttribute("id", id);
-                virtualCol.style.breakBefore = "column";
-                virtualCol.innerHTML = "&#8203;"; // zero-width space
-                wnd.document.body.appendChild(virtualCol);
-            }
-        }
-    }
-}
+const SNAPPER_STYLE_ID = "readium-column-snapper-style";
+const SNAP_DURATION = 200; // Milliseconds
 
 enum ScrollTouchState {
     END = 0,
     START = 1,
     MOVE = 2
 }
-
-const SNAPPER_STYLE_ID = "readium-column-snapper-style";
 
 /**
  * A {Snapper} for reflowable resources using a column-based layout
@@ -47,56 +20,104 @@ export class ColumnSnapper extends Snapper {
     private observer!: ResizeObserver;
     private wnd!: Window;
     private comms!: Comms;
+    private doc() { return this.wnd.document.scrollingElement as HTMLElement; }
 
     snapOffset(offset: number) {
         const value = offset + (isRTL(this.wnd) ? -1 : 1);
         return value - (value % this.wnd.innerWidth);
     }
 
+    private snappingCancelled = false;
+    private alreadyLeft = 0;
+    private takeOverSnap() {
+        this.snappingCancelled = true;
+        this.clearTouches();
+        const doc = this.doc();
+        this.alreadyLeft = doc.style.left?.length > 0 ? parseFloat(doc.style.left.slice(0, doc.style.left.length - 2)) : 0;
+    }
+
     // Snaps the current offset to the page width.
-    snapCurrentOffset(usingScrollTo=false) {
-        const currentOffset = this.wnd.scrollX;
-        // Adds half a page to make sure we don't snap to the previous page.
+    snapCurrentOffset(smooth=false) {
+        const doc = this.doc();
+        const cdo = this.dragOffset();
+        const columnCount = getColumnCountPerScreen(this.wnd);
+        const currentOffset = Math.min(Math.max(0, this.wnd.scrollX + cdo), doc.scrollWidth);
+        // Adds half a page to make sure we don't snap to the previous page. (from orig readium)
         const factor = isRTL(this.wnd) ? -1 : 1;
-        var delta = factor * (this.wnd.innerWidth / 2);
-        if(usingScrollTo)
-            this.wnd.document.scrollingElement?.scrollTo({
-                left: this.snapOffset(currentOffset + delta),
-                behavior: "smooth"
+        const delta = factor * (this.wnd.innerWidth / 2) * Math.sign(cdo) * ((factor* cdo) > 0 ? 1.25 : 0.75); // TODO fix this
+        if(smooth) { // Smooth snapping
+            this.snappingCancelled = false;
+            const so = this.snapOffset(currentOffset + delta);
+            const position = (start: number, end: number, elapsed: number, period: number) => {
+                if (elapsed > period) {
+                    return end;
+                }
+                return start + (end - start) * easeInOutQuad(elapsed / period);
+            }
+            const period = Math.abs(this.wnd.scrollX - currentOffset) < 10 ? 1 : SNAP_DURATION * columnCount;
+            let startTime: number;
+            const step = (timestamp: number) => {
+                if(this.snappingCancelled) return;
+
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+
+                const lpos = position(cdo, 0, elapsed, period);
+                const spos = position(this.wnd.scrollX, so, elapsed, period);
+                doc.scrollLeft = spos;
+                doc.style.left = `${-lpos}px`;
+
+                if (elapsed < period)
+                    this.wnd.requestAnimationFrame(step);
+                else {
+                    this.clearTouches();
+                    doc.style.removeProperty("left");
+                    doc.scrollLeft = so;
+                }
+            }
+            this.wnd.requestAnimationFrame(step);
+        } else { // Instant snapping
+            doc.style.removeProperty("left");
+            this.wnd.requestAnimationFrame(() => {
+                doc.scrollLeft = this.snapOffset(currentOffset + delta);
             });
-        else
-            this.wnd.document.scrollingElement!.scrollLeft = this.snapOffset(currentOffset + delta);
+            this.clearTouches();
+        }
     }
 
     // Current touch state cycler, to assist with swipe detection etc.
     private touchState: ScrollTouchState = ScrollTouchState.END;
-    private startingTouch: Touch | undefined = undefined;
-    private endingTouch: Touch | undefined = undefined;
+    private startingX: number | undefined = undefined;
+    private endingX: number | undefined = undefined;
+    private dragOffset() { return (this.startingX ?? 0) - (this.endingX ?? 0) - this.alreadyLeft; }
+    private clearTouches() { this.startingX = undefined; this.endingX = undefined; this.alreadyLeft = 0; }
 
     onTouchStart(e: TouchEvent) {
         e.stopPropagation();
+        this.takeOverSnap();
         switch (e.touches.length) {
             case 1:
                 break; // Single finger
             case 2:
                 return; // TODO pinch?
-            default:
+            default: {
                 this.comms.send("tap_more", e.touches.length);
+                return;
+            }
         }
 
-        this.startingTouch = e.touches[0];
+        this.startingX = e.touches[0].pageX;
         this.touchState = ScrollTouchState.START;
-        this.wnd.document.body.style.removeProperty("overflow-x");
     }
     private readonly onTouchStarter = this.onTouchStart.bind(this);
 
     onTouchEnd(e: TouchEvent) {
         if(this.touchState === ScrollTouchState.MOVE) {
             // Get the horizontal drag distance
-            const dragOffset = (this.startingTouch?.pageX ?? 0) - (this.endingTouch?.pageX ?? 0);
+            const dragOffset = this.dragOffset();
 
-            const scrollWidth = this.wnd.document.scrollingElement?.scrollWidth!;
-            const scrollOffset = this.wnd.document.scrollingElement?.scrollLeft!;
+            const scrollWidth = this.doc().scrollWidth!;
+            const scrollOffset = this.doc().scrollLeft!;
             if(scrollWidth <= this.wnd.innerWidth) {
                 // Only a single page, meaning any swipe triggers next/prev
                 if(dragOffset > 5) this.comms.send("no_more", undefined);
@@ -104,24 +125,12 @@ export class ColumnSnapper extends Snapper {
                 return;
             } else if(scrollOffset < 5 && dragOffset < 5) {
                 this.comms.send("no_less", undefined);
-                return;
             } else if((scrollWidth - scrollOffset - this.wnd.innerWidth) < 5 && dragOffset > 5) {
                 this.comms.send("no_more", undefined);
-                return;
             }
 
-            this.wnd.setTimeout(() => {
-                if(this.touchState !== ScrollTouchState.END)
-                    return;
-                this.wnd.document.body.style.overflowX = "hidden";
-                this.snapCurrentOffset(true);
-                this.wnd.setTimeout(() => {
-                    this.wnd.document.body.style.removeProperty("overflow-x");
-                    if(this.touchState === ScrollTouchState.END)
-                        this.snapCurrentOffset(true); // Do it again
-                }, 50);
-            }, 50);
-            this.startingTouch = undefined;
+            this.snapCurrentOffset(true);
+            // this.startingTouch = undefined;
             this.comms.send("swipe", dragOffset);
         }
         this.touchState = ScrollTouchState.END;
@@ -131,7 +140,10 @@ export class ColumnSnapper extends Snapper {
     onTouchMove(e: TouchEvent) {
         if(this.touchState === ScrollTouchState.START)
             this.touchState = ScrollTouchState.MOVE;
-        this.endingTouch = e.touches[0];
+        this.endingX = e.touches[0].pageX;
+
+        const dro = this.dragOffset();
+        this.doc().style.left = `${-dro}px`;
     }
     private readonly onTouchMover = this.onTouchMove.bind(this);
 
@@ -144,9 +156,12 @@ export class ColumnSnapper extends Snapper {
         const d = wnd.document.createElement("style");
         d.id = SNAPPER_STYLE_ID;
         d.textContent = `
+        html {
+            overflow-x: hidden;
+        }
+
         body {
             -ms-overflow-style: none; /* for Internet Explorer, Edge */
-            overflow-x: scroll;
         }
 
         * {
@@ -165,7 +180,7 @@ export class ColumnSnapper extends Snapper {
         this.observer.observe(wnd.document.body);
 
         const scrollToOffset = (offset: number): boolean => {
-            wnd.document.scrollingElement!.scrollLeft = this.snapOffset(offset); // TODO assert if never undefined (same for rest of !)
+            this.doc().scrollLeft = this.snapOffset(offset); // TODO assert if never undefined (same for rest of !)
 
             // In some case the scrollX cannot reach the position respecting to innerWidth
             const diff = Math.abs(wnd.scrollX - offset) / wnd.innerWidth;
@@ -188,35 +203,35 @@ export class ColumnSnapper extends Snapper {
                 ack(false);
                 return;
             }
-            const documentWidth = wnd.document.scrollingElement!.scrollWidth;
+            const documentWidth = this.doc().scrollWidth;
             const factor = isRTL(wnd) ? -1 : 1;
             const offset = documentWidth * position * factor;
-            wnd.document.scrollingElement!.scrollLeft = this.snapOffset(offset);
+            this.doc().scrollLeft = this.snapOffset(offset);
             ack(true);
         })
 
         comms.register("go_end", ColumnSnapper.moduleName, (_, ack) => {
             const factor = isRTL(wnd) ? -1 : 1;
-            wnd.document.scrollingElement!.scrollLeft = this.snapOffset(
-                wnd.document.scrollingElement!.scrollWidth * factor
+            this.doc().scrollLeft = this.snapOffset(
+                this.doc().scrollWidth * factor
             );
             ack(true);
         })
 
         comms.register("go_start", ColumnSnapper.moduleName, (_, ack) => {
-            wnd.document.scrollingElement!.scrollLeft = 0;
+            this.doc().scrollLeft = 0;
             ack(true);
         })
 
         comms.register("go_prev", ColumnSnapper.moduleName, (_, ack) => {
-            const documentWidth = wnd.document.scrollingElement?.scrollWidth!;
+            const documentWidth = this.doc().scrollWidth!;
             var offset = wnd.scrollX - wnd.innerWidth;
             var minOffset = isRTL(wnd) ? - (documentWidth - wnd.innerWidth) : 0;
             ack(!scrollToOffset(Math.max(offset, minOffset)));
         });
 
         comms.register("go_next", ColumnSnapper.moduleName, (_, ack) => {
-            const documentWidth = wnd.document.scrollingElement?.scrollWidth!;
+            const documentWidth = this.doc().scrollWidth!;
             var offset = wnd.scrollX + wnd.innerWidth;
             var maxOffset = isRTL(wnd) ? 0 : documentWidth - wnd.innerWidth;
             ack(!scrollToOffset(Math.min(offset, maxOffset)));
@@ -232,6 +247,7 @@ export class ColumnSnapper extends Snapper {
     }
 
     unmount(wnd: Window, comms: Comms): boolean {
+        this.snappingCancelled = true;
         comms.unregister("go_next", ColumnSnapper.moduleName);
         comms.unregister("go_prev", ColumnSnapper.moduleName);
         comms.unregister("go_start", ColumnSnapper.moduleName);
