@@ -20,7 +20,6 @@ export class ColumnSnapper extends Snapper {
     private observer!: ResizeObserver;
     private wnd!: Window;
     private comms!: Comms;
-    private useTransform = true;
     private doc() { return this.wnd.document.scrollingElement as HTMLElement; }
 
     snapOffset(offset: number) {
@@ -29,24 +28,25 @@ export class ColumnSnapper extends Snapper {
     }
 
     private snappingCancelled = false;
-    private alreadyLeft = 0;
+    private alreadyScrollLeft = 0;
+    private overscroll = 0;
+    private cachedScrollWidth = 0; // We have to cache this because during overscroll (transform, or left) the width is incorrect due to browser
     private takeOverSnap() {
         this.snappingCancelled = true;
         this.clearTouches();
         const doc = this.doc();
-        if(this.useTransform)
-            // translate3d(XXXpx, 0px, 0px) -> slice 12 -> XXXpx, 0px, 0px) -> split "px" [0] -> XXX
-            this.alreadyLeft = doc.style.transform?.length > 12 ? parseFloat(doc.style.transform.slice(12).split("px")[0]) : 0;
-        else
-            this.alreadyLeft = doc.style.left?.length > 0 ? parseFloat(doc.style.left.slice(0, doc.style.left.length - 2)) : 0;
+
+        // translate3d(XXXpx, 0px, 0px) -> slice 12 -> XXXpx, 0px, 0px) -> split "px" [0] -> XXX
+        this.overscroll = doc.style.transform?.length > 12 ? parseFloat(doc.style.transform.slice(12).split("px")[0]) : 0;
     }
 
     // Snaps the current offset to the page width.
     snapCurrentOffset(smooth=false) {
+        const startX = this.wnd.scrollX > 0 ? this.wnd.scrollX : this.alreadyScrollLeft;
         const doc = this.doc();
         const cdo = this.dragOffset();
         const columnCount = getColumnCountPerScreen(this.wnd);
-        const currentOffset = Math.min(Math.max(0, this.wnd.scrollX + cdo), doc.scrollWidth);
+        const currentOffset = Math.min(Math.max(0, startX), doc.scrollWidth);
         // Adds half a page to make sure we don't snap to the previous page. (from orig readium)
         const factor = isRTL(this.wnd) ? -1 : 1;
         const delta = factor * (this.wnd.innerWidth / 2) * Math.sign(cdo) * ((factor* cdo) > 0 ? 1.25 : 0.75); // TODO fix this
@@ -59,8 +59,7 @@ export class ColumnSnapper extends Snapper {
                 }
                 return start + (end - start) * easeInOutQuad(elapsed / period);
             }
-            const startX = this.wnd.scrollX;
-            const period = Math.abs(startX - currentOffset) < 10 ? 1 : SNAP_DURATION * columnCount;
+            const period = /*Math.abs(startX - (this.useTransform ? currentOffset : 0)) < 10 ? 1 : */SNAP_DURATION * columnCount; // TODO revamp
             let startTime: number;
             const step = (timestamp: number) => {
                 if(this.snappingCancelled) return;
@@ -68,27 +67,23 @@ export class ColumnSnapper extends Snapper {
                 if (!startTime) startTime = timestamp;
                 const elapsed = timestamp - startTime;
 
-                const lpos = position(cdo, 0, elapsed, period);
+                const lpos = position(this.overscroll, 0, elapsed, period);
                 const spos = position(startX, so, elapsed, period);
                 doc.scrollLeft = spos;
-                if(this.useTransform)
+                if(this.overscroll !== 0)
                     doc.style.transform = `translate3d(${-lpos}px, 0px, 0px)`;
-                else
-                    doc.style.left = `${-lpos}px`;
 
                 if (elapsed < period)
                     this.wnd.requestAnimationFrame(step);
                 else {
                     this.clearTouches();
                     doc.style.removeProperty("transform");
-                    doc.style.removeProperty("left");
                     doc.scrollLeft = so;
                 }
             }
             this.wnd.requestAnimationFrame(step);
         } else { // Instant snapping
             doc.style.removeProperty("transform");
-            doc.style.removeProperty("left");
             this.wnd.requestAnimationFrame(() => {
                 doc.scrollLeft = this.snapOffset(currentOffset + delta);
             });
@@ -100,11 +95,11 @@ export class ColumnSnapper extends Snapper {
     private touchState: ScrollTouchState = ScrollTouchState.END;
     private startingX: number | undefined = undefined;
     private endingX: number | undefined = undefined;
-    private dragOffset() { return (this.startingX ?? 0) - (this.endingX ?? 0) - this.alreadyLeft; }
+    private dragOffset() { return (this.startingX ?? 0) - (this.endingX ?? 0); }
     private clearTouches() {
         this.startingX = undefined; this.endingX = undefined;
-        this.alreadyLeft = 0;
-        this.doc().style.removeProperty("will-change");
+        this.overscroll = 0;
+        // this.doc().style.removeProperty("will-change");
     }
 
     onTouchStart(e: TouchEvent) {
@@ -123,8 +118,9 @@ export class ColumnSnapper extends Snapper {
             }
         }
 
-        this.doc().style.willChange = "transform, scroll-position";
-        this.startingX = e.touches[0].pageX;
+        // this.doc().style.willChange = "transform, scroll-position";
+        this.startingX = e.touches[0].clientX;
+        this.alreadyScrollLeft = this.doc().scrollLeft;
         this.touchState = ScrollTouchState.START;
     }
     private readonly onTouchStarter = this.onTouchStart.bind(this);
@@ -134,16 +130,14 @@ export class ColumnSnapper extends Snapper {
             // Get the horizontal drag distance
             const dragOffset = this.dragOffset();
 
-            const scrollWidth = this.doc().scrollWidth!;
-            const scrollOffset = this.doc().scrollLeft!;
-            if(scrollWidth <= this.wnd.innerWidth) {
+            const scrollOffset = (this.doc().scrollLeft > 0) ? this.doc().scrollLeft : this.alreadyScrollLeft;
+            if(this.cachedScrollWidth <= this.wnd.innerWidth) {
                 // Only a single page, meaning any swipe triggers next/prev
                 if(dragOffset > 5) this.comms.send("no_more", undefined);
                 if(dragOffset < -5) this.comms.send("no_less", undefined);
-                return;
             } else if(scrollOffset < 5 && dragOffset < 5) {
                 this.comms.send("no_less", undefined);
-            } else if((scrollWidth - scrollOffset - this.wnd.innerWidth) < 5 && dragOffset > 5) {
+            } else if((this.cachedScrollWidth - scrollOffset - this.wnd.innerWidth) < 5 && dragOffset > 5) {
                 this.comms.send("no_more", undefined);
             }
 
@@ -159,13 +153,21 @@ export class ColumnSnapper extends Snapper {
         if(this.touchState === ScrollTouchState.END) return;
         if(this.touchState === ScrollTouchState.START)
             this.touchState = ScrollTouchState.MOVE;
-        this.endingX = e.touches[0].pageX;
+        this.endingX = e.touches[0].clientX;
 
         const dro = this.dragOffset();
-        if(this.useTransform)
-            this.doc().style.transform = `translate3d(${-dro}px, 0px, 0px)`;
-        else
-            this.doc().style.left = `${-dro}px`;
+        const newpos = this.alreadyScrollLeft + dro;
+        if(newpos < 0) {
+            this.overscroll = newpos;
+            this.doc().style.transform = `translate3d(${-this.overscroll}px, 0px, 0px)`;
+        } else if((newpos + this.wnd.innerWidth) > this.cachedScrollWidth) {
+            this.overscroll = newpos;
+            this.doc().style.transform = `translate3d(${-newpos}px, 0px, 0px)`;
+        } else {
+            this.overscroll = 0;
+            this.doc().style.removeProperty("transform");
+            this.doc().scrollLeft = this.alreadyScrollLeft + dro;
+        }
     }
     private readonly onTouchMover = this.onTouchMove.bind(this);
 
@@ -210,11 +212,14 @@ export class ColumnSnapper extends Snapper {
         }
 
         window.addEventListener("orientationchange", () => { // TODO implement unregister!!!
+            this.cachedScrollWidth = this.doc().scrollWidth!;
             this.snapCurrentOffset();
         });
         window.addEventListener("resize", () => { // TODO implement unregister!!!
+            this.cachedScrollWidth = this.doc().scrollWidth!;
             this.snapCurrentOffset();
         });
+        this.wnd.requestAnimationFrame(() => this.cachedScrollWidth = this.doc().scrollWidth!);
 
         comms.register("go_progression", ColumnSnapper.moduleName, (data, ack) => {
             const position = data as number;
