@@ -33,7 +33,8 @@ export class ColumnSnapper extends Snapper {
         this.snappingCancelled = true;
         this.clearTouches();
         const doc = this.doc();
-        this.alreadyLeft = doc.style.left?.length > 0 ? parseFloat(doc.style.left.slice(0, doc.style.left.length - 2)) : 0;
+        // translate3d(XXXpx, 0px, 0px) -> slice 12 -> XXXpx, 0px, 0px) -> split "px" [0] -> XXX
+        this.alreadyLeft = doc.style.transform?.length > 12 ? parseFloat(doc.style.transform.slice(12).split("px")[0]) : 0;
     }
 
     // Snaps the current offset to the page width.
@@ -66,19 +67,19 @@ export class ColumnSnapper extends Snapper {
                 const lpos = position(cdo, 0, elapsed, period);
                 const spos = position(startX, so, elapsed, period);
                 doc.scrollLeft = spos;
-                doc.style.left = `${-lpos}px`;
+                doc.style.transform = `translate3d(${-lpos}px, 0px, 0px)`;
 
                 if (elapsed < period)
                     this.wnd.requestAnimationFrame(step);
                 else {
                     this.clearTouches();
-                    doc.style.removeProperty("left");
+                    doc.style.removeProperty("transform");
                     doc.scrollLeft = so;
                 }
             }
             this.wnd.requestAnimationFrame(step);
         } else { // Instant snapping
-            doc.style.removeProperty("left");
+            doc.style.removeProperty("transform");
             this.wnd.requestAnimationFrame(() => {
                 doc.scrollLeft = this.snapOffset(currentOffset + delta);
             });
@@ -152,7 +153,7 @@ export class ColumnSnapper extends Snapper {
         this.endingX = e.touches[0].pageX;
 
         const dro = this.dragOffset();
-        this.doc().style.left = `${-dro}px`;
+        this.doc().style.transform = `translate3d(${-dro}px, 0px, 0px)`;
     }
     private readonly onTouchMover = this.onTouchMove.bind(this);
 
