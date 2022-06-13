@@ -20,6 +20,7 @@ export class ColumnSnapper extends Snapper {
     private observer!: ResizeObserver;
     private wnd!: Window;
     private comms!: Comms;
+    private useTransform = true;
     private doc() { return this.wnd.document.scrollingElement as HTMLElement; }
 
     snapOffset(offset: number) {
@@ -33,8 +34,11 @@ export class ColumnSnapper extends Snapper {
         this.snappingCancelled = true;
         this.clearTouches();
         const doc = this.doc();
-        // translate3d(XXXpx, 0px, 0px) -> slice 12 -> XXXpx, 0px, 0px) -> split "px" [0] -> XXX
-        this.alreadyLeft = doc.style.transform?.length > 12 ? parseFloat(doc.style.transform.slice(12).split("px")[0]) : 0;
+        if(this.useTransform)
+            // translate3d(XXXpx, 0px, 0px) -> slice 12 -> XXXpx, 0px, 0px) -> split "px" [0] -> XXX
+            this.alreadyLeft = doc.style.transform?.length > 12 ? parseFloat(doc.style.transform.slice(12).split("px")[0]) : 0;
+        else
+            this.alreadyLeft = doc.style.left?.length > 0 ? parseFloat(doc.style.left.slice(0, doc.style.left.length - 2)) : 0;
     }
 
     // Snaps the current offset to the page width.
@@ -67,19 +71,24 @@ export class ColumnSnapper extends Snapper {
                 const lpos = position(cdo, 0, elapsed, period);
                 const spos = position(startX, so, elapsed, period);
                 doc.scrollLeft = spos;
-                doc.style.transform = `translate3d(${-lpos}px, 0px, 0px)`;
+                if(this.useTransform)
+                    doc.style.transform = `translate3d(${-lpos}px, 0px, 0px)`;
+                else
+                    doc.style.left = `${-lpos}px`;
 
                 if (elapsed < period)
                     this.wnd.requestAnimationFrame(step);
                 else {
                     this.clearTouches();
                     doc.style.removeProperty("transform");
+                    doc.style.removeProperty("left");
                     doc.scrollLeft = so;
                 }
             }
             this.wnd.requestAnimationFrame(step);
         } else { // Instant snapping
             doc.style.removeProperty("transform");
+            doc.style.removeProperty("left");
             this.wnd.requestAnimationFrame(() => {
                 doc.scrollLeft = this.snapOffset(currentOffset + delta);
             });
@@ -153,7 +162,10 @@ export class ColumnSnapper extends Snapper {
         this.endingX = e.touches[0].pageX;
 
         const dro = this.dragOffset();
-        this.doc().style.transform = `translate3d(${-dro}px, 0px, 0px)`;
+        if(this.useTransform)
+            this.doc().style.transform = `translate3d(${-dro}px, 0px, 0px)`;
+        else
+            this.doc().style.left = `${-dro}px`;
     }
     private readonly onTouchMover = this.onTouchMove.bind(this);
 
