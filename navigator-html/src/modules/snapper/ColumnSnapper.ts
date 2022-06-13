@@ -54,7 +54,8 @@ export class ColumnSnapper extends Snapper {
                 }
                 return start + (end - start) * easeInOutQuad(elapsed / period);
             }
-            const period = Math.abs(this.wnd.scrollX - currentOffset) < 10 ? 1 : SNAP_DURATION * columnCount;
+            const startX = this.wnd.scrollX;
+            const period = Math.abs(startX - currentOffset) < 10 ? 1 : SNAP_DURATION * columnCount;
             let startTime: number;
             const step = (timestamp: number) => {
                 if(this.snappingCancelled) return;
@@ -63,7 +64,7 @@ export class ColumnSnapper extends Snapper {
                 const elapsed = timestamp - startTime;
 
                 const lpos = position(cdo, 0, elapsed, period);
-                const spos = position(this.wnd.scrollX, so, elapsed, period);
+                const spos = position(startX, so, elapsed, period);
                 doc.scrollLeft = spos;
                 doc.style.left = `${-lpos}px`;
 
@@ -100,17 +101,19 @@ export class ColumnSnapper extends Snapper {
         e.stopPropagation();
         this.takeOverSnap();
         switch (e.touches.length) {
-            case 1:
-                break; // Single finger
-            case 2:
-                return; // TODO pinch?
-            default: {
+            case 1: // Single finger - handle it
+                break;
+            case 2: // Pinch - abort
+                this.onTouchEnd(e);
+                return;
+            default: { // More fingers - abort, notify
+                this.onTouchEnd(e);
                 this.comms.send("tap_more", e.touches.length);
                 return;
             }
         }
 
-        this.doc().style.willChange = "left, scroll-position";
+        this.doc().style.willChange = "transform, scroll-position";
         this.startingX = e.touches[0].pageX;
         this.touchState = ScrollTouchState.START;
     }
@@ -143,6 +146,7 @@ export class ColumnSnapper extends Snapper {
     private readonly onTouchEnder = this.onTouchEnd.bind(this);
 
     onTouchMove(e: TouchEvent) {
+        if(this.touchState === ScrollTouchState.END) return;
         if(this.touchState === ScrollTouchState.START)
             this.touchState = ScrollTouchState.MOVE;
         this.endingX = e.touches[0].pageX;
@@ -162,7 +166,7 @@ export class ColumnSnapper extends Snapper {
         d.id = SNAPPER_STYLE_ID;
         d.textContent = `
         html {
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
         body {
@@ -246,6 +250,9 @@ export class ColumnSnapper extends Snapper {
         wnd.addEventListener("touchstart", this.onTouchStarter);
         wnd.addEventListener("touchend", this.onTouchEnder);
         wnd.addEventListener("touchmove", this.onTouchMover);
+
+        // Safari hack, otherwise other evens won't register
+        document.addEventListener('touchstart', () => {});
 
         console.log("ColumnSnapper Mounted");
         return true;
