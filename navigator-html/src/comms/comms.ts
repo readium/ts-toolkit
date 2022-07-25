@@ -5,6 +5,7 @@ export const COMMS_VERSION = 1;
 
 export interface CommsMessage {
     _readium: number; // Sanity/version-checking field
+    _channel: string; // Channel ID
     id?: string; // Optional (but recommended!) unique identifier
     strict?: boolean; // Whether or not the event *must* be handled by the receiver
     key: CommsEventKey | CommsCommandKey; // The "key" for identification to the listener
@@ -25,6 +26,8 @@ export type CommsCallback = (data: unknown, ack: CommsAck) => void; // TODO: may
 export class Comms {
     private destination: MessageEventSource | null = null;
     private registrar = new Map<CommsCommandKey, Registrant[]>();
+    private origin: string;
+    private channelId: string;
 
     constructor(wnd: Window) {
         wnd.addEventListener("message", (event) => {
@@ -37,7 +40,8 @@ export class Comms {
                 // The "ping" gives us a destination we bind to for posting events
                 if(!this.destination) {
                     this.destination = event.source;
-                    // TODO: should we lock down the target origin too?
+                    this.origin = event.origin;
+                    this.channelId = data._channel;
                     this.send("_pong", undefined);
                 }
                 return;
@@ -84,12 +88,13 @@ export class Comms {
         if(!this.destination) throw Error("Attempted to send comms message before destination has been initialized");
         this.destination.postMessage({
             _readium: COMMS_VERSION,
+            _channel: this.channelId,
             id: id ?? mid(),
             // scrict,
             key,
             data
         } as CommsMessage, {
-            // targetOrigin
+            targetOrigin: this.origin,
             transfer
         });
     }
