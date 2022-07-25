@@ -40,7 +40,10 @@ export class EpubNavigator extends VisualNavigator {
         await this.apply();
     }
 
-    private get cframe() {
+    /**
+     * Exposed to the public to compensate for lack of implemented readium conveniences
+     */
+    public get cframe() {
         return this.framePool.currentFrame;
     }
 

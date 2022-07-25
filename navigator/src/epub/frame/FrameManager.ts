@@ -27,7 +27,6 @@ export default class FrameManager {
                 try { res(this.frame.contentWindow!);} catch (error) {}
             }
             this.frame.onload = () => {
-                console.log("IFRAME LOADED!");
                 const wnd = this.frame.contentWindow!
                 this.loader = new Loader(wnd, modules);
                 this.comms = new FrameComms(wnd, this.source);
@@ -41,8 +40,8 @@ export default class FrameManager {
     }
 
     destroy() {
-        this.comms.destroy();
-        this.loader.destroy();
+        this.comms?.destroy();
+        this.loader?.destroy();
         this.frame.remove(); // TODO this makes it unusable, should it?
     }
 
