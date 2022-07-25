@@ -64,9 +64,9 @@ export default class FramePoolManager {
         const creation: string[] = [];
         this.positions.forEach((l, j) => {
             if(j > (i + UPPER_BOUNDARY) || j < (i - UPPER_BOUNDARY))
-                disposal.push(l.href);
+                if(!disposal.includes(l.href)) disposal.push(l.href);
             if(j < (i + LOWER_BOUNDARY) && j > (i - LOWER_BOUNDARY))
-                creation.push(l.href);
+                if(!creation.includes(l.href)) creation.push(l.href);
         })
         disposal.forEach(href => {
             if(creation.includes(href)) return;

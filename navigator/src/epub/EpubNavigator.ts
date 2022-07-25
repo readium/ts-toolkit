@@ -191,6 +191,7 @@ export class EpubNavigator extends VisualNavigator {
                 this.cframe.window.scrollX / this.cframe.window.document.scrollingElement!.scrollWidth
             );
             this.listeners.positionChanged(this.currentLocation);
+            this.framePool.update(this.pub, this.currentLocation);
             cb();
         });
         return true;
@@ -207,6 +208,7 @@ export class EpubNavigator extends VisualNavigator {
                 this.cframe.window.scrollX / this.cframe.window.document.scrollingElement!.scrollWidth
             );
             this.listeners.positionChanged(this.currentLocation);
+            this.framePool.update(this.pub, this.currentLocation);
             cb();
         });
         return true;
