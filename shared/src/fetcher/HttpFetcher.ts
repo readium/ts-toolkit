@@ -2,7 +2,10 @@ import { Link } from '../publication/Link';
 import { Fetcher } from './Fetcher';
 import { NumberRange, Resource } from './Resource';
 
-export type FetchFunc = (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+export type FetchFunc = (
+  input: RequestInfo,
+  init?: RequestInit
+) => Promise<Response>;
 
 // Fetches remote resources through HTTP.
 export class HttpFetcher implements Fetcher {
