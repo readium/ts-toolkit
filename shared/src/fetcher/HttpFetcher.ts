@@ -2,13 +2,16 @@ import { Link } from '../publication/Link';
 import { Fetcher } from './Fetcher';
 import { NumberRange, Resource } from './Resource';
 
+export type FetchFunc = (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+
 // Fetches remote resources through HTTP.
 export class HttpFetcher implements Fetcher {
   private readonly baseUrl?: string;
-  // TODO HttpClient? Is it even necesary when we have fetch()?
+  private readonly client: FetchFunc;
 
-  constructor(baseUrl?: string) {
+  constructor(client?: FetchFunc, baseUrl?: string) {
     this.baseUrl = baseUrl;
+    this.client = client ?? fetch;
   }
 
   links(): Link[] {
@@ -21,7 +24,7 @@ export class HttpFetcher implements Fetcher {
       // TODO FailureResource
       throw Error(`Invalid HREF: ${link.href}`);
     }
-    return new HttpResource(link, url);
+    return new HttpResource(this.client, link, url);
   }
 
   close() {
@@ -32,9 +35,11 @@ export class HttpFetcher implements Fetcher {
 class HttpResource implements Resource {
   private readonly _link: Link; // "link" conflicts with inteface function
   private readonly url: string;
+  private readonly client: FetchFunc;
   private _headResponse?: Response;
 
-  constructor(link: Link, url: string) {
+  constructor(client: FetchFunc, link: Link, url: string) {
+    this.client = client;
     this._link = link;
     this.url = url;
   }
@@ -42,7 +47,7 @@ class HttpResource implements Resource {
   /** Cached HEAD response to get the expected content length and other metadata. */
   private async headResponse(): Promise<Response> {
     if (this._headResponse) return this._headResponse;
-    const resp = await fetch(this.url, {
+    const resp = await this.client(this.url, {
       method: 'HEAD',
     });
     if (!resp.ok)
@@ -66,7 +71,7 @@ class HttpResource implements Resource {
 
   async read(range?: NumberRange): Promise<Uint8Array | undefined> {
     if (range) throw new Error('http read range not implemented!'); // TODO
-    const resp = await fetch(this.url);
+    const resp = await this.client(this.url);
     if (!resp.ok)
       throw new Error(
         `http GET request for ${this.url} failed with HTTP status code ${resp.status}`
@@ -77,13 +82,13 @@ class HttpResource implements Resource {
   async length(): Promise<number> {
     const resp = await this.headResponse();
     const contentLength = resp.headers.get('content-length');
-    if (contentLength === '')
+    if (contentLength === null || contentLength === '')
       throw new Error('length for resource unavailable'); // TODO
     return parseInt(contentLength);
   }
 
   async readAsJSON(): Promise<unknown> {
-    const resp = await fetch(this.url);
+    const resp = await this.client(this.url);
     if (!resp.ok)
       throw new Error(
         `http GET request for ${this.url} failed with HTTP status code ${resp.status}`
@@ -92,7 +97,7 @@ class HttpResource implements Resource {
   }
 
   async readAsString(): Promise<string> {
-    const resp = await fetch(this.url);
+    const resp = await this.client(this.url);
     if (!resp.ok)
       throw new Error(
         `http GET request for ${this.url} failed with HTTP status code ${resp.status}`
@@ -101,7 +106,7 @@ class HttpResource implements Resource {
   }
 
   async readAsXML(): Promise<XMLDocument> {
-    const resp = await fetch(this.url);
+    const resp = await this.client(this.url);
     if (!resp.ok)
       throw new Error(
         `http GET request for ${this.url} failed with HTTP status code ${resp.status}`
