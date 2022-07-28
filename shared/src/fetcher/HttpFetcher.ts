@@ -21,7 +21,7 @@ export class HttpFetcher implements Fetcher {
     return [];
   }
 
-  get(link: Link) {
+  get(link: Link): Resource {
     const url = link.toURL(this.baseUrl);
     if (url === undefined) {
       // TODO FailureResource
@@ -35,13 +35,14 @@ export class HttpFetcher implements Fetcher {
   }
 }
 
-class HttpResource implements Resource {
+class HttpResource extends Resource {
   private readonly _link: Link; // "link" conflicts with inteface function
   private readonly url: string;
   private readonly client: FetchFunc;
   private _headResponse?: Response;
 
   constructor(client: FetchFunc, link: Link, url: string) {
+    super();
     this.client = client;
     this._link = link;
     this.url = url;
