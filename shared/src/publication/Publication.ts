@@ -4,14 +4,20 @@
  */
 
 import { Link, Links } from './Link';
+import { Locator } from './Locator';
 import { Manifest } from './Manifest';
 import { Metadata } from './Metadata';
+import { EmptyFetcher, Fetcher } from '../fetcher/Fetcher';
 import { PublicationCollection } from './PublicationCollection';
+import { Resource } from '../fetcher/Resource';
+
+export type ServiceFactory = () => null;
 
 /** Shared model for a Readium Publication. */
 export class Publication {
   /** The manifest holding the publication metadata extracted from the publication file */
   public manifest: Manifest;
+  private readonly fetcher: Fetcher = new EmptyFetcher();
 
   // Shortcuts to manifest properties
   public readonly context?: Array<string>;
@@ -26,7 +32,8 @@ export class Publication {
   /** Identifies the collection that contains sub collections. */
   public readonly subcollections?: Map<string, Array<PublicationCollection>>;
 
-  constructor(values: { manifest: Manifest }) {
+  constructor(values: { manifest: Manifest; fetcher?: Fetcher }) {
+    if (values.fetcher) this.fetcher = values.fetcher;
     this.manifest = values.manifest;
     this.context = values.manifest.context;
     this.metadata = values.manifest.metadata;
@@ -68,5 +75,26 @@ export class Publication {
    */
   public linkWithRel(rel: string): Link | undefined {
     return this.manifest.linkWithRel(rel);
+  }
+
+  public async positionsFromManifest(): Promise<Locator[]> {
+    const positionListLink = this.manifest.links.findWithMediaType(
+      'application/vnd.readium.position-list+json'
+    );
+    if (positionListLink === undefined) return [];
+    const positionListJSON = (await this.get(
+      positionListLink
+    ).readAsJSON()) as { positions: unknown[] };
+    return (positionListJSON['positions'] as unknown[]) // Get the array for the positions key
+      .map(pos => Locator.deserialize(pos)) // Parse locators
+      .filter(l => l !== undefined) as Locator[]; // Filter out failures
+  }
+
+  /**
+   * Returns the resource targeted by the given non-templated [link].
+   */
+  public get(link: Link): Resource {
+    // TODO warn about expanding templated links
+    return this.fetcher.get(link);
   }
 }
