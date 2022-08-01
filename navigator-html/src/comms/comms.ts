@@ -43,6 +43,8 @@ export class Comms {
                     this.origin = event.origin;
                     this.channelId = data._channel;
                     this.send("_pong", undefined);
+                    this.preLog.forEach(d => this.send("log", d));
+                    this.preLog = [];
                 }
                 return;
             }
@@ -82,6 +84,13 @@ export class Comms {
         const listeners = this.registrar.get(key);
         if(!listeners || listeners.length === 0) return;
         listeners.splice(listeners.findIndex(l => l.module === module), 1);
+    }
+
+    // Convenience function for logging data
+    private preLog: any[] = [];
+    public log(...data: any[]) {
+        if(!this.destination) this.preLog.push(data);
+        else this.send("log", data);
     }
 
     public send(key: CommsEventKey, data: unknown, id: unknown = undefined, transfer: Transferable[] = []) {

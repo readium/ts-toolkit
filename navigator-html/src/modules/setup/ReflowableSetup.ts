@@ -43,7 +43,7 @@ export class ReflowableSetup extends Setup {
             ack(true);
         })
 
-        console.log("ReflowableSetup Mounted");
+        comms.log("ReflowableSetup Mounted");
         return true;
     }
 
@@ -51,7 +51,7 @@ export class ReflowableSetup extends Setup {
         wnd.document.head.querySelector(`#${VIEWPORT_META_TAG_ID}`)?.remove();
         wnd.removeEventListener("orientationchange", this.onViewportWidthChanged);
 
-        console.log("ReflowableSetup Unmounted");
+        comms.log("ReflowableSetup Unmounted");
         return super.unmount(wnd, comms);
     }
 }

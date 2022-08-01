@@ -14,7 +14,7 @@ export abstract class Setup extends Module {
     }
 
     mount(wnd: Window, comms: Comms): boolean {
-        console.log("Setup Mounted");
+        comms.log("Setup Mounted");
 
         // Add listener
         this.comms = comms;
@@ -31,7 +31,7 @@ export abstract class Setup extends Module {
         comms.unregister("set_property", "setup");
         comms.unregister("remove_property", "setup");
         wnd.removeEventListener("error", this.wndOnErr);
-        console.log("Setup Unmounted");
+        comms.log("Setup Unmounted");
         return true;
     }
 }

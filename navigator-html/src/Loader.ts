@@ -25,7 +25,7 @@ export class Loader<T extends string = ModuleName> {
         if(typeof wnd === 'undefined') // Detect accidental Node/SSR usage
             throw Error("Loader is not in a web browser");
 
-        if(wnd.parent !== wnd) console.log("Loader is probably in a frame");
+        if(wnd.parent !== wnd) this.comms.log("Loader is probably in a frame");
 
         this.loadedModules = uniqueModules.map(name => {
             const m = ModuleLibrary.get(name); // Find a module with this name

@@ -21,19 +21,23 @@ export default class FrameManager {
         return new Promise((res, rej) => {
             if(this.loader) {
                 // Check if currently loaded modules are equal
-                if(this.currModules.sort().join("|") === modules.sort().join("|"))
+                if(this.currModules.sort().join("|") === modules.sort().join("|")) {
+                    try { res(this.frame.contentWindow!); } catch (error) {};
                     return;
+                }
                 this.loader.destroy();
-                this.loader = new Loader(this.frame.contentWindow!, modules);
-                try { res(this.frame.contentWindow!);} catch (error) {}
+                this.loader = new Loader(this.frame.contentWindow!);
+                this.currModules = modules;
+                try { res(this.frame.contentWindow!); } catch (error) {}
             }
             this.frame.onload = () => {
                 const wnd = this.frame.contentWindow!
                 this.loader = new Loader(wnd, modules);
-                try { res(wnd);} catch (error) {}
+                this.currModules = modules;
+                try { res(wnd); } catch (error) {}
             };
             this.frame.onerror = (err) => {
-                try { rej(err);} catch (error) {}
+                try { rej(err); } catch (error) {}
             }
             this.frame.src = this.source;
         });

@@ -13,6 +13,8 @@ interface RegistryValue {
 }
 const REGISTRY_EXPIRY = 10000; // 10 seconds max
 
+export type FrameCommsListener = (key: CommsEventKey, value: unknown) => void;
+
 export class FrameComms {
     private readonly wnd: Window;
     private readonly registry = new Map<string, RegistryValue>();
@@ -20,10 +22,17 @@ export class FrameComms {
     private readonly origin: string
     private readonly channelId: string;
     private _ready = false;
+    private _listener: FrameCommsListener | undefined;
+    private listenerBuffer: [key: CommsEventKey, value: unknown][] = [];
 
-    public listener?: (key: CommsEventKey, value: unknown) => void;
+    public set listener(listener: FrameCommsListener) {
+        if(this.listenerBuffer.length > 0)
+        this.listenerBuffer.forEach(msg => listener(msg[0], msg[1]));
+        this.listenerBuffer = [];
+        this._listener = listener;
+    }
     public clearListener() {
-        if(typeof this.listener === "function") this.listener = undefined;
+        if(typeof this._listener === "function") this._listener = undefined;
     }
 
     constructor(wnd: Window, origin: string) {
@@ -50,7 +59,7 @@ export class FrameComms {
         this._ready = false;
         window.removeEventListener("message", this.handler);
         clearInterval(this.gc);
-        this.listener = undefined;
+        this._listener = undefined;
         this.registry.clear();
     }
 
@@ -75,8 +84,11 @@ export class FrameComms {
                 this._ready = true;
             }
             default: {
-                if(typeof this.listener === "function" && this.ready)
-                    this.listener(dt.key as CommsEventKey, dt.data);
+                if(!this.ready) return;
+                if(typeof this._listener === "function")
+                    this._listener(dt.key as CommsEventKey, dt.data);
+                else
+                    this.listenerBuffer.push([dt.key as CommsEventKey, dt.data]);
             }
         }
     }

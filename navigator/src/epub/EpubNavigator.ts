@@ -60,7 +60,7 @@ export class EpubNavigator extends VisualNavigator {
                 break;
             case "click": // TODO distinguish between click and tap!
             case "tap":
-                // Handle click
+                // Handle click (TODO separate from tap)
                 const edata = data as FrameClickEvent;
                 if (edata.interactiveElement) {
                     const element = new DOMParser().parseFromString(
@@ -103,6 +103,9 @@ export class EpubNavigator extends VisualNavigator {
                 // TODO properly update current locator!
                 this.changeResource(0);
                 break;
+            case "log":
+                console.log(this.currentLocation.href, ...(data as any[]));
+                break;
             default:
                 console.warn("Unknown frame msg key", key); // TODO remove/replace
                 break;
@@ -122,7 +125,6 @@ export class EpubNavigator extends VisualNavigator {
         this.cframe.msg.listener = (key: CommsEventKey, value: unknown) => {
             this.eventListener(key, value);
         }
-        this.eventListener("_pong", undefined);
 
         const idx = this.pub.readingOrder.findIndexWithHref(this.currentLocation.href);
         if (idx < 0)

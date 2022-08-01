@@ -6,7 +6,7 @@ export abstract class Snapper extends Module {
         const bstyle = wnd.document.body.style;
         bstyle.userSelect = "none";
 
-        console.log("Snapper Mounted");
+        comms.log("Snapper Mounted");
         return true;
     }
 
@@ -14,7 +14,7 @@ export abstract class Snapper extends Module {
         const bstyle = wnd.document.body.style;
         bstyle.removeProperty("user-select");
 
-        console.log("Snapper Unmounted");
+        comms.log("Snapper Unmounted");
         return true;
     }
 }

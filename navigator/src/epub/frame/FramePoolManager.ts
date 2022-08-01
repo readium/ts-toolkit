@@ -79,7 +79,10 @@ export default class FramePoolManager {
         })
 
         const creator = async (href: string) => {
-            if(this.pool.has(href)) return;
+            if(this.pool.has(href)) {
+                await this.pool.get(href)!.load(modules);
+                return;
+            }
             const itm = pub.readingOrder.findWithHref(href);
             if(!itm) return; // TODO throw?
             const burl = itm.toURL(pub.baseURL) || "";

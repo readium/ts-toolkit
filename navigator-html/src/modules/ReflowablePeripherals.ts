@@ -41,14 +41,14 @@ export class ReflowablePeripherals extends Module {
         this.comms = comms;
         wnd.document.addEventListener("click", this.onClicker);
 
-        console.log("ReflowablePeripherals Mounted");
+        comms.log("ReflowablePeripherals Mounted");
         return true;
     }
 
-    unmount(wnd: Window): boolean {
+    unmount(wnd: Window, comms: Comms): boolean {
         wnd.document.removeEventListener("click", this.onClicker);
 
-        console.log("ReflowablePeripherals Unmounted");
+        comms.log("ReflowablePeripherals Unmounted");
         return true;
     }
 }

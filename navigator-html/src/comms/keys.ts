@@ -4,6 +4,7 @@ export type CommsEventKey =
     "_pong" |
     "_unhandled" |
     "_ack" |
+    "log" |
     "error" |
     "click" |
     "tap" |

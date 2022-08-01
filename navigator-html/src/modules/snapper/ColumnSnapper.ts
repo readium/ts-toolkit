@@ -272,7 +272,7 @@ export class ColumnSnapper extends Snapper {
         // Safari hack, otherwise other evens won't register
         document.addEventListener('touchstart', () => {});
 
-        console.log("ColumnSnapper Mounted");
+        comms.log("ColumnSnapper Mounted");
         return true;
     }
 
@@ -291,7 +291,7 @@ export class ColumnSnapper extends Snapper {
 
         wnd.document.getElementById(SNAPPER_STYLE_ID)?.remove();
 
-        console.log("ColumnSnapper Unmounted");
+        comms.log("ColumnSnapper Unmounted");
         return super.unmount(wnd, comms);
     }
 }
