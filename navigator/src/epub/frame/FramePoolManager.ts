@@ -1,3 +1,4 @@
+import { ModuleName } from "../../../../navigator-html/src";
 import { Locator } from "../../../../shared/src/publication/Locator";
 import { Publication } from "../../../../shared/src/publication/Publication";
 import { MediaType } from "../../../../shared/src/util/mediatype/MediaType";
@@ -7,12 +8,14 @@ const UPPER_BOUNDARY = 5;
 const LOWER_BOUNDARY = 3;
 
 export default class FramePoolManager {
+    private readonly container: HTMLElement;
     private readonly positions: Locator[];
     private _currentFrame: FrameManager;
     private readonly pool: Map<string, FrameManager> = new Map();
     private readonly blobs: Map<string, string> = new Map();
 
-    constructor(positions: Locator[]) {
+    constructor(container: HTMLElement, positions: Locator[]) {
+        this.container = container;
         this.positions = positions;
     }
 
@@ -57,7 +60,7 @@ export default class FramePoolManager {
           );
     }
 
-    async update(pub: Publication, locator: Locator) {
+    async update(pub: Publication, locator: Locator, modules: ModuleName[]) {
         let i = this.positions.findIndex(l => l.locations.position === locator.locations.position);
         if(i < 0) throw Error("Locator not found in position list");
         const disposal: string[] = [];
@@ -106,13 +109,24 @@ export default class FramePoolManager {
                 const blobURL = this.finalizeDOM(doc, burl, itm.mediaType);
                 this.blobs.set(href, blobURL);
             }
+
             // Create <iframe>
-            this.pool.set(href, new FrameManager(this.blobs.get(href)!));
+            const fm = new FrameManager(this.blobs.get(href)!);
+            fm.hide();
+            this.container.appendChild(fm.iframe);
+            await fm.load(modules);
+            this.pool.set(href, fm);
         }
         await Promise.all(creation.map(href => creator(href)))
 
         // Update current frame
-        this._currentFrame = this.pool.get(this.positions[i].href)!;
+        const newFrame = this.pool.get(this.positions[i].href)!;
+        if(newFrame !== this._currentFrame) {
+            this._currentFrame?.hide(); // Hide current frame
+            await newFrame.load(modules); // In order to ensure modules match the latest configuration
+            newFrame.show(); // Show/activate new frame
+            this._currentFrame = newFrame;
+        }
     }
 
     get currentFrame(): FrameManager {

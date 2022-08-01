@@ -36,7 +36,6 @@ export class FrameComms {
         }
         this.gc = setInterval(() => {
             this.registry.forEach((v, k) => {
-                console.log(k, v);
                 if (performance.now() - v.time > REGISTRY_EXPIRY) {
                     console.warn(k, "event was never handled!");
                     this.registry.delete(k);
@@ -47,7 +46,6 @@ export class FrameComms {
         this.send("_ping", undefined);
     }
 
-    // TODO actually use this!
     public destroy() {
         this._ready = false;
         window.removeEventListener("message", this.handler);

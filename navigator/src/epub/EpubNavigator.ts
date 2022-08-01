@@ -35,7 +35,7 @@ export class EpubNavigator extends VisualNavigator {
     async load() {
         if (!this.positions?.length)
             this.positions = await this.pub.positionsFromManifest();
-        this.framePool = new FramePoolManager(this.positions);
+        this.framePool = new FramePoolManager(this.container, this.positions);
         this.currentLocation = this.positions[0];
         await this.apply();
     }
@@ -109,28 +109,20 @@ export class EpubNavigator extends VisualNavigator {
         }
     }
 
-    private async apply() {
-        // Change the current frame
-        this.cframe?.msg?.clearListener();
-        await this.framePool.update(this.pub, this.currentLocator);
-
-        // Clear container of elements
-        while (this.container.firstChild) {
-            this.container.removeChild(this.container.firstChild);
-        }
-
-        // Add the new current iframe
-        this.container.appendChild(this.cframe.iframe);
-
-        // Load iframe with modules
+    private determineModules() {
         let modules = Array.from(ModuleLibrary.keys()) as ModuleName[];
         if (this.readingProgression === ReadingProgression.ttb) modules = modules.filter((m) => m !== "column_snapper");
-        await this.cframe.load(modules);
+        return modules;
+    }
+
+    private async apply() {
+        await this.framePool.update(this.pub, this.currentLocator, this.determineModules());
 
         // Start listening to messages from the current iframe
         this.cframe.msg.listener = (key: CommsEventKey, value: unknown) => {
             this.eventListener(key, value);
         }
+        this.eventListener("_pong", undefined);
 
         const idx = this.pub.readingOrder.findIndexWithHref(this.currentLocation.href);
         if (idx < 0)
@@ -185,13 +177,13 @@ export class EpubNavigator extends VisualNavigator {
             this.changeResource(-1);
             return false;
         }
-        this.cframe.msg.send("go_prev", undefined, () => {
+        this.cframe.msg.send("go_prev", undefined, async () => {
             // TODO make this direction-independent!!
             this.currentLocation = this.findNearestPosition(
                 this.cframe.window.scrollX / this.cframe.window.document.scrollingElement!.scrollWidth
             );
             this.listeners.positionChanged(this.currentLocation);
-            this.framePool.update(this.pub, this.currentLocation);
+            await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
             cb();
         });
         return true;
@@ -202,13 +194,13 @@ export class EpubNavigator extends VisualNavigator {
             this.changeResource(1);
             return false;
         }
-        this.cframe.msg.send("go_next", undefined, () => {
+        this.cframe.msg.send("go_next", undefined, async () => {
             // TODO make this direction-independent!!
             this.currentLocation = this.findNearestPosition(
                 this.cframe.window.scrollX / this.cframe.window.document.scrollingElement!.scrollWidth
             );
             this.listeners.positionChanged(this.currentLocation);
-            this.framePool.update(this.pub, this.currentLocation);
+            await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
             cb();
         });
         return true;

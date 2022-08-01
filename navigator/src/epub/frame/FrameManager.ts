@@ -13,6 +13,7 @@ export default class FrameManager {
     constructor(source: string) {
         this.frame = document.createElement("iframe");
         this.frame.classList.add("readium-navigator-iframe");
+        this.frame.style.display = "none";
         this.source = source;
     }
 
@@ -29,7 +30,6 @@ export default class FrameManager {
             this.frame.onload = () => {
                 const wnd = this.frame.contentWindow!
                 this.loader = new Loader(wnd, modules);
-                this.comms = new FrameComms(wnd, this.source);
                 try { res(wnd);} catch (error) {}
             };
             this.frame.onerror = (err) => {
@@ -40,9 +40,19 @@ export default class FrameManager {
     }
 
     destroy() {
-        this.comms?.destroy();
+        this.hide();
         this.loader?.destroy();
         this.frame.remove(); // TODO this makes it unusable, should it?
+    }
+
+    hide() {
+        this.comms?.destroy();
+        this.frame.style.display = "none";
+    }
+
+    show() {
+        this.comms = new FrameComms(this.frame.contentWindow!, this.source);
+        this.frame.style.display = "";
     }
 
     get iframe() {
