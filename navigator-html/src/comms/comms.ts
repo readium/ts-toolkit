@@ -47,6 +47,15 @@ export class Comms {
                     this.preLog = [];
                 }
                 return;
+            } else if(this.channelId) {
+                // Enforce matching channel ID and origin
+                if(
+                    data._channel !== this.channelId ||
+                    event.origin !== this.origin
+                ) return;
+            } else {
+                // Ignore any messages beside _ping if not initialized
+                return;
             }
             this.handle(data);
         });
