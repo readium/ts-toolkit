@@ -20,6 +20,9 @@
     "reflowable",
     "embedded"
   ],
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --minify --sourcemap --target=es6,chrome58,firefox57,safari11,edge16 --outfile=dist/index.js"
+  },
   "main": "dist/index.js",
   "types": "types/index.d.ts",
   "files": [
@@ -43,6 +46,7 @@
     "@size-limit/webpack": "^7.0.8",
     "@size-limit/webpack-why": "^7.0.8",
     "@types/jest": "^27.4.1",
+    "esbuild": "^0.14.53",
     "size-limit": "^7.0.8",
     "tslib": "^2.3.1",
     "typescript": "^4.6.3"

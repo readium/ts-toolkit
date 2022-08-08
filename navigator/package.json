@@ -1,5 +1,5 @@
 {
-  "name": "@readium/shared",
+  "name": "@readium/navigator",
   "version": "1.2.0",
   "description": "Next generation SDK for publications in Web Apps",
   "author": "readium",
@@ -28,13 +28,7 @@
     "node": ">=14"
   },
   "scripts": {
-    "start": "tsdx watch",
-    "build": "tsdx build",
-    "test": "tsdx test",
-    "lint": "tsdx lint src shared/src",
-    "prepare": "tsdx build",
-    "size": "size-limit",
-    "analyze": "size-limit --why"
+    "build": "esbuild src/index.ts --bundle --minify --sourcemap --target=es6 --outfile=dist/index.js"
   },
   "prettier": {
     "printWidth": 80,
@@ -59,6 +53,8 @@
     "@size-limit/webpack": "^7.0.8",
     "@size-limit/webpack-why": "^7.0.8",
     "@types/jest": "^27.4.1",
+    "esbuild": "^0.14.53",
+    "path-browserify": "^1.0.1",
     "size-limit": "^7.0.8",
     "tslib": "^2.3.1",
     "typescript": "^4.6.3"
