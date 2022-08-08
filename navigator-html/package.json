@@ -1,0 +1,50 @@
+{
+  "name": "@readium/navigator-html",
+  "version": "0.0.1",
+  "description": "An embeddable solution for connecting frames of HTML publications with a Readium Navigator",
+  "author": "readium",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/readium/web.git"
+  },
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/readium/ts-toolkit/issues"
+  },
+  "homepage": "https://github.com/readium/ts-toolkit",
+  "keywords": [
+    "readium",
+    "web",
+    "epub",
+    "html",
+    "reflowable",
+    "embedded"
+  ],
+  "main": "dist/index.js",
+  "types": "types/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "types"
+  ],
+  "engines": {
+    "node": ">=14"
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "module": "dist/index.js",
+  "devDependencies": {
+    "@size-limit/esbuild": "^7.0.8",
+    "@size-limit/file": "^7.0.8",
+    "@size-limit/webpack": "^7.0.8",
+    "@size-limit/webpack-why": "^7.0.8",
+    "@types/jest": "^27.4.1",
+    "size-limit": "^7.0.8",
+    "tslib": "^2.3.1",
+    "typescript": "^4.6.3"
+  }
+}

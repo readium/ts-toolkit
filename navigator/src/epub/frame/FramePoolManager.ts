@@ -4,6 +4,8 @@ import { Publication } from "../../../../shared/src/publication/Publication";
 import { MediaType } from "../../../../shared/src/util/mediatype/MediaType";
 import FrameManager from "./FrameManager";
 
+import rcx from "../../readium/readium-css/css/dist/ReadiumCSS-before.css";
+
 const UPPER_BOUNDARY = 5;
 const LOWER_BOUNDARY = 3;
 
@@ -120,7 +122,7 @@ export default class FramePoolManager {
             await fm.load(modules);
             this.pool.set(href, fm);
         }
-        await Promise.all(creation.map(href => creator(href)))
+        await Promise.all(creation.map(href => creator(href)));
 
         // Update current frame
         const newFrame = this.pool.get(this.positions[i].href)!;
