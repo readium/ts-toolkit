@@ -37,26 +37,10 @@
     "trailingComma": "es5"
   },
   "module": "dist/index.js",
-  "size-limit": [
-    {
-      "path": "dist/shared.cjs.production.min.js",
-      "limit": "50 KB"
-    },
-    {
-      "path": "dist/shared.esm.js",
-      "limit": "50 KB"
-    }
-  ],
   "devDependencies": {
-    "@size-limit/esbuild": "^7.0.8",
-    "@size-limit/file": "^7.0.8",
-    "@size-limit/webpack": "^7.0.8",
-    "@size-limit/webpack-why": "^7.0.8",
-    "@types/jest": "^27.4.1",
-    "esbuild": "^0.14.53",
+    "@readium/shared": "workspace:*",
+    "@types/path-browserify": "^1.0.0",
     "path-browserify": "^1.0.1",
-    "size-limit": "^7.0.8",
-    "tslib": "^2.3.1",
-    "typescript": "^4.6.3"
+    "tslib": "^2.3.1"
   }
 }

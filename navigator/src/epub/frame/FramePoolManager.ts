@@ -1,10 +1,8 @@
 import { ModuleName } from "../../../../navigator-html/src";
-import { Locator } from "../../../../shared/src/publication/Locator";
-import { Publication } from "../../../../shared/src/publication/Publication";
-import { MediaType } from "../../../../shared/src/util/mediatype/MediaType";
+import { Locator } from "@readium/shared/src/publication/Locator";
+import { Publication } from "@readium/shared/src/publication/Publication";
+import { MediaType } from "@readium/shared/src/util/mediatype/MediaType";
 import FrameManager from "./FrameManager";
-
-import rcx from "../../readium/readium-css/css/dist/ReadiumCSS-before.css";
 
 const UPPER_BOUNDARY = 5;
 const LOWER_BOUNDARY = 3;

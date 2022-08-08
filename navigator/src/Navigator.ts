@@ -1,7 +1,7 @@
-import { Link } from "../../shared/src/publication/Link";
-import { Locator } from "../../shared/src/publication/Locator";
-import { Publication } from "../../shared/src/publication/Publication";
-import { ReadingProgression } from "../../shared/src/publication/ReadingProgression";
+import { Link } from "@readium/shared/src/publication/Link";
+import { Locator } from "@readium/shared/src/publication/Locator";
+import { Publication } from "@readium/shared/src/publication/Publication";
+import { ReadingProgression } from "@readium/shared/src/publication/ReadingProgression";
 
 type cbv = () => void;
 
