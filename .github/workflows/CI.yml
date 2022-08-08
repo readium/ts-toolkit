@@ -3,7 +3,7 @@ on:
   push:
     paths:
       - 'shared/**'
-      - '.github/workflows/CI-shared.yml'
+      - '.github/workflows/CI.yml'
 
 jobs:
   build:
