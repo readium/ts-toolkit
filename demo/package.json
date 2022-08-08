@@ -1,0 +1,12 @@
+{
+  "name": "ts-toolkit-demo",
+  "version": "1.0.0",
+  "description": "Demo web reader using the ts-toolkit",
+  "main": "src/index.ts",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.14.53",
+    "tslib": "^2.4.0",
+    "typescript": "^4.7.4"
+  }
+}
