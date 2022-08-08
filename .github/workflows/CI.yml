@@ -35,10 +35,10 @@ jobs:
         run: pnpm install
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm run lint
 
       - name: Test
-        run: pnpm test --ci --coverage --maxWorkers=2
+        run: pnpm run test --ci --coverage --maxWorkers=2
 
       - name: Build
-        run: pnpm build
+        run: pnpm run build
