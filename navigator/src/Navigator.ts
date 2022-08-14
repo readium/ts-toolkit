@@ -4,6 +4,7 @@ import { Publication } from "@readium/shared/src/publication/Publication";
 import { ReadingProgression } from "@readium/shared/src/publication/ReadingProgression";
 
 type cbv = () => void;
+type cbb = (ok: boolean) => void;
 
 export abstract class Navigator {
     abstract get publication(): Publication; // Publication rendered by this navigator.
@@ -12,22 +13,22 @@ export abstract class Navigator {
     /**
      * Moves to the position in the publication corresponding to the given {Locator}.
      */
-    abstract go(locator: Locator, animated: boolean, cb: cbv): boolean;
+    abstract go(locator: Locator, animated: boolean, cb: cbv): void;
 
     /**
      * Moves to the position in the publication targeted by the given link.
      */
-    abstract goLink(link: Link, animated: boolean, cb: cbv): boolean;
+    abstract goLink(link: Link, animated: boolean, cb: cbv): void;
 
     /**
      * Moves to the next content portion (eg. page) in the reading progression direction.
      */
-    abstract goForward(animated: boolean, cb: cbv): boolean;
+    abstract goForward(animated: boolean, cb: cbb): void;
 
     /**
      * Moves to the previous content portion (eg. page) in the reading progression direction.
      */
-    abstract goBackward(animated: boolean, cb: cbv): boolean;
+    abstract goBackward(animated: boolean, cb: cbb): void;
 
     // TODO listener
 

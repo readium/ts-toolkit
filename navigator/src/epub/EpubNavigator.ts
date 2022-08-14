@@ -12,6 +12,7 @@ export interface EpubNavigatorListeners {
     frameLoaded: (wnd: Window) => void;
     positionChanged: (locator: Locator) => void;
     click: (e: FrameClickEvent) => void;
+    showToc: () => void;
 }
 
 export class EpubNavigator extends VisualNavigator {
@@ -72,16 +73,20 @@ export class EpubNavigator extends VisualNavigator {
                         element.nodeName === "A" &&
                         element.hasAttribute("href")
                     ) {
-                        const origHref = element.attributes.getNamedItem("href")?.value;
-                        if (origHref?.startsWith("#")) {
+                        const origHref = element.attributes.getNamedItem("href")?.value!;
+                        if (origHref.startsWith("#")) {
                             console.warn("TODO reimplement anchor jump!");
                             // contentWindow.readium.scrollToId(origHref.substring(1));
                         } else {
                             // TODO see if this can be improved
-                            const could = this.goLink(new Link({
-                                href: path.join(path.dirname(this.currentLocation.href), origHref)
-                            }), false, () => { });
-                            if(!could) console.warn("Couldn't go to link for " + origHref);
+                            try {
+                                this.goLink(new Link({
+                                    href: path.join(path.dirname(this.currentLocation.href), origHref)
+                                }), false, () => { });
+                            } catch (error) {
+                                console.warn(`Couldn't go to link for ${origHref}: ${error}`);
+                                this.listeners.click(edata);
+                            }
                         }
                     } else console.log("Clicked on", element);
                 } else {
@@ -100,8 +105,10 @@ export class EpubNavigator extends VisualNavigator {
                 this.changeResource(-1);
                 break;
             case "swipe":
-                // TODO properly update current locator!
-                this.changeResource(0);
+                // Swipe event
+                break;
+            case "progress":
+                this.syncLocation(data as number);
                 break;
             case "log":
                 console.log(this.currentLocation.href, ...(data as any[]));
@@ -118,13 +125,17 @@ export class EpubNavigator extends VisualNavigator {
         return modules;
     }
 
-    private async apply() {
-        await this.framePool.update(this.pub, this.currentLocator, this.determineModules());
-
-        // Start listening to messages from the current iframe
+    // Start listening to messages from the current iframe
+    private attachListener() {
         this.cframe.msg.listener = (key: CommsEventKey, value: unknown) => {
             this.eventListener(key, value);
         }
+    }
+
+    private async apply(withListener=true) {
+        await this.framePool.update(this.pub, this.currentLocator, this.determineModules());
+
+        if(withListener) this.attachListener();
 
         const idx = this.pub.readingOrder.findIndexWithHref(this.currentLocation.href);
         if (idx < 0)
@@ -132,10 +143,6 @@ export class EpubNavigator extends VisualNavigator {
         if (this.wentBack) {
             this.wentBack = false;
             this.cframe.msg.send("go_end", undefined);
-            const shadowPositionsList = [...this.positions];
-            this.currentLocation = shadowPositionsList?.reverse().find(
-                (p) => p.href === this.currentLocation.href
-            ) ?? shadowPositionsList[shadowPositionsList.length - 1];
         }
     }
 
@@ -143,7 +150,7 @@ export class EpubNavigator extends VisualNavigator {
         this.framePool?.destroy();
     }
 
-    private changeResource(relative: number): boolean {
+    private async changeResource(relative: number): Promise<boolean> {
         if (relative === 0) return false;
         const curr = this.pub.readingOrder.findIndexWithHref(this.currentLocation.href);
         const i = Math.max(
@@ -155,7 +162,7 @@ export class EpubNavigator extends VisualNavigator {
 
         // Apply change
         this.currentLocation = this.positions.find(p => p.href === this.pub.readingOrder.items[i].href)!;
-        this.apply();
+        await this.apply();
 
         return true;
     }
@@ -166,46 +173,46 @@ export class EpubNavigator extends VisualNavigator {
             (p) => p.href === this.currentLocation.href
         );
         let pos = this.currentLocation;
-        potentialPositions.forEach((p) => {
+
+        // Find the last locator with a progrssion that's
+        // smaller than or equal to the requested progression.
+        potentialPositions.some((p) => {
             const pr = p.locations.progression ?? 0;
-            if (fromProgression < pr) pos = p;
-            else return;
+            if (fromProgression <= pr) {
+                pos = p;
+                return true;
+            }
+            else return false;
         });
         return pos;
     }
 
-    goBackward(animated: boolean, cb: () => void): boolean {
-        if (this.cframe.atLeft) {
-            this.changeResource(-1);
-            return false;
-        }
-        this.cframe.msg.send("go_prev", undefined, async () => {
-            // TODO make this direction-independent!!
-            this.currentLocation = this.findNearestPosition(
-                this.cframe.window.scrollX / this.cframe.window.document.scrollingElement!.scrollWidth
-            );
-            this.listeners.positionChanged(this.currentLocation);
-            await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
-            cb();
-        });
-        return true;
+    private async syncLocation(iframeProgress: number) {
+        this.currentLocation = this.findNearestPosition(iframeProgress);
+        this.listeners.positionChanged(this.currentLocation);
+        await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
     }
 
-    goForward(animated: boolean, cb: () => void): boolean {
-        if (this.cframe.atRight) {
-            this.changeResource(1);
-            return false;
-        }
-        this.cframe.msg.send("go_next", undefined, async () => {
-            // TODO make this direction-independent!!
-            this.currentLocation = this.findNearestPosition(
-                this.cframe.window.scrollX / this.cframe.window.document.scrollingElement!.scrollWidth
-            );
-            this.listeners.positionChanged(this.currentLocation);
-            await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
-            cb();
+    goBackward(animated: boolean, cb: (ok: boolean) => void): void {
+        this.cframe.msg.send("go_prev", undefined, async (ack) => {
+            if(ack)
+                // OK
+                cb(true);
+            else
+                // Need to change resources because we're at the beginning of the current one
+                cb(await this.changeResource(-1));
         });
-        return true;
+    }
+
+    goForward(animated: boolean, cb: (ok: boolean) => void): void {
+        this.cframe.msg.send("go_next", undefined, async (ack) => {
+            if(ack)
+                // OK
+                cb(true);
+            else
+                // Need to change resources because we're at the end of the current one
+                cb(await this.changeResource(1));
+        });
     }
 
     get currentLocator(): Locator {
@@ -221,22 +228,36 @@ export class EpubNavigator extends VisualNavigator {
         return this.pub;
     }
 
-    go(locator: Locator, animated: boolean, cb: () => void): boolean {
+    go(locator: Locator, animated: boolean, cb: () => void): void {
         const href = locator.href.split("#")[0];
         // TODO do we let clients go to a resource too? Seems to be the case in kotlin
-        const link = this.pub.readingOrder.findWithHref(href);
-        if(!link) return false;
+        let link = this.pub.readingOrder.findWithHref(href);
+        if(!link) {
+            link = this.pub.resources?.findWithHref(href);
+            if(!link) throw Error(`Nothing in readingOrder or resources with href ${href} to go to`);
+            if(link.rels?.has("contents")) {
+                this.listeners.showToc();
+                return cb();
+            }
+            else throw Error(`${href} is only in resources, not readingOrder. Can't go to it`);
+        }
 
-        // TODO we need to use other parts of locator.locations to e.g. jump in a resource... right?
-
-        this.currentLocation = this.positions.find(p => p.href === link.href)!;
-        this.apply();
-
-        cb(); // Should be used when we jump inside a resource
-        return true;
+        this.currentLocation = this.positions.find(p => p.href === link!.href)!;
+        const hasProgression = !isNaN(locator.locations.progression || 0) && locator.locations.progression! > 0;
+        this.apply(!hasProgression).then(() => {
+            if(hasProgression)
+                this.cframe.msg.send("go_progression", locator.locations.progression!, () => {
+                    // Now that we've gone to the right progression, we can attach the listeners.
+                    // Doing this only at this stage reduces janky UI with multiple progression updates.
+                    this.attachListener();
+                    cb();
+                });
+            else
+                cb();
+        });
     }
 
-    goLink(link: Link, animated: boolean, cb: () => void): boolean {
+    goLink(link: Link, animated: boolean, cb: () => void): void {
         return this.go(link.locator, animated, cb);
     }
 }

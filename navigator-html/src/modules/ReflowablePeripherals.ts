@@ -32,6 +32,8 @@ export class ReflowablePeripherals extends Module {
         // if(handleDecorationClickEvent) TODO
         //     return;
 
+        event.preventDefault(); // TODO when not to prevent?
+
         this.comms.send("click", clickEvent);
     }
     private readonly onClicker = this.onClick.bind(this);
