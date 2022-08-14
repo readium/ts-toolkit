@@ -20,7 +20,7 @@ export class FrameComms {
     private readonly registry = new Map<string, RegistryValue>();
     private readonly gc: number;
     private readonly origin: string
-    private readonly channelId: string;
+    public readonly channelId: string;
     private _ready = false;
     private _listener: FrameCommsListener | undefined;
     private listenerBuffer: [key: CommsEventKey, value: unknown][] = [];
@@ -55,12 +55,17 @@ export class FrameComms {
         this.send("_ping", undefined);
     }
 
-    public destroy() {
+    public halt() {
         this._ready = false;
         window.removeEventListener("message", this.handler);
         clearInterval(this.gc);
         this._listener = undefined;
         this.registry.clear();
+    }
+
+    public resume() {
+        window.addEventListener("message", this.handler);
+        this._ready = true;
     }
 
     private handle(e: MessageEvent) {

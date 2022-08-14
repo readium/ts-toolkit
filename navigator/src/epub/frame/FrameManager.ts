@@ -50,12 +50,13 @@ export default class FrameManager {
     }
 
     hide() {
-        this.comms?.destroy();
+        this.comms?.halt();
         this.frame.style.display = "none";
     }
 
     show() {
-        this.comms = new FrameComms(this.frame.contentWindow!, this.source);
+        if(this.comms) this.comms.resume();
+        else this.comms = new FrameComms(this.frame.contentWindow!, this.source);
         this.frame.style.display = "";
     }
 
