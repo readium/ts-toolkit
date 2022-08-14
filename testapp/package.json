@@ -1,5 +1,5 @@
 {
-  "name": "ts-toolkit-demo",
+  "name": "ts-toolkit-testapp",
   "version": "1.0.0",
   "description": "Demo web reader using the ts-toolkit",
   "main": "src/index.ts",
