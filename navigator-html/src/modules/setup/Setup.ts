@@ -28,8 +28,6 @@ export abstract class Setup extends Module {
     }
 
     unmount(wnd: Window, comms: Comms): boolean {
-        comms.unregister("set_property", "setup");
-        comms.unregister("remove_property", "setup");
         wnd.removeEventListener("error", this.wndOnErr);
         comms.log("Setup Unmounted");
         return true;

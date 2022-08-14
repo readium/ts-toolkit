@@ -278,11 +278,7 @@ export class ColumnSnapper extends Snapper {
 
     unmount(wnd: Window, comms: Comms): boolean {
         this.snappingCancelled = true;
-        comms.unregister("go_next", ColumnSnapper.moduleName);
-        comms.unregister("go_prev", ColumnSnapper.moduleName);
-        comms.unregister("go_start", ColumnSnapper.moduleName);
-        comms.unregister("go_end", ColumnSnapper.moduleName);
-        comms.unregister("go_progression", ColumnSnapper.moduleName);
+        comms.unregisterAll(ColumnSnapper.moduleName);
         this.observer.disconnect();
 
         wnd.removeEventListener("touchstart", this.onTouchStarter);

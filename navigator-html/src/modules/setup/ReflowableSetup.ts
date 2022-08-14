@@ -48,6 +48,7 @@ export class ReflowableSetup extends Setup {
     }
 
     unmount(wnd: Window, comms: Comms): boolean {
+        comms.unregisterAll(ReflowableSetup.moduleName);
         wnd.document.head.querySelector(`#${VIEWPORT_META_TAG_ID}`)?.remove();
         wnd.removeEventListener("orientationchange", this.onViewportWidthChanged);
 

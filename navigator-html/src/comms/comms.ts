@@ -95,6 +95,10 @@ export class Comms {
         listeners.splice(listeners.findIndex(l => l.module === module), 1);
     }
 
+    public unregisterAll(module: string) {
+        this.registrar.forEach((v, k) => this.registrar.set(k, v.filter(r => r.module !== module)));
+    }
+
     // Convenience function for logging data
     private preLog: any[] = [];
     public log(...data: any[]) {
