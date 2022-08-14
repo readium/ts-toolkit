@@ -1,4 +1,4 @@
-import { Loader, ModuleName } from "../../../../navigator-html/src";
+import { Loader, ModuleName } from "@readium/navigator-html-injectables/src";
 import { FrameComms } from "./FrameComms";
 
 

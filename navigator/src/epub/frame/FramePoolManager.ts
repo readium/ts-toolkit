@@ -1,4 +1,4 @@
-import { ModuleName } from "../../../../navigator-html/src";
+import { ModuleName } from "@readium/navigator-html-injectables/src";
 import { Locator } from "@readium/shared/src/publication/Locator";
 import { Publication } from "@readium/shared/src/publication/Publication";
 import { MediaType } from "@readium/shared/src/util/mediatype/MediaType";

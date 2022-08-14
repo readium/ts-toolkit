@@ -4,8 +4,8 @@ import { Publication } from "@readium/shared/src/publication/Publication";
 import { ReadingProgression } from "@readium/shared/src/publication/ReadingProgression";
 import { VisualNavigator } from "../";
 import FramePoolManager from "./frame/FramePoolManager";
-import { CommsEventKey, ModuleLibrary, ModuleName } from "../../../navigator-html/src";
-import { FrameClickEvent } from "../../../navigator-html/src/modules/ReflowablePeripherals";
+import { CommsEventKey, ModuleLibrary, ModuleName } from "@readium/navigator-html-injectables/src";
+import { FrameClickEvent } from "@readium/navigator-html-injectables/src/modules/ReflowablePeripherals";
 import * as path from "path-browserify";
 
 export interface EpubNavigatorListeners {

@@ -39,6 +39,7 @@
   "module": "dist/index.js",
   "devDependencies": {
     "@readium/shared": "workspace:*",
+    "@readium/navigator-html-injectables": "workspace:*",
     "@types/path-browserify": "^1.0.0",
     "path-browserify": "^1.0.1",
     "tslib": "^2.3.1"

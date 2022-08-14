@@ -5,7 +5,7 @@ import {
     CommsAck,
     mid,
     CommsEventKey,
-} from "../../../../navigator-html/src";
+} from "@readium/navigator-html-injectables/src";
 
 interface RegistryValue {
     time: number;

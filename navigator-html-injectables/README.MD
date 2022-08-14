@@ -1,4 +1,4 @@
-# navigator-html
+# navigator-html-injectables
 
 This package can be used either inside a reflowable (X)HTML or outside (in a javascript environment) to provide access and control over a resource from a navigator on any modern browser or embedded browser frame. This is a replacement for the javascript stubs found in the mobile SDKs, such as [this](https://github.com/readium/kotlin-toolkit/tree/develop/readium/navigator/src/main/assets/_scripts/src).
 

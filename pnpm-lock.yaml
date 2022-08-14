@@ -14,17 +14,19 @@ importers:
 
   navigator:
     specifiers:
+      '@readium/navigator-html-injectables': workspace:*
       '@readium/shared': workspace:*
       '@types/path-browserify': ^1.0.0
       path-browserify: ^1.0.1
       tslib: ^2.3.1
     devDependencies:
+      '@readium/navigator-html-injectables': link:../navigator-html-injectables
       '@readium/shared': link:../shared
       '@types/path-browserify': 1.0.0
       path-browserify: 1.0.1
       tslib: 2.4.0
 
-  navigator-html:
+  navigator-html-injectables:
     specifiers:
       tslib: ^2.3.1
     devDependencies:
