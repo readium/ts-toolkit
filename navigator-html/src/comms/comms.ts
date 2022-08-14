@@ -26,8 +26,8 @@ export type CommsCallback = (data: unknown, ack: CommsAck) => void; // TODO: may
 export class Comms {
     private destination: MessageEventSource | null = null;
     private registrar = new Map<CommsCommandKey, Registrant[]>();
-    private origin: string;
-    private channelId: string;
+    private origin: string = "";
+    private channelId: string = "";
 
     constructor(wnd: Window) {
         wnd.addEventListener("message", (event) => {
@@ -42,6 +42,20 @@ export class Comms {
                     this.destination = event.source;
                     this.origin = event.origin;
                     this.channelId = data._channel;
+
+                    // Make sure we're communicating with a host on the same comms version
+                    if(data._readium !== COMMS_VERSION) {
+                        if(data._readium > COMMS_VERSION)
+                            this.send("error", `received comms version ${data._readium} higher than ${COMMS_VERSION}`);
+                        else
+                            this.send("error", `received comms version ${data._readium} lower than ${COMMS_VERSION}`);
+
+                        this.destination = null;
+                        this.origin = "";
+                        this.channelId = "";
+                        return;
+                    }
+
                     this.send("_pong", undefined);
                     this.preLog.forEach(d => this.send("log", d));
                     this.preLog = [];
