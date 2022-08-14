@@ -27,6 +27,10 @@ export class ColumnSnapper extends Snapper {
         return value - (value % this.wnd.innerWidth);
     }
 
+    reportProgress() {
+        this.comms.send("progress", this.wnd.scrollX / this.doc().scrollWidth);
+    }
+
     private snappingCancelled = false;
     private alreadyScrollLeft = 0;
     private overscroll = 0;
@@ -79,6 +83,7 @@ export class ColumnSnapper extends Snapper {
                     this.clearTouches();
                     doc.style.removeProperty("transform");
                     doc.scrollLeft = so;
+                    this.reportProgress();
                 }
             }
             this.wnd.requestAnimationFrame(step);
@@ -86,6 +91,7 @@ export class ColumnSnapper extends Snapper {
             doc.style.removeProperty("transform");
             this.wnd.requestAnimationFrame(() => {
                 doc.scrollLeft = this.snapOffset(currentOffset + delta);
+                this.reportProgress();
             });
             this.clearTouches();
         }
@@ -204,11 +210,10 @@ export class ColumnSnapper extends Snapper {
         this.observer.observe(wnd.document.body);
 
         const scrollToOffset = (offset: number): boolean => {
+            const oldScrollLeft = this.doc().scrollLeft;
             this.doc().scrollLeft = this.snapOffset(offset); // TODO assert if never undefined (same for rest of !)
 
-            // In some case the scrollX cannot reach the position respecting to innerWidth
-            const diff = Math.abs(wnd.scrollX - offset) / wnd.innerWidth;
-            return diff > 0.01; // TODO I don't like this 0.01
+            return oldScrollLeft !== this.doc().scrollLeft;
         }
 
         window.addEventListener("orientationchange", () => { // TODO implement unregister!!!
@@ -234,34 +239,42 @@ export class ColumnSnapper extends Snapper {
             const factor = isRTL(wnd) ? -1 : 1;
             const offset = documentWidth * position * factor;
             this.doc().scrollLeft = this.snapOffset(offset);
+            this.reportProgress();
             ack(true);
         })
 
         comms.register("go_end", ColumnSnapper.moduleName, (_, ack) => {
             const factor = isRTL(wnd) ? -1 : 1;
-            this.doc().scrollLeft = this.snapOffset(
-                this.doc().scrollWidth * factor
-            );
+            const final = this.doc().scrollWidth * factor;
+            if(this.doc().scrollLeft === final) return ack(false);
+            this.doc().scrollLeft = this.snapOffset(final);
+            this.reportProgress();
             ack(true);
         })
 
         comms.register("go_start", ColumnSnapper.moduleName, (_, ack) => {
+            if(this.doc().scrollLeft === 0) return ack(false);
             this.doc().scrollLeft = 0;
+            this.reportProgress();
             ack(true);
         })
 
         comms.register("go_prev", ColumnSnapper.moduleName, (_, ack) => {
             const documentWidth = this.doc().scrollWidth!;
-            var offset = wnd.scrollX - wnd.innerWidth;
-            var minOffset = isRTL(wnd) ? - (documentWidth - wnd.innerWidth) : 0;
-            ack(!scrollToOffset(Math.max(offset, minOffset)));
+            const offset = wnd.scrollX - wnd.innerWidth;
+            const minOffset = isRTL(wnd) ? - (documentWidth - wnd.innerWidth) : 0;
+            const change = scrollToOffset(Math.max(offset, minOffset));
+            if(change) this.reportProgress();
+            ack(change);
         });
 
         comms.register("go_next", ColumnSnapper.moduleName, (_, ack) => {
             const documentWidth = this.doc().scrollWidth!;
-            var offset = wnd.scrollX + wnd.innerWidth;
-            var maxOffset = isRTL(wnd) ? 0 : documentWidth - wnd.innerWidth;
-            ack(!scrollToOffset(Math.min(offset, maxOffset)));
+            const offset = wnd.scrollX + wnd.innerWidth;
+            const maxOffset = isRTL(wnd) ? 0 : documentWidth - wnd.innerWidth;
+            const change = scrollToOffset(Math.min(offset, maxOffset));
+            if(change) this.reportProgress();
+            ack(change);
         });
 
         // Add interaction listeners

@@ -11,7 +11,8 @@ export type CommsEventKey =
     "tap_more" |
     "no_more" |
     "no_less" |
-    "swipe";
+    "swipe" |
+    "progress";
 ;
 
 export type CommsCommandKey =
@@ -24,5 +25,6 @@ export type CommsCommandKey =
     "go_start" |
     "go_progression" |
     "set_property" |
-    "remove_property";
+    "remove_property" |
+    "exact_progress";
 ;
