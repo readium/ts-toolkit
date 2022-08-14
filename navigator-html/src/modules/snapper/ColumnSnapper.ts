@@ -139,11 +139,14 @@ export class ColumnSnapper extends Snapper {
             const scrollOffset = (this.doc().scrollLeft > 0) ? this.doc().scrollLeft : this.alreadyScrollLeft;
             if(this.cachedScrollWidth <= this.wnd.innerWidth) {
                 // Only a single page, meaning any swipe triggers next/prev
+                this.reportProgress();
                 if(dragOffset > 5) this.comms.send("no_more", undefined);
                 if(dragOffset < -5) this.comms.send("no_less", undefined);
             } else if(scrollOffset < 5 && dragOffset < 5) {
+                this.reportProgress();
                 this.comms.send("no_less", undefined);
             } else if((this.cachedScrollWidth - scrollOffset - this.wnd.innerWidth) < 5 && dragOffset > 5) {
+                this.reportProgress();
                 this.comms.send("no_more", undefined);
             }
 
