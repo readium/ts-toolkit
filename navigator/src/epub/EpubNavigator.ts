@@ -9,7 +9,7 @@ export interface EpubNavigatorListeners {
     frameLoaded: (wnd: Window) => void;
     positionChanged: (locator: Locator) => void;
     click: (e: FrameClickEvent) => void;
-    showToc: () => void;
+    // showToc: () => void;
 }
 
 export class EpubNavigator extends VisualNavigator {
@@ -232,10 +232,10 @@ export class EpubNavigator extends VisualNavigator {
         if(!link) {
             link = this.pub.resources?.findWithHref(href);
             if(!link) throw Error(`Nothing in readingOrder or resources with href ${href} to go to`);
-            if(link.rels?.has("contents")) {
+            /*if(link.rels?.has("contents")) {
                 this.listeners.showToc();
                 return cb();
-            }
+            }*/
             else throw Error(`${href} is only in resources, not readingOrder. Can't go to it`);
         }
 
