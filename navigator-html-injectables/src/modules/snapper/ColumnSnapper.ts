@@ -17,7 +17,8 @@ enum ScrollTouchState {
  */
 export class ColumnSnapper extends Snapper {
     static readonly moduleName = "column_snapper";
-    private observer!: ResizeObserver;
+    private resizeObserver!: ResizeObserver;
+    private mutationObserver!: MutationObserver;
     private wnd!: Window;
     private comms!: Comms;
     private doc() { return this.wnd.document.scrollingElement as HTMLElement; }
@@ -158,6 +159,16 @@ export class ColumnSnapper extends Snapper {
     }
     private readonly onTouchEnder = this.onTouchEnd.bind(this);
 
+    private onWidthChange() {
+        this.cachedScrollWidth = this.doc().scrollWidth!;
+        if(this.comms.ready)
+            // This function can be called while the frame is still hidden
+            // so it should only be snapped if it's actually active because
+            // it sends a comms message to update progress.
+            this.snapCurrentOffset();
+    }
+    private readonly onWidthChanger = this.onWidthChange.bind(this);
+
     onTouchMove(e: TouchEvent) {
         if(this.touchState === ScrollTouchState.END) return;
         if(this.touchState === ScrollTouchState.START)
@@ -207,10 +218,15 @@ export class ColumnSnapper extends Snapper {
         `;
         wnd.document.head.appendChild(d);
 
-        this.observer = new ResizeObserver(() => {
+        this.resizeObserver = new ResizeObserver(() => {
             appendVirtualColumnIfNeeded(wnd);
         });
-        this.observer.observe(wnd.document.body);
+        this.resizeObserver.observe(wnd.document.body);
+        this.mutationObserver = new MutationObserver(() => {
+            this.wnd.requestAnimationFrame(() => this.cachedScrollWidth = this.doc().scrollWidth!);
+        });
+        wnd.frameElement && this.mutationObserver.observe(wnd.frameElement, {attributes: true, attributeFilter: ["style"]});
+        this.mutationObserver.observe(wnd.document, {attributes: true, attributeFilter: ["style"]});
 
         const scrollToOffset = (offset: number): boolean => {
             const oldScrollLeft = this.doc().scrollLeft;
@@ -219,14 +235,8 @@ export class ColumnSnapper extends Snapper {
             return oldScrollLeft !== this.doc().scrollLeft;
         }
 
-        window.addEventListener("orientationchange", () => { // TODO implement unregister!!!
-            this.cachedScrollWidth = this.doc().scrollWidth!;
-            this.snapCurrentOffset();
-        });
-        window.addEventListener("resize", () => { // TODO implement unregister!!!
-            this.cachedScrollWidth = this.doc().scrollWidth!;
-            this.snapCurrentOffset();
-        });
+        window.addEventListener("orientationchange", this.onWidthChanger);
+        window.addEventListener("resize", this.onWidthChanger);
         this.wnd.requestAnimationFrame(() => this.cachedScrollWidth = this.doc().scrollWidth!);
 
         comms.register("go_progression", ColumnSnapper.moduleName, (data, ack) => {
@@ -295,11 +305,15 @@ export class ColumnSnapper extends Snapper {
     unmount(wnd: Window, comms: Comms): boolean {
         this.snappingCancelled = true;
         comms.unregisterAll(ColumnSnapper.moduleName);
-        this.observer.disconnect();
+        this.resizeObserver.disconnect();
+        this.mutationObserver.disconnect();
 
         wnd.removeEventListener("touchstart", this.onTouchStarter);
         wnd.removeEventListener("touchend", this.onTouchEnder);
         wnd.removeEventListener("touchmove", this.onTouchMover);
+
+        window.removeEventListener("orientationchange", this.onWidthChanger);
+        window.removeEventListener("resize", this.onWidthChanger);
 
         wnd.document.getElementById(SNAPPER_STYLE_ID)?.remove();
 

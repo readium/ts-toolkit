@@ -120,6 +120,10 @@ export class Comms {
         else this.send("log", data);
     }
 
+    public get ready() {
+        return !!this.destination;
+    }
+
     public send(key: CommsEventKey, data: unknown, id: unknown = undefined, transfer: Transferable[] = []) {
         if(!this.destination) throw Error("Attempted to send comms message before destination has been initialized");
         this.destination.postMessage({
