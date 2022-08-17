@@ -1,7 +1,5 @@
 import { ModuleName } from "@readium/navigator-html-injectables/src";
-import { Locator } from "@readium/shared/src/publication/Locator";
-import { Publication } from "@readium/shared/src/publication/Publication";
-import { MediaType } from "@readium/shared/src/util/mediatype/MediaType";
+import { Locator, Publication, MediaType } from "@readium/shared/src";
 import FrameManager from "./FrameManager";
 
 const UPPER_BOUNDARY = 5;

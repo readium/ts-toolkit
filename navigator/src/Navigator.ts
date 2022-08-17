@@ -1,7 +1,4 @@
-import { Link } from "@readium/shared/src/publication/Link";
-import { Locator } from "@readium/shared/src/publication/Locator";
-import { Publication } from "@readium/shared/src/publication/Publication";
-import { ReadingProgression } from "@readium/shared/src/publication/ReadingProgression";
+import { Link, Locator, Publication, ReadingProgression } from "@readium/shared/src";
 
 type cbv = () => void;
 type cbb = (ok: boolean) => void;
