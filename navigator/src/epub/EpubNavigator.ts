@@ -185,7 +185,9 @@ export class EpubNavigator extends VisualNavigator {
     }
 
     private async syncLocation(iframeProgress: number) {
-        this.currentLocation = this.findNearestPosition(iframeProgress);
+        this.currentLocation = this.findNearestPosition(iframeProgress).copyWithLocations({
+            progression: iframeProgress // Most accurate progression in resource
+        });
         this.listeners.positionChanged(this.currentLocation);
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
     }
