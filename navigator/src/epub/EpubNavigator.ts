@@ -8,7 +8,9 @@ import * as path from "path-browserify";
 export interface EpubNavigatorListeners {
     frameLoaded: (wnd: Window) => void;
     positionChanged: (locator: Locator) => void;
-    click: (e: FrameClickEvent) => void;
+    tap: (e: FrameClickEvent) => boolean; // Return true to prevent handling here
+    click: (e: FrameClickEvent) => boolean;  // Return true to prevent handling here
+    miscPointer: (amount: number) => void;
     // showToc: () => void;
 }
 
@@ -56,9 +58,8 @@ export class EpubNavigator extends VisualNavigator {
                 this.listeners.frameLoaded(this.cframe.iframe.contentWindow!);
                 this.listeners.positionChanged(this.currentLocation)
                 break;
-            case "click": // TODO distinguish between click and tap!
+            case "click":
             case "tap":
-                // Handle click (TODO separate from tap)
                 const edata = data as FrameClickEvent;
                 if (edata.interactiveElement) {
                     const element = new DOMParser().parseFromString(
@@ -82,18 +83,24 @@ export class EpubNavigator extends VisualNavigator {
                                 }), false, () => { });
                             } catch (error) {
                                 console.warn(`Couldn't go to link for ${origHref}: ${error}`);
-                                this.listeners.click(edata);
+                                if(key === "click") this.listeners.click(edata);
+                                else this.listeners.tap(edata);
                             }
                         }
                     } else console.log("Clicked on", element);
                 } else {
+                    const handled = key === "click" ? this.listeners.click(edata) : this.listeners.tap(edata);
+                    if(handled) break;
                     const oneQuarter = (this.cframe.window.innerWidth * window.devicePixelRatio) / 4;
                     // open UI if middle screen is clicked/tapped
-                    if (edata.x >= oneQuarter && edata.x <= oneQuarter * 3) this.listeners.click(edata);
+                    if (edata.x >= oneQuarter && edata.x <= oneQuarter * 3) this.listeners.miscPointer(1);
                     // if (scrollMode.value) return; TODO!
                     if (edata.x < oneQuarter) this.goLeft(false, () => { }); // Go left if left quarter clicked
                     else if (edata.x > oneQuarter * 3) this.goRight(false, () => { }); // Go right if right quarter clicked
                 }
+                break;
+            case "tap_more":
+                this.listeners.miscPointer(data as number);
                 break;
             case "no_more":
                 this.changeResource(1);
