@@ -26,5 +26,7 @@ export type CommsCommandKey =
     "go_progression" |
     "set_property" |
     "remove_property" |
-    "exact_progress";
+    "exact_progress" |
+    "protect" |
+    "unprotect";
 ;
