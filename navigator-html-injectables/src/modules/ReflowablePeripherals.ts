@@ -15,7 +15,7 @@ export class ReflowablePeripherals extends Module {
     private wnd!: Window;
     private comms!: Comms;
 
-    onClick(event: PointerEvent) {
+    onPoint(event: PointerEvent) {
         if(!this.wnd.getSelection()?.isCollapsed)
             // There's an ongoing selection, the tap will dismiss it so we don't forward it.
             return;
@@ -34,19 +34,27 @@ export class ReflowablePeripherals extends Module {
             interactiveElement: nearestInteractiveElement(event.target as Element)?.outerHTML
         } as FrameClickEvent);
     }
+    private readonly onPointer = this.onPoint.bind(this);
+
+    onClick(event: MouseEvent) {
+        // To prevent certain browser actions
+        event.preventDefault(); // TODO when not to prevent?
+    }
     private readonly onClicker = this.onClick.bind(this);
 
     mount(wnd: Window, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
-        wnd.document.addEventListener("pointerup", this.onClicker);
+        wnd.document.addEventListener("pointerup", this.onPointer);
+        wnd.document.addEventListener("click", this.onClicker);
 
         comms.log("ReflowablePeripherals Mounted");
         return true;
     }
 
     unmount(wnd: Window, comms: Comms): boolean {
-        wnd.document.removeEventListener("pointerup", this.onClicker);
+        wnd.document.removeEventListener("pointerup", this.onPointer);
+        wnd.document.removeEventListener("click", this.onClicker);
 
         comms.log("ReflowablePeripherals Unmounted");
         return true;
