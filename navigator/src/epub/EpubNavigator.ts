@@ -242,7 +242,7 @@ export class EpubNavigator extends VisualNavigator {
         }
 
         this.currentLocation = this.positions.find(p => p.href === link!.href)!;
-        const hasProgression = !isNaN(locator.locations.progression || 0) && locator.locations.progression! > 0;
+        const hasProgression = !isNaN(locator.locations.progression as number) && locator.locations.progression! > 0;
         this.apply(!hasProgression).then(() => {
             if(hasProgression)
                 this.cframe.msg.send("go_progression", locator.locations.progression!, () => {
