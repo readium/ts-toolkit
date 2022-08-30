@@ -16,6 +16,7 @@ export default class FrameManager {
         this.frame.style.visibility = "hidden";
         this.frame.style.opacity = "0";
         this.frame.style.position = "absolute";
+        this.frame.style.pointerEvents = "none";
         this.frame.style.transition = "visibility 0s, opacity 0.1s linear";
         this.source = source;
     }
@@ -55,6 +56,7 @@ export default class FrameManager {
     hide() {
         this.frame.style.visibility = "hidden";
         this.frame.style.opacity = "0";
+        this.frame.style.pointerEvents = "none";
         this.comms?.send("unfocus", undefined);
         this.comms?.halt();
     }
@@ -62,8 +64,9 @@ export default class FrameManager {
     show() {
         if(this.comms) this.comms.resume();
         else this.comms = new FrameComms(this.frame.contentWindow!, this.source);
-        this.frame.style.visibility = "";
-        this.frame.style.opacity = "1";
+        this.frame.style.removeProperty("visibility");
+        this.frame.style.removeProperty("opacity");
+        this.frame.style.removeProperty("pointer-events");
         this.comms?.send("focus", undefined);
     }
 
