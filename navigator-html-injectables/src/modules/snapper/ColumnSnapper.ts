@@ -297,7 +297,8 @@ export class ColumnSnapper extends Snapper {
         });
 
         comms.register("focus", ColumnSnapper.moduleName, (_, ack) => {
-            this.cachedScrollWidth = this.doc().scrollWidth!
+            this.cachedScrollWidth = this.doc().scrollWidth!;
+            this.snapCurrentOffset(false);
             ack(true);
         });
 

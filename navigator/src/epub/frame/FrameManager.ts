@@ -64,10 +64,10 @@ export default class FrameManager {
     show() {
         if(this.comms) this.comms.resume();
         else this.comms = new FrameComms(this.frame.contentWindow!, this.source);
+        this.comms?.send("focus", undefined);
         this.frame.style.removeProperty("visibility");
         this.frame.style.removeProperty("opacity");
         this.frame.style.removeProperty("pointer-events");
-        this.comms?.send("focus", undefined);
     }
 
     get iframe() {
