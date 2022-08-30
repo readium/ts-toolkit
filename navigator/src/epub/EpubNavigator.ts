@@ -115,7 +115,7 @@ export class EpubNavigator extends VisualNavigator {
                 this.syncLocation(data as number);
                 break;
             case "log":
-                console.log(this.currentLocation.href, ...(data as any[]));
+                console.log(this.cframe.source.split("/")[3], ...(data as any[]));
                 break;
             default:
                 console.warn("Unknown frame msg key", key); // TODO remove/replace
