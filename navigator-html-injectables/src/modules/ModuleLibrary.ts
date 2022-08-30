@@ -5,6 +5,7 @@ import { ReflowableSetup } from "./setup/ReflowableSetup";
 
 // All the module names. TODO: Come up with a better way of collecting these in a way TS will recognize
 export type ModuleName =
+    "snapper" |
     "column_snapper" |
     "reflowable_setup" |
     "reflowable_peripherals";

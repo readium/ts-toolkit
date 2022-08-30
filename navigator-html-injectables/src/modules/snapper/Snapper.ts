@@ -1,8 +1,9 @@
 import { Comms } from "../../comms";
 import { Module } from "../Module";
+import { ModuleName } from "../ModuleLibrary";
 
 export abstract class Snapper extends Module {
-    static readonly moduleName = "snapper";
+    static readonly moduleName: ModuleName = "snapper";
 
     mount(wnd: Window, comms: Comms): boolean {
         const bstyle = wnd.document.body.style;

@@ -61,13 +61,16 @@ export default class FramePoolManager {
     async update(pub: Publication, locator: Locator, modules: ModuleName[]) {
         let i = this.positions.findIndex(l => l.locations.position === locator.locations.position);
         if(i < 0) throw Error("Locator not found in position list");
+        const newHref = this.positions[i].href;
         const disposal: string[] = [];
         const creation: string[] = [];
         this.positions.forEach((l, j) => {
-            if(j > (i + UPPER_BOUNDARY) || j < (i - UPPER_BOUNDARY))
+            if(j > (i + UPPER_BOUNDARY) || j < (i - UPPER_BOUNDARY)) {
                 if(!disposal.includes(l.href)) disposal.push(l.href);
-            if(j < (i + LOWER_BOUNDARY) && j > (i - LOWER_BOUNDARY))
+            }
+            if(j < (i + LOWER_BOUNDARY) && j > (i - LOWER_BOUNDARY)) {
                 if(!creation.includes(l.href)) creation.push(l.href);
+            }
         })
         disposal.forEach(href => {
             if(creation.includes(href)) return;
@@ -75,7 +78,6 @@ export default class FramePoolManager {
             this.pool.get(href)?.destroy();
             this.pool.delete(href);
         })
-
         const creator = async (href: string) => {
             if(this.pool.has(href)) {
                 await this.pool.get(href)!.load(modules);
@@ -113,7 +115,7 @@ export default class FramePoolManager {
 
             // Create <iframe>
             const fm = new FrameManager(this.blobs.get(href)!);
-            fm.hide();
+            if(href !== newHref) fm.hide(); // Avoid unecessary hide
             this.container.appendChild(fm.iframe);
             await fm.load(modules);
             this.pool.set(href, fm);
@@ -121,11 +123,11 @@ export default class FramePoolManager {
         await Promise.all(creation.map(href => creator(href)));
 
         // Update current frame
-        const newFrame = this.pool.get(this.positions[i].href)!;
-        if(newFrame !== this._currentFrame) {
-            this._currentFrame?.hide(); // Hide current frame
+        const newFrame = this.pool.get(newHref)!;
+        if(newFrame?.source !== this._currentFrame?.source) {
             await newFrame.load(modules); // In order to ensure modules match the latest configuration
             newFrame.show(); // Show/activate new frame
+            this._currentFrame?.hide(); // Hide current frame
             this._currentFrame = newFrame;
         }
     }

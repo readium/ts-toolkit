@@ -4,16 +4,19 @@ import { FrameComms } from "./FrameComms";
 
 export default class FrameManager {
     private frame: HTMLIFrameElement;
-    private loader: Loader;
+    private loader: Loader | undefined;
     public readonly source: string;
-    private comms: FrameComms;
+    private comms: FrameComms | undefined;
 
     private currModules: ModuleName[] = [];
 
     constructor(source: string) {
         this.frame = document.createElement("iframe");
         this.frame.classList.add("readium-navigator-iframe");
-        this.frame.style.display = "none";
+        this.frame.style.visibility = "hidden";
+        this.frame.style.opacity = "0";
+        this.frame.style.position = "absolute";
+        this.frame.style.transition = "visibility 0s, opacity 0.1s linear";
         this.source = source;
     }
 
@@ -31,7 +34,7 @@ export default class FrameManager {
                 try { res(this.frame.contentWindow!); } catch (error) {}
             }
             this.frame.onload = () => {
-                const wnd = this.frame.contentWindow!
+                const wnd = this.frame.contentWindow!;
                 this.loader = new Loader(wnd, modules);
                 this.currModules = modules;
                 try { res(wnd); } catch (error) {}
@@ -50,14 +53,18 @@ export default class FrameManager {
     }
 
     hide() {
+        this.frame.style.visibility = "hidden";
+        this.frame.style.opacity = "0";
+        this.comms?.send("unfocus", undefined);
         this.comms?.halt();
-        this.frame.style.display = "none";
     }
 
     show() {
         if(this.comms) this.comms.resume();
         else this.comms = new FrameComms(this.frame.contentWindow!, this.source);
-        this.frame.style.display = "";
+        this.frame.style.visibility = "";
+        this.frame.style.opacity = "1";
+        this.comms?.send("focus", undefined);
     }
 
     get iframe() {

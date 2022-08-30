@@ -131,7 +131,7 @@ export class EpubNavigator extends VisualNavigator {
 
     // Start listening to messages from the current iframe
     private attachListener() {
-        this.cframe.msg.listener = (key: CommsEventKey, value: unknown) => {
+        this.cframe.msg!.listener = (key: CommsEventKey, value: unknown) => {
             this.eventListener(key, value);
         }
     }
@@ -141,13 +141,14 @@ export class EpubNavigator extends VisualNavigator {
 
         if(withListener) this.attachListener();
 
+        if (this.wentBack) {
+            this.wentBack = false;
+            this.cframe.msg!.send("go_end", undefined);
+        }
+
         const idx = this.pub.readingOrder.findIndexWithHref(this.currentLocation.href);
         if (idx < 0)
             throw Error("Link for " + this.currentLocation.href + " not found!");
-        if (this.wentBack) {
-            this.wentBack = false;
-            this.cframe.msg.send("go_end", undefined);
-        }
     }
 
     destroy() {
@@ -165,9 +166,22 @@ export class EpubNavigator extends VisualNavigator {
         if (curr > i) this.wentBack = true;
 
         // Apply change
-        this.currentLocation = this.positions.find(p => p.href === this.pub.readingOrder.items[i].href)!;
-        await this.apply();
+        if(this.wentBack)
+            for (let j = this.positions.length - 1; j >= 0; j--) {
+                if(this.positions[j].href === this.pub.readingOrder.items[i].href) {
+                    this.currentLocation = this.positions[j];
+                    break;
+                }
+            }
+        else
+            for (let j = 0; j < this.positions.length; j++) {
+                if(this.positions[j].href === this.pub.readingOrder.items[i].href) {
+                    this.currentLocation = this.positions[j];
+                    break;
+                }
+            }
 
+        await this.apply();
         return true;
     }
 
@@ -200,7 +214,7 @@ export class EpubNavigator extends VisualNavigator {
     }
 
     goBackward(animated: boolean, cb: (ok: boolean) => void): void {
-        this.cframe.msg.send("go_prev", undefined, async (ack) => {
+        this.cframe.msg!.send("go_prev", undefined, async (ack) => {
             if(ack)
                 // OK
                 cb(true);
@@ -211,7 +225,7 @@ export class EpubNavigator extends VisualNavigator {
     }
 
     goForward(animated: boolean, cb: (ok: boolean) => void): void {
-        this.cframe.msg.send("go_next", undefined, async (ack) => {
+        this.cframe.msg!.send("go_next", undefined, async (ack) => {
             if(ack)
                 // OK
                 cb(true);
@@ -252,7 +266,7 @@ export class EpubNavigator extends VisualNavigator {
         const hasProgression = !isNaN(locator.locations.progression as number) && locator.locations.progression! > 0;
         this.apply(!hasProgression).then(() => {
             if(hasProgression)
-                this.cframe.msg.send("go_progression", locator.locations.progression!, () => {
+                this.cframe.msg!.send("go_progression", locator.locations.progression!, () => {
                     // Now that we've gone to the right progression, we can attach the listeners.
                     // Doing this only at this stage reduces janky UI with multiple progression updates.
                     this.attachListener();

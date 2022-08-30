@@ -1,4 +1,4 @@
-import { Comms } from "../../comms";
+import { Comms, mid } from "../../comms";
 import { Snapper } from "./Snapper";
 import { getColumnCountPerScreen, isRTL, appendVirtualColumnIfNeeded } from "../../helpers/document";
 import { easeInOutQuad } from "../../helpers/animation";
@@ -29,7 +29,7 @@ export class ColumnSnapper extends Snapper {
     }
 
     reportProgress() {
-        this.comms.send("progress", this.wnd.scrollX / this.doc().scrollWidth);
+        this.comms.send("progress", this.wnd.scrollX / this.cachedScrollWidth);
     }
 
     private snappingCancelled = false;
@@ -51,13 +51,17 @@ export class ColumnSnapper extends Snapper {
         const doc = this.doc();
         const cdo = this.dragOffset();
         const columnCount = getColumnCountPerScreen(this.wnd);
-        const currentOffset = Math.min(Math.max(0, startX), doc.scrollWidth);
-        // Adds half a page to make sure we don't snap to the previous page. (from orig readium)
+        const currentOffset = Math.min(Math.max(0, startX), this.cachedScrollWidth);
         const factor = isRTL(this.wnd) ? -1 : 1;
-        const delta = factor * (this.wnd.innerWidth / 2) * Math.sign(cdo) * ((factor* cdo) > 0 ? 1.25 : 0.75); // TODO fix this
-        if(smooth) { // Smooth snapping
+        const hurdle =
+            // The hurdle to overcome in order to change pages
+            factor *
+            (this.wnd.innerWidth / 3) *
+            ((factor * cdo) > 0 ? 2 : 1);
+
+        const so = this.snapOffset(currentOffset + hurdle);
+        if(smooth && so !== doc.scrollLeft) { // Smooth snapping
             this.snappingCancelled = false;
-            const so = this.snapOffset(currentOffset + delta);
             const position = (start: number, end: number, elapsed: number, period: number) => {
                 if (elapsed > period) {
                     return end;
@@ -91,7 +95,7 @@ export class ColumnSnapper extends Snapper {
         } else { // Instant snapping
             doc.style.removeProperty("transform");
             this.wnd.requestAnimationFrame(() => {
-                doc.scrollLeft = this.snapOffset(currentOffset + delta);
+                doc.scrollLeft = so;
                 this.reportProgress();
             });
             this.clearTouches();
@@ -144,15 +148,14 @@ export class ColumnSnapper extends Snapper {
                 if(dragOffset > 5) this.comms.send("no_more", undefined);
                 if(dragOffset < -5) this.comms.send("no_less", undefined);
             } else if(scrollOffset < 5 && dragOffset < 5) {
-                this.reportProgress();
+                this.alreadyScrollLeft = 0;
                 this.comms.send("no_less", undefined);
             } else if((this.cachedScrollWidth - scrollOffset - this.wnd.innerWidth) < 5 && dragOffset > 5) {
-                this.reportProgress();
+                this.alreadyScrollLeft = this.doc().scrollLeft;
                 this.comms.send("no_more", undefined);
             }
 
             this.snapCurrentOffset(true);
-            // this.startingTouch = undefined;
             this.comms.send("swipe", dragOffset);
         }
         this.touchState = ScrollTouchState.END;
@@ -248,7 +251,7 @@ export class ColumnSnapper extends Snapper {
                 ack(false);
                 return;
             }
-            const documentWidth = this.doc().scrollWidth;
+            const documentWidth = this.cachedScrollWidth;
             const factor = isRTL(wnd) ? -1 : 1;
             const offset = documentWidth * position * factor;
             this.doc().scrollLeft = this.snapOffset(offset);
@@ -258,7 +261,7 @@ export class ColumnSnapper extends Snapper {
 
         comms.register("go_end", ColumnSnapper.moduleName, (_, ack) => {
             const factor = isRTL(wnd) ? -1 : 1;
-            const final = this.doc().scrollWidth * factor;
+            const final = this.cachedScrollWidth * factor;
             if(this.doc().scrollLeft === final) return ack(false);
             this.doc().scrollLeft = this.snapOffset(final);
             this.reportProgress();
@@ -273,30 +276,38 @@ export class ColumnSnapper extends Snapper {
         })
 
         comms.register("go_prev", ColumnSnapper.moduleName, (_, ack) => {
-            const documentWidth = this.doc().scrollWidth!;
             const offset = wnd.scrollX - wnd.innerWidth;
-            const minOffset = isRTL(wnd) ? - (documentWidth - wnd.innerWidth) : 0;
+            const minOffset = isRTL(wnd) ? - (this.cachedScrollWidth - wnd.innerWidth) : 0;
             const change = scrollToOffset(Math.max(offset, minOffset));
             if(change) this.reportProgress();
             ack(change);
         });
 
         comms.register("go_next", ColumnSnapper.moduleName, (_, ack) => {
-            const documentWidth = this.doc().scrollWidth!;
             const offset = wnd.scrollX + wnd.innerWidth;
-            const maxOffset = isRTL(wnd) ? 0 : documentWidth - wnd.innerWidth;
+            const maxOffset = isRTL(wnd) ? 0 : this.cachedScrollWidth - wnd.innerWidth;
             const change = scrollToOffset(Math.min(offset, maxOffset));
             if(change) this.reportProgress();
             ack(change);
         });
 
-        // Add interaction listeners
-        wnd.addEventListener("touchstart", this.onTouchStarter);
-        wnd.addEventListener("touchend", this.onTouchEnder);
-        wnd.addEventListener("touchmove", this.onTouchMover);
+        comms.register("unfocus", ColumnSnapper.moduleName, (_, ack) => {
+            this.snappingCancelled = true;
+            ack(true);
+        });
 
-        // Safari hack, otherwise other evens won't register
-        document.addEventListener('touchstart', () => {});
+        comms.register("focus", ColumnSnapper.moduleName, (_, ack) => {
+            this.cachedScrollWidth = this.doc().scrollWidth!
+            ack(true);
+        });
+
+        // Add interaction listeners
+        wnd.addEventListener("touchstart", this.onTouchStarter, { passive: true });
+        wnd.addEventListener("touchend", this.onTouchEnder, { passive: true });
+        wnd.addEventListener("touchmove", this.onTouchMover, { passive: true });
+
+        // Safari hack, otherwise other events won't register
+        wnd.document.addEventListener('touchstart', () => {});
 
         comms.log("ColumnSnapper Mounted");
         return true;

@@ -28,5 +28,7 @@ export type CommsCommandKey =
     "remove_property" |
     "exact_progress" |
     "protect" |
-    "unprotect";
+    "unprotect" |
+    "unfocus" |
+    "focus";
 ;
