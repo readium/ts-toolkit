@@ -76,10 +76,10 @@ export default class FrameManager {
         if(this.comms) this.comms.resume();
         else this.comms = new FrameComms(this.frame.contentWindow!, this.source);
         return new Promise((res, _) => {
-            this.frame.style.removeProperty("visibility");
-            this.frame.style.removeProperty("opacity");
-            this.frame.style.removeProperty("pointer-events");
             this.comms?.send("focus", undefined, () => {
+                this.frame.style.removeProperty("visibility");
+                this.frame.style.removeProperty("opacity");
+                this.frame.style.removeProperty("pointer-events");
                 res();
             });
         });
