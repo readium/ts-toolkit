@@ -18,10 +18,10 @@ export class EpubNavigator extends VisualNavigator {
     private readonly pub: Publication;
     private readonly container: HTMLElement;
     private readonly listeners: EpubNavigatorListeners;
-    private framePool: FramePoolManager;
-    private positions: Locator[];
-    private currentLocation: Locator;
-    private wentBack: boolean;
+    private framePool!: FramePoolManager;
+    private positions!: Locator[];
+    private currentLocation!: Locator;
+    private wentBack = false;
 
     constructor(container: HTMLElement, pub: Publication, listeners: EpubNavigatorListeners, positions: Locator[] = []) {
         super();
@@ -55,8 +55,8 @@ export class EpubNavigator extends VisualNavigator {
     public eventListener(key: CommsEventKey, data: unknown) {
         switch (key) {
             case "_pong":
-                this.listeners.frameLoaded(this.cframe.iframe.contentWindow!);
-                this.listeners.positionChanged(this.currentLocation)
+                this.listeners.frameLoaded(this.cframe!.iframe.contentWindow!);
+                this.listeners.positionChanged(this.currentLocation);
                 break;
             case "click":
             case "tap":
@@ -91,7 +91,7 @@ export class EpubNavigator extends VisualNavigator {
                 } else {
                     const handled = key === "click" ? this.listeners.click(edata) : this.listeners.tap(edata);
                     if(handled) break;
-                    const oneQuarter = (this.cframe.window.innerWidth * window.devicePixelRatio) / 4;
+                    const oneQuarter = (this.cframe!.window.innerWidth * window.devicePixelRatio) / 4;
                     // open UI if middle screen is clicked/tapped
                     if (edata.x >= oneQuarter && edata.x <= oneQuarter * 3) this.listeners.miscPointer(1);
                     // if (scrollMode.value) return; TODO!
@@ -115,7 +115,7 @@ export class EpubNavigator extends VisualNavigator {
                 this.syncLocation(data as number);
                 break;
             case "log":
-                console.log(this.cframe.source.split("/")[3], ...(data as any[]));
+                console.log(this.cframe?.source.split("/")[3], ...(data as any[]));
                 break;
             default:
                 console.warn("Unknown frame msg key", key); // TODO remove/replace
@@ -131,6 +131,7 @@ export class EpubNavigator extends VisualNavigator {
 
     // Start listening to messages from the current iframe
     private attachListener() {
+        if(!this.cframe) throw Error("now cframe to attach listener to");
         this.cframe.msg!.listener = (key: CommsEventKey, value: unknown) => {
             this.eventListener(key, value);
         }
@@ -143,7 +144,7 @@ export class EpubNavigator extends VisualNavigator {
 
         if (this.wentBack) {
             this.wentBack = false;
-            this.cframe.msg!.send("go_end", undefined);
+            this.cframe!.msg!.send("go_end", undefined);
         }
 
         const idx = this.pub.readingOrder.findIndexWithHref(this.currentLocation.href);
@@ -151,8 +152,8 @@ export class EpubNavigator extends VisualNavigator {
             throw Error("Link for " + this.currentLocation.href + " not found!");
     }
 
-    destroy() {
-        this.framePool?.destroy();
+    async destroy() {
+        await this.framePool?.destroy();
     }
 
     private async changeResource(relative: number): Promise<boolean> {
@@ -214,7 +215,7 @@ export class EpubNavigator extends VisualNavigator {
     }
 
     goBackward(animated: boolean, cb: (ok: boolean) => void): void {
-        this.cframe.msg!.send("go_prev", undefined, async (ack) => {
+        this.cframe!.msg!.send("go_prev", undefined, async (ack) => {
             if(ack)
                 // OK
                 cb(true);
@@ -225,7 +226,7 @@ export class EpubNavigator extends VisualNavigator {
     }
 
     goForward(animated: boolean, cb: (ok: boolean) => void): void {
-        this.cframe.msg!.send("go_next", undefined, async (ack) => {
+        this.cframe!.msg!.send("go_next", undefined, async (ack) => {
             if(ack)
                 // OK
                 cb(true);
@@ -266,7 +267,7 @@ export class EpubNavigator extends VisualNavigator {
         const hasProgression = !isNaN(locator.locations.progression as number) && locator.locations.progression! > 0;
         this.apply(!hasProgression).then(() => {
             if(hasProgression)
-                this.cframe.msg!.send("go_progression", locator.locations.progression!, () => {
+                this.cframe!.msg!.send("go_progression", locator.locations.progression!, () => {
                     // Now that we've gone to the right progression, we can attach the listeners.
                     // Doing this only at this stage reduces janky UI with multiple progression updates.
                     this.attachListener();

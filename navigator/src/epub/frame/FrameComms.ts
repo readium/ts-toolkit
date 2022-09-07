@@ -130,12 +130,9 @@ export class FrameComms {
                 key,
                 strict,
             } as CommsMessage,
-            {
-                targetOrigin: this.origin,
-                transfer,
-            }
+            this.origin,
+            transfer
         );
-        // console.log("SENT", id, key);
         return id;
     }
 }

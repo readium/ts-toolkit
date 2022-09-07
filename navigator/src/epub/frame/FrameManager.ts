@@ -47,27 +47,42 @@ export default class FrameManager {
         });
     }
 
-    destroy() {
+    async destroy() {
         this.hide();
         this.loader?.destroy();
-        this.frame.remove(); // TODO this makes it unusable, should it?
+        this.frame.remove();
     }
 
-    hide() {
+    async hide(): Promise<void> {
         this.frame.style.visibility = "hidden";
         this.frame.style.opacity = "0";
         this.frame.style.pointerEvents = "none";
-        this.comms?.send("unfocus", undefined);
-        this.comms?.halt();
+        if(this.frame.parentElement) {
+            return new Promise((res, _) => {
+                this.comms?.send("unfocus", undefined, () => {
+                    this.comms?.halt();
+                    res();
+                });
+            });
+        } else
+            this.comms?.halt();
     }
 
-    show() {
+    async show(): Promise<void> {
+        if(!this.frame.parentElement) {
+            console.warn("Trying to show frame that is not attached to the DOM");
+            return;
+        }
         if(this.comms) this.comms.resume();
         else this.comms = new FrameComms(this.frame.contentWindow!, this.source);
-        this.comms?.send("focus", undefined);
-        this.frame.style.removeProperty("visibility");
-        this.frame.style.removeProperty("opacity");
-        this.frame.style.removeProperty("pointer-events");
+        return new Promise((res, _) => {
+            this.frame.style.removeProperty("visibility");
+            this.frame.style.removeProperty("opacity");
+            this.frame.style.removeProperty("pointer-events");
+            this.comms?.send("focus", undefined, () => {
+                res();
+            });
+        });
     }
 
     get iframe() {

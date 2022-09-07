@@ -8,7 +8,7 @@ const LOWER_BOUNDARY = 3;
 export default class FramePoolManager {
     private readonly container: HTMLElement;
     private readonly positions: Locator[];
-    private _currentFrame: FrameManager;
+    private _currentFrame: FrameManager | undefined;
     private readonly pool: Map<string, FrameManager> = new Map();
     private readonly blobs: Map<string, string> = new Map();
     private readonly inprogress: Map<string, Promise<void>> = new Map();
@@ -18,9 +18,36 @@ export default class FramePoolManager {
         this.positions = positions;
     }
 
-    destroy() {
+    async destroy() {
+        // Wait for all in-progress loads to complete
+        let iit = this.inprogress.values();
+        let inp = iit.next();
+        const inprogressPromises: Promise<void>[] = [];
+        while(inp.value) {
+            inprogressPromises.push(inp.value);
+            inp = iit.next();
+        }
+        if(inprogressPromises.length > 0) {
+            await Promise.allSettled(inprogressPromises);
+        }
+        this.inprogress.clear();
+
+        // Destroy all frames
+        let fit = this.pool.values();
+        let frm = fit.next();
+        while(frm.value) {
+            await (frm.value as FrameManager).destroy();
+            frm = fit.next();
+        }
         this.pool.clear();
+
+        // Revoke all blobs
         this.blobs.forEach(v => URL.revokeObjectURL(v));
+
+        // Empty container of elements
+        this.container.childNodes.forEach(v => {
+            if(v.nodeType === Node.ELEMENT_NODE || v.nodeType === Node.TEXT_NODE) v.remove();
+        })
     }
 
     private finalizeDOM(doc: Document, base: string | undefined, mediaType: MediaType): string {
@@ -81,13 +108,13 @@ export default class FramePoolManager {
                 if(j < (i + LOWER_BOUNDARY) && j > (i - LOWER_BOUNDARY)) {
                     if(!creation.includes(l.href)) creation.push(l.href);
                 }
-            })
-            disposal.forEach(href => {
+            });
+            disposal.forEach(async href => {
                 if(creation.includes(href)) return;
                 if(!this.pool.has(href)) return;
-                this.pool.get(href)?.destroy();
+                await this.pool.get(href)?.destroy();
                 this.pool.delete(href);
-            })
+            });
             const creator = async (href: string) => {
                 if(this.pool.has(href)) {
                     await this.pool.get(href)!.load(modules);
@@ -125,7 +152,7 @@ export default class FramePoolManager {
 
                 // Create <iframe>
                 const fm = new FrameManager(this.blobs.get(href)!);
-                if(href !== newHref) fm.hide(); // Avoid unecessary hide
+                if(href !== newHref) await fm.hide(); // Avoid unecessary hide
                 this.container.appendChild(fm.iframe);
                 await fm.load(modules);
                 this.pool.set(href, fm);
@@ -136,8 +163,8 @@ export default class FramePoolManager {
             const newFrame = this.pool.get(newHref)!;
             if(newFrame?.source !== this._currentFrame?.source) {
                 await newFrame.load(modules); // In order to ensure modules match the latest configuration
-                newFrame.show(); // Show/activate new frame
-                this._currentFrame?.hide(); // Hide current frame
+                await newFrame.show(); // Show/activate new frame
+                await this._currentFrame?.hide(); // Hide current frame. It's possible it no longer even exists
                 this._currentFrame = newFrame;
             }
             resolve();
@@ -148,7 +175,7 @@ export default class FramePoolManager {
         this.inprogress.delete(newHref); // Delete it from the in progress map!
     }
 
-    get currentFrame(): FrameManager {
+    get currentFrame(): FrameManager | undefined {
         return this._currentFrame;
     }
 }

@@ -33,7 +33,6 @@ export class Comms {
         wnd.addEventListener("message", (event) => {
             if(event.source === null) throw Error("Event source is null");
             if(typeof event.data !== "object") return;
-            // console.log("Received message", event.data);
             const data = event.data as CommsMessage; // Cast it as a CommsMessage
             if(!("_readium" in data) || !data._readium || data._readium <= 0) return; // Not for us
             if(data.key === "_ping") {

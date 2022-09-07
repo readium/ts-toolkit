@@ -3,7 +3,7 @@ import { Snapper } from "./Snapper";
 import { getColumnCountPerScreen, isRTL, appendVirtualColumnIfNeeded } from "../../helpers/document";
 import { easeInOutQuad } from "../../helpers/animation";
 
-const SNAPPER_STYLE_ID = "readium-column-snapper-style";
+const COLUMN_SNAPPER_STYLE_ID = "readium-column-snapper-style";
 const SNAP_DURATION = 200; // Milliseconds
 
 enum ScrollTouchState {
@@ -140,8 +140,8 @@ export class ColumnSnapper extends Snapper {
         if(this.touchState === ScrollTouchState.MOVE) {
             // Get the horizontal drag distance
             const dragOffset = this.dragOffset();
-
             const scrollOffset = (this.doc().scrollLeft > 0) ? this.doc().scrollLeft : this.alreadyScrollLeft;
+            this.cachedScrollWidth = this.doc().scrollWidth!;
             if(this.cachedScrollWidth <= this.wnd.innerWidth) {
                 // Only a single page, meaning any swipe triggers next/prev
                 this.reportProgress();
@@ -201,7 +201,7 @@ export class ColumnSnapper extends Snapper {
 
         // Add styling to hide the scrollbar
         const d = wnd.document.createElement("style");
-        d.id = SNAPPER_STYLE_ID;
+        d.id = COLUMN_SNAPPER_STYLE_ID;
         d.textContent = `
         html {
             overflow: hidden;
@@ -252,6 +252,7 @@ export class ColumnSnapper extends Snapper {
                 return;
             }
             this.wnd.requestAnimationFrame(() => {
+                this.cachedScrollWidth = this.doc().scrollWidth!;
                 const documentWidth = this.cachedScrollWidth;
                 const factor = isRTL(wnd) ? -1 : 1;
                 const offset = documentWidth * position * factor;
@@ -263,8 +264,9 @@ export class ColumnSnapper extends Snapper {
 
         comms.register("go_end", ColumnSnapper.moduleName, (_, ack) => {
             const factor = isRTL(wnd) ? -1 : 1;
-            const final = this.cachedScrollWidth * factor;
             this.wnd.requestAnimationFrame(() => {
+                this.cachedScrollWidth = this.doc().scrollWidth!;
+                const final = this.cachedScrollWidth * factor;
                 if(this.doc().scrollLeft === final) return ack(false);
                 this.doc().scrollLeft = this.snapOffset(final);
                 this.reportProgress();
@@ -307,9 +309,11 @@ export class ColumnSnapper extends Snapper {
         });
 
         comms.register("focus", ColumnSnapper.moduleName, (_, ack) => {
-            this.cachedScrollWidth = this.doc().scrollWidth!;
-            this.snapCurrentOffset(false, true);
-            ack(true);
+            this.wnd.requestAnimationFrame(() => {
+                this.cachedScrollWidth = this.doc().scrollWidth!;
+                this.snapCurrentOffset(false, true);
+                ack(true);
+            });
         });
 
         // Add interaction listeners
@@ -337,7 +341,7 @@ export class ColumnSnapper extends Snapper {
         window.removeEventListener("orientationchange", this.onWidthChanger);
         window.removeEventListener("resize", this.onWidthChanger);
 
-        wnd.document.getElementById(SNAPPER_STYLE_ID)?.remove();
+        wnd.document.getElementById(COLUMN_SNAPPER_STYLE_ID)?.remove();
 
         comms.log("ColumnSnapper Unmounted");
         return super.unmount(wnd, comms);

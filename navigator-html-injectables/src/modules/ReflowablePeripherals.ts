@@ -15,7 +15,15 @@ export class ReflowablePeripherals extends Module {
     private wnd!: Window;
     private comms!: Comms;
 
-    onPoint(event: PointerEvent) {
+    private pointerMoved = false;
+
+    onPointUp(event: PointerEvent) {
+        if(this.pointerMoved) {
+            // If the pointer moved while tapping it's not a tap to consider
+            this.pointerMoved = false;
+            return;
+        }
+
         if(!this.wnd.getSelection()?.isCollapsed)
             // There's an ongoing selection, the tap will dismiss it so we don't forward it.
             return;
@@ -33,8 +41,22 @@ export class ReflowablePeripherals extends Module {
             targetElement: (event.target as Element).outerHTML,
             interactiveElement: nearestInteractiveElement(event.target as Element)?.outerHTML
         } as FrameClickEvent);
+
+        this.pointerMoved = false;
     }
-    private readonly onPointer = this.onPoint.bind(this);
+    private readonly onPointerUp = this.onPointUp.bind(this);
+
+    onPointMove(event: PointerEvent) {
+        if(event.movementY !== undefined && event.movementX !== undefined) {
+            if(Math.abs(event.movementX) > 1 || Math.abs(event.movementY) > 1) {
+                this.pointerMoved = true;
+            }
+            return;
+        }
+
+        this.pointerMoved = true;
+    }
+    private readonly onPointerMove = this.onPointMove.bind(this);
 
     onClick(event: MouseEvent) {
         // To prevent certain browser actions
@@ -45,7 +67,8 @@ export class ReflowablePeripherals extends Module {
     mount(wnd: Window, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
-        wnd.document.addEventListener("pointerup", this.onPointer);
+        wnd.document.addEventListener("pointerup", this.onPointerUp);
+        wnd.document.addEventListener("pointermove", this.onPointerMove);
         wnd.document.addEventListener("click", this.onClicker);
 
         comms.log("ReflowablePeripherals Mounted");
@@ -53,7 +76,8 @@ export class ReflowablePeripherals extends Module {
     }
 
     unmount(wnd: Window, comms: Comms): boolean {
-        wnd.document.removeEventListener("pointerup", this.onPointer);
+        wnd.document.removeEventListener("pointerup", this.onPointerUp);
+        wnd.document.removeEventListener("pointermove", this.onPointerMove);
         wnd.document.removeEventListener("click", this.onClicker);
 
         comms.log("ReflowablePeripherals Unmounted");
