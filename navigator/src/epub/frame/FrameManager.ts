@@ -68,7 +68,7 @@ export default class FrameManager {
             this.comms?.halt();
     }
 
-    async show(): Promise<void> {
+    async show(atProgress: number | undefined = undefined): Promise<void> {
         if(!this.frame.parentElement) {
             console.warn("Trying to show frame that is not attached to the DOM");
             return;
@@ -77,10 +77,19 @@ export default class FrameManager {
         else this.comms = new FrameComms(this.frame.contentWindow!, this.source);
         return new Promise((res, _) => {
             this.comms?.send("focus", undefined, () => {
-                this.frame.style.removeProperty("visibility");
-                this.frame.style.removeProperty("opacity");
-                this.frame.style.removeProperty("pointer-events");
-                res();
+                if(atProgress && atProgress > 0) {
+                    this.comms?.send("go_progression", atProgress, () => {
+                        this.frame.style.removeProperty("visibility");
+                        this.frame.style.removeProperty("opacity");
+                        this.frame.style.removeProperty("pointer-events");
+                        res();
+                    });
+                } else {
+                    this.frame.style.removeProperty("visibility");
+                    this.frame.style.removeProperty("opacity");
+                    this.frame.style.removeProperty("pointer-events");
+                    res();
+                }
             });
         });
     }

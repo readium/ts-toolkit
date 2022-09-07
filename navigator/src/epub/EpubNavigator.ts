@@ -137,15 +137,10 @@ export class EpubNavigator extends VisualNavigator {
         }
     }
 
-    private async apply(withListener=true) {
+    private async apply() {
         await this.framePool.update(this.pub, this.currentLocator, this.determineModules());
 
-        if(withListener) this.attachListener();
-
-        if (this.wentBack) {
-            this.wentBack = false;
-            this.cframe!.msg!.send("go_end", undefined);
-        }
+        this.attachListener();
 
         const idx = this.pub.readingOrder.findIndexWithHref(this.currentLocation.href);
         if (idx < 0)
@@ -164,13 +159,14 @@ export class EpubNavigator extends VisualNavigator {
             Math.min(this.pub.readingOrder.items.length - 1, curr + relative)
         );
         if (i === curr) return false;
-        if (curr > i) this.wentBack = true;
 
         // Apply change
-        if(this.wentBack)
+        if(curr > i)
             for (let j = this.positions.length - 1; j >= 0; j--) {
                 if(this.positions[j].href === this.pub.readingOrder.items[i].href) {
-                    this.currentLocation = this.positions[j];
+                    this.currentLocation = this.positions[j].copyWithLocations({
+                        progression: 0.999999999999
+                    });
                     break;
                 }
             }
@@ -264,8 +260,8 @@ export class EpubNavigator extends VisualNavigator {
         }
 
         this.currentLocation = this.positions.find(p => p.href === link!.href)!;
-        const hasProgression = !isNaN(locator.locations.progression as number) && locator.locations.progression! > 0;
-        this.apply(!hasProgression).then(() => {
+        this.apply().then(() => cb());
+        /*this.apply(!hasProgression).then(() => {
             if(hasProgression)
                 this.cframe!.msg!.send("go_progression", locator.locations.progression!, () => {
                     // Now that we've gone to the right progression, we can attach the listeners.
@@ -275,7 +271,7 @@ export class EpubNavigator extends VisualNavigator {
                 });
             else
                 cb();
-        });
+        });*/
     }
 
     goLink(link: Link, animated: boolean, cb: () => void): void {

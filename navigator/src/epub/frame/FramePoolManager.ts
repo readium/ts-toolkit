@@ -163,8 +163,13 @@ export default class FramePoolManager {
             const newFrame = this.pool.get(newHref)!;
             if(newFrame?.source !== this._currentFrame?.source) {
                 await newFrame.load(modules); // In order to ensure modules match the latest configuration
-                await newFrame.show(); // Show/activate new frame
-                await this._currentFrame?.hide(); // Hide current frame. It's possible it no longer even exists
+
+                await this._currentFrame?.hide(); // Hide current frame. It's possible it no longer even existsin the DOM at this point
+
+                // Update progression if necessary and show the new frame
+                const hasProgression = !isNaN(locator.locations.progression as number) && locator.locations.progression! > 0;
+                await newFrame.show(hasProgression ? locator.locations.progression! : undefined); // Show/activate new frame
+
                 this._currentFrame = newFrame;
             }
             resolve();
