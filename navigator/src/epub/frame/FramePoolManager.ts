@@ -86,7 +86,7 @@ export default class FramePoolManager {
           );
     }
 
-    async update(pub: Publication, locator: Locator, modules: ModuleName[]) {
+    async update(pub: Publication, locator: Locator, modules: ModuleName[], force=false) {
         let i = this.positions.findIndex(l => l.locations.position === locator.locations.position);
         if(i < 0) throw Error("Locator not found in position list");
         const newHref = this.positions[i].href;
@@ -123,31 +123,32 @@ export default class FramePoolManager {
                 const itm = pub.readingOrder.findWithHref(href);
                 if(!itm) return; // TODO throw?
                 const burl = itm.toURL(pub.baseURL) || "";
-                if(!itm.mediaType.isHTML) {
-                    if(itm.mediaType.isBitmap) {
-                        // Rudimentary image display
-                        const doc = document.implementation.createHTMLDocument(itm.title || itm.href);
-                        const simg = document.createElement("img");
-                        simg.src = burl || "";
-                        simg.alt = itm.title || "";
-                        simg.loading = "lazy";
-                        simg.decoding = "async";
-                        doc.body.appendChild(simg);
+                if(!this.blobs.has(href)) {
+                    if(!itm.mediaType.isHTML) {
+                        if(itm.mediaType.isBitmap) {
+                            // Rudimentary image display
+                            const doc = document.implementation.createHTMLDocument(itm.title || itm.href);
+                            const simg = document.createElement("img");
+                            simg.src = burl || "";
+                            simg.alt = itm.title || "";
+                            simg.loading = "lazy";
+                            simg.decoding = "async";
+                            doc.body.appendChild(simg);
+                            const blobURL = this.finalizeDOM(doc, burl, itm.mediaType);
+                            this.blobs.set(href, blobURL);
+                        } else
+                            throw Error("Unsupported frame mediatype " + itm.mediaType.string);
+                    } else {
+                        // Load the HTML resource
+                        const txt = await pub.get(itm).readAsString();
+                        if(!txt) throw new Error(`Failed reading item ${itm.href}`);
+                        const doc = new DOMParser().parseFromString(
+                            txt,
+                            itm.mediaType.string as DOMParserSupportedType
+                        );
                         const blobURL = this.finalizeDOM(doc, burl, itm.mediaType);
                         this.blobs.set(href, blobURL);
-                    } else
-                        throw Error("Unsupported frame mediatype " + itm.mediaType.string);
-                }
-                if(!this.blobs.has(href)) {
-                    // Load the resource
-                    const txt = await pub.get(itm).readAsString();
-                    if(!txt) throw new Error(`Failed reading item ${itm.href}`);
-                    const doc = new DOMParser().parseFromString(
-                        txt,
-                        itm.mediaType.string as DOMParserSupportedType
-                    );
-                    const blobURL = this.finalizeDOM(doc, burl, itm.mediaType);
-                    this.blobs.set(href, blobURL);
+                    }
                 }
 
                 // Create <iframe>
@@ -161,14 +162,15 @@ export default class FramePoolManager {
 
             // Update current frame
             const newFrame = this.pool.get(newHref)!;
-            if(newFrame?.source !== this._currentFrame?.source) {
-                await newFrame.load(modules); // In order to ensure modules match the latest configuration
-
-                await this._currentFrame?.hide(); // Hide current frame. It's possible it no longer even existsin the DOM at this point
+            if(newFrame?.source !== this._currentFrame?.source || force) {
+                await this._currentFrame?.hide(); // Hide current frame. It's possible it no longer even exists in the DOM at this point
+                if(newFrame) // If user is speeding through the publication, this can get destroyed
+                    await newFrame.load(modules); // In order to ensure modules match the latest configuration
 
                 // Update progression if necessary and show the new frame
                 const hasProgression = !isNaN(locator.locations.progression as number) && locator.locations.progression! > 0;
-                await newFrame.show(hasProgression ? locator.locations.progression! : undefined); // Show/activate new frame
+                if(newFrame) // If user is speeding through the publication, this can get destroyed
+                    await newFrame.show(hasProgression ? locator.locations.progression! : undefined); // Show/activate new frame
 
                 this._currentFrame = newFrame;
             }

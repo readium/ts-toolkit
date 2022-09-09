@@ -21,18 +21,19 @@ export class EpubNavigator extends VisualNavigator {
     private framePool!: FramePoolManager;
     private positions!: Locator[];
     private currentLocation!: Locator;
-    private wentBack = false;
+    private currentProgression: ReadingProgression;
 
     constructor(container: HTMLElement, pub: Publication, listeners: EpubNavigatorListeners, positions: Locator[] = []) {
         super();
         this.pub = pub;
+        this.currentProgression = pub.metadata.effectiveReadingProgression;
         this.container = container;
         this.listeners = listeners;
         if (positions.length)
             this.positions = positions;
     }
 
-    async load() {
+    public async load() {
         if (!this.positions?.length)
             this.positions = await this.pub.positionsFromManifest();
         this.framePool = new FramePoolManager(this.container, this.positions);
@@ -125,14 +126,20 @@ export class EpubNavigator extends VisualNavigator {
 
     private determineModules() {
         let modules = Array.from(ModuleLibrary.keys()) as ModuleName[];
-        if (this.readingProgression === ReadingProgression.ttb) modules = modules.filter((m) => m !== "column_snapper");
+
+        // Horizontal vs. Vertical reading
+        if (this.readingProgression === ReadingProgression.ttb || this.readingProgression === ReadingProgression.btt)
+            modules = modules.filter((m) => m !== "column_snapper");
+        else
+            modules = modules.filter((m) => m !== "scroll_snapper");
+
         return modules;
     }
 
     // Start listening to messages from the current iframe
     private attachListener() {
-        if(!this.cframe) throw Error("now cframe to attach listener to");
-        this.cframe.msg!.listener = (key: CommsEventKey, value: unknown) => {
+        if(!this.cframe) throw Error("no cframe to attach listener to");
+        if(this.cframe.msg) this.cframe.msg.listener = (key: CommsEventKey, value: unknown) => {
             this.eventListener(key, value);
         }
     }
@@ -147,7 +154,7 @@ export class EpubNavigator extends VisualNavigator {
             throw Error("Link for " + this.currentLocation.href + " not found!");
     }
 
-    async destroy() {
+    public async destroy() {
         await this.framePool?.destroy();
     }
 
@@ -210,8 +217,8 @@ export class EpubNavigator extends VisualNavigator {
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
     }
 
-    goBackward(animated: boolean, cb: (ok: boolean) => void): void {
-        this.cframe!.msg!.send("go_prev", undefined, async (ack) => {
+    public goBackward(animated: boolean, cb: (ok: boolean) => void): void {
+        this.cframe?.msg?.send("go_prev", undefined, async (ack) => {
             if(ack)
                 // OK
                 cb(true);
@@ -221,8 +228,8 @@ export class EpubNavigator extends VisualNavigator {
         });
     }
 
-    goForward(animated: boolean, cb: (ok: boolean) => void): void {
-        this.cframe!.msg!.send("go_next", undefined, async (ack) => {
+    public goForward(animated: boolean, cb: (ok: boolean) => void): void {
+        this.cframe?.msg?.send("go_next", undefined, async (ack) => {
             if(ack)
                 // OK
                 cb(true);
@@ -234,18 +241,31 @@ export class EpubNavigator extends VisualNavigator {
 
     get currentLocator(): Locator {
         // TODO seed locator with detailed info if this property is accessed
+        /*return (async () => { // Wrapped because JS doesn't support async getters
+            return this.currentLocation;
+        })();*/
+
         return this.currentLocation;
     }
 
+    // TODO: This is temporary until user settings are implemented.
     get readingProgression(): ReadingProgression {
-        return ReadingProgression.auto; // TODO
+        return this.currentProgression;
+    }
+
+    // TODO: This is temporary until user settings are implemented.
+    public async setReadingProgression(newProgression: ReadingProgression) {
+        if(this.currentProgression === newProgression) return;
+        this.currentProgression = newProgression;
+        await this.framePool.update(this.pub, this.currentLocator, this.determineModules(), true);
+        this.attachListener();
     }
 
     get publication(): Publication {
         return this.pub;
     }
 
-    go(locator: Locator, animated: boolean, cb: () => void): void {
+    public go(locator: Locator, animated: boolean, cb: () => void): void {
         const href = locator.href.split("#")[0];
         // TODO do we let clients go to a resource too? Seems to be the case in kotlin
         let link = this.pub.readingOrder.findWithHref(href);
@@ -274,7 +294,7 @@ export class EpubNavigator extends VisualNavigator {
         });*/
     }
 
-    goLink(link: Link, animated: boolean, cb: () => void): void {
+    public goLink(link: Link, animated: boolean, cb: () => void): void {
         return this.go(link.locator, animated, cb);
     }
 }

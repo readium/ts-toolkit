@@ -24,55 +24,60 @@ export type CommsCallback = (data: unknown, ack: CommsAck) => void; // TODO: may
  * adds structure to the messages and lets modules register callbacks.
  */
 export class Comms {
+    private readonly wnd: Window;
     private destination: MessageEventSource | null = null;
     private registrar = new Map<CommsCommandKey, Registrant[]>();
     private origin: string = "";
     private channelId: string = "";
 
     constructor(wnd: Window) {
-        wnd.addEventListener("message", (event) => {
-            if(event.source === null) throw Error("Event source is null");
-            if(typeof event.data !== "object") return;
-            const data = event.data as CommsMessage; // Cast it as a CommsMessage
-            if(!("_readium" in data) || !data._readium || data._readium <= 0) return; // Not for us
-            if(data.key === "_ping") {
-                // The "ping" gives us a destination we bind to for posting events
-                if(!this.destination) {
-                    this.destination = event.source;
-                    this.origin = event.origin;
-                    this.channelId = data._channel;
-
-                    // Make sure we're communicating with a host on the same comms version
-                    if(data._readium !== COMMS_VERSION) {
-                        if(data._readium > COMMS_VERSION)
-                            this.send("error", `received comms version ${data._readium} higher than ${COMMS_VERSION}`);
-                        else
-                            this.send("error", `received comms version ${data._readium} lower than ${COMMS_VERSION}`);
-
-                        this.destination = null;
-                        this.origin = "";
-                        this.channelId = "";
-                        return;
-                    }
-
-                    this.send("_pong", undefined);
-                    this.preLog.forEach(d => this.send("log", d));
-                    this.preLog = [];
-                }
-                return;
-            } else if(this.channelId) {
-                // Enforce matching channel ID and origin
-                if(
-                    data._channel !== this.channelId ||
-                    event.origin !== this.origin
-                ) return;
-            } else {
-                // Ignore any messages beside _ping if not initialized
-                return;
-            }
-            this.handle(data);
-        });
+        this.wnd = wnd;
+        wnd.addEventListener("message", this.receiver);
     }
+
+    private receive(event: MessageEvent) {
+        if(event.source === null) throw Error("Event source is null");
+        if(typeof event.data !== "object") return;
+        const data = event.data as CommsMessage; // Cast it as a CommsMessage
+        if(!("_readium" in data) || !data._readium || data._readium <= 0) return; // Not for us
+        if(data.key === "_ping") {
+            // The "ping" gives us a destination we bind to for posting events
+            if(!this.destination) {
+                this.destination = event.source;
+                this.origin = event.origin;
+                this.channelId = data._channel;
+
+                // Make sure we're communicating with a host on the same comms version
+                if(data._readium !== COMMS_VERSION) {
+                    if(data._readium > COMMS_VERSION)
+                        this.send("error", `received comms version ${data._readium} higher than ${COMMS_VERSION}`);
+                    else
+                        this.send("error", `received comms version ${data._readium} lower than ${COMMS_VERSION}`);
+
+                    this.destination = null;
+                    this.origin = "";
+                    this.channelId = "";
+                    return;
+                }
+
+                this.send("_pong", undefined);
+                this.preLog.forEach(d => this.send("log", d));
+                this.preLog = [];
+            }
+            return;
+        } else if(this.channelId) {
+            // Enforce matching channel ID and origin
+            if(
+                data._channel !== this.channelId ||
+                event.origin !== this.origin
+            ) return;
+        } else {
+            // Ignore any messages beside _ping if not initialized
+            return;
+        }
+        this.handle(data);
+    }
+    private receiver = this.receive.bind(this);
 
     private handle(data: CommsMessage) {
         const listeners = this.registrar.get(data.key as CommsCommandKey);
@@ -121,6 +126,14 @@ export class Comms {
 
     public get ready() {
         return !!this.destination;
+    }
+
+    public destroy() {
+        this.destination = null;
+        this.channelId = "";
+        this.preLog = [];
+        this.registrar.clear();
+        this.wnd.removeEventListener("message", this.receiver);
     }
 
     public send(key: CommsEventKey, data: unknown, id: unknown = undefined, transfer: Transferable[] = []) {

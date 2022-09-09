@@ -2,6 +2,7 @@ import { Comms, mid } from "../../comms";
 import { Snapper } from "./Snapper";
 import { getColumnCountPerScreen, isRTL, appendVirtualColumnIfNeeded } from "../../helpers/document";
 import { easeInOutQuad } from "../../helpers/animation";
+import { ModuleName } from "../ModuleLibrary";
 
 const COLUMN_SNAPPER_STYLE_ID = "readium-column-snapper-style";
 const SNAP_DURATION = 200; // Milliseconds
@@ -16,7 +17,7 @@ enum ScrollTouchState {
  * A {Snapper} for reflowable resources using a column-based layout
  */
 export class ColumnSnapper extends Snapper {
-    static readonly moduleName = "column_snapper";
+    static readonly moduleName: ModuleName = "column_snapper";
     private resizeObserver!: ResizeObserver;
     private mutationObserver!: MutationObserver;
     private wnd!: Window;

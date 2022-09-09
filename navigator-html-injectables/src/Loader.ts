@@ -1,6 +1,4 @@
-import { CommsCommandKey, CommsMessage, COMMS_VERSION } from "./comms";
 import { Comms } from "./comms/comms";
-import mid from "./comms/mid";
 import { Module, ModuleDerived, ModuleLibrary, ModuleName } from "./modules";
 
 /**
@@ -78,6 +76,7 @@ export class Loader<T extends string = ModuleName> {
      * Unmount and remove all modules
      */
     public destroy() {
+        this.comms.destroy();
         this.loadedModules.forEach(m => m.unmount(this.wnd, this.comms));
         this.loadedModules = [];
     }

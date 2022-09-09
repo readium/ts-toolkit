@@ -24,15 +24,19 @@ export default class FrameManager {
     async load(modules: ModuleName[]): Promise<Window> {
         return new Promise((res, rej) => {
             if(this.loader) {
+                const wnd = this.frame.contentWindow!;
                 // Check if currently loaded modules are equal
-                if(this.currModules.sort().join("|") === modules.sort().join("|")) {
-                    try { res(this.frame.contentWindow!); } catch (error) {};
+                if([...this.currModules].sort().join("|") === [...modules].sort().join("|")) {
+                    try { res(wnd); } catch (error) {};
                     return;
                 }
+                this.comms?.halt();
                 this.loader.destroy();
-                this.loader = new Loader(this.frame.contentWindow!);
+                this.loader = new Loader(wnd, modules);
                 this.currModules = modules;
-                try { res(this.frame.contentWindow!); } catch (error) {}
+                this.comms = undefined;
+                try { res(wnd); } catch (error) {}
+                return;
             }
             this.frame.onload = () => {
                 const wnd = this.frame.contentWindow!;
@@ -58,8 +62,9 @@ export default class FrameManager {
         this.frame.style.opacity = "0";
         this.frame.style.pointerEvents = "none";
         if(this.frame.parentElement) {
+            if(this.comms === undefined) return;
             return new Promise((res, _) => {
-                this.comms?.send("unfocus", undefined, () => {
+                this.comms?.send("unfocus", undefined, (ok: boolean) => {
                     this.comms?.halt();
                     res();
                 });
@@ -76,7 +81,7 @@ export default class FrameManager {
         if(this.comms) this.comms.resume();
         else this.comms = new FrameComms(this.frame.contentWindow!, this.source);
         return new Promise((res, _) => {
-            this.comms?.send("focus", undefined, () => {
+            this.comms?.send("focus", undefined, (ok: boolean) => {
                 if(atProgress && atProgress > 0) {
                     this.comms?.send("go_progression", atProgress, () => {
                         this.frame.style.removeProperty("visibility");
