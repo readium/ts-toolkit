@@ -25,9 +25,8 @@ export class ScrollSnapper extends Snapper {
             customElements.define("anchor-observer", AnchorObserver);
     }
 
-    private reportProgress() {
-        this.comms.send("progress", this.wnd.scrollY / this.doc().scrollHeight);
-        console.log("reporting scrollsnapper progress", this.wnd.scrollY, this.doc().scrollHeight, this.wnd.scrollY / this.doc().scrollHeight)
+    private reportProgress(progress: number) {
+        this.comms.send("progress", progress);
     }
 
     mount(wnd: Window, comms: Comms): boolean {
@@ -36,6 +35,7 @@ export class ScrollSnapper extends Snapper {
 
         comms.register("go_progression", ScrollSnapper.moduleName, (data, ack) => {
             const position = data as number;
+
             if (position < 0 || position > 1) {
                 comms.send("error", {
                     message: "go_progression must be given a position from 0.0 to 1.0"
@@ -43,32 +43,35 @@ export class ScrollSnapper extends Snapper {
                 ack(false);
                 return;
             }
-            this.doc().scrollTop = this.doc().scrollHeight * position;
-            this.reportProgress();
-            ack(true);
-        })
+
+            this.wnd.requestAnimationFrame(() => {
+              this.doc().scrollTop = this.doc().offsetHeight * position;
+              this.reportProgress(position);
+              ack(true);
+          });
+        });
 
         comms.register("go_start", ScrollSnapper.moduleName, (_, ack) => {
             if (this.doc().scrollTop === 0) return ack(false);
             this.doc().scrollTop = 0;
-            this.reportProgress();
+            this.reportProgress(0);
             ack(true);
         });
 
         comms.register("go_end", ScrollSnapper.moduleName, (_, ack) => {
             if (this.doc().scrollTop === 0) return ack(false);
             this.doc().scrollTop = 0;
-            this.reportProgress();
+            this.reportProgress(0);
             ack(true);
         })
 
         comms.register("go_prev", ScrollSnapper.moduleName, (_, ack) => {
-            this.reportProgress();
+            this.reportProgress(0);
             ack(false);
         });
 
         comms.register("go_next", ScrollSnapper.moduleName, (_, ack) => {
-            this.reportProgress();
+            this.reportProgress(0);
             ack(false);
         });
 
