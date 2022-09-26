@@ -23,12 +23,13 @@ export class EpubNavigator extends VisualNavigator {
     private currentLocation!: Locator;
     private currentProgression: ReadingProgression;
 
-    constructor(container: HTMLElement, pub: Publication, listeners: EpubNavigatorListeners, positions: Locator[] = []) {
+    constructor(container: HTMLElement, pub: Publication, listeners: EpubNavigatorListeners, positions: Locator[] = [], initialPosition: Locator | undefined = undefined) {
         super();
         this.pub = pub;
         this.currentProgression = pub.metadata.effectiveReadingProgression;
         this.container = container;
         this.listeners = listeners;
+        this.currentLocation = initialPosition!;
         if (positions.length)
             this.positions = positions;
     }
@@ -37,7 +38,8 @@ export class EpubNavigator extends VisualNavigator {
         if (!this.positions?.length)
             this.positions = await this.pub.positionsFromManifest();
         this.framePool = new FramePoolManager(this.container, this.positions);
-        this.currentLocation = this.positions[0];
+        if(this.currentLocation === undefined)
+            this.currentLocation = this.positions[0];
         await this.apply();
     }
 
