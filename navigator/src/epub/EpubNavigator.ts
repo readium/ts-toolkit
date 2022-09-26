@@ -11,6 +11,7 @@ export interface EpubNavigatorListeners {
     tap: (e: FrameClickEvent) => boolean; // Return true to prevent handling here
     click: (e: FrameClickEvent) => boolean;  // Return true to prevent handling here
     miscPointer: (amount: number) => void;
+    customEvent: (key: string, data: unknown) => void;
     // showToc: () => void;
 }
 
@@ -121,7 +122,7 @@ export class EpubNavigator extends VisualNavigator {
                 console.log(this.cframe?.source.split("/")[3], ...(data as any[]));
                 break;
             default:
-                console.warn("Unknown frame msg key", key); // TODO remove/replace
+                this.listeners.customEvent(key, data);
                 break;
         }
     }
