@@ -12,6 +12,7 @@ export default class FramePoolManager {
     private readonly pool: Map<string, FrameManager> = new Map();
     private readonly blobs: Map<string, string> = new Map();
     private readonly inprogress: Map<string, Promise<void>> = new Map();
+    private currentBaseURL: string | undefined;
 
     constructor(container: HTMLElement, positions: Locator[]) {
         this.container = container;
@@ -74,7 +75,6 @@ export default class FramePoolManager {
             b.href = base;
             doc.head.firstChild!.before(b);
         }
-        
 
         // Make blob from doc
         return URL.createObjectURL(
@@ -97,7 +97,7 @@ export default class FramePoolManager {
             await this.inprogress.get(newHref);
 
         // Create a new progress that doesn't resolve until complete
-        // loading of the resourceresource has finished.
+        // loading of the resource and its dependencies has finished.
         const progressPromise = new Promise<void>(async (resolve, _) => {
             const disposal: string[] = [];
             const creation: string[] = [];
@@ -115,14 +115,29 @@ export default class FramePoolManager {
                 await this.pool.get(href)?.destroy();
                 this.pool.delete(href);
             });
+
+            // Check if base URL of publication has changed
+            if(this.currentBaseURL !== undefined && pub.baseURL !== this.currentBaseURL) {
+                // Revoke all blobs
+                this.blobs.forEach(v => URL.revokeObjectURL(v));
+                this.blobs.clear();
+            }
+            this.currentBaseURL = pub.baseURL;
+
             const creator = async (href: string) => {
                 if(this.pool.has(href)) {
-                    await this.pool.get(href)!.load(modules);
-                    return;
+                    const fm = this.pool.get(href)!;
+                    if(!this.blobs.has(href)) {
+                        await fm.destroy();
+                        this.pool.delete(href);
+                    } else {
+                        await fm.load(modules);
+                        return;
+                    }
                 }
                 const itm = pub.readingOrder.findWithHref(href);
                 if(!itm) return; // TODO throw?
-                const burl = itm.toURL(pub.baseURL) || "";
+                const burl = itm.toURL(this.currentBaseURL) || "";
                 if(!this.blobs.has(href)) {
                     if(!itm.mediaType.isHTML) {
                         if(itm.mediaType.isBitmap) {
