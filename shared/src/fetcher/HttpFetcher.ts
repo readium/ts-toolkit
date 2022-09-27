@@ -29,7 +29,7 @@ export class HttpFetcher implements Fetcher {
   }
 }
 
-class HttpResource implements Resource {
+export class HttpResource implements Resource {
   private readonly _link: Link; // "link" conflicts with inteface function
   private readonly url: string;
   private _headResponse?: Response;
