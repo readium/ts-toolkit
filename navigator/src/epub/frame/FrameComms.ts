@@ -130,7 +130,7 @@ export class FrameComms {
                 key,
                 strict,
             } as CommsMessage,
-            this.origin,
+            "/", // Same origin
             transfer
         );
         return id;
