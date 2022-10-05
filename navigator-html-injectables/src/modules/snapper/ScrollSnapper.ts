@@ -3,6 +3,8 @@ import { AnchorObserver, helperCreateAnchorElements, helperRemoveAnchorElements 
 import { ModuleName } from "../ModuleLibrary";
 import { Snapper } from "./Snapper";
 
+const SCROLL_SNAPPER_STYLE_ID = "readium-scroll-snapper-style";
+
 export class ScrollSnapper extends Snapper {
     static readonly moduleName: ModuleName = "scroll_snapper";
     private wnd!: Window;
@@ -32,6 +34,20 @@ export class ScrollSnapper extends Snapper {
     mount(wnd: Window, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
+
+        // Add styling to hide the scrollbar
+        const style = wnd.document.createElement("style");
+        style.id = SCROLL_SNAPPER_STYLE_ID;
+        style.textContent = `
+        * {
+            scrollbar-width: none; /* for Firefox */
+        }
+        
+        body::-webkit-scrollbar {
+            display: none; /* for Chrome, Safari, and Opera */
+        }
+        `;
+        wnd.document.head.appendChild(style);
 
         comms.register("go_progression", ScrollSnapper.moduleName, (data, ack) => {
             const position = data as number;
