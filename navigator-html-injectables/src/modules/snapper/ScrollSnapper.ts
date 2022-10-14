@@ -82,12 +82,10 @@ export class ScrollSnapper extends Snapper {
         })
 
         comms.register("go_prev", ScrollSnapper.moduleName, (_, ack) => {
-            this.reportProgress(0);
             ack(false);
         });
 
         comms.register("go_next", ScrollSnapper.moduleName, (_, ack) => {
-            this.reportProgress(0);
             ack(false);
         });
 
