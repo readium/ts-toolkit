@@ -80,7 +80,6 @@ export class EpubNavigator extends VisualNavigator {
                             console.warn("TODO reimplement anchor jump!");
                             // contentWindow.readium.scrollToId(origHref.substring(1));
                         } else {
-                            // TODO see if this can be improved
                             try {
                                 this.goLink(new Link({
                                     href: path.join(path.dirname(this.currentLocation.href), origHref)
@@ -283,10 +282,12 @@ export class EpubNavigator extends VisualNavigator {
         }
 
         this.currentLocation = this.positions.find(p => p.href === link!.href)!;
-        this.apply().then(() => cb());
-        /*this.apply(!hasProgression).then(() => {
+        this.apply().then(() => {
+            const progression = locator?.locations?.progression;
+            const hasProgression = progression && progression > 0;
+
             if(hasProgression)
-                this.cframe!.msg!.send("go_progression", locator.locations.progression!, () => {
+                this.cframe!.msg!.send("go_progression", progression, () => {
                     // Now that we've gone to the right progression, we can attach the listeners.
                     // Doing this only at this stage reduces janky UI with multiple progression updates.
                     this.attachListener();
@@ -294,7 +295,7 @@ export class EpubNavigator extends VisualNavigator {
                 });
             else
                 cb();
-        });*/
+        });
     }
 
     public goLink(link: Link, animated: boolean, cb: () => void): void {
