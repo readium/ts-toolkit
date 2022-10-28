@@ -1,5 +1,6 @@
 import { ModuleName } from "@readium/navigator-html-injectables/src";
 import { Locator, Publication, MediaType } from "@readium/shared/src";
+import FrameBlobBuider from "./FrameBlobBuilder";
 import FrameManager from "./FrameManager";
 
 const UPPER_BOUNDARY = 5;
@@ -49,41 +50,6 @@ export default class FramePoolManager {
         this.container.childNodes.forEach(v => {
             if(v.nodeType === Node.ELEMENT_NODE || v.nodeType === Node.TEXT_NODE) v.remove();
         })
-    }
-
-    private finalizeDOM(doc: Document, base: string | undefined, mediaType: MediaType): string {
-        if(!doc) return "";
-
-        // Inject scripts/styles
-        const css = (name: string) => {
-            const d = doc.createElement("link");
-            d.rel = "stylesheet";
-            d.type = "text/css";
-            d.href = // TODO standardize
-            "https://cdn.jsdelivr.net/gh/readium/readium-css@583011453612e6f695056ab6c086a2c4f4cac9c0/css/dist/{FILE}".replace(
-                "{FILE}",
-                name
-            );
-            return d;
-        };
-        doc.head.firstChild ? doc.head.firstChild.before(css("ReadiumCSS-before.css")) : doc.head.appendChild(css("ReadiumCSS-before.css"));
-        doc.head.appendChild(css("ReadiumCSS-after.css"));
-
-        if(base !== undefined) {
-            // Set all URL bases. Very convenient!
-            const b = doc.createElement("base");
-            b.href = base;
-            doc.head.firstChild!.before(b);
-        }
-
-        // Make blob from doc
-        return URL.createObjectURL(
-            new Blob([new XMLSerializer().serializeToString(doc)], {
-              type: mediaType.isHTML
-                ? mediaType.string
-                : "application/xhtml+xml", // Fallback to XHTML
-            })
-          );
     }
 
     async update(pub: Publication, locator: Locator, modules: ModuleName[], force=false) {
@@ -137,33 +103,10 @@ export default class FramePoolManager {
                 }
                 const itm = pub.readingOrder.findWithHref(href);
                 if(!itm) return; // TODO throw?
-                const burl = itm.toURL(this.currentBaseURL) || "";
                 if(!this.blobs.has(href)) {
-                    if(!itm.mediaType.isHTML) {
-                        if(itm.mediaType.isBitmap) {
-                            // Rudimentary image display
-                            const doc = document.implementation.createHTMLDocument(itm.title || itm.href);
-                            const simg = document.createElement("img");
-                            simg.src = burl || "";
-                            simg.alt = itm.title || "";
-                            simg.loading = "lazy";
-                            simg.decoding = "async";
-                            doc.body.appendChild(simg);
-                            const blobURL = this.finalizeDOM(doc, burl, itm.mediaType);
-                            this.blobs.set(href, blobURL);
-                        } else
-                            throw Error("Unsupported frame mediatype " + itm.mediaType.string);
-                    } else {
-                        // Load the HTML resource
-                        const txt = await pub.get(itm).readAsString();
-                        if(!txt) throw new Error(`Failed reading item ${itm.href}`);
-                        const doc = new DOMParser().parseFromString(
-                            txt,
-                            itm.mediaType.string as DOMParserSupportedType
-                        );
-                        const blobURL = this.finalizeDOM(doc, burl, itm.mediaType);
-                        this.blobs.set(href, blobURL);
-                    }
+                    const blobBuilder = new FrameBlobBuider(pub, this.currentBaseURL || "", itm);
+                    const blobURL = await blobBuilder.build();
+                    this.blobs.set(href, blobURL);
                 }
 
                 // Create <iframe>

@@ -1,6 +1,5 @@
 import { Link, Locator, Publication, ReadingProgression } from "@readium/shared/src";
 
-type cbv = () => void;
 type cbb = (ok: boolean) => void;
 
 export abstract class Navigator {
@@ -10,12 +9,12 @@ export abstract class Navigator {
     /**
      * Moves to the position in the publication corresponding to the given {Locator}.
      */
-    abstract go(locator: Locator, animated: boolean, cb: cbv): void;
+    abstract go(locator: Locator, animated: boolean, cb: cbb): void;
 
     /**
      * Moves to the position in the publication targeted by the given link.
      */
-    abstract goLink(link: Link, animated: boolean, cb: cbv): void;
+    abstract goLink(link: Link, animated: boolean, cb: cbb): void;
 
     /**
      * Moves to the next content portion (eg. page) in the reading progression direction.
@@ -32,7 +31,7 @@ export abstract class Navigator {
     /**
      * Destroy all resources associated with this navigator. Synonymous with "unmount"
      */
-    abstract destroy();
+    abstract destroy(): void;
 }
 
 export abstract class VisualNavigator extends Navigator {
@@ -45,7 +44,7 @@ export abstract class VisualNavigator extends Navigator {
      /**
       * Moves to the left content portion (eg. page) relative to the reading progression direction.
       */
-     goLeft(animated = false, completion: cbv) {
+     goLeft(animated = false, completion: cbb) {
         if(this.readingProgression === ReadingProgression.ltr || this.readingProgression === ReadingProgression.ttb || this.readingProgression === ReadingProgression.auto)
             this.goBackward(animated, completion);
         else if(this.readingProgression === ReadingProgression.rtl || this.readingProgression === ReadingProgression.btt)
@@ -55,7 +54,7 @@ export abstract class VisualNavigator extends Navigator {
      /**
       * Moves to the right content portion (eg. page) relative to the reading progression direction.
       */
-     goRight(animated = false, completion: cbv) {
+     goRight(animated = false, completion: cbb) {
         if(this.readingProgression === ReadingProgression.ltr || this.readingProgression === ReadingProgression.ttb || this.readingProgression === ReadingProgression.auto)
             this.goForward(animated, completion);
         else if(this.readingProgression === ReadingProgression.rtl || this.readingProgression === ReadingProgression.btt)

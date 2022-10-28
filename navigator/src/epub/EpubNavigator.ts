@@ -47,7 +47,7 @@ export class EpubNavigator extends VisualNavigator {
     /**
      * Exposed to the public to compensate for lack of implemented readium conveniences
      */
-    public get cframe() {
+    public get _cframe() {
         return this.framePool.currentFrame;
     }
 
@@ -59,7 +59,7 @@ export class EpubNavigator extends VisualNavigator {
     public eventListener(key: CommsEventKey, data: unknown) {
         switch (key) {
             case "_pong":
-                this.listeners.frameLoaded(this.cframe!.iframe.contentWindow!);
+                this.listeners.frameLoaded(this._cframe!.iframe.contentWindow!);
                 this.listeners.positionChanged(this.currentLocation);
                 break;
             case "click":
@@ -94,7 +94,7 @@ export class EpubNavigator extends VisualNavigator {
                 } else {
                     const handled = key === "click" ? this.listeners.click(edata) : this.listeners.tap(edata);
                     if(handled) break;
-                    const oneQuarter = (this.cframe!.window.innerWidth * window.devicePixelRatio) / 4;
+                    const oneQuarter = (this._cframe!.window.innerWidth * window.devicePixelRatio) / 4;
                     // open UI if middle screen is clicked/tapped
                     if (edata.x >= oneQuarter && edata.x <= oneQuarter * 3) this.listeners.miscPointer(1);
                     // if (scrollMode.value) return; TODO!
@@ -118,7 +118,7 @@ export class EpubNavigator extends VisualNavigator {
                 this.syncLocation(data as number);
                 break;
             case "log":
-                console.log(this.cframe?.source.split("/")[3], ...(data as any[]));
+                console.log(this._cframe?.source.split("/")[3], ...(data as any[]));
                 break;
             default:
                 this.listeners.customEvent(key, data);
@@ -140,8 +140,8 @@ export class EpubNavigator extends VisualNavigator {
 
     // Start listening to messages from the current iframe
     private attachListener() {
-        if(!this.cframe) throw Error("no cframe to attach listener to");
-        if(this.cframe.msg) this.cframe.msg.listener = (key: CommsEventKey, value: unknown) => {
+        if(!this._cframe) throw Error("no cframe to attach listener to");
+        if(this._cframe.msg) this._cframe.msg.listener = (key: CommsEventKey, value: unknown) => {
             this.eventListener(key, value);
         }
     }
@@ -220,7 +220,7 @@ export class EpubNavigator extends VisualNavigator {
     }
 
     public goBackward(animated: boolean, cb: (ok: boolean) => void): void {
-        this.cframe?.msg?.send("go_prev", undefined, async (ack) => {
+        this._cframe?.msg?.send("go_prev", undefined, async (ack) => {
             if(ack)
                 // OK
                 cb(true);
@@ -231,7 +231,7 @@ export class EpubNavigator extends VisualNavigator {
     }
 
     public goForward(animated: boolean, cb: (ok: boolean) => void): void {
-        this.cframe?.msg?.send("go_next", undefined, async (ack) => {
+        this._cframe?.msg?.send("go_next", undefined, async (ack) => {
             if(ack)
                 // OK
                 cb(true);
@@ -267,18 +267,19 @@ export class EpubNavigator extends VisualNavigator {
         return this.pub;
     }
 
-    public go(locator: Locator, animated: boolean, cb: () => void): void {
+    public go(locator: Locator, animated: boolean, cb: (ok: boolean) => void): void {
         const href = locator.href.split("#")[0];
-        // TODO do we let clients go to a resource too? Seems to be the case in kotlin
         let link = this.pub.readingOrder.findWithHref(href);
         if(!link) {
+            // We don't let the user go to a resource right now.
             link = this.pub.resources?.findWithHref(href);
-            if(!link) throw Error(`Nothing in readingOrder or resources with href ${href} to go to`);
+            if(!link) console.error(`Nothing in readingOrder or resources with href ${href} to go to`);
             /*if(link.rels?.has("contents")) {
                 this.listeners.showToc();
                 return cb();
             }*/
-            else throw Error(`${href} is only in resources, not readingOrder. Can't go to it`);
+            else console.error(`${href} is only in resources, not readingOrder. Can't go to it`);
+            return cb(false);
         }
 
         this.currentLocation = this.positions.find(p => p.href === link!.href)!;
@@ -287,18 +288,18 @@ export class EpubNavigator extends VisualNavigator {
             const hasProgression = progression && progression > 0;
 
             if(hasProgression)
-                this.cframe!.msg!.send("go_progression", progression, () => {
+                this._cframe!.msg!.send("go_progression", progression, () => {
                     // Now that we've gone to the right progression, we can attach the listeners.
                     // Doing this only at this stage reduces janky UI with multiple progression updates.
                     this.attachListener();
-                    cb();
+                    cb(true);
                 });
             else
-                cb();
+                cb(true);
         });
     }
 
-    public goLink(link: Link, animated: boolean, cb: () => void): void {
+    public goLink(link: Link, animated: boolean, cb: (ok: boolean) => void): void {
         return this.go(link.locator, animated, cb);
     }
 }

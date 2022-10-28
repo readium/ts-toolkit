@@ -2,7 +2,8 @@ import { Comms } from "./comms/comms";
 import { Module, ModuleDerived, ModuleLibrary, ModuleName } from "./modules";
 
 /**
- * The Module loader. Not really sure what else to say right now
+ * The Module loader. Handles initialization of the HTML injectables
+ * in the target Window, which could be an IFrame, or the current window).
  */
 export class Loader<T extends string = ModuleName> {
     private loadedModules: Module[] = [];
@@ -26,15 +27,20 @@ export class Loader<T extends string = ModuleName> {
         if(wnd.parent !== wnd) this.comms.log("Loader is probably in a frame");
 
         this.loadedModules = uniqueModules.map(name => {
-            const m = ModuleLibrary.get(name); // Find a module with this name
-            if(m === undefined) {
-                console.warn(`Module "${name} does not exist in the library"`)
-                return m;
-            }
-            const nm = new m(); // Construct module
+            const nm = this.loadModule(name);
+            if(!nm) return;
             nm.mount(this.wnd, this.comms); // Mount module
             return nm;
         }).filter(m => m !== undefined) as Module[]; // Filter out all modules not found
+    }
+
+    private loadModule(moduleName: string) {
+        const m = ModuleLibrary.get(moduleName); // Find a module with this name
+        if(m === undefined) {
+            this.comms.log(`Module "${name}" does not exist in the library`)
+            return m;
+        }
+        return new m(); // Construct module
     }
 
     /**
@@ -43,13 +49,8 @@ export class Loader<T extends string = ModuleName> {
      * @returns Success
      */
     public addModule(moduleName: T): boolean {
-        const m = ModuleLibrary.get(moduleName); // Find a module with this name
-        if(m === undefined) {
-            console.warn(`Module "${moduleName} does not exist in the library"`)
-            return false;
-        }
-        const nm = new m(); // Construct module
-        if(!nm.mount(this.wnd, this.comms)) return false; // Mount module
+        const nm = this.loadModule(moduleName);
+        if(!nm || !nm.mount(this.wnd, this.comms)) return false; // Mount module
         this.loadedModules.push(nm); // Add module to list
         return true;
     }
@@ -62,7 +63,7 @@ export class Loader<T extends string = ModuleName> {
     public removeModule(moduleName: T): boolean {
         const m = ModuleLibrary.get(moduleName) as ModuleDerived; // Get the right class
         if(m === undefined) {
-            console.warn(`Module "${moduleName} does not exist in the library"`)
+            this.comms.log(`Module "${moduleName}" does not exist in the library`)
             return false;
         }
         const index = this.loadedModules.findIndex(lm => lm instanceof m); // Find module
