@@ -12,13 +12,14 @@ export class HttpFetcher implements Fetcher {
   constructor(client?: FetchImplementation, baseUrl?: string) {
     this.client = client || window.fetch;
     this.baseUrl = baseUrl;
+    this.client = client ?? fetch;
   }
 
   links(): Link[] {
     return [];
   }
 
-  get(link: Link) {
+  get(link: Link): Resource {
     const url = link.toURL(this.baseUrl);
     if (url === undefined) {
       // TODO FailureResource
@@ -83,7 +84,7 @@ export class HttpResource implements Resource {
   async length(): Promise<number> {
     const resp = await this.headResponse();
     const contentLength = resp.headers.get('content-length');
-    if (contentLength === '')
+    if (contentLength === null || contentLength === '')
       throw new Error('length for resource unavailable'); // TODO
     return parseInt(contentLength);
   }
