@@ -3,16 +3,16 @@ on:
   push:
     paths:
       - 'shared/**'
-      - 'streamer/**'
-      - 'navigator/**'
-      - 'src/**'
-      - '.github/workflows/CI-shared.yml'
+      - '.github/workflows/CI.yml'
 
 jobs:
   build:
     name: Build, lint, and test on Node ${{ matrix.node }} and ${{ matrix.os }}
 
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: ./shared
     strategy:
       matrix:
         node: ['14.x', '16.x']
@@ -22,19 +22,23 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2
 
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v2.2.2
+  
       - name: Use Node ${{ matrix.node }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
+          cache: 'pnpm'
 
-      - name: Install deps and build (with cache)
-        uses: bahmutov/npm-install@v1
+      - name: Install deps and build
+        run: pnpm install
 
       - name: Lint
-        run: yarn lint
+        run: pnpm run lint
 
       - name: Test
-        run: yarn test --ci --coverage --maxWorkers=2
+        run: pnpm run test --ci --coverage --maxWorkers=2
 
       - name: Build
-        run: yarn build
+        run: pnpm run build

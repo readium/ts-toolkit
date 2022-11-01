@@ -2,17 +2,15 @@ import { Link } from '../publication/Link';
 import { Fetcher } from './Fetcher';
 import { NumberRange, Resource } from './Resource';
 
-export type FetchFunc = (
-  input: RequestInfo,
-  init?: RequestInit
-) => Promise<Response>;
+export type FetchImplementation = (input: RequestInfo | URL, init?: RequestInit | undefined) => Promise<Response>;
 
 // Fetches remote resources through HTTP.
 export class HttpFetcher implements Fetcher {
   private readonly baseUrl?: string;
-  private readonly client: FetchFunc;
+  private readonly client: FetchImplementation;
 
-  constructor(client?: FetchFunc, baseUrl?: string) {
+  constructor(client?: FetchImplementation, baseUrl?: string) {
+    this.client = client || window.fetch;
     this.baseUrl = baseUrl;
     this.client = client ?? fetch;
   }
@@ -35,17 +33,17 @@ export class HttpFetcher implements Fetcher {
   }
 }
 
-class HttpResource extends Resource {
+export class HttpResource implements Resource {
   private readonly _link: Link; // "link" conflicts with inteface function
   private readonly url: string;
-  private readonly client: FetchFunc;
+  private readonly client: FetchImplementation;
   private _headResponse?: Response;
 
-  constructor(client: FetchFunc, link: Link, url: string) {
-    super();
-    this.client = client;
+  constructor(client: FetchImplementation, link: Link, url: string) {
+    this.client = client || window.fetch;
     this._link = link;
     this.url = url;
+    
   }
 
   /** Cached HEAD response to get the expected content length and other metadata. */
