@@ -2,7 +2,10 @@ import { Link } from '../publication/Link';
 import { Fetcher } from './Fetcher';
 import { NumberRange, Resource } from './Resource';
 
-export type FetchImplementation = (input: RequestInfo | URL, init?: RequestInit | undefined) => Promise<Response>;
+export type FetchImplementation = (
+  input: RequestInfo | URL,
+  init?: RequestInit | undefined
+) => Promise<Response>;
 
 // Fetches remote resources through HTTP.
 export class HttpFetcher implements Fetcher {
@@ -43,7 +46,6 @@ export class HttpResource implements Resource {
     this.client = client || window.fetch;
     this._link = link;
     this.url = url;
-    
   }
 
   /** Cached HEAD response to get the expected content length and other metadata. */
