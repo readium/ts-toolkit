@@ -84,7 +84,8 @@ export class Publication {
     if (positionListLink === undefined) return [];
     const positionListJSON = (await this.get(
       positionListLink
-    ).readAsJSON()) as { positions: unknown[] };
+    ).readAsJSON()) as { positions: unknown[] | null, total: number };
+    if(!positionListJSON['total']) return [];
     return (positionListJSON['positions'] as unknown[]) // Get the array for the positions key
       .map(pos => Locator.deserialize(pos)) // Parse locators
       .filter(l => l !== undefined) as Locator[]; // Filter out failures
