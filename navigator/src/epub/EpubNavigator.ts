@@ -12,8 +12,19 @@ export interface EpubNavigatorListeners {
     click: (e: FrameClickEvent) => boolean;  // Return true to prevent handling here
     miscPointer: (amount: number) => void;
     customEvent: (key: string, data: unknown) => void;
+    handleLocator: (locator: Locator) => boolean; // Retrun true to prevent handling here
     // showToc: () => void;
 }
+
+const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListeners => ({
+    frameLoaded: listeners.frameLoaded || (() => {}),
+    positionChanged: listeners.positionChanged || (() => {}),
+    tap: listeners.tap || (() => false),
+    click: listeners.click || (() => false),
+    miscPointer: listeners.miscPointer || (() => {}),
+    customEvent: listeners.customEvent || (() => {}),
+    handleLocator: listeners.handleLocator || (() => false),
+})
 
 export class EpubNavigator extends VisualNavigator {
     private readonly pub: Publication;
@@ -29,7 +40,7 @@ export class EpubNavigator extends VisualNavigator {
         this.pub = pub;
         this.currentProgression = pub.metadata.effectiveReadingProgression;
         this.container = container;
-        this.listeners = listeners;
+        this.listeners = defaultListeners(listeners);
         this.currentLocation = initialPosition!;
         if (positions.length)
             this.positions = positions;
@@ -79,6 +90,15 @@ export class EpubNavigator extends VisualNavigator {
                         if (origHref.startsWith("#")) {
                             console.warn("TODO reimplement anchor jump!");
                             // contentWindow.readium.scrollToId(origHref.substring(1));
+                        } else if(
+                            origHref.startsWith("http://") ||
+                            origHref.startsWith("https://") ||
+                            origHref.startsWith("mailto:") ||
+                            origHref.startsWith("tel:")
+                        ) {
+                            this.listeners.handleLocator(new Link({
+                                href: origHref,
+                            }).locator);
                         } else {
                             try {
                                 this.goLink(new Link({
@@ -86,8 +106,9 @@ export class EpubNavigator extends VisualNavigator {
                                 }), false, () => { });
                             } catch (error) {
                                 console.warn(`Couldn't go to link for ${origHref}: ${error}`);
-                                if(key === "click") this.listeners.click(edata);
-                                else this.listeners.tap(edata);
+                                this.listeners.handleLocator(new Link({
+                                    href: origHref,
+                                }).locator);
                             }
                         }
                     } else console.log("Clicked on", element);
@@ -167,7 +188,10 @@ export class EpubNavigator extends VisualNavigator {
             0,
             Math.min(this.pub.readingOrder.items.length - 1, curr + relative)
         );
-        if (i === curr) return false;
+        if (i === curr) {
+            this._cframe?.msg?.send("shake", undefined, async (_) => {});
+            return false;
+        }
 
         // Apply change
         if(curr > i)
@@ -271,15 +295,7 @@ export class EpubNavigator extends VisualNavigator {
         const href = locator.href.split("#")[0];
         let link = this.pub.readingOrder.findWithHref(href);
         if(!link) {
-            // We don't let the user go to a resource right now.
-            link = this.pub.resources?.findWithHref(href);
-            if(!link) console.error(`Nothing in readingOrder or resources with href ${href} to go to`);
-            /*if(link.rels?.has("contents")) {
-                this.listeners.showToc();
-                return cb();
-            }*/
-            else console.error(`${href} is only in resources, not readingOrder. Can't go to it`);
-            return cb(false);
+            return cb(this.listeners.handleLocator(locator));
         }
 
         this.currentLocation = this.positions.find(p => p.href === link!.href)!;

@@ -58,6 +58,11 @@ export class ReflowablePeripherals extends Module {
     }
     private readonly onPointerMove = this.onPointMove.bind(this);
 
+    onPointDown(event: PointerEvent) {
+        this.pointerMoved = false;
+    }
+    private readonly onPointerDown = this.onPointDown.bind(this);
+
     onClick(event: MouseEvent) {
         // To prevent certain browser actions
         event.preventDefault(); // TODO when not to prevent?
@@ -67,6 +72,7 @@ export class ReflowablePeripherals extends Module {
     mount(wnd: Window, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
+        wnd.document.addEventListener("pointerdown", this.onPointerDown);
         wnd.document.addEventListener("pointerup", this.onPointerUp);
         wnd.document.addEventListener("pointermove", this.onPointerMove);
         wnd.document.addEventListener("click", this.onClicker);
@@ -76,6 +82,7 @@ export class ReflowablePeripherals extends Module {
     }
 
     unmount(wnd: Window, comms: Comms): boolean {
+        wnd.document.removeEventListener("pointerdown", this.onPointerDown);
         wnd.document.removeEventListener("pointerup", this.onPointerUp);
         wnd.document.removeEventListener("pointermove", this.onPointerMove);
         wnd.document.removeEventListener("click", this.onClicker);

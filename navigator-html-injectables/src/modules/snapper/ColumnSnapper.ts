@@ -23,6 +23,12 @@ export class ColumnSnapper extends Snapper {
     private wnd!: Window;
     private comms!: Comms;
     private doc() { return this.wnd.document.scrollingElement as HTMLElement; }
+    private scrollOffset() {
+        // The reason we do this is because when the document is transformed (translate3d),
+        // the scrollLeft value is 0 because... reasons. So we have to use the cached value
+        // from this.alreadyScrollLeft instead.
+        return (this.doc().scrollLeft > 0) ? this.doc().scrollLeft : this.alreadyScrollLeft;
+    }
 
     snapOffset(offset: number) {
         const value = offset + (isRTL(this.wnd) ? -1 : 1);
@@ -31,6 +37,23 @@ export class ColumnSnapper extends Snapper {
 
     reportProgress() {
         this.comms.send("progress", this.wnd.scrollX / this.cachedScrollWidth);
+    }
+
+    private shakeTimeout = 0;
+    shake() {
+        // - If already overscrolling (touchscreen), then shaking on top of it looks ugly
+        // - If already shaking, wait until it's finished before allowing another shake
+        if(this.overscroll !== 0 || this.shakeTimeout !== 0) return;
+        const doc = this.doc();
+
+        doc.classList.add((isRTL(this.wnd) ? "readium-bounce-l" : "readium-bounce-r"));
+        const curScrollLeft = this.scrollOffset();
+        this.shakeTimeout = this.wnd.setTimeout(() => {
+            doc.classList.remove("readium-bounce-l");
+            doc.classList.remove("readium-bounce-r");
+            this.shakeTimeout = 0;
+            this.doc().scrollLeft = curScrollLeft;
+        }, 150);
     }
 
     private snappingCancelled = false;
@@ -61,7 +84,7 @@ export class ColumnSnapper extends Snapper {
             ((factor * cdo) > 0 ? 2 : 1);
 
         const so = this.snapOffset(currentOffset + hurdle);
-        if(smooth && so !== doc.scrollLeft) { // Smooth snapping
+        if(smooth && so !== this.scrollOffset()) { // Smooth snapping
             this.snappingCancelled = false;
             const position = (start: number, end: number, elapsed: number, period: number) => {
                 if (elapsed > period) {
@@ -97,9 +120,9 @@ export class ColumnSnapper extends Snapper {
             doc.style.removeProperty("transform");
             this.wnd.requestAnimationFrame(() => {
                 doc.scrollLeft = so;
+                this.clearTouches();
                 if(!noprogress) this.reportProgress();
             });
-            this.clearTouches();
         }
     }
 
@@ -141,8 +164,8 @@ export class ColumnSnapper extends Snapper {
         if(this.touchState === ScrollTouchState.MOVE) {
             // Get the horizontal drag distance
             const dragOffset = this.dragOffset();
-            const scrollOffset = (this.doc().scrollLeft > 0) ? this.doc().scrollLeft : this.alreadyScrollLeft;
-            this.cachedScrollWidth = this.doc().scrollWidth!;
+            const scrollOffset = this.scrollOffset();
+            // this.cachedScrollWidth = this.doc().scrollWidth!;
             if(this.cachedScrollWidth <= this.wnd.innerWidth) {
                 // Only a single page, meaning any swipe triggers next/prev
                 this.reportProgress();
@@ -204,6 +227,24 @@ export class ColumnSnapper extends Snapper {
         const d = wnd.document.createElement("style");
         d.id = COLUMN_SNAPPER_STYLE_ID;
         d.textContent = `
+        @keyframes readium-bounce-l-animation {
+            0%, 100% {transform: translate3d(0, 0, 0);}
+            50% {transform: translate3d(-50px, 0, 0);}
+        }
+
+        @keyframes readium-bounce-r-animation {
+            0%, 100% {transform: translate3d(0, 0, 0);}
+            50% {transform: translate3d(50px, 0, 0);}
+        }
+
+        .readium-bounce-l {
+            animation: readium-bounce-l-animation 150ms ease-out 1;
+        }
+
+        .readium-bounce-r {
+            animation: readium-bounce-r-animation 150ms ease-out 1;
+        }
+
         html {
             overflow: hidden;
         }
@@ -306,6 +347,11 @@ export class ColumnSnapper extends Snapper {
 
         comms.register("unfocus", ColumnSnapper.moduleName, (_, ack) => {
             this.snappingCancelled = true;
+            ack(true);
+        });
+
+        comms.register("shake", ColumnSnapper.moduleName, (_, ack) => {
+            this.shake();
             ack(true);
         });
 
