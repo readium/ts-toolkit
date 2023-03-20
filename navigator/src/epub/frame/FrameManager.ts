@@ -52,7 +52,7 @@ export default class FrameManager {
     }
 
     async destroy() {
-        this.hide();
+        await this.hide();
         this.loader?.destroy();
         this.frame.remove();
     }

@@ -140,7 +140,7 @@ export default class FramePoolManager {
         this.inprogress.delete(newHref); // Delete it from the in progress map!
     }
 
-    get currentFrame(): FrameManager | undefined {
-        return this._currentFrame;
+    get currentFrames(): (FXLFrameManager | undefined)[] {
+        return [this._currentFrame];
     }
 }

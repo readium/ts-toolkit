@@ -1,6 +1,7 @@
-import { Link, Locator, Publication, ReadingProgression } from "@readium/shared/src";
+import { EPUBLayout, Link, Locator, Publication, ReadingProgression } from "@readium/shared/src";
 import { VisualNavigator } from "../";
 import FramePoolManager from "./frame/FramePoolManager";
+import FXLFramePoolManager from "./fxl/FXLFramePoolManager";
 import { CommsEventKey, ModuleLibrary, ModuleName } from "@readium/navigator-html-injectables/src";
 import { FrameClickEvent } from "@readium/navigator-html-injectables/src/modules/ReflowablePeripherals";
 import * as path from "path-browserify";
@@ -30,14 +31,16 @@ export class EpubNavigator extends VisualNavigator {
     private readonly pub: Publication;
     private readonly container: HTMLElement;
     private readonly listeners: EpubNavigatorListeners;
-    private framePool!: FramePoolManager;
+    private framePool!: FramePoolManager | FXLFramePoolManager;
     private positions!: Locator[];
     private currentLocation!: Locator;
     private currentProgression: ReadingProgression;
+    public readonly layout: EPUBLayout;
 
     constructor(container: HTMLElement, pub: Publication, listeners: EpubNavigatorListeners, positions: Locator[] = [], initialPosition: Locator | undefined = undefined) {
         super();
         this.pub = pub;
+        this.layout = EpubNavigator.determineLayout(pub);
         this.currentProgression = pub.metadata.effectiveReadingProgression;
         this.container = container;
         this.listeners = defaultListeners(listeners);
@@ -46,10 +49,21 @@ export class EpubNavigator extends VisualNavigator {
             this.positions = positions;
     }
 
+    public static determineLayout(pub: Publication): EPUBLayout {
+        const presentation = pub.metadata.getPresentation();
+        if(presentation?.layout == EPUBLayout.fixed) return EPUBLayout.fixed;
+        if(pub.metadata.otherMetadata && ("http://openmangaformat.org/schema/1.0#version" in pub.metadata.otherMetadata))
+            return EPUBLayout.fixed; // It's fixed layout even though it lacks presentation, although this should really be a divina
+        // TODO other logic to detect fixed layout publications
+        return EPUBLayout.reflowable;
+    }
+
     public async load() {
         if (!this.positions?.length)
             this.positions = await this.pub.positionsFromManifest();
-        this.framePool = new FramePoolManager(this.container, this.positions);
+        this.framePool = this.layout === EPUBLayout.fixed ?
+            new FXLFramePoolManager(this.container, this.positions, this.pub) :
+            new FramePoolManager(this.container, this.positions);
         if(this.currentLocation === undefined)
             this.currentLocation = this.positions[0];
         await this.apply();
@@ -57,9 +71,18 @@ export class EpubNavigator extends VisualNavigator {
 
     /**
      * Exposed to the public to compensate for lack of implemented readium conveniences
+     * TODO remove when settings management is incorporated
      */
-    public get _cframe() {
-        return this.framePool.currentFrame;
+    public get _cframes() {
+        return this.framePool.currentFrames;
+    }
+
+    /**
+     * Exposed to the public to compensate for lack of implemented readium conveniences
+     * TODO remove when settings management is incorporated
+     */
+    public get pool() {
+        return this.framePool;
     }
 
     /**
@@ -70,12 +93,19 @@ export class EpubNavigator extends VisualNavigator {
     public eventListener(key: CommsEventKey, data: unknown) {
         switch (key) {
             case "_pong":
-                this.listeners.frameLoaded(this._cframe!.iframe.contentWindow!);
+                this.listeners.frameLoaded(this._cframes[0]!.iframe.contentWindow!);
                 this.listeners.positionChanged(this.currentLocation);
                 break;
             case "click":
             case "tap":
                 const edata = data as FrameClickEvent;
+                if(this.layout === EPUBLayout.fixed) {
+                    const p = this.framePool as FXLFramePoolManager;
+                    if(p.perPage > 1) {
+                        // Spread
+                        console.log("S", edata.x, edata.y);
+                    }
+                }
                 if (edata.interactiveElement) {
                     const element = new DOMParser().parseFromString(
                         edata.interactiveElement,
@@ -114,8 +144,10 @@ export class EpubNavigator extends VisualNavigator {
                     } else console.log("Clicked on", element);
                 } else {
                     const handled = key === "click" ? this.listeners.click(edata) : this.listeners.tap(edata);
+                    console.log("handled?", handled);
                     if(handled) break;
-                    const oneQuarter = (this._cframe!.window.innerWidth * window.devicePixelRatio) / 4;
+                    const oneQuarter = ((this._cframes.length === 2 ? this._cframes[0]!.window.innerWidth + this._cframes[1]!.window.innerWidth : this._cframe!.window.innerWidth) * window.devicePixelRatio) / 4;
+                    console.log("OQ", oneQuarter, edata);
                     // open UI if middle screen is clicked/tapped
                     if (edata.x >= oneQuarter && edata.x <= oneQuarter * 3) this.listeners.miscPointer(1);
                     // if (scrollMode.value) return; TODO!
@@ -139,7 +171,7 @@ export class EpubNavigator extends VisualNavigator {
                 this.syncLocation(data as number);
                 break;
             case "log":
-                console.log(this._cframe?.source.split("/")[3], ...(data as any[]));
+                console.log(this._cframes[0]?.source?.split("/")[3], ...(data as any[]));
                 break;
             default:
                 this.listeners.customEvent(key, data);
@@ -149,6 +181,10 @@ export class EpubNavigator extends VisualNavigator {
 
     private determineModules() {
         let modules = Array.from(ModuleLibrary.keys()) as ModuleName[];
+
+        if(this.layout === EPUBLayout.fixed) {
+            return modules.filter((m) => m === "fixed_setup" || m === "reflowable_peripherals");
+        }
 
         // Horizontal vs. Vertical reading
         if (this.readingProgression === ReadingProgression.ttb || this.readingProgression === ReadingProgression.btt)
@@ -161,10 +197,14 @@ export class EpubNavigator extends VisualNavigator {
 
     // Start listening to messages from the current iframe
     private attachListener() {
-        if(!this._cframe) throw Error("no cframe to attach listener to");
-        if(this._cframe.msg) this._cframe.msg.listener = (key: CommsEventKey, value: unknown) => {
-            this.eventListener(key, value);
-        }
+        const vframes = this._cframes.filter(f => !!f);
+        if(vframes.length === 0) throw Error("no cframe to attach listener to");
+        this._cframes.forEach(f => {
+            if(f.msg) f.msg.listener = (key: CommsEventKey, value: unknown) => {
+                this.eventListener(key, value);
+            }
+        })
+        
     }
 
     private async apply() {
@@ -183,13 +223,47 @@ export class EpubNavigator extends VisualNavigator {
 
     private async changeResource(relative: number): Promise<boolean> {
         if (relative === 0) return false;
+
+        if(this.layout === EPUBLayout.fixed) {
+            const p = this.framePool as FXLFramePoolManager;
+            const old = p.currentSlide;
+            if(relative === 1)
+                p.next(p.perPage);
+            else if(relative === -1)
+                p.prev(p.perPage);
+            else
+                throw Error("Invalid relative value for FXL");
+
+            console.log(relative, "COMP", p.currentSlide, this.pub.readingOrder.items.length);
+            // Apply change
+            if(old > p.currentSlide)
+                for (let j = this.positions.length - 1; j >= 0; j--) {
+                    if(this.positions[j].href === this.pub.readingOrder.items[p.currentSlide].href) {
+                        this.currentLocation = this.positions[j].copyWithLocations({
+                            progression: 0.999999999999
+                        });
+                        break;
+                    }
+                }
+            else if(old < p.currentSlide)
+                for (let j = 0; j < this.positions.length; j++) {
+                    if(this.positions[j].href === this.pub.readingOrder.items[p.currentSlide].href) {
+                        this.currentLocation = this.positions[j];
+                        break;
+                    }
+                }
+
+            await this.apply();
+            return true;
+        }
+
         const curr = this.pub.readingOrder.findIndexWithHref(this.currentLocation.href);
         const i = Math.max(
             0,
             Math.min(this.pub.readingOrder.items.length - 1, curr + relative)
         );
         if (i === curr) {
-            this._cframe?.msg?.send("shake", undefined, async (_) => {});
+            this._cframes[0]?.msg?.send("shake", undefined, async (_) => {});
             return false;
         }
 
@@ -244,25 +318,35 @@ export class EpubNavigator extends VisualNavigator {
     }
 
     public goBackward(animated: boolean, cb: (ok: boolean) => void): void {
-        this._cframe?.msg?.send("go_prev", undefined, async (ack) => {
-            if(ack)
-                // OK
-                cb(true);
-            else
-                // Need to change resources because we're at the beginning of the current one
-                cb(await this.changeResource(-1));
-        });
+        if(this.layout === EPUBLayout.fixed) {
+            this.changeResource(-1);
+            cb(true);
+        } else {
+            this._cframes[0]?.msg?.send("go_prev", undefined, async (ack) => {
+                if(ack)
+                    // OK
+                    cb(true);
+                else
+                    // Need to change resources because we're at the beginning of the current one
+                    cb(await this.changeResource(-1));
+            });
+        }
     }
 
     public goForward(animated: boolean, cb: (ok: boolean) => void): void {
-        this._cframe?.msg?.send("go_next", undefined, async (ack) => {
-            if(ack)
-                // OK
-                cb(true);
-            else
-                // Need to change resources because we're at the end of the current one
-                cb(await this.changeResource(1));
-        });
+        if(this.layout === EPUBLayout.fixed) {
+            this.changeResource(1);
+            cb(true);
+        } else {
+            this._cframes[0]?.msg?.send("go_next", undefined, async (ack) => {
+                if(ack)
+                    // OK
+                    cb(true);
+                else
+                    // Need to change resources because we're at the end of the current one
+                    cb(await this.changeResource(1));
+            });
+        }
     }
 
     get currentLocator(): Locator {
@@ -272,6 +356,13 @@ export class EpubNavigator extends VisualNavigator {
         })();*/
 
         return this.currentLocation;
+    }
+
+    get currentPositionNumber(): number {
+        if(this.layout === EPUBLayout.fixed)
+         return (this.framePool as FXLFramePoolManager).currentNumber;
+
+        return this.currentLocator?.locations.position ?? 0;
     }
 
     // TODO: This is temporary until user settings are implemented.
@@ -304,7 +395,7 @@ export class EpubNavigator extends VisualNavigator {
             const hasProgression = progression && progression > 0;
 
             if(hasProgression)
-                this._cframe!.msg!.send("go_progression", progression, () => {
+                this._cframes[0]!.msg!.send("go_progression", progression, () => {
                     // Now that we've gone to the right progression, we can attach the listeners.
                     // Doing this only at this stage reduces janky UI with multiple progression updates.
                     this.attachListener();

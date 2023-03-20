@@ -106,6 +106,7 @@ export class ScrollSnapper extends Snapper {
     unmount(wnd: Window, comms: Comms): boolean {
         comms.unregisterAll(ScrollSnapper.moduleName);
         this.removeAnchorElements();
+        wnd.document.getElementById(SCROLL_SNAPPER_STYLE_ID)?.remove();
         comms.log("ScrollSnapper Unmounted");
         return true;
     }

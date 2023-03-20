@@ -14,18 +14,18 @@ export default class FrameBlobBuider {
         this.burl = item.toURL(baseURL) || "";
     }
 
-    public async build(): Promise<string> {
+    public async build(fxl = false): Promise<string> {
         if(!this.item.mediaType.isHTML) {
             if(this.item.mediaType.isBitmap) {
                 return this.buildImageFrame();
             } else
                 throw Error("Unsupported frame mediatype " + this.item.mediaType.string);
         } else {
-            return await this.buildHtmlFrame();
+            return await this.buildHtmlFrame(fxl);
         }
     }
 
-    private async buildHtmlFrame(): Promise<string> {
+    private async buildHtmlFrame(fxl = false): Promise<string> {
         // Load the HTML resource
         const txt = await this.pub.get(this.item).readAsString();
         if(!txt) throw new Error(`Failed reading item ${this.item.href}`);
@@ -33,7 +33,7 @@ export default class FrameBlobBuider {
             txt,
             this.item.mediaType.string as DOMParserSupportedType
         );
-        return this.finalizeDOM(doc, this.burl, this.item.mediaType);
+        return this.finalizeDOM(doc, this.burl, this.item.mediaType, fxl);
     }
 
     private buildImageFrame(): string {
@@ -48,23 +48,25 @@ export default class FrameBlobBuider {
         return this.finalizeDOM(doc, this.burl, this.item.mediaType);
     }
 
-    private finalizeDOM(doc: Document, base: string | undefined, mediaType: MediaType): string {
+    private finalizeDOM(doc: Document, base: string | undefined, mediaType: MediaType, fxl = false): string {
         if(!doc) return "";
     
-        // Inject scripts/styles
-        const css = (name: string) => {
-            const d = doc.createElement("link");
-            d.rel = "stylesheet";
-            d.type = "text/css";
-            d.href = // TODO standardize
-            READIUM_CSS_PATH.replace(
-                "{FILE}",
-                name
-            );
-            return d;
-        };
-        doc.head.firstChild ? doc.head.firstChild.before(css("ReadiumCSS-before.css")) : doc.head.appendChild(css("ReadiumCSS-before.css"));
-        doc.head.appendChild(css("ReadiumCSS-after.css"));
+        // Inject styles
+        if(!fxl) {
+            const css = (name: string) => {
+                const d = doc.createElement("link");
+                d.rel = "stylesheet";
+                d.type = "text/css";
+                d.href = // TODO standardize
+                READIUM_CSS_PATH.replace(
+                    "{FILE}",
+                    name
+                );
+                return d;
+            };
+            doc.head.firstChild ? doc.head.firstChild.before(css("ReadiumCSS-before.css")) : doc.head.appendChild(css("ReadiumCSS-before.css"));
+            doc.head.appendChild(css("ReadiumCSS-after.css"));
+        }
     
         if(base !== undefined) {
             // Set all URL bases. Very convenient!
