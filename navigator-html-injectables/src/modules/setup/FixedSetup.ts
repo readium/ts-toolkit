@@ -15,6 +15,10 @@ export class FixedSetup extends Setup {
         style.textContent = `
         html, body {
             overflow: hidden;
+            text-size-adjust: none;
+            -ms-text-size-adjust: none;
+            -webkit-text-size-adjust: none;
+            -moz-text-size-adjust: none;
         }`;
         wnd.document.head.appendChild(style);
 
