@@ -54,7 +54,11 @@ export class EpubNavigator extends VisualNavigator {
         if(presentation?.layout == EPUBLayout.fixed) return EPUBLayout.fixed;
         if(pub.metadata.otherMetadata && ("http://openmangaformat.org/schema/1.0#version" in pub.metadata.otherMetadata))
             return EPUBLayout.fixed; // It's fixed layout even though it lacks presentation, although this should really be a divina
+        if(pub.metadata.otherMetadata?.conformsTo === "https://readium.org/webpub-manifest/profiles/divina")
+            // TODO: this is temporary until there's a divina reader in place
+            return EPUBLayout.fixed;
         // TODO other logic to detect fixed layout publications
+
         return EPUBLayout.reflowable;
     }
 

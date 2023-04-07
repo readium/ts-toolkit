@@ -33,12 +33,12 @@ export class ReflowableSetup extends Setup {
             target: wnd
         } as any); // Cheat!
 
-        comms.register("set_property", "setup", (data, ack) => {
+        comms.register("set_property", ReflowableSetup.moduleName, (data, ack) => {
             const kv = data as string[];
             setProperty(wnd, kv[0], kv[1]);
             ack(true);
         })
-        comms.register("remove_property", "setup", (data, ack) => {
+        comms.register("remove_property", ReflowableSetup.moduleName, (data, ack) => {
             removeProperty(wnd, data as string);
             ack(true);
         })
