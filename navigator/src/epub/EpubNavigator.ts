@@ -61,9 +61,13 @@ export class EpubNavigator extends VisualNavigator {
     public async load() {
         if (!this.positions?.length)
             this.positions = await this.pub.positionsFromManifest();
-        this.framePool = this.layout === EPUBLayout.fixed ?
-            new FXLFramePoolManager(this.container, this.positions, this.pub) :
-            new FramePoolManager(this.container, this.positions);
+        if(this.layout === EPUBLayout.fixed) {
+            this.framePool = new FXLFramePoolManager(this.container, this.positions, this.pub);
+            this.framePool.listener = (key: CommsEventKey, data: unknown) => {
+                this.eventListener(key, data);
+            }
+        } else
+            this.framePool = new FramePoolManager(this.container, this.positions);
         if(this.currentLocation === undefined)
             this.currentLocation = this.positions[0];
         await this.apply();
@@ -146,7 +150,7 @@ export class EpubNavigator extends VisualNavigator {
                     const handled = key === "click" ? this.listeners.click(edata) : this.listeners.tap(edata);
                     console.log("handled?", handled);
                     if(handled) break;
-                    const oneQuarter = ((this._cframes.length === 2 ? this._cframes[0]!.window.innerWidth + this._cframes[1]!.window.innerWidth : this._cframe!.window.innerWidth) * window.devicePixelRatio) / 4;
+                    const oneQuarter = ((this._cframes.length === 2 ? this._cframes[0]!.window.innerWidth + this._cframes[1]!.window.innerWidth : this._cframes[0]!.window.innerWidth) * window.devicePixelRatio) / 4;
                     console.log("OQ", oneQuarter, edata);
                     // open UI if middle screen is clicked/tapped
                     if (edata.x >= oneQuarter && edata.x <= oneQuarter * 3) this.listeners.miscPointer(1);
@@ -234,7 +238,7 @@ export class EpubNavigator extends VisualNavigator {
             else
                 throw Error("Invalid relative value for FXL");
 
-            console.log(relative, "COMP", p.currentSlide, this.pub.readingOrder.items.length);
+            // console.log(relative, "COMP", p.currentSlide, this.pub.readingOrder.items.length);
             // Apply change
             if(old > p.currentSlide)
                 for (let j = this.positions.length - 1; j >= 0; j--) {

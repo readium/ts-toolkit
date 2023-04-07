@@ -22,12 +22,12 @@ export class FixedSetup extends Setup {
         }`;
         wnd.document.head.appendChild(style);
 
-        comms.register("set_property", "setup", (data, ack) => {
+        comms.register("set_property", FixedSetup.moduleName, (data, ack) => {
             const kv = data as string[];
             setProperty(wnd, kv[0], kv[1]);
             ack(true);
         })
-        comms.register("remove_property", "setup", (data, ack) => {
+        comms.register("remove_property", FixedSetup.moduleName, (data, ack) => {
             removeProperty(wnd, data as string);
             ack(true);
         })

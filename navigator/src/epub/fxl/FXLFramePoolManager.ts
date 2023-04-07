@@ -1,33 +1,33 @@
 import { ModuleName } from "@readium/navigator-html-injectables/src";
 import { Locator, Publication, MediaType, ReadingProgression, Orientation, Page, Link } from "@readium/shared/src";
+import { FrameCommsListener } from "../frame";
 import FrameBlobBuider from "../frame/FrameBlobBuilder";
 import FXLFrameManager from "./FXLFrameManager";
+import FXLPeripherals from "./FXLPeripherals";
 import FXLSpreader from "./FXLSpreader";
 
 const UPPER_BOUNDARY = 8;
 const LOWER_BOUNDARY = 5;
 
-const spreadPosition = (spread: Link[], target: Link) => {
-    //console.log("SP", spread, target);
-    return spread.length < 2 ? Page.center : (
-        target === spread[0] ? Page.left : Page.right // TODO take rtl into account
-    );
-}
+const OFFSCREEN_LOAD_DELAY = 500;
+const OFFSCREEN_LOAD_TIMEOUT = 15000;
+const RESIZE_UPDATE_TIMEOUT = 250;
 
 export default class FramePoolManager {
     private readonly container: HTMLElement;
     private readonly positions: Locator[];
-    private _currentFrame: FXLFrameManager | undefined;
     private readonly pool: Map<string, FXLFrameManager> = new Map();
     private readonly blobs: Map<string, string> = new Map();
     private readonly inprogress: Map<string, Promise<void>> = new Map();
+    private readonly delayedShow: Map<string, Promise<void>> = new Map();
+    private readonly delayedTimeout: Map<string, number> = new Map();
     private currentBaseURL: string | undefined;
 
     // NEW
     private readonly bookElement: HTMLDivElement;
-    private readonly spineElement: HTMLDivElement;
+    public readonly spineElement: HTMLDivElement;
     private readonly pub: Publication;
-    private width: number = 0;
+    public width: number = 0;
     private height: number = 0;
     private transform: string = "";
     public currentSlide: number = 0;
@@ -38,6 +38,7 @@ export default class FramePoolManager {
     private readonly resizeBoundHandler: EventListenerOrEventListenerObject;
     private resizeTimeout: number | undefined;
     // private readonly pages: FXLFrameManager[] = [];
+    private peripherals: FXLPeripherals;
 
     constructor(container: HTMLElement, positions: Locator[], pub: Publication) {
         this.container = container;
@@ -68,9 +69,11 @@ export default class FramePoolManager {
         this.container.appendChild(this.bookElement);
         this.updateSpineStyle(true);
 
+        this.peripherals = new FXLPeripherals(this);
+
         this.pub.readingOrder.items.forEach((link) => {
             // Create <iframe>
-            const fm = new FXLFrameManager(this.pub.metadata.effectiveReadingProgression, link.href);
+            const fm = new FXLFrameManager(this.peripherals, this.pub.metadata.effectiveReadingProgression, link.href);
             this.spineElement.appendChild(fm.element);
 
             // this.pages.push(fm);
@@ -78,6 +81,14 @@ export default class FramePoolManager {
             fm.width = 100 / this.length * (link.properties?.getOrientation() === Orientation.landscape || link.properties?.otherProperties["addBlank"] ? this.perPage : 1);
             fm.height = this.height;
         });
+    }
+
+    private _listener!: FrameCommsListener;
+    public set listener(listener: FrameCommsListener) {
+        this._listener = listener;
+    }
+    public get listener() {
+        return this._listener;
     }
 
     /**
@@ -97,24 +108,23 @@ export default class FramePoolManager {
 
         this.updateSpineStyle(true);
         if(slide/* && !sML.Mobile*/) {
-            if (this.currentSlide % 2 && !this.single) // Prevent getting out of track
-                this.currentSlide++;
-
+            this.currentSlide = this.reAlign();
             this.slideToCurrent(!fast, fast);
         }
 
         clearTimeout(this.resizeTimeout);
         this.resizeTimeout = setTimeout(() => {
-            // TODO optimize this expensive set of loops and operations
+            // TODO optimize this expensive set of loops and operations 
             this.pool.forEach((frm, linkHref) => {
                 let i = this.pub.readingOrder.items.findIndex(l => l.href === linkHref);
                 const link = this.pub.readingOrder.items[i];
-                const spread = this.spreader.findByLink(link)!;
                 frm.width = 100 / this.length * (link.properties?.getOrientation() === Orientation.landscape || link.properties?.otherProperties["addBlank"] ? this.perPage : 1);
                 frm.height = this.height;
-                frm.update(this.perPage < 2 ? Page.center : spreadPosition(spread, link));
+                if(!frm.loaded) return;
+                const spread = this.spreader.findByLink(link)!;
+                frm.update(this.spreadPosition(spread, link));
             });
-        }, 500);
+        }, RESIZE_UPDATE_TIMEOUT);
     }
 
     /**
@@ -127,7 +137,7 @@ export default class FramePoolManager {
         // this.containerHeightCached = r.height;
     }
 
-    private get rtl() {
+    public get rtl() {
         return this.pub.metadata.effectiveReadingProgression === ReadingProgression.rtl;
     }
 
@@ -139,6 +149,10 @@ export default class FramePoolManager {
         return (this.spread && !this.portrait) ? 2 : 1;
     }
 
+    get threshold(): number {
+        return 50;
+    }
+
     get portrait(): boolean {
         if(this.orientationInternal === -1) {
             this.orientationInternal = this.containerHeightCached > this.container.clientWidth ? 1 : 0;
@@ -146,7 +160,7 @@ export default class FramePoolManager {
         return this.orientationInternal === 1;
     }
 
-    private updateSpineStyle(animate: boolean, fast = true) {
+    public updateSpineStyle(animate: boolean, fast = true) {
         let margin = "0";
         this.updateDimensions();
         if(this.perPage > 1 && true) // this.shift
@@ -195,8 +209,7 @@ export default class FramePoolManager {
     goTo(index: number) {
         if (this.slength <= this.perPage)
             return;
-        if (index % 2 && !this.single) // Prevent getting out of track
-            index++;
+        index = this.reAlign(index);
         const beforeChange = this.currentSlide;
         this.currentSlide = Math.min(Math.max(index, 0), this.length - 1);
         if (beforeChange !== this.currentSlide) {
@@ -358,6 +371,56 @@ export default class FramePoolManager {
         })
     }
 
+    makeSpread(itemIndex: number) {
+        return this.perPage < 2 ? [this.pub.readingOrder.items[itemIndex]] : this.spreader.currentSpread(itemIndex, this.perPage);
+    }
+
+    reAlign(index: number = this.currentSlide) {
+        if (index % 2 && !this.single) // Prevent getting out of track
+            index++;
+        return index;
+    }
+
+    spreadPosition(spread: Link[], target: Link) {
+        //console.log("SP", spread, target);
+        return this.perPage < 2 ? Page.center : (spread.length < 2 ? Page.center : (
+            target.href === spread[0].href ? Page.left : Page.right // TODO take rtl into account
+        ));
+    }
+
+    async waitForItem(href: string) {
+        if(this.inprogress.has(href))
+            // If this same href is already being loaded, block until the other function
+            // call has finished executing so we don't end up e.g. loading the blob twice.
+            await this.inprogress.get(href);
+
+        if(this.delayedShow.has(href)) {
+            const timeoutVal = this.delayedTimeout.get(href)!;
+            if(timeoutVal > 0) {
+                // Delayed resource showing has not yet commenced, cancel it
+                clearTimeout(timeoutVal);
+            } else {
+                // console.log("SHOW START", href);
+                // Await a current delayed showing of the resource
+                await this.delayedShow.get(href);
+            }
+            this.delayedTimeout.set(href, 0);
+            this.delayedShow.delete(href);
+            // console.log("SHOW DONE", href);
+        }
+    }
+
+    async cancelShowing(href: string) {
+        if(this.delayedShow.has(href)) {
+            const timeoutVal = this.delayedTimeout.get(href)!;
+            if(timeoutVal > 0) {
+                // Delayed resource showing has not yet commenced, cancel it
+                clearTimeout(timeoutVal);
+            }
+            this.delayedShow.delete(href);
+        }
+    }
+
     async update(pub: Publication, locator: Locator, modules: ModuleName[], force=false) {
         let i = this.pub.readingOrder.items.findIndex(l => l.href === locator.href);
         if(i < 0) throw Error("Href not found in reading order");
@@ -365,20 +428,13 @@ export default class FramePoolManager {
         //console.log(i, "update to", locator);
 
         if(this.currentSlide !== i) {
-            if (i % 2 && !this.single) // Prevent getting out of track
-                i++;
-
-            this.currentSlide = i;
+            this.currentSlide = this.reAlign(i);
             this.slideToCurrent();
         }
-        const spread = this.perPage < 2 ? [this.pub.readingOrder.items[i]] : this.spreader.currentSpread(this.currentSlide, this.perPage);
+        const spread = this.makeSpread(this.currentSlide);
         if(this.perPage > 1) i++;
         for (const s of spread) {
-            //console.log("B", s.href);
-            if(this.inprogress.has(s.href))
-                // If this same href is already being loaded, block until the other function
-                // call has finished executing so we don't end up e.g. loading the blob twice.
-                await this.inprogress.get(s.href);
+            await this.waitForItem(s.href);
         }
         //console.log("C");
 
@@ -399,6 +455,7 @@ export default class FramePoolManager {
             disposal.forEach(async href => {
                 if(creation.includes(href)) return;
                 if(!this.pool.has(href)) return;
+                this.cancelShowing(href);
                 await this.pool.get(href)?.unload();
                 // this.pool.delete(href);
             });
@@ -412,7 +469,8 @@ export default class FramePoolManager {
             this.currentBaseURL = pub.baseURL;
 
             const creator = async (href: string) => {
-                const itm = pub.readingOrder.findWithHref(href);
+                const index = pub.readingOrder.findIndexWithHref(href);
+                const itm = pub.readingOrder.items[index];
                 if(!itm) return; // TODO throw?
                 if(!this.blobs.has(href)) {
                     const blobBuilder = new FrameBlobBuider(pub, this.currentBaseURL || "", itm);
@@ -425,12 +483,35 @@ export default class FramePoolManager {
                     const fm = this.pool.get(href)!;
                     if(!this.blobs.has(href)) {
                         // console.log("DESTROY", href);
+                        this.cancelShowing(href);
+                        await this.waitForItem(href);
                         await fm.destroy();
                         this.pool.delete(href);
                     } else {
                         // console.log("LOAD", href, this.blobs.get(href)!);
                         await fm.load(modules, this.blobs.get(href)!);
-                        return;
+
+                        // Show future offscreen frame in advance after a delay
+                        // The added delay prevents this expensive operation from
+                        // occuring during the sliding animation, to reduce lag
+                        this.delayedShow.set(href, new Promise((resolve, reject) => {
+                            let done = false;
+                            const t = setTimeout(async () => {
+                                this.delayedTimeout.set(href, 0);
+                                const spread = this.makeSpread(this.reAlign(index));
+                                const page = this.spreadPosition(spread, itm);
+                                // console.log("DELAYED SHOW BEGI", href);
+                                await fm.show(page); // Show/activate new frame
+                                this.delayedShow.delete(href);
+                                // console.log("DELAYED SHOW DONE", href);
+                                done = true;
+                                resolve();
+                            }, OFFSCREEN_LOAD_DELAY);
+                            setTimeout(() => {
+                                if(!done && this.delayedShow.has(href)) reject(`Offscreen load timeout: ${href}`);
+                            }, OFFSCREEN_LOAD_TIMEOUT);
+                            this.delayedTimeout.set(href, t);
+                        }));
                     }
                 }
 
@@ -447,19 +528,18 @@ export default class FramePoolManager {
 
             // Update current frame(s)
             for (const s of spread) {
-                const page = spreadPosition(spread, s);
                 const newFrame = this.pool.get(s.href)!;
-                //console.log("SHOW", s.href);
-                // await this._currentFrame?.hide(); // Hide current frame. It's possible it no longer even exists in the DOM at this point
+
                 const source = this.blobs.get(s.href);
                 if(!source) continue; // This can get destroyed
                 if(newFrame) // If user is speeding through the publication, this can get destroyed
                     await newFrame.load(modules, source); // In order to ensure modules match the latest configuration
                 //console.log("SHOW B", s.href);
-                if(newFrame) // If user is speeding through the publication, this can get destroyed
-                    await newFrame.show(this.perPage < 2 ? Page.center : page); // Show/activate new frame
+                if(newFrame) { // If user is speeding through the publication, this can get destroyed
+                    this.cancelShowing(s.href);
+                    await newFrame.show(this.spreadPosition(spread, s)); // Show/activate new frame
+                }
 
-                this._currentFrame = newFrame;
                 // console.log("SHOW DONE");
             }
             //console.log("RESOLVE!", spread);

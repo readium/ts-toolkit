@@ -1,12 +1,14 @@
 import { Loader, ModuleName } from "@readium/navigator-html-injectables/src";
 import { Page, ReadingProgression } from "@readium/shared/src";
 import { FrameComms } from "../frame/FrameComms";
+import FXLPeripherals from "./FXLPeripherals";
 
 export default class FXLFrameManager {
     private frame: HTMLIFrameElement;
     private loader: Loader | undefined;
     public source: string;
     private comms: FrameComms | undefined;
+    private readonly peripherals: FXLPeripherals;
 
     private currModules: ModuleName[] = [];
 
@@ -14,8 +16,10 @@ export default class FXLFrameManager {
     public wrapper: HTMLDivElement;
     public debugHref: string;
     private loadPromise: Promise<Window> | undefined;
+    private showPromise: Promise<void> | undefined;
 
-    constructor(direction: ReadingProgression, debugHref: string) {
+    constructor(peripherals: FXLPeripherals, direction: ReadingProgression, debugHref: string) {
+        this.peripherals = peripherals;
         this.debugHref = debugHref;
         this.frame = document.createElement("iframe");
         this.frame.classList.add("readium-navigator-iframe");
@@ -72,6 +76,7 @@ export default class FXLFrameManager {
                 const wnd = this.frame.contentWindow!;
                 this.loader = new Loader(wnd, modules);
                 this.currModules = modules;
+                this.peripherals.observe(wnd);
                 // console.log("loaded resolve", this.debugHref);
                 try { res(wnd); } catch (error) {};
             }, { once: true });
@@ -113,7 +118,6 @@ export default class FXLFrameManager {
     }
 
     update(page?: Page) {
-        //console.log("update!", this.debugHref, page);
         if(!this.loaded) return;
         const dimensions = this.loadPageSize();
         this.frame.style.height = `${dimensions.height}px`;
@@ -123,13 +127,14 @@ export default class FXLFrameManager {
         const bcr = this.frame.getBoundingClientRect();
         const hdiff = this.wrapper.clientHeight - bcr.height;
         this.frame.style.top = `${hdiff / 2}px`;
-
         if(page === Page.left) {
             const wdiff = this.wrapper.clientWidth - bcr.width;
             this.frame.style.left = `${wdiff}px`;
         } else if(page === Page.center) {
             const wdiff = this.wrapper.clientWidth - bcr.width;
             this.frame.style.left = `${wdiff / 2}px`;
+        } else {
+            this.frame.style.left = "0px";
         }
 
         this.frame.style.removeProperty("visibility");
@@ -156,10 +161,10 @@ export default class FXLFrameManager {
         this.frame.blur();
         return new Promise<void>((res, rej) => {
             this.frame.addEventListener("load", () => {
-                try { res(); } catch (error) {};
+                try { this.showPromise = undefined; res(); } catch (error) {};
             }, { once: true });
             this.frame.addEventListener("error", (e) => {
-                try { rej(e.error); } catch (error) {};
+                try { this.showPromise = undefined; rej(e.error); } catch (error) {};
             }, { once: true });
             this.frame.src = "about:blank";
         });
@@ -171,6 +176,7 @@ export default class FXLFrameManager {
             return new Promise((res, _) => {
                 this.comms?.send("unfocus", undefined, (ok: boolean) => {
                     this.comms?.halt();
+                    this.showPromise = undefined;
                     res();
                 });
             });
@@ -178,22 +184,38 @@ export default class FXLFrameManager {
             this.comms?.halt();
     }
 
+    private cachedPage: Page | undefined = undefined;
     async show(page: Page): Promise<void> {
         if(!this.frame.parentElement) {
             console.warn("Trying to show frame that is not attached to the DOM");
             return;
         }
-        // console.log("SHOW", this.debugHref, this.comms?.ready);
-        this.update(page);
+        if(!this.loaded) {
+            this.showPromise = undefined;
+            return;
+        }
+        if(this.showPromise) {
+            if(this.cachedPage !== page) {
+                this.update(page); // TODO fix that this can theoretically happen before the page is fully loaded
+                this.cachedPage = page;
+            }
+            return this.showPromise;
+        };
+        // console.log("SHOW", page, this.debugHref, this.comms?.ready);
+        // this.update(page);
+        this.cachedPage = page;
         if(this.comms) this.comms.resume();
         else this.comms = new FrameComms(this.frame.contentWindow!, this.source);
-        return new Promise((res, _) => {
+        this.showPromise = new Promise<void>((res, _) => {
             // console.log("SEND FOCUS", this.debugHref, this.comms, this.source);
-            this.comms?.send("focus", undefined, (ok: boolean) => {
+            this.comms!.send("focus", undefined, (ok: boolean) => {
                 // console.log("RESOLVE!", this.debugHref);
+                // this.showPromise = undefined; Don't do this
+                this.update(this.cachedPage);
                 res();
             });
         });
+        return this.showPromise;
     }
 
     get element() {
