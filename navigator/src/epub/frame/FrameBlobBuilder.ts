@@ -42,10 +42,9 @@ export default class FrameBlobBuider {
         const simg = document.createElement("img");
         simg.src = this.burl || "";
         simg.alt = this.item.title || "";
-        simg.loading = "lazy";
         simg.decoding = "async";
         doc.body.appendChild(simg);
-        return this.finalizeDOM(doc, this.burl, this.item.mediaType);
+        return this.finalizeDOM(doc, this.burl, this.item.mediaType, true);
     }
 
     private finalizeDOM(doc: Document, base: string | undefined, mediaType: MediaType, fxl = false): string {
