@@ -384,7 +384,7 @@ export default class FramePoolManager {
     spreadPosition(spread: Link[], target: Link) {
         //console.log("SP", spread, target);
         return this.perPage < 2 ? Page.center : (spread.length < 2 ? Page.center : (
-            target.href === spread[0].href ? Page.left : Page.right // TODO take rtl into account
+            target.href === spread[0].href ? (this.rtl ? Page.right : Page.left) : (this.rtl ? Page.left : Page.right)
         ));
     }
 
