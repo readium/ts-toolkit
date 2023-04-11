@@ -192,7 +192,7 @@ export class EpubNavigator extends VisualNavigator {
 
         if(this.layout === EPUBLayout.fixed) {
             return modules.filter((m) => m === "fixed_setup" || m === "reflowable_peripherals");
-        }
+        } else modules = modules.filter((m) => m !== "fixed_setup");
 
         // Horizontal vs. Vertical reading
         if (this.readingProgression === ReadingProgression.ttb || this.readingProgression === ReadingProgression.btt)
