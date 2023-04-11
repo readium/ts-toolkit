@@ -83,7 +83,7 @@ export default class FXLFrameManager {
             this.frame.addEventListener("error", (e) => {
                 try { rej(e.error); } catch (error) {};
             }, { once: true });
-            this.frame.src = this.source;
+            this.frame.contentWindow!.location.replace(this.source);
         });
         return this.loadPromise;
     }
@@ -166,7 +166,7 @@ export default class FXLFrameManager {
             this.frame.addEventListener("error", (e) => {
                 try { this.showPromise = undefined; rej(e.error); } catch (error) {};
             }, { once: true });
-            this.frame.src = "about:blank";
+            this.frame.contentWindow!.location.replace("about:blank");
         });
     }
 
