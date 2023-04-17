@@ -24,10 +24,10 @@ export default class FXLFrameManager {
         this.frame = document.createElement("iframe");
         this.frame.classList.add("readium-navigator-iframe");
         this.frame.style.visibility = "hidden";
-        this.frame.style.opacity = "0";
+        // this.frame.style.opacity = "0";
         this.frame.style.position = "absolute";
         this.frame.style.pointerEvents = "none";
-        this.frame.style.transition = "visibility 0s, opacity 0.1s linear";
+        // this.frame.style.transition = "visibility 0s, opacity 0.1s linear";
         this.frame.style.transformOrigin = "0 0";
         this.frame.style.transform = "scale(1)";
         this.frame.style.background = "#fff";
@@ -43,12 +43,13 @@ export default class FXLFrameManager {
     }
 
     async load(modules: ModuleName[], source: string): Promise<Window> {
-        if(this.source === source && this.loadPromise && this.loaded) {
+        if(this.source === source && this.loadPromise/* && this.loaded*/) {
             if([...this.currModules].sort().join("|") === [...modules].sort().join("|")) {
                 // console.log("return already load promise", this.debugHref);
                 return this.loadPromise;
             }
         }
+        // console.log("will load", this.debugHref, this.frame.contentWindow!.location.href, this.source, source);
         if(this.loaded && this.source !== source) {
             this.window.stop();
         }
@@ -60,7 +61,7 @@ export default class FXLFrameManager {
                 // Check if currently loaded modules are equal
                 if([...this.currModules].sort().join("|") === [...modules].sort().join("|")) {
                     // console.log("shortcut resolve", this.debugHref);
-                    try { res(wnd); } catch (error) { };
+                    try { res(wnd); this.loadPromise = undefined; } catch (error) { };
                     return;
                 }
                 // TODO
@@ -70,7 +71,7 @@ export default class FXLFrameManager {
                 this.currModules = modules;
                 this.comms = undefined;
                 // console.log("complete resolve", this.debugHref);
-                try { res(wnd); } catch (error) {}
+                try { res(wnd); this.loadPromise = undefined; } catch (error) {}
                 return;
             }
             this.frame.addEventListener("load", () => {
@@ -82,7 +83,7 @@ export default class FXLFrameManager {
                 try { res(wnd); } catch (error) {};
             }, { once: true });
             this.frame.addEventListener("error", (e) => {
-                try { rej(e.error); } catch (error) {};
+                try { rej(e.error); this.loadPromise = undefined; } catch (error) {};
             }, { once: true });
             this.frame.contentWindow!.location.replace(this.source);
         });
@@ -120,6 +121,7 @@ export default class FXLFrameManager {
 
     update(page?: Page) {
         if(!this.loaded) return;
+        // console.log("UPDATE", this.debugHref);
         const dimensions = this.loadPageSize();
         this.frame.style.height = `${dimensions.height}px`;
         this.frame.style.width = `${dimensions.width}px`;
@@ -139,7 +141,7 @@ export default class FXLFrameManager {
         }
 
         this.frame.style.removeProperty("visibility");
-        this.frame.style.removeProperty("opacity");
+        // this.frame.style.removeProperty("opacity");
         this.frame.style.removeProperty("pointer-events");
     }
 
@@ -152,9 +154,9 @@ export default class FXLFrameManager {
 
     async unload() {
         if(!this.loaded) return;
-        // console.log("unload", this.debugHref);
+        // console.log("UNLOAD", this.debugHref);
         this.frame.style.visibility = "hidden";
-        this.frame.style.opacity = "0";
+        // this.frame.style.opacity = "0";
         this.frame.style.pointerEvents = "none";
         this.comms?.halt();
         this.loader?.destroy();
@@ -167,6 +169,7 @@ export default class FXLFrameManager {
             this.frame.addEventListener("error", (e) => {
                 try { this.showPromise = undefined; rej(e.error); } catch (error) {};
             }, { once: true });
+            this.source = "about:blank";
             this.frame.contentWindow!.location.replace("about:blank");
         });
     }

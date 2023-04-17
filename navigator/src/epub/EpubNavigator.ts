@@ -235,14 +235,13 @@ export class EpubNavigator extends VisualNavigator {
         if(this.layout === EPUBLayout.fixed) {
             const p = this.framePool as FXLFramePoolManager;
             const old = p.currentSlide;
-            if(relative === 1)
-                p.next(p.perPage);
-            else if(relative === -1)
-                p.prev(p.perPage);
-            else
+            if(relative === 1) {
+                if(!p.next(p.perPage)) return false;
+            } else if(relative === -1) {
+                if(!p.prev(p.perPage)) return false;
+            } else
                 throw Error("Invalid relative value for FXL");
 
-            // console.log(relative, "COMP", p.currentSlide, this.pub.readingOrder.items.length);
             // Apply change
             if(old > p.currentSlide)
                 for (let j = this.positions.length - 1; j >= 0; j--) {

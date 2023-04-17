@@ -9,9 +9,11 @@ import FXLSpreader from "./FXLSpreader";
 const UPPER_BOUNDARY = 8;
 const LOWER_BOUNDARY = 5;
 
-const OFFSCREEN_LOAD_DELAY = 500;
+const OFFSCREEN_LOAD_DELAY = 300;
 const OFFSCREEN_LOAD_TIMEOUT = 15000;
 const RESIZE_UPDATE_TIMEOUT = 250;
+const SLIDE_FAST = 150;
+const SLIDE_SLOW = 500;
 
 export default class FramePoolManager {
     private readonly container: HTMLElement;
@@ -167,7 +169,7 @@ export default class FramePoolManager {
             margin = `${this.width / 2}px`;
 
         const bookStyle = {
-            transition: animate ? `all ${fast ? 150 : 500}ms ease-out` : "all 0ms ease-out",
+            transition: animate ? `all ${fast ? SLIDE_FAST : SLIDE_SLOW}ms ease-out` : "all 0ms ease-out",
             marginRight: this.rtl ? margin : "0",
             marginLeft: this.rtl ? "0" : margin,
             width: `${(this.width / this.perPage) * this.length}px`,
@@ -273,26 +275,42 @@ export default class FramePoolManager {
             // This one is tricky, I know but this is a perfect explanation:
             // https://youtu.be/cCOL7MC4Pl0
             requestAnimationFrame(() => {
-                requestAnimationFrame(() => { 
-                    this.transform = `translate3d(${this.offset}px, 0, 0)`;
+                requestAnimationFrame(() => {
+                    const newTransform = `translate3d(${this.offset}px, 0, 0)`;
+                    if(this.spineElement.style.transform === newTransform) return;
+                    this.transform = newTransform;
                     this.updateSpineStyle(true, fast);
                 });
             });
         } else {
-            this.transform = `translate3d(${this.offset}px, 0, 0)`;
+            const newTransform = `translate3d(${this.offset}px, 0, 0)`;
+            if(this.spineElement.style.transform === newTransform) return;
+            this.transform = newTransform;
             this.updateSpineStyle(false);
         }
+    }
+
+    bounce(rtl = false) {
+        requestAnimationFrame(() => {
+            this.transform = `translate3d(${this.offset+(50 * (rtl ? 1 : -1))}px, 0, 0)`;
+            this.updateSpineStyle(true, true);
+            setTimeout(() => {
+                this.transform = `translate3d(${this.offset}px, 0, 0)`;
+                this.updateSpineStyle(true, true);
+            }, 100);
+        });
     }
 
 
     /**
      * Go to next slide.
      * @param {number} [howManySlides=1] - How many items to slide forward.
+     * @returns {boolean} Whether or not going to next was possible
      */
-    next(howManySlides = 1) {
+    next(howManySlides = 1): boolean {
         // early return when there is nothing to slide
         if (this.slength <= this.perPage) {
-            return;
+            return false;
         }
 
         const beforeChange = this.currentSlide;
@@ -309,17 +327,22 @@ export default class FramePoolManager {
         if (beforeChange !== this.currentSlide) {
             this.slideToCurrent(true);
             this.onChange();
+            return true;
+        } else {
+            this.bounce(this.rtl);
+            return false;
         }
     }
 
     /**
      * Go to previous slide.
      * @param {number} [howManySlides=1] - How many items to slide backward.
+     * @returns {boolean} Whether or not going to prev was possible
      */
-    prev(howManySlides = 1) {
+    prev(howManySlides = 1): boolean {
         // early return when there is nothing to slide
         if (this.slength <= this.perPage) {
-            return;
+            return false;
         }
 
         const beforeChange = this.currentSlide;
@@ -331,8 +354,10 @@ export default class FramePoolManager {
         if (beforeChange !== this.currentSlide) {
             this.slideToCurrent(true);
             this.onChange();
-        } else {}
-            // this.bounce(!this.rtl);
+            return true;
+        } else
+            this.bounce(!this.rtl);
+            return false;
     }
 
 
@@ -478,49 +503,29 @@ export default class FramePoolManager {
                     this.blobs.set(href, blobURL);
                 }
 
-                if(this.pool.has(href)) {
-                    // console.log("pool has", href);
-                    const fm = this.pool.get(href)!;
-                    if(!this.blobs.has(href)) {
-                        // console.log("DESTROY", href);
-                        this.cancelShowing(href);
-                        await this.waitForItem(href);
-                        await fm.destroy();
-                        this.pool.delete(href);
-                    } else {
-                        // console.log("LOAD", href, this.blobs.get(href)!);
+                // Show future offscreen frame in advance after a delay
+                // The added delay prevents this expensive operation from
+                // occuring during the sliding animation, to reduce lag
+                this.delayedShow.set(href, new Promise((resolve, reject) => {
+                    let done = false;
+                    const t = setTimeout(async () => {
+                        this.delayedTimeout.set(href, 0);
+                        const spread = this.makeSpread(this.reAlign(index));
+                        const page = this.spreadPosition(spread, itm);
+                        // console.log("DELAYED SHOW BEGI", href);
+                        const fm = this.pool.get(href)!;
                         await fm.load(modules, this.blobs.get(href)!);
-
-                        // Show future offscreen frame in advance after a delay
-                        // The added delay prevents this expensive operation from
-                        // occuring during the sliding animation, to reduce lag
-                        this.delayedShow.set(href, new Promise((resolve, reject) => {
-                            let done = false;
-                            const t = setTimeout(async () => {
-                                this.delayedTimeout.set(href, 0);
-                                const spread = this.makeSpread(this.reAlign(index));
-                                const page = this.spreadPosition(spread, itm);
-                                // console.log("DELAYED SHOW BEGI", href);
-                                await fm.show(page); // Show/activate new frame
-                                this.delayedShow.delete(href);
-                                // console.log("DELAYED SHOW DONE", href);
-                                done = true;
-                                resolve();
-                            }, OFFSCREEN_LOAD_DELAY);
-                            setTimeout(() => {
-                                if(!done && this.delayedShow.has(href)) reject(`Offscreen load timeout: ${href}`);
-                            }, OFFSCREEN_LOAD_TIMEOUT);
-                            this.delayedTimeout.set(href, t);
-                        }));
-                    }
-                }
-
-                // Create <iframe>
-                // console.log("GET", href);
-                const fm = this.pool.get(href)!;
-                // if(href !== newHref) await fm.hide(); // Avoid unecessary hide
-                // this.spineElement.appendChild(fm.element);
-                await fm.load(modules, this.blobs.get(href)!);
+                        await fm.show(page); // Show/activate new frame
+                        this.delayedShow.delete(href);
+                        // console.log("DELAYED SHOW DONE", href);
+                        done = true;
+                        resolve();
+                    }, OFFSCREEN_LOAD_DELAY);
+                    setTimeout(() => {
+                        if(!done && this.delayedShow.has(href)) reject(`Offscreen load timeout: ${href}`);
+                    }, OFFSCREEN_LOAD_TIMEOUT);
+                    this.delayedTimeout.set(href, t);
+                }));
             }
             //console.log("D");
             await Promise.all(creation.map(href => creator(href)));
@@ -529,16 +534,12 @@ export default class FramePoolManager {
             // Update current frame(s)
             for (const s of spread) {
                 const newFrame = this.pool.get(s.href)!;
-
                 const source = this.blobs.get(s.href);
                 if(!source) continue; // This can get destroyed
-                if(newFrame) // If user is speeding through the publication, this can get destroyed
-                    await newFrame.load(modules, source); // In order to ensure modules match the latest configuration
-                //console.log("SHOW B", s.href);
-                if(newFrame) { // If user is speeding through the publication, this can get destroyed
-                    this.cancelShowing(s.href);
-                    await newFrame.show(this.spreadPosition(spread, s)); // Show/activate new frame
-                }
+
+                this.cancelShowing(s.href);
+                await newFrame.load(modules, source); // In order to ensure modules match the latest configuration
+                await newFrame.show(this.spreadPosition(spread, s)); // Show/activate new frame
 
                 // console.log("SHOW DONE");
             }
