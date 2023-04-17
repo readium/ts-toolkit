@@ -23,6 +23,7 @@ export default class FXLFrameManager {
         this.debugHref = debugHref;
         this.frame = document.createElement("iframe");
         this.frame.classList.add("readium-navigator-iframe");
+        this.frame.classList.add("blank");
         this.frame.style.visibility = "hidden";
         // this.frame.style.opacity = "0";
         this.frame.style.position = "absolute";
@@ -143,6 +144,8 @@ export default class FXLFrameManager {
         this.frame.style.removeProperty("visibility");
         // this.frame.style.removeProperty("opacity");
         this.frame.style.removeProperty("pointer-events");
+        this.frame.classList.remove("blank");
+        this.frame.classList.add("loaded");
     }
 
     async destroy() {
@@ -155,6 +158,8 @@ export default class FXLFrameManager {
     async unload() {
         if(!this.loaded) return;
         // console.log("UNLOAD", this.debugHref);
+        this.frame.classList.add("blank");
+        this.frame.classList.remove("loaded");
         this.frame.style.visibility = "hidden";
         // this.frame.style.opacity = "0";
         this.frame.style.pointerEvents = "none";
