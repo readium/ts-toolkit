@@ -506,26 +506,27 @@ export default class FramePoolManager {
                 // Show future offscreen frame in advance after a delay
                 // The added delay prevents this expensive operation from
                 // occuring during the sliding animation, to reduce lag
-                this.delayedShow.set(href, new Promise((resolve, reject) => {
-                    let done = false;
-                    const t = setTimeout(async () => {
-                        this.delayedTimeout.set(href, 0);
-                        const spread = this.makeSpread(this.reAlign(index));
-                        const page = this.spreadPosition(spread, itm);
-                        // console.log("DELAYED SHOW BEGI", href);
-                        const fm = this.pool.get(href)!;
-                        await fm.load(modules, this.blobs.get(href)!);
-                        await fm.show(page); // Show/activate new frame
-                        this.delayedShow.delete(href);
-                        // console.log("DELAYED SHOW DONE", href);
-                        done = true;
-                        resolve();
-                    }, OFFSCREEN_LOAD_DELAY);
-                    setTimeout(() => {
-                        if(!done && this.delayedShow.has(href)) reject(`Offscreen load timeout: ${href}`);
-                    }, OFFSCREEN_LOAD_TIMEOUT);
-                    this.delayedTimeout.set(href, t);
-                }));
+                if(!this.delayedShow.has(href))
+                    this.delayedShow.set(href, new Promise((resolve, reject) => {
+                        let done = false;
+                        const t = setTimeout(async () => {
+                            this.delayedTimeout.set(href, 0);
+                            const spread = this.makeSpread(this.reAlign(index));
+                            const page = this.spreadPosition(spread, itm);
+                            // console.log("DELAYED SHOW BEGI", href);
+                            const fm = this.pool.get(href)!;
+                            await fm.load(modules, this.blobs.get(href)!);
+                            await fm.show(page); // Show/activate new frame
+                            this.delayedShow.delete(href);
+                            // console.log("DELAYED SHOW DONE", href);
+                            done = true;
+                            resolve();
+                        }, OFFSCREEN_LOAD_DELAY);
+                        setTimeout(() => {
+                            if(!done && this.delayedShow.has(href)) reject(`Offscreen load timeout: ${href}`);
+                        }, OFFSCREEN_LOAD_TIMEOUT);
+                        this.delayedTimeout.set(href, t);
+                    }));
             }
             //console.log("D");
             await Promise.all(creation.map(href => creator(href)));
