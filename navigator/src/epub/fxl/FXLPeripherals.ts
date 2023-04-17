@@ -249,7 +249,9 @@ export default class FXLPeripherals {
 
             cancelAnimationFrame(this.moveFrame);
             this.moveFrame = requestAnimationFrame(() => {
-                this.manager.spineElement.style.transform = `translate3d(${(this.manager.rtl ? 1 : -1) * offset}px, 0, 0)`;
+                requestAnimationFrame(() => {
+                    this.manager.spineElement.style.transform = `translate3d(${(this.manager.rtl ? 1 : -1) * offset}px, 0, 0)`;
+                })
             });
         }
     }

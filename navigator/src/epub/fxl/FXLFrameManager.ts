@@ -24,11 +24,11 @@ export default class FXLFrameManager {
         this.frame = document.createElement("iframe");
         this.frame.classList.add("readium-navigator-iframe");
         this.frame.classList.add("blank");
+        this.frame.scrolling = "no";
         this.frame.style.visibility = "hidden";
-        // this.frame.style.opacity = "0";
+        this.frame.style.display = "none";
         this.frame.style.position = "absolute";
         this.frame.style.pointerEvents = "none";
-        // this.frame.style.transition = "visibility 0s, opacity 0.1s linear";
         this.frame.style.transformOrigin = "0 0";
         this.frame.style.transform = "scale(1)";
         this.frame.style.background = "#fff";
@@ -86,6 +86,7 @@ export default class FXLFrameManager {
             this.frame.addEventListener("error", (e) => {
                 try { rej(e.error); this.loadPromise = undefined; } catch (error) {};
             }, { once: true });
+            this.frame.style.removeProperty("display");
             this.frame.contentWindow!.location.replace(this.source);
         });
         return this.loadPromise;
@@ -142,7 +143,6 @@ export default class FXLFrameManager {
         }
 
         this.frame.style.removeProperty("visibility");
-        // this.frame.style.removeProperty("opacity");
         this.frame.style.removeProperty("pointer-events");
         this.frame.classList.remove("blank");
         this.frame.classList.add("loaded");
@@ -157,12 +157,10 @@ export default class FXLFrameManager {
 
     async unload() {
         if(!this.loaded) return;
-        // console.log("UNLOAD", this.debugHref);
+        this.frame.style.visibility = "hidden";
+        this.frame.style.pointerEvents = "none";
         this.frame.classList.add("blank");
         this.frame.classList.remove("loaded");
-        this.frame.style.visibility = "hidden";
-        // this.frame.style.opacity = "0";
-        this.frame.style.pointerEvents = "none";
         this.comms?.halt();
         this.loader?.destroy();
         this.comms = undefined;
@@ -176,6 +174,7 @@ export default class FXLFrameManager {
             }, { once: true });
             this.source = "about:blank";
             this.frame.contentWindow!.location.replace("about:blank");
+            this.frame.style.display = "none";
         });
     }
 
