@@ -31,6 +31,7 @@ export default class FXLFrameManager {
         this.frame.style.transformOrigin = "0 0";
         this.frame.style.transform = "scale(1)";
         this.frame.style.background = "#fff";
+        this.frame.dataset.originalHref = debugHref;
         this.source = "about:blank";
 
         // NEW
@@ -227,7 +228,7 @@ export default class FXLFrameManager {
     }
 
     get loaded() {
-        return this.frame.src !== "about:blank";
+        return this.frame.contentWindow!.location.href !== "about:blank";
     }
 
     set width(width: number) {
