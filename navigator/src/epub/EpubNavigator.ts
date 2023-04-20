@@ -111,7 +111,7 @@ export class EpubNavigator extends VisualNavigator {
                     const p = this.framePool as FXLFramePoolManager;
                     if(p.perPage > 1) {
                         // Spread
-                        console.log("S", edata.x, edata.y);
+                        console.log("Spread tap", edata.x, edata.y);
                     }
                 }
                 if (edata.interactiveElement) {
@@ -152,10 +152,10 @@ export class EpubNavigator extends VisualNavigator {
                     } else console.log("Clicked on", element);
                 } else {
                     const handled = key === "click" ? this.listeners.click(edata) : this.listeners.tap(edata);
-                    console.log("handled?", handled);
+                    // console.log("handled?", handled);
                     if(handled) break;
                     const oneQuarter = ((this._cframes.length === 2 ? this._cframes[0]!.window.innerWidth + this._cframes[1]!.window.innerWidth : this._cframes[0]!.window.innerWidth) * window.devicePixelRatio) / 4;
-                    console.log("OQ", oneQuarter, edata);
+                    // console.log("OQ", oneQuarter, edata);
                     // open UI if middle screen is clicked/tapped
                     if (edata.x >= oneQuarter && edata.x <= oneQuarter * 3) this.listeners.miscPointer(1);
                     // if (scrollMode.value) return; TODO!

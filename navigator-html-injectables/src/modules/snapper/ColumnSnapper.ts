@@ -359,6 +359,7 @@ export class ColumnSnapper extends Snapper {
             this.wnd.requestAnimationFrame(() => {
                 this.cachedScrollWidth = this.doc().scrollWidth!;
                 this.snapCurrentOffset(false, true);
+                this.reportProgress();
                 ack(true);
             });
         });
