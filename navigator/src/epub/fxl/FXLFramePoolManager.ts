@@ -513,7 +513,8 @@ export default class FramePoolManager {
                             // console.log("DELAYED SHOW BEGI", href);
                             const fm = this.pool.get(href)!;
                             await fm.load(modules, this.blobs.get(href)!);
-                            await fm.show(page); // Show/activate new frame
+                            if(!this.peripherals.isScaled) // When scaled, positioning is screwed up, so wait to show
+                                await fm.show(page); // Show/activate new frame
                             this.delayedShow.delete(href);
                             // console.log("DELAYED SHOW DONE", href);
                             done = true;
