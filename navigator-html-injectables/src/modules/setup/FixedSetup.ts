@@ -19,6 +19,10 @@ export class FixedSetup extends Setup {
             -ms-text-size-adjust: none;
             -webkit-text-size-adjust: none;
             -moz-text-size-adjust: none;
+
+            /* Fight Safari pinches */
+            touch-action: none !important;
+            min-height: 100%;
         }`;
         wnd.document.head.appendChild(style);
 

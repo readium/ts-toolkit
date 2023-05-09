@@ -30,7 +30,7 @@ export default class FramePoolManager {
     public readonly spineElement: HTMLDivElement;
     private readonly pub: Publication;
     public width: number = 0;
-    private height: number = 0;
+    public height: number = 0;
     private transform: string = "";
     public currentSlide: number = 0;
     private spreader: FXLSpreader;
@@ -62,7 +62,7 @@ export default class FramePoolManager {
         this.bookElement = document.createElement("div");
         this.bookElement.ariaLabel = "Book";
         this.bookElement.tabIndex = -1;
-        this.updateBookStyle();
+        this.updateBookStyle(true);
 
         this.spineElement = document.createElement("div");
         this.spineElement.ariaLabel = "Spine";
@@ -91,6 +91,11 @@ export default class FramePoolManager {
     }
     public get listener() {
         return this._listener;
+    }
+
+    public get doNotDisturb() {
+        // TODO other situations
+        return this.peripherals.pan.touchID > 0;
     }
 
     /**
@@ -133,9 +138,8 @@ export default class FramePoolManager {
      * It is important that these values be cached to avoid spamming them on redraws, they are expensive.
      */
     private updateDimensions() {
-        const r = this.bookElement.getBoundingClientRect();
-        this.width = r.width;
-        this.height = r.height;
+        this.width = this.bookElement.clientWidth;
+        this.height = this.bookElement.clientHeight;
         // this.containerHeightCached = r.height;
     }
 
@@ -168,7 +172,7 @@ export default class FramePoolManager {
         if(this.perPage > 1 && true) // this.shift
             margin = `${this.width / 2}px`;
 
-        const bookStyle = {
+        const spineStyle = {
             transition: animate ? `all ${fast ? SLIDE_FAST : SLIDE_SLOW}ms ease-out` : "all 0ms ease-out",
             marginRight: this.rtl ? margin : "0",
             marginLeft: this.rtl ? "0" : margin,
@@ -179,29 +183,28 @@ export default class FramePoolManager {
             contain: "content"
         } as CSSStyleDeclaration;
 
-        Object.assign(this.spineElement.style, bookStyle);
+        Object.assign(this.spineElement.style, spineStyle);
     }
 
-    private updateBookStyle() {
-        const bookStyle = {
-            overflow: "hidden",
-            direction: this.pub.metadata.effectiveReadingProgression,
-            cursor: "",
-            transform: "scale(1)",
-            transformOrigin: "",
-
-            // Static (should be moved to CSS)
-            // minHeight: 100%
-            // maxHeight: "100%",
-            height: "100%",
-            width: "100%",
-            position: "relative",
-            outline: "none",
-            transitionProperty: "transform",
-            transition: ".15s ease-in-out"
-        } as CSSStyleDeclaration;
-
-        Object.assign(this.bookElement.style, bookStyle);
+    public updateBookStyle(initial=false) {
+        if(initial) {
+            const bookStyle = {
+                overflow: "hidden",
+                direction: this.pub.metadata.effectiveReadingProgression,
+                cursor: "",
+                // Static (should be moved to CSS)
+                // minHeight: 100%
+                // maxHeight: "100%",
+                height: "100%",
+                width: "100%",
+                position: "relative",
+                outline: "none",
+                transition: this.peripherals?.dragState ? "none" : "transform .15s ease-in-out",
+                touchAction: "none",
+            } as CSSStyleDeclaration;
+            Object.assign(this.bookElement.style, bookStyle);
+        }
+        this.bookElement.style.transform = `scale(${this.peripherals?.scale || 1})` + (this.peripherals ? ` translate3d(${this.peripherals.pan.translateX}px, ${this.peripherals.pan.translateY}px, 0px)` : "");
     }
 
     /**
@@ -221,14 +224,8 @@ export default class FramePoolManager {
     }
 
     onChange() {
-        //this.zoomer.scale = 1;
-        // m.redraw();
-
-        /*clearTimeout(this.PageChangeTimer);
-        this.PageChangeTimer = window.setTimeout(
-            () => this.config.state.onPageChange(this.outsidePageNumber(), this.direction, !this.single),
-            100 // Rate-limit change states, because it can get very spammy on toonflowable scrolls
-        );*/
+        this.peripherals.scale = 1;
+        this.updateBookStyle();
     }
 
     private get offset() {
@@ -564,6 +561,35 @@ export default class FramePoolManager {
         }
         const spread = this.spreader.currentSpread(this.currentSlide, this.perPage);
         return spread.map(s => this.pool.get(s.href));
+    }
+
+    get currentBounds(): DOMRect {
+        const ret = {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            toJSON() {
+                return this;
+            },
+        };
+        this.currentFrames.forEach(f => {
+            if(!f) return;
+            const b = f.realSize;
+            ret.x = Math.min(ret.x, b.x);
+            ret.y = Math.min(ret.y, b.y);
+            ret.width = Math.max(ret.width, b.width);
+            ret.height = Math.max(ret.height, b.height);
+            ret.top = Math.min(ret.top, b.top);
+            ret.right = Math.max(ret.right, b.right);
+            ret.bottom = Math.max(ret.bottom, b.bottom);
+            ret.left = Math.min(ret.left, b.left);
+        });
+        return ret as DOMRect;
     }
 
     get currentNumber() {

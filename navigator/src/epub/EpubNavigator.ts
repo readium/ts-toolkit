@@ -151,6 +151,8 @@ export class EpubNavigator extends VisualNavigator {
                         }
                     } else console.log("Clicked on", element);
                 } else {
+                    if(this.layout === EPUBLayout.fixed && (this.framePool as FXLFramePoolManager).doNotDisturb)
+                        edata.doNotDisturb = true;
                     const handled = key === "click" ? this.listeners.click(edata) : this.listeners.tap(edata);
                     // console.log("handled?", handled);
                     if(handled) break;

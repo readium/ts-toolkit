@@ -4,6 +4,7 @@ import nearestInteractiveElement from "../helpers/nearestInteractiveElement";
 
 export interface FrameClickEvent {
     defaultPrevented: boolean;
+    doNotDisturb: boolean;
     interactiveElement: string | undefined;
     targetElement: string;
     x: number;

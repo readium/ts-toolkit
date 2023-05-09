@@ -32,6 +32,7 @@ export default class FXLFrameManager {
         this.frame.style.transformOrigin = "0 0";
         this.frame.style.transform = "scale(1)";
         this.frame.style.background = "#fff";
+        this.frame.style.touchAction = "none";
         this.frame.dataset.originalHref = debugHref;
         this.source = "about:blank";
 
@@ -79,6 +80,7 @@ export default class FXLFrameManager {
                 const wnd = this.frame.contentWindow!;
                 this.loader = new Loader(wnd, modules);
                 this.currModules = modules;
+                this.peripherals.observe(this.wrapper);
                 this.peripherals.observe(wnd);
                 // console.log("loaded resolve", this.debugHref);
                 try { res(wnd); } catch (error) {};
@@ -232,6 +234,10 @@ export default class FXLFrameManager {
 
     get iframe() {
         return this.frame;
+    }
+
+    get realSize() {
+        return this.frame.getBoundingClientRect();
     }
 
     get loaded() {
