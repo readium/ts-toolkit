@@ -241,7 +241,7 @@ export default class FXLFrameManager {
     }
 
     get loaded() {
-        return this.frame.contentWindow!.location.href !== "about:blank";
+        return this.frame.contentWindow && this.frame.contentWindow.location.href !== "about:blank";
     }
 
     set width(width: number) {

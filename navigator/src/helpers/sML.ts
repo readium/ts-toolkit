@@ -45,9 +45,9 @@ declare interface UAFlags {
 }
 
 class sML {
-    OS: OSFlags; // Synonym for above
-    UA: UAFlags; // Synonym for above
-    Env: string[]; // Synonym for above
+    OS: OSFlags;
+    UA: UAFlags;
+    Env: string[];
 
     constructor() {
         const NUAD = navigator.userAgentData, NUA = navigator.userAgent;
