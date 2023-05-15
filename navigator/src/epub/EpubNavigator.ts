@@ -6,11 +6,14 @@ import { CommsEventKey, ModuleLibrary, ModuleName } from "@readium/navigator-htm
 import { FrameClickEvent } from "@readium/navigator-html-injectables/src/modules/ReflowablePeripherals";
 import * as path from "path-browserify";
 
+export type ManagerEventKey = "zoom";
+
 export interface EpubNavigatorListeners {
     frameLoaded: (wnd: Window) => void;
     positionChanged: (locator: Locator) => void;
     tap: (e: FrameClickEvent) => boolean; // Return true to prevent handling here
     click: (e: FrameClickEvent) => boolean;  // Return true to prevent handling here
+    zoom: (scale: number) => void;
     miscPointer: (amount: number) => void;
     customEvent: (key: string, data: unknown) => void;
     handleLocator: (locator: Locator) => boolean; // Retrun true to prevent handling here
@@ -22,6 +25,7 @@ const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListe
     positionChanged: listeners.positionChanged || (() => {}),
     tap: listeners.tap || (() => false),
     click: listeners.click || (() => false),
+    zoom: listeners.zoom || (() => {}),
     miscPointer: listeners.miscPointer || (() => {}),
     customEvent: listeners.customEvent || (() => {}),
     handleLocator: listeners.handleLocator || (() => false),
@@ -98,7 +102,7 @@ export class EpubNavigator extends VisualNavigator {
      * to trigger the navigator when user's mouse/keyboard focus is
      * outside the readium-controller navigator. Be careful!
      */
-    public eventListener(key: CommsEventKey, data: unknown) {
+    public eventListener(key: CommsEventKey | ManagerEventKey, data: unknown) {
         switch (key) {
             case "_pong":
                 this.listeners.frameLoaded(this._cframes[0]!.iframe.contentWindow!);
@@ -176,6 +180,9 @@ export class EpubNavigator extends VisualNavigator {
                 break;
             case "swipe":
                 // Swipe event
+                break;
+            case "zoom":
+                this.listeners.zoom(data as number);
                 break;
             case "progress":
                 this.syncLocation(data as number);

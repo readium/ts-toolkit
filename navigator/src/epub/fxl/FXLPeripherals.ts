@@ -1,5 +1,6 @@
 import FXLCoordinator, { Point } from "./FXLCoordinator";
 import FramePoolManager from "./FXLFramePoolManager";
+import FXLPeripheralsDebug from "./FXLPeripheralsDebug";
 
 const MAX_SCALE = 6; // 6x zoom
 const MIN_SCALE = 1.02;
@@ -59,50 +60,32 @@ export default class FXLPeripherals {
         touchN: 0,
         startTranslate: {X: 0, Y: 0}
     };
-    scale = 1;
+
+    // Scale
+    private _scale = 1;
+    public get scale() {
+        return this._scale;
+    }
+    private scaleDebouncer = 0;
+    public set scale(value: number) {
+        if(isNaN(value)) value = 1;
+        window.clearTimeout(this.scaleDebouncer);
+        this.scaleDebouncer = window.setTimeout(() => {
+            this.manager.listener("zoom", value);
+        }, 100);
+        this._scale = value;
+    }
 
     private frameBounds: DOMRect | null = null;
+    private debugger: FXLPeripheralsDebug | null = null;
 
-    private debugDOM = {
-        show: false,
-        pinchTarget: document.createElement("div"),
-        touch1: document.createElement("div"),
-        touch2: document.createElement("div"),
-        center: document.createElement("div"),
-        stats: document.createElement("div"),
-    };
-
-    constructor(manager: FramePoolManager, debug=true) {
+    constructor(manager: FramePoolManager, debug=false) {
         this.manager = manager;
         this.coordinator = new FXLCoordinator();
         this.attachEvents();
 
         if(debug) {
-            this.debugDOM.show = true;
-            this.debugDOM.pinchTarget.style.zIndex =this.debugDOM.stats.style.zIndex = this.debugDOM.center.style.zIndex = this.debugDOM.touch1.style.zIndex = this.debugDOM.touch2.style.zIndex = "100000";
-            this.debugDOM.pinchTarget.style.position = this.debugDOM.stats.style.position = this.debugDOM.center.style.position = this.debugDOM.touch1.style.position = this.debugDOM.touch2.style.position = "absolute";
-            this.debugDOM.pinchTarget.style.borderRadius = this.debugDOM.center.style.borderRadius = this.debugDOM.touch1.style.borderRadius = this.debugDOM.touch2.style.borderRadius = "50%";
-            this.debugDOM.pinchTarget.style.pointerEvents = this.debugDOM.stats.style.pointerEvents = this.debugDOM.center.style.pointerEvents = this.debugDOM.touch1.style.pointerEvents = this.debugDOM.touch2.style.pointerEvents = "none";
-            this.debugDOM.pinchTarget.style.display = this.debugDOM.center.style.display = this.debugDOM.touch1.style.display = this.debugDOM.touch2.style.display = "none";
-            this.debugDOM.pinchTarget.style.paddingTop = this.debugDOM.center.style.paddingTop = "10px";
-            this.debugDOM.pinchTarget.style.width = this.debugDOM.pinchTarget.style.height = this.debugDOM.center.style.width = this.debugDOM.center.style.height = "10px";
-            this.debugDOM.pinchTarget.style.backgroundColor = "green";
-            this.debugDOM.center.style.backgroundColor = "red";
-            this.debugDOM.touch1.style.backgroundColor = this.debugDOM.touch2.style.backgroundColor = "blue";
-            this.debugDOM.touch1.style.height = this.debugDOM.touch2.style.height = "20px";
-            this.debugDOM.touch1.style.width = this.debugDOM.touch2.style.width = "20px";
-            this.debugDOM.touch1.style.paddingTop = this.debugDOM.touch2.style.paddingTop = "20px";
-            this.debugDOM.touch1.textContent = "1";
-            this.debugDOM.touch2.textContent = "2";
-            this.debugDOM.stats.style.padding = "20px";
-            this.debugDOM.stats.style.backgroundColor = "rgba(0,0,0,0.5)";
-            this.debugDOM.stats.style.color = "white";
-            this.debugDOM.stats.textContent = "[stats]";
-            document.body.appendChild(this.debugDOM.stats);
-            document.body.appendChild(this.debugDOM.center);
-            document.body.appendChild(this.debugDOM.touch1);
-            document.body.appendChild(this.debugDOM.touch2);
-            document.body.appendChild(this.debugDOM.pinchTarget);
+            this.debugger = new FXLPeripheralsDebug();
         }
     }
 
@@ -111,6 +94,9 @@ export default class FXLPeripherals {
     private readonly btouchmoveHandler = this.touchmoveHandler.bind(this);
     private readonly bdblclickHandler = this.dblclickHandler.bind(this);
     private readonly bclickHandler = this.clickHandler.bind(this);
+    private readonly bmousedownHandler = this.mousedownHandler.bind(this);
+    private readonly bmouseupHandler = this.mouseupHandler.bind(this);
+    private readonly bmousemoveHandler = this.mousemoveHandler.bind(this);
 
     /**
      * Attaches listeners to required events.
@@ -171,6 +157,9 @@ export default class FXLPeripherals {
         item.addEventListener("dblclick", this.bdblclickHandler as EventListener, {
             passive: true
         });
+        item.addEventListener("mousedown", this.bmousedownHandler as EventListener);
+        item.addEventListener("mouseup", this.bmouseupHandler as EventListener);
+        item.addEventListener("mousemove", this.bmousemoveHandler as EventListener);
         // item.addEventListener("click", this.bclickHandler as EventListener);
     }
 
@@ -236,19 +225,19 @@ export default class FXLPeripherals {
                 this.pinch.target.Y -= this.manager.height / 2;*/
                 this.pinch.startTranslate = {X: this.pan.translateX, Y: this.pan.translateY};
 
-                if(this.debugDOM.show) {
-                    this.debugDOM.touch2.style.display = "";
-                    this.debugDOM.center.style.display = "";
-                    this.debugDOM.pinchTarget.style.display = "";
-                    //this.debugDOM.pinchTarget.style.top = `${this.pinch.target.Y-5}px`;
-                    //this.debugDOM.pinchTarget.style.left = `${this.pinch.target.X-5}px`;
-                    //this.debugDOM.pinchTarget.innerText = `${this.pinch.target.X},${this.pinch.target.Y}`;
+                if(this.debugger?.show) {
+                    this.debugger.DOM.touch2.style.display = "";
+                    this.debugger.DOM.center.style.display = "";
+                    this.debugger.DOM.pinchTarget.style.display = "";
+                    //this.debugger.DOM.pinchTarget.style.top = `${this.pinch.target.Y-5}px`;
+                    //this.debugger.DOM.pinchTarget.style.left = `${this.pinch.target.X-5}px`;
+                    //this.debugger.DOM.pinchTarget.innerText = `${this.pinch.target.X},${this.pinch.target.Y}`;
                 }
                 return;
             }
             case 1:
                 this.pan.touchID = e.touches[0].identifier;
-                if(this.debugDOM.show) this.debugDOM.touch1.style.display = "";
+                if(this.debugger?.show) this.debugger.DOM.touch1.style.display = "";
                 // Fallthrough on purpose
             default:
                 if(this.dragState < 1) this.dragState = 1;
@@ -275,7 +264,7 @@ export default class FXLPeripherals {
     touchendHandler(e: TouchEvent) {
         e.stopPropagation();
 
-        if(e.touches.length === 0) {
+        if(!e.touches || e.touches.length === 0) {
             if ((this.pan.endX && !this.isScaled)) {
                 if(this.pinch.touchN) {
                     this.pan.endX = this.pan.startX;
@@ -294,10 +283,10 @@ export default class FXLPeripherals {
             }
             this.dragState = 0;
             this.clearPinch();
-            if(this.debugDOM.show) {
-                this.debugDOM.center.style.display = "none";
-                this.debugDOM.touch1.style.display = "none";
-                this.debugDOM.touch2.style.display = "none";
+            if(this.debugger?.show) {
+                this.debugger.DOM.center.style.display = "none";
+                this.debugger.DOM.touch1.style.display = "none";
+                this.debugger.DOM.touch2.style.display = "none";
             }
         } else if(e.touches.length === 1) {
             // Back to only one touch from 2+
@@ -306,10 +295,10 @@ export default class FXLPeripherals {
                 this.pan.touchID = e.touches[0].identifier;
             }
 
-            if(this.debugDOM.show) {
-                this.debugDOM.center.style.display = "none";
-                this.debugDOM.touch2.style.display = "none";
-                this.debugDOM.pinchTarget.style.display = "none";
+            if(this.debugger?.show) {
+                this.debugger.DOM.center.style.display = "none";
+                this.debugger.DOM.touch2.style.display = "none";
+                this.debugger.DOM.pinchTarget.style.display = "none";
             }
 
             // Reverse translate
@@ -377,10 +366,10 @@ export default class FXLPeripherals {
             this.pan.letItGo = Math.abs(this.pan.startY - coords.Y) < Math.abs(this.pan.startX - coords.X);
         }
 
-        if(this.debugDOM.show) {
-            this.debugDOM.touch1.style.top = `${coords.Y-10}px`;
-            this.debugDOM.touch1.style.left = `${coords.X-10}px`;
-            this.debugDOM.touch1.innerText = `${coords.X.toFixed(2)},${coords.Y.toFixed(2)}`;
+        if(this.debugger?.show) {
+            this.debugger.DOM.touch1.style.top = `${coords.Y-10}px`;
+            this.debugger.DOM.touch1.style.left = `${coords.X-10}px`;
+            this.debugger.DOM.touch1.innerText = `${coords.X.toFixed(2)},${coords.Y.toFixed(2)}`;
         }
 
         if ((this.dragState > 0 && this.isScaled) || this.dragState > 1) {
@@ -395,15 +384,15 @@ export default class FXLPeripherals {
                 //console.log("#1", this.pan.translateY, "<- (", center.Y, "-", this.pan.startY, ") * 1 /", this.scale);
             } else if(this.dragState === 2) {
                 const center = this.coordinator.getTouchCenter(e)!;
-                if(this.debugDOM.show) {
-                    this.debugDOM.center.style.top = `${center.Y-5}px`;
-                    this.debugDOM.center.style.left = `${center.X-5}px`;
-                    this.debugDOM.center.innerText = `${center.X.toFixed(2)},${center.Y.toFixed(2)}`;
+                if(this.debugger?.show) {
+                    this.debugger.DOM.center.style.top = `${center.Y-5}px`;
+                    this.debugger.DOM.center.style.left = `${center.X-5}px`;
+                    this.debugger.DOM.center.innerText = `${center.X.toFixed(2)},${center.Y.toFixed(2)}`;
 
                     const coords = this.coordinator.getBibiEventCoord(e, 1);
-                    this.debugDOM.touch2.style.top = `${coords.Y-10}px`;
-                    this.debugDOM.touch2.style.left = `${coords.X-10}px`;
-                    this.debugDOM.touch2.innerText = `${coords.X.toFixed(2)},${coords.Y.toFixed(2)}`;
+                    this.debugger.DOM.touch2.style.top = `${coords.Y-10}px`;
+                    this.debugger.DOM.touch2.style.left = `${coords.X-10}px`;
+                    this.debugger.DOM.touch2.innerText = `${coords.X.toFixed(2)},${coords.Y.toFixed(2)}`;
                 }
 
                 center.X -= this.manager.width / 2;
@@ -441,10 +430,10 @@ export default class FXLPeripherals {
                 //(this.pinch.target.X - this.manager.width / 2) - this.pan.translateX * this.scale + this.manager.width / 2
                 ///(center.Y - this.manager.height / 2) - this.pan.translateY * this.scale + this.manager.height / 2
 
-                if(this.debugDOM.show) {
-                    this.debugDOM.pinchTarget.style.left = `${this.pinch.target.X * this.scale / this.pinch.startScale-5+this.manager.width / 2}px`;
-                    this.debugDOM.pinchTarget.style.top = `${this.pinch.target.Y * this.scale / this.pinch.startScale-5+this.manager.height / 2}px`;
-                    this.debugDOM.pinchTarget.innerText = `${(this.pinch.target.X * this.scale / this.pinch.startScale).toFixed(2)},${(this.pinch.target.Y * this.scale / this.pinch.startScale).toFixed(2)}`;
+                if(this.debugger?.show) {
+                    this.debugger.DOM.pinchTarget.style.left = `${this.pinch.target.X * this.scale / this.pinch.startScale-5+this.manager.width / 2}px`;
+                    this.debugger.DOM.pinchTarget.style.top = `${this.pinch.target.Y * this.scale / this.pinch.startScale-5+this.manager.height / 2}px`;
+                    this.debugger.DOM.pinchTarget.innerText = `${(this.pinch.target.X * this.scale / this.pinch.startScale).toFixed(2)},${(this.pinch.target.Y * this.scale / this.pinch.startScale).toFixed(2)}`;
                 }
             }
 
@@ -471,8 +460,8 @@ export default class FXLPeripherals {
 
             updateBook = true;
 
-            if(this.debugDOM.show)
-                this.debugDOM.stats.innerText =
+            if(this.debugger?.show)
+                this.debugger.DOM.stats.innerText =
                     `TX: ${this.pan.translateX.toFixed(2)}\nTY: ${this.pan.translateY.toFixed(2)}\nZoom: ${this.scale.toFixed(2)}\nOverscroll: ${this.pan.overscrollX.toFixed(2)},${this.pan.overscrollY.toFixed(2)}`;
         }
 
@@ -514,7 +503,6 @@ export default class FXLPeripherals {
 
         if(this.disableDblClick) return;
 
-        
         if(this.isScaled) this.scale = 1;
 
         // TODO smarter
@@ -530,6 +518,43 @@ export default class FXLPeripherals {
 
     public get isScaled() {
         return this.scale > 1;
+    }
+
+    private addTouch(e: any) {
+        e.touches = [{
+            pageX: e.pageX,
+            pageY: e.pageY
+        }];
+    }
+
+    /**
+     * mousedown event handler
+     */
+    mousedownHandler(e: MouseEvent) {
+        if (this.isScaled) {
+            this.addTouch(e as any);
+            this.touchstartHandler(e as any);
+        }
+    }
+
+    /**
+     * mouseup event handler
+     */
+    mouseupHandler(e: MouseEvent) {
+        if (this.isScaled) {
+            this.touchendHandler(e as any);
+        }
+    }
+
+    /**
+     * mousemove event handler
+     */
+    mousemoveHandler(e: MouseEvent) {
+        if (this.isScaled && e.buttons > 0) {
+            e.preventDefault();
+            this.addTouch(e as any);
+            this.touchmoveHandler(e as any);
+        }
     }
 
     /**

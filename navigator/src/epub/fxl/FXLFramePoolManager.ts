@@ -40,7 +40,7 @@ export default class FramePoolManager {
     private readonly resizeBoundHandler: EventListenerOrEventListenerObject;
     private resizeTimeout: number | undefined;
     // private readonly pages: FXLFrameManager[] = [];
-    private peripherals: FXLPeripherals;
+    public readonly peripherals: FXLPeripherals;
 
     constructor(container: HTMLElement, positions: Locator[], pub: Publication) {
         this.container = container;
