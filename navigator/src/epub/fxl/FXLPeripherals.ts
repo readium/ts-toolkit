@@ -179,7 +179,6 @@ export default class FXLPeripherals {
      * touchstart event handler
      */
     touchstartHandler(e: TouchEvent) {
-        console.log("TARGET", e.target);
         // Prevent dragging / swiping on inputs, selects and textareas
         const ignoreSlider = ["TEXTAREA", "OPTION", "INPUT", "SELECT"].indexOf((e.target as Element).nodeName) !== -1;
         if (ignoreSlider)

@@ -101,6 +101,10 @@ export default class FrameManager {
         return this.frame;
     }
 
+    get realSize() {
+        return this.frame.getBoundingClientRect();
+    }
+
     get window() {
         if(!this.frame.contentWindow) throw Error("Trying to use frame window when it doesn't exist");
         return this.frame.contentWindow;

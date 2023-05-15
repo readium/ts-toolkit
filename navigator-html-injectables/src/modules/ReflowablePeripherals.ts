@@ -7,6 +7,7 @@ export interface FrameClickEvent {
     doNotDisturb: boolean;
     interactiveElement: string | undefined;
     targetElement: string;
+    targetFrameSrc: string;
     x: number;
     y: number;
 }
@@ -39,6 +40,7 @@ export class ReflowablePeripherals extends Module {
             defaultPrevented: event.defaultPrevented,
             x: event.clientX * pixelRatio,
             y: event.clientY * pixelRatio,
+            targetFrameSrc: this.wnd.location.href,
             targetElement: (event.target as Element).outerHTML,
             interactiveElement: nearestInteractiveElement(event.target as Element)?.outerHTML
         } as FrameClickEvent);

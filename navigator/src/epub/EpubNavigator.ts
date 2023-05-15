@@ -111,13 +111,6 @@ export class EpubNavigator extends VisualNavigator {
             case "click":
             case "tap":
                 const edata = data as FrameClickEvent;
-                if(this.layout === EPUBLayout.fixed) {
-                    const p = this.framePool as FXLFramePoolManager;
-                    if(p.perPage > 1) {
-                        // Spread
-                        console.log("Spread tap", edata.x, edata.y);
-                    }
-                }
                 if (edata.interactiveElement) {
                     const element = new DOMParser().parseFromString(
                         edata.interactiveElement,
@@ -157,14 +150,33 @@ export class EpubNavigator extends VisualNavigator {
                 } else {
                     if(this.layout === EPUBLayout.fixed && (this.framePool as FXLFramePoolManager).doNotDisturb)
                         edata.doNotDisturb = true;
+
+                    if(this.layout === EPUBLayout.fixed
+                        // TODO handle ttb/btt
+                        && (
+                            this.currentProgression === ReadingProgression.rtl ||
+                            this.currentProgression === ReadingProgression.ltr
+                        )
+                    ) {
+                        if(this.framePool.currentFrames.length > 1) {
+                            // Spread page dimensions
+                            const cfs = this.framePool.currentFrames;
+                            if(edata.targetFrameSrc === cfs[this.currentProgression === ReadingProgression.rtl ? 0 : 1]?.source) {
+                                // The right page (screen-wise) was clicked, so we add the left page's width to the click's x
+                                edata.x += (cfs[this.currentProgression === ReadingProgression.rtl ? 1 : 0]?.iframe.contentWindow?.innerWidth ?? 0) * window.devicePixelRatio;
+                            }
+                        }
+                    }
+
                     const handled = key === "click" ? this.listeners.click(edata) : this.listeners.tap(edata);
                     // console.log("handled?", handled);
                     if(handled) break;
+                    if (this.currentProgression === ReadingProgression.ttb || this.currentProgression === ReadingProgression.btt)
+                        return; // Not applicable to vertical reading yet. TODO
+
                     const oneQuarter = ((this._cframes.length === 2 ? this._cframes[0]!.window.innerWidth + this._cframes[1]!.window.innerWidth : this._cframes[0]!.window.innerWidth) * window.devicePixelRatio) / 4;
-                    // console.log("OQ", oneQuarter, edata);
                     // open UI if middle screen is clicked/tapped
                     if (edata.x >= oneQuarter && edata.x <= oneQuarter * 3) this.listeners.miscPointer(1);
-                    // if (scrollMode.value) return; TODO!
                     if (edata.x < oneQuarter) this.goLeft(false, () => { }); // Go left if left quarter clicked
                     else if (edata.x > oneQuarter * 3) this.goRight(false, () => { }); // Go right if right quarter clicked
                 }

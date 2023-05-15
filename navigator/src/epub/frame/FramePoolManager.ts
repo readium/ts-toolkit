@@ -140,7 +140,36 @@ export default class FramePoolManager {
         this.inprogress.delete(newHref); // Delete it from the in progress map!
     }
 
-    get currentFrames(): (FXLFrameManager | undefined)[] {
+    get currentFrames(): (FrameManager | undefined)[] {
         return [this._currentFrame];
+    }
+
+    get currentBounds(): DOMRect {
+        const ret = {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            toJSON() {
+                return this;
+            },
+        };
+        this.currentFrames.forEach(f => {
+            if(!f) return;
+            const b = f.realSize;
+            ret.x = Math.min(ret.x, b.x);
+            ret.y = Math.min(ret.y, b.y);
+            ret.width += b.width; // TODO different in vertical
+            ret.height = Math.max(ret.height, b.height);
+            ret.top = Math.min(ret.top, b.top);
+            ret.right = Math.min(ret.right, b.right);
+            ret.bottom = Math.min(ret.bottom, b.bottom);
+            ret.left = Math.min(ret.left, b.left);
+        });
+        return ret as DOMRect;
     }
 }

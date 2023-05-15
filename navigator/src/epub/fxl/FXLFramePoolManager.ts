@@ -583,11 +583,11 @@ export default class FramePoolManager {
             const b = f.realSize;
             ret.x = Math.min(ret.x, b.x);
             ret.y = Math.min(ret.y, b.y);
-            ret.width = Math.max(ret.width, b.width);
+            ret.width += b.width; // TODO different in vertical
             ret.height = Math.max(ret.height, b.height);
             ret.top = Math.min(ret.top, b.top);
-            ret.right = Math.max(ret.right, b.right);
-            ret.bottom = Math.max(ret.bottom, b.bottom);
+            ret.right = Math.min(ret.right, b.right);
+            ret.bottom = Math.min(ret.bottom, b.bottom);
             ret.left = Math.min(ret.left, b.left);
         });
         return ret as DOMRect;
