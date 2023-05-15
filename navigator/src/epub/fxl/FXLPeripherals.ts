@@ -444,8 +444,8 @@ export default class FXLPeripherals {
                 }
             }
 
-            const maxEdgeX = this.frameBounds!.width / 2;
-            const maxEdgeY = this.frameBounds!.height / 2;
+            const maxEdgeX = this.frameBounds!.width / 6;
+            const maxEdgeY = this.frameBounds!.height / 6;
 
             if (this.pan.translateX < -maxEdgeX) {
                 this.pan.overscrollX = -(maxEdgeX + this.pan.translateX);
