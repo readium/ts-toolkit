@@ -71,6 +71,14 @@ export default class FXLPeripherals {
         if(isNaN(value)) value = 1;
         window.clearTimeout(this.scaleDebouncer);
         this.scaleDebouncer = window.setTimeout(() => {
+            if(this.dragState === 0) {
+                if(this.scale < MIN_SCALE) {
+                    this.pan.translateX = 0;
+                    this.pan.translateY = 0;
+                    this.clearPan();
+                    this.manager.updateBookStyle();
+                }
+            }
             this.manager.listener("zoom", value);
         }, 100);
         this._scale = value;
@@ -138,7 +146,7 @@ export default class FXLPeripherals {
         this.pan.overscrollY = 0;
     }
 
-    private clearPinch() {
+    public clearPinch() {
         this.pinch = {
             startDistance: 0,
             startScale: this.pinch.startScale,
