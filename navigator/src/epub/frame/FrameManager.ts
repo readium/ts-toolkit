@@ -81,18 +81,20 @@ export default class FrameManager {
         if(this.comms) this.comms.resume();
         else this.comms = new FrameComms(this.frame.contentWindow!, this.source);
         return new Promise((res, _) => {
-            this.comms?.send("focus", undefined, (ok: boolean) => {
-                const remove = () => {
-                    this.frame.style.removeProperty("visibility");
-                    this.frame.style.removeProperty("opacity");
-                    this.frame.style.removeProperty("pointer-events");
-                    res();
-                }
-                if(atProgress && atProgress > 0) {
-                    this.comms?.send("go_progression", atProgress, remove);
-                } else {
-                    remove();
-                }
+            this.comms?.send("activate", undefined, () => {
+                this.comms?.send("focus", undefined, () => {
+                    const remove = () => {
+                        this.frame.style.removeProperty("visibility");
+                        this.frame.style.removeProperty("opacity");
+                        this.frame.style.removeProperty("pointer-events");
+                        res();
+                    }
+                    if(atProgress && atProgress > 0) {
+                        this.comms?.send("go_progression", atProgress, remove);
+                    } else {
+                        remove();
+                    }
+                });
             });
         });
     }

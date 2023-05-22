@@ -1,5 +1,5 @@
 import { ModuleName } from "@readium/navigator-html-injectables/src";
-import { Locator, Publication, MediaType, ReadingProgression, Orientation, Page, Link } from "@readium/shared/src";
+import { Locator, Publication, MediaType, ReadingProgression, Orientation, Page, Link, Spread } from "@readium/shared/src";
 import { FrameCommsListener } from "../frame";
 import FrameBlobBuider from "../frame/FrameBlobBuilder";
 import FXLFrameManager from "./FXLFrameManager";
@@ -35,6 +35,7 @@ export default class FramePoolManager {
     public currentSlide: number = 0;
     private spreader: FXLSpreader;
     private spread = true; // TODO
+    private readonly spreadPresentation: Spread;
     private orientationInternal = -1; // Portrait = 1, Landscape = 0, Unknown = -1
     private containerHeightCached: number;
     private readonly resizeBoundHandler: EventListenerOrEventListenerObject;
@@ -46,6 +47,7 @@ export default class FramePoolManager {
         this.container = container;
         this.positions = positions;
         this.pub = pub;
+        this.spreadPresentation = pub.metadata.getPresentation()?.spread || Spread.auto;
 
         if(this.pub.metadata.effectiveReadingProgression !== ReadingProgression.rtl && this.pub.metadata.effectiveReadingProgression !== ReadingProgression.ltr)
             // TODO support TTB and BTT
@@ -160,6 +162,7 @@ export default class FramePoolManager {
     }
 
     get portrait(): boolean {
+        if(this.spreadPresentation === Spread.none) return true; // No spreads
         if(this.orientationInternal === -1) {
             this.orientationInternal = this.containerHeightCached > this.container.clientWidth ? 1 : 0;
         }
@@ -539,6 +542,7 @@ export default class FramePoolManager {
                 this.cancelShowing(s.href);
                 await newFrame.load(modules, source); // In order to ensure modules match the latest configuration
                 await newFrame.show(this.spreadPosition(spread, s)); // Show/activate new frame
+                await newFrame.activate();
 
                 // console.log("SHOW DONE");
             }

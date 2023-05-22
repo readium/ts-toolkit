@@ -31,5 +31,6 @@ export type CommsCommandKey =
     "unprotect" |
     "unfocus" |
     "focus" |
+    "activate" |
     "shake";
 ;

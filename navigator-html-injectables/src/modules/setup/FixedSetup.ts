@@ -62,6 +62,10 @@ export class FixedSetup extends Setup {
         });
 
         comms.register("focus", FixedSetup.moduleName, (_, ack) => {
+            ack(true);
+        });
+
+        comms.register("activate", FixedSetup.moduleName, (_, ack) => {
             this.unblock(wnd as ReadiumWindow);
             ack(true);
         });

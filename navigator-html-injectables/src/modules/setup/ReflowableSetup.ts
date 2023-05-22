@@ -44,7 +44,7 @@ export class ReflowableSetup extends Setup {
             ack(true);
         });
 
-        comms.register("focus", ReflowableSetup.moduleName, (_, ack) => {
+        comms.register("activate", ReflowableSetup.moduleName, (_, ack) => {
             this.unblock(wnd as ReadiumWindow);
             ack(true);
         });

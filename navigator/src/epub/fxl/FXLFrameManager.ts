@@ -228,6 +228,14 @@ export default class FXLFrameManager {
         return this.showPromise;
     }
 
+    async activate(): Promise<void> {
+        return new Promise<void>((res, _) => {
+            this.comms!.send("activate", undefined, () => {
+                res();
+            });
+        });
+    }
+
     get element() {
         return this.wrapper;
     }
