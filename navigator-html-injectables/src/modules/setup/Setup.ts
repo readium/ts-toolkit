@@ -31,7 +31,6 @@ export abstract class Setup extends Module {
                     break;
                 case 1:
                     const ev = x[1];
-                    console.log("Blocked event:", ev);
                     window.removeEventListener(ev.type, wnd._readium_eventBlocker, true);
                     const evt = new Event(ev.type, {
                         bubbles: ev.bubbles,
