@@ -14,11 +14,11 @@ window._readium_blockedEvents = [];
 window._readium_blockEvents = true;
 window._readium_eventBlocker = (e) => {
     if(!window._readium_blockEvents) return;
-e.preventDefault();
+    e.preventDefault();
     e.stopImmediatePropagation();
-_readium_blockedEvents.push([
-    1, e
-]);
+    _readium_blockedEvents.push([
+        1, e
+    ]);
 };
 window.addEventListener("DOMContentLoaded", window._readium_eventBlocker, true);
 window.addEventListener("load", window._readium_eventBlocker, true);
