@@ -32,6 +32,9 @@ export class ColumnSnapper extends Snapper {
 
     snapOffset(offset: number) {
         const value = offset + (isRTL(this.wnd) ? -1 : 1);
+        /*console.log(this.wnd.document.head.getElementsByTagName("base").item(0)?.href?.split("OPS/")[1])
+        console.log(value, "%", this.wnd.innerWidth, "=", value % this.wnd.innerWidth)
+        console.log("Snap", value, "-", value % this.wnd.innerWidth, "=", value - (value % this.wnd.innerWidth));*/
         return value - (value % this.wnd.innerWidth);
     }
 
@@ -225,6 +228,7 @@ export class ColumnSnapper extends Snapper {
 
         // Add styling to hide the scrollbar
         const d = wnd.document.createElement("style");
+        d.dataset.readium = "true";
         d.id = COLUMN_SNAPPER_STYLE_ID;
         d.textContent = `
         @keyframes readium-bounce-l-animation {

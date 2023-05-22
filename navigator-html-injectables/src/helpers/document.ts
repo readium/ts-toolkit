@@ -32,6 +32,7 @@ export function appendVirtualColumnIfNeeded(wnd: Window) {
             else {
                 virtualCol = wnd.document.createElement("div");
                 virtualCol.setAttribute("id", id);
+                virtualCol.dataset.readium = "true";
                 virtualCol.style.breakBefore = "column";
                 virtualCol.innerHTML = "&#8203;"; // zero-width space
                 wnd.document.body.appendChild(virtualCol);

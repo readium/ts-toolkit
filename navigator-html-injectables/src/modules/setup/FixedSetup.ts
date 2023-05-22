@@ -1,5 +1,5 @@
 import { Comms } from "../../comms/comms";
-import { Setup } from "./Setup";
+import { ReadiumWindow, Setup } from "./Setup";
 import { removeProperty, setProperty } from "../../helpers/css";
 
 const FIXED_STYLE_ID = "readium-fixed-style";
@@ -12,6 +12,7 @@ export class FixedSetup extends Setup {
 
         const style = wnd.document.createElement("style");
         style.id = FIXED_STYLE_ID;
+        style.dataset.readium = "true";
         style.textContent = `
         html, body {
             overflow: hidden;
@@ -61,6 +62,7 @@ export class FixedSetup extends Setup {
         });
 
         comms.register("focus", FixedSetup.moduleName, (_, ack) => {
+            this.unblock(wnd as ReadiumWindow);
             ack(true);
         });
 
