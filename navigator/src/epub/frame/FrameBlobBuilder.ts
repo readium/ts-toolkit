@@ -1,55 +1,68 @@
 import { Link, MediaType, Publication } from "@readium/shared/src";
 
-// TODO embed locally
-const READIUM_CSS_PATH = "https://cdn.jsdelivr.net/gh/readium/readium-css@583011453612e6f695056ab6c086a2c4f4cac9c0/css/dist/{FILE}";
+// Readium CSS imports
+// The "?inline" query is to prevent some bundlers from injecting these into the page (e.g. vite)
+import readiumCSSAfter from "readium-css/css/dist/ReadiumCSS-after.css?inline";
+import readiumCSSBefore from "readium-css/css/dist/ReadiumCSS-before.css?inline";
+import readiumCSSDefault from "readium-css/css/dist/ReadiumCSS-default.css?inline";
+
+// Utilities
+const blobify = (source: string, type: string) => URL.createObjectURL(new Blob([source], { type }));
+const stripJS = (source: string) => source.replace(/\/\/.*/g, "").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\n/g, "").replace(/\s+/g, " ");
+const stripCSS = (source: string) => source.replace(/\/\*(?:(?!\*\/)[\s\S])*\*\/|[\r\n\t]+/g, '').replace(/ {2,}/g, ' ');
+const scriptify = (doc: Document, source: string) => {
+    const s = doc.createElement("script");
+    s.dataset.readium = "true";
+    s.src = source.startsWith("blob:") ? source : blobify(source, "text/javascript");
+    return s;
+}
+const styleify = (doc: Document, source: string) => {
+    const s = doc.createElement("link");
+    s.dataset.readium = "true";
+    s.rel = "stylesheet";
+    s.type = "text/css";
+    s.href = source.startsWith("blob:") ? source : blobify(source, "text/css");
+    return s;
+}
+
+type CacheFunction = () => string;
+const resourceBlobCache = new Map<string, string>();
+const cached = (key: string, cacher: CacheFunction) => {
+    if(resourceBlobCache.has(key)) return resourceBlobCache.get(key)!;
+    const value = cacher();
+    resourceBlobCache.set(key, value);
+    return value;
+};
 
 // Note: we aren't blocking some of the events right now to try and be as nonintrusive as possible.
 // For a more comprehensive implementation, see https://github.com/hackademix/noscript/blob/3a83c0e4a506f175e38b0342dad50cdca3eae836/src/content/syncFetchPolicy.js#L142
-let rBeforeBlob: string | undefined;
-let rAfterBlob: string | undefined;
-const rBefore = (doc: Document) => {
-    if(!rBeforeBlob) {
-        rBeforeBlob = URL.createObjectURL(new Blob([`
-window._readium_blockedEvents = [];
-window._readium_blockEvents = true;
-window._readium_eventBlocker = (e) => {
-    if(!window._readium_blockEvents) return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    _readium_blockedEvents.push([
-        1, e
-    ]);
-};
-window.addEventListener("DOMContentLoaded", window._readium_eventBlocker, true);
-window.addEventListener("load", window._readium_eventBlocker, true);
-`], { type: "text/javascript" }));
-    }
-    const rBefore = doc.createElement("script");
-    rBefore.dataset.readium = "true";
-    rBefore.src = rBeforeBlob;
-    return rBefore;
-}
-
-export const rAfter = (doc: Document) => {
-    if(!rAfterBlob) {
-        rAfterBlob = URL.createObjectURL(new Blob([`
-if(window.onload) window.onload = new Proxy(window.onload, {
-    apply: function(target, receiver, args) {
-        if(!window._readium_blockEvents) {
-            Reflect.apply(target, receiver, args);
-            return;
-        }
+const rBefore = (doc: Document) => scriptify(doc, cached("JS-Before", () => blobify(stripJS(`
+    window._readium_blockedEvents = [];
+    window._readium_blockEvents = true;
+    window._readium_eventBlocker = (e) => {
+        if(!window._readium_blockEvents) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
         _readium_blockedEvents.push([
-            0, target, receiver, args
+            1, e
         ]);
-    }
-});`], { type: "text/javascript" }));
-    }
-    const rAfter = doc.createElement("script");
-    rAfter.dataset.readium = "true";
-    rAfter.src = rAfterBlob;
-    return rAfter;
-}
+    };
+    window.addEventListener("DOMContentLoaded", window._readium_eventBlocker, true);
+    window.addEventListener("load", window._readium_eventBlocker, true);`
+), "text/javascript")));
+const rAfter = (doc: Document) => scriptify(doc, cached("JS-After", () => blobify(stripJS(`
+    if(window.onload) window.onload = new Proxy(window.onload, {
+        apply: function(target, receiver, args) {
+            if(!window._readium_blockEvents) {
+                Reflect.apply(target, receiver, args);
+                return;
+            }
+            _readium_blockedEvents.push([
+                0, target, receiver, args
+            ]);
+        }
+    });`
+), "text/javascript")));
 
 export default class FrameBlobBuider {
     private readonly item: Link;
@@ -95,25 +108,45 @@ export default class FrameBlobBuider {
         return this.finalizeDOM(doc, this.burl, this.item.mediaType, true);
     }
 
+    private hasStyle(doc: Document): boolean {
+        if(
+            doc.querySelector("link[rel='stylesheet']") ||
+            doc.querySelector("style")
+        ) return true;
+
+        // Expensive, but probably rare because almost every EPUB has some sort of CSS in it
+        const elements = document.querySelectorAll("*");
+        console.log(elements);
+        for (let i = 0; i < elements.length; i++) {
+            if (elements[i].hasAttribute("style")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private finalizeDOM(doc: Document, base: string | undefined, mediaType: MediaType, fxl = false): string {
         if(!doc) return "";
 
         // Inject styles
         if(!fxl) {
-            const css = (name: string) => {
-                const d = doc.createElement("link");
-                d.dataset.readium = "true";
-                d.rel = "stylesheet";
-                d.type = "text/css";
-                d.href = // TODO standardize
-                READIUM_CSS_PATH.replace(
-                    "{FILE}",
-                    name
-                );
-                return d;
-            };
-            doc.head.firstChild ? doc.head.firstChild.before(css("ReadiumCSS-before.css")) : doc.head.appendChild(css("ReadiumCSS-before.css"));
-            doc.head.appendChild(css("ReadiumCSS-after.css"));
+            // Readium CSS Before
+            const rcssBefore = styleify(doc, cached("ReadiumCSS-before", () => blobify(stripCSS(readiumCSSBefore), "text/css")));
+            doc.head.firstChild ? doc.head.firstChild.before(rcssBefore) : doc.head.appendChild(rcssBefore);
+
+            // Patch
+            const patch = doc.createElement("style");
+            patch.dataset.readium = "true";
+            patch.innerHTML = `audio[controls] { width: revert; height: revert; }`; // https://github.com/readium/readium-css/issues/94
+            rcssBefore.after(patch);
+
+            // Readium CSS default
+            if(!this.hasStyle(doc))
+                rcssBefore.after(styleify(doc, cached("ReadiumCSS-default", () => blobify(stripCSS(readiumCSSDefault), "text/css"))))
+
+            // Readium CSS After
+            doc.head.appendChild(styleify(doc, cached("ReadiumCSS-after", () => blobify(stripCSS(readiumCSSAfter), "text/css"))));
         }
     
         if(base !== undefined) {
