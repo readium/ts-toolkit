@@ -9,7 +9,9 @@ import readiumCSSDefault from "readium-css/css/dist/ReadiumCSS-default.css?inlin
 // Utilities
 const blobify = (source: string, type: string) => URL.createObjectURL(new Blob([source], { type }));
 const stripJS = (source: string) => source.replace(/\/\/.*/g, "").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\n/g, "").replace(/\s+/g, " ");
-const stripCSS = (source: string) => source.replace(/\/\*(?:(?!\*\/)[\s\S])*\*\/|[\r\n\t]+/g, '').replace(/ {2,}/g, ' ');
+const stripCSS = (source: string) => source.replace(/\/\*(?:(?!\*\/)[\s\S])*\*\/|[\r\n\t]+/g, '').replace(/ {2,}/g, ' ')
+    // Fully resolve absolute local URLs created by bundlers since it's going into a blob
+    .replace(/url\((?!(https?:)?\/\/)("?)\/([^\)]+)/g, `url($2${window.location.origin}/$3`);
 const scriptify = (doc: Document, source: string) => {
     const s = doc.createElement("script");
     s.dataset.readium = "true";
