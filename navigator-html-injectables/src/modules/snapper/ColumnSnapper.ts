@@ -1,3 +1,4 @@
+import { ResizeObserver as Polyfill } from '@juggle/resize-observer';
 import { Comms, mid } from "../../comms";
 import { Snapper } from "./Snapper";
 import { getColumnCountPerScreen, isRTL, appendVirtualColumnIfNeeded } from "../../helpers/document";
@@ -12,6 +13,9 @@ enum ScrollTouchState {
     START = 1,
     MOVE = 2
 }
+
+// Necessary for iOS 13 and below
+const ResizeObserver = window.ResizeObserver || Polyfill;
 
 /**
  * A {Snapper} for reflowable resources using a column-based layout

@@ -34,8 +34,10 @@ importers:
 
   navigator-html-injectables:
     specifiers:
+      '@juggle/resize-observer': ^3.4.0
       tslib: ^2.3.1
     devDependencies:
+      '@juggle/resize-observer': 3.4.0
       tslib: 2.4.0
 
   shared:
@@ -1980,6 +1982,10 @@ packages:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.0
       '@jridgewell/sourcemap-codec': 1.4.14
+    dev: true
+
+  /@juggle/resize-observer/3.4.0:
+    resolution: {integrity: sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==}
     dev: true
 
   /@nodelib/fs.scandir/2.1.5:

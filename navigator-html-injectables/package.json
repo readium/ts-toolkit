@@ -41,6 +41,7 @@
   },
   "module": "dist/index.js",
   "devDependencies": {
+    "@juggle/resize-observer": "^3.4.0",
     "tslib": "^2.3.1"
   }
 }
