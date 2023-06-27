@@ -8,6 +8,7 @@ import { Link, Links } from './Link';
 import { arrayfromJSONorString } from '../util/JSONParse';
 import { PublicationCollection } from './PublicationCollection';
 import { MediaType } from '../util/mediatype/MediaType';
+import { Locator, LocatorLocations } from "./Locator";
 
 /** Holds the metadata of a Readium publication, as described in
  *  the Readium Web Publication Manifest.
@@ -131,6 +132,30 @@ export class Manifest {
     result.push(this.links.filterByRel(rel));
 
     return result.reduce((acc, val) => acc.concat(val), []);
+  }
+
+  /**
+   * Creates a new [Locator] object from a [Link] to a resource of this manifest.
+   * Returns null if the resource is not found in this manifest.
+   */
+  public locatorFromLink(link: Link): Locator | undefined {
+    const components = link.href.split("#");
+    const href = components.length == 2 ? components[0] : link.href;
+    const resourceLink = this.linkWithHref(href);
+    if(!resourceLink) return undefined;
+    const type = resourceLink.type;
+    if(!type) return undefined;
+    const fragment = components.length == 2 ? components[1] : undefined;
+
+    return new Locator({
+      href,
+      type,
+      title: resourceLink.title ?? link.title,
+      locations: new LocatorLocations({
+        fragments: fragment ? [fragment] : undefined,
+        progression: fragment ? undefined : 0.0,
+      })
+    });
   }
 
   /** Finds the first Link having the given `href` in the publication's links. */
