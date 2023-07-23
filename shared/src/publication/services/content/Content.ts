@@ -1,5 +1,5 @@
 import { Iterator } from "./Iterator";
-import { Elemnt, TextualElement } from "./element";
+import { ContentElement, TextualElement } from "./element";
 
 /**
  * Provides an iterable list of content [Element]s.
@@ -24,8 +24,8 @@ export abstract class Content {
     /**
      * Returns all the elements as a list.
      */
-    elements(): Elemnt[] {
-        const list: Elemnt[] = [];
+    elements(): ContentElement[] {
+        const list: ContentElement[] = [];
         const iterator = this.iterator();
         while (true) {
             if(!iterator.hasNext()) break;

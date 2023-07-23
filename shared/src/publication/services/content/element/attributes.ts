@@ -17,7 +17,7 @@ export abstract class AttributesHolder {
         /**
          * Associated list of attributes.
          */
-        protected readonly _attributes: Attribute<any>[] = []
+        readonly _attributes: Attribute<any>[] = []
     ) {}
 
     get language(): Language | undefined {

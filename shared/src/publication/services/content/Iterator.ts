@@ -1,4 +1,4 @@
-import { Elemnt } from "./element";
+import { ContentElement } from "./element";
 
 export class IllegalStateError extends Error {
     constructor(message: string) {
@@ -14,33 +14,33 @@ export abstract class Iterator {
     /**
      * Returns true if the iterator has a next element, suspending the caller while processing it.
      */
-    abstract hasNext(): boolean;
+    abstract hasNext(): Promise<boolean>;
     /**
      * Retrieves the element computed by a preceding call to [hasNext], or throws an
      * [IllegalStateError] if [hasNext] was not invoked. This method should only be used in
      * pair with [hasNext].
      */
-    abstract next(): Elemnt;
+    abstract next(): ContentElement;
     /**
      * Advances to the next item and returns it, or null if we reached the end.
      */
-    nextOrNull(): Elemnt | null {
-        return this.hasNext() ? this.next() : null;
+    async nextOrNull(): Promise<ContentElement | null> {
+        return (await this.hasNext()) ? this.next() : null;
     }
     /**
      * Returns true if the iterator has a previous element, suspending the caller while processing it.
      */
-    abstract hasPrevious(): boolean;
+    abstract hasPrevious(): Promise<boolean>;
     /**
      * Retrieves the element computed by a preceding call to [hasPrevious], or throws an
      * [IllegalStateError] if [hasPrevious] was not invoked. This method should only be used in
      * pair with [hasPrevious].
      */
-    abstract previous(): Elemnt;
+    abstract previous(): ContentElement;
     /**
      * Advances to the previous item and returns it, or null if we reached the beginning.
      */
-    previousOrNull(): Elemnt | null {
-        return this.hasPrevious() ? this.previous() : null;
+    async previousOrNull(): Promise<ContentElement | null> {
+        return (await this.hasPrevious()) ? this.previous() : null;
     }
 }

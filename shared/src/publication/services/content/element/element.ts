@@ -7,7 +7,7 @@ import { TextRole } from "./text_role";
  * Represents a single semantic content element part of a publication.
  * NOTE: This is named "Element" in other toolkits. This conflicts with the JavaScript `Element` type so it's been renamed.
  */
-export abstract class Elemnt extends AttributesHolder {
+export abstract class ContentElement extends AttributesHolder {
     constructor(public readonly locator: Locator, attributes: Attribute<any>[] = []) {
         super(attributes);
     }
@@ -17,7 +17,7 @@ export abstract class Elemnt extends AttributesHolder {
  * An element which can be represented as human-readable text.
  * The default implementation returns the first accessibility label associated to the element.
  */
-export class TextualElement extends Elemnt {
+export class TextualElement extends ContentElement {
     /**
      * Human-readable text representation for this element.
      */
@@ -29,7 +29,7 @@ export class TextualElement extends Elemnt {
 /**
  *  An element referencing an embedded external resource.
  */
-export interface EmbeddedElement extends Elemnt {
+export interface EmbeddedElement extends ContentElement {
     /**
      * Referenced resource in the publication.
      */

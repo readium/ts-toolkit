@@ -2,7 +2,7 @@ import { Resource } from "../../../../fetcher/Resource";
 import { Locator } from "../../../Locator";
 import { Publication } from "../../../Publication";
 import { IllegalStateError, Iterator } from "../Iterator";
-import { Elemnt } from "../element";
+import { ContentElement } from "../element";
 
 // Creates a [Content.Iterator] instance for the [Resource], starting from the given [Locator].
 // Returns null if the resource media type is not supported.
@@ -20,7 +20,7 @@ class IndexedIterator {
         readonly iterator: Iterator
     ) {}
 
-    nextContentIn(direction: Direction): Elemnt | null {
+    async nextContentIn(direction: Direction): Promise<ContentElement | null> {
         return direction === Direction.Forward ? this.iterator.nextOrNull() : this.iterator.previousOrNull();
     }
 }
@@ -28,7 +28,7 @@ class IndexedIterator {
 // [Element] loaded with [hasPrevious] or [hasNext], associated with the move direction.
 class ElementInDirection {
     constructor(
-        readonly element: Elemnt,
+        readonly element: ContentElement,
         readonly direction: Direction
     ) {}
 }
@@ -58,31 +58,31 @@ export class PublicationContentIterator extends Iterator {
     ) { super(); }
 
 
-    hasPrevious(): boolean {
-        this.currentElement = this.nextIn(Direction.Backward);
+    async hasPrevious(): Promise<boolean> {
+        this.currentElement = await this.nextIn(Direction.Backward);
         return this.currentElement !== null;
     }
 
-    previous(): Elemnt {
+    previous(): ContentElement {
         if(this.currentElement?.direction !== Direction.Backward) throw new IllegalStateError("Called previous() without a successful call to hasPrevious() first");
         return this.currentElement.element;
     }
 
-    hasNext(): boolean {
-        this.currentElement = this.nextIn(Direction.Forward);
+    async hasNext(): Promise<boolean> {
+        this.currentElement = await this.nextIn(Direction.Forward);
         return this.currentElement !== null;
     }
 
-    next(): Elemnt {
+    next(): ContentElement {
         if(this.currentElement?.direction !== Direction.Forward) throw new IllegalStateError("Called next() without a successful call to hasNext() first");
         return this.currentElement.element;
     }
 
-    private nextIn(direction: Direction): ElementInDirection | null {
+    private async nextIn(direction: Direction): Promise<ElementInDirection | null> {
         const iterator = this.currentIterator;
         if(!iterator) return null;
 
-        const content = iterator.nextContentIn(direction);
+        const content = await iterator.nextContentIn(direction);
         if(!content) {
             const ni = this.nextIteratorIn(direction, iterator.index);
             if(!ni) return null;

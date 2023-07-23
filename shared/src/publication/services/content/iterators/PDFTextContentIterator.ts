@@ -33,6 +33,8 @@ class ElementInDirection {
 
 /* An iterator which iterates through a whole PDF page provided, 
     and returns the elements based on a [pageContentElement] array. */
+
+// TODO extend Iterator class!
 export class PageContentIteratorPDF {
     private pageContentFiltered: Array<PageContentElement> = [];
     private currentElement: ElementInDirection | null = null;
