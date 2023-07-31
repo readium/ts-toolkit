@@ -123,8 +123,9 @@ export class EpubNavigator extends VisualNavigator {
                     ) {
                         const origHref = element.attributes.getNamedItem("href")?.value!;
                         if (origHref.startsWith("#")) {
-                            console.warn("TODO reimplement anchor jump!");
-                            // contentWindow.readium.scrollToId(origHref.substring(1));
+                            this.go(this.currentLocation.copyWithLocations({
+                                fragments: [origHref.substring(1)]
+                            }), false, () => { });
                         } else if(
                             origHref.startsWith("http://") ||
                             origHref.startsWith("https://") ||
@@ -410,6 +411,38 @@ export class EpubNavigator extends VisualNavigator {
         return this.pub;
     }
 
+    private async loadLocator(locator: Locator, cb: (ok: boolean) => void) {
+        let done = false;
+        if(locator.text?.highlight)
+            done = await new Promise<boolean>((res, _) => {
+                // Attempt to go to a highlighted piece of text in the resource
+                this._cframes[0]!.msg!.send("go_text", locator.text, (ok) => res(ok));
+            });
+        if(done) {
+            cb(done);
+            return;
+        }
+        const hid = locator.locations.htmlId();
+        if(hid)
+            done = await new Promise<boolean>((res, _) => {
+                // Attempt to go to an HTML ID in the resource
+                this._cframes[0]!.msg!.send("go_id", hid, (ok) => res(ok));
+            });
+        if(done) {
+            cb(done);
+            return;
+        }
+
+        const progression = locator?.locations?.progression;
+        const hasProgression = progression && progression > 0;
+        if(hasProgression)
+            done = await new Promise<boolean>((res, _) => {
+                // Attempt to go to a progression in the resource
+                this._cframes[0]!.msg!.send("go_progression", progression, (ok) => res(ok));
+            });
+        cb(done);
+    }
+
     public go(locator: Locator, animated: boolean, cb: (ok: boolean) => void): void {
         const href = locator.href.split("#")[0];
         let link = this.pub.readingOrder.findWithHref(href);
@@ -418,19 +451,10 @@ export class EpubNavigator extends VisualNavigator {
         }
 
         this.currentLocation = this.positions.find(p => p.href === link!.href)!;
-        this.apply().then(() => {
-            const progression = locator?.locations?.progression;
-            const hasProgression = progression && progression > 0;
-
-            if(hasProgression)
-                this._cframes[0]!.msg!.send("go_progression", progression, () => {
-                    // Now that we've gone to the right progression, we can attach the listeners.
-                    // Doing this only at this stage reduces janky UI with multiple progression updates.
-                    this.attachListener();
-                    cb(true);
-                });
-            else
-                cb(true);
+        this.apply().then(() => this.loadLocator(locator, (ok) => cb(ok))).then(() => {
+            // Now that we've gone to the right locator, we can attach the listeners.
+            // Doing this only at this stage reduces janky UI with multiple locator updates.
+            this.attachListener();
         });
     }
 

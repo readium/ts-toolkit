@@ -4,6 +4,8 @@ import { Snapper } from "./Snapper";
 import { getColumnCountPerScreen, isRTL, appendVirtualColumnIfNeeded } from "../../helpers/document";
 import { easeInOutQuad } from "../../helpers/animation";
 import { ModuleName } from "../ModuleLibrary";
+import { Locator, LocatorText } from "@readium/shared/src";
+import { rangeFromLocator } from "../../helpers/locator";
 
 const COLUMN_SNAPPER_STYLE_ID = "readium-column-snapper-style";
 const SNAP_DURATION = 200; // Milliseconds
@@ -311,6 +313,37 @@ export class ColumnSnapper extends Snapper {
                 ack(true);
             });
         })
+
+        comms.register("go_id", ColumnSnapper.moduleName, (data, ack) => {
+            const element = wnd.document.getElementById(data as string);
+            if(!element) {
+                ack(false);
+                return;
+            }
+            this.wnd.requestAnimationFrame(() => {
+                this.doc().scrollLeft = this.snapOffset(element.getBoundingClientRect().left + wnd.scrollX);
+                this.reportProgress();
+                ack(true);
+            });
+        });
+
+        comms.register("go_text", ColumnSnapper.moduleName, (data, ack) => {
+            const text = data as LocatorText;
+            const r = rangeFromLocator(this.wnd.document, new Locator({
+                href: wnd.location.href,
+                type: "text/html",
+                text
+            }));
+            if(!r) {
+                ack(false);
+                return;
+            }
+            this.wnd.requestAnimationFrame(() => {
+                this.doc().scrollLeft = this.snapOffset(r.getBoundingClientRect().left + wnd.scrollX);
+                this.reportProgress();
+                ack(true);
+            });
+        });
 
         comms.register("go_end", ColumnSnapper.moduleName, (_, ack) => {
             const factor = isRTL(wnd) ? -1 : 1;

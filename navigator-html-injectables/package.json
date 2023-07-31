@@ -42,6 +42,10 @@
   "module": "dist/index.js",
   "devDependencies": {
     "@juggle/resize-observer": "^3.4.0",
-    "tslib": "^2.3.1"
+    "@readium/shared": "workspace:1.2.0",
+    "tslib": "^2.6.1"
+  },
+  "dependencies": {
+    "approx-string-match": "^2.0.0"
   }
 }
