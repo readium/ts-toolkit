@@ -1,0 +1,1 @@
+The code in this module has been directly copied from https://github.com/hypothesis/client/tree/529a0f8e2242d07736d751715974a4356c0a69f1/src/annotator/anchoring, released under the 2-Clause BSD license.
