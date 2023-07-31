@@ -88,7 +88,6 @@ const unicodeSpaceTrim = new RegExp(`^${unicodeSpaceRange}+|${unicodeSpaceRange}
 const unicodeSpaceStart = new RegExp(`^${unicodeSpaceRange}+`, "g");
 const unicodeSpaceEnd = new RegExp(`${unicodeSpaceRange}+$`, "g");
 
-console.log(allUnicodeSpace.source);
 export const isBlank = (s: string | null) =>
     // Normal spaces, \t, \n, \v, \f, \r, U+0085, U+00A0, U+2000 to U+200A, U+2028, U+2029, U+202F, U+205F, U+3000
     !s?.length ? true : allUnicodeSpace.test(s);
