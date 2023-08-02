@@ -1,20 +1,36 @@
 import { Locator } from "../../../Locator";
+import { Attribute, ContentElement } from "../element";
+import { IllegalStateError, Iterator } from "../Iterator";
 
 // Type TextItem represents a text item in a PDF page (extracted from pdf.js TextItem type).
 type TextItem = {
     str: string;
     dir: string;
-    transform: Array<any>;
-    width: number;
-    height: number;
-    fontName: string;
-    hasEOL: boolean;
+    locator: Locator;
 };
 
+/**
+ * A pdf element.
+ */
+export class PDFContentElement extends ContentElement {
+    constructor(
+        locator: Locator,
+        /**
+         * Readable text.
+         */
+        readonly element: PDFReadableElement,
+        attributes: Attribute<any>[] = [],
+    ) { super(locator, attributes); }
+
+    get text(): string | undefined {
+        return this.element.text;
+    }
+}
+
 // Element in a PDF resource page.
-export type PageContentElement = {
+export type PDFReadableElement = {
+    index: number,
     text: string;
-    locator?: Locator;
     readingDirection?: string;
 };
 
@@ -26,17 +42,17 @@ enum Direction {
 // [Element] loaded with [hasPrevious] or [hasNext], associated with the move direction.
 class ElementInDirection {
     constructor(
-        readonly element: PageContentElement,
+        readonly element: ContentElement,
         readonly direction: Direction
     ) {}
 }
 
 /* An iterator which iterates through a whole PDF page provided, 
-    and returns the elements based on a [pageContentElement] array. */
+    and returns the elements based on a [PDFReadableElement] array. */
 
 // TODO extend Iterator class!
-export class PageContentIteratorPDF {
-    private pageContentFiltered: Array<PageContentElement> = [];
+export class PageContentIteratorPDF extends Iterator{
+    private pageContentFiltered: Array<PDFContentElement> = [];
     private currentElement: ElementInDirection | null = null;
     private currentProgression: number = 0;
     private currentElementIndex: number = 0;
@@ -50,15 +66,19 @@ export class PageContentIteratorPDF {
         private pageContent: Array<TextItem>,
         private startLocator?: Locator | null | undefined
     ) { 
+        super();
         const contentFiltered = this.pageContent.filter(
             (item: TextItem) => item?.str !== " " && item?.str !== ""
         ) as Array<TextItem>;
+
+        console.log("TTS_____contentFiltered::", contentFiltered);
         
         this.pageContentFiltered = contentFiltered.map((item) => {
-            return {
+            return new PDFContentElement(item.locator, {
+                index: contentFiltered.indexOf(item),
                 text: item.str,
-                direction: item.dir,
-            } as PageContentElement;
+                readingDirection: item.dir
+            });
         });
 
         if (this.startLocator) {
@@ -77,54 +97,54 @@ export class PageContentIteratorPDF {
 
 
     // Returns the current element to be read.
-    current(): PageContentElement | null { 
+    current(): ContentElement | null { 
         return this.currentElement ? this.currentElement.element : null;
     }
 
-    hasPrevious(): boolean {
+    async hasPrevious(): Promise<boolean> {
         this.currentElement?.direction === Direction.Backward;
         return this.nextIn(Direction.Backward) !== null;
     }
 
-    previous(): PageContentElement | null {
+    previous(): ContentElement {
         
-        if (this.hasPrevious()){
-            this.currentElement = this.nextIn(Direction.Backward);
-            
-            if (this.currentElementIndex && this.currentElementIndex > 0) {
-                const newIndex = this.currentElementIndex - 1;
-                this.currentProgression = newIndex / this.pageContentFiltered.length * 100;
-                this.currentElementIndex = newIndex;
-            }
-            return this.currentElement ? this.currentElement.element : null;
-        } else {
-            console.warn("Called previous() but hasPrevious() check failed");
-            return null;
+        if (!this.currentElement) throw new IllegalStateError("Called next() without a successful call to hasNext() first");
+        
+        this.currentElement = this.nextIn(Direction.Backward);
+
+        if (this.currentElementIndex && this.currentElementIndex > 0) {
+            const newIndex = this.currentElementIndex - 1;
+            this.currentProgression = newIndex / this.pageContentFiltered.length * 100;
+            this.currentElementIndex = newIndex;
         }
+        
+        return this.currentElement ? 
+            this.currentElement.element : 
+            new PDFContentElement(new Locator( { href : "", type: "" }), { index: -1, text: "" });
+        
     }
 
-    hasNext(): boolean {
+    async hasNext(): Promise<boolean> {
         this.currentElement?.direction === Direction.Forward;
         return this.nextIn(Direction.Forward) !== null;
     }
 
-    next(): PageContentElement | null {
-
-        if (this.hasNext()){
-            this.currentElement = this.nextIn(Direction.Forward);
-            const currentIndex = this.currentElementIndex;
-            if (currentIndex !== null &&
-                currentIndex >= 0 && 
-                currentIndex < this.pageContentFiltered.length - 1) {
-                const newIndex = currentIndex + 1;
-                this.currentProgression = newIndex / (this.pageContentFiltered.length) * 100;
-                this.currentElementIndex = newIndex;
-            }
-            return this.currentElement ? this.currentElement.element : null;
-        } else {
-            console.warn("Called next() but hasNext() check failed");
-            return null;
+    next(): ContentElement {
+        
+        this.currentElement = this.nextIn(Direction.Forward);
+        const currentIndex = this.currentElementIndex;
+        if (currentIndex !== null &&
+            currentIndex >= 0 && 
+            currentIndex < this.pageContentFiltered.length - 1) {
+            const newIndex = currentIndex + 1;
+            this.currentProgression = newIndex / (this.pageContentFiltered.length) * 100;
+            this.currentElementIndex = newIndex;
         }
+    
+        return this.currentElement ? 
+            this.currentElement.element : 
+            new PDFContentElement(new Locator( { href : "", type: "" }), { index: -1, text: "" });
+             
     }
 
     private nextIn(direction: Direction): ElementInDirection | null {
@@ -150,7 +170,7 @@ export class PageContentIteratorPDF {
     }
 
     /**
-     * Updates the current [PageContentElement] position in the pageContentFiltered array
+     * Updates the current [PDFReadableElement] position in the pageContentFiltered array
      * based on the current progression value.
      */
     private updateElementIndex(): number | null {
