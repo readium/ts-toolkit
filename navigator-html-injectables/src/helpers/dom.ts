@@ -19,7 +19,7 @@ const interactiveTags = [
 ];
 
 // See https://github.com/JayPanoz/architecture/tree/touch-handling/misc/touch-handling
-export default function nearestInteractiveElement(element: Element): Element | null {
+export function nearestInteractiveElement(element: Element): Element | null {
     if (interactiveTags.indexOf(element.nodeName.toLowerCase()) !== -1) {
         return element;
     }
