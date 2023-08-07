@@ -4,6 +4,7 @@ import { ScrollSnapper } from "./snapper/ScrollSnapper";
 import { ReflowablePeripherals } from "./ReflowablePeripherals";
 import { ReflowableSetup } from "./setup/ReflowableSetup";
 import { FixedSetup } from "./setup/FixedSetup";
+import { Decorator } from "./Decorator";
 
 // All the module names. TODO: Come up with a better way of collecting these in a way TS will recognize
 export type ModuleName =
@@ -11,6 +12,7 @@ export type ModuleName =
     "column_snapper" |
     "scroll_snapper" |
     "fixed_setup" |
+    "decorator" |
     "reflowable_setup" |
     "reflowable_peripherals";
 
@@ -19,6 +21,7 @@ export const ModuleLibrary = new Map<string, ModuleDerived>([
     FixedSetup,
     ReflowableSetup,
     ReflowablePeripherals,
+    Decorator,
     ColumnSnapper,
     ScrollSnapper,
 ].map(m => [m.moduleName, m])); // Turn module list into K/V list for quick access by name

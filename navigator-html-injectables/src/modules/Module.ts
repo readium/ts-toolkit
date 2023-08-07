@@ -1,7 +1,8 @@
 import { Comms } from "../comms";
+import { ModuleName } from "./ModuleLibrary";
 
 export abstract class Module {
-    static readonly moduleName: string; // snake_case name of the module, must be unique.
+    static readonly moduleName: ModuleName; // snake_case name of the module, must be unique.
 
     // Called by the loader, where modules are mounted one after another.
     // In this function, the Module can register any commands it should listen

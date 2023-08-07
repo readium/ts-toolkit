@@ -416,7 +416,7 @@ export class EpubNavigator extends VisualNavigator {
         if(locator.text?.highlight)
             done = await new Promise<boolean>((res, _) => {
                 // Attempt to go to a highlighted piece of text in the resource
-                this._cframes[0]!.msg!.send("go_text", locator.text, (ok) => res(ok));
+                this._cframes[0]!.msg!.send("go_text", locator.text?.serialize(), (ok) => res(ok));
             });
         if(done) {
             cb(done);

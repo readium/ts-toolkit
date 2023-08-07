@@ -3,8 +3,8 @@ import { Link, Links } from "../../../Link";
 import { Locator, LocatorLocations } from "../../../Locator";
 import { IllegalStateError, Iterator } from "../Iterator";
 import { Attribute, AttributeKeys, AudioElement, Body, ContentElement, Footnote, Heading, ImageElement, TextElement, TextQuote, TextSegment, VideoElement } from "../element";
-import { appendNormalizedWhitespace, elementLanguage, getMinSelector, isBlank, isInlineTag, srcRelativeToHref, trimUnicodeSpace, trimUnicodeSpaceEnd, trimUnicodeSpaceStart, trimmingTextLocator } from "./helpers";
-
+import { appendNormalizedWhitespace, elementLanguage, isBlank, isInlineTag, srcRelativeToHref, trimUnicodeSpace, trimUnicodeSpaceEnd, trimUnicodeSpaceStart, trimmingTextLocator } from "./helpers";
+import { getCssSelector } from "css-selector-generator";
 
 interface ElementWithDelta {
     element: ContentElement;
@@ -85,8 +85,6 @@ export class HTMLResourceContentIterator extends Iterator {
 
     private async elements(): Promise<ParsedElements> {
         this.parsedElements ??= await this.parseElements();
-        console.log("EL DONE");
-        console.log(this.parsedElements)
         return this.parsedElements;
     }
 
@@ -94,6 +92,7 @@ export class HTMLResourceContentIterator extends Iterator {
         const raw = await this.resource.readAsString();
         const doc = (new DOMParser()).parseFromString(raw!, this.locator.type as DOMParserSupportedType);
         const parser = new ContentParser(
+            doc,
             this.locator,
             this.locator.locations.getCssSelector() ? doc.querySelector(this.locator.locations.getCssSelector()!) as Element : null,
             this.beforeMaxLength
@@ -167,6 +166,7 @@ class ContentParser implements NodeVisitor {
     private breadcrumbs: Node[] = []; // LIFO stack of the current element's block ancestors.
 
     constructor(
+        private doc: Document,
         private baseLocator: Locator,
         private startElement: Element | null,
         private beforeMaxLength: number
@@ -190,7 +190,9 @@ class ContentParser implements NodeVisitor {
                 this.breadcrumbs.push(node);
 
                 // Calculate CSS selector now because we'll definitely need it
-                cssSelector = getMinSelector(node as Element);
+                cssSelector = getCssSelector(node as Element, {
+                    root: this.doc
+                });
             }
 
             const nodeName = node.nodeName.toUpperCase();
@@ -204,7 +206,9 @@ class ContentParser implements NodeVisitor {
                 this.flushText();
 
                 if (!cssSelector) {
-                    cssSelector = getMinSelector(node as Element);
+                    cssSelector = getCssSelector(node as Element, {
+                        root: this.doc
+                    });
                 }
                 const elementLocator = this.baseLocator.copyWithLocations({
                     otherLocations: new Map([

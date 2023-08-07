@@ -1,11 +1,12 @@
 import { Comms } from "../../comms/comms";
 import { ReadiumWindow, Setup } from "./Setup";
 import { removeProperty, setProperty } from "../../helpers/css";
+import { ModuleName } from "../ModuleLibrary";
 
 const FIXED_STYLE_ID = "readium-fixed-style";
 
 export class FixedSetup extends Setup {
-    static readonly moduleName = "fixed_setup";
+    static readonly moduleName: ModuleName = "fixed_setup";
 
     mount(wnd: Window, comms: Comms): boolean {
         if(!super.mount(wnd, comms)) return false;
@@ -24,6 +25,8 @@ export class FixedSetup extends Setup {
             /* Fight Safari pinches */
             touch-action: none !important;
             min-height: 100%;
+
+            /*cursor: var() TODO*/
         }`;
         wnd.document.head.appendChild(style);
 

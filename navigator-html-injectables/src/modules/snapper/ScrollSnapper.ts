@@ -1,4 +1,5 @@
 import { Comms } from "../../comms";
+import { findFirstVisibleLocator } from "../../helpers/dom";
 import { AnchorObserver, helperCreateAnchorElements, helperRemoveAnchorElements } from '../../helpers/scrollSnapperHelper';
 import { ModuleName } from "../ModuleLibrary";
 import { Snapper } from "./Snapper";
@@ -96,6 +97,12 @@ export class ScrollSnapper extends Snapper {
 
         comms.register("focus", ScrollSnapper.moduleName, (_, ack) => {
             this.reportProgress(this.doc().scrollTop / this.doc().offsetHeight);
+            ack(true);
+        });
+
+        comms.register("first_visible_locator", ScrollSnapper.moduleName, (_, ack) => {
+            const locator = findFirstVisibleLocator(wnd.document,true);
+            this.comms.send("first_visible_locator", locator.serialize());
             ack(true);
         });
 
