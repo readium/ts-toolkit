@@ -35,14 +35,13 @@ importers:
       '@juggle/resize-observer': ^3.4.0
       '@readium/shared': workspace:1.2.0
       approx-string-match: ^2.0.0
-      css-selector-generator: ^3.6.4
+      css-selector-generator: github:chocolatkey/css-selector-generator#39a341cdc0b003f5dc5bd930a9ffccba1f86961b
       tslib: ^2.6.1
-    dependencies:
-      approx-string-match: 2.0.0
-      css-selector-generator: 3.6.4
     devDependencies:
       '@juggle/resize-observer': 3.4.0
       '@readium/shared': link:../shared
+      approx-string-match: 2.0.0
+      css-selector-generator: github.com/chocolatkey/css-selector-generator/39a341cdc0b003f5dc5bd930a9ffccba1f86961b
       tslib: 2.6.1
 
   shared:
@@ -54,7 +53,7 @@ importers:
       '@size-limit/webpack-why': ^7.0.8
       '@types/jest': ^27.5.2
       babel-jest: ^28.1.3
-      css-selector-generator: ^3.6.4
+      css-selector-generator: github:chocolatkey/css-selector-generator#39a341cdc0b003f5dc5bd930a9ffccba1f86961b
       size-limit: ^7.0.8
       tsdx: ^0.14.1
       tslib: ^2.6.1
@@ -67,7 +66,7 @@ importers:
       '@size-limit/webpack-why': 7.0.8_z4dsl6jfbhjmoui3kelkk44s5e
       '@types/jest': 27.5.2
       babel-jest: 28.1.3_@babel+core@7.22.9
-      css-selector-generator: 3.6.4
+      css-selector-generator: github.com/chocolatkey/css-selector-generator/39a341cdc0b003f5dc5bd930a9ffccba1f86961b
       size-limit: 7.0.8
       tsdx: 0.14.1
       tslib: 2.6.1
@@ -2774,7 +2773,7 @@ packages:
 
   /approx-string-match/2.0.0:
     resolution: {integrity: sha512-03v8MsWnZYV4Svv82EYWoVw1RIKAJ/zubmhG1FYvhJwOsBnLPxx6CPHF2dXN/yW8uwHK+653j52IwiNluJR97w==}
-    dev: false
+    dev: true
 
   /archy/1.0.0:
     resolution: {integrity: sha512-Xg+9RwCg/0p32teKdGMPTPnVXKD0w3DfHnFTficozsAgsvq2XenPJq/MYpzzQ/v8zrOyJn6Ds39VA4JIDwFfqw==}
@@ -3589,9 +3588,6 @@ packages:
   /crypt/0.0.2:
     resolution: {integrity: sha512-mCxBlsHFYh9C+HVpiEacem8FEBnMXgU9gy4zmNC+SXAZNB/1idgp/aulFJ4FgCi7GPEVbfyng092GqL2k2rmow==}
     dev: true
-
-  /css-selector-generator/3.6.4:
-    resolution: {integrity: sha512-/VDUW5KAoxGXJPNcn+5Y0DLJMQumLk9zNMWl2NChuTwGLEFeqfnddCpRhY6uZ77ar0uyM7W7ilvIWsk7DpjKxQ==}
 
   /cssesc/3.0.0:
     resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
@@ -9114,6 +9110,12 @@ packages:
   /yocto-queue/0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
+    dev: true
+
+  github.com/chocolatkey/css-selector-generator/39a341cdc0b003f5dc5bd930a9ffccba1f86961b:
+    resolution: {tarball: https://codeload.github.com/chocolatkey/css-selector-generator/tar.gz/39a341cdc0b003f5dc5bd930a9ffccba1f86961b}
+    name: css-selector-generator
+    version: 3.6.5
     dev: true
 
   github.com/readium/readium-css/583011453612e6f695056ab6c086a2c4f4cac9c0:

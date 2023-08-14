@@ -48,7 +48,10 @@ export function findFirstVisibleLocator(doc: Document, scrolling: boolean) {
         type: "application/xhtml+xml",
         locations: new LocatorLocations({
             otherLocations: new Map([
-                ["cssSelector", getCssSelector(element)]
+                ["cssSelector", getCssSelector(element, {
+                    root: doc,
+                    assumeCorrect: true
+                })]
             ])
         }),
         text: new LocatorText({

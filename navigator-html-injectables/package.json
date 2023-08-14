@@ -43,9 +43,8 @@
   "devDependencies": {
     "@juggle/resize-observer": "^3.4.0",
     "@readium/shared": "workspace:1.2.0",
-    
     "approx-string-match": "^2.0.0",
-    "css-selector-generator": "^3.6.4",
+    "css-selector-generator": "github:chocolatkey/css-selector-generator#39a341cdc0b003f5dc5bd930a9ffccba1f86961b",
     "tslib": "^2.6.1"
   }
 }
