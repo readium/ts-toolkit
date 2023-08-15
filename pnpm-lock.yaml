@@ -19,6 +19,7 @@ importers:
       '@readium/navigator-html-injectables': workspace:0.0.1
       '@readium/shared': workspace:1.2.0
       '@types/path-browserify': ^1.0.0
+      css-selector-generator: ^3.6.4
       path-browserify: ^1.0.1
       readium-css: github:readium/readium-css
       tslib: ^2.5.2
@@ -26,6 +27,7 @@ importers:
       '@readium/navigator-html-injectables': link:../navigator-html-injectables
       '@readium/shared': link:../shared
       '@types/path-browserify': 1.0.0
+      css-selector-generator: 3.6.4
       path-browserify: 1.0.1
       readium-css: github.com/readium/readium-css/583011453612e6f695056ab6c086a2c4f4cac9c0
       tslib: 2.5.2

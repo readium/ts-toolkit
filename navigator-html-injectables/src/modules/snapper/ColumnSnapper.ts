@@ -6,7 +6,7 @@ import { easeInOutQuad } from "../../helpers/animation";
 import { ModuleName } from "../ModuleLibrary";
 import { Locator, LocatorText } from "@readium/shared/src";
 import { rangeFromLocator } from "../../helpers/locator";
-import { findFirstVisibleLocator } from "../../helpers/dom";
+import { ReadiumWindow, findFirstVisibleLocator } from "../../helpers/dom";
 
 const COLUMN_SNAPPER_STYLE_ID = "readium-column-snapper-style";
 const SNAP_DURATION = 200; // Milliseconds
@@ -407,7 +407,7 @@ export class ColumnSnapper extends Snapper {
         });
 
         comms.register("first_visible_locator", ColumnSnapper.moduleName, (_, ack) => {
-            const locator = findFirstVisibleLocator(wnd.document, false);
+            const locator = findFirstVisibleLocator(wnd as ReadiumWindow, false);
             this.comms.send("first_visible_locator", locator.serialize());
             ack(true);
         });

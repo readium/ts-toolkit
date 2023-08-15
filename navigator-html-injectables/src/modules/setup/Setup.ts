@@ -1,13 +1,6 @@
 import { Comms } from "../../comms/comms";
+import { ReadiumWindow } from "../../helpers/dom";
 import { Module } from "../Module";
-
-type BlockedEventData = [0, Function, any[], any[]] | [1, Event];
-
-export interface ReadiumWindow extends Window {
-    _readium_blockEvents: boolean;
-    _readium_blockedEvents: BlockedEventData[];
-    _readium_eventBlocker: EventListenerOrEventListenerObject;
-}
 
 export abstract class Setup extends Module {
     private comms!: Comms;

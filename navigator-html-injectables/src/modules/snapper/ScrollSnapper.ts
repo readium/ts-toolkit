@@ -1,5 +1,5 @@
 import { Comms } from "../../comms";
-import { findFirstVisibleLocator } from "../../helpers/dom";
+import { ReadiumWindow, findFirstVisibleLocator } from "../../helpers/dom";
 import { AnchorObserver, helperCreateAnchorElements, helperRemoveAnchorElements } from '../../helpers/scrollSnapperHelper';
 import { ModuleName } from "../ModuleLibrary";
 import { Snapper } from "./Snapper";
@@ -101,7 +101,7 @@ export class ScrollSnapper extends Snapper {
         });
 
         comms.register("first_visible_locator", ScrollSnapper.moduleName, (_, ack) => {
-            const locator = findFirstVisibleLocator(wnd.document,true);
+            const locator = findFirstVisibleLocator(wnd as ReadiumWindow, true);
             this.comms.send("first_visible_locator", locator.serialize());
             ack(true);
         });

@@ -108,6 +108,18 @@ export class EpubNavigator extends VisualNavigator {
                 this.listeners.frameLoaded(this._cframes[0]!.iframe.contentWindow!);
                 this.listeners.positionChanged(this.currentLocation);
                 break;
+            case "first_visible_locator":
+                const loc = Locator.deserialize(data as string);
+                if(!loc) break;
+                this.currentLocation = new Locator({
+                    href: this.currentLocation.href,
+                    type: this.currentLocation.type,
+                    title: this.currentLocation.title,
+                    locations: loc?.locations,
+                    text: loc?.text
+                });
+                this.listeners.positionChanged(this.currentLocation);
+                break;
             case "click":
             case "tap":
                 const edata = data as FrameClickEvent;

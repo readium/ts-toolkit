@@ -1,7 +1,20 @@
 // (From swift-toolkit @ https://github.com/hypothesis/client/blob/main/src/annotator/highlighter.ts)
 
 import { Locator, LocatorLocations, LocatorText } from "@readium/shared/src";
-import { getCssSelector } from "css-selector-generator";
+import type { getCssSelector } from "css-selector-generator";
+
+type BlockedEventData = [0, Function, any[], any[]] | [1, Event];
+
+// This is what is injected into the HTML documents
+export interface ReadiumWindow extends Window {
+    _readium_blockEvents: boolean;
+    _readium_blockedEvents: BlockedEventData[];
+    _readium_eventBlocker: EventListenerOrEventListenerObject;
+    _readium_cssSelectorGenerator: {
+        getCssSelector: typeof getCssSelector;
+    };
+}
+
 
 const interactiveTags = [
     "a",
@@ -41,17 +54,14 @@ export function nearestInteractiveElement(element: Element): Element | null {
 
 /// Returns the `Locator` object to the first block element that is visible on
 /// the screen.
-export function findFirstVisibleLocator(doc: Document, scrolling: boolean) {
-    const element = findElement(doc.body, scrolling);
+export function findFirstVisibleLocator(wnd: ReadiumWindow, scrolling: boolean) {
+    const element = findElement(wnd.document.body, scrolling);
     return new Locator({
         href: "#",
         type: "application/xhtml+xml",
         locations: new LocatorLocations({
             otherLocations: new Map([
-                ["cssSelector", getCssSelector(element, {
-                    root: doc,
-                    assumeCorrect: true
-                })]
+                ["cssSelector", wnd._readium_cssSelectorGenerator.getCssSelector(element)]
             ])
         }),
         text: new LocatorText({
