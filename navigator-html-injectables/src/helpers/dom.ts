@@ -39,6 +39,7 @@ export function nearestInteractiveElement(element: Element): Element | null {
 
     // Checks whether the element is editable by the user.
     if (
+        element.hasAttribute("contenteditable") &&
         element.getAttribute("contenteditable")?.toLowerCase() !== "false"
     ) {
         return element;
