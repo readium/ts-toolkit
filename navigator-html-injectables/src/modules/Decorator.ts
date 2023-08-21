@@ -3,11 +3,35 @@ import { Comms } from "../comms/comms";
 import { Module } from "./Module";
 import { rangeFromLocator } from "../helpers/locator";
 import { ModuleName } from "./ModuleLibrary";
+import { Rect, getClientRectsNoOverlap } from "../helpers/rect";
+import { ResizeObserver as Polyfill } from '@juggle/resize-observer';
+
+// Necessary for iOS 13 and below
+const ResizeObserver = window.ResizeObserver || Polyfill;
+
+export enum Width {
+    Wrap = "wrap", // Smallest width fitting the CSS border box.
+    Viewport = "viewport", // Fills the whole viewport.
+    Bounds = "bounds", // Fills the anchor page, useful for dual page.
+    Page = "page", // Fills the whole viewport.
+}
+
+export enum Layout {
+    Boxes = "boxes", // One HTML element for each CSS border box (e.g. line of text).
+    Bounds = "bounds", // A single HTML element covering the smallest region containing all CSS border boxes.
+}
+
+// TODO improve
+export interface Style {
+    tint: string; // CSS color string
+    layout: Layout; // Determines the number of created HTML elements and their position relative to the matching DOM range.
+    width: Width; // Indicates how the width of each created HTML element expands in the viewport.
+}
 
 export interface Decoration {
     id: string; // Unique ID of the decoration. It must be unique in the group the decoration is applied to.
     locator: Locator; // Location in the publication where the decoration will be rendered.
-    // TODO style
+    style: Style; // Declares the look and feel of the decoration.
     // TODO extras (userInfo)
 }
 
@@ -31,14 +55,19 @@ class DecorationGroup {
     private lastItemId = 0;
     private container: HTMLDivElement | undefined = undefined;
     private activateable = false;
-    private experimentalHighlights = false;
+    public readonly experimentalHighlights: boolean = false;
 
     /**
      * Creates a DecorationGroup object
      * @param id Unique HTML ID-adhering name of the group
      * @param name Human-readable name of the group
      */
-    constructor(private wnd: Window, private comms: Comms, private id: string, private name: string) {
+    constructor(
+        private readonly wnd: Window,
+        private readonly comms: Comms,
+        private readonly id: string,
+        private readonly name: string
+    ) {
         if ("Highlight" in window) {
             this.experimentalHighlights = true;
         }
@@ -122,31 +151,30 @@ class DecorationGroup {
         this.items.forEach(i => this.layout(i));
     }
 
+    private experimentalLayout(item: DecorationItem) {
+        const [stylesheet, highlighter]: [HTMLStyleElement, any] = this.requireContainer(true) as [HTMLStyleElement, unknown];
+        highlighter.add(item.range);
+
+        // TODO add caching layer ("vdom") to this so we aren't completely replacing the CSS every time
+        stylesheet.innerHTML = `
+        ::highlight(${this.id}) {
+            color: black;
+            background-color: ${item.decoration?.style?.tint ?? "yellow"};
+        }`;
+    }
+
     /**
      * Layouts a single DecorationItem.
      * @param item 
      */
     private layout(item: DecorationItem) {
         if (this.experimentalHighlights) {
-            const [stylesheet, highlighter]: [HTMLStyleElement, any] = this.requireContainer() as [HTMLStyleElement, unknown];
-            highlighter.add(item.range);
-            if (stylesheet.innerHTML.length < 3)
-                // TODO customization
-                stylesheet.innerHTML += `
-                ::highlight(${this.id}) {
-                    color: black;
-                    background-color: yellow;
-                }`;
-            return;
+            // Highlight using the new Highlight Web API!
+            return this.experimentalLayout(item);
         }
+        // this.comms.log("Environment does not support experimental Web Highlight API, can't layout decorations");
 
-        this.comms.log("Environment does not support experimental Web Highlight API, can't layout decorations");
-        return;
-
-        /*
-        const groupContainer = this.requireContainer();
-
-        // TODO styles
+        const groupContainer = this.requireContainer() as HTMLDivElement;
 
         const itemContainer = this.wnd.document.createElement("div");
         itemContainer.setAttribute("id", item.id);
@@ -163,56 +191,106 @@ class DecorationGroup {
         const scrollingElement = this.wnd.document.scrollingElement!;
         const xOffset = scrollingElement.scrollLeft;
         const yOffset = scrollingElement.scrollTop;
+        console.log("prep");
 
-        const positionElement = (element: HTMLElement, rect, boundingRect: DOMRect) => {
+        const positionElement = (element: HTMLElement, rect: Rect, boundingRect: DOMRect) => {
             element.style.position = "absolute";
 
-            if (style.width === "wrap") {
-                element.style.width = `${rect.width}px`;
-                element.style.height = `${rect.height}px`;
-                element.style.left = `${rect.left + xOffset}px`;
-                element.style.top = `${rect.top + yOffset}px`;
-            } else if (style.width === "viewport") {
+            // TODO change to switch
+            if (item.decoration?.style?.width === Width.Viewport) {
                 element.style.width = `${viewportWidth}px`;
                 element.style.height = `${rect.height}px`;
                 let left = Math.floor(rect.left / viewportWidth) * viewportWidth;
                 element.style.left = `${left + xOffset}px`;
                 element.style.top = `${rect.top + yOffset}px`;
-            } else if (style.width === "bounds") {
+            } else if (item.decoration?.style?.width === Width.Bounds) {
                 element.style.width = `${boundingRect.width}px`;
                 element.style.height = `${rect.height}px`;
                 element.style.left = `${boundingRect.left + xOffset}px`;
                 element.style.top = `${rect.top + yOffset}px`;
-            } else if (style.width === "page") {
+            } else if (item.decoration?.style?.width === Width.Page) {
                 element.style.width = `${pageWidth}px`;
                 element.style.height = `${rect.height}px`;
                 let left = Math.floor(rect.left / pageWidth) * pageWidth;
                 element.style.left = `${left + xOffset}px`;
+                element.style.top = `${rect.top + yOffset}px`;
+            } else {
+                // Fall back to "wrap"
+                element.style.width = `${rect.width}px`;
+                element.style.height = `${rect.height}px`;
+                element.style.left = `${rect.left + xOffset}px`;
                 element.style.top = `${rect.top + yOffset}px`;
             }
         }
 
         const boundingRect = item.range.getBoundingClientRect();
 
-        let elementTemplate;
-        try {
-            let template = this.wnd.document.createElement("template");
-            template.innerHTML = item.decoration.element.trim();
-            elementTemplate = template.content.firstElementChild;
-        } catch (error) {
-            logErrorMessage(
-                `Invalid decoration element "${item.decoration.element}": ${error.message}`
+        let template = this.wnd.document.createElement("template");
+        // template.innerHTML = item.decoration.element.trim();
+        // TODO more styles logic
+        template.innerHTML = `
+        <div
+            class="r2-highlight-0"
+            style="${[
+                `background-color: ${item.decoration?.style?.tint ?? "yellow"} !important`,
+                "opacity: 0.3 !important",
+                /*
+                "mix-blend-mode: multiply !important",
+                "opacity: 1 !important",
+                */
+                "box-sizing: border-box !important"
+            ].join("; ")}"
+        >
+        </div>
+        `.trim();
+        const elementTemplate = template.content.firstElementChild!;
+
+        if(item.decoration?.style?.layout === Layout.Bounds) {
+            const bounds = elementTemplate.cloneNode(true) as HTMLDivElement;
+            bounds.style.setProperty("pointer-events", "none");
+            positionElement(bounds, boundingRect, boundingRect);
+            itemContainer.append(bounds);
+        } else {
+            // Fall back to "boxes" value for layout
+            let clientRects = getClientRectsNoOverlap(
+              item.range,
+              true // doNotMergeHorizontallyAlignedRects
             );
-            return;
-        }*/
+
+            clientRects = clientRects.sort((r1, r2) => {
+              if (r1.top < r2.top) {
+                return -1;
+              } else if (r1.top > r2.top) {
+                return 1;
+              } else {
+                return 0;
+              }
+            });
+
+            for (let clientRect of clientRects) {
+              const line = elementTemplate.cloneNode(true) as HTMLDivElement;
+              line.style.setProperty("pointer-events", "none");
+              positionElement(line, clientRect, boundingRect);
+              itemContainer.append(line);
+            }
+        }
+
+        groupContainer.append(itemContainer);
+        item.container = itemContainer;
+        item.clickableElements = Array.from(
+            itemContainer.querySelectorAll("[data-activable='1']")
+        );
+        if(!item.clickableElements.length) {
+            item.clickableElements = Array.from(itemContainer.children) as HTMLElement[];
+        }
     }
 
     /**
      * Returns the group container element, after making sure it exists.
      * @returns Group's container
      */
-    private requireContainer(): [HTMLStyleElement, any] | HTMLDivElement {
-        if (this.experimentalHighlights) {
+    private requireContainer(experimental=false): [HTMLStyleElement, any] | HTMLDivElement {
+        if (experimental) {
             // Setup <style> for highlights
             let d: HTMLStyleElement;
             if (this.wnd.document.getElementById(`${this.id}-style`)) {
@@ -239,7 +317,9 @@ class DecorationGroup {
             this.container = this.wnd.document.createElement("div");
             this.container.setAttribute("id", this.id);
             this.container.dataset.group = this.name;
+            this.container.dataset.readium = "true";
             this.container.style.setProperty("pointer-events", "none");
+            this.container.style.display = "contents";
             this.wnd.document.body.append(this.container);
         }
         return this.container;
@@ -261,15 +341,33 @@ class DecorationGroup {
 
 export class Decorator extends Module {
     static readonly moduleName: ModuleName = "decorator";
+    private resizeObserver!: ResizeObserver;
     private wnd!: Window;
     private comms!: Comms;
+    private readonly lastSize = {
+        width: 0,
+        height: 0
+    };
+    private resizeFrame = 0;
 
     private lastGroupId = 0;
     private groups = new Map<string, DecorationGroup>();
 
     private cleanup() {
-
+        // TODO cleanup all decorators
+        this.groups.forEach(g => g.clear());
+        this.groups.clear();
     }
+
+    private handleResize() {
+        this.wnd.clearTimeout(this.resizeFrame);
+        this.resizeFrame = this.wnd.setTimeout(() => {
+            this.groups.forEach(g => {
+                if(!g.experimentalHighlights) g.requestLayout();
+            });
+        }, 50);
+    }
+    private readonly handleResizer = this.handleResize.bind(this);
 
     mount(wnd: Window, comms: Comms): boolean {
         this.wnd = wnd;
@@ -304,21 +402,25 @@ export class Decorator extends Module {
                     break;
             }
 
-
             ack(true);
         });
+
+        this.resizeObserver = new ResizeObserver(() => this.handleResize());
+        this.resizeObserver.observe(wnd.document.body);
+        wnd.addEventListener("orientationchange", this.handleResizer);
+        wnd.addEventListener("resize", this.handleResizer);
 
         comms.log("Decorator Mounted");
         return true;
     }
 
     unmount(wnd: Window, comms: Comms): boolean {
+        window.removeEventListener("orientationchange", this.handleResizer);
+        window.removeEventListener("resize", this.handleResizer);
+
         comms.unregisterAll(Decorator.moduleName);
-
-        // TODO cleanup all decorators
-        this.groups.forEach(g => g.clear());
-        this.groups.clear();
-
+        this.resizeObserver.disconnect();
+        this.cleanup();
 
         comms.log("Decorator Unmounted");
         return true;
