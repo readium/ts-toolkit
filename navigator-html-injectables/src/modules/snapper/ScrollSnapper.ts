@@ -91,7 +91,6 @@ export class ScrollSnapper extends Snapper {
                 type: "text/html",
                 text
             }));
-            console.log("go_text", r);
             if(!r) {
                 ack(false);
                 return;
