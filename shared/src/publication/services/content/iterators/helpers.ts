@@ -78,7 +78,12 @@ export function isInlineTag(n: Node) {
 export function srcRelativeToHref(e: Element, base?: string | URL): string | null {
     const src = e.getAttribute("src");
     if (!src?.length) return null;
-    return new URL(src, base).toString(); // TODO use readium util Href class?
+    try {
+        // TODO use readium util Href class
+        return new URL(src, base).toString();
+    } catch (error) {
+        return src; // This is a temporary solution until we implement the Href utility
+    }
 }
 
 // Inspired by golang's unicode.IsSpace
