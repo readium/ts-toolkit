@@ -54,7 +54,7 @@ export default class FramePoolManager {
 
     async update(pub: Publication, locator: Locator, modules: ModuleName[], force=false) {
         let i = this.positions.findIndex(l => l.locations.position === locator.locations.position);
-        if(i < 0) throw Error("Locator not found in position list");
+        if(i < 0) throw Error(`Locator not found in position list: ${locator.serialize()}`);
         const newHref = this.positions[i].href;
 
         if(this.inprogress.has(newHref))

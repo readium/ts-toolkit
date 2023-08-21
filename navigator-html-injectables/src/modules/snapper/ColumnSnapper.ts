@@ -291,9 +291,9 @@ export class ColumnSnapper extends Snapper {
             return oldScrollLeft !== this.doc().scrollLeft;
         }
 
-        window.addEventListener("orientationchange", this.onWidthChanger);
-        window.addEventListener("resize", this.onWidthChanger);
-        this.wnd.requestAnimationFrame(() => this.cachedScrollWidth = this.doc().scrollWidth!);
+        wnd.addEventListener("orientationchange", this.onWidthChanger);
+        wnd.addEventListener("resize", this.onWidthChanger);
+        wnd.requestAnimationFrame(() => this.cachedScrollWidth = this.doc().scrollWidth!);
 
         comms.register("go_progression", ColumnSnapper.moduleName, (data, ack) => {
             const position = data as number;
