@@ -5,6 +5,7 @@ import { rangeFromLocator } from "../helpers/locator";
 import { ModuleName } from "./ModuleLibrary";
 import { Rect, getClientRectsNoOverlap } from "../helpers/rect";
 import { ResizeObserver as Polyfill } from '@juggle/resize-observer';
+import { getProperty } from "../helpers/css";
 
 // Necessary for iOS 13 and below
 const ResizeObserver = window.ResizeObserver || Polyfill;
@@ -101,6 +102,7 @@ class DecorationGroup {
         } as DecorationItem;
         this.items.push(item);
         this.layout(item);
+        this.renderLayout([item]);
     }
 
     /**
@@ -149,6 +151,7 @@ class DecorationGroup {
     requestLayout() {
         this.clearContainer();
         this.items.forEach(i => this.layout(i));
+        this.renderLayout(this.items);
     }
 
     private experimentalLayout(item: DecorationItem) {
@@ -173,8 +176,6 @@ class DecorationGroup {
             return this.experimentalLayout(item);
         }
         // this.comms.log("Environment does not support experimental Web Highlight API, can't layout decorations");
-
-        const groupContainer = this.requireContainer() as HTMLDivElement;
 
         const itemContainer = this.wnd.document.createElement("div");
         itemContainer.setAttribute("id", item.id);
@@ -228,16 +229,17 @@ class DecorationGroup {
         let template = this.wnd.document.createElement("template");
         // template.innerHTML = item.decoration.element.trim();
         // TODO more styles logic
+
+        const isDarkMode = getProperty(this.wnd, "--USER__appearance") === "readium-night-on";
+
         template.innerHTML = `
         <div
             class="r2-highlight-0"
             style="${[
                 `background-color: ${item.decoration?.style?.tint ?? "yellow"} !important`,
-                "opacity: 0.3 !important",
-                /*
-                "mix-blend-mode: multiply !important",
+                //"opacity: 0.3 !important",
+                `mix-blend-mode: ${isDarkMode ? "exclusion" : "multiply"} !important`,
                 "opacity: 1 !important",
-                */
                 "box-sizing: border-box !important"
             ].join("; ")}"
         >
@@ -275,7 +277,6 @@ class DecorationGroup {
             }
         }
 
-        groupContainer.append(itemContainer);
         item.container = itemContainer;
         item.clickableElements = Array.from(
             itemContainer.querySelectorAll("[data-activable='1']")
@@ -283,6 +284,15 @@ class DecorationGroup {
         if(!item.clickableElements.length) {
             item.clickableElements = Array.from(itemContainer.children) as HTMLElement[];
         }
+    }
+
+    private renderLayout(items: DecorationItem[]) {
+        if(this.experimentalHighlights) return;
+        this.wnd.requestAnimationFrame(() => {
+            if(!items) return;
+            const groupContainer = this.requireContainer() as HTMLDivElement;
+            groupContainer.append(...this.items.map(i => i.container).filter(c => !!c) as Node[])
+        });
     }
 
     /**
