@@ -149,6 +149,7 @@ class DecorationGroup {
      * To be called after reflowing the resource, for example.
      */
     requestLayout() {
+        this.wnd.cancelAnimationFrame(this.currentRender);
         this.clearContainer();
         this.items.forEach(i => this.layout(i));
         this.renderLayout(this.items);
@@ -192,7 +193,6 @@ class DecorationGroup {
         const scrollingElement = this.wnd.document.scrollingElement!;
         const xOffset = scrollingElement.scrollLeft;
         const yOffset = scrollingElement.scrollTop;
-        console.log("prep");
 
         const positionElement = (element: HTMLElement, rect: Rect, boundingRect: DOMRect) => {
             element.style.position = "absolute";
@@ -286,9 +286,11 @@ class DecorationGroup {
         }
     }
 
+    private currentRender = 0;
     private renderLayout(items: DecorationItem[]) {
         if(this.experimentalHighlights) return;
-        this.wnd.requestAnimationFrame(() => {
+        this.wnd.cancelAnimationFrame(this.currentRender);
+        this.currentRender = this.wnd.requestAnimationFrame(() => {
             if(!items) return;
             const groupContainer = this.requireContainer() as HTMLDivElement;
             groupContainer.append(...this.items.map(i => i.container).filter(c => !!c) as Node[])
