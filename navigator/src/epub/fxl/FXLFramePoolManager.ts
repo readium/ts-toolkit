@@ -454,7 +454,7 @@ export default class FramePoolManager {
 
         if(this.currentSlide !== i) {
             this.currentSlide = this.reAlign(i);
-            this.slideToCurrent();
+            this.slideToCurrent(true);
         }
         const spread = this.makeSpread(this.currentSlide);
         if(this.perPage > 1) i++;

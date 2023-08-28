@@ -16,6 +16,22 @@ export type ModuleName =
     "reflowable_setup" |
     "reflowable_peripherals";
 
+// Modules that are valid for FXL publications
+export const FXLModules: ModuleName[] = [
+    "fixed_setup",
+    "decorator",
+    "reflowable_peripherals"
+];
+
+// Modules that are valid for reflowable publications
+export const ReflowableModules: ModuleName[] = [
+    "reflowable_setup",
+    "decorator",
+    "reflowable_peripherals",
+    "column_snapper",
+    "scroll_snapper"
+];
+
 export const ModuleLibrary = new Map<string, ModuleDerived>([
     // All modules go here
     FixedSetup,

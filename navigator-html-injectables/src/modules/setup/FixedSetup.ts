@@ -40,11 +40,19 @@ export class FixedSetup extends Setup {
             ack(true);
         })
 
-        comms.register("go_progression", FixedSetup.moduleName, (data, ack) => {
+        comms.register("go_progression", FixedSetup.moduleName, (_, ack) => {
             ack(true);
         });
 
         comms.register("go_start", FixedSetup.moduleName, (_, ack) => {
+            ack(true);
+        });
+
+        comms.register("go_text", FixedSetup.moduleName, (_, ack) => {
+            ack(true);
+        });
+
+        comms.register("go_id", FixedSetup.moduleName, (_, ack) => {
             ack(true);
         });
 

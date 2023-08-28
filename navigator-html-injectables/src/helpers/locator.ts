@@ -1,7 +1,7 @@
 import { Locator } from "@readium/shared/src";
 import { TextQuoteAnchor } from "../vendor/hypothesis/anchoring/types";
 
-// From the kotlin-toolkit code
+// Based on the kotlin-toolkit code
 export function rangeFromLocator(doc: Document, locator: Locator) {
     try {
       let locations = locator.locations;
@@ -19,7 +19,13 @@ export function rangeFromLocator(doc: Document, locator: Locator) {
           prefix: text.before,
           suffix: text.after,
         });
-        return anchor.toRange();
+        try {
+          return anchor.toRange();
+        } catch (error) {
+          // We don't watch to "crash" when the quote is not found
+          console.warn("Quote not found:", anchor);
+          return null;
+        }
       }
   
       if (locations) {
@@ -40,6 +46,15 @@ export function rangeFromLocator(doc: Document, locator: Locator) {
   
         if (element) {
           let range = doc.createRange();
+
+          // This is a special case where the node is
+          // a single element with no children. Not sure
+          // yet how effective this is yet, may remove in future.
+          if(element.childNodes.length === 0) {
+            range.selectNodeContents(element);
+            return range;
+          }
+
           range.setStartBefore(element);
           range.setEndAfter(element);
           return range;

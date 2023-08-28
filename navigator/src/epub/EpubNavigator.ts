@@ -2,7 +2,7 @@ import { EPUBLayout, Link, Locator, Publication, ReadingProgression } from "@rea
 import { VisualNavigator } from "../";
 import FramePoolManager from "./frame/FramePoolManager";
 import FXLFramePoolManager from "./fxl/FXLFramePoolManager";
-import { CommsEventKey, ModuleLibrary, ModuleName } from "@readium/navigator-html-injectables/src";
+import { CommsEventKey, FXLModules, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables/src";
 import { FrameClickEvent } from "@readium/navigator-html-injectables/src/modules/ReflowablePeripherals";
 import * as path from "path-browserify";
 
@@ -225,8 +225,8 @@ export class EpubNavigator extends VisualNavigator {
         let modules = Array.from(ModuleLibrary.keys()) as ModuleName[];
 
         if(this.layout === EPUBLayout.fixed) {
-            return modules.filter((m) => m === "fixed_setup" || m === "reflowable_peripherals");
-        } else modules = modules.filter((m) => m !== "fixed_setup");
+            return modules.filter((m) => FXLModules.includes(m));
+        } else modules = modules.filter((m) => ReflowableModules.includes(m));
 
         // Horizontal vs. Vertical reading
         if (this.readingProgression === ReadingProgression.ttb || this.readingProgression === ReadingProgression.btt)
@@ -268,7 +268,7 @@ export class EpubNavigator extends VisualNavigator {
 
         if(this.layout === EPUBLayout.fixed) {
             const p = this.framePool as FXLFramePoolManager;
-            const old = p.currentSlide;
+            const old = p.currentNumber;
             if(relative === 1) {
                 if(!p.next(p.perPage)) return false;
             } else if(relative === -1) {
@@ -277,23 +277,23 @@ export class EpubNavigator extends VisualNavigator {
                 throw Error("Invalid relative value for FXL");
 
             // Apply change
-            if(old > p.currentSlide)
+            const neW = p.currentNumber
+            if(old > neW)
                 for (let j = this.positions.length - 1; j >= 0; j--) {
-                    if(this.positions[j].href === this.pub.readingOrder.items[p.currentSlide].href) {
+                    if(this.positions[j].href === this.pub.readingOrder.items[neW-1].href) {
                         this.currentLocation = this.positions[j].copyWithLocations({
                             progression: 0.999999999999
                         });
                         break;
                     }
                 }
-            else if(old < p.currentSlide)
+            else if(old < neW)
                 for (let j = 0; j < this.positions.length; j++) {
-                    if(this.positions[j].href === this.pub.readingOrder.items[p.currentSlide].href) {
+                    if(this.positions[j].href === this.pub.readingOrder.items[neW-1].href) {
                         this.currentLocation = this.positions[j];
                         break;
                     }
                 }
-
             await this.apply();
             return true;
         }
@@ -434,7 +434,10 @@ export class EpubNavigator extends VisualNavigator {
             cb(done);
             return;
         }
-        const hid = locator.locations.htmlId();
+        // This sanity check has to be performed because we're still passing non-locator class
+        // locator objects to this function. This is not good and should eventually be forbidden
+        // or the locator should be deserialized sometime before this function.
+        const hid = (typeof locator.locations.htmlId === 'function') && locator.locations.htmlId();
         if(hid)
             done = await new Promise<boolean>((res, _) => {
                 // Attempt to go to an HTML ID in the resource
