@@ -71,8 +71,6 @@ export class PageContentIteratorPDF extends Iterator{
             (item: TextItem) => item?.str !== " " && item?.str !== ""
         ) as Array<TextItem>;
 
-        console.log("TTS_____contentFiltered::", contentFiltered);
-        
         this.pageContentFiltered = contentFiltered.map((item) => {
             return new PDFContentElement(item.locator, {
                 index: contentFiltered.indexOf(item),
