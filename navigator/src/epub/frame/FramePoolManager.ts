@@ -1,5 +1,5 @@
 import { ModuleName } from "@readium/navigator-html-injectables/src";
-import { Locator, Publication, MediaType } from "@readium/shared/src";
+import { Locator, Publication } from "@readium/shared/src/publication";
 import FrameBlobBuider from "./FrameBlobBuilder";
 import FrameManager from "./FrameManager";
 

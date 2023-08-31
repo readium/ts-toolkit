@@ -1,4 +1,5 @@
-import { Link, MediaType, Publication } from "@readium/shared/src";
+import { MediaType } from "@readium/shared/src/util/mediatype";
+import { Link, Publication } from "@readium/shared/src/publication";
 
 // Readium CSS imports
 // The "?inline" query is to prevent some bundlers from injecting these into the page (e.g. vite)

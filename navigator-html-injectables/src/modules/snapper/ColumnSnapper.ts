@@ -1,10 +1,10 @@
 import { ResizeObserver as Polyfill } from '@juggle/resize-observer';
-import { Comms, mid } from "../../comms";
+import { Comms } from "../../comms";
 import { Snapper } from "./Snapper";
 import { getColumnCountPerScreen, isRTL, appendVirtualColumnIfNeeded } from "../../helpers/document";
 import { easeInOutQuad } from "../../helpers/animation";
 import { ModuleName } from "../ModuleLibrary";
-import { Locator, LocatorText } from "@readium/shared/src";
+import { Locator, LocatorText } from "@readium/shared/src/publication";
 import { rangeFromLocator } from "../../helpers/locator";
 import { ReadiumWindow, findFirstVisibleLocator } from "../../helpers/dom";
 

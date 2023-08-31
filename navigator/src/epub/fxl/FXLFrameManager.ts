@@ -1,5 +1,5 @@
 import { Loader, ModuleName } from "@readium/navigator-html-injectables/src";
-import { Page, ReadingProgression } from "@readium/shared/src";
+import { Page, ReadingProgression } from "@readium/shared/src/publication";
 import { FrameComms } from "../frame/FrameComms";
 import FXLPeripherals from "./FXLPeripherals";
 

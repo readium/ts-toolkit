@@ -1,4 +1,4 @@
-import { EPUBLayout, Link, Locator, Publication, ReadingProgression } from "@readium/shared/src";
+import { EPUBLayout, Link, Locator, Publication, ReadingProgression } from "@readium/shared/src/publication";
 import { VisualNavigator } from "../";
 import FramePoolManager from "./frame/FramePoolManager";
 import FXLFramePoolManager from "./fxl/FXLFramePoolManager";

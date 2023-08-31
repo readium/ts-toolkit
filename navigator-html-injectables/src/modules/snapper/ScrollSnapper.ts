@@ -1,4 +1,4 @@
-import { Locator, LocatorText } from "@readium/shared/src";
+import { Locator, LocatorText } from "@readium/shared/src/publication";
 import { Comms } from "../../comms";
 import { ReadiumWindow, findFirstVisibleLocator } from "../../helpers/dom";
 import { AnchorObserver, helperCreateAnchorElements, helperRemoveAnchorElements } from '../../helpers/scrollSnapperHelper';

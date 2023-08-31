@@ -1,4 +1,4 @@
-import { Locator } from "@readium/shared/src";
+import { Locator } from "@readium/shared/src/publication";
 import { Comms } from "../comms/comms";
 import { Module } from "./Module";
 import { rangeFromLocator } from "../helpers/locator";
