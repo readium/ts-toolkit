@@ -56,7 +56,7 @@ export function nearestInteractiveElement(element: Element): Element | null {
 /// Returns the `Locator` object to the first block element that is visible on
 /// the screen.
 export function findFirstVisibleLocator(wnd: ReadiumWindow, scrolling: boolean) {
-    const element = findElement(wnd.document.body, scrolling);
+    const element = findElement(wnd, wnd.document.body, scrolling);
     return new Locator({
         href: "#",
         type: "application/xhtml+xml",
@@ -71,17 +71,17 @@ export function findFirstVisibleLocator(wnd: ReadiumWindow, scrolling: boolean) 
     });
 }
 
-function findElement(rootElement: Element, scrolling: boolean): Element {
+function findElement(wnd: ReadiumWindow, rootElement: Element, scrolling: boolean): Element {
     for (var i = 0; i < rootElement.children.length; i++) {
         const child = rootElement.children[i];
-        if (!shouldIgnoreElement(child) && isElementVisible(child, scrolling)) {
-            return findElement(child, scrolling);
+        if (!shouldIgnoreElement(child) && isElementVisible(wnd, child, scrolling)) {
+            return findElement(wnd, child, scrolling);
         }
     }
     return rootElement;
 }
 
-function isElementVisible(element: Element, scrolling: boolean) {
+function isElementVisible(wnd: ReadiumWindow, element: Element, scrolling: boolean) {
     // if (readium.isFixedLayout) return true;
 
     if (element === document.body || element === document.documentElement) {
@@ -93,9 +93,9 @@ function isElementVisible(element: Element, scrolling: boolean) {
 
     const rect = element.getBoundingClientRect();
     if (scrolling) {
-        return rect.bottom > 0 && rect.top < window.innerHeight;
+        return rect.bottom > 0 && rect.top < wnd.innerHeight;
     } else {
-        return rect.right > 0 && rect.left < window.innerWidth;
+        return rect.right > 0 && rect.left < wnd.innerWidth;
     }
 }
 

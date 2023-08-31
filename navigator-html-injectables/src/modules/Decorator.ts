@@ -427,8 +427,8 @@ export class Decorator extends Module {
     }
 
     unmount(wnd: Window, comms: Comms): boolean {
-        window.removeEventListener("orientationchange", this.handleResizer);
-        window.removeEventListener("resize", this.handleResizer);
+        wnd.removeEventListener("orientationchange", this.handleResizer);
+        wnd.removeEventListener("resize", this.handleResizer);
 
         comms.unregisterAll(Decorator.moduleName);
         this.resizeObserver.disconnect();

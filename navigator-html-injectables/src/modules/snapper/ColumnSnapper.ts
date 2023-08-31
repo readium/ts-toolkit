@@ -17,9 +17,6 @@ enum ScrollTouchState {
     MOVE = 2
 }
 
-// Necessary for iOS 13 and below
-const ResizeObserver = window.ResizeObserver || Polyfill;
-
 /**
  * A {Snapper} for reflowable resources using a column-based layout
  */
@@ -274,9 +271,12 @@ export class ColumnSnapper extends Snapper {
         `;
         wnd.document.head.appendChild(d);
 
-        this.resizeObserver = new ResizeObserver(() => {
-            appendVirtualColumnIfNeeded(wnd);
-        });
+        // Necessary for iOS 13 and below
+        const ResizeObserver = (wnd as Window & typeof globalThis).ResizeObserver || Polyfill;
+
+        this.resizeObserver = new ResizeObserver(() => wnd.requestAnimationFrame(() => {
+            wnd && appendVirtualColumnIfNeeded(wnd);
+        }));
         this.resizeObserver.observe(wnd.document.body);
         this.mutationObserver = new MutationObserver(() => {
             this.wnd.requestAnimationFrame(() => this.cachedScrollWidth = this.doc().scrollWidth!);
@@ -434,8 +434,8 @@ export class ColumnSnapper extends Snapper {
         wnd.removeEventListener("touchend", this.onTouchEnder);
         wnd.removeEventListener("touchmove", this.onTouchMover);
 
-        window.removeEventListener("orientationchange", this.onWidthChanger);
-        window.removeEventListener("resize", this.onWidthChanger);
+        wnd.removeEventListener("orientationchange", this.onWidthChanger);
+        wnd.removeEventListener("resize", this.onWidthChanger);
 
         wnd.document.getElementById(COLUMN_SNAPPER_STYLE_ID)?.remove();
 
