@@ -66,8 +66,5 @@
     "tsdx": "^0.14.1",
     "tslib": "^2.6.1",
     "typescript": "^4.9.5"
-  },
-  "dependencies": {
-    "@textlint-rule/tokenize-text": "^2.0.2"
   }
 }

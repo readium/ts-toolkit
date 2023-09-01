@@ -1,7 +1,7 @@
 import { Language } from "../Language";
 import { Tokenizer } from "./Tokenizer";
 import BasicEnglishTokenizer from "./tokenize-english";
-import BasicTokenizer from "@textlint-rule/tokenize-text";
+import BasicTokenizer, { TextlintSegment } from "./tokenize-text";
 
 // Start / End
 export type Range = [number, number];
