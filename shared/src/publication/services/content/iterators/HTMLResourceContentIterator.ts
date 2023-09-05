@@ -289,7 +289,6 @@ class ContentParser implements NodeVisitor {
     // Implements NodeTraversor
     tail(node: Node, depth: number) {
         if (node.nodeType === Node.TEXT_NODE && !isBlank(node.textContent)) {
-            // console.log("NOT BLANK", node.textContent);
             const language = elementLanguage(node.parentElement);
             if (this.currentLanguage !== language) {
                 this.flushSegment();
@@ -306,6 +305,14 @@ class ContentParser implements NodeVisitor {
                 ) throw new Error("HTMLContentIterator: breadcrumbs mismatch"); // Kotlin does assert(breadcrumbs.last() == node) which throws
                 this.flushText();
                 this.breadcrumbs.pop();
+                if(this.breadcrumbs.length)
+                    /*This is a fix that for some reason wasn't necessary in the
+                     other toolkits. We should probably figure out why because
+                     it makes the process less efficient due to additional calls. */
+                    this.currentCssSelector = getCssSelector(
+                        this.breadcrumbs[this.breadcrumbs.length - 1] as Element,
+                        { root: this.doc }
+                    );
             }
         }
     }
