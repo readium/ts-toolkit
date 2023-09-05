@@ -1,5 +1,5 @@
-import approxSearch from 'approx-string-match';
-import type { Match as StringMatch } from 'approx-string-match';
+import approxSearch from '../../approx-string-match';
+import type { Match as StringMatch } from '../../approx-string-match';
 
 type Match = {
   /** Start offset of match in text */

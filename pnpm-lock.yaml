@@ -36,13 +36,11 @@ importers:
     specifiers:
       '@juggle/resize-observer': ^3.4.0
       '@readium/shared': workspace:1.2.0
-      approx-string-match: ^2.0.0
       css-selector-generator: ^3.6.4
       tslib: ^2.6.1
     devDependencies:
       '@juggle/resize-observer': 3.4.0
       '@readium/shared': link:../shared
-      approx-string-match: 2.0.0
       css-selector-generator: 3.6.4
       tslib: 2.6.1
 
@@ -2771,10 +2769,6 @@ packages:
     dependencies:
       normalize-path: 3.0.0
       picomatch: 2.3.1
-    dev: true
-
-  /approx-string-match/2.0.0:
-    resolution: {integrity: sha512-03v8MsWnZYV4Svv82EYWoVw1RIKAJ/zubmhG1FYvhJwOsBnLPxx6CPHF2dXN/yW8uwHK+653j52IwiNluJR97w==}
     dev: true
 
   /archy/1.0.0:
