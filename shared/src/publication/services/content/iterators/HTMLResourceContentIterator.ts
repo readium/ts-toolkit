@@ -151,6 +151,11 @@ function TraverseNode(visitor: NodeVisitor, root: Node | null) {
     }
 }
 
+interface BreadcrumbData {
+    node: Node;
+    cssSelector?: string;
+}
+
 // Note that this whole thing is based off of JSoup's Node-related classes, with simplifications
 // https://jsoup.org/apidocs/org/jsoup/select/NodeTraversor.html
 class ContentParser implements NodeVisitor {
@@ -162,8 +167,7 @@ class ContentParser implements NodeVisitor {
     private elementRawTextAcc = ""; // Text content since the beginning of the current element, including whitespaces.
     private rawTextAcc = ""; // Text content since the beginning of the current segment, including whitespaces.
     private currentLanguage: string | null = null; // Language of the current segment.
-    private currentCssSelector: string | null = null; // CSS selector of the current element.
-    private breadcrumbs: Node[] = []; // LIFO stack of the current element's block ancestors.
+    private breadcrumbs: BreadcrumbData[] = []; // LIFO stack of the current element's block ancestors.
 
     constructor(
         private doc: Document,
@@ -186,12 +190,15 @@ class ContentParser implements NodeVisitor {
             const isBlock = !isInlineTag(node);
             let cssSelector: string | null = null;
             if (isBlock) {
-                // Add blocks to breadcrumbs
-                this.breadcrumbs.push(node);
-
                 // Calculate CSS selector now because we'll definitely need it
                 cssSelector = getCssSelector(node as Element, {
                     root: this.doc
+                });
+
+                // Add blocks to breadcrumbs
+                this.breadcrumbs.push({
+                    node,
+                    cssSelector
                 });
             }
 
@@ -281,7 +288,6 @@ class ContentParser implements NodeVisitor {
 
             if (isBlock) {
                 this.flushText();
-                this.currentCssSelector = cssSelector;
             }
         }
     }
@@ -301,18 +307,10 @@ class ContentParser implements NodeVisitor {
             if (!isInlineTag(node)) {
                 if (
                     !this.breadcrumbs.length ||
-                    this.breadcrumbs.at(-1) !== node
+                    this.breadcrumbs.at(-1)?.node !== node
                 ) throw new Error("HTMLContentIterator: breadcrumbs mismatch"); // Kotlin does assert(breadcrumbs.last() == node) which throws
                 this.flushText();
                 this.breadcrumbs.pop();
-                if(this.breadcrumbs.length)
-                    /*This is a fix that for some reason wasn't necessary in the
-                     other toolkits. We should probably figure out why because
-                     it makes the process less efficient due to additional calls. */
-                    this.currentCssSelector = getCssSelector(
-                        this.breadcrumbs[this.breadcrumbs.length - 1] as Element,
-                        { root: this.doc }
-                    );
             }
         }
     }
@@ -324,7 +322,7 @@ class ContentParser implements NodeVisitor {
             this.startIndex === 0 &&
             this.startElement &&
             this.breadcrumbs.length &&
-            this.breadcrumbs[this.breadcrumbs.length - 1] === this.startElement
+            this.breadcrumbs.at(-1)?.node === this.startElement
         ) {
             this.startIndex = this.elements.length;
         }
@@ -343,7 +341,7 @@ class ContentParser implements NodeVisitor {
         // Determine the role of the element
         let bestRole = Body;
         if (this.breadcrumbs.length > 0) {
-            const el = this.breadcrumbs[this.breadcrumbs.length - 1] as HTMLElement;
+            const el = this.breadcrumbs.at(-1)?.node as HTMLElement;
             if(el.getAttributeNS("http://www.idpf.org/2007/ops", "type") === "footnote") {
                 bestRole = Footnote;
             } else {
@@ -373,9 +371,9 @@ class ContentParser implements NodeVisitor {
                 type: this.baseLocator.type,
                 title: this.baseLocator.title,
                 text: trimmingTextLocator(this.elementRawTextAcc, (this.segmentsAcc.length && this.segmentsAcc[0]?.locator?.text?.before) || ""),
-                locations: new LocatorLocations(this.currentCssSelector ? {
+                locations: new LocatorLocations(this.breadcrumbs.at(-1)?.cssSelector ? {
                     otherLocations: new Map([
-                        ["cssSelector", this.currentCssSelector]
+                        ["cssSelector", this.breadcrumbs.at(-1)?.cssSelector]
                     ])
                 } : {})
             }),
@@ -402,9 +400,9 @@ class ContentParser implements NodeVisitor {
                     type: this.baseLocator.type,
                     title: this.baseLocator.title,
                     text: trimmingTextLocator(text, this.wholeRawTextAcc?.substring(this.wholeRawTextAcc.length - this.beforeMaxLength)),
-                    locations: new LocatorLocations(this.currentCssSelector ? {
+                    locations: new LocatorLocations(this.breadcrumbs.at(-1)?.cssSelector ? {
                         otherLocations: new Map([
-                            ["cssSelector", this.currentCssSelector]
+                            ["cssSelector", this.breadcrumbs.at(-1)?.cssSelector]
                         ])
                     } : {})
                 }),
