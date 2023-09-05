@@ -72,7 +72,7 @@ const inlineTags = [
 ];
 
 export function isInlineTag(n: Node) {
-    return inlineTags.includes(n.nodeName);
+    return inlineTags.includes(n.nodeName.toUpperCase());
 }
 
 export function srcRelativeToHref(e: Element, base?: string | URL): string | null {
