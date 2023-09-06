@@ -16,7 +16,6 @@ export class FixedSetup extends Setup {
         style.dataset.readium = "true";
         style.textContent = `
         html, body {
-            overflow: hidden;
             text-size-adjust: none;
             -ms-text-size-adjust: none;
             -webkit-text-size-adjust: none;
