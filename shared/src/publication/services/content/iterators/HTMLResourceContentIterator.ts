@@ -184,6 +184,35 @@ class ContentParser implements NodeVisitor {
         } as ParsedElements;
     }
 
+    private cssSelector(node: Node) {
+        const el = node as Element;
+
+        /**
+         * The css-selector-generator library chokes when generating a selector and using element
+         * attributes that have a namespace prefix, for example `xml:lang="fr"`. It's also not very
+         * useful to use these elements to generate a CSS selector that's usable with the querySelector
+         * DOM API, because that API can't use attributes with prefixes, unless you just select for any prefix,
+         * which, in certain edge cases, could result in the incorrect element being selected. So, in order to
+         * to solve the breakage in the library and avoid using these attributes in the first place, we just
+         * remove any attributes with namespace prefixes. There's still enough "meat" left to properly
+         * generate a CSS selector that can reliably be used with querySelector. Afterwards, we add them back
+         * to the element, so we can, for example, still select the xml:lang for accessibility purposes.
+         */
+        const removedAttributes = [];
+        for (let i = 0; i < el.attributes.length; i++) {
+            const attr = el.attributes[i];
+            if(attr.prefix) {
+                removedAttributes.push(attr);
+                el.attributes.removeNamedItem(attr.name);
+            }
+        }
+        const sel = getCssSelector(el, {
+            root: this.doc
+        });
+        removedAttributes.forEach(attr => el.attributes.setNamedItem(attr));
+        return sel;
+    }
+
     // Implements NodeTraversor
     head(node: Node, depth: number) {
         if (node.nodeType == Node.ELEMENT_NODE) {
@@ -191,9 +220,7 @@ class ContentParser implements NodeVisitor {
             let cssSelector: string | null = null;
             if (isBlock) {
                 // Calculate CSS selector now because we'll definitely need it
-                cssSelector = getCssSelector(node as Element, {
-                    root: this.doc
-                });
+                cssSelector = this.cssSelector(node);
 
                 // Add blocks to breadcrumbs
                 this.breadcrumbs.push({
@@ -213,9 +240,7 @@ class ContentParser implements NodeVisitor {
                 this.flushText();
 
                 if (!cssSelector) {
-                    cssSelector = getCssSelector(node as Element, {
-                        root: this.doc
-                    });
+                    cssSelector = this.cssSelector(node);
                 }
                 const elementLocator = this.baseLocator.copyWithLocations({
                     otherLocations: new Map([

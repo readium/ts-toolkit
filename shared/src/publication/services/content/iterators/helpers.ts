@@ -111,7 +111,9 @@ export const trimmingTextLocator = (text: string, before: string = ""): LocatorT
 
 export function elementLanguage(e: HTMLElement | null) {
     while (e) {
-        let lang = e.getAttribute("lang") || e.getAttributeNS("http://www.w3.org/1999/xhtml", "lang");
+        let lang = e.getAttribute("lang") 
+        || e.getAttributeNS("http://www.w3.org/1999/xhtml", "lang")
+        || e.getAttributeNS("http://www.w3.org/XML/1998/namespace", "lang");
         if (lang) return lang;
         e = e.parentElement;
     }
