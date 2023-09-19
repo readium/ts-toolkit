@@ -222,6 +222,9 @@ class ContentParser implements NodeVisitor {
                 // Calculate CSS selector now because we'll definitely need it
                 cssSelector = this.cssSelector(node);
 
+                // Flush text
+                this.flushText();
+
                 // Add blocks to breadcrumbs
                 this.breadcrumbs.push({
                     node,
