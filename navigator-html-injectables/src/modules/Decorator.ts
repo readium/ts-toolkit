@@ -417,7 +417,7 @@ export class Decorator extends Module {
             ack(true);
         });
 
-        this.resizeObserver = new ResizeObserver(() => this.handleResize());
+        this.resizeObserver = new ResizeObserver(() => wnd.requestAnimationFrame(() => this.handleResize()));
         this.resizeObserver.observe(wnd.document.body);
         wnd.addEventListener("orientationchange", this.handleResizer);
         wnd.addEventListener("resize", this.handleResizer);
