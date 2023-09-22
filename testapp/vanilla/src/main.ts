@@ -19,7 +19,7 @@ async function load() {
     const manifestLink = new Link({ href: "manifest.json" });
     const fetcher: Fetcher = new HttpFetcher(undefined, manifestURL);
     await fetcher.get(manifestLink).readAsJSON()
-        .then((response: unknown) => {
+        .then(async (response: unknown) => {
             const manifest = Manifest.deserialize(response as string)!;
             manifest.setSelfLink(manifestURL);
             const publication = new Publication({ manifest: manifest, fetcher: fetcher })
@@ -52,7 +52,20 @@ async function load() {
                 }
             }
             const nav = new EpubNavigator(container, publication, listeners);
-            nav.load();
+            await nav.load();
+
+            window.addEventListener("reader-control", (ev) => {
+                switch ((ev as CustomEvent).detail) {
+                    case "goRight":
+                        nav.goRight(true, () => {});
+                        break;
+                    case "goLeft":
+                        nav.goLeft(true, () => {});
+                        break;
+                    default:
+                        console.error("Unknown reader-control event", ev);
+                }
+            })
         })
 }
 

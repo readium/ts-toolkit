@@ -12,6 +12,19 @@
     <div id="wrapper">
       <div id="container"></div>
     </div>
+
+    <script>
+      function control(command) {
+        window.dispatchEvent(
+          new CustomEvent('reader-control', { detail: command })
+        );
+      }
+    </script>
+    <div id="controls">
+      <button title="Go left" onclick="control('goLeft')">👈</button>
+      <button title="Go right" onclick="control('goRight')">👉</button>
+    </div>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

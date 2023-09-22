@@ -8,12 +8,19 @@ html, body {
 
 body {
   margin: 0;
+  background: #eee;
+}
+
+#controls {
+  height: 32px;
+  display: flex;
+  justify-content: center;
 }
 
 #wrapper {
-  height: calc(100vh - 32px * 2);
+  height: calc(100vh - 64px);
   display: flex;
-  margin: 32px 0;
+  margin: 32px 0 0 0;
 }
 
 #container {
