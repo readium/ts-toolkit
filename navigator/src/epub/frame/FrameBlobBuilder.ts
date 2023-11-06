@@ -127,7 +127,6 @@ export default class FrameBlobBuider {
 
         // Expensive, but probably rare because almost every EPUB has some sort of CSS in it
         const elements = document.querySelectorAll("*");
-        console.log(elements);
         for (let i = 0; i < elements.length; i++) {
             if (elements[i].hasAttribute("style")) {
                 return true;

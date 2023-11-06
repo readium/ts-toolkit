@@ -47,22 +47,18 @@ export default class FXLFrameManager {
     async load(modules: ModuleName[], source: string): Promise<Window> {
         if(this.source === source && this.loadPromise/* && this.loaded*/) {
             if([...this.currModules].sort().join("|") === [...modules].sort().join("|")) {
-                // console.log("return already load promise", this.debugHref);
                 return this.loadPromise;
             }
         }
-        // console.log("will load", this.debugHref, this.frame.contentWindow!.location.href, this.source, source);
         if(this.loaded && this.source !== source) {
             this.window.stop();
         }
         this.source = source;
         this.loadPromise = new Promise((res, rej) => {
-            // console.log("promise load", this.debugHref, this.loader, this.loaded);
             if(this.loader && this.loaded) {
                 const wnd = this.frame.contentWindow!;
                 // Check if currently loaded modules are equal
                 if([...this.currModules].sort().join("|") === [...modules].sort().join("|")) {
-                    // console.log("shortcut resolve", this.debugHref);
                     try { res(wnd); this.loadPromise = undefined; } catch (error) { };
                     return;
                 }
@@ -72,7 +68,6 @@ export default class FXLFrameManager {
                 this.loader = new Loader(wnd, modules);
                 this.currModules = modules;
                 this.comms = undefined;
-                // console.log("complete resolve", this.debugHref);
                 try { res(wnd); this.loadPromise = undefined; } catch (error) {}
                 return;
             }
@@ -211,15 +206,12 @@ export default class FXLFrameManager {
             }
             return this.showPromise;
         };
-        // console.log("SHOW", page, this.debugHref, this.comms?.ready);
         // this.update(page);
         this.cachedPage = page;
         if(this.comms) this.comms.resume();
         else this.comms = new FrameComms(this.frame.contentWindow!, this.source);
         this.showPromise = new Promise<void>((res, _) => {
-            // console.log("SEND FOCUS", this.debugHref, this.comms, this.source);
             this.comms!.send("focus", undefined, (ok: boolean) => {
-                // console.log("RESOLVE!", this.debugHref);
                 // this.showPromise = undefined; Don't do this
                 this.update(this.cachedPage);
                 res();
