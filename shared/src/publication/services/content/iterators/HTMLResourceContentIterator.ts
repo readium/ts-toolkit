@@ -185,7 +185,7 @@ class ContentParser implements NodeVisitor {
     }
 
     private cssSelector(node: Node) {
-        const el = node as Element;
+        const el = node as HTMLElement;
 
         /**
          * The css-selector-generator library chokes when generating a selector and using element
@@ -198,18 +198,26 @@ class ContentParser implements NodeVisitor {
          * generate a CSS selector that can reliably be used with querySelector. Afterwards, we add them back
          * to the element, so we can, for example, still select the xml:lang for accessibility purposes.
          */
-        const removedAttributes = [];
-        for (let i = 0; i < el.attributes.length; i++) {
-            const attr = el.attributes[i];
-            if(attr.prefix) {
-                removedAttributes.push(attr);
-                el.attributes.removeNamedItem(attr.name);
+        const removedAttributes = new Map<HTMLElement, Attr[]>();
+        let currEl: HTMLElement | null = el;
+        while(currEl && currEl !== this.doc.body) {
+            for (let i = 0; i < currEl.attributes.length; i++) {
+                const attr = currEl.attributes[i];
+                if(attr.prefix) {
+                    if(!removedAttributes.has(currEl)) {
+                        removedAttributes.set(currEl, [attr])
+                    } else {
+                        removedAttributes.set(currEl, removedAttributes.get(currEl)!.concat([attr]))
+                    }
+                    currEl.attributes.removeNamedItem(attr.name);
+                }
             }
+            currEl = currEl.parentElement;
         }
         const sel = getCssSelector(el, {
             root: this.doc
         });
-        removedAttributes.forEach(attr => el.attributes.setNamedItem(attr));
+        removedAttributes.forEach((value, key) => value.forEach(v => key.attributes.setNamedItem(v)));
         return sel;
     }
 
@@ -449,6 +457,4 @@ class ContentParser implements NodeVisitor {
         this.rawTextAcc = "";
         this.textAcc = "";
     }
-
-
 }
