@@ -30,7 +30,6 @@ export abstract class Setup extends Module {
                         cancelable: ev.cancelable
                     });
                     if(ev.currentTarget) ev.currentTarget.dispatchEvent(evt)
-                    else if(ev.target) ev.target.dispatchEvent(evt);
                     else wnd.dispatchEvent(evt);
                     break;
             }
