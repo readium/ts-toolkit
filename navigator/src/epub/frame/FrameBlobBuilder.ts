@@ -169,7 +169,6 @@ export default class FrameBlobBuider {
             const b = doc.createElement("base");
             b.href = base;
             b.dataset.readium = "true";
-            console.log("DOC", doc, doc.head)
             doc.head.firstChild!.before(b);
         }
 
