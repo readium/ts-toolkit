@@ -407,7 +407,6 @@ export default class FramePoolManager {
     }
 
     spreadPosition(spread: Link[], target: Link) {
-        //console.log("SP", spread, target);
         return this.perPage < 2 ? Page.center : (spread.length < 2 ? Page.center : (
             target.href === spread[0].href ? (this.rtl ? Page.right : Page.left) : (this.rtl ? Page.left : Page.right)
         ));
@@ -425,13 +424,11 @@ export default class FramePoolManager {
                 // Delayed resource showing has not yet commenced, cancel it
                 clearTimeout(timeoutVal);
             } else {
-                // console.log("SHOW START", href);
                 // Await a current delayed showing of the resource
                 await this.delayedShow.get(href);
             }
             this.delayedTimeout.set(href, 0);
             this.delayedShow.delete(href);
-            // console.log("SHOW DONE", href);
         }
     }
 
@@ -449,8 +446,6 @@ export default class FramePoolManager {
     async update(pub: Publication, locator: Locator, modules: ModuleName[], force=false) {
         let i = this.pub.readingOrder.items.findIndex(l => l.href === locator.href);
         if(i < 0) throw Error("Href not found in reading order");
-        // const newHref = this.positions[i].href;
-        //console.log(i, "update to", locator);
 
         if(this.currentSlide !== i) {
             this.currentSlide = this.reAlign(i);
@@ -461,11 +456,10 @@ export default class FramePoolManager {
         for (const s of spread) {
             await this.waitForItem(s.href);
         }
-        //console.log("C");
 
         // Create a new progress that doesn't resolve until complete
         // loading of the resource and its dependencies has finished.
-        const progressPromise = new Promise<void>(async (resolve, _) => {
+        const progressPromise = new Promise<void>(async (resolve, reject) => {
             const disposal: string[] = [];
             const creation: string[] = [];
 
@@ -513,13 +507,11 @@ export default class FramePoolManager {
                             this.delayedTimeout.set(href, 0);
                             const spread = this.makeSpread(this.reAlign(index));
                             const page = this.spreadPosition(spread, itm);
-                            // console.log("DELAYED SHOW BEGI", href);
                             const fm = this.pool.get(href)!;
                             await fm.load(modules, this.blobs.get(href)!);
                             if(!this.peripherals.isScaled) // When scaled, positioning is screwed up, so wait to show
                                 await fm.show(page); // Show/activate new frame
                             this.delayedShow.delete(href);
-                            // console.log("DELAYED SHOW DONE", href);
                             done = true;
                             resolve();
                         }, OFFSCREEN_LOAD_DELAY);
@@ -529,9 +521,11 @@ export default class FramePoolManager {
                         this.delayedTimeout.set(href, t);
                     }));
             }
-            //console.log("D");
-            await Promise.all(creation.map(href => creator(href)));
-            //console.log("E");
+            try {
+                await Promise.all(creation.map(href => creator(href)));
+            } catch (error) {
+                reject(error);
+            }
 
             // Update current frame(s)
             for (const s of spread) {
@@ -543,10 +537,7 @@ export default class FramePoolManager {
                 await newFrame.load(modules, source); // In order to ensure modules match the latest configuration
                 await newFrame.show(this.spreadPosition(spread, s)); // Show/activate new frame
                 await newFrame.activate();
-
-                // console.log("SHOW DONE");
             }
-            //console.log("RESOLVE!", spread);
             resolve();
         });
 
