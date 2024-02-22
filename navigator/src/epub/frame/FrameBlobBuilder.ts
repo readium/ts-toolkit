@@ -105,6 +105,11 @@ export default class FrameBlobBuider {
             txt,
             this.item.mediaType.string as DOMParserSupportedType
         );
+        const perror = doc.querySelector("parsererror");
+        if(perror) {
+            const details = perror.querySelector("div");
+            throw new Error(`Failed parsing item ${this.item.href}: ${details?.textContent || perror.textContent}`);
+        }
         return this.finalizeDOM(doc, this.burl, this.item.mediaType, fxl);
     }
 
@@ -164,6 +169,7 @@ export default class FrameBlobBuider {
             const b = doc.createElement("base");
             b.href = base;
             b.dataset.readium = "true";
+            console.log("DOC", doc, doc.head)
             doc.head.firstChild!.before(b);
         }
 
