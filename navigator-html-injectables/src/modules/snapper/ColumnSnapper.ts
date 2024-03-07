@@ -4,7 +4,7 @@ import { Snapper } from "./Snapper";
 import { getColumnCountPerScreen, isRTL, appendVirtualColumnIfNeeded } from "../../helpers/document";
 import { easeInOutQuad } from "../../helpers/animation";
 import { ModuleName } from "../ModuleLibrary";
-import { Locator, LocatorText } from "@readium/shared/src/publication";
+import { Locator, LocatorLocations, LocatorText } from "@readium/shared/src/publication";
 import { rangeFromLocator } from "../../helpers/locator";
 import { ReadiumWindow, findFirstVisibleLocator } from "../../helpers/dom";
 
@@ -325,12 +325,24 @@ export class ColumnSnapper extends Snapper {
             });
         });
 
-        comms.register("go_text", ColumnSnapper.moduleName, (data, ack) => {
+        comms.register("go_text", ColumnSnapper.moduleName, (data: unknown | unknown[], ack) => {
+            let cssSelector = undefined;
+            if(Array.isArray(data)) {
+                if(data.length > 1)
+                    // Second element is presumed to be the CSS selector
+                    cssSelector = (data as unknown[])[1] as string;
+                data = data[0]; // First element will always be the locator text object
+            }
             const text = LocatorText.deserialize(data);
             const r = rangeFromLocator(this.wnd.document, new Locator({
                 href: wnd.location.href,
                 type: "text/html",
-                text
+                text,
+                locations: cssSelector ? new LocatorLocations({
+                    otherLocations: new Map([
+                        ["cssSelector", cssSelector]
+                    ])
+                }) : undefined
             }));
             if(!r) {
                 ack(false);
