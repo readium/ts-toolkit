@@ -1,5 +1,5 @@
 import { ModuleName } from "@readium/navigator-html-injectables/src";
-import { Locator, Publication, MediaType } from "@readium/shared/src";
+import { Locator, Publication } from "@readium/shared/src/publication";
 import FrameBlobBuider from "./FrameBlobBuilder";
 import FrameManager from "./FrameManager";
 
@@ -54,7 +54,7 @@ export default class FramePoolManager {
 
     async update(pub: Publication, locator: Locator, modules: ModuleName[], force=false) {
         let i = this.positions.findIndex(l => l.locations.position === locator.locations.position);
-        if(i < 0) throw Error("Locator not found in position list");
+        if(i < 0) throw Error(`Locator not found in position list: ${locator.serialize()}`);
         const newHref = this.positions[i].href;
 
         if(this.inprogress.has(newHref))
@@ -64,7 +64,7 @@ export default class FramePoolManager {
 
         // Create a new progress that doesn't resolve until complete
         // loading of the resource and its dependencies has finished.
-        const progressPromise = new Promise<void>(async (resolve, _) => {
+        const progressPromise = new Promise<void>(async (resolve, reject) => {
             const disposal: string[] = [];
             const creation: string[] = [];
             this.positions.forEach((l, j) => {
@@ -116,7 +116,11 @@ export default class FramePoolManager {
                 await fm.load(modules);
                 this.pool.set(href, fm);
             }
-            await Promise.all(creation.map(href => creator(href)));
+            try {
+                await Promise.all(creation.map(href => creator(href)));
+            } catch (error) {
+                reject(error);
+            }
 
             // Update current frame
             const newFrame = this.pool.get(newHref)!;
@@ -140,7 +144,36 @@ export default class FramePoolManager {
         this.inprogress.delete(newHref); // Delete it from the in progress map!
     }
 
-    get currentFrame(): FrameManager | undefined {
-        return this._currentFrame;
+    get currentFrames(): (FrameManager | undefined)[] {
+        return [this._currentFrame];
+    }
+
+    get currentBounds(): DOMRect {
+        const ret = {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            toJSON() {
+                return this;
+            },
+        };
+        this.currentFrames.forEach(f => {
+            if(!f) return;
+            const b = f.realSize;
+            ret.x = Math.min(ret.x, b.x);
+            ret.y = Math.min(ret.y, b.y);
+            ret.width += b.width; // TODO different in vertical
+            ret.height = Math.max(ret.height, b.height);
+            ret.top = Math.min(ret.top, b.top);
+            ret.right = Math.min(ret.right, b.right);
+            ret.bottom = Math.min(ret.bottom, b.bottom);
+            ret.left = Math.min(ret.left, b.left);
+        });
+        return ret as DOMRect;
     }
 }

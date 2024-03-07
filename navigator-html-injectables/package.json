@@ -41,6 +41,9 @@
   },
   "module": "dist/index.js",
   "devDependencies": {
-    "tslib": "^2.3.1"
+    "@juggle/resize-observer": "^3.4.0",
+    "@readium/shared": "workspace:1.2.0",
+    "css-selector-generator": "^3.6.4",
+    "tslib": "^2.6.1"
   }
 }

@@ -13,9 +13,8 @@ export class HttpFetcher implements Fetcher {
   private readonly client: FetchImplementation;
 
   constructor(client?: FetchImplementation, baseUrl?: string) {
-    this.client = client || window.fetch;
+    this.client = client || window.fetch.bind(window);
     this.baseUrl = baseUrl;
-    this.client = client ?? fetch;
   }
 
   links(): Link[] {
@@ -43,7 +42,7 @@ export class HttpResource implements Resource {
   private _headResponse?: Response;
 
   constructor(client: FetchImplementation, link: Link, url: string) {
-    this.client = client || window.fetch;
+    this.client = client || window.fetch.bind(window);
     this._link = link;
     this.url = url;
   }

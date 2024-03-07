@@ -17,6 +17,8 @@ export function helperCreateAnchorElements(iframeElement: HTMLElement) {
   const body = iframeElement.getElementsByTagName("body")[0];
   const anchorTop = document.createElement("anchor-observer");
   const anchorBottom = document.createElement("anchor-observer");
+  anchorTop.dataset.readium = "true";
+  anchorBottom.dataset.readium = "true";
 
   anchorTop?.setAttribute("id", iframeAnchors.top);
   anchorTop?.style.setProperty("height", "115px", "important");

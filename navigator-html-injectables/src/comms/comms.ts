@@ -138,16 +138,23 @@ export class Comms {
 
     public send(key: CommsEventKey, data: unknown, id: unknown = undefined, transfer: Transferable[] = []) {
         if(!this.destination) throw Error("Attempted to send comms message before destination has been initialized");
-        this.destination.postMessage({
+        const msg = {
             _readium: COMMS_VERSION,
             _channel: this.channelId,
             id: id ?? mid(),
             // scrict,
             key,
             data
-        } as CommsMessage, {
-            targetOrigin: this.origin,
-            transfer
-        });
+        } as CommsMessage;
+        try {
+            this.destination.postMessage(msg, {
+                targetOrigin: this.origin,
+                transfer
+            });
+        } catch (error) {
+            // Fallback for when browser doesn't support WindowPostMessageOptions
+            // For example, older Safari versions
+            this.destination.postMessage(msg, this.origin, transfer);
+        }
     }
 }

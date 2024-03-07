@@ -1,5 +1,5 @@
 import { Comms } from "../../comms/comms";
-import { Setup } from "./Setup";
+import { ReadiumWindow, Setup } from "./Setup";
 import { removeProperty, setProperty } from "../../helpers/css";
 
 const VIEWPORT_META_TAG_ID = "readium-viewport";
@@ -18,6 +18,7 @@ export class ReflowableSetup extends Setup {
 
         // Add viewport tag
         const meta = wnd.document.createElement("meta");
+        meta.dataset.readium = "true";
         meta.setAttribute("name", "viewport");
         meta.setAttribute("id", VIEWPORT_META_TAG_ID);
         meta.setAttribute(
@@ -33,15 +34,20 @@ export class ReflowableSetup extends Setup {
             target: wnd
         } as any); // Cheat!
 
-        comms.register("set_property", "setup", (data, ack) => {
+        comms.register("set_property", ReflowableSetup.moduleName, (data, ack) => {
             const kv = data as string[];
             setProperty(wnd, kv[0], kv[1]);
             ack(true);
-        })
-        comms.register("remove_property", "setup", (data, ack) => {
+        });
+        comms.register("remove_property", ReflowableSetup.moduleName, (data, ack) => {
             removeProperty(wnd, data as string);
             ack(true);
-        })
+        });
+
+        comms.register("activate", ReflowableSetup.moduleName, (_, ack) => {
+            this.unblock(wnd as ReadiumWindow);
+            ack(true);
+        });
 
         comms.log("ReflowableSetup Mounted");
         return true;

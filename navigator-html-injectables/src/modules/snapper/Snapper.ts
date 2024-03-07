@@ -19,6 +19,7 @@ export abstract class Snapper extends Module {
 
     mount(wnd: Window, comms: Comms): boolean {
         const d = wnd.document.createElement("style");
+        d.dataset.readium = "true";
         d.id = SNAPPER_STYLE_ID;
         d.textContent = this.buildStyles();
         wnd.document.head.appendChild(d);

@@ -6,6 +6,7 @@ import {
     mid,
     CommsEventKey,
 } from "@readium/navigator-html-injectables/src";
+import { ManagerEventKey } from "../EpubNavigator";
 
 interface RegistryValue {
     time: number;
@@ -13,7 +14,7 @@ interface RegistryValue {
 }
 const REGISTRY_EXPIRY = 10000; // 10 seconds max
 
-export type FrameCommsListener = (key: CommsEventKey, value: unknown) => void;
+export type FrameCommsListener = (key: CommsEventKey | ManagerEventKey, value: unknown) => void;
 
 export class FrameComms {
     private readonly wnd: Window;

@@ -1,11 +1,13 @@
 import { Comms } from "../comms/comms";
 import { Module } from "./Module";
-import nearestInteractiveElement from "../helpers/nearestInteractiveElement";
+import { nearestInteractiveElement } from "../helpers/dom";
 
 export interface FrameClickEvent {
     defaultPrevented: boolean;
+    doNotDisturb: boolean;
     interactiveElement: string | undefined;
     targetElement: string;
+    targetFrameSrc: string;
     x: number;
     y: number;
 }
@@ -28,7 +30,7 @@ export class ReflowablePeripherals extends Module {
             // There's an ongoing selection, the tap will dismiss it so we don't forward it.
             return;
 
-        // if(handleDecorationClickEvent) TODO
+        // if(handleDecorationClickEvent) // TODO handle clicking on decorators
         //     return;
         if(!event.isPrimary) return;
 
@@ -38,6 +40,7 @@ export class ReflowablePeripherals extends Module {
             defaultPrevented: event.defaultPrevented,
             x: event.clientX * pixelRatio,
             y: event.clientY * pixelRatio,
+            targetFrameSrc: this.wnd.location.href,
             targetElement: (event.target as Element).outerHTML,
             interactiveElement: nearestInteractiveElement(event.target as Element)?.outerHTML
         } as FrameClickEvent);
