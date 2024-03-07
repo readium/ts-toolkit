@@ -14,7 +14,12 @@ export function getClientRectsNoOverlap(
     range: Range,
     doNotMergeHorizontallyAlignedRects: boolean
 ) {
-    const clientRects = range.getClientRects();
+    let clientRects = range.getClientRects();
+
+    // Try falling back to the client rects of the common ancestor of the range if it's an HTML Element
+    if(!clientRects.length)
+        if(range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE)
+            clientRects = (range.commonAncestorContainer as HTMLElement).getClientRects();
 
     const tolerance = 1;
     const originalRects: Rect[] = [];

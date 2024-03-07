@@ -253,10 +253,16 @@ class ContentParser implements NodeVisitor {
                 if (!cssSelector) {
                     cssSelector = this.cssSelector(node);
                 }
-                const elementLocator = this.baseLocator.copyWithLocations({
-                    otherLocations: new Map([
-                        ["cssSelector", cssSelector]
-                    ])
+                // Don't use Locator.copyWithLocations() because we don't want Locator.text or the pre-existing Locator.locations!
+                const elementLocator = new Locator({
+                    href: this.baseLocator.href,
+                    type: this.baseLocator.type,
+                    title: this.baseLocator.title,
+                    locations: new LocatorLocations({
+                        otherLocations: new Map([
+                            ["cssSelector", cssSelector]
+                        ])
+                    })
                 });
 
                 if (nodeName === "IMG") {

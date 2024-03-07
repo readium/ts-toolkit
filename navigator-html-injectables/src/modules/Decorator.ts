@@ -51,12 +51,16 @@ interface DecorationItem {
     container: HTMLElement | undefined;
 }
 
+const canNativeHighlight = "Highlight" in window;
+const cannotNativeHighlight = ["IMG", "IMAGE", "AUDIO", "VIDEO", "SVG"];
+
 class DecorationGroup {
     public readonly items: DecorationItem[] = [];
     private lastItemId = 0;
     private container: HTMLDivElement | undefined = undefined;
     private activateable = false;
     public readonly experimentalHighlights: boolean = false;
+    private readonly notTextFlag: Map<string, boolean> | undefined;
 
     /**
      * Creates a DecorationGroup object
@@ -69,8 +73,9 @@ class DecorationGroup {
         private readonly id: string,
         private readonly name: string
     ) {
-        if ("Highlight" in window) {
+        if (canNativeHighlight) {
             this.experimentalHighlights = true;
+            this.notTextFlag = new Map<string, boolean>();
         }
     }
 
@@ -94,12 +99,28 @@ class DecorationGroup {
             this.comms.log("Can't locate DOM range for decoration", decoration);
             return;
         }
+        const ancestor = range.commonAncestorContainer as HTMLElement;
+        if(ancestor.nodeType !== Node.TEXT_NODE) {
+            if(cannotNativeHighlight.includes(ancestor.nodeName.toUpperCase())) {
+                // The common ancestor is an element that definitely cannot be highlighted
+                this.notTextFlag?.set(id, true);
+            }
+            if(ancestor.querySelector(cannotNativeHighlight.join(", ").toLowerCase())) {
+                // Contains elements that definitely cannot be highlighted as children
+                this.notTextFlag?.set(id, true);
+            }
+            if((ancestor.textContent?.trim() || "").length === 0) {
+                // No text to be highlighted
+                this.notTextFlag?.set(id, true);
+            }
+        }
 
         const item = {
             decoration,
             id,
             range,
         } as DecorationItem;
+
         this.items.push(item);
         this.layout(item);
         this.renderLayout([item]);
@@ -120,11 +141,12 @@ class DecorationGroup {
             item.container.remove();
             item.container = undefined;
         }
-        if (this.experimentalHighlights) {
+        if (this.experimentalHighlights && !this.notTextFlag?.has(item.id)) {
             // Remove highlight from ranges
             const mm = ((this.wnd as any).CSS.highlights as Map<string, unknown>).get(this.id) as Set<Range>;
             mm?.delete(item.range);
         }
+        this.notTextFlag?.delete(item.id);
     }
 
     /**
@@ -142,6 +164,7 @@ class DecorationGroup {
     clear() {
         this.clearContainer();
         this.items.length = 0;
+        this.notTextFlag?.clear();
     }
 
     /**
@@ -172,7 +195,7 @@ class DecorationGroup {
      * @param item 
      */
     private layout(item: DecorationItem) {
-        if (this.experimentalHighlights) {
+        if (this.experimentalHighlights && !this.notTextFlag?.has(item.id)) {
             // Highlight using the new Highlight Web API!
             return this.experimentalLayout(item);
         }
@@ -288,12 +311,12 @@ class DecorationGroup {
 
     private currentRender = 0;
     private renderLayout(items: DecorationItem[]) {
-        if(this.experimentalHighlights) return;
         this.wnd.cancelAnimationFrame(this.currentRender);
         this.currentRender = this.wnd.requestAnimationFrame(() => {
-            if(!items) return;
+            items = items.filter(i => this.notTextFlag?.has(i.id));
+            if(!items || items.length === 0) return;
             const groupContainer = this.requireContainer() as HTMLDivElement;
-            groupContainer.append(...this.items.map(i => i.container).filter(c => !!c) as Node[])
+            groupContainer.append(...items.map(i => i.container).filter(c => !!c) as Node[])
         });
     }
 
