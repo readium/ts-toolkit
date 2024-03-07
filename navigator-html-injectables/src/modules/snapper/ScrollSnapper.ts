@@ -128,6 +128,7 @@ export class ScrollSnapper extends Snapper {
         });
 
         comms.register("unfocus", ScrollSnapper.moduleName, (_, ack) => {
+            deselect(this.wnd);
             ack(true);
         });
 
