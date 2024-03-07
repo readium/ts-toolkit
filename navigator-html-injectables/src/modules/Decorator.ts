@@ -100,7 +100,7 @@ class DecorationGroup {
             return;
         }
         const ancestor = range.commonAncestorContainer as HTMLElement;
-        if(ancestor.nodeType !== Node.TEXT_NODE) {
+        if(ancestor.nodeType !== Node.TEXT_NODE && this.experimentalHighlights) {
             if(cannotNativeHighlight.includes(ancestor.nodeName.toUpperCase())) {
                 // The common ancestor is an element that definitely cannot be highlighted
                 this.notTextFlag?.set(id, true);
