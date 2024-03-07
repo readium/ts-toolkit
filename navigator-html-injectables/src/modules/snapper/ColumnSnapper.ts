@@ -36,9 +36,6 @@ export class ColumnSnapper extends Snapper {
 
     snapOffset(offset: number) {
         const value = offset + (isRTL(this.wnd) ? -1 : 1);
-        /*console.log(this.wnd.document.head.getElementsByTagName("base").item(0)?.href?.split("OPS/")[1])
-        console.log(value, "%", this.wnd.innerWidth, "=", value % this.wnd.innerWidth)
-        console.log("Snap", value, "-", value % this.wnd.innerWidth, "=", value - (value % this.wnd.innerWidth));*/
         return value - (value % this.wnd.innerWidth);
     }
 

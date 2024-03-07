@@ -77,7 +77,6 @@ export default class FXLFrameManager {
                 this.currModules = modules;
                 this.peripherals.observe(this.wrapper);
                 this.peripherals.observe(wnd);
-                // console.log("loaded resolve", this.debugHref);
                 try { res(wnd); } catch (error) {};
             }, { once: true });
             this.frame.addEventListener("error", (e) => {
@@ -120,7 +119,6 @@ export default class FXLFrameManager {
 
     update(page?: Page) {
         if(!this.loaded) return;
-        // console.log("UPDATE", this.debugHref);
         const dimensions = this.loadPageSize();
         this.frame.style.height = `${dimensions.height}px`;
         this.frame.style.width = `${dimensions.width}px`;
@@ -146,7 +144,6 @@ export default class FXLFrameManager {
     }
 
     async destroy() {
-        // console.log("destroy!", this.debugHref);
         await this.hide();
         this.loader?.destroy();
         this.wrapper.remove();

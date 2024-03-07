@@ -78,7 +78,6 @@ export class FrameComms {
         if(dt._channel !== this.channelId) return; // Not meant for us
         switch (dt.key) {
             case "_ack": {
-                // console.log("ACK", dt.id, dt.data);
                 if (!dt.id) return;
                 const v = this.registry.get(dt.id);
                 if (!v) return;

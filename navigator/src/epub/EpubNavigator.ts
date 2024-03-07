@@ -182,7 +182,6 @@ export class EpubNavigator extends VisualNavigator {
                     }
 
                     const handled = key === "click" ? this.listeners.click(edata) : this.listeners.tap(edata);
-                    // console.log("handled?", handled);
                     if(handled) break;
                     if (this.currentProgression === ReadingProgression.ttb || this.currentProgression === ReadingProgression.btt)
                         return; // Not applicable to vertical reading yet. TODO

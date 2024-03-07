@@ -218,13 +218,9 @@ export default class FXLPeripherals {
                     this.pinch.target = {X: 0, Y: 0};
                     this.pinch.startScale = this.scale;
                 } else {
-                    //console.log(this.pinch.target)
-                    //console.log(this.pinch.startScale, this.scale, this.pinch.startTranslate);
                     this.pinch.target.X -= this.pan.translateX * (this.pinch.startScale / this.scale);
                     this.pinch.target.Y -= this.pan.translateY * (this.pinch.startScale / this.scale);
-                    //console.log(this.pinch.target)
                     this.pinch.target = {X: 0, Y: 0};
-                    //console.log(this.pinch.startScale, "VS", 1 / this.scale);
                     this.pinch.startScale = 1 / this.scale;
                 }
                 /*this.pinch.target = this.startTouch(e);
