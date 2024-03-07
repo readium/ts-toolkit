@@ -1,13 +1,6 @@
 import { Comms } from "../../comms/comms";
+import { ReadiumWindow } from "../../helpers/dom";
 import { Module } from "../Module";
-
-type BlockedEventData = [0, Function, any[], any[]] | [1, Event];
-
-export interface ReadiumWindow extends Window {
-    _readium_blockEvents: boolean;
-    _readium_blockedEvents: BlockedEventData[];
-    _readium_eventBlocker: EventListenerOrEventListenerObject;
-}
 
 export abstract class Setup extends Module {
     private comms!: Comms;
@@ -31,13 +24,12 @@ export abstract class Setup extends Module {
                     break;
                 case 1:
                     const ev = x[1];
-                    window.removeEventListener(ev.type, wnd._readium_eventBlocker, true);
+                    wnd.removeEventListener(ev.type, wnd._readium_eventBlocker, true);
                     const evt = new Event(ev.type, {
                         bubbles: ev.bubbles,
                         cancelable: ev.cancelable
                     });
                     if(ev.currentTarget) ev.currentTarget.dispatchEvent(evt)
-                    else if(ev.target) ev.target.dispatchEvent(evt);
                     else wnd.dispatchEvent(evt);
                     break;
             }

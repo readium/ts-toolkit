@@ -1,5 +1,5 @@
 import { ModuleName } from "@readium/navigator-html-injectables/src";
-import { Locator, Publication, MediaType } from "@readium/shared/src";
+import { Locator, Publication } from "@readium/shared/src/publication";
 import FrameBlobBuider from "./FrameBlobBuilder";
 import FrameManager from "./FrameManager";
 
@@ -54,7 +54,7 @@ export default class FramePoolManager {
 
     async update(pub: Publication, locator: Locator, modules: ModuleName[], force=false) {
         let i = this.positions.findIndex(l => l.locations.position === locator.locations.position);
-        if(i < 0) throw Error("Locator not found in position list");
+        if(i < 0) throw Error(`Locator not found in position list: ${locator.serialize()}`);
         const newHref = this.positions[i].href;
 
         if(this.inprogress.has(newHref))
@@ -64,7 +64,7 @@ export default class FramePoolManager {
 
         // Create a new progress that doesn't resolve until complete
         // loading of the resource and its dependencies has finished.
-        const progressPromise = new Promise<void>(async (resolve, _) => {
+        const progressPromise = new Promise<void>(async (resolve, reject) => {
             const disposal: string[] = [];
             const creation: string[] = [];
             this.positions.forEach((l, j) => {
@@ -116,7 +116,11 @@ export default class FramePoolManager {
                 await fm.load(modules);
                 this.pool.set(href, fm);
             }
-            await Promise.all(creation.map(href => creator(href)));
+            try {
+                await Promise.all(creation.map(href => creator(href)));
+            } catch (error) {
+                reject(error);
+            }
 
             // Update current frame
             const newFrame = this.pool.get(newHref)!;

@@ -1,9 +1,12 @@
 import { ResizeObserver as Polyfill } from '@juggle/resize-observer';
-import { Comms, mid } from "../../comms";
+import { Comms } from "../../comms";
 import { Snapper } from "./Snapper";
 import { getColumnCountPerScreen, isRTL, appendVirtualColumnIfNeeded } from "../../helpers/document";
 import { easeInOutQuad } from "../../helpers/animation";
 import { ModuleName } from "../ModuleLibrary";
+import { Locator, LocatorText } from "@readium/shared/src/publication";
+import { rangeFromLocator } from "../../helpers/locator";
+import { ReadiumWindow, findFirstVisibleLocator } from "../../helpers/dom";
 
 const COLUMN_SNAPPER_STYLE_ID = "readium-column-snapper-style";
 const SNAP_DURATION = 200; // Milliseconds
@@ -13,9 +16,6 @@ enum ScrollTouchState {
     START = 1,
     MOVE = 2
 }
-
-// Necessary for iOS 13 and below
-const ResizeObserver = window.ResizeObserver || Polyfill;
 
 /**
  * A {Snapper} for reflowable resources using a column-based layout
@@ -271,9 +271,12 @@ export class ColumnSnapper extends Snapper {
         `;
         wnd.document.head.appendChild(d);
 
-        this.resizeObserver = new ResizeObserver(() => {
-            appendVirtualColumnIfNeeded(wnd);
-        });
+        // Necessary for iOS 13 and below
+        const ResizeObserver = (wnd as Window & typeof globalThis).ResizeObserver || Polyfill;
+
+        this.resizeObserver = new ResizeObserver(() => wnd.requestAnimationFrame(() => {
+            wnd && appendVirtualColumnIfNeeded(wnd);
+        }));
         this.resizeObserver.observe(wnd.document.body);
         this.mutationObserver = new MutationObserver(() => {
             this.wnd.requestAnimationFrame(() => this.cachedScrollWidth = this.doc().scrollWidth!);
@@ -288,9 +291,9 @@ export class ColumnSnapper extends Snapper {
             return oldScrollLeft !== this.doc().scrollLeft;
         }
 
-        window.addEventListener("orientationchange", this.onWidthChanger);
-        window.addEventListener("resize", this.onWidthChanger);
-        this.wnd.requestAnimationFrame(() => this.cachedScrollWidth = this.doc().scrollWidth!);
+        wnd.addEventListener("orientationchange", this.onWidthChanger);
+        wnd.addEventListener("resize", this.onWidthChanger);
+        wnd.requestAnimationFrame(() => this.cachedScrollWidth = this.doc().scrollWidth!);
 
         comms.register("go_progression", ColumnSnapper.moduleName, (data, ack) => {
             const position = data as number;
@@ -311,6 +314,37 @@ export class ColumnSnapper extends Snapper {
                 ack(true);
             });
         })
+
+        comms.register("go_id", ColumnSnapper.moduleName, (data, ack) => {
+            const element = wnd.document.getElementById(data as string);
+            if(!element) {
+                ack(false);
+                return;
+            }
+            this.wnd.requestAnimationFrame(() => {
+                this.doc().scrollLeft = this.snapOffset(element.getBoundingClientRect().left + wnd.scrollX);
+                this.reportProgress();
+                ack(true);
+            });
+        });
+
+        comms.register("go_text", ColumnSnapper.moduleName, (data, ack) => {
+            const text = LocatorText.deserialize(data);
+            const r = rangeFromLocator(this.wnd.document, new Locator({
+                href: wnd.location.href,
+                type: "text/html",
+                text
+            }));
+            if(!r) {
+                ack(false);
+                return;
+            }
+            this.wnd.requestAnimationFrame(() => {
+                this.doc().scrollLeft = this.snapOffset(r.getBoundingClientRect().left + wnd.scrollX);
+                this.reportProgress();
+                ack(true);
+            });
+        });
 
         comms.register("go_end", ColumnSnapper.moduleName, (_, ack) => {
             const factor = isRTL(wnd) ? -1 : 1;
@@ -372,6 +406,12 @@ export class ColumnSnapper extends Snapper {
             });
         });
 
+        comms.register("first_visible_locator", ColumnSnapper.moduleName, (_, ack) => {
+            const locator = findFirstVisibleLocator(wnd as ReadiumWindow, false);
+            this.comms.send("first_visible_locator", locator.serialize());
+            ack(true);
+        });
+
         // Add interaction listeners
         wnd.addEventListener("touchstart", this.onTouchStarter, { passive: true });
         wnd.addEventListener("touchend", this.onTouchEnder, { passive: true });
@@ -394,8 +434,8 @@ export class ColumnSnapper extends Snapper {
         wnd.removeEventListener("touchend", this.onTouchEnder);
         wnd.removeEventListener("touchmove", this.onTouchMover);
 
-        window.removeEventListener("orientationchange", this.onWidthChanger);
-        window.removeEventListener("resize", this.onWidthChanger);
+        wnd.removeEventListener("orientationchange", this.onWidthChanger);
+        wnd.removeEventListener("resize", this.onWidthChanger);
 
         wnd.document.getElementById(COLUMN_SNAPPER_STYLE_ID)?.remove();
 

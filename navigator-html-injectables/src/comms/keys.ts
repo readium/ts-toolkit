@@ -12,7 +12,8 @@ export type CommsEventKey =
     "no_more" |
     "no_less" |
     "swipe" |
-    "progress";
+    "progress" |
+    "first_visible_locator";
 ;
 
 export type CommsCommandKey =
@@ -26,7 +27,9 @@ export type CommsCommandKey =
     "go_progression" |
     "set_property" |
     "remove_property" |
-    "exact_progress" |
+    // "exact_progress" |
+    "first_visible_locator" |
+    "decorate" |
     "protect" |
     "unprotect" |
     "unfocus" |

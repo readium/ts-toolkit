@@ -1,8 +1,8 @@
-import { EPUBLayout, Link, Locator, Publication, ReadingProgression } from "@readium/shared/src";
+import { EPUBLayout, Link, Locator, Publication, ReadingProgression } from "@readium/shared/src/publication";
 import { VisualNavigator } from "../";
 import FramePoolManager from "./frame/FramePoolManager";
 import FXLFramePoolManager from "./fxl/FXLFramePoolManager";
-import { CommsEventKey, ModuleLibrary, ModuleName } from "@readium/navigator-html-injectables/src";
+import { CommsEventKey, FXLModules, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables/src";
 import { FrameClickEvent } from "@readium/navigator-html-injectables/src/modules/ReflowablePeripherals";
 import * as path from "path-browserify";
 
@@ -108,6 +108,18 @@ export class EpubNavigator extends VisualNavigator {
                 this.listeners.frameLoaded(this._cframes[0]!.iframe.contentWindow!);
                 this.listeners.positionChanged(this.currentLocation);
                 break;
+            case "first_visible_locator":
+                const loc = Locator.deserialize(data as string);
+                if(!loc) break;
+                this.currentLocation = new Locator({
+                    href: this.currentLocation.href,
+                    type: this.currentLocation.type,
+                    title: this.currentLocation.title,
+                    locations: loc?.locations,
+                    text: loc?.text
+                });
+                this.listeners.positionChanged(this.currentLocation);
+                break;
             case "click":
             case "tap":
                 const edata = data as FrameClickEvent;
@@ -123,8 +135,9 @@ export class EpubNavigator extends VisualNavigator {
                     ) {
                         const origHref = element.attributes.getNamedItem("href")?.value!;
                         if (origHref.startsWith("#")) {
-                            console.warn("TODO reimplement anchor jump!");
-                            // contentWindow.readium.scrollToId(origHref.substring(1));
+                            this.go(this.currentLocation.copyWithLocations({
+                                fragments: [origHref.substring(1)]
+                            }), false, () => { });
                         } else if(
                             origHref.startsWith("http://") ||
                             origHref.startsWith("https://") ||
@@ -212,8 +225,8 @@ export class EpubNavigator extends VisualNavigator {
         let modules = Array.from(ModuleLibrary.keys()) as ModuleName[];
 
         if(this.layout === EPUBLayout.fixed) {
-            return modules.filter((m) => m === "fixed_setup" || m === "reflowable_peripherals");
-        } else modules = modules.filter((m) => m !== "fixed_setup");
+            return modules.filter((m) => FXLModules.includes(m));
+        } else modules = modules.filter((m) => ReflowableModules.includes(m));
 
         // Horizontal vs. Vertical reading
         if (this.readingProgression === ReadingProgression.ttb || this.readingProgression === ReadingProgression.btt)
@@ -255,7 +268,7 @@ export class EpubNavigator extends VisualNavigator {
 
         if(this.layout === EPUBLayout.fixed) {
             const p = this.framePool as FXLFramePoolManager;
-            const old = p.currentSlide;
+            const old = p.currentNumber;
             if(relative === 1) {
                 if(!p.next(p.perPage)) return false;
             } else if(relative === -1) {
@@ -264,23 +277,23 @@ export class EpubNavigator extends VisualNavigator {
                 throw Error("Invalid relative value for FXL");
 
             // Apply change
-            if(old > p.currentSlide)
+            const neW = p.currentNumber
+            if(old > neW)
                 for (let j = this.positions.length - 1; j >= 0; j--) {
-                    if(this.positions[j].href === this.pub.readingOrder.items[p.currentSlide].href) {
+                    if(this.positions[j].href === this.pub.readingOrder.items[neW-1].href) {
                         this.currentLocation = this.positions[j].copyWithLocations({
                             progression: 0.999999999999
                         });
                         break;
                     }
                 }
-            else if(old < p.currentSlide)
+            else if(old < neW)
                 for (let j = 0; j < this.positions.length; j++) {
-                    if(this.positions[j].href === this.pub.readingOrder.items[p.currentSlide].href) {
+                    if(this.positions[j].href === this.pub.readingOrder.items[neW-1].href) {
                         this.currentLocation = this.positions[j];
                         break;
                     }
                 }
-
             await this.apply();
             return true;
         }
@@ -410,6 +423,41 @@ export class EpubNavigator extends VisualNavigator {
         return this.pub;
     }
 
+    private async loadLocator(locator: Locator, cb: (ok: boolean) => void) {
+        let done = false;
+        if(locator.text?.highlight)
+            done = await new Promise<boolean>((res, _) => {
+                // Attempt to go to a highlighted piece of text in the resource
+                this._cframes[0]!.msg!.send("go_text", locator.text?.serialize(), (ok) => res(ok));
+            });
+        if(done) {
+            cb(done);
+            return;
+        }
+        // This sanity check has to be performed because we're still passing non-locator class
+        // locator objects to this function. This is not good and should eventually be forbidden
+        // or the locator should be deserialized sometime before this function.
+        const hid = (typeof locator.locations.htmlId === 'function') && locator.locations.htmlId();
+        if(hid)
+            done = await new Promise<boolean>((res, _) => {
+                // Attempt to go to an HTML ID in the resource
+                this._cframes[0]!.msg!.send("go_id", hid, (ok) => res(ok));
+            });
+        if(done) {
+            cb(done);
+            return;
+        }
+
+        const progression = locator?.locations?.progression;
+        const hasProgression = progression && progression > 0;
+        if(hasProgression)
+            done = await new Promise<boolean>((res, _) => {
+                // Attempt to go to a progression in the resource
+                this._cframes[0]!.msg!.send("go_progression", progression, (ok) => res(ok));
+            });
+        cb(done);
+    }
+
     public go(locator: Locator, animated: boolean, cb: (ok: boolean) => void): void {
         const href = locator.href.split("#")[0];
         let link = this.pub.readingOrder.findWithHref(href);
@@ -418,19 +466,10 @@ export class EpubNavigator extends VisualNavigator {
         }
 
         this.currentLocation = this.positions.find(p => p.href === link!.href)!;
-        this.apply().then(() => {
-            const progression = locator?.locations?.progression;
-            const hasProgression = progression && progression > 0;
-
-            if(hasProgression)
-                this._cframes[0]!.msg!.send("go_progression", progression, () => {
-                    // Now that we've gone to the right progression, we can attach the listeners.
-                    // Doing this only at this stage reduces janky UI with multiple progression updates.
-                    this.attachListener();
-                    cb(true);
-                });
-            else
-                cb(true);
+        this.apply().then(() => this.loadLocator(locator, (ok) => cb(ok))).then(() => {
+            // Now that we've gone to the right locator, we can attach the listeners.
+            // Doing this only at this stage reduces janky UI with multiple locator updates.
+            this.attachListener();
         });
     }
 

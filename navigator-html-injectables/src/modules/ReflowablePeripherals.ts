@@ -1,6 +1,6 @@
 import { Comms } from "../comms/comms";
 import { Module } from "./Module";
-import nearestInteractiveElement from "../helpers/nearestInteractiveElement";
+import { nearestInteractiveElement } from "../helpers/dom";
 
 export interface FrameClickEvent {
     defaultPrevented: boolean;
@@ -30,7 +30,7 @@ export class ReflowablePeripherals extends Module {
             // There's an ongoing selection, the tap will dismiss it so we don't forward it.
             return;
 
-        // if(handleDecorationClickEvent) TODO
+        // if(handleDecorationClickEvent) // TODO handle clicking on decorators
         //     return;
         if(!event.isPrimary) return;
 

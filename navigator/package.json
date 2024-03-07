@@ -41,6 +41,7 @@
     "@readium/navigator-html-injectables": "workspace:0.0.1",
     "@readium/shared": "workspace:1.2.0",
     "@types/path-browserify": "^1.0.0",
+    "css-selector-generator": "^3.6.4",
     "path-browserify": "^1.0.1",
     "readium-css": "github:readium/readium-css",
     "tslib": "^2.5.2"
