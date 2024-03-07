@@ -41,6 +41,7 @@ export default class FXLPeripherals {
     private readonly coordinator: FXLCoordinator;
 
     public dragState = 0;
+    private minimumMoved = false;
     public pan: PanTracker = {
         startX: 0,
         endX: 0,
@@ -285,6 +286,7 @@ export default class FXLPeripherals {
                 this.updateAfterDrag();
             }
             this.dragState = 0;
+            this.minimumMoved = false;
             this.clearPinch();
             if(this.debugger?.show) {
                 this.debugger.DOM.center.style.display = "none";
@@ -343,9 +345,12 @@ export default class FXLPeripherals {
         e.stopPropagation();
         const coords = this.coordinator.getBibiEventCoord(e);
 
-        if ((Math.abs(this.pan.startY - coords.Y) + Math.abs(this.pan.startX - coords.X)) > 5 && this.dragState < 1) {
-            this.manager.currentFrames?.forEach(f => f?.deselect());
-            this.dragState = 1;
+        if ((Math.abs(this.pan.startY - coords.Y) + Math.abs(this.pan.startX - coords.X)) > 5) {
+            if(!this.minimumMoved) {
+                this.manager.deselect();
+                this.minimumMoved = true;
+            }
+            if(this.dragState < 1) this.dragState = 1;
         }
 
         const currentDistance = this.coordinator?.getTouchDistance(e);
