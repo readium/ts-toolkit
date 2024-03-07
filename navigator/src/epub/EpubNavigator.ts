@@ -424,8 +424,8 @@ export class EpubNavigator extends VisualNavigator {
 
     private async loadLocator(locator: Locator, cb: (ok: boolean) => void) {
         let done = false;
+        let cssSelector = (typeof locator.locations.getCssSelector === 'function') && locator.locations.getCssSelector();
         if(locator.text?.highlight) {
-            let cssSelector = (typeof locator.locations.getCssSelector === 'function') && locator.locations.getCssSelector();
             done = await new Promise<boolean>((res, _) => {
                 // Attempt to go to a highlighted piece of text in the resource
                 this._cframes[0]!.msg!.send(
@@ -434,6 +434,17 @@ export class EpubNavigator extends VisualNavigator {
                         locator.text?.serialize(),
                         cssSelector // Include CSS selector if it exists
                     ] : locator.text?.serialize(),
+                    (ok) => res(ok)
+                );
+            });
+        } else if(cssSelector) {
+            done = await new Promise<boolean>((res, _) => {
+                this._cframes[0]!.msg!.send(
+                    "go_text",
+                    [
+                        "", // No text!
+                        cssSelector // Just CSS selector
+                    ],
                     (ok) => res(ok)
                 );
             });
