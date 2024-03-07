@@ -344,7 +344,7 @@ export default class FXLPeripherals {
         const coords = this.coordinator.getBibiEventCoord(e);
 
         if ((Math.abs(this.pan.startY - coords.Y) + Math.abs(this.pan.startX - coords.X)) > 5 && this.dragState < 1) {
-            this.manager.currentFrames?.forEach(f => f.deselect());
+            this.manager.currentFrames?.forEach(f => f?.deselect());
             this.dragState = 1;
         }
 

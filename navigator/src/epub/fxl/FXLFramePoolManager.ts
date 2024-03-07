@@ -280,6 +280,7 @@ export default class FramePoolManager {
                     if(this.spineElement.style.transform === newTransform) return;
                     this.transform = newTransform;
                     this.updateSpineStyle(true, fast);
+                    this.currentFrames?.forEach(f => f?.deselect());
                 });
             });
         } else {
@@ -287,6 +288,7 @@ export default class FramePoolManager {
             if(this.spineElement.style.transform === newTransform) return;
             this.transform = newTransform;
             this.updateSpineStyle(false);
+            this.currentFrames?.forEach(f => f?.deselect());
         }
     }
 
