@@ -1,6 +1,6 @@
 import { Locator, LocatorText } from "@readium/shared/src/publication";
 import { Comms } from "../../comms";
-import { ReadiumWindow, findFirstVisibleLocator } from "../../helpers/dom";
+import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/dom";
 import { AnchorObserver, helperCreateAnchorElements, helperRemoveAnchorElements } from '../../helpers/scrollSnapperHelper';
 import { ModuleName } from "../ModuleLibrary";
 import { Snapper } from "./Snapper";
@@ -67,6 +67,7 @@ export class ScrollSnapper extends Snapper {
             this.wnd.requestAnimationFrame(() => {
               this.doc().scrollTop = this.doc().offsetHeight * position;
               this.reportProgress(position);
+              deselect(this.wnd);
               ack(true);
           });
         });
@@ -80,6 +81,7 @@ export class ScrollSnapper extends Snapper {
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollTop = element.getBoundingClientRect().top + wnd.scrollY - wnd.innerHeight / 2;
                 this.reportProgress(this.doc().scrollTop / this.doc().offsetHeight);
+                deselect(this.wnd);
                 ack(true);
             });
         });
@@ -98,6 +100,7 @@ export class ScrollSnapper extends Snapper {
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollTop = r.getBoundingClientRect().top + wnd.scrollY - wnd.innerHeight / 2;
                 this.reportProgress(this.doc().scrollTop / this.doc().offsetHeight);
+                deselect(this.wnd);
                 ack(true);
             });
         });

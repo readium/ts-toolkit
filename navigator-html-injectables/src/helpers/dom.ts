@@ -15,6 +15,10 @@ export interface ReadiumWindow extends Window {
     };
 }
 
+export function deselect(wnd: Window) {
+    const currentSelection = wnd.getSelection();
+    if(currentSelection) currentSelection.removeAllRanges();
+}
 
 const interactiveTags = [
     "a",
