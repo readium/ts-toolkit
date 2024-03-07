@@ -39,13 +39,13 @@ export class FixedSetup extends Setup {
             ack(true);
         })
 
+        comms.register("first_visible_locator", FixedSetup.moduleName, (_, ack) => ack(false))
+
         comms.register([
             "focus", "unfocus", "go_next", "go_prev",
             "go_id", "go_end", "go_start", "go_text",
             "go_progression"
-        ], FixedSetup.moduleName, (_, ack) => {
-            ack(true);
-        });
+        ], FixedSetup.moduleName, (_, ack) => ack(true));
 
         comms.register("activate", FixedSetup.moduleName, (_, ack) => {
             this.unblock(wnd as ReadiumWindow);

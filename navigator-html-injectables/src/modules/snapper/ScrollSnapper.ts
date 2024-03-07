@@ -120,9 +120,7 @@ export class ScrollSnapper extends Snapper {
             "go_next",
             "go_prev",
             "unfocus",
-        ], ScrollSnapper.moduleName, (_, ack) => {
-            ack(false);
-        });
+        ], ScrollSnapper.moduleName, (_, ack) => ack(false));
 
         comms.register("focus", ScrollSnapper.moduleName, (_, ack) => {
             this.reportProgress(this.doc().scrollTop / this.doc().offsetHeight);
