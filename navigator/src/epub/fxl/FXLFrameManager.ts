@@ -151,6 +151,7 @@ export default class FXLFrameManager {
 
     async unload() {
         if(!this.loaded) return;
+        this.deselect();
         this.frame.style.visibility = "hidden";
         this.frame.style.pointerEvents = "none";
         this.frame.classList.add("blank");
@@ -172,8 +173,13 @@ export default class FXLFrameManager {
         });
     }
 
+    deselect() {
+        this.frame.contentWindow?.getSelection()?.removeAllRanges();
+    }
+
     async hide(): Promise<void> {
         if(this.frame.parentElement) {
+            this.deselect();
             if(this.comms === undefined) return;
             return new Promise((res, _) => {
                 this.comms?.send("unfocus", undefined, (ok: boolean) => {

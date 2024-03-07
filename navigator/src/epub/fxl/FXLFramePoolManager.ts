@@ -280,6 +280,7 @@ export default class FramePoolManager {
                     if(this.spineElement.style.transform === newTransform) return;
                     this.transform = newTransform;
                     this.updateSpineStyle(true, fast);
+                    this.deselect();
                 });
             });
         } else {
@@ -287,6 +288,7 @@ export default class FramePoolManager {
             if(this.spineElement.style.transform === newTransform) return;
             this.transform = newTransform;
             this.updateSpineStyle(false);
+            this.deselect();
         }
     }
 
@@ -595,5 +597,9 @@ export default class FramePoolManager {
         }
         const spread = this.spreader.currentSpread(this.currentSlide, this.perPage);
         return spread[0].properties?.otherProperties["number"];
+    }
+
+    deselect() {
+        this.currentFrames?.forEach(f => f?.deselect());
     }
 }

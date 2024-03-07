@@ -6,7 +6,7 @@ import { easeInOutQuad } from "../../helpers/animation";
 import { ModuleName } from "../ModuleLibrary";
 import { Locator, LocatorLocations, LocatorText } from "@readium/shared/src/publication";
 import { rangeFromLocator } from "../../helpers/locator";
-import { ReadiumWindow, findFirstVisibleLocator } from "../../helpers/dom";
+import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/dom";
 
 const COLUMN_SNAPPER_STYLE_ID = "readium-column-snapper-style";
 const SNAP_DURATION = 200; // Milliseconds
@@ -202,8 +202,10 @@ export class ColumnSnapper extends Snapper {
 
     onTouchMove(e: TouchEvent) {
         if(this.touchState === ScrollTouchState.END) return;
-        if(this.touchState === ScrollTouchState.START)
+        if(this.touchState === ScrollTouchState.START) {
             this.touchState = ScrollTouchState.MOVE;
+            deselect(this.wnd);
+        }
         this.endingX = e.touches[0].clientX;
 
         const dro = this.dragOffset();
@@ -308,6 +310,7 @@ export class ColumnSnapper extends Snapper {
                 const offset = documentWidth * position * factor;
                 this.doc().scrollLeft = this.snapOffset(offset);
                 this.reportProgress();
+                deselect(this.wnd);
                 ack(true);
             });
         })
@@ -321,6 +324,7 @@ export class ColumnSnapper extends Snapper {
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollLeft = this.snapOffset(element.getBoundingClientRect().left + wnd.scrollX);
                 this.reportProgress();
+                deselect(this.wnd);
                 ack(true);
             });
         });
@@ -351,6 +355,7 @@ export class ColumnSnapper extends Snapper {
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollLeft = this.snapOffset(r.getBoundingClientRect().left + wnd.scrollX);
                 this.reportProgress();
+                deselect(this.wnd);
                 ack(true);
             });
         });
@@ -363,6 +368,7 @@ export class ColumnSnapper extends Snapper {
                 if(this.doc().scrollLeft === final) return ack(false);
                 this.doc().scrollLeft = this.snapOffset(final);
                 this.reportProgress();
+                deselect(this.wnd);
                 ack(true);
             });
         })
@@ -372,6 +378,7 @@ export class ColumnSnapper extends Snapper {
                 if(this.doc().scrollLeft === 0) return ack(false);
                 this.doc().scrollLeft = 0;
                 this.reportProgress();
+                deselect(this.wnd);
                 ack(true);
             });
         })
@@ -381,7 +388,10 @@ export class ColumnSnapper extends Snapper {
                 const offset = wnd.scrollX - wnd.innerWidth;
                 const minOffset = isRTL(wnd) ? - (this.cachedScrollWidth - wnd.innerWidth) : 0;
                 const change = scrollToOffset(Math.max(offset, minOffset));
-                if(change) this.reportProgress();
+                if(change) {
+                    this.reportProgress();
+                    deselect(this.wnd);
+                }
                 ack(change);
             });
         });
@@ -391,13 +401,17 @@ export class ColumnSnapper extends Snapper {
                 const offset = wnd.scrollX + wnd.innerWidth;
                 const maxOffset = isRTL(wnd) ? 0 : this.cachedScrollWidth - wnd.innerWidth;
                 const change = scrollToOffset(Math.min(offset, maxOffset));
-                if(change) this.reportProgress();
+                if(change) {
+                    this.reportProgress();
+                    deselect(this.wnd);
+                }
                 ack(change);
             });
         });
 
         comms.register("unfocus", ColumnSnapper.moduleName, (_, ack) => {
             this.snappingCancelled = true;
+            deselect(this.wnd);
             ack(true);
         });
 
