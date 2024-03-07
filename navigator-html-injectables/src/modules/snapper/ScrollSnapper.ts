@@ -1,4 +1,4 @@
-import { Locator, LocatorText } from "@readium/shared/src/publication";
+import { Locator, LocatorLocations, LocatorText } from "@readium/shared/src/publication";
 import { Comms } from "../../comms";
 import { ReadiumWindow, findFirstVisibleLocator } from "../../helpers/dom";
 import { AnchorObserver, helperCreateAnchorElements, helperRemoveAnchorElements } from '../../helpers/scrollSnapperHelper';
@@ -85,11 +85,23 @@ export class ScrollSnapper extends Snapper {
         });
 
         comms.register("go_text", ScrollSnapper.moduleName, (data, ack) => {
+            let cssSelector = undefined;
+            if(Array.isArray(data)) {
+                if(data.length > 1)
+                    // Second element is presumed to be the CSS selector
+                    cssSelector = (data as unknown[])[1] as string;
+                data = data[0]; // First element will always be the locator text object
+            }
             const text = LocatorText.deserialize(data);
             const r = rangeFromLocator(this.wnd.document, new Locator({
                 href: wnd.location.href,
                 type: "text/html",
-                text
+                text,
+                locations: cssSelector ? new LocatorLocations({
+                    otherLocations: new Map([
+                        ["cssSelector", cssSelector]
+                    ])
+                }) : undefined
             }));
             if(!r) {
                 ack(false);
