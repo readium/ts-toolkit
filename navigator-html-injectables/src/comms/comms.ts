@@ -90,27 +90,33 @@ export class Comms {
         }));
     }
 
-    public register(key: CommsCommandKey, module: string, callback: CommsCallback) {
-        const listeners = this.registrar.get(key);
-        if(listeners && listeners.length >= 0) {
-            const existing = listeners.find(l => l.module === module);
-            if(existing) throw new Error(`Trying to register another callback for combination of event ${key} and module ${module}`);
-            listeners.push({
-                cb: callback,
-                module
-            })
-            this.registrar.set(key, listeners);
-        } else
-            this.registrar.set(key, [{
-                cb: callback,
-                module
-            }]);
+    public register(key: CommsCommandKey | CommsCommandKey[], module: string, callback: CommsCallback) {
+        if(!Array.isArray(key)) key = [key];
+        key.forEach(k => {
+            const listeners = this.registrar.get(k);
+            if(listeners && listeners.length >= 0) {
+                const existing = listeners.find(l => l.module === module);
+                if(existing) throw new Error(`Trying to register another callback for combination of event ${k} and module ${module}`);
+                listeners.push({
+                    cb: callback,
+                    module
+                })
+                this.registrar.set(k, listeners);
+            } else
+                this.registrar.set(k, [{
+                    cb: callback,
+                    module
+                }]);
+        })
     }
 
-    public unregister(key: CommsCommandKey, module: string) {
-        const listeners = this.registrar.get(key);
-        if(!listeners || listeners.length === 0) return;
-        listeners.splice(listeners.findIndex(l => l.module === module), 1);
+    public unregister(key: CommsCommandKey | CommsCommandKey[], module: string) {
+        if(!Array.isArray(key)) key = [key];
+        key.forEach(k => {
+            const listeners = this.registrar.get(k);
+            if(!listeners || listeners.length === 0) return;
+            listeners.splice(listeners.findIndex(l => l.module === module), 1);
+        });
     }
 
     public unregisterAll(module: string) {

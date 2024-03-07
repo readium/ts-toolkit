@@ -116,16 +116,12 @@ export class ScrollSnapper extends Snapper {
             ack(true);
         })
 
-        comms.register("go_prev", ScrollSnapper.moduleName, (_, ack) => {
+        comms.register([
+            "go_next",
+            "go_prev",
+            "unfocus",
+        ], ScrollSnapper.moduleName, (_, ack) => {
             ack(false);
-        });
-
-        comms.register("go_next", ScrollSnapper.moduleName, (_, ack) => {
-            ack(false);
-        });
-
-        comms.register("unfocus", ScrollSnapper.moduleName, (_, ack) => {
-            ack(true);
         });
 
         comms.register("focus", ScrollSnapper.moduleName, (_, ack) => {

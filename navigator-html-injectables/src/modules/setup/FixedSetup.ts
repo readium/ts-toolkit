@@ -39,39 +39,11 @@ export class FixedSetup extends Setup {
             ack(true);
         })
 
-        comms.register("go_progression", FixedSetup.moduleName, (_, ack) => {
-            ack(true);
-        });
-
-        comms.register("go_start", FixedSetup.moduleName, (_, ack) => {
-            ack(true);
-        });
-
-        comms.register("go_text", FixedSetup.moduleName, (_, ack) => {
-            ack(true);
-        });
-
-        comms.register("go_id", FixedSetup.moduleName, (_, ack) => {
-            ack(true);
-        });
-
-        comms.register("go_end", FixedSetup.moduleName, (_, ack) => {
-            ack(true);
-        })
-
-        comms.register("go_prev", FixedSetup.moduleName, (_, ack) => {
-            ack(false);
-        });
-
-        comms.register("go_next", FixedSetup.moduleName, (_, ack) => {
-            ack(false);
-        });
-
-        comms.register("unfocus", FixedSetup.moduleName, (_, ack) => {
-            ack(true);
-        });
-
-        comms.register("focus", FixedSetup.moduleName, (_, ack) => {
+        comms.register([
+            "focus", "unfocus", "go_next", "go_prev",
+            "go_id", "go_end", "go_start", "go_text",
+            "go_progression"
+        ], FixedSetup.moduleName, (_, ack) => {
             ack(true);
         });
 
