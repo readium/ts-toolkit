@@ -313,7 +313,7 @@ class DecorationGroup {
     private renderLayout(items: DecorationItem[]) {
         this.wnd.cancelAnimationFrame(this.currentRender);
         this.currentRender = this.wnd.requestAnimationFrame(() => {
-            items = items.filter(i => this.notTextFlag?.has(i.id));
+            items = items.filter(i => !this.experimentalHighlights || !!this.notTextFlag?.has(i.id));
             if(!items || items.length === 0) return;
             const groupContainer = this.requireContainer() as HTMLDivElement;
             groupContainer.append(...items.map(i => i.container).filter(c => !!c) as Node[])
