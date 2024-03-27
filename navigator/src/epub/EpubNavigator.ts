@@ -267,7 +267,7 @@ export class EpubNavigator extends VisualNavigator {
 
         if(this.layout === EPUBLayout.fixed) {
             const p = this.framePool as FXLFramePoolManager;
-            const old = p.currentNumber;
+            const old = p.currentNumbers[0];
             if(relative === 1) {
                 if(!p.next(p.perPage)) return false;
             } else if(relative === -1) {
@@ -276,7 +276,7 @@ export class EpubNavigator extends VisualNavigator {
                 throw Error("Invalid relative value for FXL");
 
             // Apply change
-            const neW = p.currentNumber
+            const neW = p.currentNumbers[0]
             if(old > neW)
                 for (let j = this.positions.length - 1; j >= 0; j--) {
                     if(this.positions[j].href === this.pub.readingOrder.items[neW-1].href) {
@@ -398,11 +398,12 @@ export class EpubNavigator extends VisualNavigator {
         return this.currentLocation;
     }
 
-    get currentPositionNumber(): number {
+    // Starting and ending position currently showing in the reader
+    get currentPositionNumbers(): number[] {
         if(this.layout === EPUBLayout.fixed)
-         return (this.framePool as FXLFramePoolManager).currentNumber;
+         return (this.framePool as FXLFramePoolManager).currentNumbers;
 
-        return this.currentLocator?.locations.position ?? 0;
+        return [this.currentLocator?.locations.position ?? 0];
     }
 
     // TODO: This is temporary until user settings are implemented.
