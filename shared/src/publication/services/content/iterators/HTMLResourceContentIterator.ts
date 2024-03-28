@@ -2,7 +2,7 @@ import { Resource } from "../../../../fetcher/Resource";
 import { Link, Links } from "../../../Link";
 import { Locator, LocatorLocations } from "../../../Locator";
 import { IllegalStateError, Iterator } from "../Iterator";
-import { Attribute, AttributeKeys, AudioElement, Body, ContentElement, Footnote, Heading, ImageElement, TextElement, TextQuote, TextSegment, VideoElement } from "../element";
+import { Attribute, AttributeKeys, AudioElement, Body, ContentElement, Footnote, Heading, ImageElement, TextElement, TextQuote, TextRole, TextSegment, VideoElement } from "../element";
 import { appendNormalizedWhitespace, elementLanguage, isBlank, isInlineTag, srcRelativeToHref, trimUnicodeSpace, trimUnicodeSpaceEnd, trimUnicodeSpaceStart, trimmingTextLocator } from "./helpers";
 import { getCssSelector } from "css-selector-generator";
 
@@ -44,7 +44,7 @@ export class HTMLResourceContentIterator extends Iterator {
         this.currentIndex = index;
         this.currentElement = {
             delta: -1,
-            element: content
+            element: this.parser!.executeRecipe(content)
         };
         return true;
     }
@@ -68,7 +68,7 @@ export class HTMLResourceContentIterator extends Iterator {
         this.currentIndex = index;
         this.currentElement = {
             delta: 1,
-            element: content
+            element: this.parser!.executeRecipe(content)
         };
         return true;
     }
@@ -81,35 +81,39 @@ export class HTMLResourceContentIterator extends Iterator {
     }
 
     private currentIndex: number | null = null;
-    private parsedElements: ParsedElements | null = null;
+    private parsedElementRecipes: ParsedElementRecipes | null = null;
 
-    private async elements(): Promise<ParsedElements> {
-        this.parsedElements ??= await this.parseElements();
-        return this.parsedElements;
+    private async elements(): Promise<ParsedElementRecipes> {
+        this.parsedElementRecipes ??= await this.parseElements();
+        return this.parsedElementRecipes;
     }
 
-    private async parseElements(): Promise<ParsedElements> {
+    private parser: ContentParser | null = null;
+
+    private async parseElements(): Promise<ParsedElementRecipes> {
         const raw = await this.resource.readAsString();
         const doc = (new DOMParser()).parseFromString(raw!, this.locator.type as DOMParserSupportedType);
-        const parser = new ContentParser(
+        this.parser = new ContentParser(
             doc,
             this.locator,
             this.locator.locations.getCssSelector() ? doc.querySelector(this.locator.locations.getCssSelector()!) as Element : null,
             this.beforeMaxLength
         );
 
-        TraverseNode(parser, doc.body);
-        return parser.result();
+        TraverseNode(this.parser, doc.body);
+        return this.parser.result();
     }
 }
 
 /**
- * Holds the result of parsing the HTML resource into a list of [ContentElement].
+ * Holds the result of parsing the HTML resource into a list of [ElementRecipe].
+ * The recipes can be used to generate ContentElement instances, but are used
+ * instead to reduce memory usage that happens due to string copies
  * The [startIndex] will be calculated from the element matched by the base
  * [locator], if possible. Defaults to 0.
  */
-interface ParsedElements {
-    elements: ContentElement[];
+interface ParsedElementRecipes {
+    elements: ElementRecipe[];
     startIndex: number;
 }
 
@@ -151,23 +155,63 @@ function TraverseNode(visitor: NodeVisitor, root: Node | null) {
     }
 }
 
-interface BreadcrumbData {
-    node: Node;
-    cssSelector?: string;
+interface LocatorRecipe {
+    cssSelectorNode: Node | undefined;
 }
+
+type TextSegmentRecipe = LocatorRecipe & {
+    text: string;
+    beforeRange: [number, number];
+    attributes: Attribute<any>[];
+}
+
+type TextElementRecipe = LocatorRecipe & {
+    text: string;
+    role: TextRole;
+    segments: TextSegmentRecipe[];
+}
+
+type ImageElementRecipe = LocatorRecipe & {
+    href: string;
+    caption: string | undefined;
+    attributes: Attribute<any>[];
+}
+
+type AVElementRecipe = LocatorRecipe & {
+    link: Link;
+}
+
+enum ElementRecipeType {
+    TextRecipe,
+    ImageRecipe,
+    AudioRecipe,
+    VideoRecipe
+}
+
+type ElementRecipe = {
+    type: ElementRecipeType.TextRecipe;
+    recipe: TextElementRecipe;
+} | {
+    type: ElementRecipeType.ImageRecipe;
+    recipe: ImageElementRecipe;
+} | {
+    type: ElementRecipeType.AudioRecipe | ElementRecipeType.VideoRecipe;
+    recipe: AVElementRecipe;
+};
 
 // Note that this whole thing is based off of JSoup's Node-related classes, with simplifications
 // https://jsoup.org/apidocs/org/jsoup/select/NodeTraversor.html
 class ContentParser implements NodeVisitor {
-    private readonly elements: ContentElement[] = [];
+    private readonly elementRecipes: ElementRecipe[] = [];
     private startIndex = 0;
-    private segmentsAcc: TextSegment[] = []; // Segments accumulated for the current element.
+    private segmentRecipesAcc: TextSegmentRecipe[] = []; // Segments accumulated for the current element.
     private textAcc = ""; // Text since the beginning of the current segment, after coalescing whitespaces.
     private wholeRawTextAcc: string | null = null; // Text content since the beginning of the resource, including whitespaces.
     private elementRawTextAcc = ""; // Text content since the beginning of the current element, including whitespaces.
     private rawTextAcc = ""; // Text content since the beginning of the current segment, including whitespaces.
     private currentLanguage: string | null = null; // Language of the current segment.
-    private breadcrumbs: BreadcrumbData[] = []; // LIFO stack of the current element's block ancestors.
+    private breadcrumbs: Node[] = []; // LIFO stack of the current element's block ancestors.
+    private recipeCssSelectorCache = new WeakMap<HTMLElement, string>();
 
     constructor(
         private doc: Document,
@@ -176,16 +220,109 @@ class ContentParser implements NodeVisitor {
         private beforeMaxLength: number
     ) { }
 
-    result(): ParsedElements {
+    result(): ParsedElementRecipes {
         return {
-            elements: this.elements,
+            elements: this.elementRecipes,
             startIndex: this.baseLocator.locations.progression === 1.0
-                ? this.elements.length : this.startIndex
-        } as ParsedElements;
+                ? this.elementRecipes.length : this.startIndex
+        } as ParsedElementRecipes;
+    }
+
+    executeRecipe(item: ElementRecipe): ContentElement {
+        const cssSelector = item.recipe.cssSelectorNode ? this.cssSelector(item.recipe.cssSelectorNode) : null;
+
+        if(item.type === ElementRecipeType.ImageRecipe) {
+            // Image
+            const recipe = item.recipe;
+            return new ImageElement(
+                new Locator({
+                    href: this.baseLocator.href,
+                    type: this.baseLocator.type,
+                    title: this.baseLocator.title,
+                    locations: new LocatorLocations(cssSelector ? {
+                        otherLocations: new Map([
+                            ["cssSelector", cssSelector]
+                        ])
+                    } : {})
+                }),
+                new Link({
+                    href: recipe.href
+                }),
+                recipe.caption,
+                recipe.attributes
+            );
+        } else if(item.type === ElementRecipeType.AudioRecipe || item.type === ElementRecipeType.VideoRecipe) {
+            // Audio or Video
+            const locator = new Locator({
+                href: this.baseLocator.href,
+                type: this.baseLocator.type,
+                title: this.baseLocator.title,
+                locations: new LocatorLocations(cssSelector ? {
+                    otherLocations: new Map([
+                        ["cssSelector", cssSelector]
+                    ])
+                } : {})
+            });
+            const recipe = item.recipe;
+
+            if(item.type === ElementRecipeType.VideoRecipe) {
+                return new VideoElement(
+                    locator,
+                    recipe.link
+                );
+            } else {
+                return new AudioElement(
+                    locator,
+                    recipe.link
+                );
+            }
+        } else if(item.type === ElementRecipeType.TextRecipe) {
+            // Text
+            const recipe = item.recipe;
+            const segments: TextSegment[] = recipe.segments.map(sr => {
+                const segmentCssSelector = sr.cssSelectorNode ? this.cssSelector(sr.cssSelectorNode) : null;
+                return new TextSegment(
+                    new Locator({
+                        href: this.baseLocator.href,
+                        type: this.baseLocator.type,
+                        title: this.baseLocator.title,
+                        text: trimmingTextLocator(sr.text, this.wholeRawTextAcc?.substring(sr.beforeRange[0], sr.beforeRange[1])),
+                        locations: new LocatorLocations(segmentCssSelector ? {
+                            otherLocations: new Map([
+                                ["cssSelector", segmentCssSelector]
+                            ])
+                        } : {})
+                    }),
+                    sr.text,
+                    sr.attributes
+                );
+            });
+    
+            return new TextElement(
+                new Locator({
+                    href: this.baseLocator.href,
+                    type: this.baseLocator.type,
+                    title: this.baseLocator.title,
+                    text: trimmingTextLocator(recipe.text, segments.length && segments[0].locator.text?.before || ""),
+                    locations: new LocatorLocations(cssSelector ? {
+                        otherLocations: new Map([
+                            ["cssSelector", cssSelector]
+                        ])
+                    } : {})
+                }),
+                recipe.role,
+                segments,
+            );
+        } else {
+            throw new Error(`Unknown recipe type`);
+        }
     }
 
     private cssSelector(node: Node) {
         const el = node as HTMLElement;
+
+        const cached = this.recipeCssSelectorCache.get(el);
+        if(cached) return cached;
 
         /**
          * The css-selector-generator library chokes when generating a selector and using element
@@ -218,6 +355,7 @@ class ContentParser implements NodeVisitor {
             root: this.doc
         });
         removedAttributes.forEach((value, key) => value.forEach(v => key.attributes.setNamedItem(v)));
+        this.recipeCssSelectorCache.set(el, sel);
         return sel;
     }
 
@@ -225,19 +363,12 @@ class ContentParser implements NodeVisitor {
     head(node: Node, depth: number) {
         if (node.nodeType == Node.ELEMENT_NODE) {
             const isBlock = !isInlineTag(node);
-            let cssSelector: string | null = null;
             if (isBlock) {
-                // Calculate CSS selector now because we'll definitely need it
-                cssSelector = this.cssSelector(node);
-
                 // Flush text
                 this.flushText();
 
                 // Add blocks to breadcrumbs
-                this.breadcrumbs.push({
-                    node,
-                    cssSelector
-                });
+                this.breadcrumbs.push(node);
             }
 
             const nodeName = node.nodeName.toUpperCase();
@@ -250,21 +381,6 @@ class ContentParser implements NodeVisitor {
             ) {
                 this.flushText();
 
-                if (!cssSelector) {
-                    cssSelector = this.cssSelector(node);
-                }
-                // Don't use Locator.copyWithLocations() because we don't want Locator.text or the pre-existing Locator.locations!
-                const elementLocator = new Locator({
-                    href: this.baseLocator.href,
-                    type: this.baseLocator.type,
-                    title: this.baseLocator.title,
-                    locations: new LocatorLocations({
-                        otherLocations: new Map([
-                            ["cssSelector", cssSelector]
-                        ])
-                    })
-                });
-
                 if (nodeName === "IMG") {
                     const el = node as HTMLImageElement;
                     const href = srcRelativeToHref(el, this.baseLocator.href);
@@ -273,17 +389,18 @@ class ContentParser implements NodeVisitor {
                         // Try fallback to title if no alt
                         alt = el.getAttribute("title");
                     if (href != null) {
-                        this.elements.push(new ImageElement(
-                            elementLocator,
-                            new Link({
-                                href
-                            }),
-                            undefined, // // FIXME: Get the caption from figcaption
-                            alt?.length ? [new Attribute(
-                                AttributeKeys.ACCESSIBILITY_LABEL,
-                                alt
-                            )] : []
-                        ))
+                        this.elementRecipes.push({
+                            type: ElementRecipeType.ImageRecipe,
+                            recipe: {
+                                href,
+                                caption: undefined, // FIXME: Get the caption from figcaption
+                                cssSelectorNode: node,
+                                attributes: alt?.length ? [new Attribute(
+                                    AttributeKeys.ACCESSIBILITY_LABEL,
+                                    alt
+                                )] : []
+                            }
+                        });
                     }
                 } else { // Audio or Video
                     const el = node as HTMLAudioElement | HTMLVideoElement;
@@ -314,15 +431,21 @@ class ContentParser implements NodeVisitor {
 
                     if (link) {
                         if (nodeName === "AUDIO") {
-                            this.elements.push(new AudioElement(
-                                elementLocator,
-                                link
-                            ));
+                            this.elementRecipes.push({
+                                type: ElementRecipeType.AudioRecipe,
+                                recipe: {
+                                    cssSelectorNode: node,
+                                    link,
+                                }
+                            });
                         } else if (nodeName === "VIDEO") {
-                            this.elements.push(new VideoElement(
-                                elementLocator,
-                                link
-                            ));
+                            this.elementRecipes.push({
+                                type: ElementRecipeType.VideoRecipe,
+                                recipe: {
+                                    cssSelectorNode: node,
+                                    link,
+                                }
+                            });
                         }
                     }
                 }
@@ -349,7 +472,7 @@ class ContentParser implements NodeVisitor {
             if (!isInlineTag(node)) {
                 if (
                     !this.breadcrumbs.length ||
-                    this.breadcrumbs.at(-1)?.node !== node
+                    this.breadcrumbs.at(-1) !== node
                 ) throw new Error("HTMLContentIterator: breadcrumbs mismatch"); // Kotlin does assert(breadcrumbs.last() == node) which throws
                 this.flushText();
                 this.breadcrumbs.pop();
@@ -364,26 +487,23 @@ class ContentParser implements NodeVisitor {
             this.startIndex === 0 &&
             this.startElement &&
             this.breadcrumbs.length &&
-            this.breadcrumbs.at(-1)?.node === this.startElement
+            this.breadcrumbs.at(-1) === this.startElement
         ) {
-            this.startIndex = this.elements.length;
+            this.startIndex = this.elementRecipes.length;
         }
 
-        if (!this.segmentsAcc.length) return;
+        if (!this.segmentRecipesAcc.length) return;
 
         // Trim the end of the last segment's text to get a cleaner output for the TextElement.
         // Only whitespaces between the segments are meaningful.
-        const lastSegment = this.segmentsAcc[this.segmentsAcc.length - 1]
-        this.segmentsAcc[this.segmentsAcc.length - 1] = new TextSegment(
-            lastSegment.locator,
-            trimUnicodeSpaceEnd(lastSegment.text),
-            lastSegment._attributes
+        this.segmentRecipesAcc[this.segmentRecipesAcc.length - 1].text = trimUnicodeSpaceEnd(
+            this.segmentRecipesAcc[this.segmentRecipesAcc.length - 1].text
         );
 
         // Determine the role of the element
         let bestRole = Body;
         if (this.breadcrumbs.length > 0) {
-            const el = this.breadcrumbs.at(-1)?.node as HTMLElement;
+            const el = this.breadcrumbs.at(-1) as HTMLElement;
             if(el.getAttributeNS("http://www.idpf.org/2007/ops", "type") === "footnote") {
                 bestRole = Footnote;
             } else {
@@ -407,53 +527,38 @@ class ContentParser implements NodeVisitor {
             }
         }
 
-        this.elements.push(new TextElement(
-            new Locator({
-                href: this.baseLocator.href,
-                type: this.baseLocator.type,
-                title: this.baseLocator.title,
-                text: trimmingTextLocator(this.elementRawTextAcc, (this.segmentsAcc.length && this.segmentsAcc[0]?.locator?.text?.before) || ""),
-                locations: new LocatorLocations(this.breadcrumbs.at(-1)?.cssSelector ? {
-                    otherLocations: new Map([
-                        ["cssSelector", this.breadcrumbs.at(-1)?.cssSelector]
-                    ])
-                } : {})
-            }),
-            bestRole,
-            [...this.segmentsAcc]
-        ));
+        this.elementRecipes.push({
+            type: ElementRecipeType.TextRecipe,
+            recipe: {
+                text: this.elementRawTextAcc,
+                role: bestRole,
+                segments: [...this.segmentRecipesAcc],
+                cssSelectorNode: this.breadcrumbs.at(-1),
+            }
+        });
         this.elementRawTextAcc = "";
-        this.segmentsAcc = [];
+        this.segmentRecipesAcc = [];
     }
 
     flushSegment() {
         let text = this.textAcc;
         const trimmedText = trimUnicodeSpace(text);
         if (!isBlank(trimmedText)) {
-            if (!this.segmentsAcc.length) {
+            if (!this.segmentRecipesAcc.length) {
                 text = trimUnicodeSpaceStart(text)
                 const whitespaceSuffix = (text.length && isBlank(text[text.length - 1])) ? text[text.length - 1] : "";
                 text = trimmedText + whitespaceSuffix;
             }
 
-            this.segmentsAcc.push(new TextSegment(
-                new Locator({
-                    href: this.baseLocator.href,
-                    type: this.baseLocator.type,
-                    title: this.baseLocator.title,
-                    text: trimmingTextLocator(text, this.wholeRawTextAcc?.substring(this.wholeRawTextAcc.length - this.beforeMaxLength)),
-                    locations: new LocatorLocations(this.breadcrumbs.at(-1)?.cssSelector ? {
-                        otherLocations: new Map([
-                            ["cssSelector", this.breadcrumbs.at(-1)?.cssSelector]
-                        ])
-                    } : {})
-                }),
+            this.segmentRecipesAcc.push({
                 text,
-                this.currentLanguage ? [new Attribute(
+                attributes: this.currentLanguage ? [new Attribute(
                     AttributeKeys.LANGUAGE,
                     this.currentLanguage
-                )] : []
-            ));
+                )] : [],
+                beforeRange: this.wholeRawTextAcc ? [this.wholeRawTextAcc.length - this.beforeMaxLength, this.wholeRawTextAcc.length] : [0, 0],
+                cssSelectorNode: this.breadcrumbs.at(-1)
+            });
         }
 
         if (this.rawTextAcc.length) {
