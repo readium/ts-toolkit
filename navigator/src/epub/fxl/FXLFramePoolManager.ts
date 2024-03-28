@@ -590,13 +590,16 @@ export default class FramePoolManager {
         return ret as DOMRect;
     }
 
-    get currentNumber() {
+    get currentNumbers(): number[] {
         if(this.perPage < 2) {
             const link = this.pub.readingOrder.items[this.currentSlide];
-            return link.properties?.otherProperties["number"];
+            return [link.properties?.otherProperties["number"]];
         }
         const spread = this.spreader.currentSpread(this.currentSlide, this.perPage);
-        return spread[0].properties?.otherProperties["number"];
+        return spread.length > 1 ? [
+            spread[0].properties?.otherProperties["number"],
+            spread[spread.length-1].properties?.otherProperties["number"]
+        ] : spread[0].properties?.otherProperties["number"];
     }
 
     deselect() {
