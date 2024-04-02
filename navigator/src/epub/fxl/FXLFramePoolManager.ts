@@ -597,9 +597,9 @@ export default class FramePoolManager {
         }
         const spread = this.spreader.currentSpread(this.currentSlide, this.perPage);
         return spread.length > 1 ? [
-            spread[0].properties?.otherProperties["number"],
-            spread[spread.length-1].properties?.otherProperties["number"]
-        ] : spread[0].properties?.otherProperties["number"];
+            spread[0].properties?.otherProperties["number"] as number,
+            spread[spread.length-1].properties?.otherProperties["number"] as number
+        ] : [spread[0].properties?.otherProperties["number"] as number];
     }
 
     deselect() {
