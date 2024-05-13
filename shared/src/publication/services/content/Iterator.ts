@@ -12,6 +12,10 @@ export class IllegalStateError extends Error {
  */
 export abstract class Iterator {
     /**
+     * Returns the current element to be read.
+     */
+    abstract current(): ContentElement | null;
+    /**
      * Returns true if the iterator has a next element, suspending the caller while processing it.
      */
     abstract hasNext(): Promise<boolean>;
