@@ -225,7 +225,8 @@ export default class FXLFrameManager {
 
     async activate(): Promise<void> {
         return new Promise<void>((res, _) => {
-            this.comms!.send("activate", undefined, () => {
+            if(!this.comms) return res(); // TODO: investigate when this is the case
+            this.comms?.send("activate", undefined, () => {
                 res();
             });
         });
