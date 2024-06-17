@@ -124,19 +124,25 @@ export default class FrameBlobBuider {
         return this.finalizeDOM(doc, this.burl, this.item.mediaType, true);
     }
 
+    // Has JS that may have side-effects when the document is loaded, without any user interaction
+    private hasExecutable(doc: Document): boolean {
+        // This is not a 100% comprehensive check of all possibilities for JS execution,
+        // but it covers what the prevention scripts cover. Other possibilities include:
+        // - <iframe> src
+        // - <img> with onload/onerror
+        // - <meta http-equiv="refresh" content="xxx">
+        return (
+            !!doc.querySelector("script") || // Any <script> elements
+            !!doc.querySelector("body[onload]:not(body[onload=''])") // <body> that executes JS on load
+        );
+    }
+
     private hasStyle(doc: Document): boolean {
         if(
-            doc.querySelector("link[rel='stylesheet']") ||
-            doc.querySelector("style")
+            doc.querySelector("link[rel='stylesheet']") || // Any CSS link
+            doc.querySelector("style") || // Any <style> element
+            doc.querySelector("[style]:not([style=''])") // Any element with style attribute set
         ) return true;
-
-        // Expensive, but probably rare because almost every EPUB has some sort of CSS in it
-        const elements = document.querySelectorAll("*");
-        for (let i = 0; i < elements.length; i++) {
-            if (elements[i].hasAttribute("style")) {
-                return true;
-            }
-        }
 
         return false;
     }
@@ -156,7 +162,7 @@ export default class FrameBlobBuider {
             patch.innerHTML = `audio[controls] { width: revert; height: revert; }`; // https://github.com/readium/readium-css/issues/94
             rcssBefore.after(patch);
 
-            // Readium CSS default
+            // Readium CSS defaults
             if(!this.hasStyle(doc))
                 rcssBefore.after(styleify(doc, cached("ReadiumCSS-default", () => blobify(stripCSS(readiumCSSDefault), "text/css"))))
 
@@ -173,9 +179,10 @@ export default class FrameBlobBuider {
         }
 
         // Inject script to prevent in-publication scripts from executing until we want them to
-        doc.head.firstChild!.before(rBefore(doc));
-        doc.head.firstChild!.before(cssSelectorGenerator(doc));
-        doc.head.appendChild(rAfter(doc));
+        const hasExecutable = this.hasExecutable(doc);
+        if(hasExecutable) doc.head.firstChild!.before(rBefore(doc));
+        doc.head.firstChild!.before(cssSelectorGenerator(doc)); // CSS selector utility
+        if(hasExecutable) doc.head.appendChild(rAfter(doc)); // Another execution prevention script
 
 
         // Make blob from doc
