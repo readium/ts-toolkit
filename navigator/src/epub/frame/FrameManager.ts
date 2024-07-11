@@ -64,7 +64,7 @@ export default class FrameManager {
         if(this.frame.parentElement) {
             if(this.comms === undefined) return;
             return new Promise((res, _) => {
-                this.comms?.send("unfocus", undefined, (ok: boolean) => {
+                this.comms?.send("unfocus", undefined, (_: boolean) => {
                     this.comms?.halt();
                     res();
                 });

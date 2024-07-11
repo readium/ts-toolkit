@@ -1,6 +1,7 @@
 import { Comms } from "../../comms/comms";
-import { ReadiumWindow, Setup } from "./Setup";
+import { Setup } from "./Setup";
 import { removeProperty, setProperty } from "../../helpers/css";
+import { ReadiumWindow } from "../../helpers/dom";
 
 const VIEWPORT_META_TAG_ID = "readium-viewport";
 

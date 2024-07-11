@@ -378,11 +378,10 @@ export class Decorator extends Module {
     static readonly moduleName: ModuleName = "decorator";
     private resizeObserver!: ResizeObserver;
     private wnd!: Window;
-    private comms!: Comms;
-    private readonly lastSize = {
+    /*private readonly lastSize = {
         width: 0,
         height: 0
-    };
+    };*/
     private resizeFrame = 0;
 
     private lastGroupId = 0;
@@ -406,7 +405,6 @@ export class Decorator extends Module {
 
     mount(wnd: Window, comms: Comms): boolean {
         this.wnd = wnd;
-        this.comms = comms;
 
         comms.register("decorate", Decorator.moduleName, (data, ack) => {
             const req = data as DecoratorRequest;

@@ -56,10 +56,10 @@ export default class FramePoolManager {
         // NEW
         this.spreader = new FXLSpreader(this.pub);
         this.containerHeightCached = container.clientHeight;
-        this.resizeBoundHandler = this.resizeHandler.bind(this);
-        // TODO unbind
-        window.addEventListener("resize", this.resizeBoundHandler);
-        window.addEventListener("orientationchange", this.resizeBoundHandler);
+        this.resizeBoundHandler = this.nativeResizeHandler.bind(this);
+
+        this.ownerWindow.addEventListener("resize", this.resizeBoundHandler);
+        this.ownerWindow.addEventListener("orientationchange", this.resizeBoundHandler);
 
         this.bookElement = document.createElement("div");
         this.bookElement.ariaLabel = "Book";
@@ -98,6 +98,10 @@ export default class FramePoolManager {
     public get doNotDisturb() {
         // TODO other situations
         return this.peripherals.pan.touchID > 0;
+    }
+
+    private nativeResizeHandler(_: Event) {
+        this.resizeHandler(true);
     }
 
     /**
@@ -362,11 +366,18 @@ export default class FramePoolManager {
             return false;
     }
 
+    get ownerWindow() {
+        return this.container.ownerDocument.defaultView || window;
+    }
+
 
     // OLD
 
 
     async destroy() {
+        this.ownerWindow.removeEventListener("resize", this.resizeBoundHandler);
+        this.ownerWindow.removeEventListener("orientationchange", this.resizeBoundHandler);
+
         // Wait for all in-progress loads to complete
         let iit = this.inprogress.values();
         let inp = iit.next();
@@ -445,7 +456,7 @@ export default class FramePoolManager {
         }
     }
 
-    async update(pub: Publication, locator: Locator, modules: ModuleName[], force=false) {
+    async update(pub: Publication, locator: Locator, modules: ModuleName[], _force=false) {
         let i = this.pub.readingOrder.items.findIndex(l => l.href === locator.href);
         if(i < 0) throw Error("Href not found in reading order");
 

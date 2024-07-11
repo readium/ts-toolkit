@@ -182,7 +182,7 @@ export default class FXLFrameManager {
             this.deselect();
             if(this.comms === undefined) return;
             return new Promise((res, _) => {
-                this.comms?.send("unfocus", undefined, (ok: boolean) => {
+                this.comms?.send("unfocus", undefined, (_: boolean) => {
                     this.comms?.halt();
                     this.showPromise = undefined;
                     res();
@@ -214,7 +214,7 @@ export default class FXLFrameManager {
         if(this.comms) this.comms.resume();
         else this.comms = new FrameComms(this.frame.contentWindow!, this.source);
         this.showPromise = new Promise<void>((res, _) => {
-            this.comms!.send("focus", undefined, (ok: boolean) => {
+            this.comms!.send("focus", undefined, (_: boolean) => {
                 // this.showPromise = undefined; Don't do this
                 this.update(this.cachedPage);
                 res();

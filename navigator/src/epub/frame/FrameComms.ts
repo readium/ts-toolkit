@@ -20,7 +20,8 @@ export class FrameComms {
     private readonly wnd: Window;
     private readonly registry = new Map<string, RegistryValue>();
     private readonly gc: number;
-    private readonly origin: string
+    // @ts-ignore
+    private readonly origin: string;
     public readonly channelId: string;
     private _ready = false;
     private _listener: FrameCommsListener | undefined;
@@ -85,6 +86,7 @@ export class FrameComms {
                 v.cb(!!dt.data);
                 return;
             }
+            // @ts-ignore
             case "_pong": {
                 this._ready = true;
             }
