@@ -4,6 +4,7 @@ on:
     paths:
       - 'shared/**'
       - '.github/workflows/CI.yml'
+      - '.pnpm-lock.yaml'
 
 jobs:
   build:
