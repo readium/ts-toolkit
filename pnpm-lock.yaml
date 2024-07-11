@@ -105,19 +105,19 @@ importers:
         specifier: ^3.4.0
         version: 3.4.0
       '@material/web':
-        specifier: ^1.5.0
+        specifier: ^1.4.1
         version: 1.5.0
       '@readium/navigator':
-        specifier: workspace:*
+        specifier: workspace:1.2.0
         version: link:../../navigator
       '@readium/navigator-html-injectables':
-        specifier: workspace:*
+        specifier: workspace:0.0.1
         version: link:../../navigator-html-injectables
       '@readium/shared':
-        specifier: workspace:*
+        specifier: workspace:1.2.0
         version: link:../../shared
       css-selector-generator:
-        specifier: ^3.6.7
+        specifier: ^3.6.4
         version: 3.6.7
       readium-css:
         specifier: github:readium/readium-css
@@ -126,7 +126,7 @@ importers:
         specifier: ^5.4.5
         version: 5.4.5
       vite:
-        specifier: ^4.5.3
+        specifier: ^4.4.9
         version: 4.5.3
 
 packages:
