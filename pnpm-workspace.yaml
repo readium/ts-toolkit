@@ -2,3 +2,4 @@ packages:
   - 'shared'
   - 'navigator'
   - 'navigator-html-injectables'
+  - 'testapp/vanilla'

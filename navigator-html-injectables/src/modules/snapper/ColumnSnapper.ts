@@ -164,7 +164,7 @@ export class ColumnSnapper extends Snapper {
     }
     private readonly onTouchStarter = this.onTouchStart.bind(this);
 
-    onTouchEnd(e: TouchEvent) {
+    onTouchEnd(_: TouchEvent) {
         if(this.touchState === ScrollTouchState.MOVE) {
             // Get the horizontal drag distance
             const dragOffset = this.dragOffset();

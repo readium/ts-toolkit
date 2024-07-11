@@ -18,15 +18,15 @@ export enum VerticalThird {
 }
 
 export interface NinthPoint {
-    X: HorizontalThird;
-    Y: VerticalThird;
+    X: HorizontalThird | null;
+    Y: VerticalThird | null;
 }
 
 export interface BibiEvent {
-    Target: EventTarget;
-    Coord: Point;
-    Ratio: Point;
-    Division: NinthPoint;
+    Target: EventTarget | null;
+    Coord: Point | null;
+    Ratio: Point | null;
+    Division: NinthPoint | null;
 }
 
 export default class FXLCoordinator {
@@ -50,7 +50,7 @@ export default class FXLCoordinator {
 
     private outerWidth = 0;
     private outerHeight = 0;
-    refreshOuterPixels(r: DOMRect) {
+    refreshOuterPixels(_: DOMRect) {
         if(sML.OS.iOS) return; // No need on iOS
         this.outerHeight = window.outerHeight - window.innerHeight;
         if(sML.OS.Android && sML.UA.Chrome) {
@@ -116,7 +116,7 @@ export default class FXLCoordinator {
             Ratio: null,
             Target: null
         };
-        const Coord = this.getBibiEventCoord(Eve);
+        const Coord = this.getBibiEventCoord(Eve as TouchEvent | MouseEvent);
         let FlipperWidth = 0.3; // TODO flipper-width
         const Ratio = {
             X: Coord.X / window.innerWidth,

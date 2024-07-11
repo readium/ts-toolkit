@@ -4,7 +4,7 @@
   "compilerOptions": {
     "module": "esnext",
     "target": "es6",
-    "lib": ["esnext","dom","dom.iterable"],
+    "lib": ["esnext", "es2022.intl", "dom", "dom.iterable"],
     "importHelpers": true,
     // output .d.ts declaration files for consumers
     "declaration": true,

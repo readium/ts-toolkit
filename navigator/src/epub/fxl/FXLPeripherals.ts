@@ -102,7 +102,7 @@ export default class FXLPeripherals {
     private readonly btouchendHandler = this.touchendHandler.bind(this);
     private readonly btouchmoveHandler = this.touchmoveHandler.bind(this);
     private readonly bdblclickHandler = this.dblclickHandler.bind(this);
-    private readonly bclickHandler = this.clickHandler.bind(this);
+    // private readonly bclickHandler = this.clickHandler.bind(this);
     private readonly bmousedownHandler = this.mousedownHandler.bind(this);
     private readonly bmouseupHandler = this.mouseupHandler.bind(this);
     private readonly bmousemoveHandler = this.mousemoveHandler.bind(this);
@@ -172,7 +172,7 @@ export default class FXLPeripherals {
         // item.addEventListener("click", this.bclickHandler as EventListener);
     }
 
-    clickHandler(e: MouseEvent) {
+    clickHandler(_: MouseEvent) {
         // e.preventDefault();
     }
 
@@ -239,6 +239,7 @@ export default class FXLPeripherals {
                 }
                 return;
             }
+            // @ts-ignore
             case 1:
                 this.pan.touchID = e.touches[0].identifier;
                 if(this.debugger?.show) this.debugger.DOM.touch1.style.display = "";
@@ -358,7 +359,7 @@ export default class FXLPeripherals {
         let updateBook = false;
 
         const oldScale = this.scale;
-        const oldDistance = this.pinch.startDistance;
+        // const oldDistance = this.pinch.startDistance;
         if(this.dragState === 2 && currentDistance) {
             this.pinch.touchN++;
             if(this.pinch.touchN < 4) return;
@@ -503,10 +504,11 @@ export default class FXLPeripherals {
         }
     }
 
-    private dtimer: number;
-    private pdblclick: boolean;
-    private disableDblClick: boolean;
-    dblclickHandler(e: MouseEvent) {
+    private dtimer!: number;
+    // @ts-ignore
+    private pdblclick!: boolean;
+    private disableDblClick!: boolean;
+    dblclickHandler(_: MouseEvent) {
         clearTimeout(this.dtimer);
         this.pdblclick = true;
         this.dtimer = window.setTimeout(() => this.pdblclick = false, 200);

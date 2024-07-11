@@ -5,6 +5,8 @@ import FXLFramePoolManager from "./fxl/FXLFramePoolManager";
 import { CommsEventKey, FXLModules, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables/src";
 import { FrameClickEvent } from "@readium/navigator-html-injectables/src/modules/ReflowablePeripherals";
 import * as path from "path-browserify";
+import FXLFrameManager from "./fxl/FXLFrameManager";
+import FrameManager from "./frame/FrameManager";
 
 export type ManagerEventKey = "zoom";
 
@@ -71,7 +73,7 @@ export class EpubNavigator extends VisualNavigator {
             this.positions = await this.pub.positionsFromManifest();
         if(this.layout === EPUBLayout.fixed) {
             this.framePool = new FXLFramePoolManager(this.container, this.positions, this.pub);
-            this.framePool.listener = (key: CommsEventKey, data: unknown) => {
+            this.framePool.listener = (key: CommsEventKey | ManagerEventKey, data: unknown) => {
                 this.eventListener(key, data);
             }
         } else
@@ -85,7 +87,7 @@ export class EpubNavigator extends VisualNavigator {
      * Exposed to the public to compensate for lack of implemented readium conveniences
      * TODO remove when settings management is incorporated
      */
-    public get _cframes() {
+    public get _cframes(): (FXLFrameManager | FrameManager | undefined)[] {
         return this.framePool.currentFrames;
     }
 
@@ -238,10 +240,10 @@ export class EpubNavigator extends VisualNavigator {
 
     // Start listening to messages from the current iframe
     private attachListener() {
-        const vframes = this._cframes.filter(f => !!f);
+        const vframes = this._cframes.filter(f => !!f) as (FXLFrameManager | FrameManager)[];
         if(vframes.length === 0) throw Error("no cframe to attach listener to");
-        this._cframes.forEach(f => {
-            if(f.msg) f.msg.listener = (key: CommsEventKey, value: unknown) => {
+        vframes.forEach(f => {
+            if(f.msg) f.msg.listener = (key: CommsEventKey | ManagerEventKey, value: unknown) => {
                 this.eventListener(key, value);
             }
         })
@@ -357,7 +359,7 @@ export class EpubNavigator extends VisualNavigator {
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
     }
 
-    public goBackward(animated: boolean, cb: (ok: boolean) => void): void {
+    public goBackward(_: boolean, cb: (ok: boolean) => void): void {
         if(this.layout === EPUBLayout.fixed) {
             this.changeResource(-1);
             cb(true);
@@ -373,7 +375,7 @@ export class EpubNavigator extends VisualNavigator {
         }
     }
 
-    public goForward(animated: boolean, cb: (ok: boolean) => void): void {
+    public goForward(_: boolean, cb: (ok: boolean) => void): void {
         if(this.layout === EPUBLayout.fixed) {
             this.changeResource(1);
             cb(true);
@@ -475,10 +477,11 @@ export class EpubNavigator extends VisualNavigator {
                 // Attempt to go to a progression in the resource
                 this._cframes[0]!.msg!.send("go_progression", progression, (ok) => res(ok));
             });
+        else done = true;
         cb(done);
     }
 
-    public go(locator: Locator, animated: boolean, cb: (ok: boolean) => void): void {
+    public go(locator: Locator, _: boolean, cb: (ok: boolean) => void): void {
         const href = locator.href.split("#")[0];
         let link = this.pub.readingOrder.findWithHref(href);
         if(!link) {

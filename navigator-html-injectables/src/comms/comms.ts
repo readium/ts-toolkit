@@ -25,7 +25,7 @@ export type CommsCallback = (data: unknown, ack: CommsAck) => void; // TODO: may
  */
 export class Comms {
     private readonly wnd: Window;
-    private destination: MessageEventSource | null = null;
+    private destination: Window | null = null;
     private registrar = new Map<CommsCommandKey, Registrant[]>();
     private origin: string = "";
     private channelId: string = "";
@@ -43,7 +43,7 @@ export class Comms {
         if(data.key === "_ping") {
             // The "ping" gives us a destination we bind to for posting events
             if(!this.destination) {
-                this.destination = event.source;
+                this.destination = event.source as Window;
                 this.origin = event.origin;
                 this.channelId = data._channel;
 
@@ -160,6 +160,7 @@ export class Comms {
         } catch (error) {
             // Fallback for when browser doesn't support WindowPostMessageOptions
             // For example, older Safari versions
+            if(transfer.length > 0) throw error;
             this.destination.postMessage(msg, this.origin, transfer);
         }
     }

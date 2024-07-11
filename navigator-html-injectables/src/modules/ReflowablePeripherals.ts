@@ -61,7 +61,7 @@ export class ReflowablePeripherals extends Module {
     }
     private readonly onPointerMove = this.onPointMove.bind(this);
 
-    onPointDown(event: PointerEvent) {
+    onPointDown() {
         this.pointerMoved = false;
     }
     private readonly onPointerDown = this.onPointDown.bind(this);
