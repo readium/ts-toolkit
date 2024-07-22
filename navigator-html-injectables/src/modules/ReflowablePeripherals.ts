@@ -35,7 +35,7 @@ export class ReflowablePeripherals extends Module {
         if(!event.isPrimary) return;
 
         const pixelRatio = this.wnd.devicePixelRatio;
-        event.preventDefault(); // TODO when not to prevent?
+        event.preventDefault(); // May have side-effects
         this.comms.send(event.pointerType === "touch" ? "tap" : "click", {
             defaultPrevented: event.defaultPrevented,
             x: event.clientX * pixelRatio,
@@ -67,8 +67,22 @@ export class ReflowablePeripherals extends Module {
     private readonly onPointerDown = this.onPointDown.bind(this);
 
     onClick(event: MouseEvent) {
-        // To prevent certain browser actions
-        event.preventDefault(); // TODO when not to prevent?
+        event.preventDefault(); // To prevent certain browser actions. May have side-effects
+        if(!event.isTrusted) {
+            // Synthetic events (probably triggered by some JavaScript) are probably not going to
+            // also send a `pointerup` event, so we have to compensate by doing so for them
+            const synthEvent = new PointerEvent("pointerup", {
+                isPrimary: true,
+                pointerType: "mouse", // Not really a better choice than this
+                clientX: event.clientX,
+                clientY: event.clientY,
+            });
+            // Override properties we cannot set in the constructor
+            Object.defineProperty(synthEvent, 'target', {writable: false, value: event.target});
+            Object.defineProperty(synthEvent, 'defaultPrevented', {writable: false, value: event.defaultPrevented });
+            // Trigger `pointerup` event
+            this.onPointUp(synthEvent);
+        }
     }
     private readonly onClicker = this.onClick.bind(this);
 
