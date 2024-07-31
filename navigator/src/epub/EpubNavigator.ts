@@ -3,10 +3,8 @@ import { VisualNavigator } from "../";
 import FramePoolManager from "./frame/FramePoolManager";
 import FXLFramePoolManager from "./fxl/FXLFramePoolManager";
 import { CommsEventKey, FXLModules, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables/src";
-import { FrameClickEvent } from "@readium/navigator-html-injectables/src/modules/ReflowablePeripherals";
+import { BasicTextSelection, FrameClickEvent } from "@readium/navigator-html-injectables/src/modules/ReflowablePeripherals";
 import * as path from "path-browserify";
-import FXLFrameManager from "./fxl/FXLFrameManager";
-import FrameManager from "./frame/FrameManager";
 
 export type ManagerEventKey = "zoom";
 
@@ -19,6 +17,7 @@ export interface EpubNavigatorListeners {
     miscPointer: (amount: number) => void;
     customEvent: (key: string, data: unknown) => void;
     handleLocator: (locator: Locator) => boolean; // Retrun true to prevent handling here
+    textSelected: (selection: BasicTextSelection) => void;
     // showToc: () => void;
 }
 
@@ -31,6 +30,7 @@ const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListe
     miscPointer: listeners.miscPointer || (() => {}),
     customEvent: listeners.customEvent || (() => {}),
     handleLocator: listeners.handleLocator || (() => false),
+    textSelected: listeners.textSelected || (() => {})
 })
 
 export class EpubNavigator extends VisualNavigator {
@@ -121,6 +121,9 @@ export class EpubNavigator extends VisualNavigator {
                     text: loc?.text
                 });
                 this.listeners.positionChanged(this.currentLocation);
+                break;
+            case "text_selected":
+                this.listeners.textSelected(data as BasicTextSelection);
                 break;
             case "click":
             case "tap":

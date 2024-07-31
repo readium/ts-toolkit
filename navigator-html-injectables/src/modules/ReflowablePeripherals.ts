@@ -12,6 +12,15 @@ export interface FrameClickEvent {
     y: number;
 }
 
+export interface BasicTextSelection {
+    text: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    targetFrameSrc: string;
+}
+
 export class ReflowablePeripherals extends Module {
     static readonly moduleName = "reflowable_peripherals";
     private wnd!: Window;
@@ -20,13 +29,31 @@ export class ReflowablePeripherals extends Module {
     private pointerMoved = false;
 
     onPointUp(event: PointerEvent) {
-        if(this.pointerMoved) {
+        const selection = this.wnd.getSelection();
+        if (!!selection && selection.toString()?.length > 0) {
+            const domRectList = selection.getRangeAt(0)?.getClientRects();
+            // Sanity check to avoid sending empty selections
+            if (!domRectList || domRectList.length === 0) {
+                return;
+            }
+            const rect = domRectList[0];
+            const textSelection = {
+                text: selection.toString(),
+                x: rect.x,
+                y: rect.y,
+                width: rect.width,
+                height: rect.height,
+                targetFrameSrc: this.wnd?.location?.href,
+            }
+            this.comms.send("text_selected", textSelection as BasicTextSelection);
+        }
+        if (this.pointerMoved) {
             // If the pointer moved while tapping it's not a tap to consider
             this.pointerMoved = false;
             return;
         }
 
-        if(!this.wnd.getSelection()?.isCollapsed)
+        if(!selection?.isCollapsed)
             // There's an ongoing selection, the tap will dismiss it so we don't forward it.
             return;
 
@@ -66,6 +93,13 @@ export class ReflowablePeripherals extends Module {
     }
     private readonly onPointerDown = this.onPointDown.bind(this);
 
+    onContext(event: MouseEvent) {
+        // If the context menu is triggered by a long press, we manage the event using the pointup event
+        this.onPointUp(event as PointerEvent);
+        this.pointerMoved = false;
+    }
+    private readonly onContextMenu = this.onContext.bind(this);
+
     onClick(event: MouseEvent) {
         event.preventDefault(); // To prevent certain browser actions. May have side-effects
         if(!event.isTrusted) {
@@ -91,6 +125,7 @@ export class ReflowablePeripherals extends Module {
         this.comms = comms;
         wnd.document.addEventListener("pointerdown", this.onPointerDown);
         wnd.document.addEventListener("pointerup", this.onPointerUp);
+        wnd.document.addEventListener("contextmenu", this.onContextMenu);
         wnd.document.addEventListener("pointermove", this.onPointerMove);
         wnd.document.addEventListener("click", this.onClicker);
 
@@ -101,6 +136,7 @@ export class ReflowablePeripherals extends Module {
     unmount(wnd: Window, comms: Comms): boolean {
         wnd.document.removeEventListener("pointerdown", this.onPointerDown);
         wnd.document.removeEventListener("pointerup", this.onPointerUp);
+        wnd.document.removeEventListener("contextmenu", this.onContextMenu);
         wnd.document.removeEventListener("pointermove", this.onPointerMove);
         wnd.document.removeEventListener("click", this.onClicker);
 
