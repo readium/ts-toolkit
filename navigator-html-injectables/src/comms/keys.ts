@@ -13,7 +13,8 @@ export type CommsEventKey =
     "no_less" |
     "swipe" |
     "progress" |
-    "first_visible_locator";
+    "first_visible_locator" |
+    "text_selected";
 ;
 
 export type CommsCommandKey =
