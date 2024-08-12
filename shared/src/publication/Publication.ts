@@ -10,6 +10,8 @@ import { Metadata } from './Metadata';
 import { EmptyFetcher, Fetcher } from '../fetcher/Fetcher';
 import { PublicationCollection } from './PublicationCollection';
 import { Resource } from '../fetcher/Resource';
+import { GuidedNavigation } from "./GuidedNavigation";
+import { URITemplate } from "../util";
 
 export type ServiceFactory = () => null;
 
@@ -89,6 +91,51 @@ export class Publication {
     return (positionListJSON['positions'] as unknown[]) // Get the array for the positions key
       .map(pos => Locator.deserialize(pos)) // Parse locators
       .filter(l => l !== undefined) as Locator[]; // Filter out failures
+  }
+
+  public async guideForLink(link: Link): Promise<GuidedNavigation | undefined> {
+    const findGNLink = (l: Link): Link | undefined => l.alternates?.findWithMediaType(
+      'application/vnd.readium.guided-navigation+json'
+    );
+
+    let guidedNavigationLink = findGNLink(link);
+    if(!guidedNavigationLink) {
+      // If provided link doesn't have a guided navigation link,
+      // search through the manfiest for a matching Link based on the `href`
+      const foundLink = this.linkWithHref(link.href);
+      if (foundLink !== undefined) {
+        // A Link was found, attempt to find a guided navigation link
+        guidedNavigationLink = findGNLink(foundLink);
+      }
+    }
+
+    if(!guidedNavigationLink) {
+      // Still unable to find a guided navigation link, try to use the manifest's global document
+      guidedNavigationLink = this.manifest.links.findWithMediaType(
+        'application/vnd.readium.guided-navigation+json'
+      );
+    }
+
+    // Unable to find any guided navigation Link, give up
+    if(!guidedNavigationLink) return;
+
+    let href = guidedNavigationLink.href;
+    if(guidedNavigationLink.templated) {
+      // The manifest's guided navigation link is templated, expand it
+      const template = new URITemplate(href);
+      const params: { [param: string]: string } = {};
+      if(template.parameters.has('ref')) {
+        // The template has a `ref` parameter that could be used to reduce the returned doc's size
+        params['ref'] = link.href;
+      }
+      href = new URITemplate(href).expand(params);
+    }
+
+    // Fetch the guided navigation document
+    const guidedNavigationJSON = (await this.get(new Link({
+      href,
+    })).readAsJSON());
+    return GuidedNavigation.deserialize(guidedNavigationJSON);
   }
 
   /**
