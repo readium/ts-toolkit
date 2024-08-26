@@ -95,7 +95,7 @@ export class Publication {
 
   public async guideForLink(link: Link): Promise<GuidedNavigation | undefined> {
     const findGNLink = (l: Link): Link | undefined => l.alternates?.findWithMediaType(
-      'application/vnd.readium.guided-navigation+json'
+      'application/guided-navigation+json'
     );
 
     let guidedNavigationLink = findGNLink(link);
@@ -112,7 +112,7 @@ export class Publication {
     if(!guidedNavigationLink) {
       // Still unable to find a guided navigation link, try to use the manifest's global document
       guidedNavigationLink = this.manifest.links.findWithMediaType(
-        'application/vnd.readium.guided-navigation+json'
+        'application/guided-navigation+json'
       );
     }
 
