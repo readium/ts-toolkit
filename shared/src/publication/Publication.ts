@@ -10,7 +10,7 @@ import { Metadata } from './Metadata';
 import { EmptyFetcher, Fetcher } from '../fetcher/Fetcher';
 import { PublicationCollection } from './PublicationCollection';
 import { Resource } from '../fetcher/Resource';
-import { GuidedNavigation } from "./GuidedNavigation";
+import { GuidedNavigationDocument } from "./GuidedNavigation";
 import { URITemplate } from "../util";
 
 export type ServiceFactory = () => null;
@@ -93,7 +93,7 @@ export class Publication {
       .filter(l => l !== undefined) as Locator[]; // Filter out failures
   }
 
-  public async guideForLink(link: Link): Promise<GuidedNavigation | undefined> {
+  public async guideForLink(link: Link): Promise<GuidedNavigationDocument | undefined> {
     const findGNLink = (l: Link): Link | undefined => l.alternates?.findWithMediaType(
       'application/guided-navigation+json'
     );
@@ -135,7 +135,7 @@ export class Publication {
     const guidedNavigationJSON = (await this.get(new Link({
       href,
     })).readAsJSON());
-    return GuidedNavigation.deserialize(guidedNavigationJSON);
+    return GuidedNavigationDocument.deserialize(guidedNavigationJSON);
   }
 
   /**
