@@ -168,7 +168,7 @@ export class GuidedNavigationObject {
 
     private parseTimer(times: string): [number?, number?] {
         if(!times || !times.startsWith("t=")) return [undefined, undefined];
-        const ts = times.substring(2).split(',').map(t => parseInt(t));
+        const ts = times.substring(2).split(',').map(t => parseFloat(t));
         if(ts.length === 1) return [isNaN(ts[0]) ? undefined : ts[0], undefined];
         if(ts.length > 2) return [undefined, undefined];
         return [isNaN(ts[0]) ? undefined : ts[0], isNaN(ts[1]) ? undefined : ts[1]];
