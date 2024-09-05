@@ -1,6 +1,6 @@
 import './style.css'
 
-import { FrameClickEvent } from "@readium/navigator-html-injectables/src/modules/ReflowablePeripherals";
+import { BasicTextSelection, FrameClickEvent } from "@readium/navigator-html-injectables/src/modules/ReflowablePeripherals";
 import { EpubNavigator, EpubNavigatorListeners } from "@readium/navigator/src/"
 import { Locator, Manifest, Publication } from "@readium/shared/src";
 import { Fetcher } from "@readium/shared/src/fetcher";
@@ -67,8 +67,8 @@ async function load() {
                         );
                     })*/
                     nav._cframes.forEach((frameManager: FrameManager | FXLFrameManager | undefined) => {
-                        if(frameManager) p.observe(frameManager.window);
-                    })
+                        if (frameManager) p.observe(frameManager.window);
+                    });
                     p.observe(window);
                 },
                 positionChanged: function (_locator: Locator): void {
@@ -84,23 +84,24 @@ async function load() {
                 },
                 miscPointer: function (_amount: number): void {
                 },
-                
+
                 customEvent: function (_key: string, _data: unknown): void {
                 },
                 handleLocator: function (locator: Locator): boolean {
                     const href = locator.href;
-                    if (
-                        href.startsWith("http://") ||
+                    if (href.startsWith("http://") ||
                         href.startsWith("https://") ||
                         href.startsWith("mailto:") ||
-                        href.startsWith("tel:")
-                    ) {
-                        if(confirm(`Open "${href}" ?`))
+                        href.startsWith("tel:")) {
+                        if (confirm(`Open "${href}" ?`))
                             window.open(href, "_blank");
                     } else {
                         console.warn("Unhandled locator", locator);
                     }
                     return false;
+                },
+                textSelected: function (_selection: BasicTextSelection): void {
+                    throw new Error('Function not implemented.');
                 }
             }
             const nav = new EpubNavigator(container, publication, listeners);

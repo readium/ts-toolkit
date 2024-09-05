@@ -21,9 +21,9 @@
     "embedded"
   ],
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --minify --sourcemap --target=es6,chrome58,firefox57,safari11,edge16 --outfile=dist/index.js"
+    "build": "tsc && vite build"
   },
-  "main": "dist/index.js",
+  "main": "dist/index.mjs",
   "types": "types/index.d.ts",
   "files": [
     "dist",
@@ -31,19 +31,15 @@
     "types"
   ],
   "engines": {
-    "node": ">=14"
+    "node": ">=18"
   },
-  "prettier": {
-    "printWidth": 80,
-    "semi": true,
-    "singleQuote": true,
-    "trailingComma": "es5"
-  },
-  "module": "dist/index.js",
+  "module": "dist/index.mjs",
   "devDependencies": {
     "@juggle/resize-observer": "^3.4.0",
     "@readium/shared": "workspace:1.2.0",
     "css-selector-generator": "^3.6.4",
-    "tslib": "^2.6.1"
+    "tslib": "^2.6.1",
+    "typescript": "^5.4.5",
+    "vite": "^4.4.9"
   }
 }

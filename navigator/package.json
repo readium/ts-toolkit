@@ -17,7 +17,7 @@
     "web",
     "epub"
   ],
-  "main": "dist/index.js",
+  "main": "dist/index.mjs",
   "types": "types/index.d.ts",
   "files": [
     "dist",
@@ -28,15 +28,9 @@
     "node": ">=14"
   },
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --minify --sourcemap --target=es6 --outfile=dist/index.js"
+    "build": "tsc && vite build"
   },
-  "prettier": {
-    "printWidth": 80,
-    "semi": true,
-    "singleQuote": true,
-    "trailingComma": "es5"
-  },
-  "module": "dist/index.js",
+  "module": "dist/index.mjs",
   "devDependencies": {
     "@readium/navigator-html-injectables": "workspace:0.0.1",
     "@readium/shared": "workspace:1.2.0",
@@ -44,6 +38,8 @@
     "css-selector-generator": "^3.6.4",
     "path-browserify": "^1.0.1",
     "readium-css": "github:readium/readium-css",
-    "tslib": "^2.5.2"
+    "tslib": "^2.5.2",
+    "typescript": "^5.4.5",
+    "vite": "^4.4.9"
   }
 }
