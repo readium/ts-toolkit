@@ -360,7 +360,7 @@ class ContentParser implements NodeVisitor {
     }
 
     // Implements NodeTraversor
-    head(node: Node, depth: number) {
+    head(node: Node, _depth: number) {
         if (node.nodeType == Node.ELEMENT_NODE) {
             const isBlock = !isInlineTag(node);
             if (isBlock) {
@@ -458,7 +458,7 @@ class ContentParser implements NodeVisitor {
     }
 
     // Implements NodeTraversor
-    tail(node: Node, depth: number) {
+    tail(node: Node, _depth: number) {
         if (node.nodeType === Node.TEXT_NODE && !isBlank(node.textContent)) {
             const language = elementLanguage(node.parentElement);
             if (this.currentLanguage !== language) {
