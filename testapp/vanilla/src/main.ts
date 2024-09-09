@@ -1,7 +1,7 @@
 import './style.css'
 
 import { BasicTextSelection, FrameClickEvent } from "@readium/navigator-html-injectables/src/modules/ReflowablePeripherals";
-import { EpubNavigator, EpubNavigatorListeners } from "@readium/navigator/src/"
+import { EpubNavigator, EpubNavigatorListeners } from "@readium/navigator/src";
 import { Locator, Manifest, Publication } from "@readium/shared/src";
 import { Fetcher } from "@readium/shared/src/fetcher";
 import { HttpFetcher } from "@readium/shared/src/fetcher/HttpFetcher";
