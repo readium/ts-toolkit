@@ -25,7 +25,7 @@
     "types"
   ],
   "engines": {
-    "node": ">=14"
+    "node": ">=18"
   },
   "scripts": {
     "build": "tsc && vite build"
