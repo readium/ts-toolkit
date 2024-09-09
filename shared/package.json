@@ -18,8 +18,8 @@
     "web",
     "epub"
   ],
-  "main": "./dist/shared.umd.cjs",
-  "module": "./dist/shared.js",
+  "main": "./dist/index.umd.cjs",
+  "module": "./dist/index.js",
   "types": "./types/src/index.d.ts",
   "files": [
     "dist",
@@ -37,7 +37,7 @@
   },
   "size-limit": [
     {
-      "path": "dist/shared.js",
+      "path": "dist/index.js",
       "limit": "50 KB"
     }
   ],
