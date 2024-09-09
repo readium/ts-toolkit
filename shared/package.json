@@ -20,25 +20,7 @@
   ],
   "main": "./dist/shared.umd.cjs",
   "module": "./dist/shared.js",
-  "types": "types/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/shared.js",
-      "require": "./dist/shared.umd.cjs"
-    },
-    "./src": {
-      "import": "./dist/shared.js",
-      "require": "./dist/shared.umd.cjs"
-    },
-    "./src/publication": {
-      "import": "./dist/shared.js",
-      "require": "./dist/shared.umd.cjs"
-    },
-    "./src/fetcher/HttpFetcher": {
-      "import": "./dist/fetcher.js",
-      "require": "./dist/fetcher.umd.cjs"
-    }
-  },
+  "types": "./types/src/index.d.ts",
   "files": [
     "dist",
     "src",
