@@ -55,7 +55,7 @@
   },
   "size-limit": [
     {
-      "path": "dist/index.mjs",
+      "path": "dist/shared.js",
       "limit": "50 KB"
     }
   ],
