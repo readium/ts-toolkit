@@ -4,9 +4,10 @@ import { defineConfig } from "vite";
 export default defineConfig({
   build: {
     lib: {
-      entry: resolve(__dirname, "src/index.ts"),
-      name: "shared",
-      fileName: "index"
+      entry: {
+        shared: resolve(__dirname, "src/index.ts"),
+        fetcher: resolve(__dirname, "src/fetcher/index.ts")
+      }
     }
   }
 });

@@ -1,6 +1,7 @@
 {
   "name": "@readium/shared",
   "version": "1.2.0",
+  "type": "module",
   "description": "Shared models to be used across other Readium projects and implementations in Typescript",
   "author": "readium",
   "repository": {
@@ -17,8 +18,27 @@
     "web",
     "epub"
   ],
-  "main": "dist/index.mjs",
+  "main": "./dist/shared.umd.cjs",
+  "module": "./dist/shared.js",
   "types": "types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/shared.js",
+      "require": "./dist/shared.umd.cjs"
+    },
+    "./src": {
+      "import": "./dist/shared.js",
+      "require": "./dist/shared.umd.cjs"
+    },
+    "./src/publication": {
+      "import": "./dist/shared.js",
+      "require": "./dist/shared.umd.cjs"
+    },
+    "./src/fetcher/HttpFetcher": {
+      "import": "./dist/fetcher.js",
+      "require": "./dist/fetcher.umd.cjs"
+    }
+  },
   "files": [
     "dist",
     "src",
@@ -39,7 +59,6 @@
       "limit": "50 KB"
     }
   ],
-  "module": "dist/index.mjs",
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.4",
