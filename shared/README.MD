@@ -17,7 +17,7 @@ To build:
 pnpm run build
 ```
 
-It will output 2 files (`index.mjs` and `index.umd.js`) in `dist`.
+It will output 6 files (`shared.js` and `shared.umd.cjs`, `fetcher.js` and `fetcher.cjs`) in `dist`.
 
 To check the size limit: 
 

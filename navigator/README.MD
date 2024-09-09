@@ -8,4 +8,4 @@ To build:
 pnpm run build
 ```
 
-It will output 2 files (`index.mjs` and `index.umd.js`) in `dist`.
+It will output 2 files (`index.js` and `index.umd.cjs`) in `dist`.
