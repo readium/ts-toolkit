@@ -3,6 +3,7 @@
 node_modules
 dist
 types
+!*/vendor/hypothesis/types
 coverage
 
 # Yarn
