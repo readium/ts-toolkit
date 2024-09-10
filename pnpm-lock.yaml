@@ -19,6 +19,10 @@ importers:
         version: 4.5.3(@types/node@20.4.8)(less@4.2.0)(sass@1.78.0)(stylus@0.62.0)(terser@5.31.0)
 
   navigator:
+    dependencies:
+      path-browserify:
+        specifier: ^1.0.1
+        version: 1.0.1
     devDependencies:
       '@laynezh/vite-plugin-lib-assets':
         specifier: ^0.5.24
@@ -35,9 +39,6 @@ importers:
       css-selector-generator:
         specifier: ^3.6.4
         version: 3.6.4
-      path-browserify:
-        specifier: ^1.0.1
-        version: 1.0.1
       readium-css:
         specifier: github:readium/readium-css
         version: https://codeload.github.com/readium/readium-css/tar.gz/0773e5fe25a93694c78af23d1bd286c8854c8cf8
