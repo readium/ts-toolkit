@@ -126,7 +126,7 @@ export default class FramePoolManager {
         }
 
         clearTimeout(this.resizeTimeout);
-        this.resizeTimeout = setTimeout(() => {
+        this.resizeTimeout = window.setTimeout(() => {
             // TODO optimize this expensive set of loops and operations 
             this.pool.forEach((frm, linkHref) => {
                 let i = this.pub.readingOrder.items.findIndex(l => l.href === linkHref);
@@ -516,7 +516,7 @@ export default class FramePoolManager {
                 if(!this.delayedShow.has(href))
                     this.delayedShow.set(href, new Promise((resolve, reject) => {
                         let done = false;
-                        const t = setTimeout(async () => {
+                        const t = window.setTimeout(async () => {
                             this.delayedTimeout.set(href, 0);
                             const spread = this.makeSpread(this.reAlign(index));
                             const page = this.spreadPosition(spread, itm);

@@ -45,7 +45,7 @@ export class FrameComms {
         } catch (error) {
             this.channelId = mid();
         }
-        this.gc = setInterval(() => {
+        this.gc = window.setInterval(() => {
             this.registry.forEach((v, k) => {
                 if (performance.now() - v.time > REGISTRY_EXPIRY) {
                     console.warn(k, "event was never handled!");
