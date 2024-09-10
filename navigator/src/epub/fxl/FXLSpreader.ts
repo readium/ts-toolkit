@@ -1,4 +1,4 @@
-import { Link, Links, Orientation, Page, Publication, ReadingProgression, Spread } from "@readium/shared/src/publication";
+import { Link, Links, Orientation, Page, Publication, ReadingProgression, Spread } from "@readium/shared";
 
 export default class FXLSpreader {
     shift = true; // TODO getter

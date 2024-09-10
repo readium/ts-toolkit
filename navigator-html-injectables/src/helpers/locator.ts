@@ -1,4 +1,4 @@
-import { Locator } from "@readium/shared/src/publication";
+import { Locator } from "@readium/shared";
 import { TextQuoteAnchor } from "../vendor/hypothesis/anchoring/types";
 
 // Based on the kotlin-toolkit code
