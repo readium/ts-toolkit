@@ -36,9 +36,6 @@
     "forceConsistentCasingInFileNames": true,
     // emit only .d.ts
     "noEmit": false,
-    "emitDeclarationOnly": true,
-    "typeRoots": [
-      "./node_modules/@types"
-    ]
+    "emitDeclarationOnly": true
   }
 }
