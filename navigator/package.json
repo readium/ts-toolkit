@@ -41,6 +41,7 @@
     "readium-css": "github:readium/readium-css",
     "tslib": "^2.5.2",
     "typescript": "^5.4.5",
+    "typescript-plugin-css-modules": "^5.1.0",
     "vite": "^4.4.9"
   }
 }
