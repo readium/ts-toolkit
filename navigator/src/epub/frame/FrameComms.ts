@@ -5,7 +5,7 @@ import {
     CommsAck,
     mid,
     CommsEventKey,
-} from "@readium/navigator-html-injectables/src";
+} from "@readium/navigator-html-injectables";
 import { ManagerEventKey } from "../EpubNavigator";
 
 interface RegistryValue {

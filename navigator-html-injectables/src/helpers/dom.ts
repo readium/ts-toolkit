@@ -1,6 +1,6 @@
 // (From swift-toolkit @ https://github.com/hypothesis/client/blob/main/src/annotator/highlighter.ts)
 
-import { Locator, LocatorLocations, LocatorText } from "@readium/shared/src/publication";
+import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
 import type { getCssSelector } from "css-selector-generator";
 
 type BlockedEventData = [0, Function, any[], any[]] | [1, Event];

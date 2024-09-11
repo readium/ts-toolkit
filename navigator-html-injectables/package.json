@@ -27,6 +27,33 @@
   "main": "./dist/index.umd.cjs",
   "module": "./dist/index.js",
   "types": "./types/src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.umd.cjs",
+      "types": "./types/src/index.d.ts"
+    },
+    "./comms/*": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.umd.cjs",
+      "types": "./types/src/comms/*.d.ts"
+    },
+    "./helpers/*": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.umd.cjs",
+      "types": "./types/src/helpers/*.d.ts"
+    },
+    "./modules/*": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.umd.cjs",
+      "types": "./types/src/modules/*.d.ts"
+    },
+    "./vendor/*": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.umd.cjs",
+      "types": "./types/src/vendor/*.d.ts"
+    }
+  },
   "files": [
     "dist",
     "src",

@@ -1,5 +1,5 @@
-import { ModuleName } from "@readium/navigator-html-injectables/src";
-import { Locator, Publication, ReadingProgression, Orientation, Page, Link, Spread } from "@readium/shared/src/publication";
+import { ModuleName } from "@readium/navigator-html-injectables";
+import { Locator, Publication, ReadingProgression, Orientation, Page, Link, Spread } from "@readium/shared";
 import { FrameCommsListener } from "../frame";
 import FrameBlobBuider from "../frame/FrameBlobBuilder";
 import FXLFrameManager from "./FXLFrameManager";
