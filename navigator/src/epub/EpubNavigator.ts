@@ -3,7 +3,7 @@ import { VisualNavigator } from "../";
 import FramePoolManager from "./frame/FramePoolManager";
 import FXLFramePoolManager from "./fxl/FXLFramePoolManager";
 import { CommsEventKey, FXLModules, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables";
-import { BasicTextSelection, FrameClickEvent } from "@readium/navigator-html-injectables/src/modules/ReflowablePeripherals";
+import { BasicTextSelection, FrameClickEvent } from "@readium/navigator-html-injectables/modules/ReflowablePeripherals";
 import * as path from "path-browserify";
 import FXLFrameManager from "./fxl/FXLFrameManager";
 import FrameManager from "./frame/FrameManager";

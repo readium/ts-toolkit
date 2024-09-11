@@ -140,9 +140,9 @@ async function load() {
                         const container = document.getElementById("toc-list") as HTMLElement;
                         container.querySelectorAll(":scope > md-list-item, :scope > md-divider").forEach(e => e.remove()); // Clear TOC
 
-                        if(nav.publication.tableOfContents) {
+                        if (nav.publication.tableOfContents) {
                             const template = container.querySelector("template") as HTMLTemplateElement;
-                            nav.publication.tableOfContents.items.forEach(item => {
+                            nav.publication.tableOfContents.items.forEach((item: Link) => {
                                 const clone = template.content.cloneNode(true) as HTMLElement;
 
                                 // Link
