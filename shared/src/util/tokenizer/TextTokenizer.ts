@@ -114,11 +114,13 @@ export class NaiveTextTokenizer {
     }
 }
 
+const trimmedMatcher = new RegExp("[\\p{L}\\p{N}]+", "u");
+
 // Unicode-aware of checking if there's anything that can be spoken in a string
 // "Spoken" in this case means at least one unicode letter or unicode number character
 export const speakableToken = (token: string): string | null => {
     const trimmedToken = token.trimEnd();
     if(trimmedToken.length === 0) return null;
-    if(trimmedToken.match(/[\p{L}\p{N}]+/u) === null) return null;
+    if(trimmedToken.match(trimmedMatcher) === null) return null;
     return trimmedToken;
 }
