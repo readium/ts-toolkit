@@ -1,5 +1,5 @@
-import { Locator } from '@readium/shared/src/publication/Locator';
-import { Publication } from '@readium/shared/src/publication/Publication';
+import { Locator } from '@readium/shared';
+import { Publication } from '@readium/shared';
 
 /**
  * Initial state of the audio engine playback.
