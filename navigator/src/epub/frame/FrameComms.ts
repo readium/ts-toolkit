@@ -10,6 +10,7 @@ import { ManagerEventKey } from "../EpubNavigator";
 
 interface RegistryValue {
     time: number;
+    key: CommsCommandKey;
     cb: CommsAck;
 }
 const REGISTRY_EXPIRY = 10000; // 10 seconds max
@@ -48,7 +49,7 @@ export class FrameComms {
         this.gc = window.setInterval(() => {
             this.registry.forEach((v, k) => {
                 if (performance.now() - v.time > REGISTRY_EXPIRY) {
-                    console.warn(k, "event was never handled!");
+                    console.warn(k, "event for", v.key, "was never handled!");
                     this.registry.delete(k);
                 }
             });
@@ -122,6 +123,7 @@ export class FrameComms {
                 // Add callback to the registry
                 cb: callback,
                 time: performance.now(),
+                key,
             });
         this.wnd.postMessage(
             {
