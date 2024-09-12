@@ -26,11 +26,6 @@
       "import": "./dist/index.js",
       "require": "./dist/index.umd.cjs",
       "types": "./types/src/index.d.ts"
-    },
-    "./epub/*": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.umd.cjs",
-      "types": "./types/src/epub/*.d.ts"
     }
   },
   "files": [

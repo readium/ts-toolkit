@@ -1,12 +1,12 @@
 import { ModuleName } from "@readium/navigator-html-injectables";
 import { Locator, Publication } from "@readium/shared";
 import FrameBlobBuider from "./FrameBlobBuilder";
-import FrameManager from "./FrameManager";
+import { FrameManager } from "./FrameManager";
 
 const UPPER_BOUNDARY = 5;
 const LOWER_BOUNDARY = 3;
 
-export default class FramePoolManager {
+export class FramePoolManager {
     private readonly container: HTMLElement;
     private readonly positions: Locator[];
     private _currentFrame: FrameManager | undefined;

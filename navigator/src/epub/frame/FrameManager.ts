@@ -2,7 +2,7 @@ import { Loader, ModuleName } from "@readium/navigator-html-injectables";
 import { FrameComms } from "./FrameComms";
 
 
-export default class FrameManager {
+export class FrameManager {
     private frame: HTMLIFrameElement;
     private loader: Loader | undefined;
     public readonly source: string;

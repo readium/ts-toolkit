@@ -2,9 +2,9 @@ import { ModuleName } from "@readium/navigator-html-injectables";
 import { Locator, Publication, ReadingProgression, Orientation, Page, Link, Spread } from "@readium/shared";
 import { FrameCommsListener } from "../frame";
 import FrameBlobBuider from "../frame/FrameBlobBuilder";
-import FXLFrameManager from "./FXLFrameManager";
-import FXLPeripherals from "./FXLPeripherals";
-import FXLSpreader from "./FXLSpreader";
+import { FXLFrameManager } from "./FXLFrameManager";
+import { FXLPeripherals } from "./FXLPeripherals";
+import { FXLSpreader } from "./FXLSpreader";
 
 const UPPER_BOUNDARY = 8;
 const LOWER_BOUNDARY = 5;
@@ -15,7 +15,7 @@ const RESIZE_UPDATE_TIMEOUT = 250;
 const SLIDE_FAST = 150;
 const SLIDE_SLOW = 500;
 
-export default class FramePoolManager {
+export class FXLFramePoolManager {
     private readonly container: HTMLElement;
     private readonly positions: Locator[];
     private readonly pool: Map<string, FXLFrameManager> = new Map();

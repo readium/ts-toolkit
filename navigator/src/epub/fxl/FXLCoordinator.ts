@@ -29,7 +29,7 @@ export interface BibiEvent {
     Division: NinthPoint | null;
 }
 
-export default class FXLCoordinator {
+export class FXLCoordinator {
     HTML: HTMLElement;
     Head: HTMLHeadElement;
     Body: HTMLElement;

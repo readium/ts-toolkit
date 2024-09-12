@@ -1,7 +1,7 @@
 import './style.css'
 
-import { BasicTextSelection, FrameClickEvent } from "@readium/navigator-html-injectables/modules/ReflowablePeripherals";
-import { EpubNavigator, EpubNavigatorListeners } from "@readium/navigator";
+import { BasicTextSelection, FrameClickEvent } from "@readium/navigator-html-injectables";
+import { EpubNavigator, EpubNavigatorListeners, FrameManager, FXLFrameManager } from "@readium/navigator";
 import { Locator, Manifest, Publication } from "@readium/shared";
 import { Fetcher } from "@readium/shared";
 import { HttpFetcher } from "@readium/shared";
@@ -10,8 +10,6 @@ import { Link } from "@readium/shared";
 // Design
 import '@material/web/all'; // TODO optimize for elements we use
 import Peripherals from './peripherals';
-import FrameManager from '@readium/navigator/epub/frame/FrameManager';
-import FXLFrameManager from '@readium/navigator/epub/fxl/FXLFrameManager';
 
 async function load() {
     const currentURL = new URL(window.location.href);
