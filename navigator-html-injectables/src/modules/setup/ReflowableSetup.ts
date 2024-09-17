@@ -11,7 +11,7 @@ export class ReflowableSetup extends Setup {
     onViewportWidthChanged(event: Event) {
         const wnd = event.target as Window;
         // const pageWidth = wnd.innerWidth / wnd.devicePixelRatio;
-        setProperty(wnd, "--RS__viewportWidth", `calc(${wnd.innerWidth}px / ${wnd.devicePixelRatio})`);
+        setProperty(wnd, "--RS__viewportWidth", `${wnd.innerWidth}px`);
     }
 
     mount(wnd: Window, comms: Comms): boolean {
