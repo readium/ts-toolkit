@@ -20,7 +20,7 @@ export type FrameCommsListener = (key: CommsEventKey | ManagerEventKey, value: u
 export class FrameComms {
     private readonly wnd: Window;
     private readonly registry = new Map<string, RegistryValue>();
-    private readonly gc: number;
+    private readonly gc: ReturnType<typeof setInterval>;
     // @ts-ignore
     private readonly origin: string;
     public readonly channelId: string;
@@ -46,7 +46,7 @@ export class FrameComms {
         } catch (error) {
             this.channelId = mid();
         }
-        this.gc = window.setInterval(() => {
+        this.gc = setInterval(() => {
             this.registry.forEach((v, k) => {
                 if (performance.now() - v.time > REGISTRY_EXPIRY) {
                     console.warn(k, "event for", v.key, "was never handled!");
