@@ -55,7 +55,7 @@ const rBefore = (doc: Document) => scriptify(doc, cached("JS-Before", () => blob
         e.preventDefault();
         e.stopImmediatePropagation();
         _readium_blockedEvents.push([
-            1, e
+            1, e, e.currentTarget || e.target
         ]);
     };
     window.addEventListener("DOMContentLoaded", window._readium_eventBlocker, true);

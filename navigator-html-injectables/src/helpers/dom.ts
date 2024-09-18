@@ -3,7 +3,7 @@
 import { Locator, LocatorLocations, LocatorText } from "@readium/shared/src/publication";
 import type { getCssSelector } from "css-selector-generator";
 
-type BlockedEventData = [0, Function, any[], any[]] | [1, Event];
+type BlockedEventData = [0, Function, any[], any[]] | [1, Event, EventTarget];
 
 // This is what is injected into the HTML documents
 export interface ReadiumWindow extends Window {
