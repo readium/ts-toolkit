@@ -20,7 +20,11 @@ To install all dependencies:
 pnpm install
 ```
 
-Then workspaces should be all set up.
+Then workspaces should be all set up and you can build them from their directory in the following order:
+
+1. shared
+2. navigator-html-injectables
+3. navigator
 
 ## Workspaces
 
