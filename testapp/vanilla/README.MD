@@ -12,3 +12,12 @@ pnpm dev
 ```
 
 You can then visit e.g. http://localhost:5173 in your browser. If you want to try out another book in the `./public/books` folder, you can change the book parameter, for example http://localhost:5173?book=bella . The default is `moby-dick`.
+
+To build:
+
+```sh
+# Bundle the testapp
+pnpm build
+```
+
+It will bundle the testapp into `dist`, with all the assets necessary (fonts, scripts, stylesheets, etc.).

@@ -1,4 +1,4 @@
-export default class FXLPeripheralsDebug {
+export class FXLPeripheralsDebug {
     private readonly _DOM = {
         show: false,
         pinchTarget: document.createElement("div"),

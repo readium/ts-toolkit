@@ -16,6 +16,8 @@
     "rootDir": "./",
     // stricter type-checking for stronger correctness. Recommended by TS
     "strict": true,
+    // Needed for build
+    "isolatedModules": true,
     // linter checks for common issues
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
@@ -23,7 +25,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     // use Node's module resolution algorithm, instead of the legacy TS one
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     // transpile JSX to React.createElement
     "jsx": "react",
     // interop between ESM and CJS modules. Recommended by TS
@@ -32,7 +34,8 @@
     "skipLibCheck": true,
     // error out if import and file system have a casing mismatch. Recommended by TS
     "forceConsistentCasingInFileNames": true,
-    // `tsdx build` ignores this option, but it is commonly used when type-checking separately with `tsc`
-    "noEmit": true,
-  },
+    // emit only .d.ts
+    "noEmit": false,
+    "emitDeclarationOnly": true
+  }
 }

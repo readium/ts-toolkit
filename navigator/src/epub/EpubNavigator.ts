@@ -1,10 +1,12 @@
-import { EPUBLayout, Link, Locator, Publication, ReadingProgression } from "@readium/shared/src/publication";
+import { EPUBLayout, Link, Locator, Publication, ReadingProgression } from "@readium/shared";
 import { VisualNavigator } from "../";
-import FramePoolManager from "./frame/FramePoolManager";
-import FXLFramePoolManager from "./fxl/FXLFramePoolManager";
-import { CommsEventKey, FXLModules, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables/src";
-import { BasicTextSelection, FrameClickEvent } from "@readium/navigator-html-injectables/src/modules/ReflowablePeripherals";
+import { FramePoolManager } from "./frame/FramePoolManager";
+import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager";
+import { CommsEventKey, FXLModules, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables";
+import { BasicTextSelection, FrameClickEvent } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
+import { FXLFrameManager } from "./fxl/FXLFrameManager";
+import { FrameManager } from "./frame/FrameManager";
 
 export type ManagerEventKey = "zoom";
 

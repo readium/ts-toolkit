@@ -1,6 +1,6 @@
-import FXLCoordinator, { Point } from "./FXLCoordinator";
-import FramePoolManager from "./FXLFramePoolManager";
-import FXLPeripheralsDebug from "./FXLPeripheralsDebug";
+import { FXLCoordinator, Point } from "./FXLCoordinator";
+import { FXLFramePoolManager } from "./FXLFramePoolManager";
+import { FXLPeripheralsDebug } from "./FXLPeripheralsDebug";
 
 const MAX_SCALE = 6; // 6x zoom
 const MIN_SCALE = 1.02;
@@ -35,9 +35,9 @@ export interface Zoomer {
     };
 }
 
-export default class FXLPeripherals {
+export class FXLPeripherals {
 
-    private readonly manager: FramePoolManager;
+    private readonly manager: FXLFramePoolManager;
     private readonly coordinator: FXLCoordinator;
 
     public dragState = 0;
@@ -88,7 +88,7 @@ export default class FXLPeripherals {
     private frameBounds: DOMRect | null = null;
     private debugger: FXLPeripheralsDebug | null = null;
 
-    constructor(manager: FramePoolManager, debug=false) {
+    constructor(manager: FXLFramePoolManager, debug=false) {
         this.manager = manager;
         this.coordinator = new FXLCoordinator();
         this.attachEvents();

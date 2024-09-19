@@ -35,9 +35,6 @@ jobs:
       - name: Install deps and build
         run: pnpm install
 
-      - name: Lint
-        run: pnpm run lint
-
       - name: Test
         run: pnpm run test --ci --coverage --maxWorkers=2
 

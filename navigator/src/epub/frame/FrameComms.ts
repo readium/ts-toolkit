@@ -5,7 +5,7 @@ import {
     CommsAck,
     mid,
     CommsEventKey,
-} from "@readium/navigator-html-injectables/src";
+} from "@readium/navigator-html-injectables";
 import { ManagerEventKey } from "../EpubNavigator";
 
 interface RegistryValue {
@@ -20,7 +20,7 @@ export type FrameCommsListener = (key: CommsEventKey | ManagerEventKey, value: u
 export class FrameComms {
     private readonly wnd: Window;
     private readonly registry = new Map<string, RegistryValue>();
-    private readonly gc: number;
+    private readonly gc: ReturnType<typeof setInterval>;
     // @ts-ignore
     private readonly origin: string;
     public readonly channelId: string;

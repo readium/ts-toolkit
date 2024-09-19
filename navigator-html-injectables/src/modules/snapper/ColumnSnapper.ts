@@ -4,7 +4,7 @@ import { Snapper } from "./Snapper";
 import { getColumnCountPerScreen, isRTL, appendVirtualColumnIfNeeded } from "../../helpers/document";
 import { easeInOutQuad } from "../../helpers/animation";
 import { ModuleName } from "../ModuleLibrary";
-import { Locator, LocatorLocations, LocatorText } from "@readium/shared/src/publication";
+import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
 import { rangeFromLocator } from "../../helpers/locator";
 import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/dom";
 

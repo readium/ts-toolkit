@@ -1,10 +1,13 @@
-import { MediaType } from "@readium/shared/src/util/mediatype";
-import { Link, Publication } from "@readium/shared/src/publication";
+import { MediaType } from "@readium/shared";
+import { Link, Publication } from "@readium/shared";
 
 // Readium CSS imports
 // The "?inline" query is to prevent some bundlers from injecting these into the page (e.g. vite)
+// @ts-ignore
 import readiumCSSAfter from "readium-css/css/dist/ReadiumCSS-after.css?inline";
+// @ts-ignore
 import readiumCSSBefore from "readium-css/css/dist/ReadiumCSS-before.css?inline";
+// @ts-ignore
 import readiumCSSDefault from "readium-css/css/dist/ReadiumCSS-default.css?inline";
 
 // Utilities

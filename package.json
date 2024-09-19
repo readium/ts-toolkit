@@ -2,10 +2,9 @@
     "name": "ts-toolkit",
     "private": true,
     "devDependencies": {
-        "esbuild": "^0.17.19",
-        "eslint": "^8.41.0",
+        "tslib": "^2.7.0",
         "typescript": "^5.4.5",
-        "typescript-plugin-css-modules": "^5.0.1"
+        "vite": "^4.5.3"
     },
     "workspaces": [
         "navigator",

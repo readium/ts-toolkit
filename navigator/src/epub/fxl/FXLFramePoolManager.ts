@@ -1,10 +1,10 @@
-import { ModuleName } from "@readium/navigator-html-injectables/src";
-import { Locator, Publication, ReadingProgression, Orientation, Page, Link, Spread } from "@readium/shared/src/publication";
+import { ModuleName } from "@readium/navigator-html-injectables";
+import { Locator, Publication, ReadingProgression, Orientation, Page, Link, Spread } from "@readium/shared";
 import { FrameCommsListener } from "../frame";
 import FrameBlobBuider from "../frame/FrameBlobBuilder";
-import FXLFrameManager from "./FXLFrameManager";
-import FXLPeripherals from "./FXLPeripherals";
-import FXLSpreader from "./FXLSpreader";
+import { FXLFrameManager } from "./FXLFrameManager";
+import { FXLPeripherals } from "./FXLPeripherals";
+import { FXLSpreader } from "./FXLSpreader";
 
 const UPPER_BOUNDARY = 8;
 const LOWER_BOUNDARY = 5;
@@ -15,7 +15,7 @@ const RESIZE_UPDATE_TIMEOUT = 250;
 const SLIDE_FAST = 150;
 const SLIDE_SLOW = 500;
 
-export default class FramePoolManager {
+export class FXLFramePoolManager {
     private readonly container: HTMLElement;
     private readonly positions: Locator[];
     private readonly pool: Map<string, FXLFrameManager> = new Map();
@@ -126,7 +126,7 @@ export default class FramePoolManager {
         }
 
         clearTimeout(this.resizeTimeout);
-        this.resizeTimeout = setTimeout(() => {
+        this.resizeTimeout = window.setTimeout(() => {
             // TODO optimize this expensive set of loops and operations 
             this.pool.forEach((frm, linkHref) => {
                 let i = this.pub.readingOrder.items.findIndex(l => l.href === linkHref);
@@ -516,7 +516,7 @@ export default class FramePoolManager {
                 if(!this.delayedShow.has(href))
                     this.delayedShow.set(href, new Promise((resolve, reject) => {
                         let done = false;
-                        const t = setTimeout(async () => {
+                        const t = window.setTimeout(async () => {
                             this.delayedTimeout.set(href, 0);
                             const spread = this.makeSpread(this.reAlign(index));
                             const page = this.spreadPosition(spread, itm);

@@ -1,9 +1,9 @@
-import { Loader, ModuleName } from "@readium/navigator-html-injectables/src";
-import { Page, ReadingProgression } from "@readium/shared/src/publication";
+import { Loader, ModuleName } from "@readium/navigator-html-injectables";
+import { Page, ReadingProgression } from "@readium/shared";
 import { FrameComms } from "../frame/FrameComms";
-import FXLPeripherals from "./FXLPeripherals";
+import { FXLPeripherals } from "./FXLPeripherals";
 
-export default class FXLFrameManager {
+export class FXLFrameManager {
     private frame: HTMLIFrameElement;
     private loader: Loader | undefined;
     public source: string;

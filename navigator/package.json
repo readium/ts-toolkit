@@ -1,6 +1,7 @@
 {
   "name": "@readium/navigator",
   "version": "1.2.0",
+  "type": "module",
   "description": "Next generation SDK for publications in Web Apps",
   "author": "readium",
   "repository": {
@@ -17,33 +18,40 @@
     "web",
     "epub"
   ],
-  "main": "dist/index.js",
-  "types": "types/index.d.ts",
+  "main": "./dist/index.umd.cjs",
+  "module": "./dist/index.js",
+  "types": "./types/src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.umd.cjs",
+      "types": "./types/src/index.d.ts"
+    }
+  },
   "files": [
     "dist",
     "src",
     "types"
   ],
   "engines": {
-    "node": ">=14"
+    "node": ">=18"
   },
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --minify --sourcemap --target=es6 --outfile=dist/index.js"
+    "build": "tsc && vite build"
   },
-  "prettier": {
-    "printWidth": 80,
-    "semi": true,
-    "singleQuote": true,
-    "trailingComma": "es5"
-  },
-  "module": "dist/index.js",
   "devDependencies": {
+    "@laynezh/vite-plugin-lib-assets": "^0.5.24",
     "@readium/navigator-html-injectables": "workspace:0.0.1",
     "@readium/shared": "workspace:1.2.0",
     "@types/path-browserify": "^1.0.0",
     "css-selector-generator": "^3.6.4",
-    "path-browserify": "^1.0.1",
     "readium-css": "github:readium/readium-css",
-    "tslib": "^2.5.2"
+    "tslib": "^2.5.2",
+    "typescript": "^5.4.5",
+    "typescript-plugin-css-modules": "^5.1.0",
+    "vite": "^4.4.9"
+  },
+  "dependencies": {
+    "path-browserify": "^1.0.1"
   }
 }

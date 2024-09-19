@@ -5,8 +5,8 @@ import {
     Playback,
   } from "./AudioEngine";
   
-  import { Publication } from "@readium/shared/src/publication/Publication";
-  import { Locator } from "@readium/shared/src/publication/Locator";
+  import { Publication } from "@readium/shared";
+  import { Locator } from "@readium/shared";
   
   type EventCallback = (data: any) => void;
   
@@ -139,8 +139,8 @@ import {
      * Plays the audio resource at the given locator.
      */
     public async playLocator(
-      publication: Publication,
-      locator: Locator
+      _publication: Publication,
+      _locator: Locator
     ): Promise<void> {
       // Implementation details.
     }

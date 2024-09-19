@@ -1,6 +1,7 @@
 {
   "name": "@readium/shared",
   "version": "1.2.0",
+  "type": "module",
   "description": "Shared models to be used across other Readium projects and implementations in Typescript",
   "author": "readium",
   "repository": {
@@ -17,53 +18,48 @@
     "web",
     "epub"
   ],
-  "main": "dist/index.js",
-  "types": "types/index.d.ts",
+  "main": "./dist/index.umd.cjs",
+  "module": "./dist/index.js",
+  "types": "./types/src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.umd.cjs",
+      "types": "./types/src/index.d.ts"
+    }
+  },
   "files": [
     "dist",
     "src",
     "types"
   ],
   "engines": {
-    "node": ">=14"
+    "node": ">=18"
   },
   "scripts": {
-    "start": "tsdx watch",
-    "build": "tsdx build",
-    "test": "tsdx test",
-    "lint": "tsdx lint src",
-    "size": "size-limit",
-    "analyze": "size-limit --why"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "test": "jest",
+    "size": "size-limit"
   },
-  "prettier": {
-    "printWidth": 80,
-    "semi": true,
-    "singleQuote": true,
-    "trailingComma": "es5"
-  },
-  "module": "dist/index.js",
   "size-limit": [
     {
-      "path": "dist/shared.cjs.production.min.js",
-      "limit": "50 KB"
-    },
-    {
-      "path": "dist/shared.esm.js",
+      "path": "dist/index.js",
       "limit": "50 KB"
     }
   ],
   "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/preset-env": "^7.25.4",
     "@babel/preset-typescript": "^7.22.5",
-    "@size-limit/esbuild": "^7.0.8",
-    "@size-limit/file": "^7.0.8",
-    "@size-limit/webpack": "^7.0.8",
-    "@size-limit/webpack-why": "^7.0.8",
+    "@size-limit/file": "^11.1.4",
     "@types/jest": "^27.5.2",
     "babel-jest": "^28.1.3",
     "css-selector-generator": "^3.6.4",
-    "size-limit": "^7.0.8",
-    "tsdx": "^0.14.1",
+    "jest": "^29.7.0",
+    "size-limit": "^11.1.4",
     "tslib": "^2.6.2",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vite": "^4.4.9"
   }
 }

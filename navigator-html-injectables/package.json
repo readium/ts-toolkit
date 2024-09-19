@@ -1,6 +1,7 @@
 {
   "name": "@readium/navigator-html-injectables",
   "version": "0.0.1",
+  "type": "module",
   "description": "An embeddable solution for connecting frames of HTML publications with a Readium Navigator",
   "author": "readium",
   "repository": {
@@ -21,29 +22,32 @@
     "embedded"
   ],
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --minify --sourcemap --target=es6,chrome58,firefox57,safari11,edge16 --outfile=dist/index.js"
+    "build": "tsc && vite build"
   },
-  "main": "dist/index.js",
-  "types": "types/index.d.ts",
+  "main": "./dist/index.umd.cjs",
+  "module": "./dist/index.js",
+  "types": "./types/src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.umd.cjs",
+      "types": "./types/src/index.d.ts"
+    }
+  },
   "files": [
     "dist",
     "src",
     "types"
   ],
   "engines": {
-    "node": ">=14"
+    "node": ">=18"
   },
-  "prettier": {
-    "printWidth": 80,
-    "semi": true,
-    "singleQuote": true,
-    "trailingComma": "es5"
-  },
-  "module": "dist/index.js",
   "devDependencies": {
     "@juggle/resize-observer": "^3.4.0",
     "@readium/shared": "workspace:1.2.0",
     "css-selector-generator": "^3.6.4",
-    "tslib": "^2.6.1"
+    "tslib": "^2.6.1",
+    "typescript": "^5.4.5",
+    "vite": "^4.4.9"
   }
 }
