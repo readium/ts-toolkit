@@ -144,7 +144,7 @@ export class FXLFrameManager {
     }
 
     async destroy() {
-        await this.hide();
+        await this.unfocus();
         this.loader?.destroy();
         this.wrapper.remove();
     }
@@ -177,7 +177,7 @@ export class FXLFrameManager {
         this.frame.contentWindow?.getSelection()?.removeAllRanges();
     }
 
-    async hide(): Promise<void> {
+    async unfocus(): Promise<void> {
         if(this.frame.parentElement) {
             if(this.comms === undefined) return;
             return new Promise((res, _) => {

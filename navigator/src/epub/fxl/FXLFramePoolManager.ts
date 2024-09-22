@@ -24,6 +24,7 @@ export class FXLFramePoolManager {
     private readonly delayedShow: Map<string, Promise<void>> = new Map();
     private readonly delayedTimeout: Map<string, number> = new Map();
     private currentBaseURL: string | undefined;
+    private previousFrames: FXLFrameManager[] = [];
 
     // NEW
     private readonly bookElement: HTMLDivElement;
@@ -541,6 +542,7 @@ export class FXLFramePoolManager {
             }
 
             // Update current frame(s)
+            const newFrames: FXLFrameManager[] = [];
             for (const s of spread) {
                 const newFrame = this.pool.get(s.href)!;
                 const source = this.blobs.get(s.href);
@@ -549,8 +551,19 @@ export class FXLFramePoolManager {
                 this.cancelShowing(s.href);
                 await newFrame.load(modules, source); // In order to ensure modules match the latest configuration
                 await newFrame.show(this.spreadPosition(spread, s)); // Show/activate new frame
+                this.previousFrames.push(newFrame);
                 await newFrame.activate();
+                newFrames.push(newFrame);
             }
+
+            // Unfocus previous frame(s)
+            while(this.previousFrames.length > 0) {
+                const fm = this.previousFrames.shift();
+                if(fm && !newFrames.includes(fm))
+                    await fm.unfocus();
+            }
+            this.previousFrames = newFrames;
+
             resolve();
         });
 
