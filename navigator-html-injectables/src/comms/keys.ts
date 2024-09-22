@@ -14,7 +14,9 @@ export type CommsEventKey =
     "swipe" |
     "progress" |
     "first_visible_locator" |
-    "text_selected";
+    "text_selected" |
+    "media_play" |
+    "media_pause";
 ;
 
 export type CommsCommandKey =
