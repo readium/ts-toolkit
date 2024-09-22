@@ -179,7 +179,6 @@ export class FXLFrameManager {
 
     async hide(): Promise<void> {
         if(this.frame.parentElement) {
-            this.deselect();
             if(this.comms === undefined) return;
             return new Promise((res, _) => {
                 this.comms?.send("unfocus", undefined, (_: boolean) => {
