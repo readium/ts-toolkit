@@ -172,6 +172,17 @@ export default class FrameBlobBuider {
             // Readium CSS After
             doc.head.appendChild(styleify(doc, cached("ReadiumCSS-after", () => blobify(stripCSS(readiumCSSAfter), "text/css"))));
         }
+
+        // Set all <img> elements to high priority
+        // From what I understand, browser heuristics
+        // de-prioritize <iframe> resources. This causes the <img>
+        // elements to be loaded in sequence, which in documents
+        // with many images causes significant impact to rendering
+        // speed. When you increase the priority, the <img> data is
+        // loaded in parallel, greatly increasing overall speed.
+        doc.body.querySelectorAll("img").forEach((img) => {
+            img.setAttribute("fetchpriority", "high");
+        });
     
         if(base !== undefined) {
             // Set all URL bases. Very convenient!
