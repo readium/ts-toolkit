@@ -2,7 +2,7 @@ import { Comms } from "../../comms/comms";
 import { Setup } from "./Setup";
 import { removeProperty, setProperty } from "../../helpers/css";
 import { ModuleName } from "../ModuleLibrary";
-import { ReadiumWindow } from "../../helpers/dom";
+import { ReadiumWindow, deselect } from "../../helpers/dom";
 
 const FIXED_STYLE_ID = "readium-fixed-style";
 
@@ -42,8 +42,13 @@ export class FixedSetup extends Setup {
 
         comms.register("first_visible_locator", FixedSetup.moduleName, (_, ack) => ack(false))
 
+        comms.register("unfocus", FixedSetup.moduleName, (_, ack) => {
+            deselect(wnd);
+            ack(true);
+        });
+
         comms.register([
-            "focus", "unfocus", "go_next", "go_prev",
+            "focus", "go_next", "go_prev",
             "go_id", "go_end", "go_start", "go_text",
             "go_progression"
         ], FixedSetup.moduleName, (_, ack) => ack(true));

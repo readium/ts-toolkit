@@ -8,6 +8,7 @@ import { Decorator } from "./Decorator";
 
 // All the module names. TODO: Come up with a better way of collecting these in a way TS will recognize
 export type ModuleName =
+    "setup" |
     "snapper" |
     "column_snapper" |
     "scroll_snapper" |
