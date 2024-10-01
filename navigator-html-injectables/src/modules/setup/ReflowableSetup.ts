@@ -9,12 +9,12 @@ export class ReflowableSetup extends Setup {
     static readonly moduleName = "reflowable_setup";
 
     onViewportWidthChanged(event: Event) {
-        const wnd = event.target as Window;
+        const wnd = event.target as ReadiumWindow;
         // const pageWidth = wnd.innerWidth / wnd.devicePixelRatio;
         setProperty(wnd, "--RS__viewportWidth", `${wnd.innerWidth}px`);
     }
 
-    mount(wnd: Window, comms: Comms): boolean {
+    mount(wnd: ReadiumWindow, comms: Comms): boolean {
         if(!super.mount(wnd, comms)) return false;
 
         // Add viewport tag
@@ -54,7 +54,7 @@ export class ReflowableSetup extends Setup {
         return true;
     }
 
-    unmount(wnd: Window, comms: Comms): boolean {
+    unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         comms.unregisterAll(ReflowableSetup.moduleName);
         wnd.document.head.querySelector(`#${VIEWPORT_META_TAG_ID}`)?.remove();
         wnd.removeEventListener("orientationchange", this.onViewportWidthChanged);

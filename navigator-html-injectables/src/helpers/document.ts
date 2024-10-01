@@ -1,9 +1,10 @@
+import { ReadiumWindow } from "./dom";
 
-export function isRTL(wnd: Window): boolean {
+export function isRTL(wnd: ReadiumWindow): boolean {
     return wnd.document.body.dir.toLowerCase() === "rtl";
 }
 
-export function getColumnCountPerScreen(wnd: Window) {
+export function getColumnCountPerScreen(wnd: ReadiumWindow) {
     return parseInt(
         wnd.getComputedStyle(
             wnd.document.documentElement
@@ -15,7 +16,7 @@ export function getColumnCountPerScreen(wnd: Window) {
  * Having an odd number of columns when displaying two columns per screen causes snapping and page
  * turning issues. To fix this, we insert a blank virtual column at the end of the resource.
  */
-export function appendVirtualColumnIfNeeded(wnd: Window) {
+export function appendVirtualColumnIfNeeded(wnd: ReadiumWindow) {
     const id = "readium-virtual-page";
     let virtualCol = wnd.document.getElementById(id);
     if (getColumnCountPerScreen(wnd) !== 2) {

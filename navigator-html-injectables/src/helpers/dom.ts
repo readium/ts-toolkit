@@ -15,7 +15,7 @@ export interface ReadiumWindow extends Window {
     };
 }
 
-export function deselect(wnd: Window) {
+export function deselect(wnd: ReadiumWindow) {
     const currentSelection = wnd.getSelection();
     if(currentSelection) currentSelection.removeAllRanges();
 }

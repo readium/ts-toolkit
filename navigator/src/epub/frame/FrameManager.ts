@@ -1,5 +1,6 @@
 import { Loader, ModuleName } from "@readium/navigator-html-injectables";
 import { FrameComms } from "./FrameComms";
+import { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
 
 
 export class FrameManager {
@@ -32,7 +33,7 @@ export class FrameManager {
                 }
                 this.comms?.halt();
                 this.loader.destroy();
-                this.loader = new Loader(wnd, modules);
+                this.loader = new Loader(wnd as ReadiumWindow, modules);
                 this.currModules = modules;
                 this.comms = undefined;
                 try { res(wnd); } catch (error) {}
@@ -40,7 +41,7 @@ export class FrameManager {
             }
             this.frame.onload = () => {
                 const wnd = this.frame.contentWindow!;
-                this.loader = new Loader(wnd, modules);
+                this.loader = new Loader(wnd as ReadiumWindow, modules);
                 this.currModules = modules;
                 try { res(wnd); } catch (error) {}
             };

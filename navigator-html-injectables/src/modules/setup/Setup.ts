@@ -7,7 +7,7 @@ export abstract class Setup extends Module {
     static readonly moduleName: ModuleName = "setup";
 
     private comms!: Comms;
-    private wnd!: Window;
+    private wnd!: ReadiumWindow;
 
     wndOnErr(event: ErrorEvent) {
         this.comms?.send("error", {
@@ -61,7 +61,7 @@ export abstract class Setup extends Module {
         }
     }
 
-    mount(wnd: Window, comms: Comms): boolean {
+    mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.comms = comms;
         this.wnd = wnd;
 
@@ -93,7 +93,7 @@ export abstract class Setup extends Module {
         return true;
     }
 
-    unmount(wnd: Window, comms: Comms): boolean {
+    unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         wnd.removeEventListener("error", this.wndOnErr);
         wnd.removeEventListener("play", this.onMediaPlayEvent);
         wnd.removeEventListener("pause", this.onMediaPauseEvent);

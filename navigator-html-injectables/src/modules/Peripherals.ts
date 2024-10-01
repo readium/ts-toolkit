@@ -1,11 +1,12 @@
 import { Comms } from "../comms/comms";
 import { Module } from "./Module";
-import { nearestInteractiveElement } from "../helpers/dom";
+import { ReadiumWindow, nearestInteractiveElement } from "../helpers/dom";
 
 export interface FrameClickEvent {
     defaultPrevented: boolean;
     doNotDisturb: boolean;
     interactiveElement: string | undefined;
+    cssSelector: string | undefined;
     targetElement: string;
     targetFrameSrc: string;
     x: number;
@@ -21,9 +22,9 @@ export interface BasicTextSelection {
     targetFrameSrc: string;
 }
 
-export class ReflowablePeripherals extends Module {
-    static readonly moduleName = "reflowable_peripherals";
-    private wnd!: Window;
+export class Peripherals extends Module {
+    static readonly moduleName = "peripherals";
+    private wnd!: ReadiumWindow;
     private comms!: Comms;
 
     private pointerMoved = false;
@@ -69,7 +70,8 @@ export class ReflowablePeripherals extends Module {
             y: event.clientY * pixelRatio,
             targetFrameSrc: this.wnd.location.href,
             targetElement: (event.target as Element).outerHTML,
-            interactiveElement: nearestInteractiveElement(event.target as Element)?.outerHTML
+            interactiveElement: nearestInteractiveElement(event.target as Element)?.outerHTML,
+            cssSelector: this.wnd._readium_cssSelectorGenerator.getCssSelector(event.target),
         } as FrameClickEvent);
 
         this.pointerMoved = false;
@@ -120,7 +122,7 @@ export class ReflowablePeripherals extends Module {
     }
     private readonly onClicker = this.onClick.bind(this);
 
-    mount(wnd: Window, comms: Comms): boolean {
+    mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
         wnd.document.addEventListener("pointerdown", this.onPointerDown);
@@ -129,18 +131,18 @@ export class ReflowablePeripherals extends Module {
         wnd.document.addEventListener("pointermove", this.onPointerMove);
         wnd.document.addEventListener("click", this.onClicker);
 
-        comms.log("ReflowablePeripherals Mounted");
+        comms.log("Peripherals Mounted");
         return true;
     }
 
-    unmount(wnd: Window, comms: Comms): boolean {
+    unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         wnd.document.removeEventListener("pointerdown", this.onPointerDown);
         wnd.document.removeEventListener("pointerup", this.onPointerUp);
         wnd.document.removeEventListener("contextmenu", this.onContextMenu);
         wnd.document.removeEventListener("pointermove", this.onPointerMove);
         wnd.document.removeEventListener("click", this.onClicker);
 
-        comms.log("ReflowablePeripherals Unmounted");
+        comms.log("Peripherals Unmounted");
         return true;
     }
 }

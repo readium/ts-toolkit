@@ -10,7 +10,7 @@ const SCROLL_SNAPPER_STYLE_ID = "readium-scroll-snapper-style";
 
 export class ScrollSnapper extends Snapper {
     static readonly moduleName: ModuleName = "scroll_snapper";
-    private wnd!: Window;
+    private wnd!: ReadiumWindow;
     private comms!: Comms;
 
     private doc() {
@@ -34,7 +34,7 @@ export class ScrollSnapper extends Snapper {
         this.comms.send("progress", progress);
     }
 
-    mount(wnd: Window, comms: Comms): boolean {
+    mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
 
@@ -158,7 +158,7 @@ export class ScrollSnapper extends Snapper {
         return true;
     }
 
-    unmount(wnd: Window, comms: Comms): boolean {
+    unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         comms.unregisterAll(ScrollSnapper.moduleName);
         this.removeAnchorElements();
         wnd.document.getElementById(SCROLL_SNAPPER_STYLE_ID)?.remove();

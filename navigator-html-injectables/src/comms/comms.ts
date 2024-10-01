@@ -1,3 +1,4 @@
+import { ReadiumWindow } from "../helpers/dom";
 import { CommsEventKey, CommsCommandKey } from "./keys";
 import { mid } from "./mid";
 
@@ -24,13 +25,13 @@ export type CommsCallback = (data: unknown, ack: CommsAck) => void; // TODO: may
  * adds structure to the messages and lets modules register callbacks.
  */
 export class Comms {
-    private readonly wnd: Window;
-    private destination: Window | null = null;
+    private readonly wnd: ReadiumWindow;
+    private destination: ReadiumWindow | null = null;
     private registrar = new Map<CommsCommandKey, Registrant[]>();
     private origin: string = "";
     private channelId: string = "";
 
-    constructor(wnd: Window) {
+    constructor(wnd: ReadiumWindow) {
         this.wnd = wnd;
         wnd.addEventListener("message", this.receiver);
     }
@@ -43,7 +44,7 @@ export class Comms {
         if(data.key === "_ping") {
             // The "ping" gives us a destination we bind to for posting events
             if(!this.destination) {
-                this.destination = event.source as Window;
+                this.destination = event.source as Window as ReadiumWindow;
                 this.origin = event.origin;
                 this.channelId = data._channel;
 

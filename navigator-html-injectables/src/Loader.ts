@@ -1,4 +1,5 @@
 import { Comms } from "./comms/comms";
+import { ReadiumWindow } from "./helpers/dom";
 import { Module, ModuleDerived, ModuleLibrary, ModuleName } from "./modules";
 
 /**
@@ -7,14 +8,14 @@ import { Module, ModuleDerived, ModuleLibrary, ModuleName } from "./modules";
  */
 export class Loader<T extends string = ModuleName> {
     private loadedModules: Module[] = [];
-    private readonly wnd: Window;
+    private readonly wnd: ReadiumWindow;
     private readonly comms: Comms;
 
     /**
      * @param wnd Window instance to operate on
      * @param initialModules List of initial modules to load
      */
-    constructor(wnd: Window = window, initialModules: string[] = []) {
+    constructor(wnd: ReadiumWindow = window as Window as ReadiumWindow, initialModules: string[] = []) {
         this.wnd = wnd; // Window instance
         this.comms = new Comms(wnd);
 

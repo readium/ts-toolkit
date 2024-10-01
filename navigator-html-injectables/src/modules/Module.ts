@@ -1,4 +1,5 @@
 import { Comms } from "../comms";
+import { ReadiumWindow } from "../helpers/dom";
 import { ModuleName } from "./ModuleLibrary";
 
 export abstract class Module {
@@ -9,14 +10,14 @@ export abstract class Module {
     // to using comms.register, and send any commands using comms.send. Modules
     // must be designed to not use comms.send before the communication handshake
     // has finished (so not during the mount function).
-    abstract mount(wnd: Window, comms: Comms): boolean;
+    abstract mount(wnd: ReadiumWindow, comms: Comms): boolean;
 
     // Unmounting should completely clean up any event listeners or
     // active modification of the HTML content, and cease all activity. This is
     // because an implementer should be able to mount and unmount Modules at any
     // time, to, for example, switch reading modes. There should be no difference
     // in behavior after mounting and unmounting a Module repeatedly.
-    abstract unmount(wnd: Window, comms: Comms): boolean;
+    abstract unmount(wnd: ReadiumWindow, comms: Comms): boolean;
 }
 
 export type ModuleDerived = {new (): Module} & typeof Module;
