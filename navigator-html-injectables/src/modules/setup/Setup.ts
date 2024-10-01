@@ -7,7 +7,6 @@ export abstract class Setup extends Module {
     static readonly moduleName: ModuleName = "setup";
 
     private comms!: Comms;
-    private wnd!: ReadiumWindow;
 
     wndOnErr(event: ErrorEvent) {
         this.comms?.send("error", {
@@ -54,16 +53,17 @@ export abstract class Setup extends Module {
         this.comms?.send("media_pause", this.mediaPlayingCount);
     }
 
-    private pauseAllMedia() {
-        const avEls = this.wnd.document.querySelectorAll("audio,video");
+    private pauseAllMedia(wnd: ReadiumWindow) {
+        const avEls = wnd.document.querySelectorAll("audio,video");
         for (let i = 0; i < avEls.length; i++) {
             (avEls[i] as HTMLMediaElement).pause();
         }
     }
 
+    private allAnimations = new Set<Animation>();
+
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.comms = comms;
-        this.wnd = wnd;
 
         // Track all window errors
         wnd.addEventListener(
@@ -72,12 +72,35 @@ export abstract class Setup extends Module {
             false
         );
 
-        comms.register("unfocus", Setup.moduleName, (_, ack) => {
-            // When a document is unfocused, all media is paused
-            this.pauseAllMedia();
+        // Add all currently active animations and cancel them
+        if("getAnimations" in wnd.document) {
+            wnd.document.getAnimations().forEach((a) => {
+                a.cancel();
+                this.allAnimations.add(a);
+            });
+        }
+
+        comms.register("activate", Setup.moduleName, (_, ack) => {
+            // Restart all animations
+            this.allAnimations.forEach(a => {
+                a.cancel();
+                a.play();
+            });
+
             ack(true);
         });
 
+        comms.register("unfocus", Setup.moduleName, (_, ack) => {
+            // When a document is unfocused, all media is paused
+            this.pauseAllMedia(wnd);
+
+            // ... and all animations are cancelled
+            this.allAnimations.forEach(a => a.pause());
+
+            ack(true);
+        });
+
+        // Track play/pause of all <audio> and <video> elements
         const avEls = wnd.document.querySelectorAll("audio,video");
         for (let i = 0; i < avEls.length; i++) {
             const e = avEls[i] as HTMLAudioElement | HTMLVideoElement;
@@ -97,6 +120,9 @@ export abstract class Setup extends Module {
         wnd.removeEventListener("error", this.wndOnErr);
         wnd.removeEventListener("play", this.onMediaPlayEvent);
         wnd.removeEventListener("pause", this.onMediaPauseEvent);
+
+        this.allAnimations.forEach(a => a.cancel());
+        this.allAnimations.clear();
 
         comms.log("Setup Unmounted");
         return true;
