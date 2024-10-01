@@ -9,7 +9,7 @@ const FIXED_STYLE_ID = "readium-fixed-style";
 export class FixedSetup extends Setup {
     static readonly moduleName: ModuleName = "fixed_setup";
 
-    mount(wnd: Window, comms: Comms): boolean {
+    mount(wnd: ReadiumWindow, comms: Comms): boolean {
         if(!super.mount(wnd, comms)) return false;
 
         const style = wnd.document.createElement("style");
@@ -62,7 +62,7 @@ export class FixedSetup extends Setup {
         return true;
     }
 
-    unmount(wnd: Window, comms: Comms): boolean {
+    unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         comms.unregisterAll(FixedSetup.moduleName);
 
         wnd.document.getElementById(FIXED_STYLE_ID)?.remove();

@@ -24,7 +24,7 @@ export class ColumnSnapper extends Snapper {
     static readonly moduleName: ModuleName = "column_snapper";
     private resizeObserver!: ResizeObserver;
     private mutationObserver!: MutationObserver;
-    private wnd!: Window;
+    private wnd!: ReadiumWindow;
     private comms!: Comms;
     private doc() { return this.wnd.document.scrollingElement as HTMLElement; }
     private scrollOffset() {
@@ -224,7 +224,7 @@ export class ColumnSnapper extends Snapper {
     }
     private readonly onTouchMover = this.onTouchMove.bind(this);
 
-    mount(wnd: Window, comms: Comms): boolean {
+    mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
         if(!super.mount(wnd, comms)) return false;
@@ -271,7 +271,7 @@ export class ColumnSnapper extends Snapper {
         wnd.document.head.appendChild(d);
 
         // Necessary for iOS 13 and below
-        const ResizeObserver = (wnd as Window & typeof globalThis).ResizeObserver || Polyfill;
+        const ResizeObserver = (wnd as ReadiumWindow & typeof globalThis).ResizeObserver || Polyfill;
 
         this.resizeObserver = new ResizeObserver(() => wnd.requestAnimationFrame(() => {
             wnd && appendVirtualColumnIfNeeded(wnd);
@@ -447,7 +447,7 @@ export class ColumnSnapper extends Snapper {
         return true;
     }
 
-    unmount(wnd: Window, comms: Comms): boolean {
+    unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.snappingCancelled = true;
         comms.unregisterAll(ColumnSnapper.moduleName);
         this.resizeObserver.disconnect();

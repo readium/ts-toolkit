@@ -1,4 +1,5 @@
 import { Comms } from "../../comms";
+import { ReadiumWindow } from "../../helpers/dom";
 import { Module } from "../Module";
 import { ModuleName } from "../ModuleLibrary";
 
@@ -17,7 +18,7 @@ export abstract class Snapper extends Module {
         }`;
     }
 
-    mount(wnd: Window, comms: Comms): boolean {
+    mount(wnd: ReadiumWindow, comms: Comms): boolean {
         const d = wnd.document.createElement("style");
         d.dataset.readium = "true";
         d.id = SNAPPER_STYLE_ID;
@@ -39,7 +40,7 @@ export abstract class Snapper extends Module {
         return true;
     }
 
-    unmount(wnd: Window, comms: Comms): boolean {
+    unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         wnd.document.getElementById(SNAPPER_STYLE_ID)?.remove();
 
         comms.log("Snapper Unmounted");

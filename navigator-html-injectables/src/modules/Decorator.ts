@@ -6,6 +6,7 @@ import { ModuleName } from "./ModuleLibrary";
 import { Rect, getClientRectsNoOverlap } from "../helpers/rect";
 import { ResizeObserver as Polyfill } from '@juggle/resize-observer';
 import { getProperty } from "../helpers/css";
+import { ReadiumWindow } from "../helpers/dom";
 
 // Necessary for iOS 13 and below
 const ResizeObserver = window.ResizeObserver || Polyfill;
@@ -68,7 +69,7 @@ class DecorationGroup {
      * @param name Human-readable name of the group
      */
     constructor(
-        private readonly wnd: Window,
+        private readonly wnd: ReadiumWindow,
         private readonly comms: Comms,
         private readonly id: string,
         private readonly name: string
@@ -377,7 +378,7 @@ class DecorationGroup {
 export class Decorator extends Module {
     static readonly moduleName: ModuleName = "decorator";
     private resizeObserver!: ResizeObserver;
-    private wnd!: Window;
+    private wnd!: ReadiumWindow;
     /*private readonly lastSize = {
         width: 0,
         height: 0
@@ -403,7 +404,7 @@ export class Decorator extends Module {
     }
     private readonly handleResizer = this.handleResize.bind(this);
 
-    mount(wnd: Window, comms: Comms): boolean {
+    mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
 
         comms.register("decorate", Decorator.moduleName, (data, ack) => {
@@ -447,7 +448,7 @@ export class Decorator extends Module {
         return true;
     }
 
-    unmount(wnd: Window, comms: Comms): boolean {
+    unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         wnd.removeEventListener("orientationchange", this.handleResizer);
         wnd.removeEventListener("resize", this.handleResizer);
 

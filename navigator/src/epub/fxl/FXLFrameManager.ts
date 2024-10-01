@@ -2,6 +2,7 @@ import { Loader, ModuleName } from "@readium/navigator-html-injectables";
 import { Page, ReadingProgression } from "@readium/shared";
 import { FrameComms } from "../frame/FrameComms";
 import { FXLPeripherals } from "./FXLPeripherals";
+import { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
 
 export class FXLFrameManager {
     private frame: HTMLIFrameElement;
@@ -65,7 +66,7 @@ export class FXLFrameManager {
                 // TODO
                 this.comms?.halt();
                 this.loader.destroy();
-                this.loader = new Loader(wnd, modules);
+                this.loader = new Loader(wnd as ReadiumWindow, modules);
                 this.currModules = modules;
                 this.comms = undefined;
                 try { res(wnd); this.loadPromise = undefined; } catch (error) {}
@@ -73,7 +74,7 @@ export class FXLFrameManager {
             }
             this.frame.addEventListener("load", () => {
                 const wnd = this.frame.contentWindow!;
-                this.loader = new Loader(wnd, modules);
+                this.loader = new Loader(wnd as ReadiumWindow, modules);
                 this.currModules = modules;
                 this.peripherals.observe(this.wrapper);
                 this.peripherals.observe(wnd);
