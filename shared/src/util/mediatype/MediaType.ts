@@ -454,6 +454,20 @@ export class MediaType {
       fileExtension: 'json',
     });
   }
+  public static get READIUM_CONTENT_DOCUMENT(): MediaType {
+    return MediaType.parse({
+      mediaType: 'application/vnd.readium.content+json',
+      name: 'Readium Content Document',
+      fileExtension: 'json',
+    });
+  }
+  public static get READIUM_GUIDED_NAVIGATION_DOCUMENT(): MediaType {
+    return MediaType.parse({
+      mediaType: 'application/guided-navigation+json',
+      name: 'Readium Guided Navigation Document',
+      fileExtension: 'json',
+    });
+  }
   public static get READIUM_POSITION_LIST(): MediaType {
     return MediaType.parse({
       mediaType: 'application/vnd.readium.position-list+json',
