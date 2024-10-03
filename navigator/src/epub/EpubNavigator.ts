@@ -216,7 +216,7 @@ export class EpubNavigator extends VisualNavigator {
                 this.listeners.zoom(data as number);
                 break;
             case "progress":
-                this.syncLocation(data as number);
+                this.syncLocation(data as { progress: number, reference: number });
                 break;
             case "log":
                 console.log(this._cframes[0]?.source?.split("/")[3], ...(data as any[]));
@@ -336,7 +336,7 @@ export class EpubNavigator extends VisualNavigator {
         return true;
     }
 
-    private findNearestPosition(fromProgression: number): Locator {
+    private findNearestPosition(fromProgression: { progress: number, reference: number }): Locator {
         // TODO replace with locator service
         const potentialPositions = this.positions.filter(
             (p) => p.href === this.currentLocation.href
@@ -347,7 +347,7 @@ export class EpubNavigator extends VisualNavigator {
         // smaller than or equal to the requested progression.
         potentialPositions.some((p) => {
             const pr = p.locations.progression ?? 0;
-            if (fromProgression <= pr) {
+            if (fromProgression.progress <= pr) {
                 pos = p;
                 return true;
             }
@@ -356,9 +356,9 @@ export class EpubNavigator extends VisualNavigator {
         return pos;
     }
 
-    private async syncLocation(iframeProgress: number) {
+    private async syncLocation(iframeProgress: { progress: number, reference: number }) {
         this.currentLocation = this.findNearestPosition(iframeProgress).copyWithLocations({
-            progression: iframeProgress // Most accurate progression in resource
+            progression: iframeProgress.progress // Most accurate progression in resource
         });
         this.listeners.positionChanged(this.currentLocation);
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
