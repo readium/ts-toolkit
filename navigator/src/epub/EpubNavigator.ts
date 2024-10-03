@@ -42,6 +42,7 @@ export class EpubNavigator extends VisualNavigator {
     private framePool!: FramePoolManager | FXLFramePoolManager;
     private positions!: Locator[];
     private currentLocation!: Locator;
+    private lastLocationInView: Locator | undefined;
     private currentProgression: ReadingProgression;
     public readonly layout: EPUBLayout;
 
@@ -336,30 +337,45 @@ export class EpubNavigator extends VisualNavigator {
         return true;
     }
 
-    private findNearestPosition(fromProgression: { progress: number, reference: number }): Locator {
+    private findNearestPositionAndLastinView(fromProgression: { progress: number, reference: number }):  { pos: Locator, lastInView: Locator | undefined } {
         // TODO replace with locator service
         const potentialPositions = this.positions.filter(
             (p) => p.href === this.currentLocation.href
         );
         let pos = this.currentLocation;
+        let lastInView = undefined;
 
-        // Find the last locator with a progrssion that's
+        // Find the last locator with a progression that's
         // smaller than or equal to the requested progression.
-        potentialPositions.some((p) => {
+        potentialPositions.some((p, idx) => {
             const pr = p.locations.progression ?? 0;
             if (fromProgression.progress <= pr) {
                 pos = p;
+
+                // If there’s a match, check the last in view, from the next progression
+                for (let i = idx + 1; i < potentialPositions.length; i++) {
+                    const nextProgression = fromProgression.progress + fromProgression.reference;
+                    const pNext = potentialPositions[i];
+                    if (pNext?.locations.progression && pNext.locations.progression <= nextProgression) {
+                        lastInView = pNext;
+                    } else {
+                        break;
+                    }
+                }
+
                 return true;
             }
             else return false;
         });
-        return pos;
+        return { pos: pos, lastInView: lastInView }
     }
 
     private async syncLocation(iframeProgress: { progress: number, reference: number }) {
-        this.currentLocation = this.findNearestPosition(iframeProgress).copyWithLocations({
+        const nearestAndLast = this.findNearestPositionAndLastinView(iframeProgress)
+        this.currentLocation = nearestAndLast.pos.copyWithLocations({
             progression: iframeProgress.progress // Most accurate progression in resource
         });
+        this.lastLocationInView = nearestAndLast.lastInView;
         this.listeners.positionChanged(this.currentLocation);
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
     }
@@ -410,7 +426,7 @@ export class EpubNavigator extends VisualNavigator {
         if(this.layout === EPUBLayout.fixed)
          return (this.framePool as FXLFramePoolManager).currentNumbers;
 
-        return [this.currentLocator?.locations.position ?? 0];
+        return [this.currentLocator?.locations.position ?? 0, ...(this.lastLocationInView?.locations.position ? [this.lastLocationInView.locations.position] : [])];
     }
 
     // TODO: This is temporary until user settings are implemented.
