@@ -454,6 +454,13 @@ export class MediaType {
       fileExtension: 'json',
     });
   }
+  public static get READIUM_POSITION_LIST(): MediaType {
+    return MediaType.parse({
+      mediaType: 'application/vnd.readium.position-list+json',
+      name: 'Readium Position List',
+      fileExtension: 'json',
+    });
+  }
   public static get READIUM_WEBPUB(): MediaType {
     return MediaType.parse({
       mediaType: 'application/webpub+zip',
