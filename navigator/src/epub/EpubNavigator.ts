@@ -339,14 +339,14 @@ export class EpubNavigator extends VisualNavigator {
 
     private findLastPositionInProgressionRange(positions: Locator[], range: number[]): Locator | undefined {
         const match = positions.findLastIndex((p) => {
-            const pr = p.locations.position;
+            const pr = p.locations.progression;
             if (pr && pr > Math.min(...range) && pr <= Math.max(...range)) {
                 return true;
             } else {
                 return false;
             }
         });
-        return match ? positions[match] : undefined;
+        return match !== -1 ? positions[match] : undefined;
     }
 
     private findNearestPositions(fromProgression: { progress: number, reference: number }):  { first: Locator, last: Locator | undefined } {
@@ -359,14 +359,15 @@ export class EpubNavigator extends VisualNavigator {
 
         // Find the last locator with a progression that's
         // smaller than or equal to the requested progression.
-        potentialPositions.some((p) => {
+        potentialPositions.some((p, idx) => {
             const pr = p.locations.progression ?? 0;
             if (fromProgression.progress <= pr) {
                 first = p;
 
                 // If there’s a match, check the last in view, from the next progression
+                const nextPositions = potentialPositions.splice(idx + 1, potentialPositions.length);
                 const range = [fromProgression.progress, fromProgression.progress + fromProgression.reference];
-                this.findLastPositionInProgressionRange(potentialPositions, range);
+                last = this.findLastPositionInProgressionRange(nextPositions, range);
 
                 return true;
             }
@@ -380,9 +381,7 @@ export class EpubNavigator extends VisualNavigator {
         this.currentLocation = nearestPositions.first.copyWithLocations({
             progression: iframeProgress.progress // Most accurate progression in resource
         });
-        this.lastLocationInView = nearestPositions.last?.copyWithLocations({
-            progression: iframeProgress.progress + iframeProgress.reference // Keeping consistent with currentLocation
-        });
+        this.lastLocationInView = nearestPositions.last;
         this.listeners.positionChanged(this.currentLocation);
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
     }
