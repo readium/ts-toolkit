@@ -337,45 +337,52 @@ export class EpubNavigator extends VisualNavigator {
         return true;
     }
 
-    private findNearestPositionAndLastinView(fromProgression: { progress: number, reference: number }):  { pos: Locator, lastInView: Locator | undefined } {
+    private findLastPositionInProgressionRange(positions: Locator[], range: number[]): Locator | undefined {
+        const match = positions.findLastIndex((p) => {
+            const pr = p.locations.position;
+            if (pr && pr > Math.min(...range) && pr <= Math.max(...range)) {
+                return true;
+            } else {
+                return false;
+            }
+        });
+        return match ? positions[match] : undefined;
+    }
+
+    private findNearestPositions(fromProgression: { progress: number, reference: number }):  { first: Locator, last: Locator | undefined } {
         // TODO replace with locator service
         const potentialPositions = this.positions.filter(
             (p) => p.href === this.currentLocation.href
         );
-        let pos = this.currentLocation;
-        let lastInView = undefined;
+        let first = this.currentLocation;
+        let last = undefined;
 
         // Find the last locator with a progression that's
         // smaller than or equal to the requested progression.
-        potentialPositions.some((p, idx) => {
+        potentialPositions.some((p) => {
             const pr = p.locations.progression ?? 0;
             if (fromProgression.progress <= pr) {
-                pos = p;
+                first = p;
 
                 // If there’s a match, check the last in view, from the next progression
-                for (let i = idx + 1; i < potentialPositions.length; i++) {
-                    const nextProgression = fromProgression.progress + fromProgression.reference;
-                    const pNext = potentialPositions[i];
-                    if (pNext?.locations.progression && pNext.locations.progression <= nextProgression) {
-                        lastInView = pNext;
-                    } else {
-                        break;
-                    }
-                }
+                const range = [fromProgression.progress, fromProgression.progress + fromProgression.reference];
+                this.findLastPositionInProgressionRange(potentialPositions, range);
 
                 return true;
             }
             else return false;
         });
-        return { pos: pos, lastInView: lastInView }
+        return { first: first, last: last }
     }
 
     private async syncLocation(iframeProgress: { progress: number, reference: number }) {
-        const nearestAndLast = this.findNearestPositionAndLastinView(iframeProgress)
-        this.currentLocation = nearestAndLast.pos.copyWithLocations({
+        const nearestPositions = this.findNearestPositions(iframeProgress)
+        this.currentLocation = nearestPositions.first.copyWithLocations({
             progression: iframeProgress.progress // Most accurate progression in resource
         });
-        this.lastLocationInView = nearestAndLast.lastInView;
+        this.lastLocationInView = nearestPositions.last?.copyWithLocations({
+            progression: iframeProgress.progress + iframeProgress.reference // Keeping consistent with currentLocation
+        });
         this.listeners.positionChanged(this.currentLocation);
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
     }
