@@ -94,7 +94,8 @@ export abstract class Setup extends Module {
             // When a document is unfocused, all media is paused
             this.pauseAllMedia(wnd);
 
-            // ... and all animations are cancelled
+            // ... and all animations are paused
+            // They *not* cancelled because the user can see the sudden jump back to start
             this.allAnimations.forEach(a => a.pause());
 
             ack(true);
