@@ -15,6 +15,7 @@ export class FrameManager {
         this.frame = document.createElement("iframe");
         this.frame.classList.add("readium-navigator-iframe");
         this.frame.style.visibility = "hidden";
+        this.frame.style.setProperty("aria-hidden", "true");
         this.frame.style.opacity = "0";
         this.frame.style.position = "absolute";
         this.frame.style.pointerEvents = "none";
@@ -60,6 +61,7 @@ export class FrameManager {
 
     async hide(): Promise<void> {
         this.frame.style.visibility = "hidden";
+        this.frame.style.setProperty("aria-hidden", "true");
         this.frame.style.opacity = "0";
         this.frame.style.pointerEvents = "none";
         if(this.frame.parentElement) {
@@ -86,6 +88,7 @@ export class FrameManager {
                 this.comms?.send("focus", undefined, () => {
                     const remove = () => {
                         this.frame.style.removeProperty("visibility");
+                        this.frame.style.removeProperty("aria-hidden");
                         this.frame.style.removeProperty("opacity");
                         this.frame.style.removeProperty("pointer-events");
                         res();

@@ -27,6 +27,7 @@ export class FXLFrameManager {
         this.frame.classList.add("blank");
         this.frame.scrolling = "no";
         this.frame.style.visibility = "hidden";
+        this.frame.style.setProperty("aria-hidden", "true");
         this.frame.style.display = "none";
         this.frame.style.position = "absolute";
         this.frame.style.pointerEvents = "none";
@@ -139,6 +140,7 @@ export class FXLFrameManager {
         }
 
         this.frame.style.removeProperty("visibility");
+        this.frame.style.removeProperty("aria-hidden");
         this.frame.style.removeProperty("pointer-events");
         this.frame.classList.remove("blank");
         this.frame.classList.add("loaded");
@@ -154,6 +156,7 @@ export class FXLFrameManager {
         if(!this.loaded) return;
         this.deselect();
         this.frame.style.visibility = "hidden";
+        this.frame.style.setProperty("aria-hidden", "true");
         this.frame.style.pointerEvents = "none";
         this.frame.classList.add("blank");
         this.frame.classList.remove("loaded");
