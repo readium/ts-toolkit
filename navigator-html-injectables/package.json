@@ -1,12 +1,13 @@
 {
   "name": "@readium/navigator-html-injectables",
-  "version": "0.0.1",
+  "version": "1.2.0",
   "type": "module",
   "description": "An embeddable solution for connecting frames of HTML publications with a Readium Navigator",
   "author": "readium",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/readium/web.git"
+    "url": "git+https://github.com/readium/ts-toolkit.git",
+    "directory": "navigator-html-injectables"
   },
   "license": "BSD-3-Clause",
   "bugs": {
@@ -15,11 +16,15 @@
   "homepage": "https://github.com/readium/ts-toolkit",
   "keywords": [
     "readium",
-    "web",
     "epub",
-    "html",
+    "webpub",
+    "divina",
     "reflowable",
-    "embedded"
+    "fixed-layout",
+    "publication",
+    "ebook",
+    "reader",
+    "viewer"
   ],
   "scripts": {
     "build": "tsc && vite build"

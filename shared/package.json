@@ -6,17 +6,25 @@
   "author": "readium",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/readium/web.git"
+    "url": "git+https://github.com/readium/ts-toolkit.git",
+    "directory": "shared"
   },
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/readium/web/issues"
+    "url": "https://github.com/readium/ts-toolkit/issues"
   },
-  "homepage": "https://github.com/readium/web",
+  "homepage": "https://github.com/readium/ts-toolkit",
   "keywords": [
     "readium",
-    "web",
-    "epub"
+    "epub",
+    "webpub",
+    "divina",
+    "reflowable",
+    "fixed-layout",
+    "publication",
+    "ebook",
+    "parser",
+    "tts"
   ],
   "main": "./dist/index.umd.cjs",
   "module": "./dist/index.js",
