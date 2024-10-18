@@ -42,6 +42,7 @@ export class EpubNavigator extends VisualNavigator {
     private framePool!: FramePoolManager | FXLFramePoolManager;
     private positions!: Locator[];
     private currentLocation!: Locator;
+    private lastLocationInView: Locator | undefined;
     private currentProgression: ReadingProgression;
     public readonly layout: EPUBLayout;
 
@@ -216,7 +217,7 @@ export class EpubNavigator extends VisualNavigator {
                 this.listeners.zoom(data as number);
                 break;
             case "progress":
-                this.syncLocation(data as number);
+                this.syncLocation(data as { progress: number, reference: number });
                 break;
             case "log":
                 console.log(this._cframes[0]?.source?.split("/")[3], ...(data as any[]));
@@ -336,30 +337,51 @@ export class EpubNavigator extends VisualNavigator {
         return true;
     }
 
-    private findNearestPosition(fromProgression: number): Locator {
+    private findLastPositionInProgressionRange(positions: Locator[], range: number[]): Locator | undefined {
+        const match = positions.findLastIndex((p) => {
+            const pr = p.locations.progression;
+            if (pr && pr > Math.min(...range) && pr <= Math.max(...range)) {
+                return true;
+            } else {
+                return false;
+            }
+        });
+        return match !== -1 ? positions[match] : undefined;
+    }
+
+    private findNearestPositions(fromProgression: { progress: number, reference: number }):  { first: Locator, last: Locator | undefined } {
         // TODO replace with locator service
         const potentialPositions = this.positions.filter(
             (p) => p.href === this.currentLocation.href
         );
-        let pos = this.currentLocation;
+        let first = this.currentLocation;
+        let last = undefined;
 
-        // Find the last locator with a progrssion that's
+        // Find the last locator with a progression that's
         // smaller than or equal to the requested progression.
-        potentialPositions.some((p) => {
+        potentialPositions.some((p, idx) => {
             const pr = p.locations.progression ?? 0;
-            if (fromProgression <= pr) {
-                pos = p;
+            if (fromProgression.progress <= pr) {
+                first = p;
+
+                // If there’s a match, check the last in view, from the next progression
+                const nextPositions = potentialPositions.splice(idx + 1, potentialPositions.length);
+                const range = [fromProgression.progress, fromProgression.progress + fromProgression.reference];
+                last = this.findLastPositionInProgressionRange(nextPositions, range);
+
                 return true;
             }
             else return false;
         });
-        return pos;
+        return { first: first, last: last }
     }
 
-    private async syncLocation(iframeProgress: number) {
-        this.currentLocation = this.findNearestPosition(iframeProgress).copyWithLocations({
-            progression: iframeProgress // Most accurate progression in resource
+    private async syncLocation(iframeProgress: { progress: number, reference: number }) {
+        const nearestPositions = this.findNearestPositions(iframeProgress)
+        this.currentLocation = nearestPositions.first.copyWithLocations({
+            progression: iframeProgress.progress // Most accurate progression in resource
         });
+        this.lastLocationInView = nearestPositions.last;
         this.listeners.positionChanged(this.currentLocation);
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
     }
@@ -410,7 +432,7 @@ export class EpubNavigator extends VisualNavigator {
         if(this.layout === EPUBLayout.fixed)
          return (this.framePool as FXLFramePoolManager).currentNumbers;
 
-        return [this.currentLocator?.locations.position ?? 0];
+        return [this.currentLocator?.locations.position ?? 0, ...(this.lastLocationInView?.locations.position ? [this.lastLocationInView.locations.position] : [])];
     }
 
     // TODO: This is temporary until user settings are implemented.
