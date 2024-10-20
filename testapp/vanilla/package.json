@@ -13,7 +13,7 @@
     "@juggle/resize-observer": "^3.4.0",
     "@material/web": "^1.4.1",
     "@readium/navigator": "workspace:1.2.0",
-    "@readium/navigator-html-injectables": "workspace:0.0.1",
+    "@readium/navigator-html-injectables": "workspace:1.2.0",
     "@readium/shared": "workspace:1.2.0",
     "css-selector-generator": "^3.6.4",
     "readium-css": "github:readium/readium-css",
