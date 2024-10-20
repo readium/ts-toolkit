@@ -15,8 +15,8 @@ importers:
         specifier: ^5.4.5
         version: 5.4.5
       vite:
-        specifier: ^4.5.3
-        version: 4.5.3(@types/node@20.4.8)(less@4.2.0)(sass@1.79.3)(stylus@0.62.0)
+        specifier: ^4.5.5
+        version: 4.5.5(@types/node@20.4.8)(less@4.2.0)(sass@1.79.3)(stylus@0.62.0)
 
   navigator:
     dependencies:
@@ -26,7 +26,7 @@ importers:
     devDependencies:
       '@laynezh/vite-plugin-lib-assets':
         specifier: ^0.5.24
-        version: 0.5.24(vite@4.5.3(@types/node@20.4.8)(less@4.2.0)(sass@1.79.3)(stylus@0.62.0))
+        version: 0.5.24(vite@4.5.5(@types/node@20.4.8)(less@4.2.0)(sass@1.79.3)(stylus@0.62.0))
       '@readium/navigator-html-injectables':
         specifier: workspace:1.2.0
         version: link:../navigator-html-injectables
@@ -41,7 +41,7 @@ importers:
         version: 3.6.4
       readium-css:
         specifier: github:readium/readium-css
-        version: https://codeload.github.com/readium/readium-css/tar.gz/583011453612e6f695056ab6c086a2c4f4cac9c0
+        version: git+https://git@github.com:readium/readium-css.git#f55ca6e91b5104a27c6454e549b52e9f7248bbd0
       tslib:
         specifier: ^2.5.2
         version: 2.5.2
@@ -52,8 +52,8 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0(typescript@5.4.5)
       vite:
-        specifier: ^4.4.9
-        version: 4.5.3(@types/node@20.4.8)(less@4.2.0)(sass@1.79.3)(stylus@0.62.0)
+        specifier: ^4.5.5
+        version: 4.5.5(@types/node@20.4.8)(less@4.2.0)(sass@1.79.3)(stylus@0.62.0)
 
   navigator-html-injectables:
     devDependencies:
@@ -73,8 +73,8 @@ importers:
         specifier: ^5.4.5
         version: 5.4.5
       vite:
-        specifier: ^4.4.9
-        version: 4.5.3(@types/node@20.4.8)(less@4.2.0)(sass@1.79.3)(stylus@0.62.0)
+        specifier: ^4.5.5
+        version: 4.5.5(@types/node@20.4.8)(less@4.2.0)(sass@1.79.3)(stylus@0.62.0)
 
   shared:
     devDependencies:
@@ -112,8 +112,8 @@ importers:
         specifier: ^5.4.5
         version: 5.4.5
       vite:
-        specifier: ^4.4.9
-        version: 4.5.3(@types/node@20.4.8)(less@4.2.0)(sass@1.79.3)(stylus@0.62.0)
+        specifier: ^4.5.5
+        version: 4.5.5(@types/node@20.4.8)(less@4.2.0)(sass@1.79.3)(stylus@0.62.0)
 
   testapp/vanilla:
     devDependencies:
@@ -137,13 +137,13 @@ importers:
         version: 3.6.7
       readium-css:
         specifier: github:readium/readium-css
-        version: https://codeload.github.com/readium/readium-css/tar.gz/583011453612e6f695056ab6c086a2c4f4cac9c0
+        version: git+https://git@github.com:readium/readium-css.git#f55ca6e91b5104a27c6454e549b52e9f7248bbd0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
       vite:
-        specifier: ^4.4.9
-        version: 4.5.3(@types/node@20.4.8)(less@4.2.0)(sass@1.79.3)(stylus@0.62.0)
+        specifier: ^4.5.5
+        version: 4.5.5(@types/node@20.4.8)(less@4.2.0)(sass@1.79.3)(stylus@0.62.0)
 
 packages:
 
@@ -1590,6 +1590,7 @@ packages:
 
   glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
+    deprecated: Glob versions prior to v9 are no longer supported
 
   globals@11.12.0:
     resolution: {integrity: sha512-WOBp/EEGUiIsJSp7wcv/y6MO+lV9UoncWqxuFfm8eBwzWNgyfBd6Gz+IeKQ9jCmyhoH99g15M3T+QaVHFjizVA==}
@@ -1646,6 +1647,7 @@ packages:
 
   inflight@1.0.6:
     resolution: {integrity: sha512-k92I/b08q4wvFscXCLvqfsHCrjrF7yiXsQuIVvVE7N82W3+aqpzuUdBbfhWcy/FZR3/4IgflMgKLOsvPDrGCJA==}
+    deprecated: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
 
   inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
@@ -2171,9 +2173,9 @@ packages:
     resolution: {integrity: sha512-GkMg9uOTpIWWKbSsgwb5fA4EavTR+SG/PMPoAY8hkhHfEEY0/vqljY+XHqtDf2cr2IJtoNRDbrrEpZUiZCkYRw==}
     engines: {node: '>= 14.16.0'}
 
-  readium-css@https://codeload.github.com/readium/readium-css/tar.gz/583011453612e6f695056ab6c086a2c4f4cac9c0:
-    resolution: {tarball: https://codeload.github.com/readium/readium-css/tar.gz/583011453612e6f695056ab6c086a2c4f4cac9c0}
-    version: 1.0.0-beta.1
+  readium-css@git+https://git@github.com:readium/readium-css.git#f55ca6e91b5104a27c6454e549b52e9f7248bbd0:
+    resolution: {commit: f55ca6e91b5104a27c6454e549b52e9f7248bbd0, repo: git@github.com:readium/readium-css.git, type: git}
+    version: 2.0.0-alpha.1
 
   regenerate-unicode-properties@10.1.0:
     resolution: {integrity: sha512-d1VudCLoIGitcU/hEg2QqvyGZQmdC0Lf8BqdOMXGFSvJP4bNV1+XqbPQeHHLD51Jh4QJJ225dlIFvY4Ly6MXmQ==}
@@ -2431,8 +2433,8 @@ packages:
     resolution: {integrity: sha512-kiGUalWN+rgBJ/1OHZsBtU4rXZOfj/7rKQxULKlIzwzQSvMJUUNgPwJEEh7gU6xEVxC0ahoOBvN2YI8GH6FNgA==}
     engines: {node: '>=10.12.0'}
 
-  vite@4.5.3:
-    resolution: {integrity: sha512-kQL23kMeX92v3ph7IauVkXkikdDRsYMGTVl5KY2E9OY4ONLvkHf04MDTbnfo6NKxZiDLWzVpP5oTa8hQD8U3dg==}
+  vite@4.5.5:
+    resolution: {integrity: sha512-ifW3Lb2sMdX+WU91s3R0FyQlAyLxOzCSCP37ujw0+r5POeHPwe6udWVIElKQq8gk3t7b8rkmvqC6IHBpCff4GQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
@@ -2520,7 +2522,7 @@ snapshots:
   '@babel/code-frame@7.24.6':
     dependencies:
       '@babel/highlight': 7.24.6
-      picocolors: 1.0.1
+      picocolors: 1.1.0
 
   '@babel/code-frame@7.24.7':
     dependencies:
@@ -2788,14 +2790,14 @@ snapshots:
       '@babel/helper-validator-identifier': 7.24.6
       chalk: 2.4.2
       js-tokens: 4.0.0
-      picocolors: 1.0.1
+      picocolors: 1.1.0
 
   '@babel/highlight@7.24.7':
     dependencies:
       '@babel/helper-validator-identifier': 7.24.7
       chalk: 2.4.2
       js-tokens: 4.0.0
-      picocolors: 1.0.1
+      picocolors: 1.1.0
 
   '@babel/parser@7.22.7':
     dependencies:
@@ -3758,13 +3760,13 @@ snapshots:
 
   '@juggle/resize-observer@3.4.0': {}
 
-  '@laynezh/vite-plugin-lib-assets@0.5.24(vite@4.5.3(@types/node@20.4.8)(less@4.2.0)(sass@1.79.3)(stylus@0.62.0))':
+  '@laynezh/vite-plugin-lib-assets@0.5.24(vite@4.5.5(@types/node@20.4.8)(less@4.2.0)(sass@1.79.3)(stylus@0.62.0))':
     dependencies:
       escape-string-regexp: 4.0.0
       loader-utils: 3.3.1
       mrmime: 1.0.1
       semver: 7.6.3
-      vite: 4.5.3(@types/node@20.4.8)(less@4.2.0)(sass@1.79.3)(stylus@0.62.0)
+      vite: 4.5.5(@types/node@20.4.8)(less@4.2.0)(sass@1.79.3)(stylus@0.62.0)
 
   '@lit-labs/ssr-dom-shim@1.2.0': {}
 
@@ -4947,7 +4949,7 @@ snapshots:
   postcss@8.4.38:
     dependencies:
       nanoid: 3.3.7
-      picocolors: 1.0.1
+      picocolors: 1.1.0
       source-map-js: 1.2.0
 
   pretty-format@27.5.1:
@@ -4982,7 +4984,7 @@ snapshots:
 
   readdirp@4.0.1: {}
 
-  readium-css@https://codeload.github.com/readium/readium-css/tar.gz/583011453612e6f695056ab6c086a2c4f4cac9c0: {}
+  readium-css@git+https://git@github.com:readium/readium-css.git#f55ca6e91b5104a27c6454e549b52e9f7248bbd0: {}
 
   regenerate-unicode-properties@10.1.0:
     dependencies:
@@ -5219,7 +5221,7 @@ snapshots:
     dependencies:
       browserslist: 4.23.3
       escalade: 3.1.2
-      picocolors: 1.0.1
+      picocolors: 1.1.0
 
   util-deprecate@1.0.2: {}
 
@@ -5229,7 +5231,7 @@ snapshots:
       '@types/istanbul-lib-coverage': 2.0.4
       convert-source-map: 2.0.0
 
-  vite@4.5.3(@types/node@20.4.8)(less@4.2.0)(sass@1.79.3)(stylus@0.62.0):
+  vite@4.5.5(@types/node@20.4.8)(less@4.2.0)(sass@1.79.3)(stylus@0.62.0):
     dependencies:
       esbuild: 0.18.20
       postcss: 8.4.38
