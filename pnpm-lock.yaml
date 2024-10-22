@@ -40,7 +40,7 @@ importers:
         specifier: ^3.6.4
         version: 3.6.4
       readium-css:
-        specifier: github:readium/readium-css#master
+        specifier: github:readium/readium-css#v.1.1.0
         version: https://codeload.github.com/readium/readium-css/tar.gz/5084cac302997da5f66b9ca2c2a7cc6652d9caa3
       tslib:
         specifier: ^2.5.2
