@@ -53,7 +53,7 @@
     "@readium/shared": "workspace:1.2.0",
     "@types/path-browserify": "^1.0.0",
     "css-selector-generator": "^3.6.4",
-    "readium-css": "github:readium/readium-css",
+    "readium-css": "github:readium/readium-css#develop",
     "tslib": "^2.5.2",
     "typescript": "^5.4.5",
     "typescript-plugin-css-modules": "^5.1.0",
