@@ -40,7 +40,7 @@ export class ColumnSnapper extends Snapper {
     }
 
     reportProgress() {
-        this.comms.send("progress", this.wnd.scrollX / this.cachedScrollWidth);
+        this.comms.send("progress", { progress: this.wnd.scrollX / this.cachedScrollWidth, reference: this.wnd.innerWidth / this.doc().scrollWidth });
     }
 
     private shakeTimeout = 0;
