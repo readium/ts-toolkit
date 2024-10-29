@@ -1,67 +1,68 @@
 import { Locator } from "@readium/shared";
 import { TextQuoteAnchor } from "../vendor/hypothesis/anchoring/types";
 
+function isReplacedLikeElement(element: Element): boolean {
+    return element.tagName === "IMG" || element.tagName === "VIDEO" || element.tagName === "AUDIO" || element.tagName === "IFRAME" || element.tagName === "OBJECT" || element.tagName === "EMBED" || element.tagName === "CANVAS";
+}
+
 // Based on the kotlin-toolkit code
 export function rangeFromLocator(doc: Document, locator: Locator) {
     try {
-      let locations = locator.locations;
-      let text = locator.text;
-      if (text && text.highlight) {
-        let root;
-        if (locations && locations.getCssSelector()) {
-          root = doc.querySelector(locations.getCssSelector()!);
-        }
-        if (!root) {
-          root = doc.body;
-        }
-  
-        let anchor = new TextQuoteAnchor(root, text.highlight, {
-          prefix: text.before,
-          suffix: text.after,
-        });
-        try {
-          return anchor.toRange();
-        } catch (error) {
-          // We don't watch to "crash" when the quote is not found
-          console.warn("Quote not found:", anchor);
-          return null;
-        }
-      }
-  
-      if (locations) {
-        var element = null;
-  
-        if (!element && locations.getCssSelector()) {
-          element = doc.querySelector(locations.getCssSelector()!);
-        }
-  
-        if (!element && locations.fragments) {
-          for (const htmlId of locations.fragments) {
-            element = doc.getElementById(htmlId);
-            if (element) {
-              break;
+        const locations = locator.locations;
+        const text = locator.text;
+        if (text && text.highlight) {
+            let root;
+            if (locations && locations.getCssSelector()) {
+                root = doc.querySelector(locations.getCssSelector()!);
             }
-          }
-        }
-  
-        if (element) {
-          let range = doc.createRange();
+            if (!root) {
+                root = doc.body;
+            }
 
-          // This is a special case where the node is
-          // a single element with no children. Not sure
-          // yet how effective this is yet, may remove in future.
-          if(element.childNodes.length === 0) {
-            range.selectNodeContents(element);
-            return range;
-          }
-
-          range.setStartBefore(element);
-          range.setEndAfter(element);
-          return range;
+            const anchor = new TextQuoteAnchor(root, text.highlight, {
+                prefix: text.before,
+                suffix: text.after,
+            });
+            try {
+                return anchor.toRange();
+            } catch (error) {
+                // We don't watch to "crash" when the quote is not found
+                console.warn("Quote not found:", anchor);
+                return null;
+            }
         }
-      }
+
+        if (locations) {
+            let element = null;
+
+            if (!element && locations.getCssSelector()) {
+                element = doc.querySelector(locations.getCssSelector()!);
+            }
+
+            if (!element && locations.fragments) {
+                for (const htmlId of locations.fragments) {
+                    element = doc.getElementById(htmlId);
+                    if (element) {
+                        break;
+                    }
+                }
+            }
+
+            if (element) {
+                const range = doc.createRange();
+
+                if (element.childNodes.length === 0 || isReplacedLikeElement(element)) {
+                    range.selectNode(element);
+                    return range;
+                }
+
+                range.setStartBefore(element);
+                range.setEndAfter(element);
+                return range;
+            }
+        }
     } catch (e) {
-      console.error(e);
+        console.error(e);
     }
     return null;
-  }
+}
