@@ -2,7 +2,8 @@ import { Locator } from "@readium/shared";
 import { TextQuoteAnchor } from "../vendor/hypothesis/anchoring/types";
 
 function isReplacedLikeElement(element: Element): boolean {
-    return element.tagName === "IMG" || element.tagName === "VIDEO" || element.tagName === "AUDIO" || element.tagName === "IFRAME" || element.tagName === "OBJECT" || element.tagName === "EMBED" || element.tagName === "CANVAS";
+    const tagName = element.tagName.toUpperCase();
+    return tagName === "IMG" || tagName === "VIDEO" || tagName === "AUDIO" || tagName === "IFRAME" || tagName === "OBJECT" || tagName === "EMBED" || tagName === "CANVAS";
 }
 
 // Based on the kotlin-toolkit code
