@@ -36,6 +36,7 @@
     "forceConsistentCasingInFileNames": true,
     // emit only .d.ts
     "noEmit": false,
-    "emitDeclarationOnly": true
+    "emitDeclarationOnly": true,
+    "types": ["vite/client"]
   }
 }

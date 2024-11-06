@@ -38,6 +38,8 @@ export class ScrollSnapper extends Snapper {
         this.wnd = wnd;
         this.comms = comms;
 
+        wnd.navigator.epubReadingSystem.layoutStyle = "scrolling";
+
         // Add styling to hide the scrollbar
         const style = wnd.document.createElement("style");
         style.dataset.readium = "true";

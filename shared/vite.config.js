@@ -1,5 +1,6 @@
 import { resolve } from "path";
 import { defineConfig } from "vite";
+import packageJson from "./package.json";
 
 export default defineConfig({
   build: {
@@ -8,5 +9,9 @@ export default defineConfig({
       name: "shared",
       fileName: "index"
     }
+  },
+  define: {
+    "import.meta.env.PACKAGE_NAME": JSON.stringify(packageJson.name),
+    "import.meta.env.PACKAGE_VERSION": JSON.stringify(packageJson.version),
   }
 });
