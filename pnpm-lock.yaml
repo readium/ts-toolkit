@@ -39,8 +39,8 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1
       readium-css:
-        specifier: github:readium/readium-css
-        version: https://codeload.github.com/readium/readium-css/tar.gz/0261eb62120b47ebd3b36428d9908a587ca72f9c
+        specifier: github:readium/readium-css#master
+        version: https://codeload.github.com/readium/readium-css/tar.gz/0728ade3893ba9c07ae6cd64798e5ded7b37d777
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -120,26 +120,26 @@ importers:
         specifier: ^3.4.0
         version: 3.4.0
       '@material/web':
-        specifier: ^1.4.1
-        version: 1.5.0
+        specifier: ^1.5.1
+        version: 1.5.1
       '@readium/navigator':
-        specifier: workspace:1.2.0
+        specifier: workspace:*
         version: link:../../navigator
       '@readium/navigator-html-injectables':
-        specifier: workspace:1.2.0
+        specifier: workspace:*
         version: link:../../navigator-html-injectables
       '@readium/shared':
-        specifier: workspace:1.2.0
+        specifier: workspace:*
         version: link:../../shared
       css-selector-generator:
-        specifier: ^3.6.4
-        version: 3.6.7
+        specifier: ^3.6.9
+        version: 3.6.9
       readium-css:
-        specifier: github:readium/readium-css
-        version: https://codeload.github.com/readium/readium-css/tar.gz/0261eb62120b47ebd3b36428d9908a587ca72f9c
+        specifier: github:readium/readium-css#master
+        version: https://codeload.github.com/readium/readium-css/tar.gz/0728ade3893ba9c07ae6cd64798e5ded7b37d777
       typescript:
-        specifier: ^5.4.5
-        version: 5.4.5
+        specifier: ^5.6.3
+        version: 5.6.3
       vite:
         specifier: ^4.5.5
         version: 4.5.5(@types/node@20.4.8)(less@4.2.0)(sass@1.81.0)(stylus@0.62.0)
@@ -1147,14 +1147,14 @@ packages:
     peerDependencies:
       vite: ^3.0.0 || ^4.0.0 || ^5.0.0
 
-  '@lit-labs/ssr-dom-shim@1.2.0':
-    resolution: {integrity: sha512-yWJKmpGE6lUURKAaIltoPIE/wrbY3TEkqQt+X0m+7fQNnAv0keydnYvbiJFP1PnMhizmIWRWOG5KLhYyc/xl+g==}
+  '@lit-labs/ssr-dom-shim@1.2.1':
+    resolution: {integrity: sha512-wx4aBmgeGvFmOKucFKY+8VFJSYZxs9poN3SDNQFF6lT6NrQUnHiPB2PWz2sc4ieEcAaYYzN+1uWahEeTq2aRIQ==}
 
   '@lit/reactive-element@2.0.4':
     resolution: {integrity: sha512-GFn91inaUa2oHLak8awSIigYz0cU0Payr1rcFsrkf5OJ5eSPxElyZfKh0f2p9FsTiZWXQdWGJeXZICEfXXYSXQ==}
 
-  '@material/web@1.5.0':
-    resolution: {integrity: sha512-aM2TVCU8Ozh3QS5cckRalmWkNCKK3Y6uhB3skIozP6jIqYX1PDhme/URrHGcWk44k2qqmR7R+X8GEBAu8N/NCQ==}
+  '@material/web@1.5.1':
+    resolution: {integrity: sha512-S9iQV1Biq6JhNpAkqXcsFdVrLW0BC1Tez8C36MEQ/VuhT3YLQySbJkUiG+1U+J1jUqlsG8fT5XsEFbhomCY39w==}
 
   '@parcel/watcher-android-arm64@2.5.0':
     resolution: {integrity: sha512-qlX4eS28bUcQCdribHkg/herLe+0A9RyYC+mm2PXpncit8z5b3nSqGVzMNR3CmtAOgRutiZ02eIJJgP/b1iEFQ==}
@@ -1515,9 +1515,6 @@ packages:
 
   css-selector-generator@3.6.4:
     resolution: {integrity: sha512-/VDUW5KAoxGXJPNcn+5Y0DLJMQumLk9zNMWl2NChuTwGLEFeqfnddCpRhY6uZ77ar0uyM7W7ilvIWsk7DpjKxQ==}
-
-  css-selector-generator@3.6.7:
-    resolution: {integrity: sha512-3j3pRqYla21kRfmcEZZTypHNPWgptq1U8uMGfg69tBFoBn9iqaEwTnLqrH8uX2oAba1WJ3JEhsf2iBITFc4cfA==}
 
   css-selector-generator@3.6.9:
     resolution: {integrity: sha512-OXV+a4wlKs+8TGxTZ8g96mQOKz5QDVE52QYdYusdbcmt0XkJd6F9zkXpMZbRk3pwwRF+K2pJkj1DINpWm7Isqw==}
@@ -2031,14 +2028,14 @@ packages:
   lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
 
-  lit-element@4.0.5:
-    resolution: {integrity: sha512-iTWskWZEtn9SyEf4aBG6rKT8GABZMrTWop1+jopsEOgEcugcXJGKuX5bEbkq9qfzY+XB4MAgCaSPwnNpdsNQ3Q==}
+  lit-element@4.1.1:
+    resolution: {integrity: sha512-HO9Tkkh34QkTeUmEdNYhMT8hzLid7YlMlATSi1q4q17HE5d9mrrEHJ/o8O2D0cMi182zK1F3v7x0PWFjrhXFew==}
 
-  lit-html@3.1.3:
-    resolution: {integrity: sha512-FwIbqDD8O/8lM4vUZ4KvQZjPPNx7V1VhT7vmRB8RBAO0AU6wuTVdoXiu2CivVjEGdugvcbPNBLtPE1y0ifplHA==}
+  lit-html@3.2.1:
+    resolution: {integrity: sha512-qI/3lziaPMSKsrwlxH/xMgikhQ0EGOX2ICU73Bi/YHFvz2j/yMCIrw4+puF2IpQ4+upd3EWbvnHM9+PnJn48YA==}
 
-  lit@3.1.3:
-    resolution: {integrity: sha512-l4slfspEsnCcHVRTvaP7YnkTZEZggNFywLEIhQaGhYDczG+tu/vlgm/KaWIEjIp+ZyV20r2JnZctMb8LeLCG7Q==}
+  lit@3.2.1:
+    resolution: {integrity: sha512-1BBa1E/z0O9ye5fZprPtdqnc0BFzxIxTTOO/tQFmyC/hj1O3jL4TfmLBw0WEwjAokdLwpclkvGgDJwTIh0/22w==}
 
   loader-utils@3.3.1:
     resolution: {integrity: sha512-FMJTLMXfCLMLfJxcX9PFqX5qD88Z5MRGaZCVzfuqeZSPsyiBzs+pahDQjbIWz2QIzPZz0NX9Zy4FX3lmK6YHIg==}
@@ -2296,9 +2293,9 @@ packages:
     resolution: {integrity: sha512-yDMz9g+VaZkqBYS/ozoBJwaBhTbZo3UNYQHNRw1D3UFQB8oHB4uS/tAODO+ZLjGWmUbKnIlOWO+aaIiAxrUWHA==}
     engines: {node: '>= 14.16.0'}
 
-  readium-css@https://codeload.github.com/readium/readium-css/tar.gz/0261eb62120b47ebd3b36428d9908a587ca72f9c:
-    resolution: {tarball: https://codeload.github.com/readium/readium-css/tar.gz/0261eb62120b47ebd3b36428d9908a587ca72f9c}
-    version: 2.0.0-alpha.5
+  readium-css@https://codeload.github.com/readium/readium-css/tar.gz/0728ade3893ba9c07ae6cd64798e5ded7b37d777:
+    resolution: {tarball: https://codeload.github.com/readium/readium-css/tar.gz/0728ade3893ba9c07ae6cd64798e5ded7b37d777}
+    version: 1.1.0
 
   regenerate-unicode-properties@10.1.0:
     resolution: {integrity: sha512-d1VudCLoIGitcU/hEg2QqvyGZQmdC0Lf8BqdOMXGFSvJP4bNV1+XqbPQeHHLD51Jh4QJJ225dlIFvY4Ly6MXmQ==}
@@ -3900,15 +3897,15 @@ snapshots:
       semver: 7.6.3
       vite: 4.5.5(@types/node@20.4.8)(less@4.2.0)(sass@1.81.0)(stylus@0.62.0)
 
-  '@lit-labs/ssr-dom-shim@1.2.0': {}
+  '@lit-labs/ssr-dom-shim@1.2.1': {}
 
   '@lit/reactive-element@2.0.4':
     dependencies:
-      '@lit-labs/ssr-dom-shim': 1.2.0
+      '@lit-labs/ssr-dom-shim': 1.2.1
 
-  '@material/web@1.5.0':
+  '@material/web@1.5.1':
     dependencies:
-      lit: 3.1.3
+      lit: 3.2.1
       tslib: 2.8.1
 
   '@parcel/watcher-android-arm64@2.5.0':
@@ -4309,8 +4306,6 @@ snapshots:
       which: 2.0.2
 
   css-selector-generator@3.6.4: {}
-
-  css-selector-generator@3.6.7: {}
 
   css-selector-generator@3.6.9: {}
 
@@ -4976,21 +4971,21 @@ snapshots:
 
   lines-and-columns@1.2.4: {}
 
-  lit-element@4.0.5:
+  lit-element@4.1.1:
     dependencies:
-      '@lit-labs/ssr-dom-shim': 1.2.0
+      '@lit-labs/ssr-dom-shim': 1.2.1
       '@lit/reactive-element': 2.0.4
-      lit-html: 3.1.3
+      lit-html: 3.2.1
 
-  lit-html@3.1.3:
+  lit-html@3.2.1:
     dependencies:
       '@types/trusted-types': 2.0.7
 
-  lit@3.1.3:
+  lit@3.2.1:
     dependencies:
       '@lit/reactive-element': 2.0.4
-      lit-element: 4.0.5
-      lit-html: 3.1.3
+      lit-element: 4.1.1
+      lit-html: 3.2.1
 
   loader-utils@3.3.1: {}
 
@@ -5215,7 +5210,7 @@ snapshots:
 
   readdirp@4.0.2: {}
 
-  readium-css@https://codeload.github.com/readium/readium-css/tar.gz/0261eb62120b47ebd3b36428d9908a587ca72f9c: {}
+  readium-css@https://codeload.github.com/readium/readium-css/tar.gz/0728ade3893ba9c07ae6cd64798e5ded7b37d777: {}
 
   regenerate-unicode-properties@10.1.0:
     dependencies:
