@@ -16,7 +16,7 @@
     "@readium/navigator-html-injectables": "workspace:*",
     "@readium/shared": "workspace:*",
     "css-selector-generator": "^3.6.9",
-    "readium-css": "github:readium/readium-css#master",
+    "@readium/css": "^1.1.0",
     "typescript": "^5.6.3",
     "vite": "^4.5.5"
   }
