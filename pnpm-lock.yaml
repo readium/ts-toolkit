@@ -41,7 +41,7 @@ importers:
         version: 3.6.4
       readium-css:
         specifier: github:readium/readium-css#develop
-        version: https://codeload.github.com/readium/readium-css/tar.gz/6b07db44f1af5f59c1af4c2cb8bffc74fc2993fd
+        version: https://codeload.github.com/readium/readium-css/tar.gz/a08af0e9d275cb9fb089bb3e5443c0ba6db4c42e
       tslib:
         specifier: ^2.5.2
         version: 2.5.2
@@ -137,7 +137,7 @@ importers:
         version: 3.6.7
       readium-css:
         specifier: github:readium/readium-css
-        version: https://codeload.github.com/readium/readium-css/tar.gz/6b07db44f1af5f59c1af4c2cb8bffc74fc2993fd
+        version: https://codeload.github.com/readium/readium-css/tar.gz/a08af0e9d275cb9fb089bb3e5443c0ba6db4c42e
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -208,7 +208,7 @@ packages:
     resolution: {integrity: sha512-ro/bFs3/84MDgDmMwbcHgDa8/E6J3QKNTk4xJJnVeFtGE+tL0K26E3pNxhYz2b67fJpt7Aphw5XcploKXuCvCQ==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
-      '@babel/core': 7.25.2
+      '@babel/core': ^7.0.0
 
   '@babel/helper-create-regexp-features-plugin@7.22.9':
     resolution: {integrity: sha512-+svjVa/tFwsNSG4NEy1h85+HQ5imbT92Q5/bgtS7P0GTQlP8WuFdqsiABmQouhiFGyV66oGxZFpeYHza1rNsKw==}
@@ -843,7 +843,7 @@ packages:
     resolution: {integrity: sha512-W9Gyo+KmcxjGahtt3t9fb14vFRWvPpu5pT6GBlovAK6BTBcxgjfVMSQCfJl4oi35ODrxP6xx2Wr8LNST57Mraw==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
-      '@babel/core': 7.25.2
+      '@babel/core': ^7.0.0-0
 
   '@babel/preset-modules@0.1.6-no-external-plugins':
     resolution: {integrity: sha512-HrcgcIESLm9aIR842yhJ5RWan/gebQUJ6E/E5+rf0y9o6oj7w0Br+sWuL6kEQ/o/AdfvR1Je9jG18/gnpwjEyA==}
@@ -2173,9 +2173,9 @@ packages:
     resolution: {integrity: sha512-GkMg9uOTpIWWKbSsgwb5fA4EavTR+SG/PMPoAY8hkhHfEEY0/vqljY+XHqtDf2cr2IJtoNRDbrrEpZUiZCkYRw==}
     engines: {node: '>= 14.16.0'}
 
-  readium-css@https://codeload.github.com/readium/readium-css/tar.gz/6b07db44f1af5f59c1af4c2cb8bffc74fc2993fd:
-    resolution: {tarball: https://codeload.github.com/readium/readium-css/tar.gz/6b07db44f1af5f59c1af4c2cb8bffc74fc2993fd}
-    version: 2.0.0-alpha.1
+  readium-css@https://codeload.github.com/readium/readium-css/tar.gz/a08af0e9d275cb9fb089bb3e5443c0ba6db4c42e:
+    resolution: {tarball: https://codeload.github.com/readium/readium-css/tar.gz/a08af0e9d275cb9fb089bb3e5443c0ba6db4c42e}
+    version: 2.0.0-alpha.6
 
   regenerate-unicode-properties@10.1.0:
     resolution: {integrity: sha512-d1VudCLoIGitcU/hEg2QqvyGZQmdC0Lf8BqdOMXGFSvJP4bNV1+XqbPQeHHLD51Jh4QJJ225dlIFvY4Ly6MXmQ==}
@@ -4984,7 +4984,7 @@ snapshots:
 
   readdirp@4.0.1: {}
 
-  readium-css@https://codeload.github.com/readium/readium-css/tar.gz/6b07db44f1af5f59c1af4c2cb8bffc74fc2993fd: {}
+  readium-css@https://codeload.github.com/readium/readium-css/tar.gz/a08af0e9d275cb9fb089bb3e5443c0ba6db4c42e: {}
 
   regenerate-unicode-properties@10.1.0:
     dependencies:
