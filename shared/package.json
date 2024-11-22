@@ -1,6 +1,6 @@
 {
   "name": "@readium/shared",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "type": "module",
   "description": "Shared models to be used across other Readium projects and implementations in Typescript",
   "author": "readium",
