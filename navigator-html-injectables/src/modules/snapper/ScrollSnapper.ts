@@ -30,13 +30,15 @@ export class ScrollSnapper extends Snapper {
             customElements.define("anchor-observer", AnchorObserver);
     }
 
-    private reportProgress(progress: number) {
-        this.comms.send("progress", progress);
+    private reportProgress(data: { progress: number, reference: number }) {
+        this.comms.send("progress", data);
     }
 
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
+
+        wnd.navigator.epubReadingSystem.layoutStyle = "scrolling";
 
         // Add styling to hide the scrollbar
         const style = wnd.document.createElement("style");
@@ -66,7 +68,7 @@ export class ScrollSnapper extends Snapper {
 
             this.wnd.requestAnimationFrame(() => {
               this.doc().scrollTop = this.doc().offsetHeight * position;
-              this.reportProgress(position);
+              this.reportProgress({ progress: position, reference: this.wnd.innerHeight / this.doc().scrollHeight });
               deselect(this.wnd);
               ack(true);
           });
@@ -80,7 +82,8 @@ export class ScrollSnapper extends Snapper {
             }
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollTop = element.getBoundingClientRect().top + wnd.scrollY - wnd.innerHeight / 2;
-                this.reportProgress(this.doc().scrollTop / this.doc().offsetHeight);
+                const progress = this.doc().scrollTop / this.doc().offsetHeight;
+                this.reportProgress({ progress: progress, reference: this.wnd.innerHeight / this.doc().scrollHeight });
                 deselect(this.wnd);
                 ack(true);
             });
@@ -111,7 +114,8 @@ export class ScrollSnapper extends Snapper {
             }
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollTop = r.getBoundingClientRect().top + wnd.scrollY - wnd.innerHeight / 2;
-                this.reportProgress(this.doc().scrollTop / this.doc().offsetHeight);
+                const progress = this.doc().scrollTop / this.doc().offsetHeight
+                this.reportProgress({ progress: progress, reference: this.wnd.innerHeight / this.doc().scrollHeight });
                 deselect(this.wnd);
                 ack(true);
             });
@@ -120,14 +124,14 @@ export class ScrollSnapper extends Snapper {
         comms.register("go_start", ScrollSnapper.moduleName, (_, ack) => {
             if (this.doc().scrollTop === 0) return ack(false);
             this.doc().scrollTop = 0;
-            this.reportProgress(0);
+            this.reportProgress({ progress: 0, reference: this.wnd.innerHeight / this.doc().scrollHeight });
             ack(true);
         });
 
         comms.register("go_end", ScrollSnapper.moduleName, (_, ack) => {
             if (this.doc().scrollTop === 0) return ack(false);
             this.doc().scrollTop = 0;
-            this.reportProgress(0);
+            this.reportProgress({ progress: 0, reference: this.wnd.innerHeight / this.doc().scrollHeight });
             ack(true);
         })
 
@@ -142,7 +146,8 @@ export class ScrollSnapper extends Snapper {
         ], ScrollSnapper.moduleName, (_, ack) => ack(false));
 
         comms.register("focus", ScrollSnapper.moduleName, (_, ack) => {
-            this.reportProgress(this.doc().scrollTop / this.doc().offsetHeight);
+            const progress = this.doc().scrollTop / this.doc().offsetHeight
+            this.reportProgress({ progress: progress, reference: this.wnd.innerHeight / this.doc().scrollHeight });
             ack(true);
         });
 

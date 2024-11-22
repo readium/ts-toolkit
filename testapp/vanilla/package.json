@@ -11,13 +11,13 @@
   },
   "devDependencies": {
     "@juggle/resize-observer": "^3.4.0",
-    "@material/web": "^1.4.1",
-    "@readium/navigator": "workspace:1.2.0",
-    "@readium/navigator-html-injectables": "workspace:0.0.1",
-    "@readium/shared": "workspace:1.2.0",
-    "css-selector-generator": "^3.6.4",
-    "readium-css": "github:readium/readium-css",
-    "typescript": "^5.4.5",
-    "vite": "^4.4.9"
+    "@material/web": "^1.5.1",
+    "@readium/navigator": "workspace:*",
+    "@readium/navigator-html-injectables": "workspace:*",
+    "@readium/shared": "workspace:*",
+    "css-selector-generator": "^3.6.9",
+    "@readium/css": "^1.1.0",
+    "typescript": "^5.6.3",
+    "vite": "^4.5.5"
   }
 }

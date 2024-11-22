@@ -40,7 +40,7 @@ export class ColumnSnapper extends Snapper {
     }
 
     reportProgress() {
-        this.comms.send("progress", this.wnd.scrollX / this.cachedScrollWidth);
+        this.comms.send("progress", { progress: this.wnd.scrollX / this.cachedScrollWidth, reference: this.wnd.innerWidth / this.doc().scrollWidth });
     }
 
     private shakeTimeout = 0;
@@ -228,6 +228,8 @@ export class ColumnSnapper extends Snapper {
         this.wnd = wnd;
         this.comms = comms;
         if(!super.mount(wnd, comms)) return false;
+
+        wnd.navigator.epubReadingSystem.layoutStyle = "paginated";
 
         // Add styling to hide the scrollbar
         const d = wnd.document.createElement("style");

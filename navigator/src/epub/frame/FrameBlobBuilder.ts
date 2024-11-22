@@ -4,11 +4,11 @@ import { Link, Publication } from "@readium/shared";
 // Readium CSS imports
 // The "?inline" query is to prevent some bundlers from injecting these into the page (e.g. vite)
 // @ts-ignore
-import readiumCSSAfter from "readium-css/css/dist/ReadiumCSS-after.css?inline";
+import readiumCSSAfter from "@readium/css/css/dist/ReadiumCSS-after.css?inline";
 // @ts-ignore
-import readiumCSSBefore from "readium-css/css/dist/ReadiumCSS-before.css?inline";
+import readiumCSSBefore from "@readium/css/css/dist/ReadiumCSS-before.css?inline";
 // @ts-ignore
-import readiumCSSDefault from "readium-css/css/dist/ReadiumCSS-default.css?inline";
+import readiumCSSDefault from "@readium/css/css/dist/ReadiumCSS-default.css?inline";
 
 // Utilities
 const blobify = (source: string, type: string) => URL.createObjectURL(new Blob([source], { type }));

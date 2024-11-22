@@ -12,6 +12,8 @@ export class FixedSetup extends Setup {
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         if(!super.mount(wnd, comms)) return false;
 
+        wnd.navigator.epubReadingSystem.layoutStyle = "paginated"; // TODO: what if we support scrolling?
+
         const style = wnd.document.createElement("style");
         style.id = FIXED_STYLE_ID;
         style.dataset.readium = "true";
