@@ -49,7 +49,7 @@
   },
   "devDependencies": {
     "@juggle/resize-observer": "^3.4.0",
-    "@readium/shared": "workspace:1.2.0",
+    "@readium/shared": "workspace:*",
     "css-selector-generator": "^3.6.4",
     "tslib": "^2.6.1",
     "typescript": "^5.4.5",
