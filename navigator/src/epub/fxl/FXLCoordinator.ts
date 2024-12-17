@@ -1,4 +1,4 @@
-import sML from "../../helpers/sML";
+import { sML } from "../../helpers/sML";
 
 export interface Point {
     X: number;

@@ -5,6 +5,13 @@ import type { getCssSelector } from "css-selector-generator";
 
 type BlockedEventData = [0, Function, any[], any[]] | [1, Event, EventTarget];
 
+export interface EPUBReadingSystem {
+    name: string;
+    version: string;
+    layoutStyle: "paginated" | "scrolling"; // Technically, more are allowed
+    hasFeature: (feature: string, version?: string) => boolean;
+}
+
 // This is what is injected into the HTML documents
 export interface ReadiumWindow extends Window {
     _readium_blockEvents: boolean;
@@ -13,6 +20,7 @@ export interface ReadiumWindow extends Window {
     _readium_cssSelectorGenerator: {
         getCssSelector: typeof getCssSelector;
     };
+    navigator: Navigator & { epubReadingSystem: EPUBReadingSystem };
 }
 
 export function deselect(wnd: ReadiumWindow) {

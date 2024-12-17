@@ -2,7 +2,15 @@
 
 Next generation SDK for publications in Web Apps
 
-## Install
+## Usage
+
+Three packages are made available by this repository, which are published on NPM.
+They are:
+- [@readium/shared](https://www.npmjs.com/package/@readium/shared)
+- [@readium/navigator-html-injectables](https://www.npmjs.com/package/@readium/navigator-html-injectables)
+- [@readium/navigator](https://www.npmjs.com/package/@readium/navigator)
+
+# Development
 
 You need `pnpm` installed as this is a monorepo using workspaces.
 

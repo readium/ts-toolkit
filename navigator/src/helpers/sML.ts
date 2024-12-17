@@ -44,7 +44,7 @@ declare interface UAFlags {
     LINE: number[];
 }
 
-class sML {
+class sMLFactory {
     OS: OSFlags;
     UA: UAFlags;
     Env!: string[];
@@ -117,4 +117,5 @@ class sML {
     }
 }
 
-export default (new sML);
+const sML = new sMLFactory();
+export { sML };

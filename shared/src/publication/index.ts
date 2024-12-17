@@ -3,6 +3,7 @@ export * from './epub';
 export * from './html';
 export * from './opds';
 export * from './presentation';
+export * from './services';
 export * from './BelongsTo';
 export * from './Contributor';
 export * from './Link';
