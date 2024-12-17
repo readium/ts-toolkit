@@ -43,7 +43,7 @@ importers:
         version: 1.0.1
       readium-css:
         specifier: github:readium/readium-css#theming-improvements
-        version: https://codeload.github.com/readium/readium-css/tar.gz/c08edd6abb673ec09850a58fb949d8fdf34197e9
+        version: https://codeload.github.com/readium/readium-css/tar.gz/6df67526efd2f886ac68ba9e0d80042d86de57e2
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -2299,8 +2299,8 @@ packages:
     resolution: {integrity: sha512-yDMz9g+VaZkqBYS/ozoBJwaBhTbZo3UNYQHNRw1D3UFQB8oHB4uS/tAODO+ZLjGWmUbKnIlOWO+aaIiAxrUWHA==}
     engines: {node: '>= 14.16.0'}
 
-  readium-css@https://codeload.github.com/readium/readium-css/tar.gz/c08edd6abb673ec09850a58fb949d8fdf34197e9:
-    resolution: {tarball: https://codeload.github.com/readium/readium-css/tar.gz/c08edd6abb673ec09850a58fb949d8fdf34197e9}
+  readium-css@https://codeload.github.com/readium/readium-css/tar.gz/6df67526efd2f886ac68ba9e0d80042d86de57e2:
+    resolution: {tarball: https://codeload.github.com/readium/readium-css/tar.gz/6df67526efd2f886ac68ba9e0d80042d86de57e2}
     version: 2.0.0-alpha.10
 
   regenerate-unicode-properties@10.1.0:
@@ -5218,7 +5218,7 @@ snapshots:
 
   readdirp@4.0.2: {}
 
-  readium-css@https://codeload.github.com/readium/readium-css/tar.gz/c08edd6abb673ec09850a58fb949d8fdf34197e9: {}
+  readium-css@https://codeload.github.com/readium/readium-css/tar.gz/6df67526efd2f886ac68ba9e0d80042d86de57e2: {}
 
   regenerate-unicode-properties@10.1.0:
     dependencies:
