@@ -60,7 +60,7 @@ importers:
         specifier: ^3.4.0
         version: 3.4.0
       '@readium/shared':
-        specifier: workspace:1.2.0
+        specifier: workspace:*
         version: link:../shared
       css-selector-generator:
         specifier: ^3.6.4
