@@ -69,31 +69,12 @@ export function nearestInteractiveElement(element: Element): Element | null {
 /// the screen.
 export function findFirstVisibleLocator(wnd: ReadiumWindow, scrolling: boolean) {
     const element = findElement(wnd, wnd.document.body, scrolling) as HTMLElement;
-    const removedAttributes = new Map<HTMLElement, Attr[]>();
-    if (element) {
-        // remove all the properties other than class, id or style to avoid breaking the cssSelector
-        for (let i = 0; i < element.attributes?.length; i++) {
-            const attr = element.attributes[i];
-            if (attr.name !== "class" && attr.name !== "id" && attr.name !== "style") {
-                if(!removedAttributes.has(element)) {
-                    removedAttributes.set(element, [attr])
-                } else {
-                    removedAttributes.set(element, removedAttributes.get(element)!.concat([attr]))
-                }
-                element.removeAttribute(attr.name);
-            }
-        }
-    }
     
-    const cssSelector = wnd._readium_cssSelectorGenerator.getCssSelector(element);
-    // Now that the cssSelector is generated, we can put back the removed attributes
-    if (removedAttributes.size > 0) {
-        removedAttributes.forEach((attrs, elem) => {
-            attrs.forEach(attr => {
-                elem.setAttribute(attr.name, attr.value);
-            });
-        });
-    }
+    // Use only the allowed selectors to generate the cssSelector and avoid a crash
+    const cssSelector = wnd._readium_cssSelectorGenerator.getCssSelector(element, { 
+        selectors: ["tag", "id", "class", "nthchild", "nthoftype", "attribute"] 
+    });
+
     return new Locator({
         href: "#",
         type: "application/xhtml+xml",
