@@ -63,8 +63,8 @@ importers:
         specifier: workspace:*
         version: link:../shared
       css-selector-generator:
-        specifier: ^3.6.4
-        version: 3.6.4
+        specifier: ^3.6.9
+        version: 3.6.9
       tslib:
         specifier: ^2.6.1
         version: 2.6.1
