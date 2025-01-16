@@ -8,6 +8,7 @@ export class FrameManager {
     private loader: Loader | undefined;
     public readonly source: string;
     private comms: FrameComms | undefined;
+    private destroyed: boolean = false;
 
     private currModules: ModuleName[] = [];
 
@@ -57,15 +58,17 @@ export class FrameManager {
         await this.hide();
         this.loader?.destroy();
         this.frame.remove();
+        this.destroyed = true;
     }
 
     async hide(): Promise<void> {
+        if(this.destroyed) return;
         this.frame.style.visibility = "hidden";
         this.frame.style.setProperty("aria-hidden", "true");
         this.frame.style.opacity = "0";
         this.frame.style.pointerEvents = "none";
         if(this.frame.parentElement) {
-            if(this.comms === undefined) return;
+            if(this.comms === undefined || !this.comms.ready) return;
             return new Promise((res, _) => {
                 this.comms?.send("unfocus", undefined, (_: boolean) => {
                     this.comms?.halt();
@@ -77,10 +80,8 @@ export class FrameManager {
     }
 
     async show(atProgress?: number): Promise<void> {
-        if(!this.frame.parentElement) {
-            console.warn("Trying to show frame that is not attached to the DOM");
-            return;
-        }
+        if(this.destroyed) throw Error("Trying to show frame when it doesn't exist");
+        if(!this.frame.parentElement) throw Error("Trying to show frame that is not attached to the DOM");
         if(this.comms) this.comms.resume();
         else this.comms = new FrameComms(this.frame.contentWindow!, this.source);
         return new Promise((res, _) => {
@@ -104,15 +105,17 @@ export class FrameManager {
     }
 
     get iframe() {
+        if(this.destroyed) throw Error("Trying to use frame when it doesn't exist");
         return this.frame;
     }
 
     get realSize() {
+        if(this.destroyed) throw Error("Trying to use frame client rect when it doesn't exist");
         return this.frame.getBoundingClientRect();
     }
 
     get window() {
-        if(!this.frame.contentWindow) throw Error("Trying to use frame window when it doesn't exist");
+        if(this.destroyed || !this.frame.contentWindow) throw Error("Trying to use frame window when it doesn't exist");
         return this.frame.contentWindow;
     }
 
