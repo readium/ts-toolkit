@@ -53,6 +53,6 @@
     "css-selector-generator": "^3.6.9",
     "tslib": "^2.6.1",
     "typescript": "^5.4.5",
-    "vite": "^4.5.5"
+    "vite": "^4.5.6"
   }
 }
