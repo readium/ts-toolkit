@@ -71,7 +71,7 @@ export class Peripherals extends Module {
             targetFrameSrc: this.wnd.location.href,
             targetElement: (event.target as Element).outerHTML,
             interactiveElement: nearestInteractiveElement(event.target as Element)?.outerHTML,
-            cssSelector: this.wnd._readium_cssSelectorGenerator.getCssSelector(event.target),
+            cssSelector: this.wnd._readium_cssSelectorGenerator.getCssSelector(event.target as Element),
         } as FrameClickEvent);
 
         this.pointerMoved = false;

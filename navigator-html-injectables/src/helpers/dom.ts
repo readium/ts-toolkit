@@ -68,13 +68,19 @@ export function nearestInteractiveElement(element: Element): Element | null {
 /// Returns the `Locator` object to the first block element that is visible on
 /// the screen.
 export function findFirstVisibleLocator(wnd: ReadiumWindow, scrolling: boolean) {
-    const element = findElement(wnd, wnd.document.body, scrolling);
+    const element = findElement(wnd, wnd.document.body, scrolling) as HTMLElement;
+    
+    // Use only the allowed selectors to generate the cssSelector and avoid a crash
+    const cssSelector = wnd._readium_cssSelectorGenerator.getCssSelector(element, { 
+        selectors: ["tag", "id", "class", "nthchild", "nthoftype", "attribute"] 
+    });
+
     return new Locator({
         href: "#",
         type: "application/xhtml+xml",
         locations: new LocatorLocations({
             otherLocations: new Map([
-                ["cssSelector", wnd._readium_cssSelectorGenerator.getCssSelector(element)]
+                ["cssSelector", cssSelector]
             ])
         }),
         text: new LocatorText({
@@ -87,6 +93,9 @@ function findElement(wnd: ReadiumWindow, rootElement: Element, scrolling: boolea
     for (var i = 0; i < rootElement.children.length; i++) {
         const child = rootElement.children[i];
         if (!shouldIgnoreElement(child) && isElementVisible(wnd, child, scrolling)) {
+            // Once we get a fully visible element, return it
+            if (isElementFullyVisible(wnd, child)) return child;
+            // if the parent is not fully visible, search in the childs
             return findElement(wnd, child, scrolling);
         }
     }
@@ -111,11 +120,29 @@ function isElementVisible(wnd: ReadiumWindow, element: Element, scrolling: boole
     }
 }
 
+/** 
+* Check if an element is fully visible in the current viewport.
+* @param wnd Window instance to operate on
+* @param element Element to check visibility of
+* @returns True if the element is fully visible, false otherwise
+*/
+function isElementFullyVisible(wnd: ReadiumWindow, element: Element): boolean {
+    const rect = element.getBoundingClientRect();
+    const isFullyVisible =
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <= wnd.innerHeight &&
+        rect.right <= wnd.innerWidth;
+    return isFullyVisible;
+}
+
 function shouldIgnoreElement(element: Element) {
     const elStyle = getComputedStyle(element);
     if (elStyle) {
         const display = elStyle.getPropertyValue("display");
-        if (display != "block") {
+        // Added list-item as it is a common display property for list items
+        // TODO: Check if there are other display properties that should be ignored/considered
+        if (display != "block" && display != "list-item") {
             return true;
         }
         // Cannot be relied upon, because web browser engine reports invisible when out of view in
