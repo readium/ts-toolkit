@@ -60,11 +60,11 @@ importers:
         specifier: ^3.4.0
         version: 3.4.0
       '@readium/shared':
-        specifier: workspace:1.2.0
+        specifier: workspace:*
         version: link:../shared
       css-selector-generator:
-        specifier: ^3.6.4
-        version: 3.6.4
+        specifier: ^3.6.9
+        version: 3.6.9
       tslib:
         specifier: ^2.6.1
         version: 2.6.1
