@@ -54,7 +54,7 @@
     "@types/path-browserify": "^1.0.3",
     "css-selector-generator": "^3.6.9",
     "path-browserify": "^1.0.1",
-    "@readium/css": "^1.1.0",
+    "@readium/css": ">=2.0.0-beta.1",
     "tslib": "^2.8.1",
     "typescript": "^5.6.3",
     "typescript-plugin-css-modules": "^5.1.0",
