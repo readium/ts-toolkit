@@ -1,7 +1,6 @@
 import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
 import { Comms } from "../../comms";
 import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/dom";
-import { AnchorObserver, helperCreateAnchorElements, helperRemoveAnchorElements } from '../../helpers/scrollSnapperHelper';
 import { ModuleName } from "../ModuleLibrary";
 import { Snapper } from "./Snapper";
 import { rangeFromLocator } from "../../helpers/locator";
@@ -15,19 +14,6 @@ export class ScrollSnapper extends Snapper {
 
     private doc() {
         return this.wnd.document.scrollingElement as HTMLElement;
-    }
-
-    private createAnchorElements = () => {
-        helperCreateAnchorElements(this.doc());
-    }
-
-    private removeAnchorElements = () => {
-        helperRemoveAnchorElements(this.doc());
-    }
-
-    private createCustomElement = () => {
-        customElements.get("anchor-observer") ||
-            customElements.define("anchor-observer", AnchorObserver);
     }
 
     private reportProgress(data: { progress: number, reference: number }) {
@@ -158,14 +144,11 @@ export class ScrollSnapper extends Snapper {
         });
 
         comms.log("ScrollSnapper Mounted");
-        this.createCustomElement();
-        this.createAnchorElements();
         return true;
     }
 
     unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         comms.unregisterAll(ScrollSnapper.moduleName);
-        this.removeAnchorElements();
         wnd.document.getElementById(SCROLL_SNAPPER_STYLE_ID)?.remove();
         comms.log("ScrollSnapper Unmounted");
         return true;
