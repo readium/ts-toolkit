@@ -3,15 +3,17 @@ import { ConfigurablePreferences } from "../../preferences/Configurable";
 
 export interface IEpubPreferences {
   backgroundColor?: string | null,
+  blendFilter?: boolean | null,
   columnCount?: number | null,
+  darkenFilter?: boolean | number | null,
   fontFamily?: string | null,
   fontSize?: number | null,
   fontOpticalSizing?: number | null,
   fontWeight?: number | null,
   fontWidth?: number | null,
   hyphens?: boolean | null,
-  // TODO Type of imageFilters cos it’s more complex to handle
-  imageFilters?: any | null,
+  invertFilter?: boolean | number | null,
+  invertGaijiFilter?: boolean | number | null,
   letterSpacing?: number | null,
   ligatures?: boolean | null,
   lineHeight?: number | null,
@@ -35,14 +37,17 @@ export interface IEpubPreferences {
 
 export class EpubPreferences implements ConfigurablePreferences {
   backgroundColor: string | null;
+  blendFilter: boolean | null;
   columnCount: number | null;
+  darkenFilter: boolean | number | null;
   fontFamily: string | null;
   fontSize: number | null;
   fontOpticalSizing: number | null;
   fontWeight: number | null;
   fontWidth: number | null;
   hyphens: boolean | null;
-  imageFilters: any | null;
+  invertFilter: boolean | number | null;
+  invertGaijiFilter: boolean | number | null;
   letterSpacing: number | null;
   ligatures: boolean | null;
   lineHeight: number | null;
@@ -65,14 +70,17 @@ export class EpubPreferences implements ConfigurablePreferences {
 
   constructor(preferences: IEpubPreferences) {
     this.backgroundColor = preferences.backgroundColor || null;
+    this.blendFilter = preferences.blendFilter || null;
     this.columnCount = preferences.columnCount || null;
+    this.darkenFilter = preferences.darkenFilter || null;
     this.fontFamily = preferences.fontFamily || null;
     this.fontSize = preferences.fontSize || null;
     this.fontOpticalSizing = preferences.fontOpticalSizing || null;
     this.fontWeight = preferences.fontWeight || null;
     this.fontWidth = preferences.fontWidth || null;
     this.hyphens = preferences.hyphens || null;
-    this.imageFilters = preferences.imageFilters || null;
+    this.invertFilter = preferences.invertFilter || null;
+    this.invertGaijiFilter = preferences.invertGaijiFilter || null;
     this.letterSpacing = preferences.letterSpacing || null;
     this.ligatures = preferences.ligatures || null;
     this.lineHeight = preferences.lineHeight || null;

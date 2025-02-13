@@ -1,16 +1,17 @@
 import { TextAlignment, Theme } from "../../preferences/Types";
 
-// Expose everything available in Preferences ATM
+// Expose everything available in Preferences except blend and gaiji filters ATM
 export interface IEpubDefaults {
   backgroundColor?: string | null;
   columnCount?: number | null;
+  darkenFilter?: boolean | number | null,
   fontFamily?: string | null;
   fontSize?: number | null;
   fontOpticalSizing?: number | null;
   fontWeight?: number | null;
   fontWidth?: number | null;
   hyphens?: boolean | null;
-  imageFilters?: any | null;
+  invertFilter?: boolean | number | null,
   letterSpacing?: number | null;
   ligatures?: boolean | null;
   lineHeight?: number | null;
@@ -35,13 +36,14 @@ export interface IEpubDefaults {
 export class EpubDefaults {
   backgroundColor: string | null;
   columnCount: number | null;
+  darkenFilter: boolean | number | null;
   fontFamily: string | null;
   fontSize: number | null;
   fontOpticalSizing: number | null;
   fontWeight: number | null;
   fontWidth: number | null;
   hyphens: boolean | null;
-  imageFilters: any | null;
+  invertFilter: boolean | number | null;
   letterSpacing: number | null;
   ligatures: boolean | null;
   lineHeight: number | null;
@@ -65,13 +67,14 @@ export class EpubDefaults {
   constructor(defaults: IEpubDefaults) {
     this.backgroundColor = defaults.backgroundColor || null;
     this.columnCount = defaults.columnCount || null;
+    this.darkenFilter = defaults.darkenFilter || null;
     this.fontFamily = defaults.fontFamily || null;
     this.fontSize = defaults.fontSize || null;
     this.fontOpticalSizing = defaults.fontOpticalSizing || null;
     this.fontWeight = defaults.fontWeight || null;
     this.fontWidth = defaults.fontWidth || null;
     this.hyphens = defaults.hyphens || null;
-    this.imageFilters = defaults.imageFilters || null;
+    this.invertFilter = defaults.invertFilter || null;
     this.letterSpacing = defaults.letterSpacing || null;
     this.ligatures = defaults.ligatures || null;
     this.lineHeight = defaults.lineHeight || null;
