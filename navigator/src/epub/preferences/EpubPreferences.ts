@@ -1,7 +1,7 @@
 import { TextAlignment, Theme } from "../../preferences/Types";
 import { ConfigurablePreferences } from "../../preferences/Configurable";
 
-export interface IEPUBPreferences {
+export interface IEpubPreferences {
   backgroundColor?: string | null,
   columnCount?: number | null,
   fontFamily?: string | null,
@@ -33,7 +33,7 @@ export interface IEPUBPreferences {
   wordSpacing?: number | null
 }
 
-export class EPUBPreferences implements ConfigurablePreferences {
+export class EpubPreferences implements ConfigurablePreferences {
   backgroundColor: string | null;
   columnCount: number | null;
   fontFamily: string | null;
@@ -63,7 +63,7 @@ export class EPUBPreferences implements ConfigurablePreferences {
   visitedLinkColor: string | null;
   wordSpacing: number | null;
 
-  constructor(preferences: IEPUBPreferences) {
+  constructor(preferences: IEpubPreferences) {
     this.backgroundColor = preferences.backgroundColor || null;
     this.columnCount = preferences.columnCount || null;
     this.fontFamily = preferences.fontFamily || null;
@@ -95,7 +95,7 @@ export class EPUBPreferences implements ConfigurablePreferences {
   }
 
   merging(other: ConfigurablePreferences): ConfigurablePreferences {
-    const merged: IEPUBPreferences = { ...this, ...other };
-    return new EPUBPreferences(merged);
+    const merged: IEpubPreferences = { ...this, ...other };
+    return new EpubPreferences(merged);
   }
 }

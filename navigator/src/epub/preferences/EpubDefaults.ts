@@ -1,7 +1,7 @@
 import { TextAlignment, Theme } from "../../preferences/Types";
 
 // Expose everything available in Preferences ATM
-export interface IEPUBDefaults {
+export interface IEpubDefaults {
   backgroundColor?: string | null;
   columnCount?: number | null;
   fontFamily?: string | null;
@@ -32,7 +32,7 @@ export interface IEPUBDefaults {
   wordSpacing?: number | null;
 }
 
-export class EPUBDefaults {
+export class EpubDefaults {
   backgroundColor: string | null;
   columnCount: number | null;
   fontFamily: string | null;
@@ -62,7 +62,7 @@ export class EPUBDefaults {
   visitedLinkColor: string | null;
   wordSpacing: number | null;
 
-  constructor(defaults: IEPUBDefaults) {
+  constructor(defaults: IEpubDefaults) {
     this.backgroundColor = defaults.backgroundColor || null;
     this.columnCount = defaults.columnCount || null;
     this.fontFamily = defaults.fontFamily || null;
