@@ -71,25 +71,25 @@ export class EpubPreferences implements ConfigurablePreferences {
   constructor(preferences: IEpubPreferences) {
     this.backgroundColor = preferences.backgroundColor || null;
     this.blendFilter = preferences.blendFilter || null;
-    this.columnCount = preferences.columnCount || null;
-    this.darkenFilter = preferences.darkenFilter || null;
+    this.columnCount = EpubPreferences.ensureNonNegative(preferences.columnCount);
+    this.darkenFilter = EpubPreferences.ensureFilter(preferences.darkenFilter);
     this.fontFamily = preferences.fontFamily || null;
-    this.fontSize = preferences.fontSize || null;
-    this.fontOpticalSizing = preferences.fontOpticalSizing || null;
-    this.fontWeight = preferences.fontWeight || null;
-    this.fontWidth = preferences.fontWidth || null;
+    this.fontSize = EpubPreferences.valueInRange(preferences.fontSize, 50, 250);
+    this.fontOpticalSizing = EpubPreferences.ensureNonNegative(preferences.fontOpticalSizing);
+    this.fontWeight = EpubPreferences.valueInRange(preferences.fontWeight, 100, 1000);
+    this.fontWidth = EpubPreferences.valueInRange(preferences.fontWidth, 10, 1000);
     this.hyphens = preferences.hyphens || null;
-    this.invertFilter = preferences.invertFilter || null;
-    this.invertGaijiFilter = preferences.invertGaijiFilter || null;
-    this.letterSpacing = preferences.letterSpacing || null;
+    this.invertFilter = EpubPreferences.ensureFilter(preferences.invertFilter);
+    this.invertGaijiFilter = EpubPreferences.ensureFilter(preferences.invertGaijiFilter);
+    this.letterSpacing = EpubPreferences.ensureNonNegative(preferences.letterSpacing);
     this.ligatures = preferences.ligatures || null;
-    this.lineHeight = preferences.lineHeight || null;
-    this.lineLength = preferences.lineLength || null;
+    this.lineHeight = EpubPreferences.ensureNonNegative(preferences.lineHeight);
+    this.lineLength = EpubPreferences.ensureNonNegative(preferences.lineLength);
     this.linkColor = preferences.linkColor || null;
     this.noRuby = preferences.noRuby || null;
-    this.pageMargins = preferences.pageMargins || null;
-    this.paragraphIndent = preferences.paragraphIndent || null;
-    this.paragraphSpacing = preferences.paragraphSpacing || null;
+    this.pageMargins = EpubPreferences.ensureNonNegative(preferences.pageMargins);
+    this.paragraphIndent = EpubPreferences.ensureNonNegative(preferences.paragraphIndent);
+    this.paragraphSpacing = EpubPreferences.ensureNonNegative(preferences.paragraphSpacing);
     this.publisherStyles = preferences.publisherStyles || null;
     this.scroll = preferences.scroll || null;
     this.selectionBackgroundColor = preferences.selectionBackgroundColor || null;
@@ -99,7 +99,27 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.textNormalization = preferences.textNormalization || null;
     this.theme = preferences.theme || null;
     this.visitedLinkColor = preferences.visitedLinkColor || null;
-    this.wordSpacing = preferences.wordSpacing || null;
+    this.wordSpacing = EpubPreferences.ensureNonNegative(preferences.wordSpacing);
+  }
+
+  static ensureFilter(filter: boolean | number | null | undefined): boolean | number | null {
+    if (typeof filter === "boolean") {
+      return filter;
+    } else if (typeof filter === "number" && filter >= 0) {
+      return filter;
+    } else if (filter === null) {
+      return null;
+    } else {
+      return null;
+    }
+  }
+
+  static ensureNonNegative(value: number | null | undefined): number | null {
+    return value !== undefined && value !== null && value >= 0 ? value : null;
+  }
+
+  static valueInRange(value: number | null | undefined, min: number, max: number): number | null {
+    return value !== undefined && value !== null && value >= min && value <= max ? value : null;
   }
 
   merging(other: ConfigurablePreferences): ConfigurablePreferences {
