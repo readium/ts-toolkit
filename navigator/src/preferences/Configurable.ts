@@ -3,10 +3,11 @@ export interface ConfigurableSettings {
 }
 
 export interface ConfigurablePreferences {
+  [key: string]: any;
   merging(other: ConfigurablePreferences): ConfigurablePreferences;
 }
 
-export interface Configurable<S extends ConfigurableSettings, P extends ConfigurablePreferences> {
-  settings: S;
-  submitPreferences(preferences: P): void;
+export interface Configurable<ConfigurableSettings, ConfigurablePreferences> {
+  settings: ConfigurableSettings;
+  submitPreferences(preferences: ConfigurablePreferences): void;
 }
