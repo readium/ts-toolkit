@@ -18,7 +18,7 @@ export interface IEpubDefaults {
   lineLength?: number | null;
   linkColor?: string | null;
   noRuby?: boolean | null;
-  pageMargins?: number | null;
+  pageGutter?: number | null;
   paragraphIndent?: number | null;
   paragraphSpacing?: number | null;
   publisherStyles?: boolean | null;
@@ -50,7 +50,7 @@ export class EpubDefaults {
   lineLength: number | null;
   linkColor: string | null;
   noRuby: boolean | null;
-  pageMargins: number | null;
+  pageGutter: number | null;
   paragraphIndent: number | null;
   paragraphSpacing: number | null;
   publisherStyles: boolean | null;
@@ -81,7 +81,7 @@ export class EpubDefaults {
     this.lineLength = defaults.lineLength || null;
     this.linkColor = defaults.linkColor || null;
     this.noRuby = defaults.noRuby || null;
-    this.pageMargins = defaults.pageMargins || null;
+    this.pageGutter = defaults.pageGutter || null;
     this.paragraphIndent = defaults.paragraphIndent || null;
     this.paragraphSpacing = defaults.paragraphSpacing || null;
     this.publisherStyles = defaults.publisherStyles || null;

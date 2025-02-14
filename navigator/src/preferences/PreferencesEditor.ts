@@ -1,6 +1,6 @@
 import { ConfigurablePreferences } from "./Configurable";
 
-export interface PreferencesEditor {
+export interface IPreferencesEditor {
   preferences: ConfigurablePreferences;
   clear(): void;
 }

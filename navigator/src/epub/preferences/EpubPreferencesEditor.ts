@@ -1,0 +1,311 @@
+import { EPUBLayout, Metadata, ReadingProgression } from "@readium/shared";
+import { IPreferencesEditor } from "../../preferences/PreferencesEditor";
+import { EpubDefaults } from "./EpubDefaults";
+import { EpubPreferences } from "./EpubPreferences";
+import { EpubSettings } from "./EpubSettings";
+import { TextAlignment, Theme } from "../../preferences/Types";
+import { BooleanPreference, EnumPreference, Preference, RangePreference } from "../../preferences/Preference";
+
+// WIP: will change cos’ of all the missing pieces
+export class EpubPreferencesEditor implements IPreferencesEditor {
+  preferences: EpubPreferences;
+  settings: EpubSettings;
+  defaults: EpubDefaults;
+  metadata: Metadata | null;
+  private layout: EPUBLayout | null;
+
+  constructor(initialPreferences: EpubPreferences, defaults: EpubDefaults, metadata: Metadata) {
+    this.preferences = initialPreferences;
+    this.defaults = defaults;
+    this.metadata = metadata;
+    this.settings = new EpubSettings(this.preferences);
+    this.layout = this.metadata?.getPresentation()?.layout || null
+  }
+
+  clear() {
+    this.preferences = new EpubPreferences({});
+    this.defaults = new EpubDefaults({});
+    this.metadata = null;
+    this.settings = new EpubSettings(this.preferences);
+    this.layout = null;
+  }
+
+  get backgroundColor(): Preference<string> | null {
+    return new Preference<string>({
+      initialValue: this.preferences.backgroundColor,
+      effectiveValue: this.settings.backgroundColor || "#FFFFFF",
+      isEffective: this.preferences.backgroundColor !== null
+    });
+  }
+
+  get blendFilter(): BooleanPreference | null {
+    return new BooleanPreference({
+      initialValue: this.preferences.blendFilter,
+      effectiveValue: this.preferences.blendFilter || false,
+      isEffective: this.preferences.blendFilter !== null
+    });
+  }
+
+  get columnCount(): Preference<number> | null {
+    return new Preference<number>({
+      initialValue: this.preferences.columnCount,
+      // TODO auto-pagination
+      effectiveValue: this.settings.columnCount || 0,
+      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.scroll
+    });
+  }
+
+  get darkenFilter(): RangePreference<number> | null {
+    return new RangePreference<number>({
+      initialValue: typeof this.preferences.darkenFilter === "boolean" ? 100 : this.preferences.darkenFilter,
+      effectiveValue: typeof this.settings.darkenFilter === "boolean" ? 100 : this.settings.darkenFilter || 0,
+      isEffective: this.settings.darkenFilter !== null,
+      supportedRange: [0, 100],
+      step: 1
+    });
+  }
+
+  get fontFamily(): Preference<string> | null {
+    return new Preference<string>({
+      initialValue: this.preferences.fontFamily,
+      // TODO
+      effectiveValue: this.settings.fontFamily || "default-font",
+      isEffective: this.layout === EPUBLayout.reflowable
+    });
+  }
+
+  get fontSize(): RangePreference<number> | null {
+    return new RangePreference<number>({
+      initialValue: this.preferences.fontSize,
+      effectiveValue: this.settings.fontSize || 100,
+      isEffective: this.layout === EPUBLayout.reflowable,
+      supportedRange: [50, 250],
+      step: 10
+    });
+  }
+
+  get fontOpticalSizing(): RangePreference<number> | null {
+    return new RangePreference<number>({
+      initialValue: this.preferences.fontOpticalSizing,
+      effectiveValue: this.settings.fontOpticalSizing || 16,
+      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.preferences.fontOpticalSizing !== null,
+      supportedRange: [10, 120],
+      step: 10
+    });
+  }
+
+  get fontWeight(): RangePreference<number> | null {
+    return new RangePreference<number>({
+      initialValue: this.preferences.fontWeight,
+      effectiveValue: this.settings.fontWeight || 400,
+      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.preferences.fontWeight !== null,
+      supportedRange: [100, 1000],
+      step: 100
+    });
+  }
+
+  get fontWidth(): RangePreference<number> | null {
+    return new RangePreference<number>({
+      initialValue: this.preferences.fontWidth,
+      effectiveValue: this.settings.fontWidth || 100,
+      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.preferences.fontWidth !== null,
+      supportedRange: [70, 200],
+      step: 10
+    });
+  }
+
+  get hyphens(): BooleanPreference | null {
+    return new BooleanPreference({
+      initialValue: this.preferences.hyphens,
+      effectiveValue: this.settings.hyphens || false,
+      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.metadata?.effectiveReadingProgression === ReadingProgression.ltr
+    });
+  }
+
+  get invertFilter(): RangePreference<number> | null {
+    return new RangePreference<number>({
+      initialValue: typeof this.preferences.invertFilter === "boolean" ? 100 : this.preferences.invertFilter,
+      effectiveValue: typeof this.settings.invertFilter === "boolean" ? 100 : this.settings.invertFilter || 0,
+      isEffective: this.settings.invertFilter !== null,
+      supportedRange: [0, 100],
+      step: 1
+    });
+  }
+
+  get invertGaijiFilter(): RangePreference<number> | null {
+    return new RangePreference<number>({
+      initialValue: typeof this.preferences.invertGaijiFilter === "boolean" ? 100 : this.preferences.invertGaijiFilter,
+      effectiveValue: typeof this.preferences.invertGaijiFilter === "boolean" ? 100 : this.preferences.invertGaijiFilter || 0,
+      isEffective: this.preferences.invertGaijiFilter !== null,
+      supportedRange: [0, 100],
+      step: 1
+    });
+  }
+
+  get letterSpacing(): RangePreference<number> | null {
+    return new RangePreference<number>({
+      initialValue: this.preferences.letterSpacing,
+      effectiveValue: this.settings.letterSpacing || 0,
+      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.metadata?.effectiveReadingProgression === ReadingProgression.ltr,
+      supportedRange: [0, 1],
+      step: .125
+    });
+  }
+
+  get ligatures(): BooleanPreference | null {
+    return new BooleanPreference({
+      initialValue: this.preferences.ligatures,
+      effectiveValue: this.settings.ligatures || false,
+      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.metadata?.effectiveReadingProgression === ReadingProgression.rtl
+    });
+  }
+
+  get lineHeight(): RangePreference<number> | null {
+    return new RangePreference<number>({
+      initialValue: this.preferences.lineHeight,
+      effectiveValue: this.settings.lineHeight || 1.2,
+      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles,
+      supportedRange: [1, 2],
+      step: .1
+    });
+  }
+
+  // TODO: optimal + minimal line-length
+  get lineLength(): RangePreference<number> | null {
+    return new RangePreference<number>({
+      initialValue: this.preferences.lineLength,
+      effectiveValue: this.settings.lineLength || 45,
+      isEffective: this.layout === EPUBLayout.reflowable,
+      supportedRange: [20, 100],
+      step: 1
+    });
+  }
+
+  get linkColor(): Preference<string> | null {
+    return new Preference<string>({
+      initialValue: this.preferences.linkColor,
+      effectiveValue: this.settings.linkColor || "#0000ff",
+      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.linkColor !== null
+    });
+  }
+
+  get noRuby(): BooleanPreference | null {
+    return new BooleanPreference({
+      initialValue: this.preferences.noRuby,
+      effectiveValue: this.settings.noRuby || false,
+      isEffective: this.layout === EPUBLayout.reflowable && this.metadata?.languages?.includes("ja") || false
+    });
+  }
+
+  get pageGutter(): Preference<number> | null {
+    return new Preference<number>({
+      initialValue: this.preferences.pageGutter,
+      effectiveValue: this.settings.pageGutter || 0,
+      isEffective: this.layout === EPUBLayout.reflowable
+    });
+  }
+
+  get paragraphIndent(): RangePreference<number> | null {
+    return new RangePreference<number>({
+      initialValue: this.preferences.paragraphIndent,
+      effectiveValue: this.settings.paragraphIndent || 0,
+      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.preferences.paragraphIndent !== null,
+      supportedRange: [0, 3],
+      step: .25
+    });
+  }
+
+  get paragraphSpacing(): RangePreference<number> | null {
+    return new RangePreference<number>({
+      initialValue: this.preferences.paragraphSpacing,
+      effectiveValue: this.settings.paragraphSpacing || 0,
+      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.preferences.paragraphSpacing !== null,
+      supportedRange: [0, 3],
+      step: .25
+    });
+  }
+
+  get publisherStyles(): BooleanPreference | null {
+    return new BooleanPreference({
+      initialValue: this.preferences.publisherStyles,
+      effectiveValue: this.settings.publisherStyles || false,
+      isEffective: this.layout === EPUBLayout.reflowable
+    });
+  }
+
+  get scroll(): BooleanPreference | null {
+    return new BooleanPreference({
+      initialValue: this.preferences.scroll,
+      effectiveValue: this.settings.scroll || false,
+      isEffective: this.layout === EPUBLayout.reflowable
+    });
+  }
+
+  get selectionBackgroundColor(): Preference<string> | null {
+    return new Preference<string>({
+      initialValue: this.preferences.selectionBackgroundColor,
+      effectiveValue: this.settings.selectionBackgroundColor || "#fffa00",
+      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.selectionBackgroundColor !== null
+    });
+  }
+
+  get selectionTextColor(): Preference<string> | null {
+    return new Preference<string>({
+      initialValue: this.preferences.selectionTextColor,
+      effectiveValue: this.settings.selectionTextColor || "#121212",
+      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.selectionTextColor !== null
+    });
+  }
+
+  get textAlign(): EnumPreference<TextAlignment> | null {
+    return new EnumPreference<TextAlignment>({
+      initialValue: this.preferences.textAlign,
+      effectiveValue: this.settings.textAlign || TextAlignment.start,
+      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles,
+      supportedValues: Object.values(TextAlignment)
+    });
+  }
+
+  get textColor(): Preference<string> | null {
+    return new Preference<string>({
+      initialValue: this.preferences.textColor,
+      effectiveValue: this.settings.textColor || "#121212",
+      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.textColor !== null
+    });
+  }
+
+  get textNormalization(): BooleanPreference | null {
+    return new BooleanPreference({
+      initialValue: this.preferences.textNormalization,
+      effectiveValue: this.settings.textNormalization || false,
+      isEffective: this.layout === EPUBLayout.reflowable
+    });
+  }
+
+  get theme(): EnumPreference<Theme> | null {
+    return new EnumPreference<Theme>({
+      initialValue: this.preferences.theme,
+      effectiveValue: this.settings.theme || Theme.light,
+      isEffective: this.layout === EPUBLayout.reflowable,
+      supportedValues: Object.values(Theme)
+    });
+  }
+
+  get visitedLinkColor(): Preference<string> | null {
+    return new Preference<string>({
+      initialValue: this.preferences.visitedLinkColor,
+      effectiveValue: this.settings.visitedLinkColor || "#551A8B",
+      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.visitedLinkColor !== null
+    });
+  }
+
+  get wordSpacing(): RangePreference<number> | null {
+    return new RangePreference<number>({
+      initialValue: this.preferences.wordSpacing,
+      effectiveValue: this.settings.wordSpacing || 0,
+      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.preferences.wordSpacing !== null,
+      supportedRange: [0, 2],
+      step: 0.125
+    });
+  }
+}

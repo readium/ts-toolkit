@@ -20,7 +20,7 @@ export interface IEpubPreferences {
   lineLength?: number | null,
   linkColor?: string | null,
   noRuby?: boolean | null,
-  pageMargins?: number | null,
+  pageGutter?: number | null,
   paragraphIndent?: number | null,
   paragraphSpacing?: number | null,
   publisherStyles?: boolean | null,
@@ -54,7 +54,7 @@ export class EpubPreferences implements ConfigurablePreferences {
   lineLength: number | null;
   linkColor: string | null;
   noRuby: boolean | null;
-  pageMargins: number | null;
+  pageGutter: number | null;
   paragraphIndent: number | null;
   paragraphSpacing: number | null;
   publisherStyles: boolean | null;
@@ -87,7 +87,7 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.lineLength = EpubPreferences.ensureNonNegative(preferences.lineLength);
     this.linkColor = preferences.linkColor || null;
     this.noRuby = preferences.noRuby || null;
-    this.pageMargins = EpubPreferences.ensureNonNegative(preferences.pageMargins);
+    this.pageGutter = EpubPreferences.ensureNonNegative(preferences.pageGutter);
     this.paragraphIndent = EpubPreferences.ensureNonNegative(preferences.paragraphIndent);
     this.paragraphSpacing = EpubPreferences.ensureNonNegative(preferences.paragraphSpacing);
     this.publisherStyles = preferences.publisherStyles || null;
