@@ -2,12 +2,12 @@ export interface IPreference<T> {
   /**
    * The current value of the preference.
    */
-  value: T | null;
+  value?: T | null;
 
   /**
    * The value that will be effectively used by the Configurable object if preferences are submitted as they are.
    */
-  effectiveValue: T;
+  effectiveValue?: T | null;
 
   /**
    * Indicates if this preference will be effectively used by the Configurable object if preferences are submitted as they are.
@@ -63,8 +63,8 @@ export interface IRangePreference<T> extends IPreference<T> {
 }
 
 export class Preference<T> implements Preference<T> {
-  protected _value: T | null;
-  protected readonly _effectiveValue: T;
+  protected _value?: T | null;
+  protected readonly _effectiveValue?: T | null;
   protected readonly _isEffective: boolean;
 
   constructor({
@@ -72,8 +72,8 @@ export class Preference<T> implements Preference<T> {
     effectiveValue, 
     isEffective
   } : { 
-    initialValue: T | null, 
-    effectiveValue: T, 
+    initialValue?: T | null, 
+    effectiveValue?: T | null, 
     isEffective: boolean 
   }) {
     this._value = initialValue;
@@ -81,15 +81,15 @@ export class Preference<T> implements Preference<T> {
     this._isEffective = isEffective;
   }
 
-  get value(): T | null {
+  get value(): T | null | undefined {
     return this._value;
   }
 
-  set value(value: T | null) {
+  set value(value: T | null | undefined) {
     this._value = value;
   }
 
-  get effectiveValue(): T {
+  get effectiveValue(): T | null | undefined {
     return this._effectiveValue;
   }
 
@@ -117,8 +117,8 @@ export class EnumPreference<T extends string | number | symbol> extends Preferen
       isEffective,
       supportedValues
     } : { 
-      initialValue: T | null, 
-      effectiveValue: T, 
+      initialValue?: T | null, 
+      effectiveValue?: T | null, 
       isEffective: boolean,
       supportedValues: T[]
     }) {
@@ -126,8 +126,8 @@ export class EnumPreference<T extends string | number | symbol> extends Preferen
     this._supportedValues = supportedValues;
   }
 
-  set value(value: T | null) {
-    if (value !== null && !this._supportedValues.includes(value)) {
+  set value(value: T | null | undefined) {
+    if (value && !this._supportedValues.includes(value)) {
       throw new Error(`Value '${ String(value) }' is not in the supported values for this preference.`);
     }
     this._value = value;
@@ -150,8 +150,8 @@ export class RangePreference<T extends number> extends Preference<T> implements 
       supportedRange,
       step
     } : { 
-      initialValue: T | null, 
-      effectiveValue: T, 
+      initialValue?: T | null, 
+      effectiveValue?: T | null, 
       isEffective: boolean,
       supportedRange: [T, T],
       step: number 
@@ -162,8 +162,8 @@ export class RangePreference<T extends number> extends Preference<T> implements 
     this._step = step;
   }
 
-  set value(value: T | null) {
-    if (value !== null && (value < this._supportedRange[0] || value > this._supportedRange[1])) {
+  set value(value: T | null | undefined) {
+    if (value && (value < this._supportedRange[0] || value > this._supportedRange[1])) {
       throw new Error(`Value '${ String(value) }' is out of the supported range for this preference.`);
     }
     this._value = value;
@@ -178,13 +178,13 @@ export class RangePreference<T extends number> extends Preference<T> implements 
   }
 
   increment(): void {
-    if (this._value !== null && this._value < this._supportedRange[1]) {
+    if (this._value && this._value < this._supportedRange[1]) {
       this._value = Math.min(this._value + this._step, this._supportedRange[1]) as T;
     }
   }
 
   decrement(): void {
-    if (this._value !== null && this._value > this._supportedRange[0]) {
+    if (this._value && this._value > this._supportedRange[0]) {
       this._value = Math.max(this._value - this._step, this._supportedRange[0]) as T;
     }
   }

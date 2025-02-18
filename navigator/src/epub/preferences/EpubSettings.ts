@@ -17,20 +17,15 @@ export interface IEpubSettings {
   ligatures?: boolean | null;
   lineHeight?: number | null;
   lineLength?: number | null;
-  linkColor?: string | null;
   noRuby?: boolean | null;
-  pageGutter?: number | null;
   paragraphIndent?: number | null;
   paragraphSpacing?: number | null;
   publisherStyles?: boolean | null;
   scroll?: boolean | null;
-  selectionBackgroundColor?: string | null;
-  selectionTextColor?: string | null;
   textAlign?: TextAlignment | null;
   textColor?: string | null;
   textNormalization?: boolean | null;
   theme?: Theme | null;
-  visitedLinkColor?: string | null;
   wordSpacing?: number | null;
 }
 
@@ -49,20 +44,15 @@ export class EpubSettings implements ConfigurableSettings {
   ligatures: boolean | null;
   lineHeight: number | null;
   lineLength: number | null;
-  linkColor: string | null;
   noRuby: boolean | null;
-  pageGutter: number | null;
   paragraphIndent: number | null;
   paragraphSpacing: number | null;
   publisherStyles: boolean | null;
   scroll: boolean | null;
-  selectionBackgroundColor: string | null;
-  selectionTextColor: string | null;
   textAlign: TextAlignment | null;
   textColor: string | null;
   textNormalization: boolean | null;
   theme: Theme | null;
-  visitedLinkColor: string | null;
   wordSpacing: number | null;
 
   constructor(settings: IEpubSettings) {
@@ -80,20 +70,15 @@ export class EpubSettings implements ConfigurableSettings {
     this.ligatures = settings.ligatures || null;
     this.lineHeight = settings.lineHeight || null;
     this.lineLength = settings.lineLength || null;
-    this.linkColor = settings.linkColor || null;
     this.noRuby = settings.noRuby || null;
-    this.pageGutter = settings.pageGutter || null;
     this.paragraphIndent = settings.paragraphIndent || null;
     this.paragraphSpacing = settings.paragraphSpacing || null;
     this.publisherStyles = settings.publisherStyles || null;
     this.scroll = settings.scroll || null;
-    this.selectionBackgroundColor = settings.selectionBackgroundColor || null;
-    this.selectionTextColor = settings.selectionTextColor || null;
     this.textAlign = settings.textAlign || null;
     this.textColor = settings.textColor || null;
     this.textNormalization = settings.textNormalization || null;
     this.theme = settings.theme || null;
-    this.visitedLinkColor = settings.visitedLinkColor || null;
     this.wordSpacing = settings.wordSpacing || null;
   }
 }

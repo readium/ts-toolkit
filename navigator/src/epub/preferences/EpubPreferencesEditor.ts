@@ -23,7 +23,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   }
 
   clear() {
-    this.preferences = new EpubPreferences({});
+    this.preferences = new EpubPreferences({ optimalLineLength: 65 });
     this.defaults = new EpubDefaults({});
     this.metadata = null;
     this.settings = new EpubSettings(this.preferences);
@@ -170,7 +170,6 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  // TODO: optimal + minimal line-length
   get lineLength(): RangePreference<number> | null {
     return new RangePreference<number>({
       initialValue: this.preferences.lineLength,
@@ -184,8 +183,18 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get linkColor(): Preference<string> | null {
     return new Preference<string>({
       initialValue: this.preferences.linkColor,
-      effectiveValue: this.settings.linkColor || "#0000ff",
+      effectiveValue: this.preferences.linkColor || "#0000ff",
       isEffective: this.layout === EPUBLayout.reflowable && this.preferences.linkColor !== null
+    });
+  }
+
+  get minimalLineLength(): RangePreference<number> | null {
+    return new RangePreference<number>({
+      initialValue: this.preferences.minimalLineLength,
+      effectiveValue: this.preferences.minimalLineLength,
+      isEffective: this.layout === EPUBLayout.reflowable,
+      supportedRange: [20, 100],
+      step: 1
     });
   }
 
@@ -197,10 +206,20 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
+  get optimalLineLength(): RangePreference<number> {
+    return new RangePreference<number>({
+      initialValue: this.preferences.optimalLineLength,
+      effectiveValue: this.preferences.optimalLineLength,
+      isEffective: this.layout === EPUBLayout.reflowable,
+      supportedRange: [20, 100],
+      step: 1
+    });
+  }
+
   get pageGutter(): Preference<number> | null {
     return new Preference<number>({
       initialValue: this.preferences.pageGutter,
-      effectiveValue: this.settings.pageGutter || 0,
+      effectiveValue: this.preferences.pageGutter || 0,
       isEffective: this.layout === EPUBLayout.reflowable
     });
   }
@@ -244,7 +263,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get selectionBackgroundColor(): Preference<string> | null {
     return new Preference<string>({
       initialValue: this.preferences.selectionBackgroundColor,
-      effectiveValue: this.settings.selectionBackgroundColor || "#fffa00",
+      effectiveValue: this.preferences.selectionBackgroundColor || "#fffa00",
       isEffective: this.layout === EPUBLayout.reflowable && this.preferences.selectionBackgroundColor !== null
     });
   }
@@ -252,7 +271,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get selectionTextColor(): Preference<string> | null {
     return new Preference<string>({
       initialValue: this.preferences.selectionTextColor,
-      effectiveValue: this.settings.selectionTextColor || "#121212",
+      effectiveValue: this.preferences.selectionTextColor || "#121212",
       isEffective: this.layout === EPUBLayout.reflowable && this.preferences.selectionTextColor !== null
     });
   }
@@ -294,7 +313,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get visitedLinkColor(): Preference<string> | null {
     return new Preference<string>({
       initialValue: this.preferences.visitedLinkColor,
-      effectiveValue: this.settings.visitedLinkColor || "#551A8B",
+      effectiveValue: this.preferences.visitedLinkColor || "#551A8B",
       isEffective: this.layout === EPUBLayout.reflowable && this.preferences.visitedLinkColor !== null
     });
   }
