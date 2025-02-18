@@ -19,7 +19,7 @@ export interface IEpubPreferences {
   lineHeight?: number | null,
   lineLength?: number | null,
   linkColor?: string | null,
-  minimallineLength?: number | null,
+  minimalLineLength?: number | null,
   noRuby?: boolean | null,
   optimalLineLength: number,
   pageGutter?: number | null,
@@ -89,7 +89,7 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.ligatures = preferences.ligatures || null;
     this.lineHeight = EpubPreferences.ensureNonNegative(preferences.lineHeight);
     this.lineLength = EpubPreferences.ensureNonNegative(preferences.lineLength);
-    this.minimalLineLength = preferences.minimallineLength;
+    this.minimalLineLength = preferences.minimalLineLength;
     this.linkColor = preferences.linkColor || null;
     this.optimalLineLength = EpubPreferences.ensureNonNegative(preferences.optimalLineLength) || 65;
     this.noRuby = preferences.noRuby || null;
