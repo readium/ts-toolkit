@@ -54,7 +54,7 @@ abstract class Properties {
   abstract toCSSProperties(): { [key: string]: string };
 }
 
-export interface IProperties {
+export interface IUserProperties {
   advancedSettings?: boolean | null;
   a11yNormalize?: boolean | null;
   appearance?: Theme | null;
@@ -112,7 +112,7 @@ export class UserProperties extends Properties {
   view: View | null;
   wordSpacing: number | null;
 
-  constructor(props: IProperties) {
+  constructor(props: IUserProperties) {
     super();
     this.advancedSettings = props.advancedSettings || null;
     this.a11yNormalize = props.a11yNormalize || null;
