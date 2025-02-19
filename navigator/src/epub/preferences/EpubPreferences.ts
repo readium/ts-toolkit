@@ -78,12 +78,12 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.columnCount = EpubPreferences.ensureNonNegative(preferences.columnCount);
     this.darkenFilter = EpubPreferences.ensureFilter(preferences.darkenFilter);
     this.fontFamily = preferences.fontFamily || null;
-    this.fontSize = EpubPreferences.valueInRange(preferences.fontSize, 50, 250);
+    this.fontSize = EpubPreferences.ensureValueInRange(preferences.fontSize, 50, 250);
     this.fontOpticalSizing = preferences.fontOpticalSizing || null;
-    this.fontWeight = EpubPreferences.valueInRange(preferences.fontWeight, 100, 1000);
+    this.fontWeight = EpubPreferences.ensureValueInRange(preferences.fontWeight, 100, 1000);
     this.fontWidth = typeof preferences.fontWidth === "string" 
       ? preferences.fontWidth 
-      : EpubPreferences.valueInRange(preferences.fontWidth, 10, 1000);
+      : EpubPreferences.ensureValueInRange(preferences.fontWidth, 10, 1000);
     this.hyphens = preferences.hyphens || null;
     this.invertFilter = EpubPreferences.ensureFilter(preferences.invertFilter);
     this.invertGaijiFilter = EpubPreferences.ensureFilter(preferences.invertGaijiFilter);
@@ -126,7 +126,7 @@ export class EpubPreferences implements ConfigurablePreferences {
     return value !== undefined && value !== null && value >= 0 ? value : null;
   }
 
-  static valueInRange(value: number | null | undefined, min: number, max: number): number | null {
+  static ensureValueInRange(value: number | null | undefined, min: number, max: number): number | null {
     return value !== undefined && value !== null && value >= min && value <= max ? value : null;
   }
 

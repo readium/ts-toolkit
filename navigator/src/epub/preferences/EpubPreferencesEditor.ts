@@ -68,7 +68,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get fontFamily(): Preference<string> | null {
     return new Preference<string>({
       initialValue: this.preferences.fontFamily,
-      // TODO
+      // TODO infer effectiveValue of fontFamily 
       effectiveValue: this.settings.fontFamily || "default-font",
       isEffective: this.layout === EPUBLayout.reflowable
     });
