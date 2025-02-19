@@ -302,7 +302,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get theme(): EnumPreference<Theme> | null {
     return new EnumPreference<Theme>({
       initialValue: this.preferences.theme,
-      effectiveValue: this.settings.theme || Theme.light,
+      effectiveValue: this.settings.theme || Theme.day,
       isEffective: this.layout === EPUBLayout.reflowable,
       supportedValues: Object.values(Theme)
     });
