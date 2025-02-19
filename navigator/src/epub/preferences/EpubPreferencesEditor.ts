@@ -3,7 +3,7 @@ import { IPreferencesEditor } from "../../preferences/PreferencesEditor";
 import { EpubDefaults } from "./EpubDefaults";
 import { EpubPreferences } from "./EpubPreferences";
 import { EpubSettings } from "./EpubSettings";
-import { FontOpticalSizing, TextAlignment, Theme } from "../../preferences/Types";
+import { TextAlignment, Theme } from "../../preferences/Types";
 import { BooleanPreference, EnumPreference, Preference, RangePreference } from "../../preferences/Preference";
 
 // WIP: will change cos’ of all the missing pieces
@@ -84,10 +84,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get fontOpticalSizing(): Preference<FontOpticalSizing> | null {
-    return new Preference<FontOpticalSizing>({
+  get fontOpticalSizing(): BooleanPreference | null {
+    return new BooleanPreference({
       initialValue: this.preferences.fontOpticalSizing,
-      effectiveValue: this.settings.fontOpticalSizing || "auto",
+      effectiveValue: this.settings.fontOpticalSizing || true,
       isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.preferences.fontOpticalSizing !== null
     });
   }
@@ -102,13 +102,12 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  // TODO: support keywords
   get fontWidth(): RangePreference<number> | null {
     return new RangePreference<number>({
       initialValue: this.preferences.fontWidth,
       effectiveValue: this.settings.fontWidth || 100,
       isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.preferences.fontWidth !== null,
-      supportedRange: [70, 200],
+      supportedRange: [50, 250],
       step: 10
     });
   }

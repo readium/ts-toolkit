@@ -1,4 +1,4 @@
-import { FontOpticalSizing, FontWidth, TextAlignment, Theme } from "../../preferences/Types";
+import { TextAlignment, Theme } from "../../preferences/Types";
 import { ConfigurablePreferences } from "../../preferences/Configurable";
 
 export interface IEpubPreferences {
@@ -8,9 +8,9 @@ export interface IEpubPreferences {
   darkenFilter?: boolean | number | null,
   fontFamily?: string | null,
   fontSize?: number | null,
-  fontOpticalSizing?: FontOpticalSizing | null,
+  fontOpticalSizing?: boolean | null,
   fontWeight?: number | null,
-  fontWidth?: FontWidth | null,
+  fontWidth?: number | null,
   hyphens?: boolean | null,
   invertFilter?: boolean | number | null,
   invertGaijiFilter?: boolean | number | null,
@@ -44,9 +44,9 @@ export class EpubPreferences implements ConfigurablePreferences {
   darkenFilter: boolean | number | null;
   fontFamily: string | null;
   fontSize: number | null;
-  fontOpticalSizing: FontOpticalSizing | null;
+  fontOpticalSizing: boolean | null;
   fontWeight: number | null;
-  fontWidth: FontWidth | null;
+  fontWidth: number | null;
   hyphens: boolean | null;
   invertFilter: boolean | number | null;
   invertGaijiFilter: boolean | number | null;

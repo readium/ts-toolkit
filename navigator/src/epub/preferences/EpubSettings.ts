@@ -1,5 +1,5 @@
 import { ConfigurableSettings } from "../../preferences/Configurable";
-import { FontOpticalSizing, FontWidth, TextAlignment, Theme } from "../../preferences/Types";
+import { TextAlignment, Theme } from "../../preferences/Types";
 
 // Expose everything available in Preferences except blend and gaiji filters ATM
 export interface IEpubSettings {
@@ -9,9 +9,9 @@ export interface IEpubSettings {
   darkenFilter?: boolean | number | null,
   fontFamily?: string | null,
   fontSize?: number | null,
-  fontOpticalSizing?: FontOpticalSizing | null,
+  fontOpticalSizing?: boolean | null,
   fontWeight?: number | null,
-  fontWidth?: FontWidth | null,
+  fontWidth?: number | null,
   hyphens?: boolean | null,
   invertFilter?: boolean | number | null,
   letterSpacing?: number | null,
@@ -37,9 +37,9 @@ export class EpubSettings implements ConfigurableSettings {
   darkenFilter: boolean | number | null;
   fontFamily: string | null;
   fontSize: number | null;
-  fontOpticalSizing: FontOpticalSizing | null;
+  fontOpticalSizing: boolean | null;
   fontWeight: number | null;
-  fontWidth: FontWidth | null;
+  fontWidth: number | null;
   hyphens: boolean | null;
   invertFilter: boolean | number | null;
   letterSpacing: number | null;
