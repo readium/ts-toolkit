@@ -1,4 +1,4 @@
-import { TextAlignment, Theme } from "../../preferences/Types";
+import { FontOpticalSizing, FontWidth, TextAlignment, Theme } from "../../preferences/Types";
 import { ConfigurablePreferences } from "../../preferences/Configurable";
 
 export interface IEpubPreferences {
@@ -8,9 +8,9 @@ export interface IEpubPreferences {
   darkenFilter?: boolean | number | null,
   fontFamily?: string | null,
   fontSize?: number | null,
-  fontOpticalSizing?: number | null,
+  fontOpticalSizing?: FontOpticalSizing | null,
   fontWeight?: number | null,
-  fontWidth?: number | null,
+  fontWidth?: FontWidth | null,
   hyphens?: boolean | null,
   invertFilter?: boolean | number | null,
   invertGaijiFilter?: boolean | number | null,
@@ -44,9 +44,9 @@ export class EpubPreferences implements ConfigurablePreferences {
   darkenFilter: boolean | number | null;
   fontFamily: string | null;
   fontSize: number | null;
-  fontOpticalSizing: number | null;
+  fontOpticalSizing: FontOpticalSizing | null;
   fontWeight: number | null;
-  fontWidth: number | null;
+  fontWidth: FontWidth | null;
   hyphens: boolean | null;
   invertFilter: boolean | number | null;
   invertGaijiFilter: boolean | number | null;
@@ -79,9 +79,11 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.darkenFilter = EpubPreferences.ensureFilter(preferences.darkenFilter);
     this.fontFamily = preferences.fontFamily || null;
     this.fontSize = EpubPreferences.valueInRange(preferences.fontSize, 50, 250);
-    this.fontOpticalSizing = EpubPreferences.ensureNonNegative(preferences.fontOpticalSizing);
+    this.fontOpticalSizing = preferences.fontOpticalSizing || null;
     this.fontWeight = EpubPreferences.valueInRange(preferences.fontWeight, 100, 1000);
-    this.fontWidth = EpubPreferences.valueInRange(preferences.fontWidth, 10, 1000);
+    this.fontWidth = typeof preferences.fontWidth === "string" 
+      ? preferences.fontWidth 
+      : EpubPreferences.valueInRange(preferences.fontWidth, 10, 1000);
     this.hyphens = preferences.hyphens || null;
     this.invertFilter = EpubPreferences.ensureFilter(preferences.invertFilter);
     this.invertGaijiFilter = EpubPreferences.ensureFilter(preferences.invertGaijiFilter);

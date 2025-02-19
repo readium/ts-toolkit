@@ -1,43 +1,45 @@
 import { ConfigurableSettings } from "../../preferences/Configurable";
-import { TextAlignment, Theme } from "../../preferences/Types";
+import { FontOpticalSizing, FontWidth, TextAlignment, Theme } from "../../preferences/Types";
 
 // Expose everything available in Preferences except blend and gaiji filters ATM
 export interface IEpubSettings {
-  backgroundColor?: string | null;
-  columnCount?: number | null;
+  backgroundColor?: string | null,
+  blendFilter?: boolean | null,
+  columnCount?: number | null,
   darkenFilter?: boolean | number | null,
-  fontFamily?: string | null;
-  fontSize?: number | null;
-  fontOpticalSizing?: number | null;
-  fontWeight?: number | null;
-  fontWidth?: number | null;
-  hyphens?: boolean | null;
+  fontFamily?: string | null,
+  fontSize?: number | null,
+  fontOpticalSizing?: FontOpticalSizing | null,
+  fontWeight?: number | null,
+  fontWidth?: FontWidth | null,
+  hyphens?: boolean | null,
   invertFilter?: boolean | number | null,
-  letterSpacing?: number | null;
-  ligatures?: boolean | null;
-  lineHeight?: number | null;
-  lineLength?: number | null;
-  noRuby?: boolean | null;
-  paragraphIndent?: number | null;
-  paragraphSpacing?: number | null;
-  publisherStyles?: boolean | null;
-  scroll?: boolean | null;
-  textAlign?: TextAlignment | null;
-  textColor?: string | null;
-  textNormalization?: boolean | null;
-  theme?: Theme | null;
-  wordSpacing?: number | null;
+  letterSpacing?: number | null,
+  ligatures?: boolean | null,
+  lineHeight?: number | null,
+  lineLength?: number | null,
+  noRuby?: boolean | null,
+  paragraphIndent?: number | null,
+  paragraphSpacing?: number | null,
+  publisherStyles?: boolean | null,
+  scroll?: boolean | null,
+  textAlign?: TextAlignment | null,
+  textColor?: string | null,
+  textNormalization?: boolean | null,
+  theme?: Theme | null,
+  wordSpacing?: number | null
 }
 
 export class EpubSettings implements ConfigurableSettings {
   backgroundColor: string | null;
+  blendFilter: boolean | null;
   columnCount: number | null;
   darkenFilter: boolean | number | null;
   fontFamily: string | null;
   fontSize: number | null;
-  fontOpticalSizing: number | null;
+  fontOpticalSizing: FontOpticalSizing | null;
   fontWeight: number | null;
-  fontWidth: number | null;
+  fontWidth: FontWidth | null;
   hyphens: boolean | null;
   invertFilter: boolean | number | null;
   letterSpacing: number | null;
@@ -57,6 +59,7 @@ export class EpubSettings implements ConfigurableSettings {
 
   constructor(settings: IEpubSettings) {
     this.backgroundColor = settings.backgroundColor || null;
+    this.blendFilter = settings.blendFilter || null;
     this.columnCount = settings.columnCount || null;
     this.darkenFilter = settings.darkenFilter || null;
     this.fontFamily = settings.fontFamily || null;

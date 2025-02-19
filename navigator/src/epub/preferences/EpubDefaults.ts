@@ -1,4 +1,4 @@
-import { TextAlignment, Theme } from "../../preferences/Types";
+import { FontOpticalSizing, FontWidth, TextAlignment, Theme } from "../../preferences/Types";
 
 // Expose everything available in Preferences except blend and gaiji filters ATM
 export interface IEpubDefaults {
@@ -8,9 +8,9 @@ export interface IEpubDefaults {
   darkenFilter?: boolean | number | null,
   fontFamily?: string | null,
   fontSize?: number | null,
-  fontOpticalSizing?: number | null,
+  fontOpticalSizing?: FontOpticalSizing | null,
   fontWeight?: number | null,
-  fontWidth?: number | null,
+  fontWidth?: FontWidth | null,
   hyphens?: boolean | null,
   invertFilter?: boolean | number | null,
   invertGaijiFilter?: boolean | number | null,
@@ -44,9 +44,9 @@ export class EpubDefaults {
   darkenFilter: boolean | number | null;
   fontFamily: string | null;
   fontSize: number | null;
-  fontOpticalSizing: number | null;
+  fontOpticalSizing: FontOpticalSizing | null;
   fontWeight: number | null;
-  fontWidth: number | null;
+  fontWidth: FontWidth | null;
   hyphens: boolean | null;
   invertFilter: boolean | number | null;
   invertGaijiFilter: boolean | number | null;

@@ -3,7 +3,7 @@ import { IPreferencesEditor } from "../../preferences/PreferencesEditor";
 import { EpubDefaults } from "./EpubDefaults";
 import { EpubPreferences } from "./EpubPreferences";
 import { EpubSettings } from "./EpubSettings";
-import { TextAlignment, Theme } from "../../preferences/Types";
+import { FontOpticalSizing, TextAlignment, Theme } from "../../preferences/Types";
 import { BooleanPreference, EnumPreference, Preference, RangePreference } from "../../preferences/Preference";
 
 // WIP: will change cos’ of all the missing pieces
@@ -41,7 +41,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get blendFilter(): BooleanPreference | null {
     return new BooleanPreference({
       initialValue: this.preferences.blendFilter,
-      effectiveValue: this.preferences.blendFilter || false,
+      effectiveValue: this.settings.blendFilter || false,
       isEffective: this.preferences.blendFilter !== null
     });
   }
@@ -84,13 +84,11 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get fontOpticalSizing(): RangePreference<number> | null {
-    return new RangePreference<number>({
+  get fontOpticalSizing(): Preference<FontOpticalSizing> | null {
+    return new Preference<FontOpticalSizing>({
       initialValue: this.preferences.fontOpticalSizing,
-      effectiveValue: this.settings.fontOpticalSizing || 16,
-      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.preferences.fontOpticalSizing !== null,
-      supportedRange: [10, 120],
-      step: 10
+      effectiveValue: this.settings.fontOpticalSizing || "auto",
+      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.preferences.fontOpticalSizing !== null
     });
   }
 
@@ -104,6 +102,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
+  // TODO: support keywords
   get fontWidth(): RangePreference<number> | null {
     return new RangePreference<number>({
       initialValue: this.preferences.fontWidth,
