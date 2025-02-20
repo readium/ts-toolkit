@@ -21,7 +21,7 @@ export interface IEpubPreferences {
   linkColor?: string | null,
   minimalLineLength?: number | null,
   noRuby?: boolean | null,
-  optimalLineLength: number,
+  optimalLineLength?: number,
   pageGutter?: number | null,
   paragraphIndent?: number | null,
   paragraphSpacing?: number | null,

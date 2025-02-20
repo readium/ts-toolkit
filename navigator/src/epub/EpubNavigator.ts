@@ -7,8 +7,16 @@ import { BasicTextSelection, FrameClickEvent } from "@readium/navigator-html-inj
 import * as path from "path-browserify";
 import { FXLFrameManager } from "./fxl/FXLFrameManager";
 import { FrameManager } from "./frame/FrameManager";
+import { EpubPreferences } from "./preferences/EpubPreferences";
+import { EpubDefaults } from "./preferences/EpubDefaults";
+import { EpubPreferencesEditor } from "./preferences/EpubPreferencesEditor";
 
 export type ManagerEventKey = "zoom";
+
+export interface EpubNavigatorConfiguration {
+    preferences: EpubPreferences;
+    defaults: EpubDefaults;
+}
 
 export interface EpubNavigatorListeners {
     frameLoaded: (wnd: Window) => void;
@@ -39,6 +47,8 @@ export class EpubNavigator extends VisualNavigator {
     private readonly pub: Publication;
     private readonly container: HTMLElement;
     private readonly listeners: EpubNavigatorListeners;
+    private readonly configuration: EpubNavigatorConfiguration;
+    private _preferencesEditor: EpubPreferencesEditor | null = null;
     private framePool!: FramePoolManager | FXLFramePoolManager;
     private positions!: Locator[];
     private currentLocation!: Locator;
@@ -46,7 +56,7 @@ export class EpubNavigator extends VisualNavigator {
     private currentProgression: ReadingProgression;
     public readonly layout: EPUBLayout;
 
-    constructor(container: HTMLElement, pub: Publication, listeners: EpubNavigatorListeners, positions: Locator[] = [], initialPosition: Locator | undefined = undefined) {
+    constructor(container: HTMLElement, pub: Publication, listeners: EpubNavigatorListeners, positions: Locator[] = [], initialPosition: Locator | undefined = undefined, configuration: EpubNavigatorConfiguration = { preferences: new EpubPreferences({}), defaults: new EpubDefaults({}) }) {
         super();
         this.pub = pub;
         this.layout = EpubNavigator.determineLayout(pub);
@@ -54,6 +64,7 @@ export class EpubNavigator extends VisualNavigator {
         this.container = container;
         this.listeners = defaultListeners(listeners);
         this.currentLocation = initialPosition!;
+        this.configuration = configuration;
         if (positions.length)
             this.positions = positions;
     }
@@ -84,6 +95,17 @@ export class EpubNavigator extends VisualNavigator {
         if(this.currentLocation === undefined)
             this.currentLocation = this.positions[0];
         await this.apply();
+    }
+
+    public get preferencesEditor() {
+        if (this._preferencesEditor === null) {
+            this._preferencesEditor = new EpubPreferencesEditor(this.configuration.preferences, this.configuration.defaults, this.pub.metadata);
+        }
+        return this._preferencesEditor;
+    }
+
+    public submitPreferences(preferences: EpubPreferences) {
+        this.configuration.preferences = preferences;
     }
 
     /**
