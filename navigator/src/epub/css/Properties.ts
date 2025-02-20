@@ -70,17 +70,22 @@ export interface IUserProperties {
   fontWeight?: number | null;
   fontWidth?: FontWidth | null;
   invertFilter?: boolean | number | null;
+  invertGaijiFilter?: boolean | number | null;
   letterSpacing?: number | null;
   ligatures?: Ligatures | null;
   lineHeight?: number | null;
   lineLength?: number | null;
+  linkColor?: string | null;
   noRuby?: boolean | null;
   paraIndent?: number | null;
   paraSpacing?: number | null;
   publisherStyles?: boolean | null;
+  selectionBackgroundColor?: string | null;
+  selectionTextColor?: string | null;
   textAlign?: TextAlignment | null;
   textColor?: string | null;
   view?: View | null;
+  visitedLinkColor?: string | null;
   wordSpacing?: number | null;
 }
 
@@ -100,16 +105,21 @@ export class UserProperties extends Properties {
   fontWeight: number | null;
   fontWidth: FontWidth | null;
   invertFilter: boolean | number | null;
+  invertGaijiFilter: boolean | number | null;
   letterSpacing: number | null;
   ligatures: Ligatures | null;
   lineHeight: number | null;
   lineLength: number | null;
+  linkColor: string | null;
   noRuby: boolean | null;
   paraIndent: number | null;
   paraSpacing: number | null;
+  selectionBackgroundColor?: string | null;
+  selectionTextColor?: string | null;
   textAlign: TextAlignment | null;
   textColor: string | null;
   view: View | null;
+  visitedLinkColor: string | null;
   wordSpacing: number | null;
 
   constructor(props: IUserProperties) {
@@ -129,16 +139,21 @@ export class UserProperties extends Properties {
     this.fontWeight = props.fontWeight || null;
     this.fontWidth = props.fontWidth || null;
     this.invertFilter = props.invertFilter || null;
+    this.invertGaijiFilter = props.invertGaijiFilter || null;
     this.letterSpacing = props.letterSpacing || null;
     this.ligatures = props.ligatures || null;
     this.lineHeight = props.lineHeight || null;
     this.lineLength = props.lineLength || null;
+    this.linkColor = props.linkColor || null;
     this.noRuby = props.noRuby || null;
     this.paraIndent = props.paraIndent || null;
     this.paraSpacing = props.paraSpacing || null;
+    this.selectionBackgroundColor = props.selectionBackgroundColor || null;
+    this.selectionTextColor = props.selectionTextColor || null;
     this.textAlign = props.textAlign || null;
     this.textColor = props.textColor || null;
     this.view = props.view || null;
+    this.visitedLinkColor = props.visitedLinkColor || null;
     this.wordSpacing = props.wordSpacing || null;
   }
 
@@ -172,16 +187,25 @@ export class UserProperties extends Properties {
         ? this.toPercentage(this.invertFilter)
         : this.toFlag("invert");
     }
+    if (this.invertGaijiFilter) {
+      cssProperties["--USER__invertGaiji"] = typeof this.invertGaijiFilter === "number" 
+        ? this.toPercentage(this.invertGaijiFilter) 
+        : this.toFlag("invertGaiji");
+    }
     if (this.letterSpacing) cssProperties["--USER__letterSpacing"] = this.toRem(this.letterSpacing);
     if (this.ligatures) cssProperties["--USER__ligatures"] = this.ligatures;
     if (this.lineHeight) cssProperties["--USER__lineHeight"] = this.toUnitless(this.lineHeight);
     if (this.lineLength) cssProperties["--USER__lineLength"] = this.toRem(this.lineLength);
+    if (this.linkColor) cssProperties["--USER__linkColor"] = this.linkColor;
     if (this.noRuby) cssProperties["--USER__noRuby"] = this.toFlag("noRuby");
     if (this.paraIndent) cssProperties["--USER__paraIndent"] = this.toRem(this.paraIndent);
     if (this.paraSpacing) cssProperties["--USER__paraSpacing"] = this.toRem(this.paraSpacing);
+    if (this.selectionBackgroundColor) cssProperties["--USER__selectionBackgroundColor"] = this.selectionBackgroundColor;
+    if (this.selectionTextColor) cssProperties["--USER__selectionTextColor"] = this.selectionTextColor;
     if (this.textAlign) cssProperties["--USER__textAlign"] = this.textAlign;
     if (this.textColor) cssProperties["--USER__textColor"] = this.textColor;
     if (this.view) cssProperties["--USER__view"] = this.toFlag(this.view);
+    if (this.visitedLinkColor) cssProperties["--USER__visitedLinkColor"] = this.visitedLinkColor;
     if (this.wordSpacing) cssProperties["--USER__wordSpacing"] = this.toRem(this.wordSpacing);
 
     return cssProperties;
@@ -203,7 +227,6 @@ export interface IRSProperties {
   defaultLineLength?: number | null;
   flowSpacing?: number | null;
   humanistTf?: string | null;
-  invertGaijiFilter?: boolean | number | null;
   linkColor?: string | null;
   maxMediaWidth?: number | null;
   maxMediaHeight?: number | null;
@@ -243,7 +266,6 @@ export class RSProperties extends Properties {
   defaultLineLength: number | null;
   flowSpacing: number | null;
   humanistTf: string | null;
-  invertGaijiFilter: boolean | number | null;
   linkColor: string | null;
   maxMediaWidth: number | null;
   maxMediaHeight: number | null;
@@ -283,7 +305,6 @@ export class RSProperties extends Properties {
     this.defaultLineLength = props.defaultLineLength || null;
     this.flowSpacing = props.flowSpacing || null;
     this.humanistTf = props.humanistTf || null;
-    this.invertGaijiFilter = props.invertGaijiFilter || null;
     this.linkColor = props.linkColor || null;
     this.maxMediaWidth = props.maxMediaWidth || null;
     this.maxMediaHeight = props.maxMediaHeight || null;
@@ -325,11 +346,6 @@ export class RSProperties extends Properties {
     if (this.defaultLineLength) cssProperties["--RS__defaultLineLength"] = this.toRem(this.defaultLineLength);
     if (this.flowSpacing) cssProperties["--RS__flowSpacing"] = this.toRem(this.flowSpacing);
     if (this.humanistTf) cssProperties["--RS__humanistTf"] = this.humanistTf;
-    if (this.invertGaijiFilter) {
-      cssProperties["--USER__invertGaijiFilter"] = typeof this.invertGaijiFilter === "number" 
-        ? this.toPercentage(this.invertGaijiFilter) 
-        : this.toFlag("invertGaiji");
-    }
     if (this.linkColor) cssProperties["--RS__linkColor"] = this.linkColor;
     if (this.maxMediaWidth) cssProperties["--RS__maxMediaWidth"] = this.toVw(this.maxMediaWidth);
     if (this.maxMediaHeight) cssProperties["--RS__maxMediaHeight"] = this.toVh(this.maxMediaHeight);
