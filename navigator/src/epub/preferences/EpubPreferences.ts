@@ -33,7 +33,7 @@ export interface IEpubPreferences {
   textColor?: string | null,
   textNormalization?: boolean | null,
   theme?: Theme | null,
-  visitedLinkColor?: string | null,
+  visitedColor?: string | null,
   wordSpacing?: number | null
 }
 
@@ -69,7 +69,7 @@ export class EpubPreferences implements ConfigurablePreferences {
   textColor: string | null;
   textNormalization: boolean | null;
   theme: Theme | null;
-  visitedLinkColor: string | null;
+  visitedColor: string | null;
   wordSpacing: number | null;
 
   constructor(preferences: IEpubPreferences) {
@@ -106,7 +106,7 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.textColor = preferences.textColor || null;
     this.textNormalization = preferences.textNormalization || null;
     this.theme = preferences.theme || null;
-    this.visitedLinkColor = preferences.visitedLinkColor || null;
+    this.visitedColor = preferences.visitedColor || null;
     this.wordSpacing = EpubPreferences.ensureNonNegative(preferences.wordSpacing);
   }
 

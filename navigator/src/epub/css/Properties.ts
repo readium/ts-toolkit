@@ -85,7 +85,7 @@ export interface IUserProperties {
   textAlign?: TextAlignment | null;
   textColor?: string | null;
   view?: View | null;
-  visitedLinkColor?: string | null;
+  visitedColor?: string | null;
   wordSpacing?: number | null;
 }
 
@@ -119,7 +119,7 @@ export class UserProperties extends Properties {
   textAlign: TextAlignment | null;
   textColor: string | null;
   view: View | null;
-  visitedLinkColor: string | null;
+  visitedColor: string | null;
   wordSpacing: number | null;
 
   constructor(props: IUserProperties) {
@@ -153,7 +153,7 @@ export class UserProperties extends Properties {
     this.textAlign = props.textAlign || null;
     this.textColor = props.textColor || null;
     this.view = props.view || null;
-    this.visitedLinkColor = props.visitedLinkColor || null;
+    this.visitedColor = props.visitedColor || null;
     this.wordSpacing = props.wordSpacing || null;
   }
 
@@ -205,7 +205,7 @@ export class UserProperties extends Properties {
     if (this.textAlign) cssProperties["--USER__textAlign"] = this.textAlign;
     if (this.textColor) cssProperties["--USER__textColor"] = this.textColor;
     if (this.view) cssProperties["--USER__view"] = this.toFlag(this.view);
-    if (this.visitedLinkColor) cssProperties["--USER__visitedLinkColor"] = this.visitedLinkColor;
+    if (this.visitedColor) cssProperties["--USER__visitedColor"] = this.visitedColor;
     if (this.wordSpacing) cssProperties["--USER__wordSpacing"] = this.toRem(this.wordSpacing);
 
     return cssProperties;
@@ -248,7 +248,7 @@ export interface IRSProperties {
   serifJaV?: string | null;
   textColor?: string | null;
   typeScale?: TypeScale | null;
-  visitedLinkColor?: string | null;
+  visitedColor?: string | null;
 }
 
 export class RSProperties extends Properties {
@@ -287,7 +287,7 @@ export class RSProperties extends Properties {
   serifJaV: string | null;
   textColor: string | null;
   typeScale: TypeScale | null;
-  visitedLinkColor: string | null;
+  visitedColor: string | null;
 
   constructor(props: IRSProperties) {
     super();
@@ -326,7 +326,7 @@ export class RSProperties extends Properties {
     this.serifJaV = props.serifJaV || null;
     this.textColor = props.textColor || null;
     this.typeScale = props.typeScale || null;
-    this.visitedLinkColor = props.visitedLinkColor || null;
+    this.visitedColor = props.visitedColor || null;
   }
 
   toCSSProperties(): { [key: string]: string; } {
@@ -367,7 +367,7 @@ export class RSProperties extends Properties {
     if (this.serifJaV) cssProperties["--RS__serif-ja-v"] = this.serifJaV;
     if (this.textColor) cssProperties["--RS__textColor"] = this.textColor;
     if (this.typeScale) cssProperties["--RS__typeScale"] = this.toUnitless(this.typeScale);
-    if (this.visitedLinkColor) cssProperties["--RS__visitedColor"] = this.visitedLinkColor;
+    if (this.visitedColor) cssProperties["--RS__visitedColor"] = this.visitedColor;
 
     return cssProperties;
   }

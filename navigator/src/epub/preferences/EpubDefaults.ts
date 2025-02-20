@@ -33,7 +33,7 @@ export interface IEpubDefaults {
   textColor?: string | null,
   textNormalization?: boolean | null,
   theme?: Theme | null,
-  visitedLinkColor?: string | null,
+  visitedColor?: string | null,
   wordSpacing?: number | null
 }
 
@@ -69,7 +69,7 @@ export class EpubDefaults {
   textColor: string | null;
   textNormalization: boolean | null;
   theme: Theme | null;
-  visitedLinkColor: string | null;
+  visitedColor: string | null;
   wordSpacing: number | null;
 
   constructor(defaults: IEpubDefaults) {
@@ -104,7 +104,7 @@ export class EpubDefaults {
     this.textColor = defaults.textColor || null;
     this.textNormalization = defaults.textNormalization || null;
     this.theme = defaults.theme || null;
-    this.visitedLinkColor = defaults.visitedLinkColor || null;
+    this.visitedColor = defaults.visitedColor || null;
     this.wordSpacing = defaults.wordSpacing || null;
   }
 }

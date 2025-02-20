@@ -308,11 +308,11 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get visitedLinkColor(): Preference<string> | null {
+  get visitedColor(): Preference<string> | null {
     return new Preference<string>({
-      initialValue: this.preferences.visitedLinkColor,
-      effectiveValue: this.preferences.visitedLinkColor || "#551A8B",
-      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.visitedLinkColor !== null
+      initialValue: this.preferences.visitedColor,
+      effectiveValue: this.preferences.visitedColor || "#551A8B",
+      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.visitedColor !== null
     });
   }
 
