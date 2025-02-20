@@ -47,7 +47,8 @@ export class EpubNavigator extends VisualNavigator {
     private readonly pub: Publication;
     private readonly container: HTMLElement;
     private readonly listeners: EpubNavigatorListeners;
-    private readonly configuration: EpubNavigatorConfiguration;
+    private preferences: EpubPreferences;
+    private defaults: EpubDefaults;
     private _preferencesEditor: EpubPreferencesEditor | null = null;
     private framePool!: FramePoolManager | FXLFramePoolManager;
     private positions!: Locator[];
@@ -64,7 +65,8 @@ export class EpubNavigator extends VisualNavigator {
         this.container = container;
         this.listeners = defaultListeners(listeners);
         this.currentLocation = initialPosition!;
-        this.configuration = configuration;
+        this.preferences = configuration.preferences;
+        this.defaults = configuration.defaults;
         if (positions.length)
             this.positions = positions;
     }
@@ -99,13 +101,13 @@ export class EpubNavigator extends VisualNavigator {
 
     public get preferencesEditor() {
         if (this._preferencesEditor === null) {
-            this._preferencesEditor = new EpubPreferencesEditor(this.configuration.preferences, this.configuration.defaults, this.pub.metadata);
+            this._preferencesEditor = new EpubPreferencesEditor(this.preferences, this.defaults, this.pub.metadata);
         }
         return this._preferencesEditor;
     }
 
     public submitPreferences(preferences: EpubPreferences) {
-        this.configuration.preferences = preferences;
+        this.preferences = preferences;
     }
 
     /**
