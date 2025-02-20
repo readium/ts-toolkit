@@ -70,8 +70,12 @@ export class LineLengths {
     this._fontFace = config.fontFace || null;
     this._sample = config.sample || null;
     this._pageGutter = config.pageGutter || 0;
-    this._letterSpacing = config.letterSpacing ? config.letterSpacing / (config.fontSize || 16) : 0;
-    this._wordSpacing = config.wordSpacing ? config.wordSpacing / (config.fontSize || 16) : 0;
+    this._letterSpacing = config.letterSpacing 
+      ? Math.round(config.letterSpacing * (config.fontSize || DEFAULT_FONT_SIZE)) 
+      : 0;
+    this._wordSpacing = config.wordSpacing 
+      ? Math.round(config.wordSpacing * (config.fontSize || DEFAULT_FONT_SIZE)) 
+      : 0;
     this._isCJK = config.isCJK || false;
     this._getPixels = config.getPixels || false;
     this._padding = config.pageGutter ? config.pageGutter * 2 : 0;
@@ -80,7 +84,9 @@ export class LineLengths {
       : config.minChars === null 
         ? null
         : 1;
-    this._userMultiplier = config.userChars ? config.userChars / config.optimalChars : null;
+    this._userMultiplier = config.userChars 
+      ? config.userChars / config.optimalChars 
+      : null;
     this._approximatedWordSpaces = LineLengths.approximateWordSpaces(config.optimalChars, config.sample);
   }
 
@@ -90,12 +96,12 @@ export class LineLengths {
   }
 
   set letterSpacing(n: number) {
-    this._letterSpacing = n / this._fontSize;
+    this._letterSpacing = Math.round(n * this._fontSize);
     this._optimalLineLength = this.getOptimalLineLength();
   }
   
   set wordSpacing(n: number) {
-    this._wordSpacing = n / this._fontSize;
+    this._wordSpacing = Math.round(n * this._fontSize);
     this._optimalLineLength = this.getOptimalLineLength();
   }
 
@@ -202,6 +208,7 @@ export class LineLengths {
   }
 
   private measureText(fontFace: string | null) {
+    // Note: We don’t clear the canvas since we’re not filling it, just measuring
     const ctx: CanvasRenderingContext2D | null = this._canvas.getContext("2d");
     if (ctx && fontFace) {
       // ch based on 0, ic based on water ideograph
