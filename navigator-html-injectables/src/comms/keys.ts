@@ -28,6 +28,8 @@ export type CommsCommandKey =
     "go_end" |
     "go_start" |
     "go_progression" |
+    "get_properties" | 
+    "update_properties" | 
     "set_property" |
     "remove_property" |
     // "exact_progress" |

@@ -168,13 +168,7 @@ export class EpubNavigator extends VisualNavigator {
             }
         }
 
-        let cssString: string | null = null;
-
-        if (Object.keys(properties).length > 0) {
-            cssString = JSON.stringify(properties);
-        }
-
-        // Send string to frameManager
+        if (this.layout === EPUBLayout.reflowable) (this.framePool as FramePoolManager).setCSSProperties(properties);
     }
 
     /**

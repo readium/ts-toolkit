@@ -1,6 +1,6 @@
 import { Comms } from "../../comms/comms";
 import { Setup } from "./Setup";
-import { removeProperty, setProperty } from "../../helpers/css";
+import { getProperties, removeProperty, setProperty, updateProperties } from "../../helpers/css";
 import { ReadiumWindow } from "../../helpers/dom";
 
 const VIEWPORT_META_TAG_ID = "readium-viewport";
@@ -35,6 +35,14 @@ export class ReflowableSetup extends Setup {
             target: wnd
         } as any); // Cheat!
 
+        comms.register("get_properties", ReflowableSetup.moduleName, (_, ack) => {
+            getProperties(wnd);
+            ack(true);
+        });
+        comms.register("update_properties", ReflowableSetup.moduleName, (data, ack) => {
+            updateProperties(wnd, data as { [key: string]: string });
+            ack(true);
+        })
         comms.register("set_property", ReflowableSetup.moduleName, (data, ack) => {
             const kv = data as string[];
             setProperty(wnd, kv[0], kv[1]);

@@ -104,6 +104,10 @@ export class FrameManager {
         });
     }
 
+    setCSSProperties(properties: { [key: string]: string }) {
+        this.comms?.send("update_properties", properties);
+    }
+
     get iframe() {
         if(this.destroyed) throw Error("Trying to use frame when it doesn't exist");
         return this.frame;
