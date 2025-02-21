@@ -9,7 +9,10 @@ import { FXLFrameManager } from "./fxl/FXLFrameManager";
 import { FrameManager } from "./frame/FrameManager";
 import { EpubPreferences } from "./preferences/EpubPreferences";
 import { EpubDefaults } from "./preferences/EpubDefaults";
+import { EpubSettings } from "./preferences";
 import { EpubPreferencesEditor } from "./preferences/EpubPreferencesEditor";
+import { ReadiumCSS } from "./css/ReadiumCSS";
+import { RSProperties, UserProperties } from "./css/Properties";
 
 export type ManagerEventKey = "zoom";
 
@@ -47,15 +50,17 @@ export class EpubNavigator extends VisualNavigator {
     private readonly pub: Publication;
     private readonly container: HTMLElement;
     private readonly listeners: EpubNavigatorListeners;
-    private preferences: EpubPreferences;
-    private defaults: EpubDefaults;
-    private _preferencesEditor: EpubPreferencesEditor | null = null;
     private framePool!: FramePoolManager | FXLFramePoolManager;
     private positions!: Locator[];
     private currentLocation!: Locator;
     private lastLocationInView: Locator | undefined;
     private currentProgression: ReadingProgression;
     public readonly layout: EPUBLayout;
+    private preferences: EpubPreferences;
+    private defaults: EpubDefaults;
+    private settings: EpubSettings;
+    private css: ReadiumCSS;
+    private _preferencesEditor: EpubPreferencesEditor | null = null;
 
     constructor(container: HTMLElement, pub: Publication, listeners: EpubNavigatorListeners, positions: Locator[] = [], initialPosition: Locator | undefined = undefined, configuration: EpubNavigatorConfiguration = { preferences: new EpubPreferences({}), defaults: new EpubDefaults({}) }) {
         super();
@@ -67,6 +72,11 @@ export class EpubNavigator extends VisualNavigator {
         this.currentLocation = initialPosition!;
         this.preferences = configuration.preferences;
         this.defaults = configuration.defaults;
+        this.settings = new EpubSettings(configuration.preferences);
+        this.css = new ReadiumCSS({ 
+            rsProperties: new RSProperties(configuration.preferences),
+            userProperties: new UserProperties({})
+        })
         if (positions.length)
             this.positions = positions;
     }
@@ -108,6 +118,63 @@ export class EpubNavigator extends VisualNavigator {
 
     public submitPreferences(preferences: EpubPreferences) {
         this.preferences = preferences;
+        this.applyPreferences();
+    }
+
+    private applyPreferences() {
+        const oldSettings = this.settings;
+        const newSettings = new EpubSettings(this.preferences);
+
+        this.settings = newSettings;
+
+        // Invalidation by comparing old and new settings if needed
+
+        this.updateCSS();
+    }
+
+    private updateCSS() {
+        const previous = this.css;
+        this.css.update(this.settings);
+
+        this.commitCSS(previous, this.css);
+    };
+
+    private commitCSS(from: ReadiumCSS, to: ReadiumCSS) {
+        const propertiesAreEqual = (o1: { [key: string]: string }, o2: { [key: string]: string }) => {
+            const keys1 = Object.keys(o1);
+            const keys2 = Object.keys(o2);
+
+            if (keys1.length !== keys2.length)
+                return false;
+
+            for (const key of keys1) {
+                if (o1[key] !== o2[key])
+                    return false;
+            }
+            return true;
+        }
+
+        const properties: { [key: string]: string } = {};
+
+        if (!propertiesAreEqual(from.rsProperties.toCSSProperties(), to.rsProperties.toCSSProperties())) {
+            for (const [key, value] of Object.entries(to.rsProperties.toCSSProperties())) {
+                properties[key] = value;
+            }
+        }
+
+        if (!propertiesAreEqual(from.userProperties.toCSSProperties(), to.userProperties.toCSSProperties())) {
+            for (const [key, value] of Object.entries(to.userProperties.toCSSProperties())) {
+                properties[key] = value;
+            }
+        }
+
+        let cssString: string | null = null;
+
+        if (Object.keys(properties).length > 0) {
+            cssString = JSON.stringify(properties);
+        }
+
+        // Send string to frameManager
     }
 
     /**
