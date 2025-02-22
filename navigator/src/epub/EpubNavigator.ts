@@ -81,6 +81,9 @@ export class EpubNavigator extends VisualNavigator {
                 minChars: configuration.preferences.minimalLineLength,
                 pageGutter: configuration.preferences.pageGutter,
                 fontFace: configuration.preferences.fontFamily,
+                fontSize: configuration.preferences.fontSize,
+                letterSpacing: configuration.preferences.letterSpacing,
+                wordSpacing: configuration.preferences.wordSpacing,
                 sample: pub.metadata.description
             }),
             container: container,
