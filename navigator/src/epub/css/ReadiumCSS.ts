@@ -1,5 +1,5 @@
 import { LineLengths } from "../../helpers";
-import { IEpubSettings } from "../preferences/EpubSettings";
+import { EpubSettings } from "../preferences/EpubSettings";
 import { IUserProperties, RSProperties, UserProperties } from "./Properties";
 
 export interface IReadiumCSS {
@@ -29,7 +29,7 @@ export class ReadiumCSS {
     this._containerWidth = props.container.clientWidth;
   }
 
-  update(userSettings: IEpubSettings) {
+  update(userSettings: EpubSettings) {
     const baseLineLength = userSettings.lineLength || this.userProperties.lineLength || this.lineLengths.optimalLineLength;
     
     const merged: IUserProperties = {

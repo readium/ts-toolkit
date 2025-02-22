@@ -70,9 +70,9 @@ export class EpubNavigator extends VisualNavigator {
         this.container = container;
         this.listeners = defaultListeners(listeners);
         this.currentLocation = initialPosition!;
-        this.preferences = configuration.preferences;
-        this.defaults = configuration.defaults;
-        this.settings = new EpubSettings(configuration.preferences);
+        this.preferences = new EpubPreferences(configuration.preferences);
+        this.defaults = new EpubDefaults(configuration.defaults);
+        this.settings = new EpubSettings(this.preferences, this.defaults);
         this.css = new ReadiumCSS({ 
             rsProperties: new RSProperties(configuration.preferences),
             userProperties: new UserProperties({}),
@@ -129,13 +129,13 @@ export class EpubNavigator extends VisualNavigator {
     }
 
     public submitPreferences(preferences: EpubPreferences) {
-        this.preferences = preferences;
+        this.preferences = this.preferences.merging(preferences) as EpubPreferences;
         this.applyPreferences();
     }
 
     private applyPreferences() {
         const oldSettings = this.settings;
-        const newSettings = new EpubSettings(this.preferences);
+        const newSettings = new EpubSettings(this.preferences, this.defaults);
 
         this.settings = newSettings;
 

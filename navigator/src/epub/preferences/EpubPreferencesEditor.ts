@@ -18,7 +18,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     this.preferences = initialPreferences;
     this.defaults = defaults;
     this.metadata = metadata;
-    this.settings = new EpubSettings(this.preferences);
+    this.settings = new EpubSettings(this.preferences, this.defaults);
     this.layout = this.metadata?.getPresentation()?.layout || null
   }
 
@@ -26,7 +26,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     this.preferences = new EpubPreferences({ optimalLineLength: 65 });
     this.defaults = new EpubDefaults({});
     this.metadata = null;
-    this.settings = new EpubSettings(this.preferences);
+    this.settings = new EpubSettings(this.preferences, this.defaults);
     this.layout = null;
   }
 

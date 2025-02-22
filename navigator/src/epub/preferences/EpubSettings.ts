@@ -1,5 +1,7 @@
 import { ConfigurableSettings } from "../../preferences/Configurable";
 import { TextAlignment, Theme } from "../../preferences/Types";
+import { EpubDefaults } from "./EpubDefaults";
+import { EpubPreferences } from "./EpubPreferences";
 
 // Expose everything available in Preferences except blend and gaiji filters ATM
 export interface IEpubSettings {
@@ -57,31 +59,31 @@ export class EpubSettings implements ConfigurableSettings {
   theme: Theme | null;
   wordSpacing: number | null;
 
-  constructor(settings: IEpubSettings) {
-    this.backgroundColor = settings.backgroundColor || null;
-    this.blendFilter = settings.blendFilter || null;
-    this.columnCount = settings.columnCount || null;
-    this.darkenFilter = settings.darkenFilter || null;
-    this.fontFamily = settings.fontFamily || null;
-    this.fontSize = settings.fontSize || null;
-    this.fontOpticalSizing = settings.fontOpticalSizing || null;
-    this.fontWeight = settings.fontWeight || null;
-    this.fontWidth = settings.fontWidth || null;
-    this.hyphens = settings.hyphens || null;
-    this.invertFilter = settings.invertFilter || null;
-    this.letterSpacing = settings.letterSpacing || null;
-    this.ligatures = settings.ligatures || null;
-    this.lineHeight = settings.lineHeight || null;
-    this.lineLength = settings.lineLength || null;
-    this.noRuby = settings.noRuby || null;
-    this.paragraphIndent = settings.paragraphIndent || null;
-    this.paragraphSpacing = settings.paragraphSpacing || null;
-    this.publisherStyles = settings.publisherStyles || null;
-    this.scroll = settings.scroll || null;
-    this.textAlign = settings.textAlign || null;
-    this.textColor = settings.textColor || null;
-    this.textNormalization = settings.textNormalization || null;
-    this.theme = settings.theme || null;
-    this.wordSpacing = settings.wordSpacing || null;
+  constructor(preferences: EpubPreferences, defaults: EpubDefaults) {
+    this.backgroundColor = preferences.backgroundColor || defaults.backgroundColor || null;
+    this.blendFilter = preferences.blendFilter || defaults.blendFilter || null;
+    this.columnCount = preferences.columnCount || defaults.columnCount || null;
+    this.darkenFilter = preferences.darkenFilter || defaults.darkenFilter || null;
+    this.fontFamily = preferences.fontFamily || defaults.fontFamily || null;
+    this.fontSize = preferences.fontSize || defaults.fontSize || null;
+    this.fontOpticalSizing = preferences.fontOpticalSizing || defaults.fontOpticalSizing || null;
+    this.fontWeight = preferences.fontWeight || defaults.fontWeight || null;
+    this.fontWidth = preferences.fontWidth || defaults.fontWidth || null;
+    this.hyphens = preferences.hyphens || defaults.hyphens || null;
+    this.invertFilter = preferences.invertFilter || defaults.invertFilter || null;
+    this.letterSpacing = preferences.letterSpacing || defaults.letterSpacing || null;
+    this.ligatures = preferences.ligatures || defaults.ligatures || null;
+    this.lineHeight = preferences.lineHeight || defaults.lineHeight || null;
+    this.lineLength = preferences.lineLength || defaults.lineLength || null;
+    this.noRuby = preferences.noRuby || defaults.noRuby || null;
+    this.paragraphIndent = preferences.paragraphIndent || defaults.paragraphIndent || null;
+    this.paragraphSpacing = preferences.paragraphSpacing || defaults.paragraphSpacing || null;
+    this.publisherStyles = preferences.publisherStyles || defaults.publisherStyles || null;
+    this.scroll = preferences.scroll || defaults.scroll || null;
+    this.textAlign = preferences.textAlign || defaults.textAlign || null;
+    this.textColor = preferences.textColor || defaults.textColor || null;
+    this.textNormalization = preferences.textNormalization || defaults.textNormalization || null;
+    this.theme = preferences.theme || defaults.theme || null;
+    this.wordSpacing = preferences.wordSpacing || defaults.wordSpacing || null;
   }
 }

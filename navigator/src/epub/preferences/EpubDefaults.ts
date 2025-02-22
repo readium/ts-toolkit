@@ -4,7 +4,6 @@ import { TextAlignment, Theme } from "../../preferences/Types";
 export interface IEpubDefaults {
   backgroundColor?: string | null,
   blendFilter?: boolean | null,
-  constraint?: number | null,
   columnCount?: number | null,
   darkenFilter?: boolean | number | null,
   fontFamily?: string | null,
@@ -41,7 +40,6 @@ export interface IEpubDefaults {
 export class EpubDefaults {
   backgroundColor: string | null;
   blendFilter: boolean | null;
-  constraint: number | null;
   columnCount: number | null;
   darkenFilter: boolean | number | null;
   fontFamily: string | null;
@@ -77,7 +75,6 @@ export class EpubDefaults {
   constructor(defaults: IEpubDefaults) {
     this.backgroundColor = defaults.backgroundColor || null;
     this.blendFilter = defaults.blendFilter || null;
-    this.constraint = defaults.constraint || null;
     this.columnCount = defaults.columnCount || null;
     this.darkenFilter = defaults.darkenFilter || null;
     this.fontFamily = defaults.fontFamily || null;
