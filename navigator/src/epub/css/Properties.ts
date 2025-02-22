@@ -195,7 +195,7 @@ export class UserProperties extends Properties {
     if (this.letterSpacing) cssProperties["--USER__letterSpacing"] = this.toRem(this.letterSpacing);
     if (this.ligatures) cssProperties["--USER__ligatures"] = this.ligatures;
     if (this.lineHeight) cssProperties["--USER__lineHeight"] = this.toUnitless(this.lineHeight);
-    if (this.lineLength) cssProperties["--USER__lineLength"] = this.toRem(this.lineLength);
+    if (this.lineLength) cssProperties["--USER__lineLength"] = this.toPx(this.lineLength);
     if (this.linkColor) cssProperties["--USER__linkColor"] = this.linkColor;
     if (this.noRuby) cssProperties["--USER__noRuby"] = this.toFlag("noRuby");
     if (this.paraIndent) cssProperties["--USER__paraIndent"] = this.toRem(this.paraIndent);
@@ -343,7 +343,7 @@ export class RSProperties extends Properties {
     if (this.colGap) cssProperties["--RS__colGap"] = this.toPx(this.colGap);
     if (this.codeFontFamily) cssProperties["--RS__codeFontFamily"] = this.codeFontFamily;
     if (this.compFontFamily) cssProperties["--RS__compFontFamily"] = this.compFontFamily;
-    if (this.defaultLineLength) cssProperties["--RS__defaultLineLength"] = this.toRem(this.defaultLineLength);
+    if (this.defaultLineLength) cssProperties["--RS__defaultLineLength"] = this.toPx(this.defaultLineLength);
     if (this.flowSpacing) cssProperties["--RS__flowSpacing"] = this.toRem(this.flowSpacing);
     if (this.humanistTf) cssProperties["--RS__humanistTf"] = this.humanistTf;
     if (this.linkColor) cssProperties["--RS__linkColor"] = this.linkColor;

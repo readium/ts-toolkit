@@ -83,7 +83,8 @@ export class EpubNavigator extends VisualNavigator {
                 fontFace: configuration.preferences.fontFamily,
                 sample: pub.metadata.description
             }),
-            container: container
+            container: container,
+            constraint: configuration.preferences.constraint
         })
         if (positions.length)
             this.positions = positions;

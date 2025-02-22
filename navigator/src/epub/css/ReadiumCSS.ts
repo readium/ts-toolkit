@@ -7,7 +7,7 @@ export interface IReadiumCSS {
   userProperties: UserProperties;
   lineLengths: LineLengths;
   container: HTMLElement;
-  constraint?: number;
+  constraint?: number | null;
 }
 
 export class ReadiumCSS {

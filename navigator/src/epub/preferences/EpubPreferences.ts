@@ -5,6 +5,7 @@ export interface IEpubPreferences {
   backgroundColor?: string | null,
   blendFilter?: boolean | null,
   columnCount?: number | null,
+  constraint?: number | null,
   darkenFilter?: boolean | number | null,
   fontFamily?: string | null,
   fontSize?: number | null,
@@ -40,6 +41,7 @@ export interface IEpubPreferences {
 export class EpubPreferences implements ConfigurablePreferences {
   backgroundColor: string | null;
   blendFilter: boolean | null;
+  constraint: number | null;
   columnCount: number | null;
   darkenFilter: boolean | number | null;
   fontFamily: string | null;
@@ -75,6 +77,7 @@ export class EpubPreferences implements ConfigurablePreferences {
   constructor(preferences: IEpubPreferences) {
     this.backgroundColor = preferences.backgroundColor || null;
     this.blendFilter = preferences.blendFilter || null;
+    this.constraint = EpubPreferences.ensureNonNegative(preferences.constraint);
     this.columnCount = EpubPreferences.ensureNonNegative(preferences.columnCount);
     this.darkenFilter = EpubPreferences.ensureFilter(preferences.darkenFilter);
     this.fontFamily = preferences.fontFamily || null;
