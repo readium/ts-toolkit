@@ -1,5 +1,5 @@
 import { EPUBLayout, Link, Locator, Publication, ReadingProgression } from "@readium/shared";
-import { VisualNavigator } from "../";
+import { LineLengths, VisualNavigator } from "../";
 import { FramePoolManager } from "./frame/FramePoolManager";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager";
 import { CommsEventKey, FXLModules, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables";
@@ -75,7 +75,15 @@ export class EpubNavigator extends VisualNavigator {
         this.settings = new EpubSettings(configuration.preferences);
         this.css = new ReadiumCSS({ 
             rsProperties: new RSProperties(configuration.preferences),
-            userProperties: new UserProperties({})
+            userProperties: new UserProperties({}),
+            lineLengths: new LineLengths({
+                optimalChars: configuration.preferences.optimalLineLength,
+                minChars: configuration.preferences.minimalLineLength,
+                pageGutter: configuration.preferences.pageGutter,
+                fontFace: configuration.preferences.fontFamily,
+                sample: pub.metadata.description
+            }),
+            container: container
         })
         if (positions.length)
             this.positions = positions;

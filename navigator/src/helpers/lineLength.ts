@@ -6,15 +6,15 @@ export interface ICustomFontFace {
 export interface ILineLengthsConfig {
   optimalChars: number;
   minChars?: number | null;
-  userChars?: number;
-  fontSize?: number;
-  sample?: string;
-  pageGutter?: number;
-  fontFace?: string | ICustomFontFace;
-  letterSpacing?: number;
-  wordSpacing?: number;
-  isCJK?: boolean;
-  getPixels?: boolean;
+  userChars?: number | null;
+  fontSize?: number | null;
+  sample?: string | null;
+  pageGutter?: number | null;
+  fontFace?: string | ICustomFontFace | null;
+  letterSpacing?: number | null;
+  wordSpacing?: number | null;
+  isCJK?: boolean | null;
+  getRelative?: boolean | null;
 }
 
 export interface ILineLengths {
@@ -52,7 +52,7 @@ export class LineLengths {
   private _letterSpacing: number;
   private _wordSpacing: number;
   private _isCJK: boolean;
-  private _getPixels: boolean;
+  private _getRelative: boolean;
   
   private _padding: number;
   private _minDivider: number | null;
@@ -77,7 +77,7 @@ export class LineLengths {
       ? Math.round(config.wordSpacing * (config.fontSize || DEFAULT_FONT_SIZE)) 
       : 0;
     this._isCJK = config.isCJK || false;
-    this._getPixels = config.getPixels || false;
+    this._getRelative = config.getRelative || false;
     this._padding = config.pageGutter ? config.pageGutter * 2 : 0;
     this._minDivider = config.minChars && config.minChars < config.optimalChars 
       ? config.optimalChars / config.minChars 
@@ -126,8 +126,8 @@ export class LineLengths {
     this._optimalLineLength = this.getOptimalLineLength();
   }
 
-  set pixelGetters(b: boolean) {
-    this._getPixels = b;
+  set relativeGetters(b: boolean) {
+    this._getRelative = b;
   }
 
   get fontSize() {
@@ -139,7 +139,7 @@ export class LineLengths {
       this._optimalLineLength = this.getOptimalLineLength();
     }
     return this._minDivider !== null 
-      ? Math.round((this._optimalLineLength / this._minDivider) + this._padding) / (this._getPixels ? 1 : this._fontSize) 
+      ? Math.round((this._optimalLineLength / this._minDivider) + this._padding) / (this._getRelative ? this._fontSize : 1) 
       : null;
   }
 
@@ -148,7 +148,7 @@ export class LineLengths {
       this._optimalLineLength = this.getOptimalLineLength();
     }
     return this._userMultiplier !== null 
-      ? Math.round((this._optimalLineLength * this._userMultiplier) + this._padding) / (this._getPixels ? 1 : this._fontSize) 
+      ? Math.round((this._optimalLineLength * this._userMultiplier) + this._padding) / (this._getRelative ? this._fontSize : 1) 
       : null;
   }
 
@@ -156,7 +156,7 @@ export class LineLengths {
     if (!this._optimalLineLength) {
       this._optimalLineLength = this.getOptimalLineLength();
     }
-    return Math.round(this._optimalLineLength + this._padding) / (this._getPixels ? 1 : this._fontSize);
+    return Math.round(this._optimalLineLength + this._padding) / (this._getRelative ? this._fontSize : 1);
   }
 
   get all(): ILineLengths {
