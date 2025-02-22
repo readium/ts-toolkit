@@ -57,7 +57,7 @@ export class EpubDefaults {
   linkColor: string | null;
   minimalLineLength?: number | null;
   noRuby: boolean | null;
-  optimalLineLength: number | null;
+  optimalLineLength: number;
   pageGutter: number | null;
   paragraphIndent: number | null;
   paragraphSpacing: number | null;
@@ -92,7 +92,7 @@ export class EpubDefaults {
     this.linkColor = defaults.linkColor || null;
     this.minimalLineLength = defaults.minimalLineLength;
     this.noRuby = defaults.noRuby || null;
-    this.optimalLineLength = defaults.optimalLineLength || null;
+    this.optimalLineLength = defaults.optimalLineLength || 65;
     this.pageGutter = defaults.pageGutter || null;
     this.paragraphIndent = defaults.paragraphIndent || null;
     this.paragraphSpacing = defaults.paragraphSpacing || null;

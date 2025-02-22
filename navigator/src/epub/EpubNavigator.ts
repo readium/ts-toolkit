@@ -7,8 +7,8 @@ import { BasicTextSelection, FrameClickEvent } from "@readium/navigator-html-inj
 import * as path from "path-browserify";
 import { FXLFrameManager } from "./fxl/FXLFrameManager";
 import { FrameManager } from "./frame/FrameManager";
-import { EpubPreferences } from "./preferences/EpubPreferences";
-import { EpubDefaults } from "./preferences/EpubDefaults";
+import { IEpubPreferences, EpubPreferences } from "./preferences/EpubPreferences";
+import { IEpubDefaults, EpubDefaults } from "./preferences/EpubDefaults";
 import { EpubSettings } from "./preferences";
 import { EpubPreferencesEditor } from "./preferences/EpubPreferencesEditor";
 import { ReadiumCSS } from "./css/ReadiumCSS";
@@ -17,8 +17,8 @@ import { RSProperties, UserProperties } from "./css/Properties";
 export type ManagerEventKey = "zoom";
 
 export interface EpubNavigatorConfiguration {
-    preferences: EpubPreferences;
-    defaults: EpubDefaults;
+    preferences: IEpubPreferences;
+    defaults: IEpubDefaults;
 }
 
 export interface EpubNavigatorListeners {
@@ -62,7 +62,7 @@ export class EpubNavigator extends VisualNavigator {
     private css: ReadiumCSS;
     private _preferencesEditor: EpubPreferencesEditor | null = null;
 
-    constructor(container: HTMLElement, pub: Publication, listeners: EpubNavigatorListeners, positions: Locator[] = [], initialPosition: Locator | undefined = undefined, configuration: EpubNavigatorConfiguration = { preferences: new EpubPreferences({}), defaults: new EpubDefaults({}) }) {
+    constructor(container: HTMLElement, pub: Publication, listeners: EpubNavigatorListeners, positions: Locator[] = [], initialPosition: Locator | undefined = undefined, configuration: EpubNavigatorConfiguration = { preferences: {}, defaults: {} }) {
         super();
         this.pub = pub;
         this.layout = EpubNavigator.determineLayout(pub);
@@ -77,17 +77,17 @@ export class EpubNavigator extends VisualNavigator {
             rsProperties: new RSProperties(configuration.preferences),
             userProperties: new UserProperties({}),
             lineLengths: new LineLengths({
-                optimalChars: configuration.preferences.optimalLineLength,
-                minChars: configuration.preferences.minimalLineLength,
-                pageGutter: configuration.preferences.pageGutter,
-                fontFace: configuration.preferences.fontFamily,
-                fontSize: configuration.preferences.fontSize,
-                letterSpacing: configuration.preferences.letterSpacing,
-                wordSpacing: configuration.preferences.wordSpacing,
-                sample: pub.metadata.description
+                optimalChars: this.preferences.optimalLineLength || this.defaults.optimalLineLength,
+                minChars: this.preferences.minimalLineLength,
+                pageGutter: this.preferences.pageGutter,
+                fontFace: this.preferences.fontFamily,
+                fontSize: this.preferences.fontSize,
+                letterSpacing: this.preferences.letterSpacing,
+                wordSpacing: this.preferences.wordSpacing,
+                sample: this.pub.metadata.description
             }),
             container: container,
-            constraint: configuration.preferences.constraint
+            constraint: this.preferences.constraint
         })
         if (positions.length)
             this.positions = positions;
