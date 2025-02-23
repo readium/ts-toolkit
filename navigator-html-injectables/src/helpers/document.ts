@@ -13,31 +13,31 @@ export function getColumnCountPerScreen(wnd: ReadiumWindow) {
 }
 
 /**
- * Having an odd number of columns when displaying two columns per screen causes snapping and page
- * turning issues. To fix this, we insert a blank virtual column at the end of the resource.
+ * We have to make sure that the total number of columns is a multiple 
+ * of the number of columns per screen. 
+ * Otherwise it causes snapping and page turning issues. 
+ * To fix this, we insert and remove blank virtual columns at the end of the resource.
  */
 export function appendVirtualColumnIfNeeded(wnd: ReadiumWindow) {
-    const id = "readium-virtual-page";
-    let virtualCol = wnd.document.getElementById(id);
-    if (getColumnCountPerScreen(wnd) !== 2) {
-        if (virtualCol) {
-            virtualCol.remove();
+    const colCount = getColumnCountPerScreen(wnd);
+    const documentWidth = wnd.document.scrollingElement!.scrollWidth;
+    const neededColCount = Math.ceil(documentWidth / wnd.innerWidth) * colCount;
+    const totalColCount = Math.round((documentWidth / wnd.innerWidth) * colCount);
+    const needed = colCount !== 1 ? neededColCount - totalColCount : 0;
+    const virtualCols = wnd.document.querySelectorAll("div[id^='readium-virtual-page']");
+    const currentCols = virtualCols.length;
+    if (needed > currentCols) {
+        for (let i = currentCols; i < needed; i++) {
+            const virtualCol = wnd.document.createElement("div");
+            virtualCol.setAttribute("id", `readium-virtual-page-${ i }`);
+            virtualCol.dataset.readium = "true";
+            virtualCol.style.breakBefore = "column";
+            virtualCol.innerHTML = "&#8203;"; // zero-width space
+            wnd.document.body.appendChild(virtualCol);
         }
-    } else {
-        const documentWidth = wnd.document.scrollingElement!.scrollWidth;
-        const colCount = documentWidth / wnd.innerWidth;
-        const hasOddColCount = (Math.round(colCount * 2) / 2) % 1 > 0.1;
-        if (hasOddColCount) {
-            if (virtualCol)
-                virtualCol.remove();
-            else {
-                virtualCol = wnd.document.createElement("div");
-                virtualCol.setAttribute("id", id);
-                virtualCol.dataset.readium = "true";
-                virtualCol.style.breakBefore = "column";
-                virtualCol.innerHTML = "&#8203;"; // zero-width space
-                wnd.document.body.appendChild(virtualCol);
-            }
+    } else if (needed < currentCols) {
+        for (let i = currentCols - 1; i >= needed; i--) {
+            virtualCols[i].remove();
         }
     }
 }
