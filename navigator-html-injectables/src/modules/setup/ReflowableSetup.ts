@@ -40,6 +40,9 @@ export class ReflowableSetup extends Setup {
             ack(true);
         });
         comms.register("update_properties", ReflowableSetup.moduleName, (data, ack) => {
+            // In order to keep the viewport width that is added in the setup itself, 
+            // and don’t have EpubNavigator concerned with this, we need to add it there
+            (data as { [key: string]: string })["--RS__viewportWidth"] = `${ wnd.innerWidth }px`;
             updateProperties(wnd, data as { [key: string]: string });
             ack(true);
         })
