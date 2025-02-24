@@ -356,6 +356,10 @@ export class EpubNavigator extends VisualNavigator {
         const idx = this.pub.readingOrder.findIndexWithHref(this.currentLocation.href);
         if (idx < 0)
             throw Error("Link for " + this.currentLocation.href + " not found!");
+
+        if (this.layout === EPUBLayout.reflowable) {
+            this.updateCSS();
+        }
     }
 
     public async destroy() {
