@@ -1,4 +1,4 @@
-import { MediaType } from "@readium/shared";
+import { MediaType, ReadingProgression } from "@readium/shared";
 import { Link, Publication } from "@readium/shared";
 
 // Readium CSS imports
@@ -183,6 +183,41 @@ export default class FrameBlobBuider {
         doc.body.querySelectorAll("img").forEach((img) => {
             img.setAttribute("fetchpriority", "high");
         });
+
+        // We need to ensure that lang is set on the root element 
+        // since it is used for settings such as font-family, hyphens, ligatures, etc.
+        // but also screen readers, etc.
+        // Metadata’s effectiveReadingProgression uses first item in array as primary language 
+        // so we keep it consistent.
+        if (mediaType.isHTML && this.pub.metadata.languages?.[0]) {
+            const primaryLanguage = this.pub.metadata.languages[0];
+
+            if (
+                mediaType === MediaType.XHTML && 
+                !document.documentElement.hasAttribute("xml:lang")
+            ) {
+                document.documentElement.setAttribute("xml:lang", primaryLanguage);
+                document.documentElement.lang = primaryLanguage;
+            } else if (
+                mediaType === MediaType.HTML && 
+                !document.documentElement.lang
+            ) {
+                document.documentElement.lang = primaryLanguage;
+            }
+        }
+
+        // We need to ensure that dir is set on the root element if rtl
+        // Since body can bubble up, we also need to check it’s not here.
+        // https://github.com/readium/readium-css/blob/develop/docs/CSS03-injection_and_pagination.md#be-cautious-the-direction-propagates
+
+        // TODO: ReadiumCSS stylesheets are injected as LTR/default no matter what so disabled ATM
+        /* if (
+            !document.documentElement.dir &&
+            !document.body.dir && 
+            this.pub.metadata.effectiveReadingProgression === ReadingProgression.rtl
+        ) {
+            document.documentElement.dir = this.pub.metadata.effectiveReadingProgression;
+        } */
     
         if(base !== undefined) {
             // Set all URL bases. Very convenient!
