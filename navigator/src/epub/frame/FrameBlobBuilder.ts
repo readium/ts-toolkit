@@ -192,12 +192,20 @@ export default class FrameBlobBuider {
         if (mediaType.isHTML && this.pub.metadata.languages?.[0]) {
             const primaryLanguage = this.pub.metadata.languages[0];
 
-            if (
-                mediaType === MediaType.XHTML && 
-                !document.documentElement.hasAttribute("xml:lang")
-            ) {
-                document.documentElement.setAttribute("xml:lang", primaryLanguage);
-                document.documentElement.lang = primaryLanguage;
+            if (mediaType === MediaType.XHTML) {
+                // InDesign is infamous for setting xml:lang on the body instead of the root element
+                // So we have to check whether lang is set on the body and move it to the root element
+                const rootLang = document.documentElement.lang || document.documentElement.getAttribute("xml:lang");
+                const bodyLang = document.body.lang || document.body.getAttribute("xml:lang");
+                if (bodyLang && !rootLang) {
+                    document.documentElement.lang = bodyLang;
+                    document.documentElement.setAttribute("xml:lang", bodyLang);
+                    document.body.removeAttribute("xml:lang");
+                    document.body.removeAttribute("lang");
+                } else if (!rootLang) {
+                    document.documentElement.lang = primaryLanguage;
+                    document.documentElement.setAttribute("xml:lang", primaryLanguage);
+                }
             } else if (
                 mediaType === MediaType.HTML && 
                 !document.documentElement.lang
