@@ -6,6 +6,9 @@ import { EpubSettings } from "./EpubSettings";
 import { TextAlignment, Theme } from "../../preferences/Types";
 import { BooleanPreference, EnumPreference, Preference, RangePreference } from "../../preferences/Preference";
 
+import dayMode from "@readium/css/css/vars/day.json";
+import fontStacks from "@readium/css/css/vars/fontStacks.json";
+
 // WIP: will change cos’ of all the missing pieces
 export class EpubPreferencesEditor implements IPreferencesEditor {
   preferences: EpubPreferences;
@@ -33,7 +36,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get backgroundColor(): Preference<string> | null {
     return new Preference<string>({
       initialValue: this.preferences.backgroundColor,
-      effectiveValue: this.settings.backgroundColor || "#FFFFFF",
+      effectiveValue: this.settings.backgroundColor || dayMode.RS__backgroundColor,
       isEffective: this.preferences.backgroundColor !== null
     });
   }
@@ -69,7 +72,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new Preference<string>({
       initialValue: this.preferences.fontFamily,
       // TODO infer effectiveValue of fontFamily 
-      effectiveValue: this.settings.fontFamily || "default-font",
+      effectiveValue: this.settings.fontFamily || fontStacks.RS__oldStyleTf,
       isEffective: this.layout === EPUBLayout.reflowable
     });
   }
@@ -171,7 +174,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get lineLength(): RangePreference<number> | null {
     return new RangePreference<number>({
       initialValue: this.preferences.lineLength,
-      effectiveValue: this.settings.lineLength || 45,
+      effectiveValue: this.settings.lineLength || 65,
       isEffective: this.layout === EPUBLayout.reflowable,
       supportedRange: [20, 100],
       step: 1
@@ -181,7 +184,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get linkColor(): Preference<string> | null {
     return new Preference<string>({
       initialValue: this.preferences.linkColor,
-      effectiveValue: this.preferences.linkColor || "#0000ff",
+      effectiveValue: this.preferences.linkColor || dayMode.RS__linkColor,
       isEffective: this.layout === EPUBLayout.reflowable && this.preferences.linkColor !== null
     });
   }
@@ -261,7 +264,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get selectionBackgroundColor(): Preference<string> | null {
     return new Preference<string>({
       initialValue: this.preferences.selectionBackgroundColor,
-      effectiveValue: this.preferences.selectionBackgroundColor || "#fffa00",
+      effectiveValue: this.preferences.selectionBackgroundColor || dayMode.RS__selectionBackgroundColor,
       isEffective: this.layout === EPUBLayout.reflowable && this.preferences.selectionBackgroundColor !== null
     });
   }
@@ -269,7 +272,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get selectionTextColor(): Preference<string> | null {
     return new Preference<string>({
       initialValue: this.preferences.selectionTextColor,
-      effectiveValue: this.preferences.selectionTextColor || "#121212",
+      effectiveValue: this.preferences.selectionTextColor || dayMode.RS__selectionTextColor,
       isEffective: this.layout === EPUBLayout.reflowable && this.preferences.selectionTextColor !== null
     });
   }
@@ -286,7 +289,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get textColor(): Preference<string> | null {
     return new Preference<string>({
       initialValue: this.preferences.textColor,
-      effectiveValue: this.settings.textColor || "#121212",
+      effectiveValue: this.settings.textColor || dayMode.RS__textColor,
       isEffective: this.layout === EPUBLayout.reflowable && this.preferences.textColor !== null
     });
   }
@@ -311,7 +314,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get visitedColor(): Preference<string> | null {
     return new Preference<string>({
       initialValue: this.preferences.visitedColor,
-      effectiveValue: this.preferences.visitedColor || "#551A8B",
+      effectiveValue: this.preferences.visitedColor || dayMode.RS__visitedColor,
       isEffective: this.layout === EPUBLayout.reflowable && this.preferences.visitedColor !== null
     });
   }
