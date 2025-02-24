@@ -148,39 +148,34 @@ export class EpubNavigator extends VisualNavigator {
         const previous = this.css;
         this.css.update(this.settings);
 
-        this.commitCSS(previous, this.css);
+        // Compare previous with updated if needed
+
+        if (this.css.userProperties.view === "paged" && this.readingProgression === ReadingProgression.ttb) {
+            this.setReadingProgression(ReadingProgression.ltr); 
+        } else if (this.css.userProperties.view === "scroll" && this.readingProgression === ReadingProgression.ltr) {
+            this.setReadingProgression(ReadingProgression.ttb);
+        }
+
+        this.commitCSS(this.css);
     };
 
-    private commitCSS(from: ReadiumCSS, to: ReadiumCSS) {
-        const propertiesAreEqual = (o1: { [key: string]: string }, o2: { [key: string]: string }) => {
-            const keys1 = Object.keys(o1);
-            const keys2 = Object.keys(o2);
-
-            if (keys1.length !== keys2.length)
-                return false;
-
-            for (const key of keys1) {
-                if (o1[key] !== o2[key])
-                    return false;
-            }
-            return true;
-        }
-
+    private commitCSS(css: ReadiumCSS) {
+        // Since we’re updating the CSS properties in injectables by removing
+        // the existing properties that are not inside this object first, 
+        // then adding all from it, we don’t compare the previous properties here
         const properties: { [key: string]: string } = {};
 
-        if (!propertiesAreEqual(from.rsProperties.toCSSProperties(), to.rsProperties.toCSSProperties())) {
-            for (const [key, value] of Object.entries(to.rsProperties.toCSSProperties())) {
-                properties[key] = value;
-            }
+        for (const [key, value] of Object.entries(css.rsProperties.toCSSProperties())) {
+            properties[key] = value;
         }
 
-        if (!propertiesAreEqual(from.userProperties.toCSSProperties(), to.userProperties.toCSSProperties())) {
-            for (const [key, value] of Object.entries(to.userProperties.toCSSProperties())) {
-                properties[key] = value;
-            }
+        for (const [key, value] of Object.entries(css.userProperties.toCSSProperties())) {
+            properties[key] = value;
         }
 
-        if (this.layout === EPUBLayout.reflowable) (this.framePool as FramePoolManager).setCSSProperties(properties);
+        if (this.layout === EPUBLayout.reflowable) {
+            (this.framePool as FramePoolManager).setCSSProperties(properties);
+        }
     }
 
     /**
