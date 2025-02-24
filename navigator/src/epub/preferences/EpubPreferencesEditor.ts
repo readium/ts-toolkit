@@ -71,7 +71,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get fontFamily(): Preference<string> | null {
     return new Preference<string>({
       initialValue: this.preferences.fontFamily,
-      // TODO infer effectiveValue of fontFamily 
+      // TODO infer effectiveValue of fontFamily as it’s more complex than that:
+      // while it’s using --RS__oldStyleTf as a default, it is actually var
+      // --RS__baseFontFamily that is used as a proxy so that it can be redefined 
+      // for each language ReadiumCSS supports, and these values are not extracted
       effectiveValue: this.settings.fontFamily || fontStacks.RS__oldStyleTf,
       isEffective: this.layout === EPUBLayout.reflowable
     });
