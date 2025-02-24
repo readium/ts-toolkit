@@ -11,12 +11,12 @@ export const colorToRgba = (color: string): { r: number; g: number; b: number; a
     }
   } else if (color.startsWith("#")) {
     const hex = color.slice(1);
-    if (hex.length === 3) {
+    if (hex.length === 3 || hex.length === 4) {
       return {
         r: parseInt(hex[0] + hex[0], 16) / 255,
         g: parseInt(hex[1] + hex[1], 16) / 255,
         b: parseInt(hex[2] + hex[2], 16) / 255,
-        a: 1,
+        a: hex.length === 4 ? parseInt(hex[3] + hex[3], 16) / 255 : 1,
       };
     } else if (hex.length === 6 || hex.length === 8) {
       return {
