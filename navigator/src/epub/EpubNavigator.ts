@@ -150,9 +150,15 @@ export class EpubNavigator extends VisualNavigator {
 
         // Compare previous with updated if needed
 
-        if (this.css.userProperties.view === "paged" && this.readingProgression === ReadingProgression.ttb) {
-            this.setReadingProgression(ReadingProgression.ltr); 
-        } else if (this.css.userProperties.view === "scroll" && this.readingProgression === ReadingProgression.ltr) {
+        if (
+            this.css.userProperties.view === "paged" && 
+            this.readingProgression === ReadingProgression.ttb
+        ) {
+            this.setReadingProgression(this.pub.metadata.effectiveReadingProgression); 
+        } else if (
+            this.css.userProperties.view === "scroll" && 
+            (this.readingProgression === ReadingProgression.ltr || this.readingProgression === ReadingProgression.rtl)
+        ) {
             this.setReadingProgression(ReadingProgression.ttb);
         }
 
