@@ -1,3 +1,5 @@
+import { IPreferencesEditor } from "./PreferencesEditor";
+
 export interface ConfigurableSettings {
   [key: string]: any;
 }
@@ -10,4 +12,5 @@ export interface ConfigurablePreferences {
 export interface Configurable<ConfigurableSettings, ConfigurablePreferences> {
   settings: ConfigurableSettings;
   submitPreferences(preferences: ConfigurablePreferences): void;
+  preferencesEditor: IPreferencesEditor;
 }
