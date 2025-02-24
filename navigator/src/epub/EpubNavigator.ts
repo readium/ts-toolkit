@@ -123,7 +123,7 @@ export class EpubNavigator extends VisualNavigator {
 
     public get preferencesEditor() {
         if (this._preferencesEditor === null) {
-            this._preferencesEditor = new EpubPreferencesEditor(this.preferences, this.defaults, this.pub.metadata);
+            this._preferencesEditor = new EpubPreferencesEditor(this.preferences, this.settings,this.defaults, this.pub.metadata);
         }
         return this._preferencesEditor;
     }
@@ -134,10 +134,7 @@ export class EpubNavigator extends VisualNavigator {
     }
 
     private applyPreferences() {
-        const oldSettings = this.settings;
-        const newSettings = new EpubSettings(this.preferences, this.defaults);
-
-        this.settings = newSettings;
+        this.settings = new EpubSettings(this.preferences, this.defaults);
 
         // Invalidation by comparing old and new settings if needed
 
@@ -145,7 +142,6 @@ export class EpubNavigator extends VisualNavigator {
     }
 
     private updateCSS() {
-        const previous = this.css;
         this.css.update(this.settings);
 
         // Compare previous with updated if needed

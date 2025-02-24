@@ -17,19 +17,19 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   metadata: Metadata | null;
   private layout: EPUBLayout | null;
 
-  constructor(initialPreferences: EpubPreferences, defaults: EpubDefaults, metadata: Metadata) {
+  constructor(initialPreferences: EpubPreferences, settings: EpubSettings, defaults: EpubDefaults, metadata: Metadata) {
     this.preferences = initialPreferences;
+    this.settings = settings;
     this.defaults = defaults;
     this.metadata = metadata;
-    this.settings = new EpubSettings(this.preferences, this.defaults);
     this.layout = this.metadata?.getPresentation()?.layout || null
   }
 
   clear() {
     this.preferences = new EpubPreferences({ optimalLineLength: 65 });
     this.defaults = new EpubDefaults({});
-    this.metadata = null;
     this.settings = new EpubSettings(this.preferences, this.defaults);
+    this.metadata = null;
     this.layout = null;
   }
 
