@@ -1,4 +1,4 @@
-import { MediaType, ReadingProgression } from "@readium/shared";
+import { MediaType } from "@readium/shared";
 import { Link, Publication } from "@readium/shared";
 
 // Readium CSS imports

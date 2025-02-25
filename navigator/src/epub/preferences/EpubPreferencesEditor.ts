@@ -91,10 +91,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get fontSize(): RangePreference<number> | null {
     return new RangePreference<number>({
       initialValue: this.preferences.fontSize,
-      effectiveValue: this.settings.fontSize || 100,
+      effectiveValue: this.settings.fontSize || 1,
       isEffective: this.layout === EPUBLayout.reflowable,
-      supportedRange: [50, 250],
-      step: 10
+      supportedRange: [0.5, 2.5],
+      step: 0.1
     });
   }
 
@@ -167,7 +167,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get ligatures(): BooleanPreference | null {
     return new BooleanPreference({
       initialValue: this.preferences.ligatures,
-      effectiveValue: this.settings.ligatures || false,
+      effectiveValue: this.settings.ligatures || true,
       isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.metadata?.effectiveReadingProgression === ReadingProgression.rtl
     });
   }
@@ -203,6 +203,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get minimalLineLength(): RangePreference<number> | null {
     return new RangePreference<number>({
       initialValue: this.preferences.minimalLineLength,
+      // No fallback since undefined and null are handled differently so we only pass the pref
       effectiveValue: this.preferences.minimalLineLength,
       isEffective: this.layout === EPUBLayout.reflowable,
       supportedRange: [20, 100],
@@ -259,7 +260,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get publisherStyles(): BooleanPreference | null {
     return new BooleanPreference({
       initialValue: this.preferences.publisherStyles,
-      effectiveValue: this.settings.publisherStyles || false,
+      effectiveValue: this.settings.publisherStyles || true,
       isEffective: this.layout === EPUBLayout.reflowable
     });
   }
