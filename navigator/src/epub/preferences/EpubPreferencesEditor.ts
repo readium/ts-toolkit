@@ -177,7 +177,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get lineLength(): RangePreference<number> | null {
     return new RangePreference<number>({
       initialValue: this.preferences.lineLength,
-      effectiveValue: this.settings.lineLength || 65,
+      effectiveValue: this.settings.lineLength || this.preferences.optimalLineLength,
       isEffective: this.layout === EPUBLayout.reflowable,
       supportedRange: [20, 100],
       step: 1
