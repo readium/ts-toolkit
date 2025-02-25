@@ -134,17 +134,30 @@ export class EpubNavigator extends VisualNavigator {
     }
 
     private applyPreferences() {
+        const oldSettings = this.settings;
         this.settings = new EpubSettings(this.preferences, this.defaults);
 
         // Invalidation by comparing old and new settings if needed
+        
+        if (this.layout === EPUBLayout.fixed) {
+            this.handleFXLPrefs(oldSettings, this.settings);
+        } else {
+            this.updateCSS();
+        }
+    }
 
-        this.updateCSS();
+    private handleFXLPrefs(from: EpubSettings, to: EpubSettings) {
+        if (
+            to.columnCount && 
+            from.columnCount !== to.columnCount
+        ) {
+            (this.framePool as FXLFramePoolManager).setPerPage(to.columnCount);
+            (this.framePool as FXLFramePoolManager).resizeHandler();
+        }
     }
 
     private updateCSS() {
         this.css.update(this.settings);
-
-        // Compare previous with updated if needed
 
         if (
             this.css.userProperties.view === "paged" && 
@@ -175,9 +188,7 @@ export class EpubNavigator extends VisualNavigator {
             properties[key] = value;
         }
 
-        if (this.layout === EPUBLayout.reflowable) {
-            (this.framePool as FramePoolManager).setCSSProperties(properties);
-        }
+        (this.framePool as FramePoolManager).setCSSProperties(properties);
     }
 
     /**
