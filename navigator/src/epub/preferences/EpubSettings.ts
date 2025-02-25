@@ -16,6 +16,7 @@ export interface IEpubSettings {
   fontWidth?: number | null,
   hyphens?: boolean | null,
   invertFilter?: boolean | number | null,
+  invertGaijiFilter: boolean | number | null,
   letterSpacing?: number | null,
   ligatures?: boolean | null,
   lineHeight?: number | null,
@@ -48,6 +49,7 @@ export class EpubSettings implements ConfigurableSettings {
   fontWidth: number | null;
   hyphens: boolean | null;
   invertFilter: boolean | number | null;
+  invertGaijiFilter: boolean | number | null;
   letterSpacing: number | null;
   ligatures: boolean | null;
   lineHeight: number | null;
@@ -79,6 +81,7 @@ export class EpubSettings implements ConfigurableSettings {
     this.fontWidth = preferences.fontWidth || defaults.fontWidth || null;
     this.hyphens = preferences.hyphens || defaults.hyphens || null;
     this.invertFilter = preferences.invertFilter || defaults.invertFilter || null;
+    this.invertGaijiFilter = preferences.invertGaijiFilter || defaults.invertGaijiFilter || null;
     this.letterSpacing = preferences.letterSpacing || defaults.letterSpacing || null;
     this.ligatures = preferences.ligatures || defaults.ligatures || null;
     this.lineHeight = preferences.lineHeight || defaults.lineHeight || null;

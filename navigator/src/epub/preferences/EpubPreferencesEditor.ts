@@ -139,7 +139,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get invertGaijiFilter(): RangePreference<number> | null {
     return new RangePreference<number>({
       initialValue: typeof this.preferences.invertGaijiFilter === "boolean" ? 100 : this.preferences.invertGaijiFilter,
-      effectiveValue: typeof this.preferences.invertGaijiFilter === "boolean" ? 100 : this.preferences.invertGaijiFilter || 0,
+      effectiveValue: typeof this.settings.invertGaijiFilter === "boolean" ? 100 : this.settings.invertGaijiFilter || 0,
       isEffective: this.preferences.invertGaijiFilter !== null,
       supportedRange: [0, 100],
       step: 1
