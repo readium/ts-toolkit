@@ -30,9 +30,13 @@ export const colorToRgba = (color: string): { r: number; g: number; b: number; a
   return { r: 0, g: 0, b: 0, a: 1 };
 };
 
+export const getLuminance = (color: { r: number; g: number; b: number; a: number }): number => {
+  return 0.2126 * color.r * color.a + 0.7152 * color.g * color.a + 0.0722 * color.b * color.a;
+}
+
 export const isDarkColor = (color: string): boolean => {
   const rgba = colorToRgba(color);
-  const luminance = 0.2126 * rgba.r * rgba.a + 0.7152 * rgba.g * rgba.a + 0.0722 * rgba.b * rgba.a;
+  const luminance = getLuminance(rgba);
   return luminance < 128;
 };
 
@@ -41,23 +45,70 @@ export const isLightColor = (color: string): boolean => !isDarkColor(color);
 export const checkContrast = (color1: string, color2: string): number => {
   const rgba1 = colorToRgba(color1);
   const rgba2 = colorToRgba(color2);
-  const lum1 = 0.2126 * rgba1.r * rgba1.a + 0.7152 * rgba1.g * rgba1.a + 0.0722 * rgba1.b * rgba1.a;
-  const lum2 = 0.2126 * rgba2.r * rgba2.a + 0.7152 * rgba2.g * rgba2.a + 0.0722 * rgba2.b * rgba2.a;
+  const lum1 = getLuminance(rgba1);
+  const lum2 = getLuminance(rgba2);
   const brightest = Math.max(lum1, lum2);
   const darkest = Math.min(lum1, lum2);
   return (brightest + 0.05) / (darkest + 0.05);
 };
 
-export const ensureContrast = (color1: string, color2: string, contrast: number = 4.5): string => {
+export const ensureContrast = (color1: string, color2: string, contrast: number = 4.5): string[] => {
   const c1 = colorToRgba(color1);
-  const contrastRatio = checkContrast(color1, color2);
-  if (contrastRatio < contrast) {
-    const delta = (contrast - contrastRatio) / (contrastRatio + 0.05);
-    const correction = delta * 255;
-    const r = Math.max(0, Math.min(255, c1.r + correction));
-    const g = Math.max(0, Math.min(255, c1.g + correction));
-    const b = Math.max(0, Math.min(255, c1.b + correction));
-    return `rgb(${r}, ${g}, ${b})`;
+  const c2 = colorToRgba(color2);
+  
+  const lum1 = getLuminance(c1);
+  const lum2 = getLuminance(c2);
+  const [darkest, brightest] = lum1 < lum2 ? [lum1, lum2] : [lum2, lum1];
+
+  const contrastRatio = (brightest + 0.05) / (darkest + 0.05);
+  if (contrastRatio >= contrast) {
+    return [
+      `rgba(${c1.r}, ${c1.g}, ${c1.b}, ${c1.a})`, 
+      `rgba(${c2.r}, ${c2.g}, ${c2.b}, ${c2.a})`
+    ];
   }
-  return `rgb(${c1.r}, ${c1.g}, ${c1.b})`;
+
+  const adjustColor = (color: { r: number; g: number; b: number; a: number }, delta: number) => ({
+    r: Math.max(0, Math.min(255, color.r + delta)),
+    g: Math.max(0, Math.min(255, color.g + delta)),
+    b: Math.max(0, Math.min(255, color.b + delta)),
+    a: color.a
+  });
+  
+  const delta = ((contrast - contrastRatio) * 255) / (contrastRatio + 0.05);
+  let correctedColor: { r: number; g: number; b: number; a: number };
+  let otherColor: { r: number; g: number; b: number; a: number };
+  if (lum1 < lum2) {
+    correctedColor = c1;
+    otherColor = c2;
+  } else {
+    correctedColor = c2;
+    otherColor = c1;
+  }
+
+  const correctedColorAdjusted = adjustColor(correctedColor, delta);
+  const newLum = getLuminance(correctedColorAdjusted);
+  const newContrastRatio = (brightest + 0.05) / (newLum + 0.05);
+
+  if (newContrastRatio < contrast) {
+    const updatedDelta = ((contrast - newContrastRatio) * 255) / (newContrastRatio + 0.05);
+    const reducedColor = adjustColor(otherColor, -updatedDelta);
+    return [
+      lum1 < lum2 
+        ? `rgb(${correctedColorAdjusted.r}, ${correctedColorAdjusted.g}, ${correctedColorAdjusted.b})` 
+        : `rgb(${reducedColor.r}, ${reducedColor.g}, ${reducedColor.b})`,
+      lum1 < lum2 
+        ? `rgb(${reducedColor.r}, ${reducedColor.g}, ${reducedColor.b})` 
+        : `rgb(${correctedColorAdjusted.r}, ${correctedColorAdjusted.g}, ${correctedColorAdjusted.b})`,
+    ];
+  }
+
+  return [
+    lum1 < lum2
+      ? `rgb(${correctedColorAdjusted.r}, ${correctedColorAdjusted.g}, ${correctedColorAdjusted.b})` 
+      : `rgba(${otherColor.r}, ${otherColor.g}, ${otherColor.b}, ${otherColor.a})`,
+    lum1 < lum2
+      ? `rgba(${otherColor.r}, ${otherColor.g}, ${otherColor.b}, ${otherColor.a})` 
+      : `rgb(${correctedColorAdjusted.r}, ${correctedColorAdjusted.g}, ${correctedColorAdjusted.b})`,
+  ];
 };
