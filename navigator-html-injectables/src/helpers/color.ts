@@ -86,29 +86,29 @@ export const ensureContrast = (color1: string, color2: string, contrast: number 
     otherColor = c1;
   }
 
-  const correctedColorAdjusted = adjustColor(correctedColor, delta);
+  const correctedColorAdjusted = adjustColor(correctedColor, -delta);
   const newLum = getLuminance(correctedColorAdjusted);
   const newContrastRatio = (brightest + 0.05) / (newLum + 0.05);
 
   if (newContrastRatio < contrast) {
     const updatedDelta = ((contrast - newContrastRatio) * 255) / (newContrastRatio + 0.05);
-    const reducedColor = adjustColor(otherColor, -updatedDelta);
+    const otherColorAdjusted = adjustColor(otherColor, updatedDelta);
     return [
       lum1 < lum2 
-        ? `rgb(${correctedColorAdjusted.r}, ${correctedColorAdjusted.g}, ${correctedColorAdjusted.b})` 
-        : `rgb(${reducedColor.r}, ${reducedColor.g}, ${reducedColor.b})`,
+        ? `rgba(${correctedColorAdjusted.r}, ${correctedColorAdjusted.g}, ${correctedColorAdjusted.b}, ${correctedColorAdjusted.a})` 
+        : `rgba(${otherColorAdjusted.r}, ${otherColorAdjusted.g}, ${otherColorAdjusted.b}, ${otherColorAdjusted.a})`,
       lum1 < lum2 
-        ? `rgb(${reducedColor.r}, ${reducedColor.g}, ${reducedColor.b})` 
-        : `rgb(${correctedColorAdjusted.r}, ${correctedColorAdjusted.g}, ${correctedColorAdjusted.b})`,
+        ? `rgba(${otherColorAdjusted.r}, ${otherColorAdjusted.g}, ${otherColorAdjusted.b}, ${otherColorAdjusted.a})` 
+        : `rgba(${correctedColorAdjusted.r}, ${correctedColorAdjusted.g}, ${correctedColorAdjusted.b}, ${correctedColorAdjusted.a})`,
     ];
   }
 
   return [
     lum1 < lum2
-      ? `rgb(${correctedColorAdjusted.r}, ${correctedColorAdjusted.g}, ${correctedColorAdjusted.b})` 
+      ? `rgba(${correctedColorAdjusted.r}, ${correctedColorAdjusted.g}, ${correctedColorAdjusted.b}, ${correctedColorAdjusted.a})` 
       : `rgba(${otherColor.r}, ${otherColor.g}, ${otherColor.b}, ${otherColor.a})`,
     lum1 < lum2
       ? `rgba(${otherColor.r}, ${otherColor.g}, ${otherColor.b}, ${otherColor.a})` 
-      : `rgb(${correctedColorAdjusted.r}, ${correctedColorAdjusted.g}, ${correctedColorAdjusted.b})`,
+      : `rgba(${correctedColorAdjusted.r}, ${correctedColorAdjusted.g}, ${correctedColorAdjusted.b}, ${correctedColorAdjusted.a})`,
   ];
 };
