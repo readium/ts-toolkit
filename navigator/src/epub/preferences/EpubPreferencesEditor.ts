@@ -187,7 +187,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get linkColor(): Preference<string> | null {
     return new Preference<string>({
       initialValue: this.preferences.linkColor,
-      effectiveValue: this.preferences.linkColor || dayMode.RS__linkColor,
+      effectiveValue: this.settings.linkColor || dayMode.RS__linkColor,
       isEffective: this.layout === EPUBLayout.reflowable && this.preferences.linkColor !== null
     });
   }
@@ -267,7 +267,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get selectionBackgroundColor(): Preference<string> | null {
     return new Preference<string>({
       initialValue: this.preferences.selectionBackgroundColor,
-      effectiveValue: this.preferences.selectionBackgroundColor || dayMode.RS__selectionBackgroundColor,
+      effectiveValue: this.settings.selectionBackgroundColor || dayMode.RS__selectionBackgroundColor,
       isEffective: this.layout === EPUBLayout.reflowable && this.preferences.selectionBackgroundColor !== null
     });
   }
@@ -275,7 +275,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get selectionTextColor(): Preference<string> | null {
     return new Preference<string>({
       initialValue: this.preferences.selectionTextColor,
-      effectiveValue: this.preferences.selectionTextColor || dayMode.RS__selectionTextColor,
+      effectiveValue: this.settings.selectionTextColor || dayMode.RS__selectionTextColor,
       isEffective: this.layout === EPUBLayout.reflowable && this.preferences.selectionTextColor !== null
     });
   }
@@ -317,7 +317,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get visitedColor(): Preference<string> | null {
     return new Preference<string>({
       initialValue: this.preferences.visitedColor,
-      effectiveValue: this.preferences.visitedColor || dayMode.RS__visitedColor,
+      effectiveValue: this.settings.visitedColor || dayMode.RS__visitedColor,
       isEffective: this.layout === EPUBLayout.reflowable && this.preferences.visitedColor !== null
     });
   }

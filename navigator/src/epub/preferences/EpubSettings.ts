@@ -20,15 +20,19 @@ export interface IEpubSettings {
   ligatures?: boolean | null,
   lineHeight?: number | null,
   lineLength?: number | null,
+  linkColor?: string | null,
   noRuby?: boolean | null,
   paragraphIndent?: number | null,
   paragraphSpacing?: number | null,
   publisherStyles?: boolean | null,
   scroll?: boolean | null,
+  selectionBackgroundColor?: string | null,
+  selectionTextColor?: string | null,
   textAlign?: TextAlignment | null,
   textColor?: string | null,
   textNormalization?: boolean | null,
   theme?: Theme | null,
+  visitedColor?: string | null,
   wordSpacing?: number | null
 }
 
@@ -48,15 +52,19 @@ export class EpubSettings implements ConfigurableSettings {
   ligatures: boolean | null;
   lineHeight: number | null;
   lineLength: number | null;
+  linkColor: string | null;
   noRuby: boolean | null;
   paragraphIndent: number | null;
   paragraphSpacing: number | null;
   publisherStyles: boolean | null;
   scroll: boolean | null;
+  selectionBackgroundColor: string | null;
+  selectionTextColor: string | null;
   textAlign: TextAlignment | null;
   textColor: string | null;
   textNormalization: boolean | null;
   theme: Theme | null;
+  visitedColor: string | null;
   wordSpacing: number | null;
 
   constructor(preferences: EpubPreferences, defaults: EpubDefaults) {
@@ -75,15 +83,19 @@ export class EpubSettings implements ConfigurableSettings {
     this.ligatures = preferences.ligatures || defaults.ligatures || null;
     this.lineHeight = preferences.lineHeight || defaults.lineHeight || null;
     this.lineLength = preferences.lineLength || defaults.lineLength || null;
+    this.linkColor = preferences.linkColor || defaults.linkColor || null;
     this.noRuby = preferences.noRuby || defaults.noRuby || null;
     this.paragraphIndent = preferences.paragraphIndent || defaults.paragraphIndent || null;
     this.paragraphSpacing = preferences.paragraphSpacing || defaults.paragraphSpacing || null;
     this.publisherStyles = preferences.publisherStyles || defaults.publisherStyles || null;
     this.scroll = preferences.scroll || defaults.scroll || null;
+    this.selectionBackgroundColor = preferences.selectionBackgroundColor || defaults.selectionBackgroundColor || null;
+    this.selectionTextColor = preferences.selectionTextColor || defaults.selectionTextColor || null;
     this.textAlign = preferences.textAlign || defaults.textAlign || null;
     this.textColor = preferences.textColor || defaults.textColor || null;
     this.textNormalization = preferences.textNormalization || defaults.textNormalization || null;
     this.theme = preferences.theme || defaults.theme || null;
+    this.visitedColor = preferences.visitedColor || defaults.visitedColor || null;
     this.wordSpacing = preferences.wordSpacing || defaults.wordSpacing || null;
   }
 }
