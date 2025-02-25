@@ -142,8 +142,7 @@ export class RangePreference<T extends number> extends Preference<T> implements 
   private readonly _supportedRange: [T, T];
   private readonly _step: number;
 
-  constructor(
-    {
+  constructor({
       initialValue = null, 
       effectiveValue, 
       isEffective,

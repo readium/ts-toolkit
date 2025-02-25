@@ -71,23 +71,23 @@ export class LineLengths {
     this._sample = config.sample || null;
     this._pageGutter = config.pageGutter || 0;
     this._letterSpacing = config.letterSpacing 
-      ? Math.round(config.letterSpacing * (config.fontSize || DEFAULT_FONT_SIZE)) 
+      ? Math.round(config.letterSpacing * this._fontSize) 
       : 0;
     this._wordSpacing = config.wordSpacing 
-      ? Math.round(config.wordSpacing * (config.fontSize || DEFAULT_FONT_SIZE)) 
+      ? Math.round(config.wordSpacing * this._fontSize) 
       : 0;
     this._isCJK = config.isCJK || false;
     this._getRelative = config.getRelative || false;
-    this._padding = config.pageGutter ? config.pageGutter * 2 : 0;
-    this._minDivider = config.minChars && config.minChars < config.optimalChars 
-      ? config.optimalChars / config.minChars 
-      : config.minChars === null 
+    this._padding = this._pageGutter * 2;
+    this._minDivider = this._minChars && this._minChars < this._optimalChars 
+      ? this._optimalChars / this._minChars 
+      : this._minChars === null 
         ? null
         : 1;
-    this._userMultiplier = config.userChars 
-      ? config.userChars / config.optimalChars 
+    this._userMultiplier = this._userChars 
+      ? this._userChars / this._optimalChars 
       : null;
-    this._approximatedWordSpaces = LineLengths.approximateWordSpaces(config.optimalChars, config.sample);
+    this._approximatedWordSpaces = LineLengths.approximateWordSpaces(this._optimalChars, this._sample);
   }
 
   set userChars(n: number | null) {

@@ -15,14 +15,14 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   settings: EpubSettings;
   defaults: EpubDefaults;
   metadata: Metadata | null;
-  private layout: EPUBLayout | null;
+  private layout: EPUBLayout;
 
   constructor(initialPreferences: EpubPreferences, settings: EpubSettings, defaults: EpubDefaults, metadata: Metadata) {
     this.preferences = initialPreferences;
     this.settings = settings;
     this.defaults = defaults;
     this.metadata = metadata;
-    this.layout = this.metadata?.getPresentation()?.layout || null
+    this.layout = this.metadata?.getPresentation()?.layout || EPUBLayout.reflowable;
   }
 
   clear() {
@@ -30,7 +30,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     this.defaults = new EpubDefaults({});
     this.settings = new EpubSettings(this.preferences, this.defaults);
     this.metadata = null;
-    this.layout = null;
+    this.layout = EPUBLayout.reflowable;
   }
 
   get backgroundColor(): Preference<string> | null {
