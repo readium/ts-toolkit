@@ -7,7 +7,7 @@ export interface IReadiumCSS {
   userProperties: UserProperties;
   lineLengths: LineLengths;
   container: HTMLElement;
-  constraint?: number | null;
+  constraint: number;
 }
 
 export class ReadiumCSS {
@@ -17,7 +17,8 @@ export class ReadiumCSS {
   container: HTMLElement;
   containerParent: HTMLElement;
   constraint: number;
-  private _containerWidth: number;
+  private cachedColCount: number | null;
+  private pagedContainerWidth: number;
 
   constructor(props: IReadiumCSS) {
     this.rsProperties = props.rsProperties;
@@ -25,8 +26,9 @@ export class ReadiumCSS {
     this.lineLengths = props.lineLengths;
     this.container = props.container;
     this.containerParent = props.container.parentElement || document.documentElement;
-    this.constraint = props.constraint || 0;
-    this._containerWidth = props.container.clientWidth;
+    this.constraint = props.constraint;
+    this.cachedColCount = props.userProperties.colCount;
+    this.pagedContainerWidth = this.containerParent.clientWidth;
   }
 
   update(userSettings: EpubSettings) {
@@ -80,6 +82,9 @@ export class ReadiumCSS {
       merged.fontOverride = true;
     }
 
+    // We need to keep the column count reference for resizeHandler
+    this.cachedColCount = userSettings.columnCount;
+
     this.userProperties = new UserProperties(merged);
   }
 
@@ -106,15 +111,22 @@ export class ReadiumCSS {
     }
 
     if (RCSSColCount > 1 && this.lineLengths.minimalLineLength !== null) {
-      this._containerWidth = Math.min((RCSSColCount * baseLineLength), constrainedWidth);
+      this.pagedContainerWidth = Math.min((RCSSColCount * baseLineLength), constrainedWidth);
     } else if ((baseLineLength + this.constraint) <= constrainedWidth) {
-      this._containerWidth = constrainedWidth;
+      this.pagedContainerWidth = constrainedWidth;
     };
 
     return RCSSColCount;
   }
 
-  get containerWidth() {
-    return this._containerWidth;
+  resizeHandler() {
+    if (this.userProperties.view === "scroll") {
+      this.container.style.width = `${ this.containerParent.clientWidth }px`;
+    } else {
+      const baseLineLength = this.userProperties.lineLength || this.lineLengths.optimalLineLength;
+      this.userProperties.colCount = this.setColCount(this.cachedColCount, baseLineLength);
+  
+      this.container.style.width = `${ this.pagedContainerWidth }px`;
+    }
   }
 }

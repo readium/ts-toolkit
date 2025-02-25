@@ -59,6 +59,7 @@ export class FXLFramePoolManager {
         this.containerHeightCached = container.clientHeight;
         this.resizeBoundHandler = this.nativeResizeHandler.bind(this);
 
+        // TODO: remove listeners since they’re covered by ResizeObserver in EpubNavigator?
         this.ownerWindow.addEventListener("resize", this.resizeBoundHandler);
         this.ownerWindow.addEventListener("orientationchange", this.resizeBoundHandler);
 
@@ -259,8 +260,8 @@ export class FXLFramePoolManager {
         return this.spreader.nLandscape;
     }
 
-    public setPerPage(perPage: number) {
-        if(perPage === 0) {
+    public setPerPage(perPage: number | null) {
+        if(perPage === null) {
             // TODO this mode is auto
             this.spread = true;
         } else if(perPage === 1) {

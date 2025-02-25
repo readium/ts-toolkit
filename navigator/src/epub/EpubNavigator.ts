@@ -1,3 +1,4 @@
+import { ResizeObserver as Polyfill } from "@juggle/resize-observer";
 import { EPUBLayout, Link, Locator, Publication, ReadingProgression } from "@readium/shared";
 import { LineLengths, VisualNavigator } from "../";
 import { FramePoolManager } from "./frame/FramePoolManager";
@@ -56,11 +57,15 @@ export class EpubNavigator extends VisualNavigator {
     private lastLocationInView: Locator | undefined;
     private currentProgression: ReadingProgression;
     public readonly layout: EPUBLayout;
+
     private preferences: EpubPreferences;
     private defaults: EpubDefaults;
     private settings: EpubSettings;
+    private constraint: number;
     private css: ReadiumCSS;
     private _preferencesEditor: EpubPreferencesEditor | null = null;
+
+    private resizeObserver: ResizeObserver;
 
     constructor(container: HTMLElement, pub: Publication, listeners: EpubNavigatorListeners, positions: Locator[] = [], initialPosition: Locator | undefined = undefined, configuration: EpubNavigatorConfiguration = { preferences: {}, defaults: {} }) {
         super();
@@ -70,9 +75,13 @@ export class EpubNavigator extends VisualNavigator {
         this.container = container;
         this.listeners = defaultListeners(listeners);
         this.currentLocation = initialPosition!;
+        if (positions.length)
+            this.positions = positions;
+
         this.preferences = new EpubPreferences(configuration.preferences);
         this.defaults = new EpubDefaults(configuration.defaults);
         this.settings = new EpubSettings(this.preferences, this.defaults);
+        this.constraint = this.preferences.constraint || 0;
         this.css = new ReadiumCSS({ 
             rsProperties: new RSProperties(this.preferences),
             userProperties: new UserProperties({}),
@@ -87,10 +96,15 @@ export class EpubNavigator extends VisualNavigator {
                 sample: this.pub.metadata.description
             }),
             container: container,
-            constraint: this.preferences.constraint
-        })
-        if (positions.length)
-            this.positions = positions;
+            constraint: this.constraint
+        });
+
+        // Necessary for iOS 13 and below
+        const ResizeObserver = (this.ownerWindow as Window & typeof globalThis).ResizeObserver || Polyfill;
+        // We use a resizeObserver cos’ the container may not be the width of the document/window 
+        // e.g. app using a docking system with left and right panels.
+        this.resizeObserver = new ResizeObserver(() => this.ownerWindow.requestAnimationFrame(() => this.resizeHandler()));
+        this.resizeObserver.observe(this.container);
     }
 
     public static determineLayout(pub: Publication): EPUBLayout {
@@ -118,6 +132,8 @@ export class EpubNavigator extends VisualNavigator {
             this.framePool = new FramePoolManager(this.container, this.positions);
         if(this.currentLocation === undefined)
             this.currentLocation = this.positions[0];
+        
+        this.resizeHandler();
         await this.apply();
     }
 
@@ -146,13 +162,13 @@ export class EpubNavigator extends VisualNavigator {
         }
     }
 
+    // TODO: fit, etc.
     private handleFXLPrefs(from: EpubSettings, to: EpubSettings) {
         if (
             to.columnCount && 
             from.columnCount !== to.columnCount
         ) {
             (this.framePool as FXLFramePoolManager).setPerPage(to.columnCount);
-            (this.framePool as FXLFramePoolManager).resizeHandler();
         }
     }
 
@@ -189,6 +205,32 @@ export class EpubNavigator extends VisualNavigator {
         }
 
         (this.framePool as FramePoolManager).setCSSProperties(properties);
+    }
+
+    resizeHandler() {
+        // We check the parentElement cos we want to remove constraint from the container
+        // and the container may not be the entire width of the document/window
+        const parentEl = this.container.parentElement || document.documentElement;
+
+        if (this.layout === EPUBLayout.fixed) {
+            this.container.style.width = `${ parentEl.clientWidth - this.constraint }px`;
+            (this.framePool as FXLFramePoolManager).resizeHandler(true);
+        } else {
+            // for reflow ReadiumCSS gets the width from columns + line-lengths 
+            // but we need to check whether colCount has changed to commit new CSS
+            const oldColCount = this.css.userProperties.colCount; 
+            this.css.resizeHandler();
+            if (
+                this.css.userProperties.view === "paged" &&
+                oldColCount !== this.css.userProperties.colCount
+            ) {
+                this.commitCSS(this.css);
+            }
+        }
+    }
+
+    get ownerWindow() {
+        return this.container.ownerDocument.defaultView || window;
     }
 
     /**

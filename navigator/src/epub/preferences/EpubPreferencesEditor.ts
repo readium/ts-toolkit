@@ -53,9 +53,17 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new Preference<number>({
       initialValue: this.preferences.columnCount,
       // TODO auto-pagination
-      effectiveValue: this.settings.columnCount || 0,
+      effectiveValue: this.settings.columnCount || null,
       isEffective: this.layout === EPUBLayout.reflowable && !this.settings.scroll
     });
+  }
+
+  get constraint(): Preference<number> {
+    return new Preference<number>({
+      initialValue: this.preferences.constraint,
+      effectiveValue: this.preferences.constraint || 0,
+      isEffective: true
+    })
   }
 
   get darkenFilter(): RangePreference<number> | null {
@@ -214,7 +222,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new RangePreference<number>({
       initialValue: this.preferences.optimalLineLength,
       effectiveValue: this.preferences.optimalLineLength,
-      isEffective: this.layout === EPUBLayout.reflowable,
+      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.lineLength,
       supportedRange: [20, 100],
       step: 1
     });
