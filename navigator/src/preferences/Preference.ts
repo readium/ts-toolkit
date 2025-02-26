@@ -2,12 +2,12 @@ export interface IPreference<T> {
   /**
    * The current value of the preference.
    */
-  value?: T | null;
+  value: T | null | undefined;
 
   /**
    * The value that will be effectively used by the Configurable object if preferences are submitted as they are.
    */
-  effectiveValue?: T | null;
+  effectiveValue: T | null | undefined;
 
   /**
    * Indicates if this preference will be effectively used by the Configurable object if preferences are submitted as they are.
@@ -67,26 +67,32 @@ export class Preference<T> implements Preference<T> {
   protected readonly _effectiveValue?: T | null;
   protected readonly _isEffective: boolean;
 
+  protected _onChange: (newValue: T | null | undefined) => void;
+
   constructor({
     initialValue = null, 
     effectiveValue, 
-    isEffective
+    isEffective,
+    onChange
   } : { 
     initialValue?: T | null, 
     effectiveValue?: T | null, 
-    isEffective: boolean 
+    isEffective: boolean,
+    onChange: (newValue: T | null | undefined) => void
   }) {
     this._value = initialValue;
     this._effectiveValue = effectiveValue;
     this._isEffective = isEffective;
-  }
-
-  get value(): T | null | undefined {
-    return this._value;
+    this._onChange = onChange;
   }
 
   set value(value: T | null | undefined) {
     this._value = value;
+    this._onChange(this._value);
+  }
+
+  get value(): T | null | undefined {
+    return this._value;
   }
 
   get effectiveValue(): T | null | undefined {
@@ -105,6 +111,7 @@ export class Preference<T> implements Preference<T> {
 export class BooleanPreference extends Preference<boolean> implements IBooleanPreference {
   toggle(): void {
     this._value = !this._value;
+    this._onChange(this._value);
   }
 }
 
@@ -115,14 +122,16 @@ export class EnumPreference<T extends string | number | symbol> extends Preferen
       initialValue = null, 
       effectiveValue, 
       isEffective,
+      onChange, 
       supportedValues
     } : { 
       initialValue?: T | null, 
       effectiveValue?: T | null, 
       isEffective: boolean,
+      onChange: (newValue: T | null | undefined) => void,
       supportedValues: T[]
     }) {
-    super({ initialValue, effectiveValue, isEffective });
+    super({ initialValue, effectiveValue, isEffective, onChange });
     this._supportedValues = supportedValues;
   }
 
@@ -131,6 +140,7 @@ export class EnumPreference<T extends string | number | symbol> extends Preferen
       throw new Error(`Value '${ String(value) }' is not in the supported values for this preference.`);
     }
     this._value = value;
+    this._onChange(this._value);
   }
 
   get supportedValues(): T[] {
@@ -146,17 +156,19 @@ export class RangePreference<T extends number> extends Preference<T> implements 
       initialValue = null, 
       effectiveValue, 
       isEffective,
+      onChange, 
       supportedRange,
       step
     } : { 
       initialValue?: T | null, 
       effectiveValue?: T | null, 
       isEffective: boolean,
+      onChange: (newValue: T | null | undefined) => void,
       supportedRange: [T, T],
-      step: number 
+      step: number
     }
   ) {
-    super({ initialValue, effectiveValue, isEffective });
+    super({ initialValue, effectiveValue, isEffective, onChange });
     this._supportedRange = supportedRange;
     this._step = step;
   }
@@ -166,6 +178,7 @@ export class RangePreference<T extends number> extends Preference<T> implements 
       throw new Error(`Value '${ String(value) }' is out of the supported range for this preference.`);
     }
     this._value = value;
+    this._onChange(this._value);
   }
 
   get supportedRange(): [T, T] {
@@ -179,12 +192,14 @@ export class RangePreference<T extends number> extends Preference<T> implements 
   increment(): void {
     if (this._value && this._value < this._supportedRange[1]) {
       this._value = Math.min(this._value + this._step, this._supportedRange[1]) as T;
+      this._onChange(this._value);
     }
   }
 
   decrement(): void {
     if (this._value && this._value > this._supportedRange[0]) {
       this._value = Math.max(this._value - this._step, this._supportedRange[0]) as T;
+      this._onChange(this._value);
     }
   }
 

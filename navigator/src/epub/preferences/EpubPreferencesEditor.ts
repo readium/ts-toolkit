@@ -33,19 +33,28 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     this.layout = EPUBLayout.reflowable;
   }
 
+  updatePreference<K extends keyof EpubPreferences>(key: K, value: EpubPreferences[K]) {
+    this.preferences[key] = value;
+  }
+
   get backgroundColor(): Preference<string> {
     return new Preference<string>({
       initialValue: this.preferences.backgroundColor,
       effectiveValue: this.settings.backgroundColor || dayMode.RS__backgroundColor,
-      isEffective: this.preferences.backgroundColor !== null
+      isEffective: this.preferences.backgroundColor !== null,
+      onChange: (newValue: string | null | undefined) => {
+        this.updatePreference("backgroundColor", newValue || null);
+      }
     });
   }
-
   get blendFilter(): BooleanPreference {
     return new BooleanPreference({
       initialValue: this.preferences.blendFilter,
       effectiveValue: this.settings.blendFilter || false,
-      isEffective: this.preferences.blendFilter !== null
+      isEffective: this.preferences.blendFilter !== null,
+      onChange: (newValue: boolean | null | undefined) => {
+        this.updatePreference("blendFilter", newValue || null);
+      }
     });
   }
 
@@ -54,7 +63,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       initialValue: this.preferences.columnCount,
       // TODO auto-pagination
       effectiveValue: this.settings.columnCount || null,
-      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.scroll
+      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.scroll,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("columnCount", newValue || null);
+      }
     });
   }
 
@@ -62,7 +74,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new Preference<number>({
       initialValue: this.preferences.constraint,
       effectiveValue: this.preferences.constraint || 0,
-      isEffective: true
+      isEffective: true,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("constraint", newValue || null);
+      }
     })
   }
 
@@ -71,6 +86,9 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       initialValue: typeof this.preferences.darkenFilter === "boolean" ? 100 : this.preferences.darkenFilter,
       effectiveValue: typeof this.settings.darkenFilter === "boolean" ? 100 : this.settings.darkenFilter || 0,
       isEffective: this.settings.darkenFilter !== null,
+      onChange: (newValue: number | boolean | null | undefined) => {
+        this.updatePreference("darkenFilter", newValue || null);
+      },
       supportedRange: [0, 100],
       step: 1
     });
@@ -84,7 +102,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       // --RS__baseFontFamily that is used as a proxy so that it can be redefined 
       // for each language ReadiumCSS supports, and these values are not extracted
       effectiveValue: this.settings.fontFamily || fontStacks.RS__oldStyleTf,
-      isEffective: this.layout === EPUBLayout.reflowable
+      isEffective: this.layout === EPUBLayout.reflowable,
+      onChange: (newValue: string | null | undefined) => {
+        this.updatePreference("fontFamily", newValue || null);
+      }
     });
   }
 
@@ -93,6 +114,9 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       initialValue: this.preferences.fontSize,
       effectiveValue: this.settings.fontSize || 1,
       isEffective: this.layout === EPUBLayout.reflowable,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("fontSize", newValue || null);
+      },
       supportedRange: [0.5, 2.5],
       step: 0.1
     });
@@ -102,7 +126,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new BooleanPreference({
       initialValue: this.preferences.fontOpticalSizing,
       effectiveValue: this.settings.fontOpticalSizing || true,
-      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.preferences.fontOpticalSizing !== null
+      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.preferences.fontOpticalSizing !== null,
+      onChange: (newValue: boolean | null | undefined) => {
+        this.updatePreference("fontOpticalSizing", newValue || null);
+      }
     });
   }
 
@@ -111,6 +138,9 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       initialValue: this.preferences.fontWeight,
       effectiveValue: this.settings.fontWeight || 400,
       isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.preferences.fontWeight !== null,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("fontWeight", newValue || null);
+      },
       supportedRange: [100, 1000],
       step: 100
     });
@@ -121,6 +151,9 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       initialValue: this.preferences.fontWidth,
       effectiveValue: this.settings.fontWidth || 100,
       isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.preferences.fontWidth !== null,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("fontWidth", newValue || null);
+      },
       supportedRange: [50, 250],
       step: 10
     });
@@ -130,7 +163,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new BooleanPreference({
       initialValue: this.preferences.hyphens,
       effectiveValue: this.settings.hyphens || false,
-      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.metadata?.effectiveReadingProgression === ReadingProgression.ltr
+      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.metadata?.effectiveReadingProgression === ReadingProgression.ltr,
+      onChange: (newValue: boolean | null | undefined) => {
+        this.updatePreference("hyphens", newValue || null);
+      }
     });
   }
 
@@ -139,6 +175,9 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       initialValue: typeof this.preferences.invertFilter === "boolean" ? 100 : this.preferences.invertFilter,
       effectiveValue: typeof this.settings.invertFilter === "boolean" ? 100 : this.settings.invertFilter || 0,
       isEffective: this.settings.invertFilter !== null,
+      onChange: (newValue: number | boolean | null | undefined) => {
+        this.updatePreference("invertFilter", newValue || null);
+      },
       supportedRange: [0, 100],
       step: 1
     });
@@ -149,6 +188,9 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       initialValue: typeof this.preferences.invertGaijiFilter === "boolean" ? 100 : this.preferences.invertGaijiFilter,
       effectiveValue: typeof this.settings.invertGaijiFilter === "boolean" ? 100 : this.settings.invertGaijiFilter || 0,
       isEffective: this.preferences.invertGaijiFilter !== null,
+      onChange: (newValue: number | boolean | null | undefined) => {
+        this.updatePreference("invertGaijiFilter", newValue || null);
+      },
       supportedRange: [0, 100],
       step: 1
     });
@@ -159,6 +201,9 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       initialValue: this.preferences.letterSpacing,
       effectiveValue: this.settings.letterSpacing || 0,
       isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.metadata?.effectiveReadingProgression === ReadingProgression.ltr,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("letterSpacing", newValue || null);
+      },
       supportedRange: [0, 1],
       step: .125
     });
@@ -168,7 +213,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new BooleanPreference({
       initialValue: this.preferences.ligatures,
       effectiveValue: this.settings.ligatures || true,
-      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.metadata?.effectiveReadingProgression === ReadingProgression.rtl
+      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.metadata?.effectiveReadingProgression === ReadingProgression.rtl,
+      onChange: (newValue: boolean | null | undefined) => {
+        this.updatePreference("ligatures", newValue || null);
+      }
     });
   }
 
@@ -177,6 +225,9 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       initialValue: this.preferences.lineHeight,
       effectiveValue: this.settings.lineHeight || 1.2,
       isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("lineHeight", newValue || null);
+      },
       supportedRange: [1, 2],
       step: .1
     });
@@ -187,6 +238,9 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       initialValue: this.preferences.lineLength,
       effectiveValue: this.settings.lineLength || this.preferences.optimalLineLength,
       isEffective: this.layout === EPUBLayout.reflowable,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("lineLength", newValue || null);
+      },
       supportedRange: [20, 100],
       step: 1
     });
@@ -196,7 +250,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new Preference<string>({
       initialValue: this.preferences.linkColor,
       effectiveValue: this.settings.linkColor || dayMode.RS__linkColor,
-      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.linkColor !== null
+      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.linkColor !== null,
+      onChange: (newValue: string | null | undefined) => {
+        this.updatePreference("linkColor", newValue || null);
+      }
     });
   }
 
@@ -206,6 +263,9 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       // No fallback since undefined and null are handled differently so we only pass the pref
       effectiveValue: this.preferences.minimalLineLength,
       isEffective: this.layout === EPUBLayout.reflowable,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("minimalLineLength", newValue);
+      },
       supportedRange: [20, 100],
       step: 1
     });
@@ -215,7 +275,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new BooleanPreference({
       initialValue: this.preferences.noRuby,
       effectiveValue: this.settings.noRuby || false,
-      isEffective: this.layout === EPUBLayout.reflowable && this.metadata?.languages?.includes("ja") || false
+      isEffective: this.layout === EPUBLayout.reflowable && this.metadata?.languages?.includes("ja") || false,
+      onChange: (newValue: boolean | null | undefined) => {
+        this.updatePreference("noRuby", newValue || null);
+      }
     });
   }
 
@@ -224,6 +287,9 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       initialValue: this.preferences.optimalLineLength,
       effectiveValue: this.preferences.optimalLineLength,
       isEffective: this.layout === EPUBLayout.reflowable && !this.settings.lineLength,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("optimalLineLength", newValue as number);
+      },
       supportedRange: [20, 100],
       step: 1
     });
@@ -233,7 +299,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new Preference<number>({
       initialValue: this.preferences.pageGutter,
       effectiveValue: this.preferences.pageGutter || 0,
-      isEffective: this.layout === EPUBLayout.reflowable
+      isEffective: this.layout === EPUBLayout.reflowable,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("pageGutter", newValue || null);
+      }
     });
   }
 
@@ -242,6 +311,9 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       initialValue: this.preferences.paragraphIndent,
       effectiveValue: this.settings.paragraphIndent || 0,
       isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.preferences.paragraphIndent !== null,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("paragraphIndent", newValue || null);
+      },
       supportedRange: [0, 3],
       step: .25
     });
@@ -252,6 +324,9 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       initialValue: this.preferences.paragraphSpacing,
       effectiveValue: this.settings.paragraphSpacing || 0,
       isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.preferences.paragraphSpacing !== null,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("paragraphSpacing", newValue || null);
+      },
       supportedRange: [0, 3],
       step: .25
     });
@@ -261,7 +336,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new BooleanPreference({
       initialValue: this.preferences.publisherStyles,
       effectiveValue: this.settings.publisherStyles || true,
-      isEffective: this.layout === EPUBLayout.reflowable
+      isEffective: this.layout === EPUBLayout.reflowable,
+      onChange: (newValue: boolean | null | undefined) => {
+        this.updatePreference("publisherStyles", newValue || null);
+      }
     });
   }
 
@@ -269,7 +347,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new BooleanPreference({
       initialValue: this.preferences.scroll,
       effectiveValue: this.settings.scroll || false,
-      isEffective: this.layout === EPUBLayout.reflowable
+      isEffective: this.layout === EPUBLayout.reflowable,
+      onChange: (newValue: boolean | null | undefined) => {
+        this.updatePreference("scroll", newValue || null);
+      }
     });
   }
 
@@ -277,7 +358,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new Preference<string>({
       initialValue: this.preferences.selectionBackgroundColor,
       effectiveValue: this.settings.selectionBackgroundColor || dayMode.RS__selectionBackgroundColor,
-      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.selectionBackgroundColor !== null
+      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.selectionBackgroundColor !== null,
+      onChange: (newValue: string | null | undefined) => {
+        this.updatePreference("selectionBackgroundColor", newValue || null);
+      }
     });
   }
 
@@ -285,7 +369,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new Preference<string>({
       initialValue: this.preferences.selectionTextColor,
       effectiveValue: this.settings.selectionTextColor || dayMode.RS__selectionTextColor,
-      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.selectionTextColor !== null
+      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.selectionTextColor !== null,
+      onChange: (newValue: string | null | undefined) => {
+        this.updatePreference("selectionTextColor", newValue || null);
+      }
     });
   }
 
@@ -294,6 +381,9 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       initialValue: this.preferences.textAlign,
       effectiveValue: this.settings.textAlign || TextAlignment.start,
       isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles,
+      onChange: (newValue: TextAlignment | null | undefined) => {
+        this.updatePreference("textAlign", newValue || null);
+      },
       supportedValues: Object.values(TextAlignment)
     });
   }
@@ -302,7 +392,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new Preference<string>({
       initialValue: this.preferences.textColor,
       effectiveValue: this.settings.textColor || dayMode.RS__textColor,
-      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.textColor !== null
+      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.textColor !== null,
+      onChange: (newValue: string | null | undefined) => {
+        this.updatePreference("textColor", newValue || null);
+      }
     });
   }
 
@@ -310,7 +403,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new BooleanPreference({
       initialValue: this.preferences.textNormalization,
       effectiveValue: this.settings.textNormalization || false,
-      isEffective: this.layout === EPUBLayout.reflowable
+      isEffective: this.layout === EPUBLayout.reflowable,
+      onChange: (newValue: boolean | null | undefined) => {
+        this.updatePreference("textNormalization", newValue || null);
+      }
     });
   }
 
@@ -319,6 +415,9 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       initialValue: this.preferences.theme,
       effectiveValue: this.settings.theme || Theme.day,
       isEffective: this.layout === EPUBLayout.reflowable,
+      onChange: (newValue: Theme | null | undefined) => {
+        this.updatePreference("theme", newValue || null);
+      },
       supportedValues: Object.values(Theme)
     });
   }
@@ -327,7 +426,10 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new Preference<string>({
       initialValue: this.preferences.visitedColor,
       effectiveValue: this.settings.visitedColor || dayMode.RS__visitedColor,
-      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.visitedColor !== null
+      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.visitedColor !== null,
+      onChange: (newValue: string | null | undefined) => {
+        this.updatePreference("visitedColor", newValue || null);
+      }
     });
   }
 
@@ -336,6 +438,9 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       initialValue: this.preferences.wordSpacing,
       effectiveValue: this.settings.wordSpacing || 0,
       isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles && this.preferences.wordSpacing !== null,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("wordSpacing", newValue || null);
+      },
       supportedRange: [0, 2],
       step: 0.125
     });
