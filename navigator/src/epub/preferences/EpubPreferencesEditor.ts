@@ -1,6 +1,5 @@
 import { EPUBLayout, Metadata, ReadingProgression } from "@readium/shared";
 import { IPreferencesEditor } from "../../preferences/PreferencesEditor";
-import { EpubDefaults } from "./EpubDefaults";
 import { EpubPreferences } from "./EpubPreferences";
 import { EpubSettings } from "./EpubSettings";
 import { TextAlignment, Theme } from "../../preferences/Types";
@@ -13,24 +12,18 @@ import fontStacks from "@readium/css/css/vars/fontStacks.json";
 export class EpubPreferencesEditor implements IPreferencesEditor {
   preferences: EpubPreferences;
   private settings: EpubSettings;
-  private defaults: EpubDefaults;
   private metadata: Metadata | null;
   private layout: EPUBLayout;
 
-  constructor(initialPreferences: EpubPreferences, settings: EpubSettings, defaults: EpubDefaults, metadata: Metadata) {
+  constructor(initialPreferences: EpubPreferences, settings: EpubSettings, metadata: Metadata) {
     this.preferences = initialPreferences;
     this.settings = settings;
-    this.defaults = defaults;
     this.metadata = metadata;
     this.layout = this.metadata?.getPresentation()?.layout || EPUBLayout.reflowable;
   }
 
   clear() {
     this.preferences = new EpubPreferences({ optimalLineLength: 65 });
-    this.defaults = new EpubDefaults({});
-    this.settings = new EpubSettings(this.preferences, this.defaults);
-    this.metadata = null;
-    this.layout = EPUBLayout.reflowable;
   }
 
   updatePreference<K extends keyof EpubPreferences>(key: K, value: EpubPreferences[K]) {
