@@ -1,4 +1,3 @@
-import { ResizeObserver as Polyfill } from "@juggle/resize-observer";
 import { EPUBLayout, Link, Locator, Publication, ReadingProgression } from "@readium/shared";
 import { LineLengths, VisualNavigator } from "../";
 import { FramePoolManager } from "./frame/FramePoolManager";
@@ -99,8 +98,6 @@ export class EpubNavigator extends VisualNavigator {
             constraint: this.constraint
         });
 
-        // Necessary for iOS 13 and below
-        const ResizeObserver = (this.ownerWindow as Window & typeof globalThis).ResizeObserver || Polyfill;
         // We use a resizeObserver cos’ the container may not be the width of the document/window 
         // e.g. app using a docking system with left and right panels.
         this.resizeObserver = new ResizeObserver(() => this.ownerWindow.requestAnimationFrame(() => this.resizeHandler()));

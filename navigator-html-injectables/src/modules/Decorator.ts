@@ -4,13 +4,9 @@ import { Module } from "./Module";
 import { rangeFromLocator } from "../helpers/locator";
 import { ModuleName } from "./ModuleLibrary";
 import { Rect, getClientRectsNoOverlap } from "../helpers/rect";
-import { ResizeObserver as Polyfill } from '@juggle/resize-observer';
 import { getProperty } from "../helpers/css";
 import { ReadiumWindow } from "../helpers/dom";
 import { isDarkColor } from "../helpers/color";
-
-// Necessary for iOS 13 and below
-const ResizeObserver = window.ResizeObserver || Polyfill;
 
 export enum Width {
     Wrap = "wrap", // Smallest width fitting the CSS border box.

@@ -1,4 +1,3 @@
-import { ResizeObserver as Polyfill } from '@juggle/resize-observer';
 import { Comms } from "../../comms";
 import { Snapper } from "./Snapper";
 import { getColumnCountPerScreen, isRTL, appendVirtualColumnIfNeeded } from "../../helpers/document";
@@ -271,9 +270,6 @@ export class ColumnSnapper extends Snapper {
         }
         `;
         wnd.document.head.appendChild(d);
-
-        // Necessary for iOS 13 and below
-        const ResizeObserver = (wnd as ReadiumWindow & typeof globalThis).ResizeObserver || Polyfill;
 
         this.resizeObserver = new ResizeObserver(() => wnd.requestAnimationFrame(() => {
             wnd && appendVirtualColumnIfNeeded(wnd);

@@ -48,7 +48,6 @@
     "node": ">=18"
   },
   "devDependencies": {
-    "@juggle/resize-observer": "^3.4.0",
     "@readium/shared": "workspace:*",
     "css-selector-generator": "^3.6.9",
     "tslib": "^2.6.1",
