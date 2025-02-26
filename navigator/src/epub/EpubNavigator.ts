@@ -153,7 +153,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private applyPreferences() {
         const oldSettings = this._settings;
         this._settings = new EpubSettings(this._preferences, this._defaults);
-        this._preferencesEditor = new EpubPreferencesEditor(this._preferences, this._settings, this.pub.metadata);
+        
+        if (this._preferencesEditor !== null) {
+            this._preferencesEditor = new EpubPreferencesEditor(this._preferences, this._settings, this.pub.metadata);
+        }
 
         // Invalidation by comparing old and new settings if needed
         
