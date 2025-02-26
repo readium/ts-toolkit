@@ -33,7 +33,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     this.layout = EPUBLayout.reflowable;
   }
 
-  get backgroundColor(): Preference<string> | null {
+  get backgroundColor(): Preference<string> {
     return new Preference<string>({
       initialValue: this.preferences.backgroundColor,
       effectiveValue: this.settings.backgroundColor || dayMode.RS__backgroundColor,
@@ -41,7 +41,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get blendFilter(): BooleanPreference | null {
+  get blendFilter(): BooleanPreference {
     return new BooleanPreference({
       initialValue: this.preferences.blendFilter,
       effectiveValue: this.settings.blendFilter || false,
@@ -49,7 +49,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get columnCount(): Preference<number> | null {
+  get columnCount(): Preference<number> {
     return new Preference<number>({
       initialValue: this.preferences.columnCount,
       // TODO auto-pagination
@@ -66,7 +66,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     })
   }
 
-  get darkenFilter(): RangePreference<number> | null {
+  get darkenFilter(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: typeof this.preferences.darkenFilter === "boolean" ? 100 : this.preferences.darkenFilter,
       effectiveValue: typeof this.settings.darkenFilter === "boolean" ? 100 : this.settings.darkenFilter || 0,
@@ -76,7 +76,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get fontFamily(): Preference<string> | null {
+  get fontFamily(): Preference<string> {
     return new Preference<string>({
       initialValue: this.preferences.fontFamily,
       // TODO infer effectiveValue of fontFamily as it’s more complex than that:
@@ -88,7 +88,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get fontSize(): RangePreference<number> | null {
+  get fontSize(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: this.preferences.fontSize,
       effectiveValue: this.settings.fontSize || 1,
@@ -98,7 +98,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get fontOpticalSizing(): BooleanPreference | null {
+  get fontOpticalSizing(): BooleanPreference {
     return new BooleanPreference({
       initialValue: this.preferences.fontOpticalSizing,
       effectiveValue: this.settings.fontOpticalSizing || true,
@@ -106,7 +106,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get fontWeight(): RangePreference<number> | null {
+  get fontWeight(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: this.preferences.fontWeight,
       effectiveValue: this.settings.fontWeight || 400,
@@ -116,7 +116,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get fontWidth(): RangePreference<number> | null {
+  get fontWidth(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: this.preferences.fontWidth,
       effectiveValue: this.settings.fontWidth || 100,
@@ -126,7 +126,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get hyphens(): BooleanPreference | null {
+  get hyphens(): BooleanPreference {
     return new BooleanPreference({
       initialValue: this.preferences.hyphens,
       effectiveValue: this.settings.hyphens || false,
@@ -134,7 +134,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get invertFilter(): RangePreference<number> | null {
+  get invertFilter(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: typeof this.preferences.invertFilter === "boolean" ? 100 : this.preferences.invertFilter,
       effectiveValue: typeof this.settings.invertFilter === "boolean" ? 100 : this.settings.invertFilter || 0,
@@ -144,7 +144,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get invertGaijiFilter(): RangePreference<number> | null {
+  get invertGaijiFilter(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: typeof this.preferences.invertGaijiFilter === "boolean" ? 100 : this.preferences.invertGaijiFilter,
       effectiveValue: typeof this.settings.invertGaijiFilter === "boolean" ? 100 : this.settings.invertGaijiFilter || 0,
@@ -154,7 +154,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get letterSpacing(): RangePreference<number> | null {
+  get letterSpacing(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: this.preferences.letterSpacing,
       effectiveValue: this.settings.letterSpacing || 0,
@@ -164,7 +164,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get ligatures(): BooleanPreference | null {
+  get ligatures(): BooleanPreference {
     return new BooleanPreference({
       initialValue: this.preferences.ligatures,
       effectiveValue: this.settings.ligatures || true,
@@ -172,7 +172,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get lineHeight(): RangePreference<number> | null {
+  get lineHeight(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: this.preferences.lineHeight,
       effectiveValue: this.settings.lineHeight || 1.2,
@@ -182,7 +182,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get lineLength(): RangePreference<number> | null {
+  get lineLength(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: this.preferences.lineLength,
       effectiveValue: this.settings.lineLength || this.preferences.optimalLineLength,
@@ -192,7 +192,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get linkColor(): Preference<string> | null {
+  get linkColor(): Preference<string> {
     return new Preference<string>({
       initialValue: this.preferences.linkColor,
       effectiveValue: this.settings.linkColor || dayMode.RS__linkColor,
@@ -200,7 +200,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get minimalLineLength(): RangePreference<number> | null {
+  get minimalLineLength(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: this.preferences.minimalLineLength,
       // No fallback since undefined and null are handled differently so we only pass the pref
@@ -211,7 +211,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get noRuby(): BooleanPreference | null {
+  get noRuby(): BooleanPreference {
     return new BooleanPreference({
       initialValue: this.preferences.noRuby,
       effectiveValue: this.settings.noRuby || false,
@@ -229,7 +229,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get pageGutter(): Preference<number> | null {
+  get pageGutter(): Preference<number> {
     return new Preference<number>({
       initialValue: this.preferences.pageGutter,
       effectiveValue: this.preferences.pageGutter || 0,
@@ -237,7 +237,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get paragraphIndent(): RangePreference<number> | null {
+  get paragraphIndent(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: this.preferences.paragraphIndent,
       effectiveValue: this.settings.paragraphIndent || 0,
@@ -247,7 +247,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get paragraphSpacing(): RangePreference<number> | null {
+  get paragraphSpacing(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: this.preferences.paragraphSpacing,
       effectiveValue: this.settings.paragraphSpacing || 0,
@@ -257,7 +257,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get publisherStyles(): BooleanPreference | null {
+  get publisherStyles(): BooleanPreference {
     return new BooleanPreference({
       initialValue: this.preferences.publisherStyles,
       effectiveValue: this.settings.publisherStyles || true,
@@ -265,7 +265,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get scroll(): BooleanPreference | null {
+  get scroll(): BooleanPreference {
     return new BooleanPreference({
       initialValue: this.preferences.scroll,
       effectiveValue: this.settings.scroll || false,
@@ -273,7 +273,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get selectionBackgroundColor(): Preference<string> | null {
+  get selectionBackgroundColor(): Preference<string> {
     return new Preference<string>({
       initialValue: this.preferences.selectionBackgroundColor,
       effectiveValue: this.settings.selectionBackgroundColor || dayMode.RS__selectionBackgroundColor,
@@ -281,7 +281,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get selectionTextColor(): Preference<string> | null {
+  get selectionTextColor(): Preference<string> {
     return new Preference<string>({
       initialValue: this.preferences.selectionTextColor,
       effectiveValue: this.settings.selectionTextColor || dayMode.RS__selectionTextColor,
@@ -289,7 +289,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get textAlign(): EnumPreference<TextAlignment> | null {
+  get textAlign(): EnumPreference<TextAlignment> {
     return new EnumPreference<TextAlignment>({
       initialValue: this.preferences.textAlign,
       effectiveValue: this.settings.textAlign || TextAlignment.start,
@@ -298,7 +298,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get textColor(): Preference<string> | null {
+  get textColor(): Preference<string> {
     return new Preference<string>({
       initialValue: this.preferences.textColor,
       effectiveValue: this.settings.textColor || dayMode.RS__textColor,
@@ -306,7 +306,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get textNormalization(): BooleanPreference | null {
+  get textNormalization(): BooleanPreference {
     return new BooleanPreference({
       initialValue: this.preferences.textNormalization,
       effectiveValue: this.settings.textNormalization || false,
@@ -314,7 +314,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get theme(): EnumPreference<Theme> | null {
+  get theme(): EnumPreference<Theme> {
     return new EnumPreference<Theme>({
       initialValue: this.preferences.theme,
       effectiveValue: this.settings.theme || Theme.day,
@@ -323,7 +323,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get visitedColor(): Preference<string> | null {
+  get visitedColor(): Preference<string> {
     return new Preference<string>({
       initialValue: this.preferences.visitedColor,
       effectiveValue: this.settings.visitedColor || dayMode.RS__visitedColor,
@@ -331,7 +331,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get wordSpacing(): RangePreference<number> | null {
+  get wordSpacing(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: this.preferences.wordSpacing,
       effectiveValue: this.settings.wordSpacing || 0,
