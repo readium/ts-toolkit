@@ -79,7 +79,7 @@ export class EpubDefaults {
     this.darkenFilter = defaults.darkenFilter || false;
     this.fontFamily = defaults.fontFamily || null;
     this.fontSize = defaults.fontSize || 1;
-    this.fontOpticalSizing = defaults.fontOpticalSizing || true;
+    this.fontOpticalSizing = defaults.fontOpticalSizing || null;
     this.fontWeight = defaults.fontWeight || null;
     this.fontWidth = defaults.fontWidth || null;
     this.hyphens = defaults.hyphens || null;
