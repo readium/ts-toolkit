@@ -1,5 +1,5 @@
 import { EPUBLayout, Link, Locator, Publication, ReadingProgression } from "@readium/shared";
-import { LineLengths, VisualNavigator } from "../";
+import { Configurable, ConfigurablePreferences, ConfigurableSettings, LineLengths, VisualNavigator } from "../";
 import { FramePoolManager } from "./frame/FramePoolManager";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager";
 import { CommsEventKey, FXLModules, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables";
@@ -46,7 +46,7 @@ const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListe
     textSelected: listeners.textSelected || (() => {})
 })
 
-export class EpubNavigator extends VisualNavigator {
+export class EpubNavigator extends VisualNavigator implements Configurable<ConfigurableSettings, ConfigurablePreferences> {
     private readonly pub: Publication;
     private readonly container: HTMLElement;
     private readonly listeners: EpubNavigatorListeners;
@@ -57,11 +57,11 @@ export class EpubNavigator extends VisualNavigator {
     private currentProgression: ReadingProgression;
     public readonly layout: EPUBLayout;
 
-    private preferences: EpubPreferences;
-    private defaults: EpubDefaults;
-    private settings: EpubSettings;
-    private constraint: number;
-    private css: ReadiumCSS;
+    private _preferences: EpubPreferences;
+    private _defaults: EpubDefaults;
+    private _settings: EpubSettings;
+    private _constraint: number;
+    private _css: ReadiumCSS;
     private _preferencesEditor: EpubPreferencesEditor | null = null;
 
     private resizeObserver: ResizeObserver;
@@ -77,25 +77,25 @@ export class EpubNavigator extends VisualNavigator {
         if (positions.length)
             this.positions = positions;
 
-        this.preferences = new EpubPreferences(configuration.preferences);
-        this.defaults = new EpubDefaults(configuration.defaults);
-        this.settings = new EpubSettings(this.preferences, this.defaults);
-        this.constraint = this.preferences.constraint || 0;
-        this.css = new ReadiumCSS({ 
-            rsProperties: new RSProperties(this.preferences),
+        this._preferences = new EpubPreferences(configuration.preferences);
+        this._defaults = new EpubDefaults(configuration.defaults);
+        this._settings = new EpubSettings(this._preferences, this._defaults);
+        this._constraint = this._preferences.constraint || 0;
+        this._css = new ReadiumCSS({ 
+            rsProperties: new RSProperties(this._preferences),
             userProperties: new UserProperties({}),
             lineLengths: new LineLengths({
-                optimalChars: this.preferences.optimalLineLength || this.defaults.optimalLineLength,
-                minChars: this.preferences.minimalLineLength,
-                pageGutter: this.preferences.pageGutter,
-                fontFace: this.preferences.fontFamily,
-                fontSize: this.preferences.fontSize,
-                letterSpacing: this.preferences.letterSpacing,
-                wordSpacing: this.preferences.wordSpacing,
+                optimalChars: this._preferences.optimalLineLength || this._defaults.optimalLineLength,
+                minChars: this._preferences.minimalLineLength,
+                pageGutter: this._preferences.pageGutter,
+                fontFace: this._preferences.fontFamily,
+                fontSize: this._preferences.fontSize,
+                letterSpacing: this._preferences.letterSpacing,
+                wordSpacing: this._preferences.wordSpacing,
                 sample: this.pub.metadata.description
             }),
             container: container,
-            constraint: this.constraint
+            constraint: this._constraint
         });
 
         // We use a resizeObserver cos’ the container may not be the width of the document/window 
@@ -134,26 +134,30 @@ export class EpubNavigator extends VisualNavigator {
         await this.apply();
     }
 
+    public get settings() {
+        return this._settings;
+    }
+
     public get preferencesEditor() {
         if (this._preferencesEditor === null) {
-            this._preferencesEditor = new EpubPreferencesEditor(this.preferences, this.settings,this.defaults, this.pub.metadata);
+            this._preferencesEditor = new EpubPreferencesEditor(this._preferences, this._settings,this._defaults, this.pub.metadata);
         }
         return this._preferencesEditor;
     }
 
     public submitPreferences(preferences: EpubPreferences) {
-        this.preferences = this.preferences.merging(preferences) as EpubPreferences;
+        this._preferences = this._preferences.merging(preferences) as EpubPreferences;
         this.applyPreferences();
     }
 
     private applyPreferences() {
-        const oldSettings = this.settings;
-        this.settings = new EpubSettings(this.preferences, this.defaults);
+        const oldSettings = this._settings;
+        this._settings = new EpubSettings(this._preferences, this._defaults);
 
         // Invalidation by comparing old and new settings if needed
         
         if (this.layout === EPUBLayout.fixed) {
-            this.handleFXLPrefs(oldSettings, this.settings);
+            this.handleFXLPrefs(oldSettings, this._settings);
         } else {
             this.updateCSS();
         }
@@ -170,21 +174,21 @@ export class EpubNavigator extends VisualNavigator {
     }
 
     private updateCSS() {
-        this.css.update(this.settings);
+        this._css.update(this._settings);
 
         if (
-            this.css.userProperties.view === "paged" && 
+            this._css.userProperties.view === "paged" && 
             this.readingProgression === ReadingProgression.ttb
         ) {
             this.setReadingProgression(this.pub.metadata.effectiveReadingProgression); 
         } else if (
-            this.css.userProperties.view === "scroll" && 
+            this._css.userProperties.view === "scroll" && 
             (this.readingProgression === ReadingProgression.ltr || this.readingProgression === ReadingProgression.rtl)
         ) {
             this.setReadingProgression(ReadingProgression.ttb);
         }
 
-        this.commitCSS(this.css);
+        this.commitCSS(this._css);
     };
 
     private commitCSS(css: ReadiumCSS) {
@@ -210,18 +214,18 @@ export class EpubNavigator extends VisualNavigator {
         const parentEl = this.container.parentElement || document.documentElement;
 
         if (this.layout === EPUBLayout.fixed) {
-            this.container.style.width = `${ parentEl.clientWidth - this.constraint }px`;
+            this.container.style.width = `${ parentEl.clientWidth - this._constraint }px`;
             (this.framePool as FXLFramePoolManager).resizeHandler(true);
         } else {
             // for reflow ReadiumCSS gets the width from columns + line-lengths 
             // but we need to check whether colCount has changed to commit new CSS
-            const oldColCount = this.css.userProperties.colCount; 
-            this.css.resizeHandler();
+            const oldColCount = this._css.userProperties.colCount; 
+            this._css.resizeHandler();
             if (
-                this.css.userProperties.view === "paged" &&
-                oldColCount !== this.css.userProperties.colCount
+                this._css.userProperties.view === "paged" &&
+                oldColCount !== this._css.userProperties.colCount
             ) {
-                this.commitCSS(this.css);
+                this.commitCSS(this._css);
             }
         }
     }

@@ -12,9 +12,9 @@ import fontStacks from "@readium/css/css/vars/fontStacks.json";
 // WIP: will change cos’ of all the missing pieces
 export class EpubPreferencesEditor implements IPreferencesEditor {
   preferences: EpubPreferences;
-  settings: EpubSettings;
-  defaults: EpubDefaults;
-  metadata: Metadata | null;
+  private settings: EpubSettings;
+  private defaults: EpubDefaults;
+  private metadata: Metadata | null;
   private layout: EPUBLayout;
 
   constructor(initialPreferences: EpubPreferences, settings: EpubSettings, defaults: EpubDefaults, metadata: Metadata) {
