@@ -110,7 +110,10 @@ export class FrameManager {
     setCSSProperties(properties: { [key: string]: string }) {
         // We need to resume and halt postMessage to update the properties
         // if the frame is hidden since it’s been halted in hide()
-        if (this.hidden) this.comms?.resume();
+        if (this.hidden) {
+            if (this.comms) this.comms?.resume();
+            else this.comms = new FrameComms(this.frame.contentWindow!, this.source);
+        }
         this.comms?.send("update_properties", properties);
         if (this.hidden) this.comms?.halt();
     }
