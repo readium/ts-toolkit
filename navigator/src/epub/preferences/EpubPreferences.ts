@@ -140,7 +140,7 @@ export class EpubPreferences implements ConfigurablePreferences {
   merging(other: ConfigurablePreferences): ConfigurablePreferences {
     const merged: IEpubPreferences = { ...this };
     for (const key of Object.keys(other) as (keyof IEpubPreferences)[]) {
-      if (other[key] !== null && other[key] !== undefined) {
+      if (other[key] !== undefined) {
         merged[key] = other[key];
       }
     }
