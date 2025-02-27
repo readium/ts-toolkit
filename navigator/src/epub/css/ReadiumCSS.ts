@@ -32,50 +32,50 @@ export class ReadiumCSS {
   }
 
   update(userSettings: EpubSettings) {
-    const baseLineLength = userSettings.lineLength || this.userProperties.lineLength || this.lineLengths.optimalLineLength;
+    const baseLineLength = userSettings.lineLength || this.lineLengths.optimalLineLength;
     
     const merged: IUserProperties = {
-      advancedSettings: !userSettings.publisherStyles || this.userProperties.advancedSettings,
-      a11yNormalize: userSettings.textNormalization || this.userProperties.a11yNormalize,
-      appearance: userSettings.theme || this.userProperties.appearance,
-      backgroundColor: userSettings.backgroundColor || this.userProperties.backgroundColor,
-      blendFilter: userSettings.blendFilter || this.userProperties.blendFilter,
+      advancedSettings: !userSettings.publisherStyles,
+      a11yNormalize: userSettings.textNormalization,
+      appearance: userSettings.theme,
+      backgroundColor: userSettings.backgroundColor,
+      blendFilter: userSettings.blendFilter,
       bodyHyphens: typeof userSettings.hyphens !== "boolean" 
-        ? this.userProperties.bodyHyphens 
+        ? null 
         : userSettings.hyphens 
           ? "auto" 
           : "none",
-      colCount: this.setColCount(userSettings.columnCount, baseLineLength) || this.userProperties.colCount,
-      darkenFilter: userSettings.darkenFilter || this.userProperties.darkenFilter,
-      fontFamily: userSettings.fontFamily || this.userProperties.fontFamily,
+      colCount: userSettings.scroll ? 0 : this.setColCount(userSettings.columnCount, baseLineLength),
+      darkenFilter: userSettings.darkenFilter,
+      fontFamily: userSettings.fontFamily,
       fontOpticalSizing: typeof userSettings.fontOpticalSizing !== "boolean" 
-        ? this.userProperties.fontOpticalSizing 
+        ? null 
         : userSettings.fontOpticalSizing 
           ? "auto" 
           : "none",
-      fontSize: userSettings.fontSize || this.userProperties.fontSize,
-      fontWeight: userSettings.fontWeight || this.userProperties.fontWeight,
-      fontWidth: userSettings.fontWidth || this.userProperties.fontWidth,
-      invertFilter: userSettings.invertFilter || this.userProperties.invertFilter,
-      letterSpacing: userSettings.letterSpacing || this.userProperties.letterSpacing,
+      fontSize: userSettings.fontSize,
+      fontWeight: userSettings.fontWeight,
+      fontWidth: userSettings.fontWidth,
+      invertFilter: userSettings.invertFilter,
+      letterSpacing: userSettings.letterSpacing,
       ligatures: typeof userSettings.ligatures !== "boolean" 
-        ? this.userProperties.ligatures 
+        ? null 
         : userSettings.ligatures 
           ? "common-ligatures" 
           : "none",
-      lineHeight: userSettings.lineHeight || this.userProperties.lineHeight,
-      lineLength: userSettings.lineLength || this.userProperties.lineLength,
-      noRuby: userSettings.noRuby || this.userProperties.noRuby,
-      paraIndent: userSettings.paragraphIndent || this.userProperties.paraIndent,
-      paraSpacing: userSettings.paragraphSpacing || this.userProperties.paraSpacing,
-      textAlign: userSettings.textAlign || this.userProperties.textAlign,
-      textColor: userSettings.textColor || this.userProperties.textColor,
+      lineHeight: userSettings.lineHeight,
+      lineLength: userSettings.lineLength,
+      noRuby: userSettings.noRuby,
+      paraIndent: userSettings.paragraphIndent,
+      paraSpacing: userSettings.paragraphSpacing,
+      textAlign: userSettings.textAlign,
+      textColor: userSettings.textColor,
       view: typeof userSettings.scroll !== "boolean" 
-        ? this.userProperties.view 
+        ? null 
         : userSettings.scroll 
           ? "scroll" 
           : "paged",
-      wordSpacing: userSettings.wordSpacing || this.userProperties.wordSpacing
+      wordSpacing: userSettings.wordSpacing
     };
 
     if (merged.a11yNormalize || merged.fontFamily) {
@@ -88,7 +88,7 @@ export class ReadiumCSS {
     this.userProperties = new UserProperties(merged);
   }
 
-  private setColCount(colCount?: number | null, baseLineLength: number = this.lineLengths.optimalLineLength) {
+  private setColCount(colCount: number | null, baseLineLength: number = this.lineLengths.optimalLineLength) {
     const constrainedWidth = (this.containerParent.clientWidth - (this.constraint));
     
     let RCSSColCount = 1;
