@@ -96,7 +96,7 @@ export class UserProperties extends Properties {
   backgroundColor: string | null;
   blendFilter: boolean | null;
   bodyHyphens: BodyHyphens | null;
-  colCount: number | null;
+  colCount: number | null | undefined;
   darkenFilter: boolean | number | null;
   fontFamily: string | null;
   fontOpticalSizing: FontOpticalSizing | null;

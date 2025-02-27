@@ -17,7 +17,7 @@ export class ReadiumCSS {
   container: HTMLElement;
   containerParent: HTMLElement;
   constraint: number;
-  private cachedColCount: number | null;
+  private cachedColCount: number | null | undefined;
   private pagedContainerWidth: number;
 
   constructor(props: IReadiumCSS) {
@@ -34,7 +34,7 @@ export class ReadiumCSS {
   update(userSettings: EpubSettings) {
     const baseLineLength = userSettings.lineLength || this.lineLengths.optimalLineLength;
     
-    const merged: IUserProperties = {
+    const updated: IUserProperties = {
       advancedSettings: !userSettings.publisherStyles,
       a11yNormalize: userSettings.textNormalization,
       appearance: userSettings.theme,
@@ -45,7 +45,7 @@ export class ReadiumCSS {
         : userSettings.hyphens 
           ? "auto" 
           : "none",
-      colCount: userSettings.scroll ? 0 : this.setColCount(userSettings.columnCount, baseLineLength),
+      colCount: userSettings.scroll ? undefined : this.setColCount(userSettings.columnCount, baseLineLength),
       darkenFilter: userSettings.darkenFilter,
       fontFamily: userSettings.fontFamily,
       fontOpticalSizing: typeof userSettings.fontOpticalSizing !== "boolean" 
@@ -53,6 +53,7 @@ export class ReadiumCSS {
         : userSettings.fontOpticalSizing 
           ? "auto" 
           : "none",
+      fontOverride: userSettings.textNormalization || userSettings.fontFamily ? true : false,
       fontSize: userSettings.fontSize,
       fontWeight: userSettings.fontWeight,
       fontWidth: userSettings.fontWidth,
@@ -78,18 +79,18 @@ export class ReadiumCSS {
       wordSpacing: userSettings.wordSpacing
     };
 
-    if (merged.a11yNormalize || merged.fontFamily) {
-      merged.fontOverride = true;
-    }
-
     // We need to keep the column count reference for resizeHandler
     this.cachedColCount = userSettings.columnCount;
 
-    this.userProperties = new UserProperties(merged);
+    this.userProperties = new UserProperties(updated);
   }
 
-  private setColCount(colCount: number | null, baseLineLength: number = this.lineLengths.optimalLineLength) {
+  private setColCount(colCount?: number | null, baseLineLength: number = this.lineLengths.optimalLineLength) {
     const constrainedWidth = (this.containerParent.clientWidth - (this.constraint));
+
+    if (colCount === undefined) {
+      return undefined;
+    }
     
     let RCSSColCount = 1;
 
