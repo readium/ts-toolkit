@@ -220,7 +220,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
         if (this.layout === EPUBLayout.fixed) {
             this.container.style.width = `${ parentEl.clientWidth - this._constraint }px`;
-            (this.framePool as FXLFramePoolManager).resizeHandler(true);
+            (this.framePool as FXLFramePoolManager).resizeHandler();
         } else {
             // for reflow ReadiumCSS gets the width from columns + line-lengths 
             // but we need to check whether colCount has changed to commit new CSS

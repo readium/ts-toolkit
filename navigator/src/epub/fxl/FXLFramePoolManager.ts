@@ -39,7 +39,6 @@ export class FXLFramePoolManager {
     private readonly spreadPresentation: Spread;
     private orientationInternal = -1; // Portrait = 1, Landscape = 0, Unknown = -1
     private containerHeightCached: number;
-    private readonly resizeBoundHandler: EventListenerOrEventListenerObject;
     private resizeTimeout: number | undefined;
     // private readonly pages: FXLFrameManager[] = [];
     public readonly peripherals: FXLPeripherals;
@@ -57,11 +56,6 @@ export class FXLFramePoolManager {
         // NEW
         this.spreader = new FXLSpreader(this.pub);
         this.containerHeightCached = container.clientHeight;
-        this.resizeBoundHandler = this.nativeResizeHandler.bind(this);
-
-        // TODO: remove listeners since they’re covered by ResizeObserver in EpubNavigator?
-        this.ownerWindow.addEventListener("resize", this.resizeBoundHandler);
-        this.ownerWindow.addEventListener("orientationchange", this.resizeBoundHandler);
 
         this.bookElement = document.createElement("div");
         this.bookElement.ariaLabel = "Book";
@@ -100,10 +94,6 @@ export class FXLFramePoolManager {
     public get doNotDisturb() {
         // TODO other situations
         return this.peripherals.pan.touchID > 0;
-    }
-
-    private nativeResizeHandler(_: Event) {
-        this.resizeHandler(true);
     }
 
     /**
@@ -377,9 +367,6 @@ export class FXLFramePoolManager {
 
 
     async destroy() {
-        this.ownerWindow.removeEventListener("resize", this.resizeBoundHandler);
-        this.ownerWindow.removeEventListener("orientationchange", this.resizeBoundHandler);
-
         // Wait for all in-progress loads to complete
         let iit = this.inprogress.values();
         let inp = iit.next();
