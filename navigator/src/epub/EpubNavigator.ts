@@ -146,12 +146,12 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         return this._preferencesEditor;
     }
 
-    public submitPreferences(preferences: EpubPreferences) {
+    public async submitPreferences(preferences: EpubPreferences) {
         this._preferences = this._preferences.merging(preferences) as EpubPreferences;
-        this.applyPreferences();
+        await this.applyPreferences();
     }
 
-    private applyPreferences() {
+    private async applyPreferences() {
         const oldSettings = this._settings;
         this._settings = new EpubSettings(this._preferences, this._defaults);
         
@@ -164,33 +164,30 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         if (this.layout === EPUBLayout.fixed) {
             this.handleFXLPrefs(oldSettings, this._settings);
         } else {
-            this.updateCSS();
+            await this.updateCSS();
         }
     }
 
     // TODO: fit, etc.
     private handleFXLPrefs(from: EpubSettings, to: EpubSettings) {
-        if (
-            to.columnCount && 
-            from.columnCount !== to.columnCount
-        ) {
+        if (from.columnCount !== to.columnCount) {
             (this.framePool as FXLFramePoolManager).setPerPage(to.columnCount);
         }
     }
 
-    private updateCSS() {
+    private async updateCSS() {
         this._css.update(this._settings);
 
         if (
             this._css.userProperties.view === "paged" && 
             this.readingProgression === ReadingProgression.ttb
         ) {
-            this.setReadingProgression(this.pub.metadata.effectiveReadingProgression); 
+            await this.setReadingProgression(this.pub.metadata.effectiveReadingProgression); 
         } else if (
             this._css.userProperties.view === "scroll" && 
             (this.readingProgression === ReadingProgression.ltr || this.readingProgression === ReadingProgression.rtl)
         ) {
-            this.setReadingProgression(ReadingProgression.ttb);
+            await this.setReadingProgression(ReadingProgression.ttb);
         }
 
         this.commitCSS(this._css);
