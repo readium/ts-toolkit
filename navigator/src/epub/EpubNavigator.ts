@@ -102,7 +102,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         // the document/window e.g. app using a docking system with left and right panels.
         // If we observe this.container, that won’t obviously work since we set its width.
         this.resizeObserver = new ResizeObserver(() => this.ownerWindow.requestAnimationFrame(() => this.resizeHandler()));
-        this.resizeObserver.observe(this.container.parentElement || this.container);
+        this.resizeObserver.observe(this.container.parentElement || document.documentElement);
     }
 
     public static determineLayout(pub: Publication): EPUBLayout {
@@ -154,6 +154,11 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private async applyPreferences() {
         const oldSettings = this._settings;
         this._settings = new EpubSettings(this._preferences, this._defaults);
+
+        if (this._preferences.constraint !== this._constraint) {
+            this._constraint = this._preferences.constraint || 0;
+            this._css.constraint = this._preferences.constraint || 0;
+        }
         
         if (this._preferencesEditor !== null) {
             this._preferencesEditor = new EpubPreferencesEditor(this._preferences, this._settings, this.pub.metadata);

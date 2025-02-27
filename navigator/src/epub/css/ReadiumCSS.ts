@@ -111,11 +111,10 @@ export class ReadiumCSS {
       RCSSColCount = Number(colCount);
     }
 
-    if (RCSSColCount > 1 && this.lineLengths.minimalLineLength !== null) {
-      this.pagedContainerWidth = Math.min((RCSSColCount * baseLineLength), constrainedWidth);
-    } else if ((baseLineLength + this.constraint) <= constrainedWidth) {
-      this.pagedContainerWidth = constrainedWidth;
-    };
+    this.pagedContainerWidth = Math.min(
+      (RCSSColCount * baseLineLength) + this.constraint,
+      constrainedWidth
+    );
 
     return RCSSColCount;
   }
