@@ -74,35 +74,57 @@ export class EpubDefaults {
 
   constructor(defaults: IEpubDefaults) {
     this.backgroundColor = defaults.backgroundColor || null;
-    this.blendFilter = defaults.blendFilter || false;
+    this.blendFilter = typeof defaults.blendFilter === "boolean" 
+      ? defaults.blendFilter 
+      : false;
     this.columnCount = defaults.columnCount || null;
-    this.darkenFilter = defaults.darkenFilter || false;
+    this.darkenFilter = typeof defaults.darkenFilter === "boolean" 
+      ? defaults.darkenFilter 
+      : false;
     this.fontFamily = defaults.fontFamily || null;
     this.fontSize = defaults.fontSize || 1;
-    this.fontOpticalSizing = defaults.fontOpticalSizing || null;
+    this.fontOpticalSizing = typeof defaults.fontOpticalSizing === "boolean" 
+      ? defaults.fontOpticalSizing 
+      : null;
     this.fontWeight = defaults.fontWeight || null;
     this.fontWidth = defaults.fontWidth || null;
-    this.hyphens = defaults.hyphens || null;
-    this.invertFilter = defaults.invertFilter || false;
-    this.invertGaijiFilter = defaults.invertGaijiFilter || false;
+    this.hyphens = typeof defaults.hyphens === "boolean" 
+      ? defaults.hyphens 
+      : null;
+    this.invertFilter = typeof defaults.invertFilter === "boolean" 
+      ? defaults.invertFilter 
+      : false;
+    this.invertGaijiFilter = typeof defaults.invertGaijiFilter === "boolean" 
+      ? defaults.invertGaijiFilter 
+      : false;
     this.letterSpacing = defaults.letterSpacing || null;
-    this.ligatures = defaults.ligatures || null;
+    this.ligatures = typeof defaults.ligatures === "boolean" 
+      ? defaults.ligatures 
+      : null;
     this.lineHeight = defaults.lineHeight || null;
     this.lineLength = defaults.lineLength || null;
     this.linkColor = defaults.linkColor || null;
     this.minimalLineLength = defaults.minimalLineLength;
-    this.noRuby = defaults.noRuby || false;
+    this.noRuby = typeof defaults.noRuby === "boolean" 
+      ? defaults.noRuby 
+      : false;
     this.optimalLineLength = defaults.optimalLineLength || 65;
     this.pageGutter = defaults.pageGutter || 20;
     this.paragraphIndent = defaults.paragraphIndent || null;
     this.paragraphSpacing = defaults.paragraphSpacing || null;
-    this.publisherStyles = defaults.publisherStyles || true;
-    this.scroll = defaults.scroll || false;
+    this.publisherStyles = typeof defaults.publisherStyles === "boolean" 
+      ? defaults.publisherStyles 
+      : true;
+    this.scroll = typeof defaults.scroll === "boolean" 
+      ? defaults.scroll 
+      : false;
     this.selectionBackgroundColor = defaults.selectionBackgroundColor || null;
     this.selectionTextColor = defaults.selectionTextColor || null;
     this.textAlign = defaults.textAlign || null;
     this.textColor = defaults.textColor || null;
-    this.textNormalization = defaults.textNormalization || false;
+    this.textNormalization = typeof defaults.textNormalization === "boolean" 
+      ? defaults.textNormalization 
+      : false;
     this.theme = defaults.theme || null;
     this.visitedColor = defaults.visitedColor || null;
     this.wordSpacing = defaults.wordSpacing || null;
