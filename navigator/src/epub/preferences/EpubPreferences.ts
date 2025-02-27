@@ -76,41 +76,45 @@ export class EpubPreferences implements ConfigurablePreferences {
 
   constructor(preferences: IEpubPreferences) {
     this.backgroundColor = preferences.backgroundColor || null;
-    this.blendFilter = preferences.blendFilter || null;
+    this.blendFilter = EpubPreferences.ensureBoolean(preferences.blendFilter);
     this.constraint = EpubPreferences.ensureNonNegative(preferences.constraint);
     this.columnCount = EpubPreferences.ensureNonNegative(preferences.columnCount);
     this.darkenFilter = EpubPreferences.ensureFilter(preferences.darkenFilter);
     this.fontFamily = preferences.fontFamily || null;
     this.fontSize = EpubPreferences.ensureValueInRange(preferences.fontSize, 50, 250);
-    this.fontOpticalSizing = preferences.fontOpticalSizing || null;
+    this.fontOpticalSizing = EpubPreferences.ensureBoolean(preferences.fontOpticalSizing);
     this.fontWeight = EpubPreferences.ensureValueInRange(preferences.fontWeight, 100, 1000);
     this.fontWidth = typeof preferences.fontWidth === "string" 
       ? preferences.fontWidth 
       : EpubPreferences.ensureValueInRange(preferences.fontWidth, 10, 1000);
-    this.hyphens = preferences.hyphens || null;
+    this.hyphens = EpubPreferences.ensureBoolean(preferences.hyphens);
     this.invertFilter = EpubPreferences.ensureFilter(preferences.invertFilter);
     this.invertGaijiFilter = EpubPreferences.ensureFilter(preferences.invertGaijiFilter);
     this.letterSpacing = EpubPreferences.ensureNonNegative(preferences.letterSpacing);
-    this.ligatures = preferences.ligatures || null;
+    this.ligatures = EpubPreferences.ensureBoolean(preferences.ligatures);
     this.lineHeight = EpubPreferences.ensureNonNegative(preferences.lineHeight);
     this.lineLength = EpubPreferences.ensureNonNegative(preferences.lineLength);
     this.minimalLineLength = preferences.minimalLineLength;
     this.linkColor = preferences.linkColor || null;
     this.optimalLineLength = EpubPreferences.ensureNonNegative(preferences.optimalLineLength) || 65;
-    this.noRuby = preferences.noRuby || null;
+    this.noRuby = EpubPreferences.ensureBoolean(preferences.noRuby);
     this.pageGutter = EpubPreferences.ensureNonNegative(preferences.pageGutter);
     this.paragraphIndent = EpubPreferences.ensureNonNegative(preferences.paragraphIndent);
     this.paragraphSpacing = EpubPreferences.ensureNonNegative(preferences.paragraphSpacing);
-    this.publisherStyles = preferences.publisherStyles || null;
-    this.scroll = preferences.scroll || null;
+    this.publisherStyles = EpubPreferences.ensureBoolean(preferences.publisherStyles);
+    this.scroll = EpubPreferences.ensureBoolean(preferences.scroll);
     this.selectionBackgroundColor = preferences.selectionBackgroundColor || null;
     this.selectionTextColor = preferences.selectionTextColor || null;
     this.textAlign = preferences.textAlign || null;
     this.textColor = preferences.textColor || null;
-    this.textNormalization = preferences.textNormalization || null;
+    this.textNormalization = EpubPreferences.ensureBoolean(preferences.textNormalization);
     this.theme = preferences.theme || null;
     this.visitedColor = preferences.visitedColor || null;
     this.wordSpacing = EpubPreferences.ensureNonNegative(preferences.wordSpacing);
+  }
+
+  static ensureBoolean(value: boolean | null | undefined): boolean | null {
+    return typeof value === "boolean" ? value : null;
   }
 
   static ensureFilter(filter: boolean | number | null | undefined): boolean | number | null {
