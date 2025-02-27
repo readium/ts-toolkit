@@ -94,7 +94,7 @@ export class ReadiumCSS {
     
     let RCSSColCount = 1;
 
-    if (!colCount) {
+    if (colCount === null) {
       RCSSColCount = (constrainedWidth >= baseLineLength) 
         ? Math.floor(constrainedWidth / baseLineLength) 
         : 1;

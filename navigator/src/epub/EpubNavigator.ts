@@ -98,10 +98,11 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             constraint: this._constraint
         });
 
-        // We use a resizeObserver cos’ the container may not be the width of the document/window 
-        // e.g. app using a docking system with left and right panels.
+        // We use a resizeObserver cos’ the container parent may not be the width of 
+        // the document/window e.g. app using a docking system with left and right panels.
+        // If we observe this.container, that won’t obviously work since we set its width.
         this.resizeObserver = new ResizeObserver(() => this.ownerWindow.requestAnimationFrame(() => this.resizeHandler()));
-        this.resizeObserver.observe(this.container);
+        this.resizeObserver.observe(this.container.parentElement || this.container);
     }
 
     public static determineLayout(pub: Publication): EPUBLayout {
