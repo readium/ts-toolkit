@@ -55,7 +55,7 @@ export class EpubDefaults {
   lineHeight: number | null;
   lineLength: number | null;
   linkColor: string | null;
-  minimalLineLength?: number | null;
+  minimalLineLength: number | null | undefined;
   noRuby: boolean | null;
   optimalLineLength: number;
   pageGutter: number | null;

@@ -216,7 +216,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get lineHeight(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: this.preferences.lineHeight,
-      effectiveValue: this.settings.lineHeight || 1.2,
+      effectiveValue: this.settings.lineHeight,
       isEffective: this.layout === EPUBLayout.reflowable && !this.settings.publisherStyles,
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("lineHeight", newValue || null);
@@ -229,7 +229,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get lineLength(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: this.preferences.lineLength,
-      effectiveValue: this.settings.lineLength || this.preferences.optimalLineLength,
+      effectiveValue: this.settings.lineLength || this.settings.optimalLineLength,
       isEffective: this.layout === EPUBLayout.reflowable,
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("lineLength", newValue || null);
@@ -253,8 +253,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get minimalLineLength(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: this.preferences.minimalLineLength,
-      // No fallback since undefined and null are handled differently so we only pass the pref
-      effectiveValue: this.preferences.minimalLineLength,
+      effectiveValue: this.settings.minimalLineLength,
       isEffective: this.layout === EPUBLayout.reflowable,
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("minimalLineLength", newValue);
@@ -278,7 +277,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get optimalLineLength(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: this.preferences.optimalLineLength,
-      effectiveValue: this.preferences.optimalLineLength,
+      effectiveValue: this.settings.optimalLineLength,
       isEffective: this.layout === EPUBLayout.reflowable && !this.settings.lineLength,
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("optimalLineLength", newValue as number);
@@ -291,7 +290,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get pageGutter(): Preference<number> {
     return new Preference<number>({
       initialValue: this.preferences.pageGutter,
-      effectiveValue: this.preferences.pageGutter || 0,
+      effectiveValue: this.settings.pageGutter,
       isEffective: this.layout === EPUBLayout.reflowable,
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("pageGutter", newValue || null);

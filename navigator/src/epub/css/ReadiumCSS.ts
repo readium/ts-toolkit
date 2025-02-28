@@ -2,7 +2,7 @@ import { ILineLengthsConfig, LineLengths } from "../../helpers";
 import { EpubSettings } from "../preferences/EpubSettings";
 import { IUserProperties, RSProperties, UserProperties } from "./Properties";
 
-type ILineLengthsProps = Omit<ILineLengthsConfig, "optimalChars" | "minChars" | "sample" | "isCJK" | "getRelative" | "pageGutter">;
+type ILineLengthsProps = Omit<ILineLengthsConfig, "optimalChars" | "minChars" | "sample" | "isCJK" | "getRelative">;
 
 export interface IReadiumCSS {
   rsProperties: RSProperties;
@@ -33,72 +33,78 @@ export class ReadiumCSS {
     this.pagedContainerWidth = this.containerParent.clientWidth;
   }
 
-  update(userSettings: EpubSettings) {
+  update(settings: EpubSettings) {
     this.updateLineLengths({
-      fontFace: userSettings.fontFamily,
-      fontSize: userSettings.fontSize,
-      letterSpacing: userSettings.letterSpacing,
-      wordSpacing: userSettings.wordSpacing,
-      userChars: userSettings.lineLength
+      fontFace: settings.fontFamily,
+      fontSize: settings.fontSize,
+      letterSpacing: settings.letterSpacing,
+      pageGutter: settings.pageGutter,
+      wordSpacing: settings.wordSpacing,
+      userChars: settings.lineLength
     });
 
     const baseLineLength = this.lineLengths.userLineLength || this.lineLengths.optimalLineLength;
     
     const updated: IUserProperties = {
-      advancedSettings: !userSettings.publisherStyles,
-      a11yNormalize: userSettings.textNormalization,
-      appearance: userSettings.theme,
-      backgroundColor: userSettings.backgroundColor,
-      blendFilter: userSettings.blendFilter,
-      bodyHyphens: typeof userSettings.hyphens !== "boolean" 
+      advancedSettings: !settings.publisherStyles,
+      a11yNormalize: settings.textNormalization,
+      appearance: settings.theme,
+      backgroundColor: settings.backgroundColor,
+      blendFilter: settings.blendFilter,
+      bodyHyphens: typeof settings.hyphens !== "boolean" 
         ? null 
-        : userSettings.hyphens 
+        : settings.hyphens 
           ? "auto" 
           : "none",
-      colCount: userSettings.scroll ? undefined : this.setColCount(userSettings.columnCount, baseLineLength),
-      darkenFilter: userSettings.darkenFilter,
-      fontFamily: userSettings.fontFamily,
-      fontOpticalSizing: typeof userSettings.fontOpticalSizing !== "boolean" 
+      colCount: settings.scroll ? undefined : this.setColCount(settings.columnCount, baseLineLength),
+      darkenFilter: settings.darkenFilter,
+      fontFamily: settings.fontFamily,
+      fontOpticalSizing: typeof settings.fontOpticalSizing !== "boolean" 
         ? null 
-        : userSettings.fontOpticalSizing 
+        : settings.fontOpticalSizing 
           ? "auto" 
           : "none",
-      fontOverride: userSettings.textNormalization || userSettings.fontFamily ? true : false,
-      fontSize: userSettings.fontSize,
-      fontWeight: userSettings.fontWeight,
-      fontWidth: userSettings.fontWidth,
-      invertFilter: userSettings.invertFilter,
-      letterSpacing: userSettings.letterSpacing,
-      ligatures: typeof userSettings.ligatures !== "boolean" 
+      fontOverride: settings.textNormalization || settings.fontFamily ? true : false,
+      fontSize: settings.fontSize,
+      fontWeight: settings.fontWeight,
+      fontWidth: settings.fontWidth,
+      invertFilter: settings.invertFilter,
+      letterSpacing: settings.letterSpacing,
+      ligatures: typeof settings.ligatures !== "boolean" 
         ? null 
-        : userSettings.ligatures 
+        : settings.ligatures 
           ? "common-ligatures" 
           : "none",
-      lineHeight: userSettings.lineHeight,
+      lineHeight: settings.lineHeight,
       lineLength: this.lineLengths.userLineLength || this.lineLengths.optimalLineLength,
-      noRuby: userSettings.noRuby,
-      paraIndent: userSettings.paragraphIndent,
-      paraSpacing: userSettings.paragraphSpacing,
-      textAlign: userSettings.textAlign,
-      textColor: userSettings.textColor,
-      view: typeof userSettings.scroll !== "boolean" 
+      noRuby: settings.noRuby,
+      paraIndent: settings.paragraphIndent,
+      paraSpacing: settings.paragraphSpacing,
+      textAlign: settings.textAlign,
+      textColor: settings.textColor,
+      view: typeof settings.scroll !== "boolean" 
         ? null 
-        : userSettings.scroll 
+        : settings.scroll 
           ? "scroll" 
           : "paged",
-      wordSpacing: userSettings.wordSpacing
+      wordSpacing: settings.wordSpacing
     };
 
     // We need to keep the column count reference for resizeHandler
-    this.cachedColCount = userSettings.columnCount;
+    this.cachedColCount = settings.columnCount;
 
     this.userProperties = new UserProperties(updated);
+
+    if (settings.pageGutter) {
+      this.rsProperties.pageGutter = settings.pageGutter;
+    }
   }
 
   private updateLineLengths(props: ILineLengthsProps) {
     if (props.fontFace) this.lineLengths.fontFace = props.fontFace;
     if (props.fontSize) this.lineLengths.fontSize = props.fontSize;
     if (props.letterSpacing) this.lineLengths.letterSpacing = props.letterSpacing;
+    if (props.pageGutter) this.lineLengths.pageGutter = props.pageGutter;
     if (props.wordSpacing) this.lineLengths.wordSpacing = props.wordSpacing;
     if (props.userChars) this.lineLengths.userChars = props.userChars;
   }

@@ -21,7 +21,10 @@ export interface IEpubSettings {
   lineHeight?: number | null,
   lineLength?: number | null,
   linkColor?: string | null,
+  minimalLineLength?: number | null,
   noRuby?: boolean | null,
+  optimalLineLength?: number | null,
+  pageGutter?: number | null,
   paragraphIndent?: number | null,
   paragraphSpacing?: number | null,
   publisherStyles?: boolean | null,
@@ -54,7 +57,10 @@ export class EpubSettings implements ConfigurableSettings {
   lineHeight: number | null;
   lineLength: number | null;
   linkColor: string | null;
+  minimalLineLength: number | null | undefined;
   noRuby: boolean | null;
+  optimalLineLength: number | null;
+  pageGutter: number | null;
   paragraphIndent: number | null;
   paragraphSpacing: number | null;
   publisherStyles: boolean | null;
@@ -100,9 +106,12 @@ export class EpubSettings implements ConfigurableSettings {
     this.lineHeight = preferences.lineHeight || defaults.lineHeight || null;
     this.lineLength = preferences.lineLength || defaults.lineLength || null;
     this.linkColor = preferences.linkColor || defaults.linkColor || null;
+    this.minimalLineLength = preferences.minimalLineLength || defaults.minimalLineLength;
     this.noRuby = typeof preferences.noRuby === "boolean" 
       ? preferences.noRuby 
       : defaults.noRuby || null;
+    this.optimalLineLength = preferences.optimalLineLength || defaults.optimalLineLength;
+    this.pageGutter = preferences.pageGutter || defaults.pageGutter || null;
     this.paragraphIndent = preferences.paragraphIndent || defaults.paragraphIndent || null;
     this.paragraphSpacing = preferences.paragraphSpacing || defaults.paragraphSpacing || null;
     this.publisherStyles = typeof preferences.publisherStyles === "boolean" 
