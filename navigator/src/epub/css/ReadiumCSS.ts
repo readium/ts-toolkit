@@ -41,7 +41,7 @@ export class ReadiumCSS {
       wordSpacing: userSettings.wordSpacing,
       userChars: userSettings.lineLength
     });
-    
+
     const baseLineLength = this.lineLengths.userLineLength || this.lineLengths.optimalLineLength;
     
     const updated: IUserProperties = {
@@ -75,7 +75,7 @@ export class ReadiumCSS {
           ? "common-ligatures" 
           : "none",
       lineHeight: userSettings.lineHeight,
-      lineLength: userSettings.lineLength,
+      lineLength: this.lineLengths.userLineLength || this.lineLengths.optimalLineLength,
       noRuby: userSettings.noRuby,
       paraIndent: userSettings.paragraphIndent,
       paraSpacing: userSettings.paragraphSpacing,
