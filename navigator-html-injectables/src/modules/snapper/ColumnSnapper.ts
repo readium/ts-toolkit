@@ -26,6 +26,7 @@ export class ColumnSnapper extends Snapper {
     private wnd!: ReadiumWindow;
     private comms!: Comms;
     private doc() { return this.wnd.document.scrollingElement as HTMLElement; }
+    private cachedWidth: number = 0;
     private scrollOffset() {
         // The reason we do this is because when the document is transformed (translate3d),
         // the scrollLeft value is 0 because... reasons. So we have to use the cached value
@@ -271,9 +272,16 @@ export class ColumnSnapper extends Snapper {
         `;
         wnd.document.head.appendChild(d);
 
-        this.resizeObserver = new ResizeObserver(() => wnd.requestAnimationFrame(() => {
-            wnd && appendVirtualColumnIfNeeded(wnd);
-        }));
+        this.resizeObserver = new ResizeObserver(entries => {
+            const width = entries[0].contentRect.width;
+            if (width !== this.cachedWidth) {
+                this.cachedWidth = width;
+                wnd && wnd.requestAnimationFrame(() => {
+                    wnd && appendVirtualColumnIfNeeded(wnd);
+                    this.cachedScrollWidth = this.doc().scrollWidth!;
+                });
+            }
+        });
         this.resizeObserver.observe(wnd.document.body);
         this.mutationObserver = new MutationObserver(() => {
             this.wnd.requestAnimationFrame(() => this.cachedScrollWidth = this.doc().scrollWidth!);
@@ -383,6 +391,7 @@ export class ColumnSnapper extends Snapper {
 
         comms.register("go_prev", ColumnSnapper.moduleName, (_, ack) => {
             this.wnd.requestAnimationFrame(() => {
+                this.cachedScrollWidth = this.doc().scrollWidth!;
                 const offset = wnd.scrollX - wnd.innerWidth;
                 const minOffset = isRTL(wnd) ? - (this.cachedScrollWidth - wnd.innerWidth) : 0;
                 const change = scrollToOffset(Math.max(offset, minOffset));
@@ -396,6 +405,7 @@ export class ColumnSnapper extends Snapper {
 
         comms.register("go_next", ColumnSnapper.moduleName, (_, ack) => {
             this.wnd.requestAnimationFrame(() => {
+                this.cachedScrollWidth = this.doc().scrollWidth!;
                 const offset = wnd.scrollX + wnd.innerWidth;
                 const maxOffset = isRTL(wnd) ? 0 : this.cachedScrollWidth - wnd.innerWidth;
                 const change = scrollToOffset(Math.min(offset, maxOffset));
