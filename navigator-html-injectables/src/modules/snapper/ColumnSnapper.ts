@@ -26,7 +26,6 @@ export class ColumnSnapper extends Snapper {
     private wnd!: ReadiumWindow;
     private comms!: Comms;
     private doc() { return this.wnd.document.scrollingElement as HTMLElement; }
-    private cachedWidth: number = 0;
     private scrollOffset() {
         // The reason we do this is because when the document is transformed (translate3d),
         // the scrollLeft value is 0 because... reasons. So we have to use the cached value
@@ -272,22 +271,31 @@ export class ColumnSnapper extends Snapper {
         `;
         wnd.document.head.appendChild(d);
 
-        this.resizeObserver = new ResizeObserver(entries => {
-            const width = entries[0].contentRect.width;
-            if (width !== this.cachedWidth) {
-                this.cachedWidth = width;
-                wnd && wnd.requestAnimationFrame(() => {
-                    wnd && appendVirtualColumnIfNeeded(wnd);
-                    this.cachedScrollWidth = this.doc().scrollWidth!;
-                });
-            }
+        this.resizeObserver = new ResizeObserver(() => {
+            wnd.requestAnimationFrame(() => {
+                wnd && appendVirtualColumnIfNeeded(wnd);
+                this.cachedScrollWidth = this.doc().scrollWidth!;
+            });
         });
         this.resizeObserver.observe(wnd.document.body);
-        this.mutationObserver = new MutationObserver(() => {
-            this.wnd.requestAnimationFrame(() => this.cachedScrollWidth = this.doc().scrollWidth!);
+
+        this.mutationObserver = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if(mutation.target === this.wnd.document.documentElement) {
+                    wnd.requestAnimationFrame(() => {
+                        wnd && appendVirtualColumnIfNeeded(wnd); 
+                        this.cachedScrollWidth = this.doc().scrollWidth!;
+                    });
+                } else {
+                    wnd.requestAnimationFrame(() => this.cachedScrollWidth = this.doc().scrollWidth!);
+                }
+            }
         });
         wnd.frameElement && this.mutationObserver.observe(wnd.frameElement, {attributes: true, attributeFilter: ["style"]});
         this.mutationObserver.observe(wnd.document, {attributes: true, attributeFilter: ["style"]});
+        // For cases the resizeObserver is not able to detect cos body is not resizing despite colCount,
+        // we need to check the syle attribute on the documentElement (ReadiumCSS props)
+        this.mutationObserver.observe(wnd.document.documentElement, {attributes: true, attributeFilter: ["style"]});
 
         const scrollToOffset = (offset: number): boolean => {
             const oldScrollLeft = this.doc().scrollLeft;
