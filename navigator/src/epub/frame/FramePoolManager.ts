@@ -144,6 +144,10 @@ export class FramePoolManager {
         this.inprogress.delete(newHref); // Delete it from the in progress map!
     }
 
+    setCSSProperties(properties: { [key: string]: string }) {
+        this.pool.forEach((frame) => frame.setCSSProperties(properties));
+    }
+
     get currentFrames(): (FrameManager | undefined)[] {
         return [this._currentFrame];
     }

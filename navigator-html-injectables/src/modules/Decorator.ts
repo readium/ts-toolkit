@@ -4,12 +4,9 @@ import { Module } from "./Module";
 import { rangeFromLocator } from "../helpers/locator";
 import { ModuleName } from "./ModuleLibrary";
 import { Rect, getClientRectsNoOverlap } from "../helpers/rect";
-import { ResizeObserver as Polyfill } from '@juggle/resize-observer';
 import { getProperty } from "../helpers/css";
 import { ReadiumWindow } from "../helpers/dom";
-
-// Necessary for iOS 13 and below
-const ResizeObserver = window.ResizeObserver || Polyfill;
+import { isDarkColor } from "../helpers/color";
 
 export enum Width {
     Wrap = "wrap", // Smallest width fitting the CSS border box.
@@ -254,7 +251,8 @@ class DecorationGroup {
         // template.innerHTML = item.decoration.element.trim();
         // TODO more styles logic
 
-        const isDarkMode = getProperty(this.wnd, "--USER__appearance") === "readium-night-on";
+        const isDarkMode = getProperty(this.wnd, "--USER__appearance") === "readium-night-on" ||
+            isDarkColor(getProperty(this.wnd, "--USER__backgroundColor"));
 
         template.innerHTML = `
         <div

@@ -8,6 +8,7 @@ export class FrameManager {
     private loader: Loader | undefined;
     public readonly source: string;
     private comms: FrameComms | undefined;
+    private hidden: boolean = true;
     private destroyed: boolean = false;
 
     private currModules: ModuleName[] = [];
@@ -67,6 +68,7 @@ export class FrameManager {
         this.frame.style.setProperty("aria-hidden", "true");
         this.frame.style.opacity = "0";
         this.frame.style.pointerEvents = "none";
+        this.hidden = true;
         if(this.frame.parentElement) {
             if(this.comms === undefined || !this.comms.ready) return;
             return new Promise((res, _) => {
@@ -92,6 +94,7 @@ export class FrameManager {
                         this.frame.style.removeProperty("aria-hidden");
                         this.frame.style.removeProperty("opacity");
                         this.frame.style.removeProperty("pointer-events");
+                        this.hidden = false;
                         res();
                     }
                     if(atProgress && atProgress > 0) {
@@ -102,6 +105,17 @@ export class FrameManager {
                 });
             });
         });
+    }
+
+    setCSSProperties(properties: { [key: string]: string }) {
+        // We need to resume and halt postMessage to update the properties
+        // if the frame is hidden since it’s been halted in hide()
+        if (this.hidden) {
+            if (this.comms) this.comms?.resume();
+            else this.comms = new FrameComms(this.frame.contentWindow!, this.source);
+        }
+        this.comms?.send("update_properties", properties);
+        if (this.hidden) this.comms?.halt();
     }
 
     get iframe() {

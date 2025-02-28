@@ -1,4 +1,3 @@
-import { ResizeObserver as Polyfill } from '@juggle/resize-observer';
 import { Comms } from "../../comms";
 import { Snapper } from "./Snapper";
 import { getColumnCountPerScreen, isRTL, appendVirtualColumnIfNeeded } from "../../helpers/document";
@@ -272,18 +271,31 @@ export class ColumnSnapper extends Snapper {
         `;
         wnd.document.head.appendChild(d);
 
-        // Necessary for iOS 13 and below
-        const ResizeObserver = (wnd as ReadiumWindow & typeof globalThis).ResizeObserver || Polyfill;
-
-        this.resizeObserver = new ResizeObserver(() => wnd.requestAnimationFrame(() => {
-            wnd && appendVirtualColumnIfNeeded(wnd);
-        }));
+        this.resizeObserver = new ResizeObserver(() => {
+            wnd.requestAnimationFrame(() => {
+                wnd && appendVirtualColumnIfNeeded(wnd);
+                this.onWidthChange();
+            });
+        });
         this.resizeObserver.observe(wnd.document.body);
-        this.mutationObserver = new MutationObserver(() => {
-            this.wnd.requestAnimationFrame(() => this.cachedScrollWidth = this.doc().scrollWidth!);
+
+        this.mutationObserver = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if(mutation.target === this.wnd.document.documentElement) {
+                    wnd.requestAnimationFrame(() => {
+                        wnd && appendVirtualColumnIfNeeded(wnd); 
+                        this.onWidthChange();
+                    });
+                } else {
+                    wnd.requestAnimationFrame(() => this.cachedScrollWidth = this.doc().scrollWidth!);
+                }
+            }
         });
         wnd.frameElement && this.mutationObserver.observe(wnd.frameElement, {attributes: true, attributeFilter: ["style"]});
         this.mutationObserver.observe(wnd.document, {attributes: true, attributeFilter: ["style"]});
+        // For cases the resizeObserver is not able to detect cos body is not resizing despite colCount,
+        // we need to check the syle attribute on the documentElement (ReadiumCSS props)
+        this.mutationObserver.observe(wnd.document.documentElement, {attributes: true, attributeFilter: ["style"]});
 
         const scrollToOffset = (offset: number): boolean => {
             const oldScrollLeft = this.doc().scrollLeft;
@@ -387,6 +399,7 @@ export class ColumnSnapper extends Snapper {
 
         comms.register("go_prev", ColumnSnapper.moduleName, (_, ack) => {
             this.wnd.requestAnimationFrame(() => {
+                this.cachedScrollWidth = this.doc().scrollWidth!;
                 const offset = wnd.scrollX - wnd.innerWidth;
                 const minOffset = isRTL(wnd) ? - (this.cachedScrollWidth - wnd.innerWidth) : 0;
                 const change = scrollToOffset(Math.max(offset, minOffset));
@@ -400,6 +413,7 @@ export class ColumnSnapper extends Snapper {
 
         comms.register("go_next", ColumnSnapper.moduleName, (_, ack) => {
             this.wnd.requestAnimationFrame(() => {
+                this.cachedScrollWidth = this.doc().scrollWidth!;
                 const offset = wnd.scrollX + wnd.innerWidth;
                 const maxOffset = isRTL(wnd) ? 0 : this.cachedScrollWidth - wnd.innerWidth;
                 const change = scrollToOffset(Math.min(offset, maxOffset));

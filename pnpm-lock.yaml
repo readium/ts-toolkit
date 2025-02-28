@@ -24,8 +24,8 @@ importers:
         specifier: ^0.5.25
         version: 0.5.25(vite@4.5.5(@types/node@20.4.8)(less@4.2.0)(sass@1.81.0)(stylus@0.62.0))
       '@readium/css':
-        specifier: ^1.1.0
-        version: 1.1.0
+        specifier: '>=2.0.0-beta.3'
+        version: 2.0.0-beta.3
       '@readium/navigator-html-injectables':
         specifier: workspace:*
         version: link:../navigator-html-injectables
@@ -56,9 +56,6 @@ importers:
 
   navigator-html-injectables:
     devDependencies:
-      '@juggle/resize-observer':
-        specifier: ^3.4.0
-        version: 3.4.0
       '@readium/shared':
         specifier: workspace:*
         version: link:../shared
@@ -1240,6 +1237,9 @@ packages:
 
   '@readium/css@1.1.0':
     resolution: {integrity: sha512-vcUx/+UYlWXuG6ioZNVBFDlKCuyH+65x9dNJM9jLlA8yT5ReH0k2UR9DN8cwx5/BgJhoQLUsA9s2DPhGaMhX6A==}
+
+  '@readium/css@2.0.0-beta.3':
+    resolution: {integrity: sha512-jgROe33XjDPFgS0s0SAvJ8S5wunkWK3ooCPGZJBP75jtyl8fDQTeVFBXYZXI6ABkUhf61w4kC9RKqwmJDjNsMg==}
 
   '@sinclair/typebox@0.24.51':
     resolution: {integrity: sha512-1P1OROm/rdubP5aFDSZQILU0vrLCJ4fvHt6EoqHEM+2D/G5MK3bIaymUKLit8Js9gbns5UyJnkP/TZROLw4tUA==}
@@ -3969,6 +3969,8 @@ snapshots:
     optional: true
 
   '@readium/css@1.1.0': {}
+
+  '@readium/css@2.0.0-beta.3': {}
 
   '@sinclair/typebox@0.24.51': {}
 
