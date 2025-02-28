@@ -111,7 +111,7 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.wordSpacing = EpubPreferences.ensureNonNegative(preferences.wordSpacing);
   }
   
-  static ensureString(value: string | null | undefined): string | null | undefined {
+  private static ensureString(value: string | null | undefined): string | null | undefined {
     if (typeof value === "string") {
       return value;
     } else if (value === null) {
@@ -121,7 +121,7 @@ export class EpubPreferences implements ConfigurablePreferences {
     }
   }
 
-  static ensureBoolean(value: boolean | null | undefined): boolean | null | undefined {
+  private static ensureBoolean(value: boolean | null | undefined): boolean | null | undefined {
     return typeof value === "boolean" 
       ? value 
       : value === undefined || value === null 
@@ -130,7 +130,7 @@ export class EpubPreferences implements ConfigurablePreferences {
   }
 
   
-  static ensureEnumValue<T extends string>(value: T | null | undefined, enumType: Record<T, string>): T | null | undefined {
+  private static ensureEnumValue<T extends string>(value: T | null | undefined, enumType: Record<T, string>): T | null | undefined {
     if (value === undefined) {
       return undefined;
     }
@@ -140,7 +140,7 @@ export class EpubPreferences implements ConfigurablePreferences {
     return enumType[value as T] !== undefined ? value : undefined;
   }
 
-  static ensureFilter(filter: boolean | number | null | undefined): boolean | number | null | undefined {
+  private static ensureFilter(filter: boolean | number | null | undefined): boolean | number | null | undefined {
     if (typeof filter === "boolean") {
       return filter;
     } else if (typeof filter === "number" && filter >= 0) {
@@ -152,7 +152,7 @@ export class EpubPreferences implements ConfigurablePreferences {
     }
   }
 
-  static ensureNonNegative(value: number | null | undefined): number | null | undefined {
+  private static ensureNonNegative(value: number | null | undefined): number | null | undefined {
     if (value === undefined) {
       return undefined;
     }
@@ -162,7 +162,7 @@ export class EpubPreferences implements ConfigurablePreferences {
     return value < 0 ? undefined : value;
   }
 
-  static ensureValueInRange(value: number | null | undefined, min: number, max: number): number | null | undefined {
+  private static ensureValueInRange(value: number | null | undefined, min: number, max: number): number | null | undefined {
     if (value === undefined) {
       return undefined;
     }
@@ -170,6 +170,20 @@ export class EpubPreferences implements ConfigurablePreferences {
       return null;
     }
     return value >= min && value <= max ? value : undefined;
+  }
+
+  static serialize(preferences: EpubPreferences): string {
+    return JSON.stringify(preferences);
+  }
+
+  static deserialize(preferences: string): EpubPreferences | null {
+    try {
+      const parsedPreferences = JSON.parse(preferences);
+      return new EpubPreferences(parsedPreferences);
+    } catch (error) {
+      console.error("Failed to deserialize preferences:", error);
+      return null;
+    }
   }
 
   merging(other: ConfigurablePreferences): ConfigurablePreferences {
