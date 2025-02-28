@@ -1,6 +1,8 @@
-import { LineLengths } from "../../helpers";
+import { ILineLengthsConfig, LineLengths } from "../../helpers";
 import { EpubSettings } from "../preferences/EpubSettings";
 import { IUserProperties, RSProperties, UserProperties } from "./Properties";
+
+type ILineLengthsProps = Omit<ILineLengthsConfig, "optimalChars" | "minChars" | "sample" | "isCJK" | "getRelative" | "pageGutter">;
 
 export interface IReadiumCSS {
   rsProperties: RSProperties;
@@ -32,7 +34,15 @@ export class ReadiumCSS {
   }
 
   update(userSettings: EpubSettings) {
-    const baseLineLength = userSettings.lineLength || this.lineLengths.optimalLineLength;
+    this.updateLineLengths({
+      fontFace: userSettings.fontFamily,
+      fontSize: userSettings.fontSize,
+      letterSpacing: userSettings.letterSpacing,
+      wordSpacing: userSettings.wordSpacing,
+      userChars: userSettings.lineLength
+    });
+    
+    const baseLineLength = this.lineLengths.userLineLength || this.lineLengths.optimalLineLength;
     
     const updated: IUserProperties = {
       advancedSettings: !userSettings.publisherStyles,
@@ -83,6 +93,14 @@ export class ReadiumCSS {
     this.cachedColCount = userSettings.columnCount;
 
     this.userProperties = new UserProperties(updated);
+  }
+
+  private updateLineLengths(props: ILineLengthsProps) {
+    if (props.fontFace) this.lineLengths.fontFace = props.fontFace;
+    if (props.fontSize) this.lineLengths.fontSize = props.fontSize;
+    if (props.letterSpacing) this.lineLengths.letterSpacing = props.letterSpacing;
+    if (props.wordSpacing) this.lineLengths.wordSpacing = props.wordSpacing;
+    if (props.userChars) this.lineLengths.userChars = props.userChars;
   }
 
   private setColCount(colCount?: number | null, baseLineLength: number = this.lineLengths.optimalLineLength) {

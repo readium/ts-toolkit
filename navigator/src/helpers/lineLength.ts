@@ -66,7 +66,7 @@ export class LineLengths {
     this._optimalChars = config.optimalChars;
     this._minChars = config.minChars;
     this._userChars = config.userChars || null;
-    this._fontSize = config.fontSize || DEFAULT_FONT_SIZE;
+    this._fontSize = (config.fontSize || 1) * DEFAULT_FONT_SIZE;
     this._fontFace = config.fontFace || null;
     this._sample = config.sample || null;
     this._pageGutter = config.pageGutter || 0;
@@ -106,7 +106,7 @@ export class LineLengths {
   }
 
   set fontSize(n: number) {
-    this._fontSize = n;
+    this._fontSize = Math.round(n * DEFAULT_FONT_SIZE);
     this._optimalLineLength = this.getOptimalLineLength();
   }
 
