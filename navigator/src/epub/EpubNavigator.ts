@@ -195,6 +195,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             await this.setReadingProgression(ReadingProgression.ttb);
         }
 
+        this._css.setContainerWidth();
+
         this.commitCSS(this._css);
     };
 

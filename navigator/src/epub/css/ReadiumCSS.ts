@@ -143,6 +143,14 @@ export class ReadiumCSS {
     return RCSSColCount;
   }
 
+  setContainerWidth() {
+    if (this.userProperties.view === "scroll") {
+      this.container.style.width = `${ this.containerParent.clientWidth }px`;
+    } else {
+      this.container.style.width = `${ this.pagedContainerWidth }px`;
+    }
+  }
+
   resizeHandler() {
     if (this.userProperties.view === "scroll") {
       this.container.style.width = `${ this.containerParent.clientWidth }px`;
