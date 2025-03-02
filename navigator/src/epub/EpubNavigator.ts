@@ -376,8 +376,14 @@ export class EpubNavigator extends VisualNavigator {
         return { first: first, last: last }
     }
 
+    private isFunctionOfObject(obj: any, key: string): boolean {
+        return typeof obj[key] === 'function';
+    }
+
     private async syncLocation(iframeProgress: { progress: number, reference: number }) {
         const nearestPositions = this.findNearestPositions(iframeProgress)
+        const hasCopyWithLocations = this.isFunctionOfObject(nearestPositions.first, "copyWithLocations");
+        if (!hasCopyWithLocations) return  
         this.currentLocation = nearestPositions.first.copyWithLocations({
             progression: iframeProgress.progress // Most accurate progression in resource
         });
