@@ -285,8 +285,9 @@ export class ColumnSnapper extends Snapper {
                 if (mutation.target === this.wnd.document.documentElement) {
                     const oldValue = mutation.oldValue as string;
                     const newValue = (mutation.target as HTMLElement).getAttribute("style") as string;
-                    const oldValueTransform = oldValue?.match(/transform\s*:\s*([^;]+)/);
-                    const newValueTransform = newValue?.match(/transform\s*:\s*([^;]+)/);
+                    const transformRegex = /transform\s*:\s*([^;]+)/;
+                    const oldValueTransform = oldValue?.match(transformRegex);
+                    const newValueTransform = newValue?.match(transformRegex);
                     if (
                         (!oldValueTransform && !newValueTransform) || 
                         (oldValueTransform && !newValueTransform) ||
