@@ -274,8 +274,8 @@ export class ColumnSnapper extends Snapper {
         this.resizeObserver = new ResizeObserver(() => {
             wnd.requestAnimationFrame(() => {
                 wnd && appendVirtualColumnIfNeeded(wnd);
-                this.onWidthChange();
             });
+            this.onWidthChange();
         });
         this.resizeObserver.observe(wnd.document.body);
 
@@ -283,9 +283,9 @@ export class ColumnSnapper extends Snapper {
             for (const mutation of mutations) {
                 if(mutation.target === this.wnd.document.documentElement) {
                     wnd.requestAnimationFrame(() => {
-                        wnd && appendVirtualColumnIfNeeded(wnd); 
-                        this.onWidthChange();
+                        wnd && appendVirtualColumnIfNeeded(wnd);
                     });
+                    this.onWidthChange();
                 } else {
                     wnd.requestAnimationFrame(() => this.cachedScrollWidth = this.doc().scrollWidth!);
                 }
