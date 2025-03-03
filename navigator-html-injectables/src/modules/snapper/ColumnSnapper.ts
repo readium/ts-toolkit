@@ -281,11 +281,22 @@ export class ColumnSnapper extends Snapper {
 
         this.mutationObserver = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
-                if(mutation.target === this.wnd.document.documentElement) {
-                    wnd.requestAnimationFrame(() => {
-                        wnd && appendVirtualColumnIfNeeded(wnd);
-                    });
-                    this.onWidthChange();
+                // We have to check it’s not onTouchMove + snapOffset setting transforms
+                if (mutation.target === this.wnd.document.documentElement) {
+                    const oldValue = mutation.oldValue as string;
+                    const newValue = (mutation.target as HTMLElement).getAttribute("style") as string;
+                    const oldValueTransform = oldValue?.match(/transform\s*:\s*([^;]+)/);
+                    const newValueTransform = newValue?.match(/transform\s*:\s*([^;]+)/);
+                    if (
+                        (!oldValueTransform && !newValueTransform) || 
+                        (oldValueTransform && !newValueTransform) ||
+                        (oldValueTransform && newValueTransform && oldValueTransform[1] !== newValueTransform[1])
+                    ) {
+                        wnd.requestAnimationFrame(() => {
+                            wnd && appendVirtualColumnIfNeeded(wnd);
+                        });
+                        this.onWidthChange();
+                    }
                 } else {
                     wnd.requestAnimationFrame(() => this.cachedScrollWidth = this.doc().scrollWidth!);
                 }
