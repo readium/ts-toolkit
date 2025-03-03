@@ -82,11 +82,13 @@ export default class FrameBlobBuider {
     private readonly item: Link;
     private readonly burl: string;
     private readonly pub: Publication;
+    private readonly cssProperties?: { [key: string]: string };
 
-    constructor(pub: Publication, baseURL: string, item: Link) {
+    constructor(pub: Publication, baseURL: string, item: Link, cssProperties?: { [key: string]: string }) {
         this.pub = pub;
         this.item = item;
         this.burl = item.toURL(baseURL) || "";
+        this.cssProperties = cssProperties;
     }
 
     public async build(fxl = false): Promise<string> {
@@ -113,7 +115,7 @@ export default class FrameBlobBuider {
             const details = perror.querySelector("div");
             throw new Error(`Failed parsing item ${this.item.href}: ${details?.textContent || perror.textContent}`);
         }
-        return this.finalizeDOM(doc, this.burl, this.item.mediaType, fxl);
+        return this.finalizeDOM(doc, this.burl, this.item.mediaType, fxl, this.cssProperties);
     }
 
     private buildImageFrame(): string {
@@ -150,7 +152,15 @@ export default class FrameBlobBuider {
         return false;
     }
 
-    private finalizeDOM(doc: Document, base: string | undefined, mediaType: MediaType, fxl = false): string {
+    private setProperties(cssProperties: { [key: string]: string }, doc: Document) {
+        if (!cssProperties) return;
+        for (const key in cssProperties) {
+            const value = cssProperties[key];
+            if (value) doc.documentElement.style.setProperty(key, value);
+        }
+    }
+
+    private finalizeDOM(doc: Document, base: string | undefined, mediaType: MediaType, fxl = false, cssProperties?: { [key: string]: string }): string {
         if(!doc) return "";
 
         // Inject styles
@@ -171,6 +181,10 @@ export default class FrameBlobBuider {
 
             // Readium CSS After
             doc.head.appendChild(styleify(doc, cached("ReadiumCSS-after", () => blobify(stripCSS(readiumCSSAfter), "text/css"))));
+
+            if (cssProperties) {
+                this.setProperties(cssProperties, doc);
+            }
         }
 
         // Set all <img> elements to high priority

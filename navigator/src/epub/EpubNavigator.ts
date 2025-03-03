@@ -127,7 +127,9 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 this.eventListener(key, data);
             }
         } else
-            this.framePool = new FramePoolManager(this.container, this.positions);
+            await this.updateCSS(false);
+            const cssProperties = this.compileCSSProperties(this._css);
+            this.framePool = new FramePoolManager(this.container, this.positions, cssProperties);
         if(this.currentLocation === undefined)
             this.currentLocation = this.positions[0];
         
@@ -180,7 +182,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         }
     }
 
-    private async updateCSS() {
+    private async updateCSS(commit = true) {
         this._css.update(this._settings);
 
         if (
@@ -197,13 +199,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
         this._css.setContainerWidth();
 
-        this.commitCSS(this._css);
+        if (commit) this.commitCSS(this._css);
     };
 
-    private commitCSS(css: ReadiumCSS) {
-        // Since we’re updating the CSS properties in injectables by removing
-        // the existing properties that are not inside this object first, 
-        // then adding all from it, we don’t compare the previous properties here
+    private compileCSSProperties(css: ReadiumCSS) {
         const properties: { [key: string]: string } = {};
 
         for (const [key, value] of Object.entries(css.rsProperties.toCSSProperties())) {
@@ -213,6 +212,15 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         for (const [key, value] of Object.entries(css.userProperties.toCSSProperties())) {
             properties[key] = value;
         }
+
+        return properties;
+    }
+
+    private commitCSS(css: ReadiumCSS) {
+        // Since we’re updating the CSS properties in injectables by removing
+        // the existing properties that are not inside this object first, 
+        // then adding all from it, we don’t compare the previous properties here
+        const properties = this.compileCSSProperties(css);
 
         (this.framePool as FramePoolManager).setCSSProperties(properties);
     }

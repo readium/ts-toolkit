@@ -10,14 +10,16 @@ export class FramePoolManager {
     private readonly container: HTMLElement;
     private readonly positions: Locator[];
     private _currentFrame: FrameManager | undefined;
+    private currentCssProperties: { [key: string]: string } | undefined;
     private readonly pool: Map<string, FrameManager> = new Map();
     private readonly blobs: Map<string, string> = new Map();
     private readonly inprogress: Map<string, Promise<void>> = new Map();
     private currentBaseURL: string | undefined;
 
-    constructor(container: HTMLElement, positions: Locator[]) {
+    constructor(container: HTMLElement, positions: Locator[], cssProperties?: { [key: string]: string }) {
         this.container = container;
         this.positions = positions;
+        this.currentCssProperties = cssProperties;
     }
 
     async destroy() {
@@ -104,7 +106,7 @@ export class FramePoolManager {
                 const itm = pub.readingOrder.findWithHref(href);
                 if(!itm) return; // TODO throw?
                 if(!this.blobs.has(href)) {
-                    const blobBuilder = new FrameBlobBuider(pub, this.currentBaseURL || "", itm);
+                    const blobBuilder = new FrameBlobBuider(pub, this.currentBaseURL || "", itm, this.currentCssProperties);
                     const blobURL = await blobBuilder.build();
                     this.blobs.set(href, blobURL);
                 }
@@ -145,6 +147,7 @@ export class FramePoolManager {
     }
 
     setCSSProperties(properties: { [key: string]: string }) {
+        this.currentCssProperties = properties;
         this.pool.forEach((frame) => frame.setCSSProperties(properties));
     }
 
