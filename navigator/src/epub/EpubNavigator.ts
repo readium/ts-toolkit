@@ -138,12 +138,17 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     }
 
     public get settings() {
-        return this._settings;
+        // Given all the nasty issues moving auto-pagination to EpubSettings creates
+        // Especially as it’s tied to ReadiumCSS in the first place and could be 
+        // problematic if you intend to use something else,
+        // we return the properties with columnCount overridden
+        return { ...this._settings, columnCount: this._css.rsProperties.colCount };
     }
 
     public get preferencesEditor() {
         if (this._preferencesEditor === null) {
-            this._preferencesEditor = new EpubPreferencesEditor(this._preferences, this._settings, this.pub.metadata);
+            // Note: we pass this.settings instead of this._settings to ensure the columnCount is correct
+            this._preferencesEditor = new EpubPreferencesEditor(this._preferences, this.settings, this.pub.metadata);
         }
         return this._preferencesEditor;
     }
@@ -163,7 +168,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         }
         
         if (this._preferencesEditor !== null) {
-            this._preferencesEditor = new EpubPreferencesEditor(this._preferences, this._settings, this.pub.metadata);
+            // Note: we pass this.settings instead of this._settings to ensure the columnCount is correct
+            this._preferencesEditor = new EpubPreferencesEditor(this._preferences, this.settings, this.pub.metadata);
         }
 
         // Invalidation by comparing old and new settings if needed
