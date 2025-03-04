@@ -153,7 +153,6 @@ export default class FrameBlobBuider {
     }
 
     private setProperties(cssProperties: { [key: string]: string }, doc: Document) {
-        if (!cssProperties) return;
         for (const key in cssProperties) {
             const value = cssProperties[key];
             if (value) doc.documentElement.style.setProperty(key, value);

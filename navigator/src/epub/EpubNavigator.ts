@@ -126,13 +126,15 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             this.framePool.listener = (key: CommsEventKey | ManagerEventKey, data: unknown) => {
                 this.eventListener(key, data);
             }
-        } else
+        } else {
             await this.updateCSS(false);
             const cssProperties = this.compileCSSProperties(this._css);
             this.framePool = new FramePoolManager(this.container, this.positions, cssProperties);
+        }
+
         if(this.currentLocation === undefined)
             this.currentLocation = this.positions[0];
-        
+
         this.resizeHandler();
         await this.apply();
     }
