@@ -85,13 +85,13 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             rsProperties: new RSProperties(this._preferences),
             userProperties: new UserProperties({}),
             lineLengths: new LineLengths({
-                optimalChars: this._preferences.optimalLineLength || this._defaults.optimalLineLength,
-                minChars: this._preferences.minimalLineLength,
-                pageGutter: this._preferences.pageGutter,
-                fontFace: this._preferences.fontFamily,
-                fontSize: this._preferences.fontSize,
-                letterSpacing: this._preferences.letterSpacing,
-                wordSpacing: this._preferences.wordSpacing,
+                optimalChars: this._settings.optimalLineLength,
+                minChars: this._settings.minimalLineLength,
+                pageGutter: this._settings.pageGutter,
+                fontFace: this._settings.fontFamily,
+                fontSize: this._settings.fontSize,
+                letterSpacing: this._settings.letterSpacing,
+                wordSpacing: this._settings.wordSpacing,
                 sample: this.pub.metadata.description
             }),
             container: container,
@@ -142,7 +142,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         // Especially as it’s tied to ReadiumCSS in the first place and could be 
         // problematic if you intend to use something else,
         // we return the properties with columnCount overridden
-        return Object.freeze({ ...this._settings, columnCount: this._css.rsProperties.colCount });
+        const columnCount = this._css.userProperties.colCount || this._css.rsProperties.colCount || null;
+        return Object.freeze({ ...this._settings, columnCount: columnCount });
     }
 
     public get preferencesEditor() {

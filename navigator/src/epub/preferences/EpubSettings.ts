@@ -59,7 +59,7 @@ export class EpubSettings implements ConfigurableSettings {
   linkColor: string | null;
   minimalLineLength: number | null | undefined;
   noRuby: boolean | null;
-  optimalLineLength: number | null;
+  optimalLineLength: number;
   pageGutter: number | null;
   paragraphIndent: number | null;
   paragraphSpacing: number | null;
