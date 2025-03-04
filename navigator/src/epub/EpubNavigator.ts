@@ -60,7 +60,6 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private _preferences: EpubPreferences;
     private _defaults: EpubDefaults;
     private _settings: EpubSettings;
-    private _constraint: number;
     private _css: ReadiumCSS;
     private _preferencesEditor: EpubPreferencesEditor | null = null;
 
@@ -80,7 +79,6 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this._preferences = new EpubPreferences(configuration.preferences);
         this._defaults = new EpubDefaults(configuration.defaults);
         this._settings = new EpubSettings(this._preferences, this._defaults);
-        this._constraint = this._preferences.constraint || 0;
         this._css = new ReadiumCSS({ 
             rsProperties: new RSProperties(this._preferences),
             userProperties: new UserProperties({}),
@@ -95,7 +93,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 sample: this.pub.metadata.description
             }),
             container: container,
-            constraint: this._constraint
+            constraint: this._settings.constraint
         });
 
         // We use a resizeObserver cos’ the container parent may not be the width of 
@@ -164,11 +162,6 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private async applyPreferences() {
         const oldSettings = this._settings;
         this._settings = new EpubSettings(this._preferences, this._defaults);
-
-        if (this._preferences.constraint !== this._constraint) {
-            this._constraint = this._preferences.constraint || 0;
-            this._css.constraint = this._preferences.constraint || 0;
-        }
         
         if (this._preferencesEditor !== null) {
             // Note: we pass this.settings instead of this._settings to ensure the columnCount is correct
@@ -240,7 +233,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         const parentEl = this.container.parentElement || document.documentElement;
 
         if (this.layout === EPUBLayout.fixed) {
-            this.container.style.width = `${ parentEl.clientWidth - this._constraint }px`;
+            this.container.style.width = `${ parentEl.clientWidth - this._settings.constraint }px`;
             (this.framePool as FXLFramePoolManager).resizeHandler();
         } else {
             // for reflow ReadiumCSS gets the width from columns + line-lengths 

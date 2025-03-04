@@ -93,9 +93,12 @@ export class ReadiumCSS {
     // We need to keep the column count reference for resizeHandler
     this.cachedColCount = settings.columnCount;
 
+    if (settings.constraint !== this.constraint) 
+      this.constraint = settings.constraint;
+
     this.userProperties = new UserProperties(updated);
 
-    if (settings.pageGutter) {
+    if (settings.pageGutter !== this.rsProperties.pageGutter) {
       this.rsProperties.pageGutter = settings.pageGutter;
     }
   }
