@@ -137,12 +137,12 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         await this.apply();
     }
 
-    public get settings() {
+    public get settings(): Readonly<EpubSettings> {
         // Given all the nasty issues moving auto-pagination to EpubSettings creates
         // Especially as it’s tied to ReadiumCSS in the first place and could be 
         // problematic if you intend to use something else,
         // we return the properties with columnCount overridden
-        return { ...this._settings, columnCount: this._css.rsProperties.colCount };
+        return Object.freeze({ ...this._settings, columnCount: this._css.rsProperties.colCount });
     }
 
     public get preferencesEditor() {
