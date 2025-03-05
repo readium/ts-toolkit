@@ -135,7 +135,7 @@ export class ReadiumCSS {
         RCSSColCount = colCount;
       }
     } else {
-      RCSSColCount = Number(colCount);
+      RCSSColCount = colCount;
     }
 
     this.pagedContainerWidth = Math.min(
