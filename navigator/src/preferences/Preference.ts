@@ -151,6 +151,7 @@ export class EnumPreference<T extends string | number | symbol> extends Preferen
 export class RangePreference<T extends number> extends Preference<T> implements IRangePreference<T> {
   private readonly _supportedRange: [T, T];
   private readonly _step: number;
+  private readonly _decimals: number;
 
   constructor({
       initialValue = null, 
@@ -171,6 +172,7 @@ export class RangePreference<T extends number> extends Preference<T> implements 
     super({ initialValue, effectiveValue, isEffective, onChange });
     this._supportedRange = supportedRange;
     this._step = step;
+    this._decimals = this._step.toString().split('.')[1].length;
   }
 
   set value(value: T | null | undefined) {
@@ -191,14 +193,20 @@ export class RangePreference<T extends number> extends Preference<T> implements 
 
   increment(): void {
     if (this._value && this._value < this._supportedRange[1]) {
-      this._value = Math.min(this._value + this._step, this._supportedRange[1]) as T;
+      this._value = Math.min(
+        Math.round((this._value + this._step) * 10 ** this._decimals) / 10 ** this._decimals,
+        this._supportedRange[1]
+      ) as T;
       this._onChange(this._value);
     }
   }
 
   decrement(): void {
     if (this._value && this._value > this._supportedRange[0]) {
-      this._value = Math.max(this._value - this._step, this._supportedRange[0]) as T;
+      this._value = Math.max(
+        Math.round((this._value - this._step) * 10 ** this._decimals) / 10 ** this._decimals,
+        this._supportedRange[0]
+      ) as T;
       this._onChange(this._value);
     }
   }
