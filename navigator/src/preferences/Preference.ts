@@ -109,6 +109,27 @@ export class Preference<T> implements Preference<T> {
 }
 
 export class BooleanPreference extends Preference<boolean> implements IBooleanPreference {
+  set value(value: boolean | null | undefined) {
+    this._value = value;
+    this._onChange(this._value);
+  }
+
+  get value(): boolean | null | undefined {
+    return this._value;
+  }
+
+  get effectiveValue(): boolean | null | undefined {
+    return this._effectiveValue;
+  }
+
+  get isEffective(): boolean {
+    return this._isEffective;
+  }
+
+  clear(): void {
+    this._value = null;
+  }
+
   toggle(): void {
     this._value = !this._value;
     this._onChange(this._value);
@@ -143,8 +164,24 @@ export class EnumPreference<T extends string | number | symbol> extends Preferen
     this._onChange(this._value);
   }
 
+  get value(): T | null | undefined {
+    return this._value;
+  }
+
+  get effectiveValue(): T | null | undefined {
+    return this._effectiveValue;
+  }
+
+  get isEffective(): boolean {
+    return this._isEffective;
+  }
+
   get supportedValues(): T[] {
     return this._supportedValues;
+  }
+
+  clear(): void {
+    this._value = null;
   }
 }
 
@@ -183,6 +220,18 @@ export class RangePreference<T extends number> extends Preference<T> implements 
     this._onChange(this._value);
   }
 
+  get value(): T | null | undefined {
+    return this._value;
+  }
+
+  get effectiveValue(): T | null | undefined {
+    return this._effectiveValue;
+  }
+
+  get isEffective(): boolean {
+    return this._isEffective;
+  }
+
   get supportedRange(): [T, T] {
     return this._supportedRange;
   }
@@ -213,5 +262,9 @@ export class RangePreference<T extends number> extends Preference<T> implements 
 
   format(value: T): string {
     return value.toString();
+  }
+
+  clear(): void {
+    this._value = null;
   }
 }
