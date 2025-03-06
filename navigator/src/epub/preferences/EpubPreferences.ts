@@ -81,10 +81,10 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.columnCount = EpubPreferences.ensureNonNegative(preferences.columnCount);
     this.darkenFilter = EpubPreferences.ensureFilter(preferences.darkenFilter);
     this.fontFamily = EpubPreferences.ensureString(preferences.fontFamily);
-    this.fontSize = EpubPreferences.ensureValueInRange(preferences.fontSize, 50, 250);
+    this.fontSize = EpubPreferences.ensureValueInRange(preferences.fontSize, 0.5, 2.5);
     this.fontOpticalSizing = EpubPreferences.ensureBoolean(preferences.fontOpticalSizing);
     this.fontWeight = EpubPreferences.ensureValueInRange(preferences.fontWeight, 100, 1000);
-    this.fontWidth = EpubPreferences.ensureValueInRange(preferences.fontWidth, 10, 1000);
+    this.fontWidth = EpubPreferences.ensureValueInRange(preferences.fontWidth, 50, 250);
     this.hyphens = EpubPreferences.ensureBoolean(preferences.hyphens);
     this.invertFilter = EpubPreferences.ensureFilter(preferences.invertFilter);
     this.invertGaijiFilter = EpubPreferences.ensureFilter(preferences.invertGaijiFilter);
