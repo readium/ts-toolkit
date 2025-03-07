@@ -2,8 +2,14 @@ import { EPUBLayout, Metadata, ReadingProgression } from "@readium/shared";
 import { IPreferencesEditor } from "../../preferences/PreferencesEditor";
 import { EpubPreferences } from "./EpubPreferences";
 import { EpubSettings } from "./EpubSettings";
-import { TextAlignment, Theme } from "../../preferences/Types";
 import { BooleanPreference, EnumPreference, Preference, RangePreference } from "../../preferences/Preference";
+import { 
+  TextAlignment, 
+  Theme, 
+  fontSizeRangeConfig, 
+  fontWeightRangeConfig, 
+  fontWidthRangeConfig 
+} from "../../preferences/Types";
 
 import dayMode from "@readium/css/css/vars/day.json";
 import fontStacks from "@readium/css/css/vars/fontStacks.json";
@@ -110,8 +116,8 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("fontSize", newValue || null);
       },
-      supportedRange: [0.5, 2.5],
-      step: 0.1
+      supportedRange: fontSizeRangeConfig.range,
+      step: fontSizeRangeConfig.step
     });
   }
 
@@ -134,8 +140,8 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("fontWeight", newValue || null);
       },
-      supportedRange: [100, 1000],
-      step: 100
+      supportedRange: fontWeightRangeConfig.range,
+      step: fontWeightRangeConfig.step
     });
   }
 
@@ -147,8 +153,8 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("fontWidth", newValue || null);
       },
-      supportedRange: [50, 250],
-      step: 10
+      supportedRange: fontWidthRangeConfig.range,
+      step: fontWidthRangeConfig.step
     });
   }
 

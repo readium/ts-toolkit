@@ -1,5 +1,12 @@
-import { TextAlignment, Theme } from "../../preferences/Types";
 import { ConfigurablePreferences } from "../../preferences/Configurable";
+
+import { 
+  TextAlignment, 
+  Theme, 
+  fontSizeRangeConfig, 
+  fontWeightRangeConfig, 
+  fontWidthRangeConfig 
+} from "../../preferences/Types";
 
 export interface IEpubPreferences {
   backgroundColor?: string | null,
@@ -81,10 +88,10 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.columnCount = EpubPreferences.ensureNonNegative(preferences.columnCount);
     this.darkenFilter = EpubPreferences.ensureFilter(preferences.darkenFilter);
     this.fontFamily = EpubPreferences.ensureString(preferences.fontFamily);
-    this.fontSize = EpubPreferences.ensureValueInRange(preferences.fontSize, 0.5, 2.5);
+    this.fontSize = EpubPreferences.ensureValueInRange(preferences.fontSize, fontSizeRangeConfig.range);
     this.fontOpticalSizing = EpubPreferences.ensureBoolean(preferences.fontOpticalSizing);
-    this.fontWeight = EpubPreferences.ensureValueInRange(preferences.fontWeight, 100, 1000);
-    this.fontWidth = EpubPreferences.ensureValueInRange(preferences.fontWidth, 50, 250);
+    this.fontWeight = EpubPreferences.ensureValueInRange(preferences.fontWeight, fontWeightRangeConfig.range);
+    this.fontWidth = EpubPreferences.ensureValueInRange(preferences.fontWidth,fontWidthRangeConfig.range);
     this.hyphens = EpubPreferences.ensureBoolean(preferences.hyphens);
     this.invertFilter = EpubPreferences.ensureFilter(preferences.invertFilter);
     this.invertGaijiFilter = EpubPreferences.ensureFilter(preferences.invertGaijiFilter);
@@ -162,13 +169,15 @@ export class EpubPreferences implements ConfigurablePreferences {
     return value < 0 ? undefined : value;
   }
 
-  private static ensureValueInRange(value: number | null | undefined, min: number, max: number): number | null | undefined {
+  private static ensureValueInRange(value: number | null | undefined, range: [number, number]): number | null | undefined {
     if (value === undefined) {
       return undefined;
     }
     if (value === null) {
       return null;
     }
+    const min = Math.min(...range);
+    const max = Math.max(...range);
     return value >= min && value <= max ? value : undefined;
   }
 

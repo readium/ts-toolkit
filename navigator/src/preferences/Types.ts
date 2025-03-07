@@ -11,3 +11,23 @@ export enum Theme {
   night = "night",
   custom = "custom"
 }
+
+export type RangeConfig = {
+  range: [number, number],
+  step: number
+}
+
+export const fontSizeRangeConfig: RangeConfig = {
+  range: [0.7, 2.5],
+  step: 0.1
+}
+
+export const fontWeightRangeConfig: RangeConfig = {
+  range: [100, 1000],
+  step: 100
+}
+
+export const fontWidthRangeConfig: RangeConfig = {
+  range: [50, 250],
+  step: 10
+}
