@@ -138,8 +138,9 @@ export class ReadiumCSS {
       RCSSColCount = colCount;
     }
 
+    // We have to account for zoom, that is not applied here but is in the iframe
     this.pagedContainerWidth = Math.min(
-      (RCSSColCount * baseLineLength) + this.constraint,
+      (RCSSColCount * (baseLineLength * (this.userProperties.fontSize || 1))) + this.constraint,
       constrainedWidth
     );
 
