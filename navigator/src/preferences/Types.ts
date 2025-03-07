@@ -19,7 +19,7 @@ export type RangeConfig = {
 
 export const fontSizeRangeConfig: RangeConfig = {
   range: [0.7, 2.5],
-  step: 0.1
+  step: 0.05
 }
 
 export const fontWeightRangeConfig: RangeConfig = {

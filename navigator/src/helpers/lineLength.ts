@@ -106,7 +106,7 @@ export class LineLengths {
   }
 
   set fontSize(n: number) {
-    this._fontSize = Math.round(n * DEFAULT_FONT_SIZE);
+    this._fontSize = n < 1 ? Math.round(DEFAULT_FONT_SIZE * (1 + (1 - n))) : Math.round(n * DEFAULT_FONT_SIZE);
     this._optimalLineLength = this.getOptimalLineLength();
   }
 

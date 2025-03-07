@@ -172,12 +172,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             this._preferencesEditor = new EpubPreferencesEditor(this._preferences, this.settings, this.pub.metadata);
         }
 
-        // Invalidation by comparing old and new settings if needed
-        
         if (this.layout === EPUBLayout.fixed) {
             this.handleFXLPrefs(oldSettings, this._settings);
         } else {
-            await this.updateCSS();
+            await this.updateCSS(true, oldSettings.fontSize !== this._settings.fontSize);
         }
     }
 
@@ -188,7 +186,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         }
     }
 
-    private async updateCSS(commit = true) {
+    private async updateCSS(commit: boolean, relayout = false) {
         this._css.update(this._settings);
 
         if (
@@ -203,7 +201,11 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             await this.setReadingProgression(ReadingProgression.ttb);
         }
 
-        this._css.setContainerWidth();
+        if (relayout) {
+            this._css.resizeHandler();
+        } else {
+            this._css.setContainerWidth();
+        }
 
         if (commit) this.commitCSS(this._css);
     };
@@ -437,7 +439,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             throw Error("Link for " + this.currentLocation.href + " not found!");
 
         if (this.layout === EPUBLayout.reflowable) {
-            this.updateCSS();
+            this.updateCSS(true);
         }
     }
 
