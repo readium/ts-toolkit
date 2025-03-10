@@ -2,7 +2,9 @@ import { ILineLengthsConfig, LineLengths } from "../../helpers";
 import { EpubSettings } from "../preferences/EpubSettings";
 import { IUserProperties, RSProperties, UserProperties } from "./Properties";
 
-type ILineLengthsProps = Omit<ILineLengthsConfig, "fontSize" | "optimalChars" | "minChars" | "sample" | "isCJK" | "getRelative">;
+type ILineLengthsProps = {
+  [K in Exclude<keyof ILineLengthsConfig, "fontSize" | "sample" | "isCJK" | "getRelative">]?: ILineLengthsConfig[K]
+};
 
 export interface IReadiumCSS {
   rsProperties: RSProperties;
@@ -39,6 +41,9 @@ export class ReadiumCSS {
       letterSpacing: settings.letterSpacing,
       pageGutter: settings.pageGutter,
       wordSpacing: settings.wordSpacing,
+      minChars: settings.minimalLineLength,
+      maxChars: settings.maximalLineLength,
+      optimalChars: settings.optimalLineLength,
       userChars: settings.lineLength
     });
 
@@ -107,6 +112,9 @@ export class ReadiumCSS {
     if (props.letterSpacing) this.lineLengths.letterSpacing = props.letterSpacing;
     if (props.pageGutter) this.lineLengths.pageGutter = props.pageGutter;
     if (props.wordSpacing) this.lineLengths.wordSpacing = props.wordSpacing;
+    if (props.minChars) this.lineLengths.minChars = props.minChars;
+    if (props.maxChars) this.lineLengths.maxChars = props.maxChars;
+    if (props.optimalChars) this.lineLengths.optimalChars = props.optimalChars;
     if (props.userChars) this.lineLengths.userChars = props.userChars;
   }
 

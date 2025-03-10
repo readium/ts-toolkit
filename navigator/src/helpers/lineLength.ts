@@ -100,17 +100,46 @@ export class LineLengths {
     this._approximatedWordSpaces = LineLengths.approximateWordSpaces(this._optimalChars, this._sample);
   }
 
+  set minChars(n: number | null) {
+    if (n === this._minChars) return;
+    this._minChars = n;
+    this._minDivider = this._minChars && this._minChars < this._optimalChars 
+      ? this._optimalChars / this._minChars 
+      : this._minChars === null 
+        ? null
+        : 1;
+  }
+
+  set optimalChars(n: number) {
+    if (n === this._optimalChars) return;
+    this._optimalChars = n;
+    this._optimalLineLength = this.getOptimalLineLength();
+  }
+
+  set maxChars(n: number | null) {
+    if (n === this._maxChars) return;
+    this._maxChars = n;
+    this._maxMultiplier = this._maxChars && this._maxChars > this._optimalChars 
+      ? this._maxChars / this._optimalChars 
+      : this._maxChars === null 
+        ? null
+        : 1;
+  }
+
   set userChars(n: number | null) {
+    if (n === this._userChars) return;
     this._userChars = n;
     this._userMultiplier = this._userChars ? this._userChars / this._optimalChars : null;
   }
 
   set letterSpacing(n: number) {
+    if (n === this._letterSpacing) return;
     this._letterSpacing = Math.round(n * this._fontSize);
     this._optimalLineLength = this.getOptimalLineLength();
   }
   
   set wordSpacing(n: number) {
+    if (n === this._wordSpacing) return;
     this._wordSpacing = Math.round(n * this._fontSize);
     this._optimalLineLength = this.getOptimalLineLength();
   }
@@ -126,17 +155,20 @@ export class LineLengths {
   }
 
   set sample(s: string) {
+    if (s === this._sample) return;
     this._sample = s;
     this._approximatedWordSpaces = LineLengths.approximateWordSpaces(this._optimalChars, this._sample);
   }
 
   set pageGutter(n: number) {
+    if (n === this._pageGutter) return;
     this._pageGutter = n;
     this._padding = this._pageGutter * 2;
     this._optimalLineLength = this.getOptimalLineLength();
   }
 
   set relativeGetters(b: boolean) {
+    if (b === this._getRelative) return;
     this._getRelative = b;
   }
 
