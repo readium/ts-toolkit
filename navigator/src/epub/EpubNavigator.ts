@@ -85,6 +85,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             lineLengths: new LineLengths({
                 optimalChars: this._settings.optimalLineLength,
                 minChars: this._settings.minimalLineLength,
+                maxChars: this._settings.maximalLineLength,
                 pageGutter: this._settings.pageGutter,
                 fontFace: this._settings.fontFamily,
                 fontSize: this._settings.fontSize,

@@ -20,7 +20,6 @@ export interface IEpubDefaults {
   lineHeight?: number | null,
   lineLength?: number | null,
   linkColor?: string | null,
-  minimalLineLength?: number | null,
   noRuby?: boolean | null,
   optimalLineLength?: number | null,
   pageGutter?: number | null,
@@ -57,7 +56,6 @@ export class EpubDefaults {
   lineHeight: number | null;
   lineLength: number | null;
   linkColor: string | null;
-  minimalLineLength: number | null | undefined;
   noRuby: boolean | null;
   optimalLineLength: number;
   pageGutter: number | null;
@@ -107,7 +105,6 @@ export class EpubDefaults {
     this.lineHeight = defaults.lineHeight || null;
     this.lineLength = defaults.lineLength || null;
     this.linkColor = defaults.linkColor || null;
-    this.minimalLineLength = defaults.minimalLineLength;
     this.noRuby = typeof defaults.noRuby === "boolean" 
       ? defaults.noRuby 
       : false;

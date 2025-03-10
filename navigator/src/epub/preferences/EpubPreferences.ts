@@ -27,6 +27,7 @@ export interface IEpubPreferences {
   lineHeight?: number | null,
   lineLength?: number | null,
   linkColor?: string | null,
+  maximalLineLength?: number | null,
   minimalLineLength?: number | null,
   noRuby?: boolean | null,
   optimalLineLength?: number,
@@ -64,6 +65,7 @@ export class EpubPreferences implements ConfigurablePreferences {
   lineHeight?: number | null;
   lineLength?: number | null;
   linkColor?: string | null;
+  maximalLineLength?: number | null;
   minimalLineLength?: number | null;
   noRuby?: boolean | null;
   optimalLineLength?: number;
@@ -99,7 +101,8 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.ligatures = EpubPreferences.ensureBoolean(preferences.ligatures);
     this.lineHeight = EpubPreferences.ensureNonNegative(preferences.lineHeight);
     this.lineLength = EpubPreferences.ensureNonNegative(preferences.lineLength);
-    this.minimalLineLength = preferences.minimalLineLength;
+    this.maximalLineLength = EpubPreferences.ensureMoreThanOrEqual(preferences.maximalLineLength, preferences.optimalLineLength);
+    this.minimalLineLength = EpubPreferences.ensureLessThanOrEqual(preferences.minimalLineLength, preferences.maximalLineLength);
     this.linkColor = EpubPreferences.ensureString(preferences.linkColor);
     this.optimalLineLength = EpubPreferences.ensureNonNegative(preferences.optimalLineLength) || 65;
     this.noRuby = EpubPreferences.ensureBoolean(preferences.noRuby);
@@ -116,6 +119,26 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.theme = EpubPreferences.ensureEnumValue<Theme>(preferences.theme, Theme);
     this.visitedColor = EpubPreferences.ensureString(preferences.visitedColor);
     this.wordSpacing = EpubPreferences.ensureNonNegative(preferences.wordSpacing);
+  }
+
+  private static ensureLessThanOrEqual<T extends number | null | undefined>(value: T, compareTo: T): T | null {
+    if (value === undefined || value === null) {
+      return value;
+    }
+    if (compareTo === undefined || compareTo === null) {
+      return value;
+    }
+    return value <= compareTo ? value : null;
+  }
+
+  private static ensureMoreThanOrEqual<T extends number | null | undefined>(value: T, compareTo: T): T | null {
+    if (value === undefined || value === null) {
+      return value;
+    }
+    if (compareTo === undefined || compareTo === null) {
+      return value;
+    }
+    return value >= compareTo ? value : null;
   }
   
   private static ensureString(value: string | null | undefined): string | null | undefined {

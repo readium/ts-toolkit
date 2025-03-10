@@ -6,6 +6,7 @@ export interface ICustomFontFace {
 export interface ILineLengthsConfig {
   optimalChars: number;
   minChars?: number | null;
+  maxChars?: number | null;
   userChars?: number | null;
   fontSize?: number | null;
   sample?: string | null;
@@ -20,6 +21,7 @@ export interface ILineLengthsConfig {
 export interface ILineLengths {
   min: number | null;
   user: number | null;
+  max: number | null;
   optimal: number;
   fontSize: number;
 }
@@ -44,6 +46,7 @@ export class LineLengths {
 
   private _optimalChars: number;
   private _minChars?: number | null;
+  private _maxChars?: number | null;
   private _userChars: number | null;
   private _fontSize: number;
   private _fontFace: string | ICustomFontFace | null;
@@ -57,6 +60,7 @@ export class LineLengths {
   private _padding: number;
   private _minDivider: number | null;
   private _userMultiplier: number | null;
+  private _maxMultiplier: number | null;
   private _approximatedWordSpaces: number;
 
   private _optimalLineLength: number | null = null;
@@ -65,6 +69,7 @@ export class LineLengths {
     this._canvas = document.createElement("canvas");
     this._optimalChars = config.optimalChars;
     this._minChars = config.minChars;
+    this._maxChars = config.maxChars;
     this._userChars = config.userChars || null;
     this._fontSize = (config.fontSize || 1) * DEFAULT_FONT_SIZE;
     this._fontFace = config.fontFace || null;
@@ -87,6 +92,11 @@ export class LineLengths {
     this._userMultiplier = this._userChars 
       ? this._userChars / this._optimalChars 
       : null;
+    this._maxMultiplier = this._maxChars && this._maxChars > this._optimalChars
+      ? this._maxChars / this._optimalChars 
+      : this._maxChars === null 
+        ? null
+        : 1;
     this._approximatedWordSpaces = LineLengths.approximateWordSpaces(this._optimalChars, this._sample);
   }
 
@@ -152,6 +162,15 @@ export class LineLengths {
       : null;
   }
 
+  get maxLineLength(): number | null {
+    if (!this._optimalLineLength) {
+      this._optimalLineLength = this.getOptimalLineLength();
+    }
+    return this._maxMultiplier !== null 
+      ? Math.round((this._optimalLineLength * this._maxMultiplier) + this._padding) / (this._getRelative ? this._fontSize : 1) 
+      : null;
+  }
+
   get optimalLineLength(): number {
     if (!this._optimalLineLength) {
       this._optimalLineLength = this.getOptimalLineLength();
@@ -166,6 +185,7 @@ export class LineLengths {
     return {
       min: this.minimalLineLength,
       user: this.userLineLength,
+      max: this.maxLineLength,
       optimal: this.optimalLineLength,
       fontSize: this._fontSize
     }

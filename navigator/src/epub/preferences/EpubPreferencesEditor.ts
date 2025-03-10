@@ -256,6 +256,19 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
+  get maximalLineLength(): RangePreference<number> {
+    return new RangePreference<number>({
+      initialValue: this.preferences.maximalLineLength,
+      effectiveValue: this.settings.maximalLineLength,
+      isEffective: this.layout === EPUBLayout.reflowable,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("maximalLineLength", newValue);
+      },
+      supportedRange: [20, 100],
+      step: 1
+    });
+  }
+
   get minimalLineLength(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: this.preferences.minimalLineLength,
