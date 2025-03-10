@@ -90,7 +90,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 fontSize: this._settings.fontSize,
                 letterSpacing: this._settings.letterSpacing,
                 wordSpacing: this._settings.wordSpacing,
-                sample: this.pub.metadata.description
+            //    sample: this.pub.metadata.description
             }),
             container: container,
             constraint: this._settings.constraint

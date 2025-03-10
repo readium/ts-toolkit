@@ -2,7 +2,7 @@ import { ILineLengthsConfig, LineLengths } from "../../helpers";
 import { EpubSettings } from "../preferences/EpubSettings";
 import { IUserProperties, RSProperties, UserProperties } from "./Properties";
 
-type ILineLengthsProps = Omit<ILineLengthsConfig, "optimalChars" | "minChars" | "sample" | "isCJK" | "getRelative">;
+type ILineLengthsProps = Omit<ILineLengthsConfig, "fontSize" | "optimalChars" | "minChars" | "sample" | "isCJK" | "getRelative">;
 
 export interface IReadiumCSS {
   rsProperties: RSProperties;
@@ -36,7 +36,6 @@ export class ReadiumCSS {
   update(settings: EpubSettings) {
     this.updateLineLengths({
       fontFace: settings.fontFamily,
-      fontSize: settings.fontSize,
       letterSpacing: settings.letterSpacing,
       pageGutter: settings.pageGutter,
       wordSpacing: settings.wordSpacing,
@@ -105,7 +104,6 @@ export class ReadiumCSS {
 
   private updateLineLengths(props: ILineLengthsProps) {
     if (props.fontFace) this.lineLengths.fontFace = props.fontFace;
-    if (props.fontSize) this.lineLengths.fontSize = props.fontSize;
     if (props.letterSpacing) this.lineLengths.letterSpacing = props.letterSpacing;
     if (props.pageGutter) this.lineLengths.pageGutter = props.pageGutter;
     if (props.wordSpacing) this.lineLengths.wordSpacing = props.wordSpacing;
@@ -114,6 +112,7 @@ export class ReadiumCSS {
 
   private setColCount(colCount?: number | null, baseLineLength: number = this.lineLengths.optimalLineLength) {
     const constrainedWidth = (this.containerParent.clientWidth - (this.constraint));
+    const correctedLineLength = baseLineLength * (this.userProperties.fontSize || 1);
 
     if (colCount === undefined) {
       return undefined;
@@ -122,12 +121,13 @@ export class ReadiumCSS {
     let RCSSColCount = 1;
 
     if (colCount === null) {
-      RCSSColCount = (constrainedWidth >= baseLineLength) 
-        ? Math.floor(constrainedWidth / baseLineLength) 
+      RCSSColCount = (constrainedWidth >= correctedLineLength) 
+        ? Math.floor(constrainedWidth / correctedLineLength) 
         : 1;
     } else if (colCount > 1) {
-        if (this.lineLengths.minimalLineLength !== null) {
-        const requiredWidth = 2 * this.lineLengths.minimalLineLength;
+      if (this.lineLengths.minimalLineLength !== null) {
+        const correctedMinimalLineLength = this.lineLengths.minimalLineLength * (this.userProperties.fontSize || 1);
+        const requiredWidth = 2 * correctedMinimalLineLength;
         constrainedWidth > requiredWidth 
           ? RCSSColCount = colCount 
           : RCSSColCount = colCount - 1;
@@ -140,7 +140,7 @@ export class ReadiumCSS {
 
     // We have to account for zoom, that is not applied here but is in the iframe
     this.pagedContainerWidth = Math.min(
-      (RCSSColCount * (baseLineLength * (this.userProperties.fontSize || 1))) + this.constraint,
+      (RCSSColCount * correctedLineLength) + this.constraint,
       constrainedWidth
     );
 
