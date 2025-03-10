@@ -247,7 +247,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             const oldColCount = this._css.userProperties.colCount; 
             this._css.resizeHandler();
             if (
-                this._css.userProperties.view === "paged" &&
+                this._css.userProperties.view !== "scroll" &&
                 oldColCount !== this._css.userProperties.colCount
             ) {
                 this.commitCSS(this._css);
