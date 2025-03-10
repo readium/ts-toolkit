@@ -162,7 +162,7 @@ export class LineLengths {
       : null;
   }
 
-  get maxLineLength(): number | null {
+  get maximalLineLength(): number | null {
     if (!this._optimalLineLength) {
       this._optimalLineLength = this.getOptimalLineLength();
     }
@@ -185,7 +185,7 @@ export class LineLengths {
     return {
       min: this.minimalLineLength,
       user: this.userLineLength,
-      max: this.maxLineLength,
+      max: this.maximalLineLength,
       optimal: this.optimalLineLength,
       fontSize: this._fontSize
     }
