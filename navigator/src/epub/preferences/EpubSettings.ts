@@ -113,8 +113,12 @@ export class EpubSettings implements ConfigurableSettings {
     this.lineHeight = preferences.lineHeight || defaults.lineHeight || null;
     this.lineLength = preferences.lineLength || defaults.lineLength || null;
     this.linkColor = preferences.linkColor || defaults.linkColor || null;
-    this.maximalLineLength = preferences.maximalLineLength || defaults.maximalLineLength || null;
-    this.minimalLineLength = preferences.minimalLineLength || defaults.minimalLineLength || null;
+    this.maximalLineLength = preferences.maximalLineLength === null 
+      ? null 
+      : preferences.maximalLineLength || defaults.maximalLineLength || null;
+    this.minimalLineLength = preferences.minimalLineLength === null 
+      ? null 
+      : preferences.minimalLineLength || defaults.minimalLineLength || null;
     this.noRuby = typeof preferences.noRuby === "boolean" 
       ? preferences.noRuby 
       : defaults.noRuby || null;

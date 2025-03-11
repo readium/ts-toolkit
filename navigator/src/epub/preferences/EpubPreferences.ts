@@ -125,24 +125,24 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.wordSpacing = EpubPreferences.ensureNonNegative(preferences.wordSpacing);
   }
 
-  private static ensureLessThanOrEqual<T extends number | null | undefined>(value: T, compareTo: T): T | null {
+  private static ensureLessThanOrEqual<T extends number | null | undefined>(value: T, compareTo: T): T | undefined {
     if (value === undefined || value === null) {
       return value;
     }
     if (compareTo === undefined || compareTo === null) {
       return value;
     }
-    return value <= compareTo ? value : null;
+    return value <= compareTo ? value : undefined;
   }
 
-  private static ensureMoreThanOrEqual<T extends number | null | undefined>(value: T, compareTo: T): T | null {
+  private static ensureMoreThanOrEqual<T extends number | null | undefined>(value: T, compareTo: T): T | undefined {
     if (value === undefined || value === null) {
       return value;
     }
     if (compareTo === undefined || compareTo === null) {
       return value;
     }
-    return value >= compareTo ? value : null;
+    return value >= compareTo ? value : undefined;
   }
   
   private static ensureString(value: string | null | undefined): string | null | undefined {
