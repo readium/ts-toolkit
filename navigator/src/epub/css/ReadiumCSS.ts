@@ -155,22 +155,22 @@ export class ReadiumCSS {
         
             if (maximalCount >= 2) {
               RCSSColCount = maximalCount;
-              const pagedContainedWidth = Math.min((RCSSColCount * maximal!) + this.constraint, constrainedWidth);
+              const pagedContainedWidth = Math.min((RCSSColCount * maximal!), constrainedWidth);
               const effectiveLineLength = maximal;
               return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
             } else if (optimalCount >= 2) {
               RCSSColCount = optimalCount;
-              const pagedContainedWidth = Math.min((RCSSColCount * optimal) + this.constraint, constrainedWidth);
+              const pagedContainedWidth = Math.min((RCSSColCount * optimal), constrainedWidth);
               const effectiveLineLength = optimal;
               return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
             } else if (maximal !== null && constrainedWidth >= maximal) {
               RCSSColCount = 1;
-              const pagedContainedWidth = Math.min(maximal + this.constraint, constrainedWidth);
+              const pagedContainedWidth = Math.min(maximal, constrainedWidth);
               const effectiveLineLength = maximal;
               return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
             } else {
               RCSSColCount = 1;
-              const pagedContainedWidth = Math.min(optimal + this.constraint, constrainedWidth);
+              const pagedContainedWidth = Math.min(optimal, constrainedWidth);
               const effectiveLineLength = optimal;
               return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
             }
@@ -185,12 +185,12 @@ export class ReadiumCSS {
         if (constrainedWidth >= optimal) {
           if (minimal !== null) {
             RCSSColCount = Math.floor(constrainedWidth / minimal);
-            const pagedContainedWidth = Math.min((RCSSColCount * optimal) + this.constraint, constrainedWidth);
+            const pagedContainedWidth = Math.min((RCSSColCount * optimal), constrainedWidth);
             const effectiveLineLength = optimal;
             return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
           } else {
             RCSSColCount = Math.floor(constrainedWidth / optimal);
-            const pagedContainedWidth = Math.min((RCSSColCount * optimal) + this.constraint, constrainedWidth);
+            const pagedContainedWidth = Math.min((RCSSColCount * optimal), constrainedWidth);
             const effectiveLineLength = optimal;
             return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
           }
@@ -209,17 +209,17 @@ export class ReadiumCSS {
       if (constrainedWidth > requiredWidth) {
         if (maximalCount >= 2) {
           RCSSColCount = Math.min(maximalCount, colCount);
-          const pagedContainedWidth = Math.min((RCSSColCount * maximal!) + this.constraint, constrainedWidth);
+          const pagedContainedWidth = Math.min((RCSSColCount * maximal!), constrainedWidth);
           const effectiveLineLength = maximal;
           return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
         } else if (optimalCount >= 2) {
           RCSSColCount = Math.min(optimalCount, colCount);
-          const pagedContainedWidth = Math.min((RCSSColCount * optimal) + this.constraint, constrainedWidth);
+          const pagedContainedWidth = Math.min((RCSSColCount * optimal), constrainedWidth);
           const effectiveLineLength = optimal;
           return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
         } else {
           RCSSColCount = colCount;
-          const pagedContainedWidth = Math.min((RCSSColCount * optimal) + this.constraint, constrainedWidth);
+          const pagedContainedWidth = Math.min((RCSSColCount * optimal), constrainedWidth);
           const effectiveLineLength = optimal;
           return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
         }
@@ -229,19 +229,19 @@ export class ReadiumCSS {
         } else {
           RCSSColCount = colCount;
         }
-        const pagedContainedWidth = Math.min((RCSSColCount * optimal) + this.constraint, constrainedWidth);
+        const pagedContainedWidth = Math.min((RCSSColCount * optimal), constrainedWidth);
         const effectiveLineLength = optimal;
         return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
       }
     } else {
       if (maximal !== null && constrainedWidth >= maximal) {
         RCSSColCount = 1;
-        const pagedContainedWidth = Math.min(maximal + this.constraint, constrainedWidth);
+        const pagedContainedWidth = Math.min(maximal, constrainedWidth);
         const effectiveLineLength = maximal;
         return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
       } else {
         RCSSColCount = 1;
-        const pagedContainedWidth = Math.min(optimal + this.constraint, constrainedWidth);
+        const pagedContainedWidth = Math.min(optimal, constrainedWidth);
         const effectiveLineLength = optimal;
         return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
       }
