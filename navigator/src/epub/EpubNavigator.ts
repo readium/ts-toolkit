@@ -245,11 +245,13 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         } else {
             // for reflow ReadiumCSS gets the width from columns + line-lengths 
             // but we need to check whether colCount has changed to commit new CSS
-            const oldColCount = this._css.userProperties.colCount; 
+            const oldColCount = this._css.userProperties.colCount;
+            const oldLineLength = this._css.userProperties.lineLength;
             this._css.resizeHandler();
             if (
                 this._css.userProperties.view !== "scroll" &&
-                oldColCount !== this._css.userProperties.colCount
+                oldColCount !== this._css.userProperties.colCount ||
+                oldLineLength !== this._css.userProperties.lineLength
             ) {
                 this.commitCSS(this._css);
             }
