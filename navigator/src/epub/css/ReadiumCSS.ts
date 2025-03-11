@@ -64,7 +64,10 @@ export class ReadiumCSS {
       userChars: settings.lineLength
     });
 
-    const baseLineLength = this.lineLengths.userLineLength || this.lineLengths.optimalLineLength;
+    const pagination = settings.scroll ? undefined : this.setColCount(settings.columnCount);
+
+    if (pagination?.pagedContainerWidth)
+      this.pagedContainerWidth = pagination?.pagedContainerWidth;
     
     const updated: IUserProperties = {
       advancedSettings: !settings.publisherStyles,
@@ -77,7 +80,7 @@ export class ReadiumCSS {
         : settings.hyphens 
           ? "auto" 
           : "none",
-      colCount: settings.scroll ? undefined : this.setColCount(settings.columnCount, baseLineLength),
+      colCount: settings.scroll ? undefined : pagination?.colCount,
       darkenFilter: settings.darkenFilter,
       fontFamily: settings.fontFamily,
       fontOpticalSizing: typeof settings.fontOpticalSizing !== "boolean" 
@@ -97,7 +100,7 @@ export class ReadiumCSS {
           ? "common-ligatures" 
           : "none",
       lineHeight: settings.lineHeight,
-      lineLength: this.lineLengths.userLineLength || this.lineLengths.optimalLineLength,
+      lineLength: pagination?.effectiveLineLength || this.lineLengths.userLineLength || this.lineLengths.optimalLineLength,
       noRuby: settings.noRuby,
       paraIndent: settings.paragraphIndent,
       paraSpacing: settings.paragraphSpacing,
@@ -125,41 +128,128 @@ export class ReadiumCSS {
     if (props.userChars) this.lineLengths.userChars = props.userChars;
   }
 
-  private setColCount(colCount?: number | null, baseLineLength: number = this.lineLengths.optimalLineLength) {
+  // Note: Kept intentionally verbose for debugging
+  private setColCount(colCount?: number | null) {
+    const zoomFactor = this.userProperties.fontSize || 1;
     const constrainedWidth = (this.containerParent.clientWidth - (this.constraint));
-    const correctedLineLength = baseLineLength * (this.userProperties.fontSize || 1);
+    const optimal = (this.lineLengths.userLineLength ||this.lineLengths.optimalLineLength) * zoomFactor;
+    const minimal = this.lineLengths.minimalLineLength !== null 
+      ? this.lineLengths.minimalLineLength * zoomFactor 
+      : null;
+    const maximal = this.lineLengths.maximalLineLength !== null 
+      ? this.lineLengths.maximalLineLength * zoomFactor 
+      : null;
 
-    if (colCount === undefined) {
-      return undefined;
-    }
-    
     let RCSSColCount = 1;
 
+    if (colCount === undefined) {
+      return { colCount: undefined, pagedContainerWidth: constrainedWidth, effectiveLineLength: optimal };
+    }
+    
     if (colCount === null) {
-      RCSSColCount = (constrainedWidth >= correctedLineLength) 
-        ? Math.floor(constrainedWidth / correctedLineLength) 
-        : 1;
+      if (this.paginationStrategy === PaginationStrategy.lineLength) {
+        if (constrainedWidth >= optimal) {
+          if (constrainedWidth >= optimal) {
+            const optimalCount = Math.floor(constrainedWidth / optimal);
+            const maximalCount = maximal !== null ? Math.floor(constrainedWidth / maximal) : 0;
+        
+            if (maximalCount >= 2) {
+              RCSSColCount = maximalCount;
+              const pagedContainedWidth = Math.min((RCSSColCount * maximal!) + this.constraint, constrainedWidth);
+              const effectiveLineLength = maximal;
+              return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
+            } else if (optimalCount >= 2) {
+              RCSSColCount = optimalCount;
+              const pagedContainedWidth = Math.min((RCSSColCount * optimal) + this.constraint, constrainedWidth);
+              const effectiveLineLength = optimal;
+              return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
+            } else if (maximal !== null && constrainedWidth >= maximal) {
+              RCSSColCount = 1;
+              const pagedContainedWidth = Math.min(maximal + this.constraint, constrainedWidth);
+              const effectiveLineLength = maximal;
+              return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
+            } else {
+              RCSSColCount = 1;
+              const pagedContainedWidth = Math.min(optimal + this.constraint, constrainedWidth);
+              const effectiveLineLength = optimal;
+              return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
+            }
+          } else {
+            RCSSColCount = 1;
+            const pagedContainedWidth = constrainedWidth;
+            const effectiveLineLength = optimal;
+            return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
+          }
+        }
+      } else if (this.paginationStrategy === PaginationStrategy.columns) {
+        if (constrainedWidth >= optimal) {
+          if (minimal !== null) {
+            RCSSColCount = Math.floor(constrainedWidth / minimal);
+            const pagedContainedWidth = Math.min((RCSSColCount * optimal) + this.constraint, constrainedWidth);
+            const effectiveLineLength = optimal;
+            return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
+          } else {
+            RCSSColCount = Math.floor(constrainedWidth / optimal);
+            const pagedContainedWidth = Math.min((RCSSColCount * optimal) + this.constraint, constrainedWidth);
+            const effectiveLineLength = optimal;
+            return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
+          }
+        } else {
+          RCSSColCount = 1;
+          const pagedContainedWidth = constrainedWidth;
+          const effectiveLineLength = optimal;
+          return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
+        }
+      }
     } else if (colCount > 1) {
-      if (this.lineLengths.minimalLineLength !== null) {
-        const correctedMinimalLineLength = this.lineLengths.minimalLineLength * (this.userProperties.fontSize || 1);
-        const requiredWidth = 2 * correctedMinimalLineLength;
-        constrainedWidth > requiredWidth 
-          ? RCSSColCount = colCount 
-          : RCSSColCount = colCount - 1;
+      if (minimal !== null) {
+        const requiredWidth = 2 * minimal;
+        const optimalCount = Math.floor(constrainedWidth / optimal);
+        const maximalCount = maximal !== null ? Math.floor(constrainedWidth / maximal) : 0;
+    
+        if (constrainedWidth > requiredWidth) {
+          if (maximalCount >= 2) {
+            RCSSColCount = Math.min(maximalCount, colCount);
+            const pagedContainedWidth = Math.min((RCSSColCount * maximal!) + this.constraint, constrainedWidth);
+            const effectiveLineLength = maximal;
+            return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
+          } else if (optimalCount >= 2) {
+            RCSSColCount = Math.min(optimalCount, colCount);
+            const pagedContainedWidth = Math.min((RCSSColCount * optimal) + this.constraint, constrainedWidth);
+            const effectiveLineLength = optimal;
+            return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
+          } else {
+            RCSSColCount = colCount;
+            const pagedContainedWidth = Math.min((RCSSColCount * optimal) + this.constraint, constrainedWidth);
+            const effectiveLineLength = optimal;
+            return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
+          }
+        } else {
+          RCSSColCount = colCount - 1;
+          const pagedContainedWidth = Math.min((RCSSColCount * optimal) + this.constraint, constrainedWidth);
+          const effectiveLineLength = optimal;
+          return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
+        }
       } else {
         RCSSColCount = colCount;
+        const pagedContainedWidth = Math.min((RCSSColCount * optimal) + this.constraint, constrainedWidth);
+        const effectiveLineLength = optimal;
+        return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
       }
     } else {
-      RCSSColCount = colCount;
+      if (maximal !== null && constrainedWidth >= maximal) {
+        RCSSColCount = 1;
+        const pagedContainedWidth = Math.min(maximal + this.constraint, constrainedWidth);
+        const effectiveLineLength = maximal;
+        return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
+      } else {
+        RCSSColCount = 1;
+        const pagedContainedWidth = Math.min(optimal + this.constraint, constrainedWidth);
+        const effectiveLineLength = optimal;
+        return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
+      }
     }
-
-    // We have to account for zoom, that is not applied here but is in the iframe
-    this.pagedContainerWidth = Math.min(
-      (RCSSColCount * correctedLineLength) + this.constraint,
-      constrainedWidth
-    );
-
-    return RCSSColCount;
+    return { colCount: undefined, pagedContainerWidth: constrainedWidth, effectiveLineLength: optimal };
   }
 
   setContainerWidth() {
@@ -174,9 +264,10 @@ export class ReadiumCSS {
     if (this.userProperties.view === "scroll") {
       this.container.style.width = `${ this.containerParent.clientWidth }px`;
     } else {
-      const baseLineLength = this.userProperties.lineLength || this.lineLengths.optimalLineLength;
-      this.userProperties.colCount = this.setColCount(this.cachedColCount, baseLineLength);
-  
+      const pagination = this.setColCount(this.cachedColCount);
+      this.userProperties.colCount = pagination.colCount;
+      this.userProperties.lineLength = pagination.effectiveLineLength;
+      this.pagedContainerWidth = pagination.pagedContainerWidth;
       this.container.style.width = `${ this.pagedContainerWidth }px`;
     }
   }
