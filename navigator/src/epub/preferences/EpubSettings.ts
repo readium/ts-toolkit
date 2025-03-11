@@ -1,5 +1,5 @@
 import { ConfigurableSettings } from "../../preferences/Configurable";
-import { TextAlignment, Theme } from "../../preferences/Types";
+import { PaginationStrategy, TextAlignment, Theme } from "../../preferences/Types";
 import { EpubDefaults } from "./EpubDefaults";
 import { EpubPreferences } from "./EpubPreferences";
 
@@ -27,6 +27,7 @@ export interface IEpubSettings {
   noRuby?: boolean | null,
   optimalLineLength?: number | null,
   pageGutter?: number | null,
+  paginationStrategy?: PaginationStrategy | null,
   paragraphIndent?: number | null,
   paragraphSpacing?: number | null,
   publisherStyles?: boolean | null,
@@ -60,11 +61,12 @@ export class EpubSettings implements ConfigurableSettings {
   lineHeight: number | null;
   lineLength: number | null;
   linkColor: string | null;
-  maximalLineLength: number | null | undefined;
-  minimalLineLength: number | null | undefined;
+  maximalLineLength: number | null;
+  minimalLineLength: number | null;
   noRuby: boolean | null;
   optimalLineLength: number;
   pageGutter: number | null;
+  paginationStrategy: PaginationStrategy | null;
   paragraphIndent: number | null;
   paragraphSpacing: number | null;
   publisherStyles: boolean | null;
@@ -111,13 +113,14 @@ export class EpubSettings implements ConfigurableSettings {
     this.lineHeight = preferences.lineHeight || defaults.lineHeight || null;
     this.lineLength = preferences.lineLength || defaults.lineLength || null;
     this.linkColor = preferences.linkColor || defaults.linkColor || null;
-    this.maximalLineLength = preferences.maximalLineLength;
-    this.minimalLineLength = preferences.minimalLineLength;
+    this.maximalLineLength = preferences.maximalLineLength || defaults.maximalLineLength || null;
+    this.minimalLineLength = preferences.minimalLineLength || defaults.minimalLineLength || null;
     this.noRuby = typeof preferences.noRuby === "boolean" 
       ? preferences.noRuby 
       : defaults.noRuby || null;
     this.optimalLineLength = preferences.optimalLineLength || defaults.optimalLineLength;
     this.pageGutter = preferences.pageGutter || defaults.pageGutter || null;
+    this.paginationStrategy = preferences.paginationStrategy || defaults.paginationStrategy || null;
     this.paragraphIndent = preferences.paragraphIndent || defaults.paragraphIndent || null;
     this.paragraphSpacing = preferences.paragraphSpacing || defaults.paragraphSpacing || null;
     this.publisherStyles = typeof preferences.publisherStyles === "boolean" 

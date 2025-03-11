@@ -4,6 +4,7 @@ import { EpubPreferences } from "./EpubPreferences";
 import { EpubSettings } from "./EpubSettings";
 import { BooleanPreference, EnumPreference, Preference, RangePreference } from "../../preferences/Preference";
 import { 
+  PaginationStrategy,
   TextAlignment, 
   Theme, 
   fontSizeRangeConfig, 
@@ -315,6 +316,18 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
         this.updatePreference("pageGutter", newValue || null);
       }
     });
+  }
+
+  get paginationStrategy(): EnumPreference<PaginationStrategy> {
+    return new EnumPreference<PaginationStrategy>({
+      initialValue: this.preferences.paginationStrategy,
+      effectiveValue: this.settings.paginationStrategy,
+      isEffective: this.layout === EPUBLayout.reflowable,
+      onChange: (newValue: PaginationStrategy | null | undefined) => {
+        this.updatePreference("paginationStrategy", newValue || null);
+      },
+      supportedValues: Object.values(PaginationStrategy)
+    })
   }
 
   get paragraphIndent(): RangePreference<number> {

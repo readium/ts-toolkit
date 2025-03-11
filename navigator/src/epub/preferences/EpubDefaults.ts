@@ -1,4 +1,4 @@
-import { TextAlignment, Theme } from "../../preferences/Types";
+import { PaginationStrategy, TextAlignment, Theme } from "../../preferences/Types";
 
 // Expose everything available in Preferences except blend and gaiji filters ATM
 export interface IEpubDefaults {
@@ -20,9 +20,12 @@ export interface IEpubDefaults {
   lineHeight?: number | null,
   lineLength?: number | null,
   linkColor?: string | null,
+  maximalLineLength?: number | null,
+  minimalLineLength?: number | null,
   noRuby?: boolean | null,
   optimalLineLength?: number | null,
   pageGutter?: number | null,
+  paginationStrategy?: PaginationStrategy | null,
   paragraphIndent?: number | null,
   paragraphSpacing?: number | null,
   publisherStyles?: boolean | null,
@@ -56,9 +59,12 @@ export class EpubDefaults {
   lineHeight: number | null;
   lineLength: number | null;
   linkColor: string | null;
+  maximalLineLength: number | null;
+  minimalLineLength: number | null;
   noRuby: boolean | null;
   optimalLineLength: number;
   pageGutter: number | null;
+  paginationStrategy: PaginationStrategy | null;
   paragraphIndent: number | null;
   paragraphSpacing: number | null;
   publisherStyles: boolean | null;
@@ -105,11 +111,14 @@ export class EpubDefaults {
     this.lineHeight = defaults.lineHeight || null;
     this.lineLength = defaults.lineLength || null;
     this.linkColor = defaults.linkColor || null;
+    this.maximalLineLength = defaults.maximalLineLength || 80;
+    this.minimalLineLength = defaults.minimalLineLength || 40;
     this.noRuby = typeof defaults.noRuby === "boolean" 
       ? defaults.noRuby 
       : false;
     this.optimalLineLength = defaults.optimalLineLength || 65;
     this.pageGutter = defaults.pageGutter || 20;
+    this.paginationStrategy = defaults.paginationStrategy || PaginationStrategy.lineLength;
     this.paragraphIndent = defaults.paragraphIndent || null;
     this.paragraphSpacing = defaults.paragraphSpacing || null;
     this.publisherStyles = typeof defaults.publisherStyles === "boolean" 

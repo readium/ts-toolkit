@@ -12,6 +12,11 @@ export enum Theme {
   custom = "custom"
 }
 
+export enum PaginationStrategy {
+  lineLength = "lineLength",
+  columns = "columns"
+}
+
 export type RangeConfig = {
   range: [number, number],
   step: number

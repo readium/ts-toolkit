@@ -1,4 +1,5 @@
 import { ILineLengthsConfig, LineLengths } from "../../helpers";
+import { PaginationStrategy } from "../../preferences";
 import { EpubSettings } from "../preferences/EpubSettings";
 import { IUserProperties, RSProperties, UserProperties } from "./Properties";
 
@@ -12,6 +13,7 @@ export interface IReadiumCSS {
   lineLengths: LineLengths;
   container: HTMLElement;
   constraint: number;
+  paginationStrategy?: PaginationStrategy | null;
 }
 
 export class ReadiumCSS {
@@ -21,6 +23,7 @@ export class ReadiumCSS {
   container: HTMLElement;
   containerParent: HTMLElement;
   constraint: number;
+  paginationStrategy: PaginationStrategy;
   private cachedColCount: number | null | undefined;
   private pagedContainerWidth: number;
 
@@ -31,11 +34,25 @@ export class ReadiumCSS {
     this.container = props.container;
     this.containerParent = props.container.parentElement || document.documentElement;
     this.constraint = props.constraint;
+    this.paginationStrategy = props.paginationStrategy || PaginationStrategy.lineLength;
     this.cachedColCount = props.userProperties.colCount;
     this.pagedContainerWidth = this.containerParent.clientWidth;
   }
 
   update(settings: EpubSettings) {
+    // We need to keep the column count reference for resizeHandler
+    this.cachedColCount = settings.columnCount;
+
+    if (settings.constraint !== this.constraint) 
+      this.constraint = settings.constraint;
+
+    if (settings.paginationStrategy && settings.paginationStrategy !== this.paginationStrategy) 
+      this.paginationStrategy = settings.paginationStrategy;
+
+    if (settings.pageGutter !== this.rsProperties.pageGutter) {
+      this.rsProperties.pageGutter = settings.pageGutter;
+    }
+
     this.updateLineLengths({
       fontFace: settings.fontFamily,
       letterSpacing: settings.letterSpacing,
@@ -94,17 +111,7 @@ export class ReadiumCSS {
       wordSpacing: settings.wordSpacing
     };
 
-    // We need to keep the column count reference for resizeHandler
-    this.cachedColCount = settings.columnCount;
-
-    if (settings.constraint !== this.constraint) 
-      this.constraint = settings.constraint;
-
     this.userProperties = new UserProperties(updated);
-
-    if (settings.pageGutter !== this.rsProperties.pageGutter) {
-      this.rsProperties.pageGutter = settings.pageGutter;
-    }
   }
 
   private updateLineLengths(props: ILineLengthsProps) {

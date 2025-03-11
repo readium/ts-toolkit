@@ -1,6 +1,7 @@
 import { ConfigurablePreferences } from "../../preferences/Configurable";
 
 import { 
+  PaginationStrategy,
   TextAlignment, 
   Theme, 
   fontSizeRangeConfig, 
@@ -32,6 +33,7 @@ export interface IEpubPreferences {
   noRuby?: boolean | null,
   optimalLineLength?: number,
   pageGutter?: number | null,
+  paginationStrategy?: PaginationStrategy | null,
   paragraphIndent?: number | null,
   paragraphSpacing?: number | null,
   publisherStyles?: boolean | null,
@@ -70,6 +72,7 @@ export class EpubPreferences implements ConfigurablePreferences {
   noRuby?: boolean | null;
   optimalLineLength?: number;
   pageGutter?: number | null;
+  paginationStrategy?: PaginationStrategy | null;
   paragraphIndent?: number | null;
   paragraphSpacing?: number | null;
   publisherStyles?: boolean | null;
@@ -107,6 +110,7 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.optimalLineLength = EpubPreferences.ensureNonNegative(preferences.optimalLineLength) || 65;
     this.noRuby = EpubPreferences.ensureBoolean(preferences.noRuby);
     this.pageGutter = EpubPreferences.ensureNonNegative(preferences.pageGutter);
+    this.paginationStrategy = EpubPreferences.ensureEnumValue<PaginationStrategy>(preferences.paginationStrategy, PaginationStrategy);
     this.paragraphIndent = EpubPreferences.ensureNonNegative(preferences.paragraphIndent);
     this.paragraphSpacing = EpubPreferences.ensureNonNegative(preferences.paragraphSpacing);
     this.publisherStyles = EpubPreferences.ensureBoolean(preferences.publisherStyles);
