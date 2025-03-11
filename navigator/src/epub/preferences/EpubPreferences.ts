@@ -209,7 +209,8 @@ export class EpubPreferences implements ConfigurablePreferences {
   }
 
   static serialize(preferences: EpubPreferences): string {
-    return JSON.stringify(preferences);
+    const { ...properties } = preferences;
+    return JSON.stringify(properties);
   }
 
   static deserialize(preferences: string): EpubPreferences | null {
