@@ -118,7 +118,7 @@ export class EpubDefaults {
       : false;
     this.optimalLineLength = defaults.optimalLineLength || 65;
     this.pageGutter = defaults.pageGutter || 20;
-    this.paginationStrategy = defaults.paginationStrategy || PaginationStrategy.lineLength;
+    this.paginationStrategy = defaults.paginationStrategy || null;
     this.paragraphIndent = defaults.paragraphIndent || null;
     this.paragraphSpacing = defaults.paragraphSpacing || null;
     this.publisherStyles = typeof defaults.publisherStyles === "boolean" 

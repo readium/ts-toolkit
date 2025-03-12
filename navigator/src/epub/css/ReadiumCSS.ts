@@ -23,7 +23,7 @@ export class ReadiumCSS {
   container: HTMLElement;
   containerParent: HTMLElement;
   constraint: number;
-  paginationStrategy: PaginationStrategy;
+  paginationStrategy: PaginationStrategy | null;
   private cachedColCount: number | null | undefined;
   private pagedContainerWidth: number;
 
@@ -34,7 +34,7 @@ export class ReadiumCSS {
     this.container = props.container;
     this.containerParent = props.container.parentElement || document.documentElement;
     this.constraint = props.constraint;
-    this.paginationStrategy = props.paginationStrategy || PaginationStrategy.lineLength;
+    this.paginationStrategy = props.paginationStrategy || null;
     this.cachedColCount = props.userProperties.colCount;
     this.pagedContainerWidth = this.containerParent.clientWidth;
   }
@@ -46,7 +46,7 @@ export class ReadiumCSS {
     if (settings.constraint !== this.constraint) 
       this.constraint = settings.constraint;
 
-    if (settings.paginationStrategy && settings.paginationStrategy !== this.paginationStrategy) 
+    if (settings.paginationStrategy !== this.paginationStrategy) 
       this.paginationStrategy = settings.paginationStrategy;
 
     if (settings.pageGutter !== this.rsProperties.pageGutter)
@@ -152,7 +152,18 @@ export class ReadiumCSS {
     }
     
     if (colCount === null) {
-      if (this.paginationStrategy === PaginationStrategy.lineLength) {
+      if (this.paginationStrategy === null) {
+        if (constrainedWidth >= optimal) {
+          RCSSColCount = Math.floor(constrainedWidth / optimal);
+          const requiredWidth = Math.round(RCSSColCount * optimal);
+          pagedContainerWidth = Math.min(requiredWidth, constrainedWidth);
+          effectiveLineLength = optimal;
+        } else {
+          RCSSColCount = 1;
+          pagedContainerWidth = constrainedWidth;
+          effectiveLineLength = optimal;
+        }
+      } else if (this.paginationStrategy === PaginationStrategy.lineLength) {
         if (constrainedWidth >= optimal) {
           RCSSColCount = Math.floor(constrainedWidth / optimal);
           const requiredWidth = Math.round(RCSSColCount * (maximal || optimal));
