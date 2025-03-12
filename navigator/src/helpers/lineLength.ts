@@ -8,7 +8,7 @@ export interface ILineLengthsConfig {
   minChars?: number | null;
   maxChars?: number | null;
   userChars?: number | null;
-  fontSize?: number | null;
+  baseFontSize?: number | null;
   sample?: string | null;
   pageGutter?: number | null;
   fontFace?: string | ICustomFontFace | null;
@@ -23,7 +23,7 @@ export interface ILineLengths {
   user: number | null;
   max: number | null;
   optimal: number;
-  fontSize: number;
+  baseFontSize: number;
 }
 
 export const DEFAULT_FONT_SIZE = 16;
@@ -48,7 +48,7 @@ export class LineLengths {
   private _minChars?: number | null;
   private _maxChars?: number | null;
   private _userChars: number | null;
-  private _fontSize: number;
+  private _baseFontSize: number;
   private _fontFace: string | ICustomFontFace | null;
   private _sample: string | null;
   private _pageGutter: number;
@@ -71,15 +71,15 @@ export class LineLengths {
     this._minChars = config.minChars;
     this._maxChars = config.maxChars;
     this._userChars = config.userChars || null;
-    this._fontSize = (config.fontSize || 1) * DEFAULT_FONT_SIZE;
+    this._baseFontSize = config.baseFontSize || DEFAULT_FONT_SIZE;
     this._fontFace = config.fontFace || null;
     this._sample = config.sample || null;
     this._pageGutter = config.pageGutter || 0;
     this._letterSpacing = config.letterSpacing 
-      ? Math.round(config.letterSpacing * this._fontSize) 
+      ? Math.round(config.letterSpacing * this._baseFontSize) 
       : 0;
     this._wordSpacing = config.wordSpacing 
-      ? Math.round(config.wordSpacing * this._fontSize) 
+      ? Math.round(config.wordSpacing * this._baseFontSize) 
       : 0;
     this._isCJK = config.isCJK || false;
     this._getRelative = config.getRelative || false;
@@ -134,18 +134,18 @@ export class LineLengths {
 
   set letterSpacing(n: number) {
     if (n === this._letterSpacing) return;
-    this._letterSpacing = Math.round(n * this._fontSize);
+    this._letterSpacing = Math.round(n * this._baseFontSize);
     this._optimalLineLength = this.getOptimalLineLength();
   }
   
   set wordSpacing(n: number) {
     if (n === this._wordSpacing) return;
-    this._wordSpacing = Math.round(n * this._fontSize);
+    this._wordSpacing = Math.round(n * this._baseFontSize);
     this._optimalLineLength = this.getOptimalLineLength();
   }
 
-  set fontSize(n: number) {
-    this._fontSize = n < 1 ? Math.round(DEFAULT_FONT_SIZE * (1 + (1 - n))) : Math.round(n * DEFAULT_FONT_SIZE);
+  set baseFontSize(n: number) {
+    this._baseFontSize = n;
     this._optimalLineLength = this.getOptimalLineLength();
   }
 
@@ -172,8 +172,8 @@ export class LineLengths {
     this._getRelative = b;
   }
 
-  get fontSize() {
-    return this._fontSize;
+  get baseFontSize() {
+    return this._baseFontSize;
   }
 
   get minimalLineLength(): number | null {
@@ -181,7 +181,7 @@ export class LineLengths {
       this._optimalLineLength = this.getOptimalLineLength();
     }
     return this._minDivider !== null 
-      ? Math.round((this._optimalLineLength / this._minDivider) + this._padding) / (this._getRelative ? this._fontSize : 1) 
+      ? Math.round((this._optimalLineLength / this._minDivider) + this._padding) / (this._getRelative ? this._baseFontSize : 1) 
       : null;
   }
 
@@ -190,7 +190,7 @@ export class LineLengths {
       this._optimalLineLength = this.getOptimalLineLength();
     }
     return this._userMultiplier !== null 
-      ? Math.round((this._optimalLineLength * this._userMultiplier) + this._padding) / (this._getRelative ? this._fontSize : 1) 
+      ? Math.round((this._optimalLineLength * this._userMultiplier) + this._padding) / (this._getRelative ? this._baseFontSize : 1) 
       : null;
   }
 
@@ -199,7 +199,7 @@ export class LineLengths {
       this._optimalLineLength = this.getOptimalLineLength();
     }
     return this._maxMultiplier !== null 
-      ? Math.round((this._optimalLineLength * this._maxMultiplier) + this._padding) / (this._getRelative ? this._fontSize : 1) 
+      ? Math.round((this._optimalLineLength * this._maxMultiplier) + this._padding) / (this._getRelative ? this._baseFontSize : 1) 
       : null;
   }
 
@@ -207,7 +207,7 @@ export class LineLengths {
     if (!this._optimalLineLength) {
       this._optimalLineLength = this.getOptimalLineLength();
     }
-    return Math.round(this._optimalLineLength + this._padding) / (this._getRelative ? this._fontSize : 1);
+    return Math.round(this._optimalLineLength + this._padding) / (this._getRelative ? this._baseFontSize : 1);
   }
 
   get all(): ILineLengths {
@@ -219,7 +219,7 @@ export class LineLengths {
       user: this.userLineLength,
       max: this.maximalLineLength,
       optimal: this.optimalLineLength,
-      fontSize: this._fontSize
+      baseFontSize: this._baseFontSize
     }
   }
 
@@ -236,7 +236,7 @@ export class LineLengths {
   private getLineLengthFallback() {
     const letterSpace = this._letterSpacing * (this._optimalChars - 1);
     const wordSpace = this._wordSpacing * this._approximatedWordSpaces;
-    return (this._optimalChars * (this._fontSize * 0.5)) + letterSpace + wordSpace;
+    return (this._optimalChars * (this._baseFontSize * 0.5)) + letterSpace + wordSpace;
   }
 
   private getOptimalLineLength() {
@@ -265,7 +265,7 @@ export class LineLengths {
     if (ctx && fontFace) {
       // ch based on 0, ic based on water ideograph
       let txt = this._isCJK ? "水".repeat(this._optimalChars) : "0".repeat(this._optimalChars);
-      ctx.font = `${this._fontSize}px ${fontFace}`;
+      ctx.font = `${this._baseFontSize}px ${fontFace}`;
 
       if (this._sample && this._sample.length >= this._optimalChars) {
         txt = this._sample.slice(0, this._optimalChars);
