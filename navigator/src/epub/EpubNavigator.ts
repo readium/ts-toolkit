@@ -175,7 +175,14 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         if (this.layout === EPUBLayout.fixed) {
             this.handleFXLPrefs(oldSettings, this._settings);
         } else {
-            await this.updateCSS(true, oldSettings.fontSize !== this._settings.fontSize);
+            const relayout = (
+                (oldSettings.fontSize !== this._settings.fontSize) || 
+                (oldSettings.minimalLineLength !== this._settings.minimalLineLength) ||
+                (oldSettings.optimalLineLength !== this._settings.optimalLineLength) ||
+                (oldSettings.maximalLineLength !== this._settings.maximalLineLength) ||
+                (oldSettings.lineLength !== this._settings.lineLength)
+            );
+            await this.updateCSS(true, relayout);
         }
     }
 

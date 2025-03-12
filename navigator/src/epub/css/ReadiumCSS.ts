@@ -117,14 +117,14 @@ export class ReadiumCSS {
   }
 
   private updateLineLengths(props: ILineLengthsProps) {
-    if (props.fontFace) this.lineLengths.fontFace = props.fontFace;
-    if (props.letterSpacing) this.lineLengths.letterSpacing = props.letterSpacing;
-    if (props.pageGutter) this.lineLengths.pageGutter = props.pageGutter;
-    if (props.wordSpacing) this.lineLengths.wordSpacing = props.wordSpacing;
-    if (props.minChars) this.lineLengths.minChars = props.minChars;
-    if (props.maxChars) this.lineLengths.maxChars = props.maxChars;
+    if (props.fontFace !== undefined) this.lineLengths.fontFace = props.fontFace;
+    if (props.letterSpacing !== undefined) this.lineLengths.letterSpacing = props.letterSpacing || 0;
+    if (props.pageGutter !== undefined) this.lineLengths.pageGutter = props.pageGutter || 0;
+    if (props.wordSpacing !== undefined) this.lineLengths.wordSpacing = props.wordSpacing || 0;
+    if (props.minChars !== undefined) this.lineLengths.minChars = props.minChars;
+    if (props.maxChars !== undefined) this.lineLengths.maxChars = props.maxChars;
     if (props.optimalChars) this.lineLengths.optimalChars = props.optimalChars;
-    if (props.userChars) this.lineLengths.userChars = props.userChars;
+    if (props.userChars !== undefined) this.lineLengths.userChars = props.userChars;
   }
 
   // Note: Kept intentionally verbose for debugging
