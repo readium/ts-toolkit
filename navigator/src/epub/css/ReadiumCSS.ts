@@ -49,9 +49,8 @@ export class ReadiumCSS {
     if (settings.paginationStrategy && settings.paginationStrategy !== this.paginationStrategy) 
       this.paginationStrategy = settings.paginationStrategy;
 
-    if (settings.pageGutter !== this.rsProperties.pageGutter) {
+    if (settings.pageGutter !== this.rsProperties.pageGutter)
       this.rsProperties.pageGutter = settings.pageGutter;
-    }
 
     this.updateLineLengths({
       fontFace: settings.fontFamily,
@@ -131,122 +130,85 @@ export class ReadiumCSS {
   // Note: Kept intentionally verbose for debugging
   private setColCount(colCount?: number | null) {
     const zoomFactor = this.userProperties.fontSize || 1;
-    const constrainedWidth = (this.containerParent.clientWidth - (this.constraint));
-    const optimal = (this.lineLengths.userLineLength ||this.lineLengths.optimalLineLength) * zoomFactor;
+    const constrainedWidth = Math.round(this.containerParent.clientWidth - (this.constraint));
+    const optimal = Math.round(this.lineLengths.userLineLength || this.lineLengths.optimalLineLength) * zoomFactor;
     const minimal = this.lineLengths.minimalLineLength !== null 
-      ? this.lineLengths.minimalLineLength * zoomFactor 
+      ? Math.round(this.lineLengths.minimalLineLength * zoomFactor) 
       : null;
     const maximal = this.lineLengths.maximalLineLength !== null 
-      ? this.lineLengths.maximalLineLength * zoomFactor 
+      ? Math.round(this.lineLengths.maximalLineLength * zoomFactor) 
       : null;
 
     let RCSSColCount = 1;
+    let pagedContainerWidth = constrainedWidth;
+    let effectiveLineLength = optimal;
 
     if (colCount === undefined) {
-      return { colCount: undefined, pagedContainerWidth: constrainedWidth, effectiveLineLength: optimal };
+      return { 
+        colCount: undefined, 
+        pagedContainerWidth: pagedContainerWidth, 
+        effectiveLineLength: effectiveLineLength 
+      };
     }
     
     if (colCount === null) {
       if (this.paginationStrategy === PaginationStrategy.lineLength) {
         if (constrainedWidth >= optimal) {
-          if (constrainedWidth >= optimal) {
-            const optimalCount = Math.floor(constrainedWidth / optimal);
-            const maximalCount = maximal !== null ? Math.floor(constrainedWidth / maximal) : 0;
-        
-            if (maximalCount >= 2) {
-              RCSSColCount = maximalCount;
-              const pagedContainedWidth = Math.min((RCSSColCount * maximal!), constrainedWidth);
-              const effectiveLineLength = maximal;
-              return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
-            } else if (optimalCount >= 2) {
-              RCSSColCount = optimalCount;
-              const pagedContainedWidth = Math.min((RCSSColCount * optimal), constrainedWidth);
-              const effectiveLineLength = optimal;
-              return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
-            } else if (maximal !== null && constrainedWidth >= maximal) {
-              RCSSColCount = 1;
-              const pagedContainedWidth = Math.min(maximal, constrainedWidth);
-              const effectiveLineLength = maximal;
-              return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
-            } else {
-              RCSSColCount = 1;
-              const pagedContainedWidth = Math.min(optimal, constrainedWidth);
-              const effectiveLineLength = optimal;
-              return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
-            }
-          } else {
-            RCSSColCount = 1;
-            const pagedContainedWidth = constrainedWidth;
-            const effectiveLineLength = optimal;
-            return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
-          }
+          RCSSColCount = Math.floor(constrainedWidth / optimal);
+          const requiredWidth = Math.round(RCSSColCount * (maximal || optimal));
+          pagedContainerWidth = Math.min(requiredWidth, constrainedWidth);
+          effectiveLineLength = maximal || optimal;
+        } else {
+          RCSSColCount = 1;
+          pagedContainerWidth = constrainedWidth;
+          effectiveLineLength = optimal;
         }
       } else if (this.paginationStrategy === PaginationStrategy.columns) {
         if (constrainedWidth >= optimal) {
-          if (minimal !== null) {
-            RCSSColCount = Math.floor(constrainedWidth / minimal);
-            const pagedContainedWidth = Math.min((RCSSColCount * optimal), constrainedWidth);
-            const effectiveLineLength = optimal;
-            return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
-          } else {
-            RCSSColCount = Math.floor(constrainedWidth / optimal);
-            const pagedContainedWidth = Math.min((RCSSColCount * optimal), constrainedWidth);
-            const effectiveLineLength = optimal;
-            return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
-          }
+          RCSSColCount = Math.floor(constrainedWidth / (minimal || optimal));
+          const requiredWidth = Math.round((RCSSColCount * optimal));
+          pagedContainerWidth = Math.min(requiredWidth, constrainedWidth);
+          effectiveLineLength = optimal;
         } else {
           RCSSColCount = 1;
-          const pagedContainedWidth = constrainedWidth;
-          const effectiveLineLength = optimal;
-          return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
+          pagedContainerWidth = constrainedWidth;
+          effectiveLineLength = optimal;
         }
       }
     } else if (colCount > 1) {
-      const requiredWidth = colCount * (minimal !== null ? minimal : optimal);
-      const optimalCount = Math.floor(constrainedWidth / optimal);
-      const maximalCount = maximal !== null ? Math.floor(constrainedWidth / maximal) : 0;
+      const requiredWidth = Math.round(colCount * (minimal !== null ? minimal : optimal));
     
-      if (constrainedWidth > requiredWidth) {
-        if (maximalCount >= 2) {
-          RCSSColCount = Math.min(maximalCount, colCount);
-          const pagedContainedWidth = Math.min((RCSSColCount * maximal!), constrainedWidth);
-          const effectiveLineLength = maximal;
-          return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
-        } else if (optimalCount >= 2) {
-          RCSSColCount = Math.min(optimalCount, colCount);
-          const pagedContainedWidth = Math.min((RCSSColCount * optimal), constrainedWidth);
-          const effectiveLineLength = optimal;
-          return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
-        } else {
-          RCSSColCount = colCount;
-          const pagedContainedWidth = Math.min((RCSSColCount * optimal), constrainedWidth);
-          const effectiveLineLength = optimal;
-          return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
-        }
+      if (constrainedWidth >= requiredWidth) {
+        RCSSColCount = colCount;
+        const requiredWidth = Math.round(RCSSColCount * (maximal || optimal));
+        pagedContainerWidth = Math.min(requiredWidth, constrainedWidth);
+        effectiveLineLength = maximal || optimal;
       } else {
-        if (minimal !== null && constrainedWidth < colCount * minimal) {
-          RCSSColCount = colCount - 1;
+        if (minimal !== null && constrainedWidth < Math.round(colCount * minimal)) {
+          RCSSColCount = Math.floor(constrainedWidth / minimal);
         } else {
           RCSSColCount = colCount;
         }
-        const pagedContainedWidth = Math.min((RCSSColCount * optimal), constrainedWidth);
-        const effectiveLineLength = optimal;
-        return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
+        const requiredWidth = Math.round((RCSSColCount * optimal))
+        pagedContainerWidth = Math.min(requiredWidth, constrainedWidth);
+        effectiveLineLength = optimal;
       }
     } else {
-      if (maximal !== null && constrainedWidth >= maximal) {
-        RCSSColCount = 1;
-        const pagedContainedWidth = Math.min(maximal, constrainedWidth);
-        const effectiveLineLength = maximal;
-        return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
+      RCSSColCount = 1;
+      if (constrainedWidth >= optimal) {
+        pagedContainerWidth = Math.min(maximal || optimal, constrainedWidth);
+        effectiveLineLength = maximal || optimal;
       } else {
-        RCSSColCount = 1;
-        const pagedContainedWidth = Math.min(optimal, constrainedWidth);
-        const effectiveLineLength = optimal;
-        return { colCount: RCSSColCount, pagedContainerWidth: pagedContainedWidth, effectiveLineLength };
+        pagedContainerWidth = Math.min(optimal, constrainedWidth);
+        effectiveLineLength = optimal;
       }
     }
-    return { colCount: undefined, pagedContainerWidth: constrainedWidth, effectiveLineLength: optimal };
+
+    return { 
+      colCount: RCSSColCount, 
+      pagedContainerWidth: pagedContainerWidth, 
+      effectiveLineLength: effectiveLineLength 
+    };
   }
 
   setContainerWidth() {
