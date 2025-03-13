@@ -1,6 +1,5 @@
 import { PaginationStrategy, TextAlignment, Theme } from "../../preferences/Types";
 
-// Expose everything available in Preferences except blend and gaiji filters ATM
 export interface IEpubDefaults {
   backgroundColor?: string | null,
   blendFilter?: boolean | null,
@@ -79,63 +78,63 @@ export class EpubDefaults {
   wordSpacing: number | null;
 
   constructor(defaults: IEpubDefaults) {
-    this.backgroundColor = defaults.backgroundColor || null;
+    this.backgroundColor = defaults.backgroundColor === undefined ? null : defaults.backgroundColor;
     this.blendFilter = typeof defaults.blendFilter === "boolean" 
       ? defaults.blendFilter 
       : false;
-    this.columnCount = defaults.columnCount || null;
+    this.columnCount = defaults.columnCount === undefined ? null : defaults.columnCount;
     this.constraint = defaults.constraint || 0;
-    this.darkenFilter = typeof defaults.darkenFilter === "boolean" 
-      ? defaults.darkenFilter 
+    this.darkenFilter = typeof defaults.darkenFilter === "boolean" || typeof defaults.darkenFilter === "number"
+      ? defaults.darkenFilter
       : false;
-    this.fontFamily = defaults.fontFamily || null;
-    this.fontSize = defaults.fontSize || 1;
+    this.fontFamily = defaults.fontFamily === undefined ? null : defaults.fontFamily;
+    this.fontSize = defaults.fontSize === undefined ? 1 : defaults.fontSize;
     this.fontOpticalSizing = typeof defaults.fontOpticalSizing === "boolean" 
       ? defaults.fontOpticalSizing 
       : null;
-    this.fontWeight = defaults.fontWeight || null;
-    this.fontWidth = defaults.fontWidth || null;
+    this.fontWeight = defaults.fontWeight === undefined ? null : defaults.fontWeight;
+    this.fontWidth = defaults.fontWidth === undefined ? null : defaults.fontWidth;
     this.hyphens = typeof defaults.hyphens === "boolean" 
       ? defaults.hyphens 
       : null;
-    this.invertFilter = typeof defaults.invertFilter === "boolean" 
+    this.invertFilter = typeof defaults.invertFilter === "boolean" || typeof defaults.invertFilter === "number"
       ? defaults.invertFilter 
       : false;
-    this.invertGaijiFilter = typeof defaults.invertGaijiFilter === "boolean" 
+    this.invertGaijiFilter = typeof defaults.invertGaijiFilter === "boolean" || typeof defaults.invertGaijiFilter === "number"
       ? defaults.invertGaijiFilter 
       : false;
-    this.letterSpacing = defaults.letterSpacing || null;
+    this.letterSpacing = defaults.letterSpacing === undefined ? null : defaults.letterSpacing;
     this.ligatures = typeof defaults.ligatures === "boolean" 
       ? defaults.ligatures 
       : null;
-    this.lineHeight = defaults.lineHeight || null;
-    this.lineLength = defaults.lineLength || null;
-    this.linkColor = defaults.linkColor || null;
-    this.maximalLineLength = defaults.maximalLineLength || 80;
-    this.minimalLineLength = defaults.minimalLineLength || 40;
+    this.lineHeight = defaults.lineHeight === undefined ? null : defaults.lineHeight;
+    this.lineLength = defaults.lineLength === undefined ? null : defaults.lineLength;
+    this.linkColor = defaults.linkColor === undefined ? null : defaults.linkColor;
+    this.maximalLineLength = defaults.maximalLineLength === undefined ? 80 : defaults.maximalLineLength;
+    this.minimalLineLength = defaults.minimalLineLength === undefined ? 40 : defaults.minimalLineLength;
     this.noRuby = typeof defaults.noRuby === "boolean" 
       ? defaults.noRuby 
       : false;
     this.optimalLineLength = defaults.optimalLineLength || 65;
-    this.pageGutter = defaults.pageGutter || 20;
+    this.pageGutter = defaults.pageGutter === undefined ? 20 : defaults.pageGutter;
     this.paginationStrategy = defaults.paginationStrategy || PaginationStrategy.lineLength;
-    this.paragraphIndent = defaults.paragraphIndent || null;
-    this.paragraphSpacing = defaults.paragraphSpacing || null;
+    this.paragraphIndent = defaults.paragraphIndent === undefined ? null : defaults.paragraphIndent;
+    this.paragraphSpacing = defaults.paragraphSpacing === undefined ? null : defaults.paragraphSpacing;
     this.publisherStyles = typeof defaults.publisherStyles === "boolean" 
       ? defaults.publisherStyles 
       : true;
     this.scroll = typeof defaults.scroll === "boolean" 
       ? defaults.scroll 
       : false;
-    this.selectionBackgroundColor = defaults.selectionBackgroundColor || null;
-    this.selectionTextColor = defaults.selectionTextColor || null;
-    this.textAlign = defaults.textAlign || null;
-    this.textColor = defaults.textColor || null;
+    this.selectionBackgroundColor = defaults.selectionBackgroundColor === undefined ? null : defaults.selectionBackgroundColor;
+    this.selectionTextColor = defaults.selectionTextColor === undefined ? null : defaults.selectionTextColor;
+    this.textAlign = defaults.textAlign === undefined ? null : defaults.textAlign;
+    this.textColor = defaults.textColor === undefined ? null : defaults.textColor;
     this.textNormalization = typeof defaults.textNormalization === "boolean" 
       ? defaults.textNormalization 
       : false;
-    this.theme = defaults.theme || null;
-    this.visitedColor = defaults.visitedColor || null;
-    this.wordSpacing = defaults.wordSpacing || null;
+    this.theme = defaults.theme === undefined ? null : defaults.theme;
+    this.visitedColor = defaults.visitedColor === undefined ? null : defaults.visitedColor;
+    this.wordSpacing = defaults.wordSpacing === undefined ? null : defaults.wordSpacing;
   }
 }
