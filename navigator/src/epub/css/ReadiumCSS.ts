@@ -214,7 +214,10 @@ export class ReadiumCSS {
         } else {
           RCSSColCount = colCount;
         }
-        const requiredWidth = Math.round((RCSSColCount * (optimal * zoomCompensation)))
+        let requiredWidth = Math.round(RCSSColCount * optimal);
+        if (this.paginationStrategy === PaginationStrategy.lineLength) {
+          requiredWidth = Math.round((RCSSColCount * (optimal * zoomCompensation)));
+        }
         pagedContainerWidth = Math.min(requiredWidth, constrainedWidth);
       }
     } else {
