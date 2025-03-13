@@ -23,7 +23,7 @@ export class ReadiumCSS {
   container: HTMLElement;
   containerParent: HTMLElement;
   constraint: number;
-  paginationStrategy: PaginationStrategy | null;
+  paginationStrategy: PaginationStrategy;
   private cachedColCount: number | null | undefined;
   private pagedContainerWidth: number;
 
@@ -34,7 +34,7 @@ export class ReadiumCSS {
     this.container = props.container;
     this.containerParent = props.container.parentElement || document.documentElement;
     this.constraint = props.constraint;
-    this.paginationStrategy = props.paginationStrategy || null;
+    this.paginationStrategy = props.paginationStrategy || PaginationStrategy.lineLength;
     this.cachedColCount = props.userProperties.colCount;
     this.pagedContainerWidth = this.containerParent.clientWidth;
   }
@@ -46,7 +46,7 @@ export class ReadiumCSS {
     if (settings.constraint !== this.constraint) 
       this.constraint = settings.constraint;
 
-    if (settings.paginationStrategy !== this.paginationStrategy) 
+    if (settings.paginationStrategy && settings.paginationStrategy !== this.paginationStrategy) 
       this.paginationStrategy = settings.paginationStrategy;
 
     if (settings.pageGutter !== this.rsProperties.pageGutter)
@@ -152,7 +152,7 @@ export class ReadiumCSS {
     }
     
     if (colCount === null) {
-      if (this.paginationStrategy === null) {
+      if (this.paginationStrategy === PaginationStrategy.margin) {
         if (constrainedWidth >= optimal) {
           RCSSColCount = Math.floor(constrainedWidth / optimal);
           const requiredWidth = Math.round(RCSSColCount * (optimal * zoomCompensation));
@@ -190,11 +190,23 @@ export class ReadiumCSS {
     
       if (constrainedWidth >= minRequiredWidth) {
         RCSSColCount = colCount;
-        if (maximal === null) {
-          pagedContainerWidth = constrainedWidth
-        } else {
-          const requiredWidth = Math.round(RCSSColCount * ((maximal || optimal) * zoomCompensation));
+        if (this.paginationStrategy === PaginationStrategy.margin) {
+          const requiredWidth = Math.round(RCSSColCount * (optimal * zoomCompensation));
           pagedContainerWidth = Math.min(requiredWidth, constrainedWidth);
+        } else if (
+          this.paginationStrategy === PaginationStrategy.lineLength ||
+          this.paginationStrategy === PaginationStrategy.columns
+        ) {
+          if (maximal === null) {
+            pagedContainerWidth = constrainedWidth
+          } else {
+            const requiredWidth = Math.round(RCSSColCount * (maximal * zoomCompensation));
+            pagedContainerWidth = Math.min(requiredWidth, constrainedWidth);
+          }
+
+          if (this.paginationStrategy === PaginationStrategy.columns) {
+            console.error("Columns strategy is not compatible with a column count whose value is a number. Falling back to lineLength strategy.");
+          }
         }
       } else {
         if (minimal !== null && constrainedWidth < Math.round(colCount * minimal)) {
@@ -207,10 +219,26 @@ export class ReadiumCSS {
       }
     } else {
       RCSSColCount = 1;
+      
       if (constrainedWidth >= optimal) {
-        pagedContainerWidth = maximal === null 
-          ? constrainedWidth 
-          : Math.min(Math.round((maximal || optimal) * zoomCompensation), constrainedWidth);
+        if (this.paginationStrategy === PaginationStrategy.margin) {
+          const requiredWidth = Math.round(optimal * zoomCompensation);
+          pagedContainerWidth = Math.min(requiredWidth, constrainedWidth);
+        } else if (
+          this.paginationStrategy === PaginationStrategy.lineLength ||
+          this.paginationStrategy === PaginationStrategy.columns
+        ) {
+          if (maximal === null) {
+            pagedContainerWidth = constrainedWidth
+          } else {
+            const requiredWidth = Math.round(maximal * zoomCompensation);
+            pagedContainerWidth = Math.min(requiredWidth, constrainedWidth);
+          }
+          
+          if (this.paginationStrategy === PaginationStrategy.columns) {
+            console.error("Columns strategy is not compatible with a column count whose value is a number. Falling back to lineLength strategy.");
+          }
+        }
       } else {
         pagedContainerWidth = constrainedWidth 
       }

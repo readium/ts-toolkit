@@ -13,6 +13,7 @@ export enum Theme {
 }
 
 export enum PaginationStrategy {
+  margin = "margin",
   lineLength = "lineLength",
   columns = "columns"
 }
