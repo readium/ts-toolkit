@@ -52,6 +52,8 @@ export class ReadiumCSS {
     if (settings.pageGutter !== this.rsProperties.pageGutter)
       this.rsProperties.pageGutter = settings.pageGutter;
 
+    // This has to be updated before pagination
+    // otherwise the metrics won’t be correct for line length
     this.updateLineLengths({
       fontFace: settings.fontFamily,
       letterSpacing: settings.letterSpacing,
@@ -63,7 +65,7 @@ export class ReadiumCSS {
       userChars: settings.lineLength
     });
 
-    const pagination = settings.scroll ? undefined : this.setColCount(settings.columnCount);
+    const pagination = settings.scroll ? undefined : this.setColCount(settings.fontSize, settings.columnCount);
 
     if (pagination?.pagedContainerWidth)
       this.pagedContainerWidth = pagination?.pagedContainerWidth;
@@ -128,8 +130,8 @@ export class ReadiumCSS {
   }
 
   // Note: Kept intentionally verbose for debugging
-  private setColCount(colCount?: number | null) {
-    const zoomFactor = this.userProperties.fontSize || 1;
+  private setColCount(scale: number | null, colCount?: number | null) {
+    const zoomFactor = scale || this.userProperties.fontSize || 1;
     const zoomCompensation = zoomFactor < 1 ? 1 / zoomFactor : 1;
     const constrainedWidth = Math.round(this.containerParent.clientWidth - (this.constraint));
     const optimal = Math.round(this.lineLengths.userLineLength || this.lineLengths.optimalLineLength) * zoomFactor;
@@ -266,7 +268,7 @@ export class ReadiumCSS {
     if (this.userProperties.view === "scroll") {
       this.container.style.width = `${ this.containerParent.clientWidth }px`;
     } else {
-      const pagination = this.setColCount(this.cachedColCount);
+      const pagination = this.setColCount(this.userProperties.fontSize, this.cachedColCount);
       this.userProperties.colCount = pagination.colCount;
       this.userProperties.lineLength = pagination.effectiveLineLength;
       this.pagedContainerWidth = pagination.pagedContainerWidth;

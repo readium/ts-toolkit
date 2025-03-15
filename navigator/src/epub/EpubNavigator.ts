@@ -175,16 +175,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         if (this.layout === EPUBLayout.fixed) {
             this.handleFXLPrefs(oldSettings, this._settings);
         } else {
-            // TODO: check what’s necessary
-            const relayout = (
-                (oldSettings.fontSize !== this._settings.fontSize) || 
-                (oldSettings.fontFamily !== this._settings.fontFamily) ||
-                (oldSettings.minimalLineLength !== this._settings.minimalLineLength) ||
-                (oldSettings.optimalLineLength !== this._settings.optimalLineLength) ||
-                (oldSettings.maximalLineLength !== this._settings.maximalLineLength) ||
-                (oldSettings.lineLength !== this._settings.lineLength)
-            );
-            await this.updateCSS(true, relayout);
+            await this.updateCSS(true);
         }
     }
 
@@ -195,7 +186,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         }
     }
 
-    private async updateCSS(commit: boolean, relayout = false) {
+    private async updateCSS(commit: boolean) {
         this._css.update(this._settings);
 
         if (
@@ -210,11 +201,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             await this.setReadingProgression(ReadingProgression.ttb);
         }
 
-        if (relayout) {
-            this._css.resizeHandler();
-        } else {
-            this._css.setContainerWidth();
-        }
+        this._css.setContainerWidth();
 
         if (commit) this.commitCSS(this._css);
     };
