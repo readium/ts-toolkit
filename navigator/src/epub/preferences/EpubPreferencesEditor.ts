@@ -4,7 +4,7 @@ import { EpubPreferences } from "./EpubPreferences";
 import { EpubSettings } from "./EpubSettings";
 import { BooleanPreference, EnumPreference, Preference, RangePreference } from "../../preferences/Preference";
 import { 
-  PaginationStrategy,
+  LayoutStrategy,
   TextAlignment, 
   Theme, 
   fontSizeRangeConfig, 
@@ -61,7 +61,6 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   get columnCount(): Preference<number> {
     return new Preference<number>({
       initialValue: this.preferences.columnCount,
-      // TODO auto-pagination
       effectiveValue: this.settings.columnCount || null,
       isEffective: this.layout === EPUBLayout.reflowable && !this.settings.scroll,
       onChange: (newValue: number | null | undefined) => {
@@ -196,6 +195,18 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
+  get layoutStrategy(): EnumPreference<LayoutStrategy> {
+    return new EnumPreference<LayoutStrategy>({
+      initialValue: this.preferences.layoutStrategy,
+      effectiveValue: this.settings.layoutStrategy,
+      isEffective: this.layout === EPUBLayout.reflowable,
+      onChange: (newValue: LayoutStrategy | null | undefined) => {
+        this.updatePreference("layoutStrategy", newValue || null);
+      },
+      supportedValues: Object.values(LayoutStrategy)
+    })
+  }
+
   get letterSpacing(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: this.preferences.letterSpacing,
@@ -316,18 +327,6 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
         this.updatePreference("pageGutter", newValue || null);
       }
     });
-  }
-
-  get paginationStrategy(): EnumPreference<PaginationStrategy> {
-    return new EnumPreference<PaginationStrategy>({
-      initialValue: this.preferences.paginationStrategy,
-      effectiveValue: this.settings.paginationStrategy,
-      isEffective: this.layout === EPUBLayout.reflowable,
-      onChange: (newValue: PaginationStrategy | null | undefined) => {
-        this.updatePreference("paginationStrategy", newValue || null);
-      },
-      supportedValues: Object.values(PaginationStrategy)
-    })
   }
 
   get paragraphIndent(): RangePreference<number> {

@@ -1,7 +1,7 @@
 import { ConfigurablePreferences } from "../../preferences/Configurable";
 
 import { 
-  PaginationStrategy,
+  LayoutStrategy,
   TextAlignment, 
   Theme, 
   fontSizeRangeConfig, 
@@ -23,6 +23,7 @@ export interface IEpubPreferences {
   hyphens?: boolean | null,
   invertFilter?: boolean | number | null,
   invertGaijiFilter?: boolean | number | null,
+  layoutStrategy?: LayoutStrategy | null,
   letterSpacing?: number | null,
   ligatures?: boolean | null,
   lineHeight?: number | null,
@@ -33,7 +34,6 @@ export interface IEpubPreferences {
   noRuby?: boolean | null,
   optimalLineLength?: number,
   pageGutter?: number | null,
-  paginationStrategy?: PaginationStrategy | null,
   paragraphIndent?: number | null,
   paragraphSpacing?: number | null,
   publisherStyles?: boolean | null,
@@ -62,6 +62,7 @@ export class EpubPreferences implements ConfigurablePreferences {
   hyphens?: boolean | null;
   invertFilter?: boolean | number | null;
   invertGaijiFilter?: boolean | number | null;
+  layoutStrategy?: LayoutStrategy | null;
   letterSpacing?: number | null;
   ligatures?: boolean | null;
   lineHeight?: number | null;
@@ -72,7 +73,6 @@ export class EpubPreferences implements ConfigurablePreferences {
   noRuby?: boolean | null;
   optimalLineLength?: number;
   pageGutter?: number | null;
-  paginationStrategy?: PaginationStrategy | null;
   paragraphIndent?: number | null;
   paragraphSpacing?: number | null;
   publisherStyles?: boolean | null;
@@ -100,6 +100,7 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.hyphens = EpubPreferences.ensureBoolean(preferences.hyphens);
     this.invertFilter = EpubPreferences.ensureFilter(preferences.invertFilter);
     this.invertGaijiFilter = EpubPreferences.ensureFilter(preferences.invertGaijiFilter);
+    this.layoutStrategy = EpubPreferences.ensureEnumValue<LayoutStrategy>(preferences.layoutStrategy, LayoutStrategy);
     this.letterSpacing = EpubPreferences.ensureNonNegative(preferences.letterSpacing);
     this.ligatures = EpubPreferences.ensureBoolean(preferences.ligatures);
     this.lineHeight = EpubPreferences.ensureNonNegative(preferences.lineHeight);
@@ -110,7 +111,6 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.optimalLineLength = EpubPreferences.ensureNonNegative(preferences.optimalLineLength) || 65;
     this.noRuby = EpubPreferences.ensureBoolean(preferences.noRuby);
     this.pageGutter = EpubPreferences.ensureNonNegative(preferences.pageGutter);
-    this.paginationStrategy = EpubPreferences.ensureEnumValue<PaginationStrategy>(preferences.paginationStrategy, PaginationStrategy);
     this.paragraphIndent = EpubPreferences.ensureNonNegative(preferences.paragraphIndent);
     this.paragraphSpacing = EpubPreferences.ensureNonNegative(preferences.paragraphSpacing);
     this.publisherStyles = EpubPreferences.ensureBoolean(preferences.publisherStyles);

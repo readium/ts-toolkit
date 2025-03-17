@@ -1,5 +1,5 @@
 import { ConfigurableSettings } from "../../preferences/Configurable";
-import { PaginationStrategy, TextAlignment, Theme } from "../../preferences/Types";
+import { LayoutStrategy, TextAlignment, Theme } from "../../preferences/Types";
 import { EpubDefaults } from "./EpubDefaults";
 import { EpubPreferences } from "./EpubPreferences";
 
@@ -17,6 +17,7 @@ export interface IEpubSettings {
   hyphens?: boolean | null,
   invertFilter?: boolean | number | null,
   invertGaijiFilter: boolean | number | null,
+  layoutStrategy?: LayoutStrategy | null,
   letterSpacing?: number | null,
   ligatures?: boolean | null,
   lineHeight?: number | null,
@@ -27,7 +28,6 @@ export interface IEpubSettings {
   noRuby?: boolean | null,
   optimalLineLength?: number | null,
   pageGutter?: number | null,
-  paginationStrategy?: PaginationStrategy | null,
   paragraphIndent?: number | null,
   paragraphSpacing?: number | null,
   publisherStyles?: boolean | null,
@@ -56,6 +56,7 @@ export class EpubSettings implements ConfigurableSettings {
   hyphens: boolean | null;
   invertFilter: boolean | number | null;
   invertGaijiFilter: boolean | number | null;
+  layoutStrategy: LayoutStrategy | null;
   letterSpacing: number | null;
   ligatures: boolean | null;
   lineHeight: number | null;
@@ -66,7 +67,6 @@ export class EpubSettings implements ConfigurableSettings {
   noRuby: boolean | null;
   optimalLineLength: number;
   pageGutter: number | null;
-  paginationStrategy: PaginationStrategy | null;
   paragraphIndent: number | null;
   paragraphSpacing: number | null;
   publisherStyles: boolean | null;
@@ -106,6 +106,7 @@ export class EpubSettings implements ConfigurableSettings {
     this.invertGaijiFilter = typeof preferences.invertGaijiFilter === "boolean" 
       ? preferences.invertGaijiFilter 
       : defaults.invertGaijiFilter || null;
+    this.layoutStrategy = preferences.layoutStrategy || defaults.layoutStrategy || null;
     this.letterSpacing = preferences.letterSpacing || defaults.letterSpacing || null;
     this.ligatures = typeof preferences.ligatures === "boolean"
       ? preferences.ligatures 
@@ -124,7 +125,6 @@ export class EpubSettings implements ConfigurableSettings {
       : defaults.noRuby || null;
     this.optimalLineLength = preferences.optimalLineLength || defaults.optimalLineLength;
     this.pageGutter = preferences.pageGutter || defaults.pageGutter || null;
-    this.paginationStrategy = preferences.paginationStrategy || defaults.paginationStrategy || null;
     this.paragraphIndent = preferences.paragraphIndent || defaults.paragraphIndent || null;
     this.paragraphSpacing = preferences.paragraphSpacing || defaults.paragraphSpacing || null;
     this.publisherStyles = typeof preferences.publisherStyles === "boolean" 

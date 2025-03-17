@@ -1,4 +1,4 @@
-import { PaginationStrategy, TextAlignment, Theme } from "../../preferences/Types";
+import { LayoutStrategy, TextAlignment, Theme } from "../../preferences/Types";
 
 export interface IEpubDefaults {
   backgroundColor?: string | null,
@@ -14,6 +14,7 @@ export interface IEpubDefaults {
   hyphens?: boolean | null,
   invertFilter?: boolean | number | null,
   invertGaijiFilter?: boolean | number | null,
+  layoutStrategy?: LayoutStrategy | null,
   letterSpacing?: number | null,
   ligatures?: boolean | null,
   lineHeight?: number | null,
@@ -24,7 +25,6 @@ export interface IEpubDefaults {
   noRuby?: boolean | null,
   optimalLineLength?: number | null,
   pageGutter?: number | null,
-  paginationStrategy?: PaginationStrategy | null,
   paragraphIndent?: number | null,
   paragraphSpacing?: number | null,
   publisherStyles?: boolean | null,
@@ -53,6 +53,7 @@ export class EpubDefaults {
   hyphens: boolean | null;
   invertFilter: boolean | number | null;
   invertGaijiFilter: boolean | number | null;
+  layoutStrategy: LayoutStrategy | null;
   letterSpacing: number | null;
   ligatures: boolean | null;
   lineHeight: number | null;
@@ -63,7 +64,6 @@ export class EpubDefaults {
   noRuby: boolean | null;
   optimalLineLength: number;
   pageGutter: number | null;
-  paginationStrategy: PaginationStrategy | null;
   paragraphIndent: number | null;
   paragraphSpacing: number | null;
   publisherStyles: boolean | null;
@@ -103,6 +103,7 @@ export class EpubDefaults {
     this.invertGaijiFilter = typeof defaults.invertGaijiFilter === "boolean" || typeof defaults.invertGaijiFilter === "number"
       ? defaults.invertGaijiFilter 
       : false;
+    this.layoutStrategy = defaults.layoutStrategy || LayoutStrategy.lineLength;
     this.letterSpacing = defaults.letterSpacing === undefined ? null : defaults.letterSpacing;
     this.ligatures = typeof defaults.ligatures === "boolean" 
       ? defaults.ligatures 
@@ -117,7 +118,6 @@ export class EpubDefaults {
       : false;
     this.optimalLineLength = defaults.optimalLineLength || 65;
     this.pageGutter = defaults.pageGutter === undefined ? 20 : defaults.pageGutter;
-    this.paginationStrategy = defaults.paginationStrategy || PaginationStrategy.lineLength;
     this.paragraphIndent = defaults.paragraphIndent === undefined ? null : defaults.paragraphIndent;
     this.paragraphSpacing = defaults.paragraphSpacing === undefined ? null : defaults.paragraphSpacing;
     this.publisherStyles = typeof defaults.publisherStyles === "boolean" 

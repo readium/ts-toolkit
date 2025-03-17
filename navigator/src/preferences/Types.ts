@@ -12,7 +12,7 @@ export enum Theme {
   custom = "custom"
 }
 
-export enum PaginationStrategy {
+export enum LayoutStrategy {
   margin = "margin",
   lineLength = "lineLength",
   columns = "columns"
