@@ -278,7 +278,7 @@ export class ReadiumCSS {
     return { 
       colCount: RCSSColCount, 
       effectiveContainerWidth: effectiveContainerWidth, 
-      effectiveLineLength: Math.round((effectiveContainerWidth / RCSSColCount) * zoomCompensation)
+      effectiveLineLength: Math.round(((effectiveContainerWidth / RCSSColCount) / (scale && scale >= 1 ? scale : 1)) * zoomCompensation)
     };
   }
 
