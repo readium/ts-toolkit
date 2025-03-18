@@ -19,28 +19,22 @@ abstract class Properties {
     return value.toString();
   }
 
-  protected toPercentage(value: number) {
-    if (value > 0 && value <= 1) {
-      return `${ value * 100 }%`;
+  protected toPercentage(value: number, ratio: boolean = false) {
+    if (ratio || value > 0 && value <= 1) {
+      return `${ Math.round(value * 100) }%`;
     } else {
       return `${ value }%`;
     }
   }
 
   protected toVw(value: number) {
-    if (value > 0 && value <= 1) {
-      return `${ value * 100 }vw`;
-    } else {
-      return `${ value }vw`;
-    }
+    const percentage = Math.round(value * 100);
+    return `${ Math.min(percentage, 100) }vw`;
   }
 
   protected toVh(value: number) {
-    if (value > 0 && value <= 1) {
-      return `${ value * 100 }vh`;
-    } else {
-      return `${ value }vh`;
-    }
+    const percentage = Math.round(value * 100);
+    return `${ Math.min(percentage, 100) }vh`;
   }
 
   protected toPx(value: number) {
@@ -175,13 +169,13 @@ export class UserProperties extends Properties {
     if (this.fontFamily) cssProperties["--USER__fontFamily"] = this.fontFamily;
     if (this.fontOpticalSizing) cssProperties["--USER__fontOpticalSizing"] = this.fontOpticalSizing;
     if (this.fontOverride) cssProperties["--USER__fontOverride"] = this.toFlag("font");
+    if (this.fontSize) cssProperties["--USER__fontSize"] = this.toPercentage(this.fontSize, true);
     if (this.fontWeight) cssProperties["--USER__fontWeight"] = this.toUnitless(this.fontWeight);
     if (this.fontWidth) {
       cssProperties["--USER__fontWidth"] = typeof this.fontWidth === "string" 
       ? this.fontWidth 
       : this.toUnitless(this.fontWidth);
     } 
-    if (this.fontSize) cssProperties["--USER__fontSize"] = this.toUnitless(this.fontSize);
     if (this.invertFilter) {
       cssProperties["--USER__invertFilter"] = typeof this.invertFilter === "number" 
         ? this.toPercentage(this.invertFilter)
