@@ -25,7 +25,7 @@ export class ReadiumCSS {
   constraint: number;
   layoutStrategy: LayoutStrategy;
   private cachedColCount: number | null | undefined;
-  private pagedContainerWidth: number;
+  private effectiveContainerWidth: number;
 
   constructor(props: IReadiumCSS) {
     this.rsProperties = props.rsProperties;
@@ -36,7 +36,7 @@ export class ReadiumCSS {
     this.constraint = props.constraint;
     this.layoutStrategy = props.layoutStrategy || LayoutStrategy.lineLength;
     this.cachedColCount = props.userProperties.colCount;
-    this.pagedContainerWidth = this.containerParent.clientWidth;
+    this.effectiveContainerWidth = this.containerParent.clientWidth;
   }
 
   update(settings: EpubSettings) {
@@ -65,10 +65,10 @@ export class ReadiumCSS {
       userChars: settings.lineLength
     });
 
-    const pagination = settings.scroll ? undefined : this.paginate(settings.fontSize, settings.columnCount);
+    const layout = this.updateLayout(settings.fontSize, settings.scroll, settings.columnCount);
 
-    if (pagination?.pagedContainerWidth)
-      this.pagedContainerWidth = pagination?.pagedContainerWidth;
+    if (layout?.effectiveContainerWidth)
+      this.effectiveContainerWidth = layout?.effectiveContainerWidth;
     
     const updated: IUserProperties = {
       advancedSettings: !settings.publisherStyles,
@@ -81,7 +81,7 @@ export class ReadiumCSS {
         : settings.hyphens 
           ? "auto" 
           : "none",
-      colCount: settings.scroll ? undefined : pagination?.colCount,
+      colCount: layout?.colCount,
       darkenFilter: settings.darkenFilter,
       fontFamily: settings.fontFamily,
       fontOpticalSizing: typeof settings.fontOpticalSizing !== "boolean" 
@@ -101,7 +101,7 @@ export class ReadiumCSS {
           ? "common-ligatures" 
           : "none",
       lineHeight: settings.lineHeight,
-      lineLength: settings.scroll ? this.computeScrollLength(settings.fontSize) : pagination?.effectiveLineLength,
+      lineLength: layout?.effectiveLineLength,
       noRuby: settings.noRuby,
       paraIndent: settings.paragraphIndent,
       paraSpacing: settings.paragraphSpacing,
@@ -127,6 +127,16 @@ export class ReadiumCSS {
     if (props.maxChars !== undefined) this.lineLengths.maxChars = props.maxChars;
     if (props.optimalChars) this.lineLengths.optimalChars = props.optimalChars;
     if (props.userChars !== undefined) this.lineLengths.userChars = props.userChars;
+  }
+
+  private updateLayout(scale: number | null, scroll: boolean | null, colCount?: number | null) {
+    const isScroll = scroll ?? this.userProperties.view === "scroll";
+
+    if (isScroll) {
+      return this.computeScrollLength(scale);
+    } else {
+      return this.paginate(scale, colCount);
+    }
   }
 
   private getCompensatedMetrics(scale: number | null) {
@@ -160,13 +170,13 @@ export class ReadiumCSS {
     const maximal = metrics.maximal;
 
     let RCSSColCount = 1;
-    let pagedContainerWidth = constrainedWidth;
+    let effectiveContainerWidth = constrainedWidth;
 
     if (colCount === undefined) {
       return { 
         colCount: undefined, 
-        pagedContainerWidth: pagedContainerWidth, 
-        effectiveLineLength: Math.round((pagedContainerWidth / RCSSColCount) * zoomCompensation) 
+        effectiveContainerWidth: effectiveContainerWidth, 
+        effectiveLineLength: Math.round((effectiveContainerWidth / RCSSColCount) * zoomCompensation) 
       };
     }
     
@@ -175,33 +185,33 @@ export class ReadiumCSS {
         if (constrainedWidth >= optimal) {
           RCSSColCount = Math.floor(constrainedWidth / optimal);
           const requiredWidth = Math.round(RCSSColCount * (optimal * zoomCompensation));
-          pagedContainerWidth = Math.min(requiredWidth, constrainedWidth);
+          effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
         } else {
           RCSSColCount = 1;
-          pagedContainerWidth = constrainedWidth;
+          effectiveContainerWidth = constrainedWidth;
         }
       } else if (this.layoutStrategy === LayoutStrategy.lineLength) {
         if (constrainedWidth < optimal || maximal === null) {
           RCSSColCount = 1;
-          pagedContainerWidth = constrainedWidth;
+          effectiveContainerWidth = constrainedWidth;
         } else {
           RCSSColCount = Math.floor(constrainedWidth / optimal);
           const requiredWidth = Math.round(RCSSColCount * (maximal * zoomCompensation));
-          pagedContainerWidth = Math.min(requiredWidth, constrainedWidth);
+          effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
         }
       } else if (this.layoutStrategy === LayoutStrategy.columns) {
         if (constrainedWidth >= optimal) {
           if (maximal === null) {
             RCSSColCount = Math.floor(constrainedWidth / optimal);
-            pagedContainerWidth = constrainedWidth;
+            effectiveContainerWidth = constrainedWidth;
           } else {
             RCSSColCount = Math.floor(constrainedWidth / (minimal || optimal));
             const requiredWidth = Math.round((RCSSColCount * (optimal * zoomCompensation)));
-            pagedContainerWidth = Math.min(requiredWidth, constrainedWidth);
+            effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
           }
         } else {
           RCSSColCount = 1;
-          pagedContainerWidth = constrainedWidth;
+          effectiveContainerWidth = constrainedWidth;
         }
       }
     } else if (colCount > 1) {
@@ -211,16 +221,16 @@ export class ReadiumCSS {
         RCSSColCount = colCount;
         if (this.layoutStrategy === LayoutStrategy.margin) {
           const requiredWidth = Math.round(RCSSColCount * (optimal * zoomCompensation));
-          pagedContainerWidth = Math.min(requiredWidth, constrainedWidth);
+          effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
         } else if (
           this.layoutStrategy === LayoutStrategy.lineLength ||
           this.layoutStrategy === LayoutStrategy.columns
         ) {
           if (maximal === null) {
-            pagedContainerWidth = constrainedWidth
+            effectiveContainerWidth = constrainedWidth
           } else {
             const requiredWidth = Math.round(RCSSColCount * (maximal * zoomCompensation));
-            pagedContainerWidth = Math.min(requiredWidth, constrainedWidth);
+            effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
           }
 
           if (this.layoutStrategy === LayoutStrategy.columns) {
@@ -234,7 +244,7 @@ export class ReadiumCSS {
           RCSSColCount = colCount;
         }
         const requiredWidth = Math.round((RCSSColCount * (optimal * zoomCompensation)));
-        pagedContainerWidth = Math.min(requiredWidth, constrainedWidth);
+        effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
       }
     } else {
       RCSSColCount = 1;
@@ -242,16 +252,16 @@ export class ReadiumCSS {
       if (constrainedWidth >= optimal) {
         if (this.layoutStrategy === LayoutStrategy.margin) {
           const requiredWidth = Math.round(optimal * zoomCompensation);
-          pagedContainerWidth = Math.min(requiredWidth, constrainedWidth);
+          effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
         } else if (
           this.layoutStrategy === LayoutStrategy.lineLength ||
           this.layoutStrategy === LayoutStrategy.columns
         ) {
           if (maximal === null) {
-            pagedContainerWidth = constrainedWidth
+            effectiveContainerWidth = constrainedWidth
           } else {
             const requiredWidth = Math.round(maximal * zoomCompensation);
-            pagedContainerWidth = Math.min(requiredWidth, constrainedWidth);
+            effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
           }
           
           if (this.layoutStrategy === LayoutStrategy.columns) {
@@ -259,27 +269,32 @@ export class ReadiumCSS {
           }
         }
       } else {
-        pagedContainerWidth = constrainedWidth 
+        effectiveContainerWidth = constrainedWidth 
       }
     }
 
     return { 
       colCount: RCSSColCount, 
-      pagedContainerWidth: pagedContainerWidth, 
-      effectiveLineLength: Math.round((pagedContainerWidth / RCSSColCount) * zoomCompensation)
+      effectiveContainerWidth: effectiveContainerWidth, 
+      effectiveLineLength: Math.round((effectiveContainerWidth / RCSSColCount) * zoomCompensation)
     };
   }
 
   // This behaves as paginate where colCount = 1
   private computeScrollLength(scale: number | null) {
+    const constrainedWidth = Math.round(this.containerParent.clientWidth - (this.constraint));
     const metrics = this.getCompensatedMetrics(scale);
     const zoomCompensation = metrics.zoomCompensation;
     const optimal = metrics.optimal;
     const maximal = metrics.maximal;
 
+    let RCSSColCount = undefined;
+    let effectiveContainerWidth = constrainedWidth;
+    let effectiveLineLength = Math.round(optimal * zoomCompensation);
+
     if (this.layoutStrategy === LayoutStrategy.margin) {
-      const computedWidth = Math.min(Math.round(optimal * zoomCompensation), this.containerParent.clientWidth);
-      return Math.round(computedWidth * zoomCompensation);
+      const computedWidth = Math.min(Math.round(optimal * zoomCompensation), constrainedWidth);
+      effectiveLineLength = Math.round(computedWidth * zoomCompensation);
     } else if (
       this.layoutStrategy === LayoutStrategy.lineLength ||
       this.layoutStrategy === LayoutStrategy.columns
@@ -288,34 +303,29 @@ export class ReadiumCSS {
         console.error("Columns strategy is not compatible with scroll. Falling back to lineLength strategy.");
       }
       if (maximal === null) {
-        return this.containerParent.clientWidth;
+        effectiveLineLength = constrainedWidth;
       } else {
-        const computedWidth = Math.min(Math.round(maximal * zoomCompensation), this.containerParent.clientWidth);
-        return Math.round(computedWidth * zoomCompensation);
+        const computedWidth = Math.min(Math.round(maximal * zoomCompensation), constrainedWidth);
+        effectiveLineLength = Math.round(computedWidth * zoomCompensation);
       }
     }
 
-    return Math.round(optimal * zoomCompensation);
+    return { 
+      colCount: RCSSColCount, 
+      effectiveContainerWidth: effectiveContainerWidth, 
+      effectiveLineLength: effectiveLineLength
+    }
   }
 
   setContainerWidth() {
-    if (this.userProperties.view === "scroll") {
-      this.container.style.width = `${ this.containerParent.clientWidth }px`;
-    } else {
-      this.container.style.width = `${ this.pagedContainerWidth }px`;
-    }
+    this.container.style.width = `${ this.effectiveContainerWidth }px`;
   }
 
   resizeHandler() {
-    if (this.userProperties.view === "scroll") {
-      this.userProperties.lineLength = this.computeScrollLength(this.userProperties.fontSize);
-      this.container.style.width = `${ this.containerParent.clientWidth }px`;
-    } else {
-      const pagination = this.paginate(this.userProperties.fontSize, this.cachedColCount);
-      this.userProperties.colCount = pagination.colCount;
-      this.userProperties.lineLength = pagination.effectiveLineLength;
-      this.pagedContainerWidth = pagination.pagedContainerWidth;
-      this.container.style.width = `${ this.pagedContainerWidth }px`;
-    }
+    const pagination = this.updateLayout(this.userProperties.fontSize, this.userProperties.view === "scroll", this.cachedColCount);
+    this.userProperties.colCount = pagination.colCount;
+    this.userProperties.lineLength = pagination.effectiveLineLength;
+    this.effectiveContainerWidth = pagination.effectiveContainerWidth;
+    this.container.style.width = `${ this.effectiveContainerWidth }px`;
   }
 }
