@@ -161,6 +161,8 @@ export class ReadiumCSS {
   }
 
   // Note: Kept intentionally verbose for debugging
+  // TODO: As scroll shows, the effective line-length
+  // should be the same as uncompensated when scale >= 1
   private paginate(scale: number | null, colCount?: number | null) {
     const constrainedWidth = Math.round(this.containerParent.clientWidth - (this.constraint));
     const metrics = this.getCompensatedMetrics(scale);
@@ -283,7 +285,7 @@ export class ReadiumCSS {
   // This behaves as paginate where colCount = 1
   private computeScrollLength(scale: number | null) {
     const constrainedWidth = Math.round(this.containerParent.clientWidth - (this.constraint));
-    const metrics = this.getCompensatedMetrics(scale);
+    const metrics = this.getCompensatedMetrics(scale && scale < 1 ? scale : 1);
     const zoomCompensation = metrics.zoomCompensation;
     const optimal = metrics.optimal;
     const maximal = metrics.maximal;
