@@ -13,6 +13,7 @@ import { EpubSettings } from "./preferences";
 import { EpubPreferencesEditor } from "./preferences/EpubPreferencesEditor";
 import { ReadiumCSS } from "./css/ReadiumCSS";
 import { RSProperties, UserProperties } from "./css/Properties";
+import fontStacks from "@readium/css/css/vars/fontStacks.json";
 
 export type ManagerEventKey = "zoom";
 
@@ -87,7 +88,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 minChars: this._settings.minimalLineLength,
                 maxChars: this._settings.maximalLineLength,
                 pageGutter: this._settings.pageGutter,
-                fontFace: this._settings.fontFamily,
+                fontFace: this._settings.fontFamily || fontStacks.RS__oldStyleTf,
                 letterSpacing: this._settings.letterSpacing,
                 wordSpacing: this._settings.wordSpacing,
             //    sample: this.pub.metadata.description
