@@ -1,3 +1,5 @@
+import fontStacks from "@readium/css/css/vars/fontStacks.json";
+
 export interface ICustomFontFace {
   name: string;
   url: string;
@@ -26,7 +28,8 @@ export interface ILineLengths {
   baseFontSize: number;
 }
 
-export const DEFAULT_FONT_SIZE = 16;
+const DEFAULT_FONT_SIZE = 16;
+const DEFAULT_FONT_FACE = fontStacks.RS__oldStyleTf;
 
 // Notes: 
 // 
@@ -49,7 +52,7 @@ export class LineLengths {
   private _maxChars?: number | null;
   private _userChars: number | null;
   private _baseFontSize: number;
-  private _fontFace: string | ICustomFontFace | null;
+  private _fontFace: string | ICustomFontFace;
   private _sample: string | null;
   private _pageGutter: number;
   private _letterSpacing: number;
@@ -72,7 +75,7 @@ export class LineLengths {
     this._maxChars = config.maxChars;
     this._userChars = config.userChars || null;
     this._baseFontSize = config.baseFontSize || DEFAULT_FONT_SIZE;
-    this._fontFace = config.fontFace || null;
+    this._fontFace = config.fontFace || DEFAULT_FONT_FACE;
     this._sample = config.sample || null;
     this._pageGutter = config.pageGutter || 0;
     this._letterSpacing = config.letterSpacing 
@@ -150,7 +153,7 @@ export class LineLengths {
   }
 
   set fontFace(f: string | ICustomFontFace | null) {
-    this._fontFace = f;
+    this._fontFace = f || DEFAULT_FONT_FACE;
     this._optimalLineLength = this.getOptimalLineLength();
   }
 
