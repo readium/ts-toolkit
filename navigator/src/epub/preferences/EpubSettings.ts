@@ -85,18 +85,34 @@ export class EpubSettings implements ConfigurableSettings {
     this.blendFilter = typeof preferences.blendFilter === "boolean" 
       ? preferences.blendFilter 
       : defaults.blendFilter || null;
-    this.columnCount = preferences.columnCount || defaults.columnCount || null;
+    this.columnCount = preferences.columnCount !== undefined 
+      ? preferences.columnCount 
+      : defaults.columnCount !== undefined 
+        ? defaults.columnCount 
+        : null;
     this.constraint = preferences.constraint || defaults.constraint;
     this.darkenFilter = typeof preferences.darkenFilter === "boolean" 
       ? preferences.darkenFilter 
       : defaults.darkenFilter || null;
     this.fontFamily = preferences.fontFamily || defaults.fontFamily || null;
-    this.fontSize = preferences.fontSize || defaults.fontSize || null;
+    this.fontSize = preferences.fontSize !== undefined 
+      ? preferences.fontSize 
+      : defaults.fontSize !== undefined 
+        ? defaults.fontSize 
+        : null;
     this.fontOpticalSizing = typeof preferences.fontOpticalSizing === "boolean" 
       ? preferences.fontOpticalSizing 
       : defaults.fontOpticalSizing || null;
-    this.fontWeight = preferences.fontWeight || defaults.fontWeight || null;
-    this.fontWidth = preferences.fontWidth || defaults.fontWidth || null;
+    this.fontWeight = preferences.fontWeight !== undefined 
+      ? preferences.fontWeight 
+      : defaults.fontWeight !== undefined 
+        ? defaults.fontWeight 
+        : null;
+    this.fontWidth = preferences.fontWidth !== undefined 
+      ? preferences.fontWidth 
+      : defaults.fontWidth !== undefined 
+        ? defaults.fontWidth 
+        : null;
     this.hyphens = typeof preferences.hyphens === "boolean" 
       ? preferences.hyphens 
       : defaults.hyphens || null;
@@ -107,12 +123,24 @@ export class EpubSettings implements ConfigurableSettings {
       ? preferences.invertGaijiFilter 
       : defaults.invertGaijiFilter || null;
     this.layoutStrategy = preferences.layoutStrategy || defaults.layoutStrategy || null;
-    this.letterSpacing = preferences.letterSpacing || defaults.letterSpacing || null;
+    this.letterSpacing = preferences.letterSpacing !== undefined 
+      ? preferences.letterSpacing 
+      : defaults.letterSpacing !== undefined 
+        ? defaults.letterSpacing 
+        : null;
     this.ligatures = typeof preferences.ligatures === "boolean"
       ? preferences.ligatures 
       : defaults.ligatures || null;
-    this.lineHeight = preferences.lineHeight || defaults.lineHeight || null;
-    this.lineLength = preferences.lineLength || defaults.lineLength || null;
+    this.lineHeight = preferences.lineHeight !== undefined 
+      ? preferences.lineHeight 
+      : defaults.lineHeight !== undefined 
+        ? defaults.lineHeight 
+        : null;
+    this.lineLength = preferences.lineLength !== undefined 
+      ? preferences.lineLength 
+      : defaults.lineLength !== undefined 
+        ? defaults.lineLength 
+        : null;
     this.linkColor = preferences.linkColor || defaults.linkColor || null;
     this.maximalLineLength = preferences.maximalLineLength === null 
       ? null 
@@ -124,9 +152,21 @@ export class EpubSettings implements ConfigurableSettings {
       ? preferences.noRuby 
       : defaults.noRuby || null;
     this.optimalLineLength = preferences.optimalLineLength || defaults.optimalLineLength;
-    this.pageGutter = preferences.pageGutter || defaults.pageGutter || null;
-    this.paragraphIndent = preferences.paragraphIndent || defaults.paragraphIndent || null;
-    this.paragraphSpacing = preferences.paragraphSpacing || defaults.paragraphSpacing || null;
+    this.pageGutter = preferences.pageGutter !== undefined 
+      ? preferences.pageGutter 
+      : defaults.pageGutter !== undefined 
+        ? defaults.pageGutter 
+        : null;
+    this.paragraphIndent = preferences.paragraphIndent !== undefined 
+      ? preferences.paragraphIndent 
+      : defaults.paragraphIndent !== undefined 
+        ? defaults.paragraphIndent 
+        : null;
+    this.paragraphSpacing = preferences.paragraphSpacing !== undefined 
+      ? preferences.paragraphSpacing 
+      : defaults.paragraphSpacing !== undefined 
+        ? defaults.paragraphSpacing 
+        : null;
     this.publisherStyles = typeof preferences.publisherStyles === "boolean" 
       ? preferences.publisherStyles 
       : defaults.publisherStyles || null;
@@ -142,6 +182,10 @@ export class EpubSettings implements ConfigurableSettings {
       : defaults.textNormalization || null;
     this.theme = preferences.theme || defaults.theme || null;
     this.visitedColor = preferences.visitedColor || defaults.visitedColor || null;
-    this.wordSpacing = preferences.wordSpacing || defaults.wordSpacing || null;
+    this.wordSpacing = preferences.wordSpacing !== undefined 
+      ? preferences.wordSpacing 
+      : defaults.wordSpacing !== undefined 
+        ? defaults.wordSpacing 
+        : null;
   }
 }

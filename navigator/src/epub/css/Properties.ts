@@ -118,37 +118,37 @@ export class UserProperties extends Properties {
 
   constructor(props: IUserProperties) {
     super();
-    this.advancedSettings = props.advancedSettings || null;
-    this.a11yNormalize = props.a11yNormalize || null;
-    this.appearance = props.appearance || null;
-    this.backgroundColor = props.backgroundColor || null;
-    this.blendFilter = props.blendFilter || null;
-    this.bodyHyphens = props.bodyHyphens || null;
-    this.colCount = props.colCount || null;
-    this.darkenFilter = props.darkenFilter || null;
-    this.fontFamily = props.fontFamily || null;
-    this.fontOpticalSizing = props.fontOpticalSizing || null;
-    this.fontOverride = props.fontOverride || null;
-    this.fontSize = props.fontSize || null;
-    this.fontWeight = props.fontWeight || null;
-    this.fontWidth = props.fontWidth || null;
-    this.invertFilter = props.invertFilter || null;
-    this.invertGaijiFilter = props.invertGaijiFilter || null;
-    this.letterSpacing = props.letterSpacing || null;
-    this.ligatures = props.ligatures || null;
-    this.lineHeight = props.lineHeight || null;
-    this.lineLength = props.lineLength || null;
-    this.linkColor = props.linkColor || null;
-    this.noRuby = props.noRuby || null;
-    this.paraIndent = props.paraIndent || null;
-    this.paraSpacing = props.paraSpacing || null;
-    this.selectionBackgroundColor = props.selectionBackgroundColor || null;
-    this.selectionTextColor = props.selectionTextColor || null;
-    this.textAlign = props.textAlign || null;
-    this.textColor = props.textColor || null;
-    this.view = props.view || null;
-    this.visitedColor = props.visitedColor || null;
-    this.wordSpacing = props.wordSpacing || null;
+    this.advancedSettings = props.advancedSettings ?? null;
+    this.a11yNormalize = props.a11yNormalize ?? null;
+    this.appearance = props.appearance ?? null;
+    this.backgroundColor = props.backgroundColor ?? null;
+    this.blendFilter = props.blendFilter ?? null;
+    this.bodyHyphens = props.bodyHyphens ?? null;
+    this.colCount = props.colCount ?? null;
+    this.darkenFilter = props.darkenFilter ?? null;
+    this.fontFamily = props.fontFamily ?? null;
+    this.fontOpticalSizing = props.fontOpticalSizing ?? null;
+    this.fontOverride = props.fontOverride ?? null;
+    this.fontSize = props.fontSize ?? null;
+    this.fontWeight = props.fontWeight ?? null;
+    this.fontWidth = props.fontWidth ?? null;
+    this.invertFilter = props.invertFilter ?? null;
+    this.invertGaijiFilter = props.invertGaijiFilter ?? null;
+    this.letterSpacing = props.letterSpacing ?? null;
+    this.ligatures = props.ligatures ?? null;
+    this.lineHeight = props.lineHeight ?? null;
+    this.lineLength = props.lineLength ?? null;
+    this.linkColor = props.linkColor ?? null;
+    this.noRuby = props.noRuby ?? null;
+    this.paraIndent = props.paraIndent ?? null;
+    this.paraSpacing = props.paraSpacing ?? null;
+    this.selectionBackgroundColor = props.selectionBackgroundColor ?? null;
+    this.selectionTextColor = props.selectionTextColor ?? null;
+    this.textAlign = props.textAlign ?? null;
+    this.textColor = props.textColor ?? null;
+    this.view = props.view ?? null;
+    this.visitedColor = props.visitedColor ?? null;
+    this.wordSpacing = props.wordSpacing ?? null;
   }
 
   toCSSProperties() {
@@ -161,46 +161,46 @@ export class UserProperties extends Properties {
     if (this.blendFilter) cssProperties["--USER__blendFilter"] = this.toFlag("blend");
     if (this.bodyHyphens) cssProperties["--USER__bodyHyphens"] = this.bodyHyphens;
     if (this.colCount) cssProperties["--USER__colCount"] = this.toUnitless(this.colCount);
-    if (this.darkenFilter) {
+    if (this.darkenFilter != null) {
       cssProperties["--USER__darkenFilter"] = typeof this.darkenFilter === "number" 
         ? this.toPercentage(this.darkenFilter) 
         : this.toFlag("darken");
     }
     if (this.fontFamily) cssProperties["--USER__fontFamily"] = this.fontFamily;
-    if (this.fontOpticalSizing) cssProperties["--USER__fontOpticalSizing"] = this.fontOpticalSizing;
+    if (this.fontOpticalSizing != null) cssProperties["--USER__fontOpticalSizing"] = this.fontOpticalSizing;
     if (this.fontOverride) cssProperties["--USER__fontOverride"] = this.toFlag("font");
-    if (this.fontSize) cssProperties["--USER__fontSize"] = this.toPercentage(this.fontSize, true);
-    if (this.fontWeight) cssProperties["--USER__fontWeight"] = this.toUnitless(this.fontWeight);
-    if (this.fontWidth) {
+    if (this.fontSize != null) cssProperties["--USER__fontSize"] = this.toPercentage(this.fontSize, true);
+    if (this.fontWeight != null) cssProperties["--USER__fontWeight"] = this.toUnitless(this.fontWeight);
+    if (this.fontWidth != null) {
       cssProperties["--USER__fontWidth"] = typeof this.fontWidth === "string" 
       ? this.fontWidth 
       : this.toUnitless(this.fontWidth);
     } 
-    if (this.invertFilter) {
+    if (this.invertFilter != null) {
       cssProperties["--USER__invertFilter"] = typeof this.invertFilter === "number" 
         ? this.toPercentage(this.invertFilter)
         : this.toFlag("invert");
     }
-    if (this.invertGaijiFilter) {
+    if (this.invertGaijiFilter != null) {
       cssProperties["--USER__invertGaiji"] = typeof this.invertGaijiFilter === "number" 
         ? this.toPercentage(this.invertGaijiFilter) 
         : this.toFlag("invertGaiji");
     }
-    if (this.letterSpacing) cssProperties["--USER__letterSpacing"] = this.toRem(this.letterSpacing);
+    if (this.letterSpacing != null) cssProperties["--USER__letterSpacing"] = this.toRem(this.letterSpacing);
     if (this.ligatures) cssProperties["--USER__ligatures"] = this.ligatures;
-    if (this.lineHeight) cssProperties["--USER__lineHeight"] = this.toUnitless(this.lineHeight);
-    if (this.lineLength) cssProperties["--USER__lineLength"] = this.toPx(this.lineLength);
+    if (this.lineHeight != null) cssProperties["--USER__lineHeight"] = this.toUnitless(this.lineHeight);
+    if (this.lineLength != null) cssProperties["--USER__lineLength"] = this.toPx(this.lineLength);
     if (this.linkColor) cssProperties["--USER__linkColor"] = this.linkColor;
     if (this.noRuby) cssProperties["--USER__noRuby"] = this.toFlag("noRuby");
-    if (this.paraIndent) cssProperties["--USER__paraIndent"] = this.toRem(this.paraIndent);
-    if (this.paraSpacing) cssProperties["--USER__paraSpacing"] = this.toRem(this.paraSpacing);
+    if (this.paraIndent != null) cssProperties["--USER__paraIndent"] = this.toRem(this.paraIndent);
+    if (this.paraSpacing != null) cssProperties["--USER__paraSpacing"] = this.toRem(this.paraSpacing);
     if (this.selectionBackgroundColor) cssProperties["--USER__selectionBackgroundColor"] = this.selectionBackgroundColor;
     if (this.selectionTextColor) cssProperties["--USER__selectionTextColor"] = this.selectionTextColor;
     if (this.textAlign) cssProperties["--USER__textAlign"] = this.textAlign;
     if (this.textColor) cssProperties["--USER__textColor"] = this.textColor;
     if (this.view) cssProperties["--USER__view"] = this.toFlag(this.view);
     if (this.visitedColor) cssProperties["--USER__visitedColor"] = this.visitedColor;
-    if (this.wordSpacing) cssProperties["--USER__wordSpacing"] = this.toRem(this.wordSpacing);
+    if (this.wordSpacing != null) cssProperties["--USER__wordSpacing"] = this.toRem(this.wordSpacing);
 
     return cssProperties;
   }
@@ -285,42 +285,42 @@ export class RSProperties extends Properties {
 
   constructor(props: IRSProperties) {
     super();
-    this.backgroundColor = props.backgroundColor || null;
-    this.baseFontFamily = props.baseFontFamily || null;
-    this.baseFontSize = props.baseFontSize || null;
-    this.baseLineHeight = props.baseLineHeight || null;
-    this.boxSizingMedia = props.boxSizingMedia || null;
-    this.boxSizingTable = props.boxSizingTable || null;
-    this.colWidth = props.colWidth || null;
-    this.colCount = props.colCount || null;
-    this.colGap = props.colGap || null;
-    this.codeFontFamily = props.codeFontFamily || null;
-    this.compFontFamily = props.compFontFamily || null;
-    this.defaultLineLength = props.defaultLineLength || null;
-    this.flowSpacing = props.flowSpacing || null;
-    this.humanistTf = props.humanistTf || null;
-    this.linkColor = props.linkColor || null;
-    this.maxMediaWidth = props.maxMediaWidth || null;
-    this.maxMediaHeight = props.maxMediaHeight || null;
-    this.modernTf = props.modernTf || null;
-    this.monospaceTf = props.monospaceTf || null;
-    this.noVerticalPagination = props.noVerticalPagination || null;
-    this.oldStyleTf = props.oldStyleTf || null;
-    this.pageGutter = props.pageGutter || null;
-    this.paraIndent = props.paraIndent || null;
-    this.paraSpacing = props.paraSpacing || null;
-    this.primaryColor = props.primaryColor || null;
-    this.sansSerifJa = props.sansSerifJa || null;
-    this.sansSerifJaV = props.sansSerifJaV || null;
-    this.sansTf = props.sansTf || null;
-    this.secondaryColor = props.secondaryColor || null;
-    this.selectionBackgroundColor = props.selectionBackgroundColor || null;
-    this.selectionTextColor = props.selectionTextColor || null;
-    this.serifJa = props.serifJa || null;
-    this.serifJaV = props.serifJaV || null;
-    this.textColor = props.textColor || null;
-    this.typeScale = props.typeScale || null;
-    this.visitedColor = props.visitedColor || null;
+    this.backgroundColor = props.backgroundColor ?? null;
+    this.baseFontFamily = props.baseFontFamily ?? null;
+    this.baseFontSize = props.baseFontSize ?? null;
+    this.baseLineHeight = props.baseLineHeight ?? null;
+    this.boxSizingMedia = props.boxSizingMedia ?? null;
+    this.boxSizingTable = props.boxSizingTable ?? null;
+    this.colWidth = props.colWidth ?? null;
+    this.colCount = props.colCount ?? null;
+    this.colGap = props.colGap ?? null;
+    this.codeFontFamily = props.codeFontFamily ?? null;
+    this.compFontFamily = props.compFontFamily ?? null;
+    this.defaultLineLength = props.defaultLineLength ?? null;
+    this.flowSpacing = props.flowSpacing ?? null;
+    this.humanistTf = props.humanistTf ?? null;
+    this.linkColor = props.linkColor ?? null;
+    this.maxMediaWidth = props.maxMediaWidth ?? null;
+    this.maxMediaHeight = props.maxMediaHeight ?? null;
+    this.modernTf = props.modernTf ?? null;
+    this.monospaceTf = props.monospaceTf ?? null;
+    this.noVerticalPagination = props.noVerticalPagination ?? null;
+    this.oldStyleTf = props.oldStyleTf ?? null;
+    this.pageGutter = props.pageGutter ?? null;
+    this.paraIndent = props.paraIndent ?? null;
+    this.paraSpacing = props.paraSpacing ?? null;
+    this.primaryColor = props.primaryColor ?? null;
+    this.sansSerifJa = props.sansSerifJa ?? null;
+    this.sansSerifJaV = props.sansSerifJaV ?? null;
+    this.sansTf = props.sansTf ?? null;
+    this.secondaryColor = props.secondaryColor ?? null;
+    this.selectionBackgroundColor = props.selectionBackgroundColor ?? null;
+    this.selectionTextColor = props.selectionTextColor ?? null;
+    this.serifJa = props.serifJa ?? null;
+    this.serifJaV = props.serifJaV ?? null;
+    this.textColor = props.textColor ?? null;
+    this.typeScale = props.typeScale ?? null;
+    this.visitedColor = props.visitedColor ?? null;
   }
 
   toCSSProperties(): { [key: string]: string; } {
@@ -328,17 +328,17 @@ export class RSProperties extends Properties {
 
     if (this.backgroundColor) cssProperties["--RS__backgroundColor"] = this.backgroundColor;
     if (this.baseFontFamily) cssProperties["--RS__baseFontFamily"] = this.baseFontFamily;
-    if (this.baseFontSize) cssProperties["--RS__baseFontSize"] = this.toRem(this.baseFontSize);
-    if (this.baseLineHeight) cssProperties["--RS__baseLineHeight"] = this.toUnitless(this.baseLineHeight);
+    if (this.baseFontSize != null) cssProperties["--RS__baseFontSize"] = this.toRem(this.baseFontSize);
+    if (this.baseLineHeight != null) cssProperties["--RS__baseLineHeight"] = this.toUnitless(this.baseLineHeight);
     if (this.boxSizingMedia) cssProperties["--RS__boxSizingMedia"] = this.boxSizingMedia;
     if (this.boxSizingTable) cssProperties["--RS__boxSizingTable"] = this.boxSizingTable;
-    if (this.colWidth) cssProperties["--RS__colWidth"] = this.colWidth;
-    if (this.colCount) cssProperties["--RS__colCount"] = this.toUnitless(this.colCount);
-    if (this.colGap) cssProperties["--RS__colGap"] = this.toPx(this.colGap);
+    if (this.colWidth != null) cssProperties["--RS__colWidth"] = this.colWidth;
+    if (this.colCount != null) cssProperties["--RS__colCount"] = this.toUnitless(this.colCount);
+    if (this.colGap != null) cssProperties["--RS__colGap"] = this.toPx(this.colGap);
     if (this.codeFontFamily) cssProperties["--RS__codeFontFamily"] = this.codeFontFamily;
     if (this.compFontFamily) cssProperties["--RS__compFontFamily"] = this.compFontFamily;
-    if (this.defaultLineLength) cssProperties["--RS__defaultLineLength"] = this.toPx(this.defaultLineLength);
-    if (this.flowSpacing) cssProperties["--RS__flowSpacing"] = this.toRem(this.flowSpacing);
+    if (this.defaultLineLength != null) cssProperties["--RS__defaultLineLength"] = this.toPx(this.defaultLineLength);
+    if (this.flowSpacing != null) cssProperties["--RS__flowSpacing"] = this.toRem(this.flowSpacing);
     if (this.humanistTf) cssProperties["--RS__humanistTf"] = this.humanistTf;
     if (this.linkColor) cssProperties["--RS__linkColor"] = this.linkColor;
     if (this.maxMediaWidth) cssProperties["--RS__maxMediaWidth"] = this.toVw(this.maxMediaWidth);
@@ -347,9 +347,9 @@ export class RSProperties extends Properties {
     if (this.monospaceTf) cssProperties["--RS__monospaceTf"] = this.monospaceTf;
     if (this.noVerticalPagination) cssProperties["--RS__disablePagination"] = this.toFlag("noVerticalPagination");
     if (this.oldStyleTf) cssProperties["--RS__oldStyleTf"] = this.oldStyleTf;
-    if (this.pageGutter) cssProperties["--RS__pageGutter"] = this.toPx(this.pageGutter);
-    if (this.paraIndent) cssProperties["--RS__paraIndent"] = this.toRem(this.paraIndent);
-    if (this.paraSpacing) cssProperties["--RS__paraSpacing"] = this.toRem(this.paraSpacing);
+    if (this.pageGutter != null) cssProperties["--RS__pageGutter"] = this.toPx(this.pageGutter);
+    if (this.paraIndent != null) cssProperties["--RS__paraIndent"] = this.toRem(this.paraIndent);
+    if (this.paraSpacing != null) cssProperties["--RS__paraSpacing"] = this.toRem(this.paraSpacing);
     if (this.primaryColor) cssProperties["--RS__primaryColor"] = this.primaryColor;
     if (this.sansSerifJa) cssProperties["--RS__sans-serif-ja"] = this.sansSerifJa;
     if (this.sansSerifJaV) cssProperties["--RS__sans-serif-ja-v"] = this.sansSerifJaV;
