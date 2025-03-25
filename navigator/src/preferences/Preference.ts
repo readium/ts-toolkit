@@ -209,7 +209,9 @@ export class RangePreference<T extends number> extends Preference<T> implements 
     super({ initialValue, effectiveValue, isEffective, onChange });
     this._supportedRange = supportedRange;
     this._step = step;
-    this._decimals = this._step.toString().split('.')[1].length;
+    this._decimals = this._step.toString().includes('.') 
+      ? this._step.toString().split('.')[1].length 
+      : 0;
   }
 
   set value(value: T | null | undefined) {
