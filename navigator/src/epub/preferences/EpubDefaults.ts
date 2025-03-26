@@ -1,4 +1,23 @@
-import { LayoutStrategy, TextAlignment, Theme } from "../../preferences/Types";
+import { 
+  fontSizeRangeConfig, 
+  fontWeightRangeConfig, 
+  fontWidthRangeConfig, 
+  LayoutStrategy, 
+  TextAlignment, 
+  Theme 
+} from "../../preferences/Types";
+
+import { 
+  ensureBoolean, 
+  ensureEnumValue, 
+  ensureFilter, 
+  ensureLessThanOrEqual, 
+  ensureMoreThanOrEqual, 
+  ensureNonNegative, 
+  ensureString, 
+  ensureValueInRange, 
+  withFallback
+} from "./guards";
 
 export interface IEpubDefaults {
   backgroundColor?: string | null,
@@ -78,63 +97,42 @@ export class EpubDefaults {
   wordSpacing: number | null;
 
   constructor(defaults: IEpubDefaults) {
-    this.backgroundColor = defaults.backgroundColor === undefined ? null : defaults.backgroundColor;
-    this.blendFilter = typeof defaults.blendFilter === "boolean" 
-      ? defaults.blendFilter 
-      : false;
-    this.columnCount = defaults.columnCount === undefined ? null : defaults.columnCount;
-    this.constraint = defaults.constraint || 0;
-    this.darkenFilter = typeof defaults.darkenFilter === "boolean" || typeof defaults.darkenFilter === "number"
-      ? defaults.darkenFilter
-      : false;
-    this.fontFamily = defaults.fontFamily === undefined ? null : defaults.fontFamily;
-    this.fontSize = defaults.fontSize === undefined ? 1 : defaults.fontSize;
-    this.fontOpticalSizing = typeof defaults.fontOpticalSizing === "boolean" 
-      ? defaults.fontOpticalSizing 
-      : null;
-    this.fontWeight = defaults.fontWeight === undefined ? null : defaults.fontWeight;
-    this.fontWidth = defaults.fontWidth === undefined ? null : defaults.fontWidth;
-    this.hyphens = typeof defaults.hyphens === "boolean" 
-      ? defaults.hyphens 
-      : null;
-    this.invertFilter = typeof defaults.invertFilter === "boolean" || typeof defaults.invertFilter === "number"
-      ? defaults.invertFilter 
-      : false;
-    this.invertGaijiFilter = typeof defaults.invertGaijiFilter === "boolean" || typeof defaults.invertGaijiFilter === "number"
-      ? defaults.invertGaijiFilter 
-      : false;
-    this.layoutStrategy = defaults.layoutStrategy || LayoutStrategy.lineLength;
-    this.letterSpacing = defaults.letterSpacing === undefined ? null : defaults.letterSpacing;
-    this.ligatures = typeof defaults.ligatures === "boolean" 
-      ? defaults.ligatures 
-      : null;
-    this.lineHeight = defaults.lineHeight === undefined ? null : defaults.lineHeight;
-    this.lineLength = defaults.lineLength === undefined ? null : defaults.lineLength;
-    this.linkColor = defaults.linkColor === undefined ? null : defaults.linkColor;
-    this.maximalLineLength = defaults.maximalLineLength === undefined ? 80 : defaults.maximalLineLength;
-    this.minimalLineLength = defaults.minimalLineLength === undefined ? 40 : defaults.minimalLineLength;
-    this.noRuby = typeof defaults.noRuby === "boolean" 
-      ? defaults.noRuby 
-      : false;
-    this.optimalLineLength = defaults.optimalLineLength || 65;
-    this.pageGutter = defaults.pageGutter === undefined ? 20 : defaults.pageGutter;
-    this.paragraphIndent = defaults.paragraphIndent === undefined ? null : defaults.paragraphIndent;
-    this.paragraphSpacing = defaults.paragraphSpacing === undefined ? null : defaults.paragraphSpacing;
-    this.publisherStyles = typeof defaults.publisherStyles === "boolean" 
-      ? defaults.publisherStyles 
-      : true;
-    this.scroll = typeof defaults.scroll === "boolean" 
-      ? defaults.scroll 
-      : false;
-    this.selectionBackgroundColor = defaults.selectionBackgroundColor === undefined ? null : defaults.selectionBackgroundColor;
-    this.selectionTextColor = defaults.selectionTextColor === undefined ? null : defaults.selectionTextColor;
-    this.textAlign = defaults.textAlign === undefined ? null : defaults.textAlign;
-    this.textColor = defaults.textColor === undefined ? null : defaults.textColor;
-    this.textNormalization = typeof defaults.textNormalization === "boolean" 
-      ? defaults.textNormalization 
-      : false;
-    this.theme = defaults.theme === undefined ? null : defaults.theme;
-    this.visitedColor = defaults.visitedColor === undefined ? null : defaults.visitedColor;
-    this.wordSpacing = defaults.wordSpacing === undefined ? null : defaults.wordSpacing;
+    this.backgroundColor = ensureString(defaults.backgroundColor) || null;
+    this.blendFilter = ensureBoolean(defaults.blendFilter) ?? false;
+    this.constraint = ensureNonNegative(defaults.constraint) || 0;
+    this.columnCount = ensureNonNegative(defaults.columnCount) || null;
+    this.darkenFilter = ensureFilter(defaults.darkenFilter) ?? false;
+    this.fontFamily = ensureString(defaults.fontFamily) || null;
+    this.fontSize = ensureValueInRange(defaults.fontSize, fontSizeRangeConfig.range) || 1;
+    this.fontOpticalSizing = ensureBoolean(defaults.fontOpticalSizing) ?? null;
+    this.fontWeight = ensureValueInRange(defaults.fontWeight, fontWeightRangeConfig.range) || null;
+    this.fontWidth = ensureValueInRange(defaults.fontWidth,fontWidthRangeConfig.range) || null;
+    this.hyphens = ensureBoolean(defaults.hyphens) ?? null;
+    this.invertFilter = ensureFilter(defaults.invertFilter) ?? false;
+    this.invertGaijiFilter = ensureFilter(defaults.invertGaijiFilter) ?? false;
+    this.layoutStrategy = ensureEnumValue<LayoutStrategy>(defaults.layoutStrategy, LayoutStrategy) || LayoutStrategy.lineLength;
+    this.letterSpacing = ensureNonNegative(defaults.letterSpacing) || null;
+    this.ligatures = ensureBoolean(defaults.ligatures) ?? null;
+    this.lineHeight = ensureNonNegative(defaults.lineHeight) || null;
+    this.linkColor = ensureString(defaults.linkColor) || null;
+    this.noRuby = ensureBoolean(defaults.noRuby) ?? false;
+    this.pageGutter = withFallback(ensureNonNegative(defaults.pageGutter), 20);
+    this.paragraphIndent = ensureNonNegative(defaults.paragraphIndent) ?? null;
+    this.paragraphSpacing = ensureNonNegative(defaults.paragraphSpacing) ?? null;
+    this.publisherStyles = ensureBoolean(defaults.publisherStyles) ?? true;
+    this.scroll = ensureBoolean(defaults.scroll) ?? false;
+    this.selectionBackgroundColor = ensureString(defaults.selectionBackgroundColor) || null;
+    this.selectionTextColor = ensureString(defaults.selectionTextColor) || null;
+    this.textAlign = ensureEnumValue<TextAlignment>(defaults.textAlign, TextAlignment) || null;
+    this.textColor = ensureString(defaults.textColor) || null;
+    this.textNormalization = ensureBoolean(defaults.textNormalization) ?? false;
+    this.theme = ensureEnumValue<Theme>(defaults.theme, Theme) || null;
+    this.visitedColor = ensureString(defaults.visitedColor) || null;
+    this.wordSpacing = ensureNonNegative(defaults.wordSpacing) || null;
+
+    this.lineLength = ensureNonNegative(defaults.lineLength) || null;
+    this.optimalLineLength = ensureNonNegative(defaults.optimalLineLength) || 65;
+    this.maximalLineLength = withFallback(ensureMoreThanOrEqual(defaults.maximalLineLength, this.lineLength || this.optimalLineLength), 80);
+    this.minimalLineLength = withFallback(ensureLessThanOrEqual(defaults.minimalLineLength, this.lineLength || this.optimalLineLength), 40);
   }
 }
