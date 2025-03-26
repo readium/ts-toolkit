@@ -104,11 +104,7 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.letterSpacing = EpubPreferences.ensureNonNegative(preferences.letterSpacing);
     this.ligatures = EpubPreferences.ensureBoolean(preferences.ligatures);
     this.lineHeight = EpubPreferences.ensureNonNegative(preferences.lineHeight);
-    this.lineLength = EpubPreferences.ensureNonNegative(preferences.lineLength);
-    this.maximalLineLength = EpubPreferences.ensureMoreThanOrEqual(preferences.maximalLineLength, preferences.optimalLineLength);
-    this.minimalLineLength = EpubPreferences.ensureLessThanOrEqual(preferences.minimalLineLength, preferences.maximalLineLength);
     this.linkColor = EpubPreferences.ensureString(preferences.linkColor);
-    this.optimalLineLength = EpubPreferences.ensureNonNegative(preferences.optimalLineLength) || 65;
     this.noRuby = EpubPreferences.ensureBoolean(preferences.noRuby);
     this.pageGutter = EpubPreferences.ensureNonNegative(preferences.pageGutter);
     this.paragraphIndent = EpubPreferences.ensureNonNegative(preferences.paragraphIndent);
@@ -123,6 +119,11 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.theme = EpubPreferences.ensureEnumValue<Theme>(preferences.theme, Theme);
     this.visitedColor = EpubPreferences.ensureString(preferences.visitedColor);
     this.wordSpacing = EpubPreferences.ensureNonNegative(preferences.wordSpacing);
+
+    this.lineLength = EpubPreferences.ensureNonNegative(preferences.lineLength);
+    this.optimalLineLength = EpubPreferences.ensureNonNegative(preferences.optimalLineLength) || 65;
+    this.maximalLineLength = EpubPreferences.ensureMoreThanOrEqual(preferences.maximalLineLength, this.lineLength || this.optimalLineLength);
+    this.minimalLineLength = EpubPreferences.ensureLessThanOrEqual(preferences.minimalLineLength, this.lineLength || this.optimalLineLength);
   }
 
   private static ensureLessThanOrEqual<T extends number | null | undefined>(value: T, compareTo: T): T | undefined {
