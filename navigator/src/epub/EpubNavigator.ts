@@ -13,6 +13,7 @@ import { EpubSettings } from "./preferences";
 import { EpubPreferencesEditor } from "./preferences/EpubPreferencesEditor";
 import { ReadiumCSS } from "./css/ReadiumCSS";
 import { RSProperties, UserProperties } from "./css/Properties";
+import { getContentWidth } from "../helpers/dimensions";
 
 export type ManagerEventKey = "zoom";
 
@@ -235,7 +236,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         const parentEl = this.container.parentElement || document.documentElement;
 
         if (this.layout === EPUBLayout.fixed) {
-            this.container.style.width = `${ parentEl.clientWidth - this._settings.constraint }px`;
+            this.container.style.width = `${ getContentWidth(parentEl) - this._settings.constraint }px`;
             (this.framePool as FXLFramePoolManager).resizeHandler();
         } else {
             // for reflow ReadiumCSS gets the width from columns + line-lengths 

@@ -1,4 +1,5 @@
 import { ILineLengthsConfig, LineLengths } from "../../helpers";
+import { getContentWidth } from "../../helpers/dimensions";
 import { LayoutStrategy } from "../../preferences";
 import { EpubSettings } from "../preferences/EpubSettings";
 import { IUserProperties, RSProperties, UserProperties } from "./Properties";
@@ -36,7 +37,7 @@ export class ReadiumCSS {
     this.constraint = props.constraint;
     this.layoutStrategy = props.layoutStrategy || LayoutStrategy.lineLength;
     this.cachedColCount = props.userProperties.colCount;
-    this.effectiveContainerWidth = this.containerParent.clientWidth;
+    this.effectiveContainerWidth = getContentWidth(this.containerParent);
   }
 
   update(settings: EpubSettings) {
@@ -164,7 +165,7 @@ export class ReadiumCSS {
   // TODO: As scroll shows, the effective line-length
   // should be the same as uncompensated when scale >= 1
   private paginate(scale: number | null, colCount?: number | null) {
-    const constrainedWidth = Math.round(this.containerParent.clientWidth - (this.constraint));
+    const constrainedWidth = Math.round(getContentWidth(this.containerParent) - (this.constraint));
     const metrics = this.getCompensatedMetrics(scale);
     const zoomCompensation = metrics.zoomCompensation;
     const optimal = metrics.optimal;
@@ -284,7 +285,7 @@ export class ReadiumCSS {
 
   // This behaves as paginate where colCount = 1
   private computeScrollLength(scale: number | null) {
-    const constrainedWidth = Math.round(this.containerParent.clientWidth - (this.constraint));
+    const constrainedWidth = Math.round(getContentWidth(this.containerParent) - (this.constraint));
     const metrics = this.getCompensatedMetrics(scale && scale < 1 ? scale : 1);
     const zoomCompensation = metrics.zoomCompensation;
     const optimal = metrics.optimal;
