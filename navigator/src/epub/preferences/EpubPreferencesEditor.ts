@@ -33,7 +33,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     this.preferences = new EpubPreferences({ optimalLineLength: 65 });
   }
 
-  updatePreference<K extends keyof EpubPreferences>(key: K, value: EpubPreferences[K]) {
+  private updatePreference<K extends keyof EpubPreferences>(key: K, value: EpubPreferences[K]) {
     this.preferences[key] = value;
   }
 
