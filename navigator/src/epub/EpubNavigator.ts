@@ -81,7 +81,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this._defaults = new EpubDefaults(configuration.defaults);
         this._settings = new EpubSettings(this._preferences, this._defaults);
         this._css = new ReadiumCSS({ 
-            rsProperties: new RSProperties(this._preferences),
+            rsProperties: new RSProperties({}),
             userProperties: new UserProperties({}),
             lineLengths: new LineLengths({
                 optimalChars: this._settings.optimalLineLength,
