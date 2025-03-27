@@ -618,7 +618,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
     // TODO: This is temporary until user settings are implemented.
     public async setReadingProgression(newProgression: ReadingProgression) {
-        if(this.currentProgression === newProgression) return;
+        if(this.currentProgression === newProgression || !this.framePool) return;
         this.currentProgression = newProgression;
         await this.framePool.update(this.pub, this.currentLocator, this.determineModules(), true);
         this.attachListener();
