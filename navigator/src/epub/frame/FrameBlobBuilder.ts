@@ -168,12 +168,6 @@ export default class FrameBlobBuider {
             const rcssBefore = styleify(doc, cached("ReadiumCSS-before", () => blobify(stripCSS(readiumCSSBefore), "text/css")));
             doc.head.firstChild ? doc.head.firstChild.before(rcssBefore) : doc.head.appendChild(rcssBefore);
 
-            // Patch
-            const patch = doc.createElement("style");
-            patch.dataset.readium = "true";
-            patch.innerHTML = `audio[controls] { width: revert; height: revert; }`; // https://github.com/readium/readium-css/issues/94
-            rcssBefore.after(patch);
-
             // Readium CSS defaults
             if(!this.hasStyle(doc))
                 rcssBefore.after(styleify(doc, cached("ReadiumCSS-default", () => blobify(stripCSS(readiumCSSDefault), "text/css"))))
