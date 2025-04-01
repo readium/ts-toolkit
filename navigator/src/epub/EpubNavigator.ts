@@ -70,7 +70,6 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         super();
         this.pub = pub;
         this.layout = EpubNavigator.determineLayout(pub);
-        this.currentProgression = pub.metadata.effectiveReadingProgression;
         this.container = container;
         this.listeners = defaultListeners(listeners);
         this.currentLocation = initialPosition!;
@@ -96,6 +95,12 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             container: container,
             constraint: this._settings.constraint
         });
+
+        this.currentProgression = this.layout === EPUBLayout.reflowable 
+            ? (this._settings.scroll 
+                ? ReadingProgression.ttb 
+                : pub.metadata.effectiveReadingProgression) 
+            : pub.metadata.effectiveReadingProgression;
 
         // We use a resizeObserver cos’ the container parent may not be the width of 
         // the document/window e.g. app using a docking system with left and right panels.
