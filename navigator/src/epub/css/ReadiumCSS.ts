@@ -60,10 +60,10 @@ export class ReadiumCSS {
       letterSpacing: settings.letterSpacing,
       pageGutter: settings.pageGutter,
       wordSpacing: settings.wordSpacing,
-      minChars: settings.minimalLineLength,
-      maxChars: settings.maximalLineLength,
       optimalChars: settings.optimalLineLength,
-      userChars: settings.lineLength
+      userChars: settings.lineLength,
+      minChars: settings.minimalLineLength,
+      maxChars: settings.maximalLineLength
     });
 
     const layout = this.updateLayout(settings.fontSize, settings.scroll, settings.columnCount);
@@ -124,10 +124,10 @@ export class ReadiumCSS {
     if (props.letterSpacing !== undefined) this.lineLengths.letterSpacing = props.letterSpacing || 0;
     if (props.pageGutter !== undefined) this.lineLengths.pageGutter = props.pageGutter || 0;
     if (props.wordSpacing !== undefined) this.lineLengths.wordSpacing = props.wordSpacing || 0;
-    if (props.minChars !== undefined) this.lineLengths.minChars = props.minChars;
-    if (props.maxChars !== undefined) this.lineLengths.maxChars = props.maxChars;
     if (props.optimalChars) this.lineLengths.optimalChars = props.optimalChars;
     if (props.userChars !== undefined) this.lineLengths.userChars = props.userChars;
+    if (props.minChars !== undefined) this.lineLengths.minChars = props.minChars;
+    if (props.maxChars !== undefined) this.lineLengths.maxChars = props.maxChars;
   }
 
   private updateLayout(scale: number | null, scroll: boolean | null, colCount?: number | null) {
