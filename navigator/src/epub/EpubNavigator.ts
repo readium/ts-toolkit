@@ -105,7 +105,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         // We use a resizeObserver cos’ the container parent may not be the width of 
         // the document/window e.g. app using a docking system with left and right panels.
         // If we observe this.container, that won’t obviously work since we set its width.
-        this.resizeObserver = new ResizeObserver(() => this.ownerWindow.requestAnimationFrame(() => this.resizeHandler()));
+        this.resizeObserver = new ResizeObserver(() => this.ownerWindow.requestAnimationFrame(async () => await this.resizeHandler()));
         this.resizeObserver.observe(this.container.parentElement || document.documentElement);
     }
 
@@ -139,7 +139,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         if(this.currentLocation === undefined)
             this.currentLocation = this.positions[0];
 
-        this.resizeHandler();
+        await this.resizeHandler();
         await this.apply();
     }
 
@@ -195,21 +195,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private async updateCSS(commit: boolean) {
         this._css.update(this._settings);
 
-        if (
-            this._css.userProperties.view === "paged" && 
-            this.readingProgression === ReadingProgression.ttb
-        ) {
-            await this.setReadingProgression(this.pub.metadata.effectiveReadingProgression); 
-        } else if (
-            this._css.userProperties.view === "scroll" && 
-            (this.readingProgression === ReadingProgression.ltr || this.readingProgression === ReadingProgression.rtl)
-        ) {
-            await this.setReadingProgression(ReadingProgression.ttb);
-        }
-
-        this._css.setContainerWidth();
-
-        if (commit) this.commitCSS(this._css);
+        if (commit) await this.commitCSS(this._css);
     };
 
     private compileCSSProperties(css: ReadiumCSS) {
@@ -226,16 +212,30 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         return properties;
     }
 
-    private commitCSS(css: ReadiumCSS) {
+    private async commitCSS(css: ReadiumCSS) {
         // Since we’re updating the CSS properties in injectables by removing
         // the existing properties that are not inside this object first, 
         // then adding all from it, we don’t compare the previous properties here
         const properties = this.compileCSSProperties(css);
 
         (this.framePool as FramePoolManager).setCSSProperties(properties);
+
+        if (
+            this._css.userProperties.view === "paged" && 
+            this.readingProgression === ReadingProgression.ttb
+        ) {
+            await this.setReadingProgression(this.pub.metadata.effectiveReadingProgression); 
+        } else if (
+            this._css.userProperties.view === "scroll" && 
+            (this.readingProgression === ReadingProgression.ltr || this.readingProgression === ReadingProgression.rtl)
+        ) {
+            await this.setReadingProgression(ReadingProgression.ttb);
+        }
+
+        this._css.setContainerWidth();
     }
 
-    resizeHandler() {
+    async resizeHandler() {
         // We check the parentElement cos we want to remove constraint from the container
         // and the container may not be the entire width of the document/window
         const parentEl = this.container.parentElement || document.documentElement;
@@ -254,7 +254,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 oldColCount !== this._css.userProperties.colCount ||
                 oldLineLength !== this._css.userProperties.lineLength
             ) {
-                this.commitCSS(this._css);
+                await this.commitCSS(this._css);
             }
         }
     }

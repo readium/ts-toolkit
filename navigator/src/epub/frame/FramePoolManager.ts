@@ -98,6 +98,13 @@ export class FramePoolManager {
                     if(!this.blobs.has(href)) {
                         await fm.destroy();
                         this.pool.delete(href);
+                    } else if (force) {
+                        // Revoke blob cos it's stale (CSS Properties)
+                        // It will be recreated below with updated props
+                        URL.revokeObjectURL(this.blobs.get(href)!);
+                        await fm.destroy();
+                        this.blobs.delete(href);
+                        this.pool.delete(href);
                     } else {
                         await fm.load(modules);
                         return;
