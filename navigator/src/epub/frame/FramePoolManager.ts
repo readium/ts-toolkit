@@ -93,17 +93,20 @@ export class FramePoolManager {
             this.currentBaseURL = pub.baseURL;
 
             const creator = async (href: string) => {
+                if(force) {
+                    // Revoke all blobs so that CSSProperties are not stale
+                    // When using force, we switch scroll/paginated
+                    // If this property is not up to date, it creates issues
+                    // when navigating backwards, where paginated will go the
+                    // start of the resource instead of the end due to the
+                    // corrupted width ColumnSnapper (injectables) gets on init
+                    this.blobs.forEach(v => URL.revokeObjectURL(v));
+                    this.blobs.clear();
+                }
                 if(this.pool.has(href)) {
                     const fm = this.pool.get(href)!;
                     if(!this.blobs.has(href)) {
                         await fm.destroy();
-                        this.pool.delete(href);
-                    } else if (force) {
-                        // Revoke blob cos it's stale (CSS Properties)
-                        // It will be recreated below with updated props
-                        URL.revokeObjectURL(this.blobs.get(href)!);
-                        await fm.destroy();
-                        this.blobs.delete(href);
                         this.pool.delete(href);
                     } else {
                         await fm.load(modules);
