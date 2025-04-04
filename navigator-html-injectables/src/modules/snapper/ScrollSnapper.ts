@@ -11,6 +11,7 @@ export class ScrollSnapper extends Snapper {
     static readonly moduleName: ModuleName = "scroll_snapper";
     private wnd!: ReadiumWindow;
     private comms!: Comms;
+    private resizeObserver!: ResizeObserver;
     private isScrolling = false;
 
     private doc() {
@@ -53,8 +54,13 @@ export class ScrollSnapper extends Snapper {
         `;
         wnd.document.head.appendChild(style);
 
-        this.wnd.addEventListener("scroll", this.handleScroll, {
-            passive: true,
+        this.resizeObserver = new ResizeObserver(() => {
+            this.comms.ready && this.handleScroll();
+        });
+        this.resizeObserver.observe(wnd.document.body);
+
+        wnd.addEventListener("scroll", this.handleScroll, {
+            passive: true
         });
 
         comms.register("go_progression", ScrollSnapper.moduleName, (data, ack) => {
@@ -165,8 +171,9 @@ export class ScrollSnapper extends Snapper {
 
     unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         comms.unregisterAll(ScrollSnapper.moduleName);
-        wnd.document.getElementById(SCROLL_SNAPPER_STYLE_ID)?.remove();
+        this.resizeObserver.disconnect();
         if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
+        wnd.document.getElementById(SCROLL_SNAPPER_STYLE_ID)?.remove();
         comms.log("ScrollSnapper Unmounted");
         return true;
     }
