@@ -61,6 +61,7 @@ export interface IUserProperties {
   fontOpticalSizing?: FontOpticalSizing | null;
   fontOverride?: boolean | null;
   fontSize?: number | null;
+  fontSizeNormalize?: boolean | null;
   fontWeight?: number | null;
   fontWidth?: FontWidth | null;
   invertFilter?: boolean | number | null;
@@ -73,7 +74,6 @@ export interface IUserProperties {
   noRuby?: boolean | null;
   paraIndent?: number | null;
   paraSpacing?: number | null;
-  publisherStyles?: boolean | null;
   selectionBackgroundColor?: string | null;
   selectionTextColor?: string | null;
   textAlign?: TextAlignment | null;
@@ -84,7 +84,6 @@ export interface IUserProperties {
 }
 
 export class UserProperties extends Properties {
-  advancedSettings: boolean | null;
   a11yNormalize: boolean | null;
   appearance: Theme | null;
   backgroundColor: string | null;
@@ -96,6 +95,7 @@ export class UserProperties extends Properties {
   fontOpticalSizing: FontOpticalSizing | null;
   fontOverride: boolean | null;
   fontSize: number | null;
+  fontSizeNormalize: boolean | null;
   fontWeight: number | null;
   fontWidth: FontWidth | null;
   invertFilter: boolean | number | null;
@@ -118,7 +118,6 @@ export class UserProperties extends Properties {
 
   constructor(props: IUserProperties) {
     super();
-    this.advancedSettings = props.advancedSettings ?? null;
     this.a11yNormalize = props.a11yNormalize ?? null;
     this.appearance = props.appearance ?? null;
     this.backgroundColor = props.backgroundColor ?? null;
@@ -130,6 +129,7 @@ export class UserProperties extends Properties {
     this.fontOpticalSizing = props.fontOpticalSizing ?? null;
     this.fontOverride = props.fontOverride ?? null;
     this.fontSize = props.fontSize ?? null;
+    this.fontSizeNormalize = props.fontSizeNormalize ?? null;
     this.fontWeight = props.fontWeight ?? null;
     this.fontWidth = props.fontWidth ?? null;
     this.invertFilter = props.invertFilter ?? null;
@@ -154,7 +154,6 @@ export class UserProperties extends Properties {
   toCSSProperties() {
     const cssProperties: { [key: string]: string } = {};
 
-    if (this.advancedSettings) cssProperties["--USER__advancedSettings"] = this.toFlag("advanced");
     if (this.a11yNormalize) cssProperties["--USER__a11yNormalize"] = this.toFlag("a11y");
     if (this.appearance) cssProperties["--USER__appearance"] = this.toFlag(this.appearance);
     if (this.backgroundColor) cssProperties["--USER__backgroundColor"] = this.backgroundColor;
@@ -170,6 +169,7 @@ export class UserProperties extends Properties {
     if (this.fontOpticalSizing != null) cssProperties["--USER__fontOpticalSizing"] = this.fontOpticalSizing;
     if (this.fontOverride) cssProperties["--USER__fontOverride"] = this.toFlag("font");
     if (this.fontSize != null) cssProperties["--USER__fontSize"] = this.toPercentage(this.fontSize, true);
+    if (this.fontSizeNormalize) cssProperties["--USER__fsNormalize"] = this.toFlag("normalize");
     if (this.fontWeight != null) cssProperties["--USER__fontWeight"] = this.toUnitless(this.fontWeight);
     if (this.fontWidth != null) {
       cssProperties["--USER__fontWidth"] = typeof this.fontWidth === "string" 

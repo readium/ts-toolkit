@@ -27,6 +27,7 @@ export interface IEpubDefaults {
   darkenFilter?: boolean | number | null,
   fontFamily?: string | null,
   fontSize?: number | null,
+  fontSizeNormalize?: boolean | null,
   fontOpticalSizing?: boolean | null,
   fontWeight?: number | null,
   fontWidth?: number | null,
@@ -46,7 +47,6 @@ export interface IEpubDefaults {
   pageGutter?: number | null,
   paragraphIndent?: number | null,
   paragraphSpacing?: number | null,
-  publisherStyles?: boolean | null,
   scroll?: boolean | null,
   selectionBackgroundColor?: string | null,
   selectionTextColor?: string | null,
@@ -66,6 +66,7 @@ export class EpubDefaults {
   darkenFilter: boolean | number | null;
   fontFamily: string | null;
   fontSize: number | null;
+  fontSizeNormalize: boolean | null;
   fontOpticalSizing: boolean | null;
   fontWeight: number | null;
   fontWidth: number | null;
@@ -85,7 +86,6 @@ export class EpubDefaults {
   pageGutter: number | null;
   paragraphIndent: number | null;
   paragraphSpacing: number | null;
-  publisherStyles: boolean | null;
   scroll: boolean | null;
   selectionBackgroundColor: string | null;
   selectionTextColor: string | null;
@@ -104,6 +104,7 @@ export class EpubDefaults {
     this.darkenFilter = ensureFilter(defaults.darkenFilter) ?? false;
     this.fontFamily = ensureString(defaults.fontFamily) || null;
     this.fontSize = ensureValueInRange(defaults.fontSize, fontSizeRangeConfig.range) || 1;
+    this.fontSizeNormalize = ensureBoolean(defaults.fontSizeNormalize) ?? false;
     this.fontOpticalSizing = ensureBoolean(defaults.fontOpticalSizing) ?? null;
     this.fontWeight = ensureValueInRange(defaults.fontWeight, fontWeightRangeConfig.range) || null;
     this.fontWidth = ensureValueInRange(defaults.fontWidth,fontWidthRangeConfig.range) || null;
@@ -119,7 +120,6 @@ export class EpubDefaults {
     this.pageGutter = withFallback(ensureNonNegative(defaults.pageGutter), 20);
     this.paragraphIndent = ensureNonNegative(defaults.paragraphIndent) ?? null;
     this.paragraphSpacing = ensureNonNegative(defaults.paragraphSpacing) ?? null;
-    this.publisherStyles = ensureBoolean(defaults.publisherStyles) ?? true;
     this.scroll = ensureBoolean(defaults.scroll) ?? false;
     this.selectionBackgroundColor = ensureString(defaults.selectionBackgroundColor) || null;
     this.selectionTextColor = ensureString(defaults.selectionTextColor) || null;

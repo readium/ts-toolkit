@@ -26,6 +26,7 @@ export interface IEpubPreferences {
   darkenFilter?: boolean | number | null,
   fontFamily?: string | null,
   fontSize?: number | null,
+  fontSizeNormalize?: boolean | null,
   fontOpticalSizing?: boolean | null,
   fontWeight?: number | null,
   fontWidth?: number | null,
@@ -45,7 +46,6 @@ export interface IEpubPreferences {
   pageGutter?: number | null,
   paragraphIndent?: number | null,
   paragraphSpacing?: number | null,
-  publisherStyles?: boolean | null,
   scroll?: boolean | null,
   selectionBackgroundColor?: string | null,
   selectionTextColor?: string | null,
@@ -65,6 +65,7 @@ export class EpubPreferences implements ConfigurablePreferences {
   darkenFilter?: boolean | number | null;
   fontFamily?: string | null;
   fontSize?: number | null;
+  fontSizeNormalize?: boolean | null;
   fontOpticalSizing?: boolean | null;
   fontWeight?: number | null;
   fontWidth?: number | null;
@@ -84,7 +85,6 @@ export class EpubPreferences implements ConfigurablePreferences {
   pageGutter?: number | null;
   paragraphIndent?: number | null;
   paragraphSpacing?: number | null;
-  publisherStyles?: boolean | null;
   scroll?: boolean | null;
   selectionBackgroundColor?: string | null;
   selectionTextColor?: string | null;
@@ -103,6 +103,7 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.darkenFilter = ensureFilter(preferences.darkenFilter);
     this.fontFamily = ensureString(preferences.fontFamily);
     this.fontSize = ensureValueInRange(preferences.fontSize, fontSizeRangeConfig.range);
+    this.fontSizeNormalize = ensureBoolean(preferences.fontSizeNormalize);
     this.fontOpticalSizing = ensureBoolean(preferences.fontOpticalSizing);
     this.fontWeight = ensureValueInRange(preferences.fontWeight, fontWeightRangeConfig.range);
     this.fontWidth = ensureValueInRange(preferences.fontWidth,fontWidthRangeConfig.range);
@@ -118,7 +119,6 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.pageGutter = ensureNonNegative(preferences.pageGutter);
     this.paragraphIndent = ensureNonNegative(preferences.paragraphIndent);
     this.paragraphSpacing = ensureNonNegative(preferences.paragraphSpacing);
-    this.publisherStyles = ensureBoolean(preferences.publisherStyles);
     this.scroll = ensureBoolean(preferences.scroll);
     this.selectionBackgroundColor = ensureString(preferences.selectionBackgroundColor);
     this.selectionTextColor = ensureString(preferences.selectionTextColor);

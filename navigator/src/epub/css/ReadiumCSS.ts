@@ -72,7 +72,6 @@ export class ReadiumCSS {
       this.effectiveContainerWidth = layout?.effectiveContainerWidth;
     
     const updated: IUserProperties = {
-      advancedSettings: !settings.publisherStyles,
       a11yNormalize: settings.textNormalization,
       appearance: settings.theme,
       backgroundColor: settings.backgroundColor,
@@ -92,6 +91,7 @@ export class ReadiumCSS {
           : "none",
       fontOverride: settings.textNormalization || settings.fontFamily ? true : false,
       fontSize: settings.fontSize,
+      fontSizeNormalize: settings.fontSizeNormalize,
       fontWeight: settings.fontWeight,
       fontWidth: settings.fontWidth,
       invertFilter: settings.invertFilter,

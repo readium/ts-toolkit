@@ -11,6 +11,7 @@ export interface IEpubSettings {
   darkenFilter?: boolean | number | null,
   fontFamily?: string | null,
   fontSize?: number | null,
+  fontSizeNormalize?: boolean | null,
   fontOpticalSizing?: boolean | null,
   fontWeight?: number | null,
   fontWidth?: number | null,
@@ -30,7 +31,6 @@ export interface IEpubSettings {
   pageGutter?: number | null,
   paragraphIndent?: number | null,
   paragraphSpacing?: number | null,
-  publisherStyles?: boolean | null,
   scroll?: boolean | null,
   selectionBackgroundColor?: string | null,
   selectionTextColor?: string | null,
@@ -50,6 +50,7 @@ export class EpubSettings implements ConfigurableSettings {
   darkenFilter: boolean | number | null;
   fontFamily: string | null;
   fontSize: number | null;
+  fontSizeNormalize: boolean | null;
   fontOpticalSizing: boolean | null;
   fontWeight: number | null;
   fontWidth: number | null;
@@ -69,7 +70,6 @@ export class EpubSettings implements ConfigurableSettings {
   pageGutter: number | null;
   paragraphIndent: number | null;
   paragraphSpacing: number | null;
-  publisherStyles: boolean | null;
   scroll: boolean | null;
   selectionBackgroundColor: string | null;
   selectionTextColor: string | null;
@@ -84,7 +84,7 @@ export class EpubSettings implements ConfigurableSettings {
     this.backgroundColor = preferences.backgroundColor || defaults.backgroundColor || null;
     this.blendFilter = typeof preferences.blendFilter === "boolean" 
       ? preferences.blendFilter 
-      : defaults.blendFilter || null;
+      : defaults.blendFilter ?? null;
     this.columnCount = preferences.columnCount !== undefined 
       ? preferences.columnCount 
       : defaults.columnCount !== undefined 
@@ -93,16 +93,19 @@ export class EpubSettings implements ConfigurableSettings {
     this.constraint = preferences.constraint || defaults.constraint;
     this.darkenFilter = typeof preferences.darkenFilter === "boolean" 
       ? preferences.darkenFilter 
-      : defaults.darkenFilter || null;
+      : defaults.darkenFilter ?? null;
     this.fontFamily = preferences.fontFamily || defaults.fontFamily || null;
     this.fontSize = preferences.fontSize !== undefined 
       ? preferences.fontSize 
       : defaults.fontSize !== undefined 
         ? defaults.fontSize 
         : null;
+    this.fontSizeNormalize = typeof preferences.fontSizeNormalize === "boolean" 
+      ? preferences.fontSizeNormalize 
+      : defaults.fontSizeNormalize ?? null;
     this.fontOpticalSizing = typeof preferences.fontOpticalSizing === "boolean" 
       ? preferences.fontOpticalSizing 
-      : defaults.fontOpticalSizing || null;
+      : defaults.fontOpticalSizing ?? null;
     this.fontWeight = preferences.fontWeight !== undefined 
       ? preferences.fontWeight 
       : defaults.fontWeight !== undefined 
@@ -115,13 +118,13 @@ export class EpubSettings implements ConfigurableSettings {
         : null;
     this.hyphens = typeof preferences.hyphens === "boolean" 
       ? preferences.hyphens 
-      : defaults.hyphens || null;
+      : defaults.hyphens ?? null;
     this.invertFilter = typeof preferences.invertFilter === "boolean" 
       ? preferences.invertFilter 
-      : defaults.invertFilter || null;
+      : defaults.invertFilter ?? null;
     this.invertGaijiFilter = typeof preferences.invertGaijiFilter === "boolean" 
       ? preferences.invertGaijiFilter 
-      : defaults.invertGaijiFilter || null;
+      : defaults.invertGaijiFilter ?? null;
     this.layoutStrategy = preferences.layoutStrategy || defaults.layoutStrategy || null;
     this.letterSpacing = preferences.letterSpacing !== undefined 
       ? preferences.letterSpacing 
@@ -130,7 +133,7 @@ export class EpubSettings implements ConfigurableSettings {
         : null;
     this.ligatures = typeof preferences.ligatures === "boolean"
       ? preferences.ligatures 
-      : defaults.ligatures || null;
+      : defaults.ligatures ?? null;
     this.lineHeight = preferences.lineHeight !== undefined 
       ? preferences.lineHeight 
       : defaults.lineHeight !== undefined 
@@ -150,7 +153,7 @@ export class EpubSettings implements ConfigurableSettings {
       : preferences.minimalLineLength || defaults.minimalLineLength || null;
     this.noRuby = typeof preferences.noRuby === "boolean" 
       ? preferences.noRuby 
-      : defaults.noRuby || null;
+      : defaults.noRuby ?? null;
     this.optimalLineLength = preferences.optimalLineLength || defaults.optimalLineLength;
     this.pageGutter = preferences.pageGutter !== undefined 
       ? preferences.pageGutter 
@@ -167,19 +170,16 @@ export class EpubSettings implements ConfigurableSettings {
       : defaults.paragraphSpacing !== undefined 
         ? defaults.paragraphSpacing 
         : null;
-    this.publisherStyles = typeof preferences.publisherStyles === "boolean" 
-      ? preferences.publisherStyles 
-      : defaults.publisherStyles || null;
     this.scroll = typeof preferences.scroll === "boolean" 
       ? preferences.scroll 
-      : defaults.scroll || null;
+      : defaults.scroll ?? null;
     this.selectionBackgroundColor = preferences.selectionBackgroundColor || defaults.selectionBackgroundColor || null;
     this.selectionTextColor = preferences.selectionTextColor || defaults.selectionTextColor || null;
     this.textAlign = preferences.textAlign || defaults.textAlign || null;
     this.textColor = preferences.textColor || defaults.textColor || null;
     this.textNormalization = typeof preferences.textNormalization === "boolean" 
       ? preferences.textNormalization 
-      : defaults.textNormalization || null;
+      : defaults.textNormalization ?? null;
     this.theme = preferences.theme || defaults.theme || null;
     this.visitedColor = preferences.visitedColor || defaults.visitedColor || null;
     this.wordSpacing = preferences.wordSpacing !== undefined 
