@@ -160,10 +160,10 @@ export class UserProperties extends Properties {
     if (this.blendFilter) cssProperties["--USER__blendFilter"] = this.toFlag("blend");
     if (this.bodyHyphens) cssProperties["--USER__bodyHyphens"] = this.bodyHyphens;
     if (this.colCount) cssProperties["--USER__colCount"] = this.toUnitless(this.colCount);
-    if (this.darkenFilter != null) {
-      cssProperties["--USER__darkenFilter"] = typeof this.darkenFilter === "number" 
-        ? this.toPercentage(this.darkenFilter) 
-        : this.toFlag("darken");
+    if (this.darkenFilter === true) {
+      cssProperties["--USER__darkenFilter"] = this.toFlag("darken");
+    } else if (typeof this.darkenFilter === "number") {
+      cssProperties["--USER__darkenFilter"] = this.toPercentage(this.darkenFilter);
     }
     if (this.fontFamily) cssProperties["--USER__fontFamily"] = this.fontFamily;
     if (this.fontOpticalSizing != null) cssProperties["--USER__fontOpticalSizing"] = this.fontOpticalSizing;
@@ -176,15 +176,15 @@ export class UserProperties extends Properties {
       ? this.fontWidth 
       : this.toUnitless(this.fontWidth);
     } 
-    if (this.invertFilter != null) {
-      cssProperties["--USER__invertFilter"] = typeof this.invertFilter === "number" 
-        ? this.toPercentage(this.invertFilter)
-        : this.toFlag("invert");
+    if (this.invertFilter === true) {
+      cssProperties["--USER__invertFilter"] = this.toFlag("invert");
+    } else if (typeof this.invertFilter === "number") {
+      cssProperties["--USER__invertFilter"] = this.toPercentage(this.invertFilter);
     }
-    if (this.invertGaijiFilter != null) {
-      cssProperties["--USER__invertGaiji"] = typeof this.invertGaijiFilter === "number" 
-        ? this.toPercentage(this.invertGaijiFilter) 
-        : this.toFlag("invertGaiji");
+    if (this.invertGaijiFilter === true) {
+      cssProperties["--USER__invertGaiji"] = this.toFlag("invertGaiji");
+    } else if (typeof this.invertGaijiFilter === "number") {
+      cssProperties["--USER__invertGaiji"] = this.toPercentage(this.invertGaijiFilter);
     }
     if (this.letterSpacing != null) cssProperties["--USER__letterSpacing"] = this.toRem(this.letterSpacing);
     if (this.ligatures) cssProperties["--USER__ligatures"] = this.ligatures;
