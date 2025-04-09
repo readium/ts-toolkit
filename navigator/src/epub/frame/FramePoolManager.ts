@@ -14,6 +14,7 @@ export class FramePoolManager {
     private readonly pool: Map<string, FrameManager> = new Map();
     private readonly blobs: Map<string, string> = new Map();
     private readonly inprogress: Map<string, Promise<void>> = new Map();
+    private pendingUpdates: Map<string, { inPool: boolean }> = new Map();
     private currentBaseURL: string | undefined;
 
     constructor(container: HTMLElement, positions: Locator[], cssProperties?: { [key: string]: string }) {
@@ -82,6 +83,8 @@ export class FramePoolManager {
                 if(!this.pool.has(href)) return;
                 await this.pool.get(href)?.destroy();
                 this.pool.delete(href);
+                if(this.pendingUpdates.has(href))
+                    this.pendingUpdates.set(href, { inPool: false });
             });
 
             // Check if base URL of publication has changed
@@ -102,12 +105,22 @@ export class FramePoolManager {
                     // corrupted width ColumnSnapper (injectables) gets on init
                     this.blobs.forEach(v => URL.revokeObjectURL(v));
                     this.blobs.clear();
+                    this.pendingUpdates.clear();
+                }
+                if(this.pendingUpdates.has(href) && this.pendingUpdates.get(href)?.inPool === false) {
+                    const url = this.blobs.get(href);
+                    if(url) {
+                        URL.revokeObjectURL(url);
+                        this.blobs.delete(href);
+                        this.pendingUpdates.delete(href);
+                    }
                 }
                 if(this.pool.has(href)) {
                     const fm = this.pool.get(href)!;
                     if(!this.blobs.has(href)) {
                         await fm.destroy();
                         this.pool.delete(href);
+                        this.pendingUpdates.delete(href);
                     } else {
                         await fm.load(modules);
                         return;
@@ -157,8 +170,37 @@ export class FramePoolManager {
     }
 
     setCSSProperties(properties: { [key: string]: string }) {
-        this.currentCssProperties = properties;
-        this.pool.forEach((frame) => frame.setCSSProperties(properties));
+        const deepCompare = (obj1: { [key: string]: string }, obj2: { [key: string]: string }) => {
+            const keys1 = Object.keys(obj1);
+            const keys2 = Object.keys(obj2);
+          
+            if (keys1.length !== keys2.length) {
+              return false;
+            }
+          
+            for (const key of keys1) {
+              if (obj1[key] !== obj2[key]) {
+                return false;
+              }
+            }
+          
+            return true;
+        };
+
+        // If CSSProperties have changed, we update the currentCssProperties,
+        // and set the CSS Properties to all frames already in the pool
+        // We also need to invalidate the blobs and recreate them with the new properties.
+        // We do that in update, by updating them when needed (they are added into the pool)
+        // so that we do not invalidate and recreate blobs over and over again.
+        if(!deepCompare(this.currentCssProperties || {}, properties)) {
+            this.currentCssProperties = properties;
+            this.pool.forEach((frame) => {
+                frame.setCSSProperties(properties);
+            });
+            for (const href of this.blobs.keys()) {
+                this.pendingUpdates.set(href, { inPool: this.pool.has(href) });
+            }
+        }
     }
 
     get currentFrames(): (FrameManager | undefined)[] {
