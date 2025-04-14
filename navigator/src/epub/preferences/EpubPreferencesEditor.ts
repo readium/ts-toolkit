@@ -201,6 +201,17 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
+  get iPadOSPatch(): BooleanPreference {
+    return new BooleanPreference({
+      initialValue: this.preferences.iPadOSPatch,
+      effectiveValue: this.settings.iPadOSPatch || false,
+      isEffective: this.layout === EPUBLayout.reflowable,
+      onChange: (newValue: boolean | null | undefined) => {
+        this.updatePreference("iPadOSPatch", newValue || null);
+      }
+    });
+  }
+
   get layoutStrategy(): EnumPreference<LayoutStrategy> {
     return new EnumPreference<LayoutStrategy>({
       initialValue: this.preferences.layoutStrategy,

@@ -33,6 +33,7 @@ export interface IEpubPreferences {
   hyphens?: boolean | null,
   invertFilter?: boolean | number | null,
   invertGaijiFilter?: boolean | number | null,
+  iPadOSPatch?: boolean | null,
   layoutStrategy?: LayoutStrategy | null,
   letterSpacing?: number | null,
   ligatures?: boolean | null,
@@ -72,6 +73,7 @@ export class EpubPreferences implements ConfigurablePreferences {
   hyphens?: boolean | null;
   invertFilter?: boolean | number | null;
   invertGaijiFilter?: boolean | number | null;
+  iPadOSPatch?: boolean | null;
   layoutStrategy?: LayoutStrategy | null;
   letterSpacing?: number | null;
   ligatures?: boolean | null;
@@ -110,6 +112,7 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.hyphens = ensureBoolean(preferences.hyphens);
     this.invertFilter = ensureFilter(preferences.invertFilter);
     this.invertGaijiFilter = ensureFilter(preferences.invertGaijiFilter);
+    this.iPadOSPatch = ensureBoolean(preferences.iPadOSPatch);
     this.layoutStrategy = ensureEnumValue<LayoutStrategy>(preferences.layoutStrategy, LayoutStrategy);
     this.letterSpacing = ensureNonNegative(preferences.letterSpacing);
     this.ligatures = ensureBoolean(preferences.ligatures);

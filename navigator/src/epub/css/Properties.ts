@@ -66,6 +66,7 @@ export interface IUserProperties {
   fontWidth?: FontWidth | null;
   invertFilter?: boolean | number | null;
   invertGaijiFilter?: boolean | number | null;
+  iPadOSPatch?: boolean | null;
   letterSpacing?: number | null;
   ligatures?: Ligatures | null;
   lineHeight?: number | null;
@@ -100,6 +101,7 @@ export class UserProperties extends Properties {
   fontWidth: FontWidth | null;
   invertFilter: boolean | number | null;
   invertGaijiFilter: boolean | number | null;
+  iPadOSPatch: boolean | null;
   letterSpacing: number | null;
   ligatures: Ligatures | null;
   lineHeight: number | null;
@@ -134,6 +136,7 @@ export class UserProperties extends Properties {
     this.fontWidth = props.fontWidth ?? null;
     this.invertFilter = props.invertFilter ?? null;
     this.invertGaijiFilter = props.invertGaijiFilter ?? null;
+    this.iPadOSPatch = props.iPadOSPatch ?? null;
     this.letterSpacing = props.letterSpacing ?? null;
     this.ligatures = props.ligatures ?? null;
     this.lineHeight = props.lineHeight ?? null;
@@ -186,6 +189,7 @@ export class UserProperties extends Properties {
     } else if (typeof this.invertGaijiFilter === "number") {
       cssProperties["--USER__invertGaiji"] = this.toPercentage(this.invertGaijiFilter);
     }
+    if (this.iPadOSPatch) cssProperties["--USER__iPadOSPatch"] = this.toFlag("iPadOSPatch");
     if (this.letterSpacing != null) cssProperties["--USER__letterSpacing"] = this.toRem(this.letterSpacing);
     if (this.ligatures) cssProperties["--USER__ligatures"] = this.ligatures;
     if (this.lineHeight != null) cssProperties["--USER__lineHeight"] = this.toUnitless(this.lineHeight);

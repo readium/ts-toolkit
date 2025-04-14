@@ -95,6 +95,7 @@ export class ReadiumCSS {
       fontWeight: settings.fontWeight,
       fontWidth: settings.fontWidth,
       invertFilter: settings.invertFilter,
+      iPadOSPatch: settings.iPadOSPatch,
       letterSpacing: settings.letterSpacing,
       ligatures: typeof settings.ligatures !== "boolean" 
         ? null 
