@@ -92,6 +92,17 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
+  get deprecatedFontSize(): BooleanPreference {
+    return new BooleanPreference({
+      initialValue: this.preferences.deprecatedFontSize,
+      effectiveValue: CSS.supports("zoom", "1") ? this.settings.deprecatedFontSize || false : true,
+      isEffective: this.layout === EPUBLayout.reflowable,
+      onChange: (newValue: boolean | null | undefined) => {
+        this.updatePreference("deprecatedFontSize", newValue || null);
+      }
+    });
+  }
+
   get fontFamily(): Preference<string> {
     return new Preference<string>({
       initialValue: this.preferences.fontFamily,

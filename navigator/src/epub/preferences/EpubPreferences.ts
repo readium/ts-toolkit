@@ -24,6 +24,7 @@ export interface IEpubPreferences {
   columnCount?: number | null,
   constraint?: number | null,
   darkenFilter?: boolean | number | null,
+  deprecatedFontSize?: boolean | null,
   fontFamily?: string | null,
   fontSize?: number | null,
   fontSizeNormalize?: boolean | null,
@@ -64,6 +65,7 @@ export class EpubPreferences implements ConfigurablePreferences {
   constraint?: number | null;
   columnCount?: number | null;
   darkenFilter?: boolean | number | null;
+  deprecatedFontSize?: boolean | null;
   fontFamily?: string | null;
   fontSize?: number | null;
   fontSizeNormalize?: boolean | null;
@@ -103,6 +105,7 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.constraint = ensureNonNegative(preferences.constraint);
     this.columnCount = ensureNonNegative(preferences.columnCount);
     this.darkenFilter = ensureFilter(preferences.darkenFilter);
+    this.deprecatedFontSize = ensureBoolean(preferences.deprecatedFontSize);
     this.fontFamily = ensureString(preferences.fontFamily);
     this.fontSize = ensureValueInRange(preferences.fontSize, fontSizeRangeConfig.range);
     this.fontSizeNormalize = ensureBoolean(preferences.fontSizeNormalize);

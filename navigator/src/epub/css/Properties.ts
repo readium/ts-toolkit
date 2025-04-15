@@ -57,6 +57,7 @@ export interface IUserProperties {
   bodyHyphens?: BodyHyphens | null;
   colCount?: number | null;
   darkenFilter?: boolean | number | null;
+  deprecatedFontSize?: boolean | null;
   fontFamily?: string | null;
   fontOpticalSizing?: FontOpticalSizing | null;
   fontOverride?: boolean | null;
@@ -92,6 +93,7 @@ export class UserProperties extends Properties {
   bodyHyphens: BodyHyphens | null;
   colCount: number | null | undefined;
   darkenFilter: boolean | number | null;
+  deprecatedFontSize: boolean | null;
   fontFamily: string | null;
   fontOpticalSizing: FontOpticalSizing | null;
   fontOverride: boolean | null;
@@ -127,6 +129,7 @@ export class UserProperties extends Properties {
     this.bodyHyphens = props.bodyHyphens ?? null;
     this.colCount = props.colCount ?? null;
     this.darkenFilter = props.darkenFilter ?? null;
+    this.deprecatedFontSize = props.deprecatedFontSize ?? null;
     this.fontFamily = props.fontFamily ?? null;
     this.fontOpticalSizing = props.fontOpticalSizing ?? null;
     this.fontOverride = props.fontOverride ?? null;
@@ -168,11 +171,12 @@ export class UserProperties extends Properties {
     } else if (typeof this.darkenFilter === "number") {
       cssProperties["--USER__darkenFilter"] = this.toPercentage(this.darkenFilter);
     }
+    if (this.deprecatedFontSize) cssProperties["--USER__fontSizeImplementation"] = this.toFlag("deprecatedFontSize");
     if (this.fontFamily) cssProperties["--USER__fontFamily"] = this.fontFamily;
     if (this.fontOpticalSizing != null) cssProperties["--USER__fontOpticalSizing"] = this.fontOpticalSizing;
     if (this.fontOverride) cssProperties["--USER__fontOverride"] = this.toFlag("font");
     if (this.fontSize != null) cssProperties["--USER__fontSize"] = this.toPercentage(this.fontSize, true);
-    if (this.fontSizeNormalize) cssProperties["--USER__fsNormalize"] = this.toFlag("normalize");
+    if (this.fontSizeNormalize) cssProperties["--USER__fontSizeNormalize"] = this.toFlag("normalize");
     if (this.fontWeight != null) cssProperties["--USER__fontWeight"] = this.toUnitless(this.fontWeight);
     if (this.fontWidth != null) {
       cssProperties["--USER__fontWidth"] = typeof this.fontWidth === "string" 

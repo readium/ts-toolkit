@@ -9,6 +9,7 @@ export interface IEpubSettings {
   columnCount?: number | null,
   constraint?: number | null,
   darkenFilter?: boolean | number | null,
+  deprecatedFontSize?: boolean | null,
   fontFamily?: string | null,
   fontSize?: number | null,
   fontSizeNormalize?: boolean | null,
@@ -49,6 +50,7 @@ export class EpubSettings implements ConfigurableSettings {
   columnCount: number | null;
   constraint: number;
   darkenFilter: boolean | number | null;
+  deprecatedFontSize: boolean | null;
   fontFamily: string | null;
   fontSize: number | null;
   fontSizeNormalize: boolean | null;
@@ -96,6 +98,9 @@ export class EpubSettings implements ConfigurableSettings {
     this.darkenFilter = typeof preferences.darkenFilter === "boolean" 
       ? preferences.darkenFilter 
       : defaults.darkenFilter ?? null;
+    this.deprecatedFontSize = typeof preferences.deprecatedFontSize === "boolean" 
+      ? preferences.deprecatedFontSize 
+      : defaults.deprecatedFontSize ?? null;
     this.fontFamily = preferences.fontFamily || defaults.fontFamily || null;
     this.fontSize = preferences.fontSize !== undefined 
       ? preferences.fontSize 

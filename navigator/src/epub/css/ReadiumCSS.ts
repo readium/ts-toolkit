@@ -83,6 +83,7 @@ export class ReadiumCSS {
           : "none",
       colCount: layout?.colCount,
       darkenFilter: settings.darkenFilter,
+      deprecatedFontSize: settings.deprecatedFontSize,
       fontFamily: settings.fontFamily,
       fontOpticalSizing: typeof settings.fontOpticalSizing !== "boolean" 
         ? null 
