@@ -66,7 +66,7 @@ export class ReadiumCSS {
       maxChars: settings.maximalLineLength
     });
 
-    const layout = this.updateLayout(settings.fontSize, settings.scroll, settings.columnCount);
+    const layout = this.updateLayout(settings.fontSize, settings.deprecatedFontSize, settings.scroll, settings.columnCount);
 
     if (layout?.effectiveContainerWidth)
       this.effectiveContainerWidth = layout?.effectiveContainerWidth;
@@ -132,23 +132,25 @@ export class ReadiumCSS {
     if (props.maxChars !== undefined) this.lineLengths.maxChars = props.maxChars;
   }
 
-  private updateLayout(scale: number | null, scroll: boolean | null, colCount?: number | null) {
+  private updateLayout(scale: number | null, deprecatedImplem: boolean | null, scroll: boolean | null, colCount?: number | null) {
     const isScroll = scroll ?? this.userProperties.view === "scroll";
 
     if (isScroll) {
-      return this.computeScrollLength(scale);
+      return this.computeScrollLength(scale, deprecatedImplem);
     } else {
-      return this.paginate(scale, colCount);
+      return this.paginate(scale, deprecatedImplem, colCount);
     }
   }
 
-  private getCompensatedMetrics(scale: number | null) {
+  private getCompensatedMetrics(scale: number | null, deprecatedImplem: boolean | null) {
     const zoomFactor = scale || this.userProperties.fontSize || 1;
     const zoomCompensation = zoomFactor < 1 
       ? this.layoutStrategy === LayoutStrategy.margin 
         ? 1 / (zoomFactor + 0.003)
         : 1 / zoomFactor
-      : 1;
+      : deprecatedImplem 
+        ? zoomFactor 
+        : 1;
 
     return {
       zoomFactor: zoomFactor,
@@ -166,9 +168,9 @@ export class ReadiumCSS {
   // Note: Kept intentionally verbose for debugging
   // TODO: As scroll shows, the effective line-length
   // should be the same as uncompensated when scale >= 1
-  private paginate(scale: number | null, colCount?: number | null) {
+  private paginate(scale: number | null, deprecatedImplem: boolean | null, colCount?: number | null) {
     const constrainedWidth = Math.round(getContentWidth(this.containerParent) - (this.constraint));
-    const metrics = this.getCompensatedMetrics(scale);
+    const metrics = this.getCompensatedMetrics(scale, deprecatedImplem);
     const zoomCompensation = metrics.zoomCompensation;
     const optimal = metrics.optimal;
     const minimal = metrics.minimal;
@@ -286,9 +288,9 @@ export class ReadiumCSS {
   }
 
   // This behaves as paginate where colCount = 1
-  private computeScrollLength(scale: number | null) {
+  private computeScrollLength(scale: number | null, deprecatedImplem: boolean | null) {
     const constrainedWidth = Math.round(getContentWidth(this.containerParent) - (this.constraint));
-    const metrics = this.getCompensatedMetrics(scale && scale < 1 ? scale : 1);
+    const metrics = this.getCompensatedMetrics(scale && (scale < 1 || deprecatedImplem) ? scale : 1, deprecatedImplem);
     const zoomCompensation = metrics.zoomCompensation;
     const optimal = metrics.optimal;
     const maximal = metrics.maximal;
@@ -299,7 +301,7 @@ export class ReadiumCSS {
 
     if (this.layoutStrategy === LayoutStrategy.margin) {
       const computedWidth = Math.min(Math.round(optimal * zoomCompensation), constrainedWidth);
-      effectiveLineLength = Math.round(computedWidth * zoomCompensation);
+      effectiveLineLength = deprecatedImplem ? computedWidth : Math.round(computedWidth * zoomCompensation);
     } else if (
       this.layoutStrategy === LayoutStrategy.lineLength ||
       this.layoutStrategy === LayoutStrategy.columns
@@ -311,7 +313,7 @@ export class ReadiumCSS {
         effectiveLineLength = constrainedWidth;
       } else {
         const computedWidth = Math.min(Math.round(maximal * zoomCompensation), constrainedWidth);
-        effectiveLineLength = Math.round(computedWidth * zoomCompensation);
+        effectiveLineLength = deprecatedImplem ? computedWidth : Math.round(computedWidth * zoomCompensation);
       }
     }
 
@@ -327,7 +329,7 @@ export class ReadiumCSS {
   }
 
   resizeHandler() {
-    const pagination = this.updateLayout(this.userProperties.fontSize, this.userProperties.view === "scroll", this.cachedColCount);
+    const pagination = this.updateLayout(this.userProperties.fontSize, this.userProperties.deprecatedFontSize, this.userProperties.view === "scroll", this.cachedColCount);
     this.userProperties.colCount = pagination.colCount;
     this.userProperties.lineLength = pagination.effectiveLineLength;
     this.effectiveContainerWidth = pagination.effectiveContainerWidth;

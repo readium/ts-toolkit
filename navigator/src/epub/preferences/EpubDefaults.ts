@@ -106,7 +106,10 @@ export class EpubDefaults {
     this.constraint = ensureNonNegative(defaults.constraint) || 0;
     this.columnCount = ensureNonNegative(defaults.columnCount) || null;
     this.darkenFilter = ensureFilter(defaults.darkenFilter) ?? false;
-    this.deprecatedFontSize = ensureBoolean(defaults.deprecatedFontSize) ?? false;
+    this.deprecatedFontSize = ensureBoolean(defaults.deprecatedFontSize);
+    if (this.deprecatedFontSize === false || this.deprecatedFontSize === null) {
+      this.deprecatedFontSize = !CSS.supports("zoom", "1");
+    }
     this.fontFamily = ensureString(defaults.fontFamily) || null;
     this.fontSize = ensureValueInRange(defaults.fontSize, fontSizeRangeConfig.range) || 1;
     this.fontSizeNormalize = ensureBoolean(defaults.fontSizeNormalize) ?? false;
