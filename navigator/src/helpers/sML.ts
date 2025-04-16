@@ -44,6 +44,8 @@ declare interface UAFlags {
     LINE: number[];
 }
 
+declare type iOSRequest = "mobile" | "desktop" | undefined;
+
 class sMLFactory {
     OS: OSFlags;
     UA: UAFlags;
@@ -117,5 +119,20 @@ class sMLFactory {
     }
 }
 
+class sMLFactoryWithRequest extends sMLFactory {
+    get iOSRequest(): iOSRequest {
+        const NUAD = (navigator as any).userAgentData, NUA = navigator.userAgent;
+
+        if (this.OS.iOS && !this.OS.iPadOS) {
+            return "mobile";
+        } else if (this.OS.iPadOS) {
+            return (/\(iPad;/.test(NUA) || (NUAD && /^iPad(OS)?$/.test(NUAD.platform))) ? "mobile" : "desktop"
+        }
+
+        return undefined;
+    }
+}
+
 const sML = new sMLFactory();
-export { sML };
+const sMLWithRequest = new sMLFactoryWithRequest();
+export { sML, sMLWithRequest };

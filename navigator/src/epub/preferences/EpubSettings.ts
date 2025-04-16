@@ -3,6 +3,8 @@ import { LayoutStrategy, TextAlignment, Theme } from "../../preferences/Types";
 import { EpubDefaults } from "./EpubDefaults";
 import { EpubPreferences } from "./EpubPreferences";
 
+import { sMLWithRequest } from "../../helpers";
+
 export interface IEpubSettings {
   backgroundColor?: string | null,
   blendFilter?: boolean | null,
@@ -60,7 +62,7 @@ export class EpubSettings implements ConfigurableSettings {
   hyphens: boolean | null;
   invertFilter: boolean | number | null;
   invertGaijiFilter: boolean | number | null;
-  iPadOSPatch: boolean | null;
+  iPadOSPatch: boolean;
   layoutStrategy: LayoutStrategy | null;
   letterSpacing: number | null;
   ligatures: boolean | null;
@@ -132,9 +134,13 @@ export class EpubSettings implements ConfigurableSettings {
     this.invertGaijiFilter = typeof preferences.invertGaijiFilter === "boolean" 
       ? preferences.invertGaijiFilter 
       : defaults.invertGaijiFilter ?? null;
-    this.iPadOSPatch = typeof preferences.iPadOSPatch === "boolean" 
-      ? preferences.iPadOSPatch 
-      : defaults.iPadOSPatch ?? null;
+    this.iPadOSPatch = this.deprecatedFontSize 
+      ? false 
+      : preferences.iPadOSPatch === false 
+        ? false 
+        : preferences.iPadOSPatch === true 
+          ? (sMLWithRequest.OS.iPadOS && sMLWithRequest.iOSRequest === "desktop") 
+          : defaults.iPadOSPatch;
     this.layoutStrategy = preferences.layoutStrategy || defaults.layoutStrategy || null;
     this.letterSpacing = preferences.letterSpacing !== undefined 
       ? preferences.letterSpacing 
