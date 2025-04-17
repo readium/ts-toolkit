@@ -77,6 +77,8 @@ The `EpubNavigator` class provides a Preferences API that allows you to apply st
 - `settings`: Get the current settings for the publication.
 - `preferencesEditor`: Get the preferences editor for the publication.
 
+See [Configuring the EpubNavigator](./ConfiguringEpubNavigator.md) for more information.
+
 ## Navigation
 
 The `EpubNavigator` class exposes several methods for navigating the EPUB publication. These methods are defined in the `VisualNavigator` abstract class and include:
