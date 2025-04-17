@@ -239,7 +239,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new RangePreference<number>({
       initialValue: this.preferences.letterSpacing,
       effectiveValue: this.settings.letterSpacing || 0,
-      isEffective: this.layout === EPUBLayout.reflowable && this.metadata?.effectiveReadingProgression === ReadingProgression.ltr && this.preferences.letterSpacing !== null,
+      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.letterSpacing !== null,
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("letterSpacing", newValue || null);
       },
@@ -252,7 +252,9 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new BooleanPreference({
       initialValue: this.preferences.ligatures,
       effectiveValue: this.settings.ligatures || true,
-      isEffective: this.layout === EPUBLayout.reflowable && this.metadata?.effectiveReadingProgression === ReadingProgression.rtl && this.preferences.ligatures !== null,
+      isEffective: this.layout === EPUBLayout.reflowable
+        && this.metadata?.languages?.some(lang => lang === "ar" || lang === "fa")
+        && this.preferences.ligatures !== null || false,
       onChange: (newValue: boolean | null | undefined) => {
         this.updatePreference("ligatures", newValue || null);
       }
