@@ -41,7 +41,7 @@ const listeners: EpubNavigatorListeners = {
 
 Fires when the iframe containing the EPUB contents has been loaded, is ready to be interacted with, and is visible.
 
-Note iframes are kept in a pool and are disposed of and added dynamically. This means the event won’t fire if the iframe is still in the pool and you navigate back to it – it was not disposed of, but simply hidden, so it can’t be loaded. 
+The iframes are kept in a pool and are disposed of and added dynamically. This means the event won’t fire if the iframe is still in the pool and you navigate back to it – it was not disposed of, but simply hidden, so it can’t be loaded. 
 
 Consequently, you should not rely on this event to update the frames setup.
 

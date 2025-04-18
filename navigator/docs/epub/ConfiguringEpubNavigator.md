@@ -8,7 +8,7 @@ You cannot directly overwrite the Navigator settings. Instead, you submit a set 
 
 For instance: "font size" is a setting, and the application can submit the font size value `1.5` as a preference.
 
-![The app submit preferences, The navigator returns settings.](./settings-flow.svg)
+![The app submits preferences, The navigator returns settings.](./settings-flow.svg)
 
 ```js
 // 1. Create a set of preferences.
@@ -85,7 +85,7 @@ const navigator = new EpubNavigator(
 
 The `defaults` are used as fallback values when the default Navigator settings are not suitable for your application.
 
-## Building Settings
+## Building a Settings Interface
 
 TBD.
 
