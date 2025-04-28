@@ -12,6 +12,19 @@ export function getColumnCountPerScreen(wnd: ReadiumWindow) {
     );
 }
 
+/** 
+* Returns the "content height" of an element, which is its clientHeight
+* minus any vertical padding.
+*
+* @param el - The element to measure.
+*/
+export function getContentHeight(el: Element) {
+ const cStyle = getComputedStyle(el);
+ const paddingTop = parseFloat(cStyle.paddingTop || "0");
+ const paddingBottom = parseFloat(cStyle.paddingBottom || "0");
+ return el.clientHeight - paddingTop - paddingBottom;
+}
+
 /**
  * We have to make sure that the total number of columns is a multiple 
  * of the number of columns per screen. 
@@ -36,7 +49,14 @@ export function appendVirtualColumnIfNeeded(wnd: ReadiumWindow) {
             const virtualCol = wnd.document.createElement("div");
             virtualCol.setAttribute("id", `readium-virtual-page-${ i }`);
             virtualCol.dataset.readium = "true";
-            virtualCol.style.breakBefore = "column";
+            if (CSS.supports("break-before", "column")) {
+                virtualCol.style.breakBefore = "column";
+            } else if (CSS.supports("break-inside", "avoid-column")) {
+                virtualCol.style.breakInside = "avoid-column";
+                virtualCol.style.height = getContentHeight(document.documentElement) * 0.8 + "px";
+            } else {
+                virtualCol.style.height = getContentHeight(document.documentElement) + "px";
+            }
             virtualCol.innerHTML = "&#8203;"; // zero-width space
             wnd.document.body.appendChild(virtualCol);
         }
