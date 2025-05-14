@@ -16,6 +16,7 @@ export interface IEpubSettings {
   fontSize?: number | null,
   fontSizeNormalize?: boolean | null,
   fontOpticalSizing?: boolean | null,
+  fontOverride?: boolean | null,
   fontWeight?: number | null,
   fontWidth?: number | null,
   hyphens?: boolean | null,
@@ -57,6 +58,7 @@ export class EpubSettings implements ConfigurableSettings {
   fontSize: number | null;
   fontSizeNormalize: boolean | null;
   fontOpticalSizing: boolean | null;
+  fontOverride: boolean | null;
   fontWeight: number | null;
   fontWidth: number | null;
   hyphens: boolean | null;
@@ -115,6 +117,9 @@ export class EpubSettings implements ConfigurableSettings {
     this.fontOpticalSizing = typeof preferences.fontOpticalSizing === "boolean" 
       ? preferences.fontOpticalSizing 
       : defaults.fontOpticalSizing ?? null;
+    this.fontOverride = typeof preferences.fontOverride === "boolean" 
+      ? preferences.fontOverride 
+      : defaults.fontOverride ?? null;
     this.fontWeight = preferences.fontWeight !== undefined 
       ? preferences.fontWeight 
       : defaults.fontWeight !== undefined 

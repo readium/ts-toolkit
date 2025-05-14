@@ -149,6 +149,17 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
+  get fontOverride(): BooleanPreference {
+    return new BooleanPreference({
+      initialValue: this.preferences.fontOverride,
+      effectiveValue: this.settings.fontOverride || false,
+      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.fontOverride !== null,
+      onChange: (newValue: boolean | null | undefined) => {
+        this.updatePreference("fontOverride", newValue || null);
+      }
+    });
+  }
+
   get fontWeight(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: this.preferences.fontWeight,
