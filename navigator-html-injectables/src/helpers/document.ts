@@ -22,7 +22,7 @@ export function getContentHeight(el: Element) {
  const cStyle = getComputedStyle(el);
  const paddingTop = parseFloat(cStyle.paddingTop || "0");
  const paddingBottom = parseFloat(cStyle.paddingBottom || "0");
- return Math.floor(el.clientHeight - paddingTop - paddingBottom);
+ return el.clientHeight - paddingTop - paddingBottom;
 }
 
 /**
@@ -53,9 +53,9 @@ export function appendVirtualColumnIfNeeded(wnd: ReadiumWindow) {
                 virtualCol.style.breakBefore = "column";
             } else if (CSS.supports("break-inside", "avoid-column")) {
                 virtualCol.style.breakInside = "avoid-column";
-                virtualCol.style.height = getContentHeight(document.documentElement) * 0.99 + "px";
+                virtualCol.style.height = getContentHeight(wnd.document.documentElement) + "px";
             } else {
-                virtualCol.style.height = getContentHeight(document.documentElement) + "px";
+                virtualCol.style.height = getContentHeight(wnd.document.documentElement) + "px";
             }
             virtualCol.innerHTML = "&#8203;"; // zero-width space
             wnd.document.body.appendChild(virtualCol);
