@@ -118,7 +118,7 @@ export class EpubDefaults {
     this.fontSize = ensureValueInRange(defaults.fontSize, fontSizeRangeConfig.range) || 1;
     this.fontSizeNormalize = ensureBoolean(defaults.fontSizeNormalize) ?? false;
     this.fontOpticalSizing = ensureBoolean(defaults.fontOpticalSizing) ?? null;
-    this.fontOverride = ensureBoolean(defaults.fontOverride) ?? false;
+    this.fontOverride = ensureBoolean(defaults.fontOverride) ?? null;
     this.fontWeight = ensureValueInRange(defaults.fontWeight, fontWeightRangeConfig.range) || null;
     this.fontWidth = ensureValueInRange(defaults.fontWidth,fontWidthRangeConfig.range) || null;
     this.hyphens = ensureBoolean(defaults.hyphens) ?? null;
