@@ -22,7 +22,7 @@ export function getContentHeight(el: Element) {
  const cStyle = getComputedStyle(el);
  const paddingTop = parseFloat(cStyle.paddingTop || "0");
  const paddingBottom = parseFloat(cStyle.paddingBottom || "0");
- return el.clientHeight - paddingTop - paddingBottom;
+ return Math.floor(el.clientHeight - paddingTop - paddingBottom);
 }
 
 /**
@@ -53,7 +53,7 @@ export function appendVirtualColumnIfNeeded(wnd: ReadiumWindow) {
                 virtualCol.style.breakBefore = "column";
             } else if (CSS.supports("break-inside", "avoid-column")) {
                 virtualCol.style.breakInside = "avoid-column";
-                virtualCol.style.height = getContentHeight(document.documentElement) * 0.8 + "px";
+                virtualCol.style.height = getContentHeight(document.documentElement) * 0.99 + "px";
             } else {
                 virtualCol.style.height = getContentHeight(document.documentElement) + "px";
             }
