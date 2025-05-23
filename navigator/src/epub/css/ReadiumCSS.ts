@@ -101,6 +101,7 @@ export class ReadiumCSS {
       fontWeight: settings.fontWeight,
       fontWidth: settings.fontWidth,
       invertFilter: settings.invertFilter,
+      invertGaijiFilter: settings.invertGaijiFilter,
       iPadOSPatch: settings.iPadOSPatch,
       letterSpacing: settings.letterSpacing,
       ligatures: typeof settings.ligatures !== "boolean" 
@@ -110,9 +111,12 @@ export class ReadiumCSS {
           : "none",
       lineHeight: settings.lineHeight,
       lineLength: layout?.effectiveLineLength,
+      linkColor: settings.linkColor,
       noRuby: settings.noRuby,
       paraIndent: settings.paragraphIndent,
       paraSpacing: settings.paragraphSpacing,
+      selectionBackgroundColor: settings.selectionBackgroundColor,
+      selectionTextColor: settings.selectionTextColor,
       textAlign: settings.textAlign,
       textColor: settings.textColor,
       view: typeof settings.scroll !== "boolean" 
@@ -120,6 +124,7 @@ export class ReadiumCSS {
         : settings.scroll 
           ? "scroll" 
           : "paged",
+      visitedColor: settings.visitedColor,
       wordSpacing: settings.wordSpacing
     };
 
