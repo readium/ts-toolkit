@@ -43,7 +43,6 @@ export interface IEpubDefaults {
   letterSpacing?: number | null,
   ligatures?: boolean | null,
   lineHeight?: number | null,
-  lineLength?: number | null,
   linkColor?: string | null,
   maximalLineLength?: number | null,
   minimalLineLength?: number | null,
@@ -85,7 +84,6 @@ export class EpubDefaults {
   letterSpacing: number | null;
   ligatures: boolean | null;
   lineHeight: number | null;
-  lineLength: number | null;
   linkColor: string | null;
   maximalLineLength: number | null;
   minimalLineLength: number | null;
@@ -146,9 +144,8 @@ export class EpubDefaults {
     this.visitedColor = ensureString(defaults.visitedColor) || null;
     this.wordSpacing = ensureNonNegative(defaults.wordSpacing) || null;
 
-    this.lineLength = ensureNonNegative(defaults.lineLength) || null;
     this.optimalLineLength = ensureNonNegative(defaults.optimalLineLength) || 65;
-    this.maximalLineLength = withFallback(ensureMoreThanOrEqual(defaults.maximalLineLength, this.lineLength || this.optimalLineLength), 80);
-    this.minimalLineLength = withFallback(ensureLessThanOrEqual(defaults.minimalLineLength, this.lineLength || this.optimalLineLength), 40);
+    this.maximalLineLength = withFallback(ensureMoreThanOrEqual(defaults.maximalLineLength, this.optimalLineLength), 80);
+    this.minimalLineLength = withFallback(ensureLessThanOrEqual(defaults.minimalLineLength, this.optimalLineLength), 40);
   }
 }

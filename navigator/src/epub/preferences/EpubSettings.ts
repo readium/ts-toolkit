@@ -27,7 +27,6 @@ export interface IEpubSettings {
   letterSpacing?: number | null,
   ligatures?: boolean | null,
   lineHeight?: number | null,
-  lineLength?: number | null,
   linkColor?: string | null,
   maximalLineLength?: number | null,
   minimalLineLength?: number | null,
@@ -69,7 +68,6 @@ export class EpubSettings implements ConfigurableSettings {
   letterSpacing: number | null;
   ligatures: boolean | null;
   lineHeight: number | null;
-  lineLength: number | null;
   linkColor: string | null;
   maximalLineLength: number | null;
   minimalLineLength: number | null;
@@ -159,11 +157,6 @@ export class EpubSettings implements ConfigurableSettings {
       ? preferences.lineHeight 
       : defaults.lineHeight !== undefined 
         ? defaults.lineHeight 
-        : null;
-    this.lineLength = preferences.lineLength !== undefined 
-      ? preferences.lineLength 
-      : defaults.lineLength !== undefined 
-        ? defaults.lineLength 
         : null;
     this.linkColor = preferences.linkColor || defaults.linkColor || null;
     this.maximalLineLength = preferences.maximalLineLength === null 

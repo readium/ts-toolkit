@@ -40,7 +40,6 @@ export interface IEpubPreferences {
   letterSpacing?: number | null,
   ligatures?: boolean | null,
   lineHeight?: number | null,
-  lineLength?: number | null,
   linkColor?: string | null,
   maximalLineLength?: number | null,
   minimalLineLength?: number | null,
@@ -82,7 +81,6 @@ export class EpubPreferences implements ConfigurablePreferences {
   letterSpacing?: number | null;
   ligatures?: boolean | null;
   lineHeight?: number | null;
-  lineLength?: number | null;
   linkColor?: string | null;
   maximalLineLength?: number | null;
   minimalLineLength?: number | null;
@@ -138,7 +136,6 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.visitedColor = ensureString(preferences.visitedColor);
     this.wordSpacing = ensureNonNegative(preferences.wordSpacing);
 
-    this.lineLength = ensureNonNegative(preferences.lineLength);
     this.optimalLineLength = ensureNonNegative(preferences.optimalLineLength);
     this.maximalLineLength = ensureNonNegative(preferences.maximalLineLength);
     this.minimalLineLength = ensureNonNegative(preferences.minimalLineLength);
@@ -167,12 +164,12 @@ export class EpubPreferences implements ConfigurablePreferences {
         (
           key !== "maximalLineLength" ||
           other[key] === null ||
-          (other[key] >= (other.lineLength ?? merged.lineLength ?? other.optimalLineLength ?? merged.optimalLineLength ?? 65))
+          (other[key] >= (other.optimalLineLength ?? merged.optimalLineLength ?? 65))
         ) &&
         (
           key !== "minimalLineLength" ||
           other[key] === null || 
-          (other[key] <= (other.lineLength ?? merged.lineLength ?? other.optimalLineLength ?? merged.optimalLineLength ?? 65))
+          (other[key] <= (other.optimalLineLength ?? merged.optimalLineLength ?? 65))
         )
       ) {
         merged[key] = other[key];

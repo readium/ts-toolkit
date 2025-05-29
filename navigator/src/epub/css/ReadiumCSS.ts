@@ -1,12 +1,8 @@
-import { ILineLengthsConfig, LineLengths } from "../../helpers";
+import { LineLengths } from "../../helpers";
 import { getContentWidth } from "../../helpers/dimensions";
 import { LayoutStrategy } from "../../preferences";
 import { EpubSettings } from "../preferences/EpubSettings";
 import { IUserProperties, RSProperties, UserProperties } from "./Properties";
-
-type ILineLengthsProps = {
-  [K in Exclude<keyof ILineLengthsConfig, "fontSize" | "sample" | "isCJK" | "getRelative">]?: ILineLengthsConfig[K]
-};
 
 export interface IReadiumCSS {
   rsProperties: RSProperties;
@@ -55,13 +51,12 @@ export class ReadiumCSS {
 
     // This has to be updated before pagination
     // otherwise the metrics won’t be correct for line length
-    this.updateLineLengths({
+    this.lineLengths.update({
       fontFace: settings.fontFamily,
       letterSpacing: settings.letterSpacing,
       pageGutter: settings.pageGutter,
       wordSpacing: settings.wordSpacing,
       optimalChars: settings.optimalLineLength,
-      userChars: settings.lineLength,
       minChars: settings.minimalLineLength,
       maxChars: settings.maximalLineLength
     });
@@ -131,17 +126,6 @@ export class ReadiumCSS {
     this.userProperties = new UserProperties(updated);
   }
 
-  private updateLineLengths(props: ILineLengthsProps) {
-    if (props.fontFace !== undefined) this.lineLengths.fontFace = props.fontFace;
-    if (props.letterSpacing !== undefined) this.lineLengths.letterSpacing = props.letterSpacing || 0;
-    if (props.pageGutter !== undefined) this.lineLengths.pageGutter = props.pageGutter || 0;
-    if (props.wordSpacing !== undefined) this.lineLengths.wordSpacing = props.wordSpacing || 0;
-    if (props.optimalChars) this.lineLengths.optimalChars = props.optimalChars;
-    if (props.userChars !== undefined) this.lineLengths.userChars = props.userChars;
-    if (props.minChars !== undefined) this.lineLengths.minChars = props.minChars;
-    if (props.maxChars !== undefined) this.lineLengths.maxChars = props.maxChars;
-  }
-
   private updateLayout(scale: number | null, deprecatedImplem: boolean | null, scroll: boolean | null, colCount?: number | null) {
     const isScroll = scroll ?? this.userProperties.view === "scroll";
 
@@ -165,7 +149,7 @@ export class ReadiumCSS {
     return {
       zoomFactor: zoomFactor,
       zoomCompensation: zoomCompensation,
-      optimal: Math.round(this.lineLengths.userLineLength || this.lineLengths.optimalLineLength) * zoomFactor,
+      optimal: Math.round(this.lineLengths.optimalLineLength) * zoomFactor,
       minimal: this.lineLengths.minimalLineLength !== null 
         ? Math.round(this.lineLengths.minimalLineLength * zoomFactor) 
         : null,

@@ -285,19 +285,6 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get lineLength(): RangePreference<number> {
-    return new RangePreference<number>({
-      initialValue: this.preferences.lineLength,
-      effectiveValue: this.settings.lineLength || this.settings.optimalLineLength,
-      isEffective: this.layout === EPUBLayout.reflowable && this.preferences.lineLength !== null,
-      onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("lineLength", newValue || null);
-      },
-      supportedRange: [20, 100],
-      step: 1
-    });
-  }
-
   get linkColor(): Preference<string> {
     return new Preference<string>({
       initialValue: this.preferences.linkColor,
@@ -350,7 +337,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new RangePreference<number>({
       initialValue: this.preferences.optimalLineLength,
       effectiveValue: this.settings.optimalLineLength,
-      isEffective: this.layout === EPUBLayout.reflowable && !this.settings.lineLength,
+      isEffective: this.layout === EPUBLayout.reflowable,
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("optimalLineLength", newValue as number);
       },

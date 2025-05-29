@@ -98,10 +98,10 @@ EPUB comes in two very different flavors: reflowable which allows a lot of custo
 | Preference               | Reflowable | Fixed Layout |
 | ------------------------ | ---------- | ------------ |
 | backgroundColor          | ✅         |              |
-| blendFilter              | ✅         | ✅           |
-| constraint               | ✅         | ✅           |
+| blendFilter              | ✅         | WIP          |
+| constraint               | ✅         | WIP          |
 | columnCount              | ✅         | (TMP)        |
-| darkenFilter             | ✅         | ✅           |
+| darkenFilter             | ✅         | WIP          |
 | deprecatedFontSize       | ✅         |              |
 | fontFamily               | ✅         |              |
 | fontSize                 | ✅         |              |
@@ -110,14 +110,13 @@ EPUB comes in two very different flavors: reflowable which allows a lot of custo
 | fontWeight               | ✅         |              |
 | fontWidth                | ✅         |              |
 | hyphens                  | ✅         |              |
-| invertFilter             | ✅         | ✅           |
-| invertGaijiFilter        | ✅         | ✅           |
+| invertFilter             | ✅         | WIP          |
+| invertGaijiFilter        | ✅         |              |
 | iPadOSPatch              | ✅         |              |
 | layoutStrategy           | ✅         |              |
 | letterSpacing            | ✅         |              |
 | ligatures                | ✅         |              |
 | lineHeight               | ✅         |              |
-| lineLength               | ✅         |              |
 | linkColor                | ✅         |              |
 | maximalLineLength        | ✅         |              |
 | minimalLineLength        | ✅         |              |
@@ -135,10 +134,17 @@ EPUB comes in two very different flavors: reflowable which allows a lot of custo
 | theme                    | ✅         |              |
 | visitedColor             | ✅         |              |
 | wordSpacing              | ✅         |              |
+| zoom                     |            | WIP          |
 
 ### Layout Strategy
 
 Layout strategy `columns` is not available in scroll mode (`scroll = true`) or when `columnCount` is not `null`.
+
+### Line length
+
+There is no `lineLength` preference because the effective line length is calculated based on the `optimalLineLength`, `minimalLineLength` and `maximalLineLength` preferences. 
+
+If you prefer to set a line length yourself, you can set `optimalLineLength` to the desired value (`ch|ic` unit) with `layoutStrategy` set to `margins`.
 
 ### Scroll vs paginated
 

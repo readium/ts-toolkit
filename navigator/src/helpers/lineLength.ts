@@ -9,7 +9,6 @@ export interface ILineLengthsConfig {
   optimalChars: number;
   minChars?: number | null;
   maxChars?: number | null;
-  userChars?: number | null;
   baseFontSize?: number | null;
   sample?: string | null;
   pageGutter?: number | null;
@@ -22,7 +21,6 @@ export interface ILineLengthsConfig {
 
 export interface ILineLengths {
   min: number | null;
-  user: number | null;
   max: number | null;
   optimal: number;
   baseFontSize: number;
@@ -41,7 +39,7 @@ const DEFAULT_FONT_FACE = fontStacks.RS__oldStyleTf;
 // offset on the y-axis (using fillText), and getting the total height.
 // If you don’t need high accuracy, it’s acceptable to use the one returned with isCJK.
 //
-// Instead of measuring text for min, user, and optimal each, we define multipliers
+// Instead of measuring text for min and maximal, we define multipliers
 // at the end, with optimalLineLength as a ref, before returning the lineLengths object.
 
 export class LineLengths {
@@ -50,7 +48,6 @@ export class LineLengths {
   private _optimalChars: number;
   private _minChars?: number | null;
   private _maxChars?: number | null;
-  private _userChars: number | null;
   private _baseFontSize: number;
   private _fontFace: string | ICustomFontFace;
   private _sample: string | null;
@@ -62,7 +59,6 @@ export class LineLengths {
   
   private _padding: number;
   private _minDivider: number | null;
-  private _userMultiplier: number | null;
   private _maxMultiplier: number | null;
   private _approximatedWordSpaces: number;
 
@@ -73,7 +69,6 @@ export class LineLengths {
     this._optimalChars = config.optimalChars;
     this._minChars = config.minChars;
     this._maxChars = config.maxChars;
-    this._userChars = config.userChars || null;
     this._baseFontSize = config.baseFontSize || DEFAULT_FONT_SIZE;
     this._fontFace = config.fontFace || DEFAULT_FONT_FACE;
     this._sample = config.sample || null;
@@ -92,9 +87,6 @@ export class LineLengths {
       : this._minChars === null 
         ? null
         : 1;
-    this._userMultiplier = this._userChars 
-      ? this._userChars / this._optimalChars 
-      : null;
     this._maxMultiplier = this._maxChars && this._maxChars > this._optimalChars
       ? this._maxChars / this._optimalChars 
       : this._maxChars === null 
@@ -103,25 +95,13 @@ export class LineLengths {
     this._approximatedWordSpaces = LineLengths.approximateWordSpaces(this._optimalChars, this._sample);
   }
 
-  set minChars(n: number | null) {
-    if (n === this._minChars) return;
-    this._minChars = n;
+  private updateMultipliers() {
     this._minDivider = this._minChars && this._minChars < this._optimalChars 
       ? this._optimalChars / this._minChars 
       : this._minChars === null 
         ? null
         : 1;
-  }
 
-  set optimalChars(n: number) {
-    if (n === this._optimalChars) return;
-    this._optimalChars = n;
-    this._optimalLineLength = this.getOptimalLineLength();
-  }
-
-  set maxChars(n: number | null) {
-    if (n === this._maxChars) return;
-    this._maxChars = n;
     this._maxMultiplier = this._maxChars && this._maxChars > this._optimalChars 
       ? this._maxChars / this._optimalChars 
       : this._maxChars === null 
@@ -129,50 +109,28 @@ export class LineLengths {
         : 1;
   }
 
-  set userChars(n: number | null) {
-    if (n === this._userChars) return;
-    this._userChars = n;
-    this._userMultiplier = this._userChars ? this._userChars / this._optimalChars : null;
-  }
+  // Batch update to guarantee up-to-date values
+  // Not filtering because pretty much everything can
+  // trigger a recomputation anyway.
+  update(props: Partial<ILineLengthsConfig>) {
+    if (props.optimalChars) this._optimalChars = props.optimalChars;
+    if (props.minChars !== undefined) this._minChars = props.minChars;
+    if (props.maxChars !== undefined) this._maxChars = props.maxChars;
+    if (props.baseFontSize) this._baseFontSize = props.baseFontSize;
+    if (props.fontFace !== undefined) this._fontFace = props.fontFace || DEFAULT_FONT_FACE;
+    if (props.letterSpacing) this._letterSpacing = props.letterSpacing;
+    if (props.wordSpacing) this._wordSpacing = props.wordSpacing;
+    if (props.isCJK != null) this._isCJK = props.isCJK;
+    if (props.pageGutter) this._pageGutter = props.pageGutter;
+    if (props.getRelative) this._getRelative = props.getRelative;
 
-  set letterSpacing(n: number) {
-    if (n === this._letterSpacing) return;
-    this._letterSpacing = Math.round(n * this._baseFontSize);
+    if (props.sample) {
+      this._sample = props.sample;
+      this._approximatedWordSpaces = LineLengths.approximateWordSpaces(this._optimalChars, this._sample);
+    }
+
+    this.updateMultipliers();
     this._optimalLineLength = this.getOptimalLineLength();
-  }
-  
-  set wordSpacing(n: number) {
-    if (n === this._wordSpacing) return;
-    this._wordSpacing = Math.round(n * this._baseFontSize);
-    this._optimalLineLength = this.getOptimalLineLength();
-  }
-
-  set baseFontSize(n: number) {
-    this._baseFontSize = n;
-    this._optimalLineLength = this.getOptimalLineLength();
-  }
-
-  set fontFace(f: string | ICustomFontFace | null) {
-    this._fontFace = f || DEFAULT_FONT_FACE;
-    this._optimalLineLength = this.getOptimalLineLength();
-  }
-
-  set sample(s: string) {
-    if (s === this._sample) return;
-    this._sample = s;
-    this._approximatedWordSpaces = LineLengths.approximateWordSpaces(this._optimalChars, this._sample);
-  }
-
-  set pageGutter(n: number) {
-    if (n === this._pageGutter) return;
-    this._pageGutter = n;
-    this._padding = this._pageGutter * 2;
-    this._optimalLineLength = this.getOptimalLineLength();
-  }
-
-  set relativeGetters(b: boolean) {
-    if (b === this._getRelative) return;
-    this._getRelative = b;
   }
 
   get baseFontSize() {
@@ -185,15 +143,6 @@ export class LineLengths {
     }
     return this._minDivider !== null 
       ? Math.round((this._optimalLineLength / this._minDivider) + this._padding) / (this._getRelative ? this._baseFontSize : 1) 
-      : null;
-  }
-
-  get userLineLength(): number | null {
-    if (!this._optimalLineLength) {
-      this._optimalLineLength = this.getOptimalLineLength();
-    }
-    return this._userMultiplier !== null 
-      ? Math.round((this._optimalLineLength * this._userMultiplier) + this._padding) / (this._getRelative ? this._baseFontSize : 1) 
       : null;
   }
 
@@ -219,7 +168,6 @@ export class LineLengths {
     }
     return {
       min: this.minimalLineLength,
-      user: this.userLineLength,
       max: this.maximalLineLength,
       optimal: this.optimalLineLength,
       baseFontSize: this._baseFontSize
