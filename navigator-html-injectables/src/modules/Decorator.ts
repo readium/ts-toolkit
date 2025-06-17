@@ -49,7 +49,7 @@ interface DecorationItem {
     container: HTMLElement | undefined;
 }
 
-const canNativeHighlight = "Highlight" in window;
+const canNativeHighlight = () => ("Highlight" in window);
 const cannotNativeHighlight = ["IMG", "IMAGE", "AUDIO", "VIDEO", "SVG"];
 
 class DecorationGroup {
@@ -71,7 +71,7 @@ class DecorationGroup {
         private readonly id: string,
         private readonly name: string
     ) {
-        if (canNativeHighlight) {
+        if (canNativeHighlight()) {
             this.experimentalHighlights = true;
             this.notTextFlag = new Map<string, boolean>();
         }
