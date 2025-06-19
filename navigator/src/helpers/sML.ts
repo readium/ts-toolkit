@@ -8,6 +8,7 @@
  * Portions of this code come from the sML library
  * Current version: 1.0.36
  */
+/// <reference types="user-agent-data-types" />
 
 declare interface OSFlags {
     iOS: number[];
@@ -46,13 +47,17 @@ declare interface UAFlags {
 
 declare type iOSRequest = "mobile" | "desktop" | undefined;
 
+// Fallback when global 'navigator' is not available, such as in SSR environments.
+const userAgent = () => typeof navigator === "undefined" ? "" : (navigator.userAgent || "");
+const userAgentData = () => typeof navigator === "undefined" ? undefined : (navigator.userAgentData || undefined);
+
 class sMLFactory {
     OS: OSFlags;
     UA: UAFlags;
     Env!: string[];
 
     constructor() {
-        const NUAD = (navigator as any).userAgentData, NUA = navigator.userAgent;
+        const NUAD = userAgentData(), NUA = userAgent();
 
         const _sV = (V?: string | number) => (typeof V === "string" || typeof V === "number") && V ? String(V).replace(/_/g, ".").split(".").map(I => parseInt(I) || 0) : [];
         const _dV = (Pre="") => {
@@ -84,7 +89,7 @@ class sMLFactory {
         })({} as OSFlags));
 
         this.UA = ((UA: UAFlags) => { let _OK = false;
-            if(NUAD && Array.isArray(NUAD.brands)) { const BnV = NUAD.brands.reduce((BnV: string[], _: any) => { (BnV[_.brand] as any) = [_.version * 1]; return BnV; }, {});
+            if(NUAD && Array.isArray(NUAD.brands)) { const BnV = NUAD.brands.reduce((BnV: Record<string, number[]>, _: NavigatorUABrandVersion) => { BnV[_.brand] = [(_.version as any) * 1]; return BnV; }, {});
                     if(BnV["Google Chrome"])  _OK = true, UA.Blink = UA.Chromium = BnV["Chromium"] || [], UA.Chrome = BnV["Google Chrome"];
                 else if(BnV["Microsoft Edge"]) _OK = true, UA.Blink = UA.Chromium = BnV["Chromium"] || [], UA.Edge = BnV["Microsoft Edge"];
                 else if(BnV["Opera"])          _OK = true, UA.Blink = UA.Chromium = BnV["Chromium"] || [], UA.Opera = BnV["Opera"];
@@ -121,7 +126,7 @@ class sMLFactory {
 
 class sMLFactoryWithRequest extends sMLFactory {
     get iOSRequest(): iOSRequest {
-        const NUAD = (navigator as any).userAgentData, NUA = navigator.userAgent;
+        const NUAD = userAgentData(), NUA = userAgent();
 
         if (this.OS.iOS && !this.OS.iPadOS) {
             return "mobile";

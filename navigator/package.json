@@ -58,6 +58,7 @@
     "tslib": "^2.8.1",
     "typescript": "^5.6.3",
     "typescript-plugin-css-modules": "^5.1.0",
+    "user-agent-data-types": "^0.4.2",
     "vite": "^4.5.5"
   }
 }
