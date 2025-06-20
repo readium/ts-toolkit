@@ -230,6 +230,7 @@ export interface IRSProperties {
   maxMediaHeight?: number | null;
   modernTf?: string | null;
   monospaceTf?: string | null;
+  noOverflow?: boolean | null;
   noVerticalPagination?: boolean | null;
   oldStyleTf?: string | null;
   pageGutter?: number | null;
@@ -269,6 +270,7 @@ export class RSProperties extends Properties {
   maxMediaHeight: number | null;
   modernTf: string | null;
   monospaceTf: string | null;
+  noOverflow: boolean | null;
   noVerticalPagination: boolean | null;
   oldStyleTf: string | null;
   pageGutter: number | null;
@@ -308,6 +310,7 @@ export class RSProperties extends Properties {
     this.maxMediaHeight = props.maxMediaHeight ?? null;
     this.modernTf = props.modernTf ?? null;
     this.monospaceTf = props.monospaceTf ?? null;
+    this.noOverflow = props.noOverflow ?? null;
     this.noVerticalPagination = props.noVerticalPagination ?? null;
     this.oldStyleTf = props.oldStyleTf ?? null;
     this.pageGutter = props.pageGutter ?? null;
@@ -349,6 +352,7 @@ export class RSProperties extends Properties {
     if (this.maxMediaHeight) cssProperties["--RS__maxMediaHeight"] = this.toVh(this.maxMediaHeight);
     if (this.modernTf) cssProperties["--RS__modernTf"] = this.modernTf;
     if (this.monospaceTf) cssProperties["--RS__monospaceTf"] = this.monospaceTf;
+    if (this.noOverflow) cssProperties["--RS__disableOverflow"] = this.toFlag("noOverflow");
     if (this.noVerticalPagination) cssProperties["--RS__disablePagination"] = this.toFlag("noVerticalPagination");
     if (this.oldStyleTf) cssProperties["--RS__oldStyleTf"] = this.oldStyleTf;
     if (this.pageGutter != null) cssProperties["--RS__pageGutter"] = this.toPx(this.pageGutter);
