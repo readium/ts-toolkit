@@ -6,7 +6,6 @@ export enum TextAlignment {
 };
 
 export enum Theme {
-  day = "day",
   sepia = "sepia",
   night = "night",
   custom = "custom"
