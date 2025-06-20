@@ -85,12 +85,6 @@ export class ReadiumCSS {
         : settings.fontOpticalSizing 
           ? "auto" 
           : "none",
-      fontOverride: settings.fontOverride !== null 
-        ? settings.fontOverride 
-        : (settings.textNormalization || settings.fontFamily 
-          ? true 
-          : false
-        ),
       fontSize: settings.fontSize,
       fontSizeNormalize: settings.fontSizeNormalize,
       fontWeight: settings.fontWeight,

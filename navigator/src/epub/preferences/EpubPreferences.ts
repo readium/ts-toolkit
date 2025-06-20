@@ -29,7 +29,6 @@ export interface IEpubPreferences {
   fontSize?: number | null,
   fontSizeNormalize?: boolean | null,
   fontOpticalSizing?: boolean | null,
-  fontOverride?: boolean | null,
   fontWeight?: number | null,
   fontWidth?: number | null,
   hyphens?: boolean | null,
@@ -70,7 +69,6 @@ export class EpubPreferences implements ConfigurablePreferences {
   fontSize?: number | null;
   fontSizeNormalize?: boolean | null;
   fontOpticalSizing?: boolean | null;
-  fontOverride?: boolean | null;
   fontWeight?: number | null;
   fontWidth?: number | null;
   hyphens?: boolean | null;
@@ -110,7 +108,6 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.fontSize = ensureValueInRange(preferences.fontSize, fontSizeRangeConfig.range);
     this.fontSizeNormalize = ensureBoolean(preferences.fontSizeNormalize);
     this.fontOpticalSizing = ensureBoolean(preferences.fontOpticalSizing);
-    this.fontOverride = ensureBoolean(preferences.fontOverride);
     this.fontWeight = ensureValueInRange(preferences.fontWeight, fontWeightRangeConfig.range);
     this.fontWidth = ensureValueInRange(preferences.fontWidth,fontWidthRangeConfig.range);
     this.hyphens = ensureBoolean(preferences.hyphens);

@@ -60,7 +60,6 @@ export interface IUserProperties {
   deprecatedFontSize?: boolean | null;
   fontFamily?: string | null;
   fontOpticalSizing?: FontOpticalSizing | null;
-  fontOverride?: boolean | null;
   fontSize?: number | null;
   fontSizeNormalize?: boolean | null;
   fontWeight?: number | null;
@@ -96,7 +95,6 @@ export class UserProperties extends Properties {
   deprecatedFontSize: boolean | null;
   fontFamily: string | null;
   fontOpticalSizing: FontOpticalSizing | null;
-  fontOverride: boolean | null;
   fontSize: number | null;
   fontSizeNormalize: boolean | null;
   fontWeight: number | null;
@@ -132,7 +130,6 @@ export class UserProperties extends Properties {
     this.deprecatedFontSize = props.deprecatedFontSize ?? null;
     this.fontFamily = props.fontFamily ?? null;
     this.fontOpticalSizing = props.fontOpticalSizing ?? null;
-    this.fontOverride = props.fontOverride ?? null;
     this.fontSize = props.fontSize ?? null;
     this.fontSizeNormalize = props.fontSizeNormalize ?? null;
     this.fontWeight = props.fontWeight ?? null;
@@ -174,7 +171,6 @@ export class UserProperties extends Properties {
     if (this.deprecatedFontSize) cssProperties["--USER__fontSizeImplementation"] = this.toFlag("deprecatedFontSize");
     if (this.fontFamily) cssProperties["--USER__fontFamily"] = this.fontFamily;
     if (this.fontOpticalSizing != null) cssProperties["--USER__fontOpticalSizing"] = this.fontOpticalSizing;
-    if (this.fontOverride) cssProperties["--USER__fontOverride"] = this.toFlag("font");
     if (this.fontSize != null) cssProperties["--USER__fontSize"] = this.toPercentage(this.fontSize, true);
     if (this.fontSizeNormalize) cssProperties["--USER__fontSizeNormalize"] = this.toFlag("normalize");
     if (this.fontWeight != null) cssProperties["--USER__fontWeight"] = this.toUnitless(this.fontWeight);
