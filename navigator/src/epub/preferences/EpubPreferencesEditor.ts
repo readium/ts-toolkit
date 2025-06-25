@@ -383,6 +383,50 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
+  get scrollPaddingTop(): Preference<number> {
+    return new Preference<number>({
+      initialValue: this.preferences.scrollPaddingTop,
+      effectiveValue: this.settings.scrollPaddingTop || 0,
+      isEffective: this.layout === EPUBLayout.reflowable && !!this.settings.scroll && this.preferences.scrollPaddingTop !== null,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("scrollPaddingTop", newValue || null);
+      }
+    });
+  }
+
+  get scrollPaddingBottom(): Preference<number> {
+    return new Preference<number>({
+      initialValue: this.preferences.scrollPaddingBottom,
+      effectiveValue: this.settings.scrollPaddingBottom || 0,
+      isEffective: this.layout === EPUBLayout.reflowable && !!this.settings.scroll && this.preferences.scrollPaddingBottom !== null,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("scrollPaddingBottom", newValue || null);
+      }
+    });
+  }
+
+  get scrollPaddingLeft(): Preference<number> {
+    return new Preference<number>({
+      initialValue: this.preferences.scrollPaddingLeft,
+      effectiveValue: this.settings.scrollPaddingLeft || 0,
+      isEffective: this.layout === EPUBLayout.reflowable && !!this.settings.scroll && this.preferences.scrollPaddingLeft !== null,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("scrollPaddingLeft", newValue || null);
+      }
+    });
+  }
+
+  get scrollPaddingRight(): Preference<number> {
+    return new Preference<number>({
+      initialValue: this.preferences.scrollPaddingRight,
+      effectiveValue: this.settings.scrollPaddingRight || 0,
+      isEffective: this.layout === EPUBLayout.reflowable && !!this.settings.scroll && this.preferences.scrollPaddingRight !== null,
+      onChange: (newValue: number | null | undefined) => {
+        this.updatePreference("scrollPaddingRight", newValue || null);
+      }
+    });
+  }
+
   get selectionBackgroundColor(): Preference<string> {
     return new Preference<string>({
       initialValue: this.preferences.selectionBackgroundColor,

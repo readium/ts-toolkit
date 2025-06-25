@@ -35,6 +35,10 @@ export interface IEpubSettings {
   paragraphIndent?: number | null,
   paragraphSpacing?: number | null,
   scroll?: boolean | null,
+  scrollPaddingTop?: number | null,
+  scrollPaddingBottom?: number | null,
+  scrollPaddingLeft?: number | null,
+  scrollPaddingRight?: number | null,
   selectionBackgroundColor?: string | null,
   selectionTextColor?: string | null,
   textAlign?: TextAlignment | null,
@@ -75,6 +79,10 @@ export class EpubSettings implements ConfigurableSettings {
   paragraphIndent: number | null;
   paragraphSpacing: number | null;
   scroll: boolean | null;
+  scrollPaddingTop: number | null;
+  scrollPaddingBottom: number | null;
+  scrollPaddingLeft: number | null;
+  scrollPaddingRight: number | null;
   selectionBackgroundColor: string | null;
   selectionTextColor: string | null;
   textAlign: TextAlignment | null;
@@ -182,6 +190,26 @@ export class EpubSettings implements ConfigurableSettings {
     this.scroll = typeof preferences.scroll === "boolean" 
       ? preferences.scroll 
       : defaults.scroll ?? null;
+    this.scrollPaddingTop = preferences.scrollPaddingTop !== undefined 
+      ? preferences.scrollPaddingTop 
+      : defaults.scrollPaddingTop !== undefined 
+        ? defaults.scrollPaddingTop 
+        : null;
+    this.scrollPaddingBottom = preferences.scrollPaddingBottom !== undefined 
+      ? preferences.scrollPaddingBottom 
+      : defaults.scrollPaddingBottom !== undefined 
+        ? defaults.scrollPaddingBottom 
+        : null;
+    this.scrollPaddingLeft = preferences.scrollPaddingLeft !== undefined 
+      ? preferences.scrollPaddingLeft 
+      : defaults.scrollPaddingLeft !== undefined 
+        ? defaults.scrollPaddingLeft 
+        : null;
+    this.scrollPaddingRight = preferences.scrollPaddingRight !== undefined 
+      ? preferences.scrollPaddingRight 
+      : defaults.scrollPaddingRight !== undefined 
+        ? defaults.scrollPaddingRight 
+        : null;
     this.selectionBackgroundColor = preferences.selectionBackgroundColor || defaults.selectionBackgroundColor || null;
     this.selectionTextColor = preferences.selectionTextColor || defaults.selectionTextColor || null;
     this.textAlign = preferences.textAlign || defaults.textAlign || null;

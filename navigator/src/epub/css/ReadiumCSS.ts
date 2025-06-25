@@ -49,6 +49,18 @@ export class ReadiumCSS {
     if (settings.pageGutter !== this.rsProperties.pageGutter)
       this.rsProperties.pageGutter = settings.pageGutter;
 
+    if (settings.scrollPaddingBottom !== this.rsProperties.scrollPaddingBottom)
+      this.rsProperties.scrollPaddingBottom = settings.scrollPaddingBottom;
+
+    if (settings.scrollPaddingLeft !== this.rsProperties.scrollPaddingLeft)
+      this.rsProperties.scrollPaddingLeft = settings.scrollPaddingLeft;
+
+    if (settings.scrollPaddingRight !== this.rsProperties.scrollPaddingRight)
+      this.rsProperties.scrollPaddingRight = settings.scrollPaddingRight;
+
+    if (settings.scrollPaddingTop !== this.rsProperties.scrollPaddingTop)
+      this.rsProperties.scrollPaddingTop = settings.scrollPaddingTop;
+
     // This has to be updated before pagination
     // otherwise the metrics won’t be correct for line length
     this.lineLengths.update({
