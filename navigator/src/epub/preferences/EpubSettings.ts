@@ -37,8 +37,8 @@ export interface IEpubSettings {
   scroll?: boolean | null,
   scrollPaddingTop?: number | null,
   scrollPaddingBottom?: number | null,
-  scrollPaddingLeft?: number | null,
-  scrollPaddingRight?: number | null,
+  // scrollPaddingLeft?: number | null,
+  // scrollPaddingRight?: number | null,
   selectionBackgroundColor?: string | null,
   selectionTextColor?: string | null,
   textAlign?: TextAlignment | null,
@@ -81,8 +81,8 @@ export class EpubSettings implements ConfigurableSettings {
   scroll: boolean | null;
   scrollPaddingTop: number | null;
   scrollPaddingBottom: number | null;
-  scrollPaddingLeft: number | null;
-  scrollPaddingRight: number | null;
+  // scrollPaddingLeft: number | null;
+  // scrollPaddingRight: number | null;
   selectionBackgroundColor: string | null;
   selectionTextColor: string | null;
   textAlign: TextAlignment | null;
@@ -200,6 +200,7 @@ export class EpubSettings implements ConfigurableSettings {
       : defaults.scrollPaddingBottom !== undefined 
         ? defaults.scrollPaddingBottom 
         : null;
+    /* 
     this.scrollPaddingLeft = preferences.scrollPaddingLeft !== undefined 
       ? preferences.scrollPaddingLeft 
       : defaults.scrollPaddingLeft !== undefined 
@@ -210,6 +211,7 @@ export class EpubSettings implements ConfigurableSettings {
       : defaults.scrollPaddingRight !== undefined 
         ? defaults.scrollPaddingRight 
         : null;
+    */
     this.selectionBackgroundColor = preferences.selectionBackgroundColor || defaults.selectionBackgroundColor || null;
     this.selectionTextColor = preferences.selectionTextColor || defaults.selectionTextColor || null;
     this.textAlign = preferences.textAlign || defaults.textAlign || null;

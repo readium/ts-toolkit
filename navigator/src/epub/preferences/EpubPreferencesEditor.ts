@@ -405,6 +405,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
+  /* 
   get scrollPaddingLeft(): Preference<number> {
     return new Preference<number>({
       initialValue: this.preferences.scrollPaddingLeft,
@@ -425,7 +426,8 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
         this.updatePreference("scrollPaddingRight", newValue || null);
       }
     });
-  }
+  } 
+  */
 
   get selectionBackgroundColor(): Preference<string> {
     return new Preference<string>({

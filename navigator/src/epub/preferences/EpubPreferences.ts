@@ -50,8 +50,8 @@ export interface IEpubPreferences {
   scroll?: boolean | null,
   scrollPaddingTop?: number | null,
   scrollPaddingBottom?: number | null,
-  scrollPaddingLeft?: number | null,
-  scrollPaddingRight?: number | null,
+  // scrollPaddingLeft?: number | null,
+  // scrollPaddingRight?: number | null,
   selectionBackgroundColor?: string | null,
   selectionTextColor?: string | null,
   textAlign?: TextAlignment | null,
@@ -94,8 +94,8 @@ export class EpubPreferences implements ConfigurablePreferences {
   scroll?: boolean | null;
   scrollPaddingTop?: number | null;
   scrollPaddingBottom?: number | null;
-  scrollPaddingLeft?: number | null;
-  scrollPaddingRight?: number | null;
+  // scrollPaddingLeft?: number | null;
+  // scrollPaddingRight?: number | null;
   selectionBackgroundColor?: string | null;
   selectionTextColor?: string | null;
   textAlign?: TextAlignment | null;
@@ -134,8 +134,8 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.scroll = ensureBoolean(preferences.scroll);
     this.scrollPaddingTop = ensureNonNegative(preferences.scrollPaddingTop);
     this.scrollPaddingBottom = ensureNonNegative(preferences.scrollPaddingBottom);
-    this.scrollPaddingLeft = ensureNonNegative(preferences.scrollPaddingLeft);
-    this.scrollPaddingRight = ensureNonNegative(preferences.scrollPaddingRight);
+    // this.scrollPaddingLeft = ensureNonNegative(preferences.scrollPaddingLeft);
+    // this.scrollPaddingRight = ensureNonNegative(preferences.scrollPaddingRight);
     this.selectionBackgroundColor = ensureString(preferences.selectionBackgroundColor);
     this.selectionTextColor = ensureString(preferences.selectionTextColor);
     this.textAlign = ensureEnumValue<TextAlignment>(preferences.textAlign, TextAlignment);

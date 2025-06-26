@@ -241,8 +241,8 @@ export interface IRSProperties {
   sansSerifJaV?: string | null;
   sansTf?: string | null;
   scrollPaddingBottom?: number | null;
-  scrollPaddingLeft?: number | null;
-  scrollPaddingRight?: number | null;
+  // scrollPaddingLeft?: number | null;
+  // scrollPaddingRight?: number | null;
   scrollPaddingTop?: number | null;
   secondaryColor?: string | null;
   selectionBackgroundColor?: string | null;
@@ -285,8 +285,8 @@ export class RSProperties extends Properties {
   sansSerifJaV: string | null;
   sansTf: string | null;
   scrollPaddingBottom: number | null;
-  scrollPaddingLeft: number | null;
-  scrollPaddingRight: number | null;
+  // scrollPaddingLeft: number | null;
+  // scrollPaddingRight: number | null;
   scrollPaddingTop: number | null;
   secondaryColor: string | null;
   selectionBackgroundColor: string | null;
@@ -326,8 +326,8 @@ export class RSProperties extends Properties {
     this.paraSpacing = props.paraSpacing ?? null;
     this.primaryColor = props.primaryColor ?? null;
     this.scrollPaddingBottom = props.scrollPaddingBottom ?? null;
-    this.scrollPaddingLeft = props.scrollPaddingLeft ?? null;
-    this.scrollPaddingRight = props.scrollPaddingRight ?? null;
+    // this.scrollPaddingLeft = props.scrollPaddingLeft ?? null;
+    // this.scrollPaddingRight = props.scrollPaddingRight ?? null;
     this.scrollPaddingTop = props.scrollPaddingTop ?? null;
     this.sansSerifJa = props.sansSerifJa ?? null;
     this.sansSerifJaV = props.sansSerifJaV ?? null;
@@ -375,8 +375,8 @@ export class RSProperties extends Properties {
     if (this.sansSerifJaV) cssProperties["--RS__sans-serif-ja-v"] = this.sansSerifJaV;
     if (this.sansTf) cssProperties["--RS__sansTf"] = this.sansTf;
     if (this.scrollPaddingBottom != null) cssProperties["--RS__scrollPaddingBottom"] = this.toPx(this.scrollPaddingBottom);
-    if (this.scrollPaddingLeft != null) cssProperties["--RS__scrollPaddingLeft"] = this.toPx(this.scrollPaddingLeft);
-    if (this.scrollPaddingRight != null) cssProperties["--RS__scrollPaddingRight"] = this.toPx(this.scrollPaddingRight);
+    // if (this.scrollPaddingLeft != null) cssProperties["--RS__scrollPaddingLeft"] = this.toPx(this.scrollPaddingLeft);
+    // if (this.scrollPaddingRight != null) cssProperties["--RS__scrollPaddingRight"] = this.toPx(this.scrollPaddingRight);
     if (this.scrollPaddingTop != null) cssProperties["--RS__scrollPaddingTop"] = this.toPx(this.scrollPaddingTop);
     if (this.secondaryColor) cssProperties["--RS__secondaryColor"] = this.secondaryColor;
     if (this.selectionBackgroundColor) cssProperties["--RS__selectionBackgroundColor"] = this.selectionBackgroundColor;
