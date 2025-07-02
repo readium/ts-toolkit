@@ -32,7 +32,10 @@ describe('Manifest Tests', () => {
         links: [{ href: '/manifest.json', rel: 'self' }],
         readingOrder: [{ href: '/chap1.html', type: 'text/html' }],
         resources: [{ href: '/image.png', type: 'image/png' }],
-        toc: [{ href: '/cover.html' }, { href: '/chap1.html' }],
+        toc: [{ href: '/cover.html' }, { href: '/chap1.html' }, {
+          href: '',
+          children: [{ href: '/chap2.html' }, { href: '/chap3.html' }],
+        }],
         sub: {
           links: [{ href: '/sublink' }],
         },
@@ -50,9 +53,14 @@ describe('Manifest Tests', () => {
         resources: new Links([
           new Link({ href: '/image.png', type: 'image/png' }),
         ]),
-        tableOfContents: new Links([
+        toc: new Links([
           new Link({ href: '/cover.html' }),
           new Link({ href: '/chap1.html' }),
+          new Link({ href: '', children: new Links([
+              new Link({ href: '/chap2.html' }),
+              new Link({ href: '/chap3.html' }),
+            ])
+          }),
         ]),
         subcollections: new Map([
           [
@@ -148,9 +156,13 @@ describe('Manifest Tests', () => {
         resources: new Links([
           new Link({ href: '/image.png', type: 'image/png' }),
         ]),
-        tableOfContents: new Links([
+        toc: new Links([
           new Link({ href: '/cover.html' }),
           new Link({ href: '/chap1.html' }),
+          new Link({ href: '', children: new Links([
+            new Link({ href: '/chap2.html' }),
+            new Link({ href: '/chap3.html' }),
+          ]) }),
         ]),
         subcollections: new Map([
           [
@@ -169,7 +181,11 @@ describe('Manifest Tests', () => {
       links: [{ href: '/manifest.json', rel: ['self'] }],
       readingOrder: [{ href: '/chap1.html', type: 'text/html' }],
       resources: [{ href: '/image.png', type: 'image/png' }],
-      toc: [{ href: '/cover.html' }, { href: '/chap1.html' }],
+      toc: [
+        { href: '/cover.html' }, 
+        { href: '/chap1.html' }, 
+        { href: '', children: [{ href: '/chap2.html' }, { href: '/chap3.html' }] },
+      ],
       sub: {
         links: [{ href: '/sublink' }],
       },

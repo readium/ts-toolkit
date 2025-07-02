@@ -102,8 +102,19 @@ describe('Link Tests', () => {
     );
   });
 
-  it('parse JSON requires href', () => {
+  it('parse JSON requires href to be a string', () => {
     expect(Link.deserialize({ type: 'application/pdf' })).toBeUndefined();
+    expect(Link.deserialize({ href: 123 })).toBeUndefined();
+    expect(Link.deserialize({ href: undefined })).toBeUndefined();
+    expect(Link.deserialize({ href: null })).toBeUndefined();
+    expect(Link.deserialize({ href: {} })).toBeUndefined();
+    expect(Link.deserialize({ href: [] })).toBeUndefined();
+    expect(Link.deserialize({ href: true })).toBeUndefined();
+    expect(Link.deserialize({ href: false })).toBeUndefined();
+    
+    // Should pass
+    expect(Link.deserialize({ href: '' })).toBeDefined();
+    expect(Link.deserialize({ href: 'valid' })).toBeDefined();
   });
 
   it('parse JSON requires positive width', () => {

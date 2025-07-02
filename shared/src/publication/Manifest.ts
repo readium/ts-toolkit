@@ -28,7 +28,7 @@ export class Manifest {
   public readonly resources?: Links;
 
   /** Identifies the collection that contains a table of contents. */
-  public readonly tableOfContents?: Links;
+  public readonly toc?: Links;
 
   public readonly subcollections?: Map<string, Array<PublicationCollection>>;
 
@@ -38,7 +38,7 @@ export class Manifest {
     links: Links;
     readingOrder: Links;
     resources?: Links;
-    tableOfContents?: Links;
+    toc?: Links;
     subcollections?: Map<string, Array<PublicationCollection>>;
   }) {
     this.context = values.context;
@@ -46,7 +46,7 @@ export class Manifest {
     this.links = values.links;
     this.readingOrder = values.readingOrder;
     this.resources = values.resources;
-    this.tableOfContents = values.tableOfContents;
+    this.toc = values.toc;
     this.subcollections = values.subcollections;
   }
 
@@ -79,7 +79,7 @@ export class Manifest {
       links,
       readingOrder,
       resources: Links.deserialize(json.resources),
-      tableOfContents: Links.deserialize(json.toc),
+      toc: Links.deserialize(json.toc),
       subcollections: PublicationCollection.deserializeCollections({
         sub: json.sub,
       }),
@@ -96,7 +96,7 @@ export class Manifest {
     json.links = this.links.serialize();
     json.readingOrder = this.readingOrder.serialize();
     if (this.resources) json.resources = this.resources.serialize();
-    if (this.tableOfContents) json.toc = this.tableOfContents.serialize();
+    if (this.toc) json.toc = this.toc.serialize();
     PublicationCollection.serializeCollection(json, this.subcollections);
     return json;
   }

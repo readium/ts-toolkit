@@ -94,7 +94,8 @@ export class Link {
    * Parses a [Link] from its RWPM JSON representation.
    */
   public static deserialize(json: any): Link | undefined {
-    if (!(json && json.href && typeof json.href === 'string')) return;
+    if (!json || typeof json.href !== 'string') return;
+    
     return new Link({
       href: json.href,
       templated: json.templated,

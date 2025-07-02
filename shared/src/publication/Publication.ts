@@ -30,7 +30,7 @@ export class Publication {
   /** Identifies resources that are necessary for rendering the publication. */
   public readonly resources?: Links;
   /** Identifies the collection that contains a table of contents. */
-  public readonly tableOfContents?: Links;
+  public readonly toc?: Links;
   /** Identifies the collection that contains sub collections. */
   public readonly subcollections?: Map<string, Array<PublicationCollection>>;
 
@@ -42,7 +42,7 @@ export class Publication {
     this.links = values.manifest.links;
     this.readingOrder = values.manifest.readingOrder;
     this.resources = values.manifest.resources;
-    this.tableOfContents = values.manifest.tableOfContents;
+    this.toc = values.manifest.toc;
     this.subcollections = values.manifest.subcollections;
   }
 
