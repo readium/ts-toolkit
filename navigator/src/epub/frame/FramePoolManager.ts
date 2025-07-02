@@ -155,9 +155,8 @@ export class FramePoolManager {
                     await newFrame.load(modules); // In order to ensure modules match the latest configuration
 
                 // Update progression if necessary and show the new frame
-                const hasProgression = (locator?.locations?.progression ?? 0) > 0;
                 if(newFrame) // If user is speeding through the publication, this can get destroyed
-                    await newFrame.show(hasProgression ? locator.locations.progression! : undefined); // Show/activate new frame
+                    await newFrame.show(locator.locations.progression); // Show/activate new frame
 
                 this._currentFrame = newFrame;
             }

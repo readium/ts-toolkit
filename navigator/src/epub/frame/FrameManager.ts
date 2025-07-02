@@ -97,7 +97,7 @@ export class FrameManager {
                         this.hidden = false;
                         res();
                     }
-                    if(atProgress && atProgress > 0) {
+                    if(atProgress !== undefined) {
                         this.comms?.send("go_progression", atProgress, remove);
                     } else {
                         remove();
