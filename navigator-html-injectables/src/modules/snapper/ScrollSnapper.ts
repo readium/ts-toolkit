@@ -4,6 +4,7 @@ import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/
 import { ModuleName } from "../ModuleLibrary";
 import { Snapper } from "./Snapper";
 import { rangeFromLocator } from "../../helpers/locator";
+import { forceWebkitRecalc } from "../../helpers/document";
 
 const SCROLL_SNAPPER_STYLE_ID = "readium-scroll-snapper-style";
 
@@ -61,6 +62,18 @@ export class ScrollSnapper extends Snapper {
 
         wnd.addEventListener("scroll", this.handleScroll, {
             passive: true
+        });
+
+        comms.register("force_webkit_reflow", ScrollSnapper.moduleName, () => {
+            forceWebkitRecalc(this.wnd);
+
+            // We absolutely must do this because overflown content
+            // won’t be rendered if we do not trigger scroll… 
+            // Only the content at the start of the document, 
+            // whose height is the viewport height, will be rendered.
+            const currentScroll = this.doc().scrollTop;
+            this.doc().scrollTop = currentScroll + 1;
+            this.doc().scrollTop = currentScroll;
         });
 
         comms.register("go_progression", ScrollSnapper.moduleName, (data, ack) => {

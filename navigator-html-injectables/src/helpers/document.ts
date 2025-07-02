@@ -79,3 +79,19 @@ export function appendVirtualColumnIfNeeded(wnd: ReadiumWindow): boolean {
 
     return virtualColsCount !== needed;
 }
+
+/**
+ * This forces a recalculation in WebKit browsers.
+ * It is needed in scroll mode to ensure that the content is scrollable.
+ * Webkit seems to find itself in some kind of limbo if we do not do that.
+ * It has everything correct but the scroll listener is non-functional, 
+ * unless you force a recalc or reflow.
+ * It is not needed in paginated mode.
+ */
+export function forceWebkitRecalc(wnd: ReadiumWindow) {
+    // Borrowed from APB themselves… 
+    const styleElement = wnd.document.createElement("style");
+    styleElement.appendChild(wnd.document.createTextNode("*{}"));
+    wnd.document.body.appendChild(styleElement);
+    wnd.document.body.removeChild(styleElement);
+}
