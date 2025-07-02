@@ -41,5 +41,5 @@ export type CommsCommandKey =
     "focus" |
     "activate" |
     "shake" |
-    "force_webkit_reflow";
+    "force_webkit_recalc";
 ;

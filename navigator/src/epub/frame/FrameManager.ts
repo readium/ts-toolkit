@@ -98,7 +98,7 @@ export class FrameManager {
                         this.hidden = false;
 
                         if (sML.UA.WebKit) {
-                            this.comms?.send("force_webkit_reflow", undefined);
+                            this.comms?.send("force_webkit_recalc", undefined);
                         }
 
                         res();

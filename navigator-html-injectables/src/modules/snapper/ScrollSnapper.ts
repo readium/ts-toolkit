@@ -64,7 +64,7 @@ export class ScrollSnapper extends Snapper {
             passive: true
         });
 
-        comms.register("force_webkit_reflow", ScrollSnapper.moduleName, () => {
+        comms.register("force_webkit_recalc", ScrollSnapper.moduleName, () => {
             forceWebkitRecalc(this.wnd);
 
             // We absolutely must do this because overflown content
