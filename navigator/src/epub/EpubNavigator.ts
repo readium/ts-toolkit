@@ -640,21 +640,23 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     }
 
     get isResourceStart(): boolean {
-        const currentProgression = this.viewport.progressions.get(this.currentLocation?.href);
-        return currentProgression?.start === 0;
+        const firstHref = this.viewport.readingOrder[0];
+        const progression = this.viewport.progressions.get(firstHref);
+        return progression?.start === 0;
     }
     
     get isResourceEnd(): boolean {
-        const currentProgression = this.viewport.progressions.get(this.currentLocation?.href);
-        return currentProgression?.end === 1;
+        const lastHref = this.viewport.readingOrder[this.viewport.readingOrder.length - 1];
+        const progression = this.viewport.progressions.get(lastHref);
+        return progression?.end === 1;
     }
     
-    get isPublicationStart(): boolean {
+    get canGoBackward(): boolean {
         const firstResource = this.pub.readingOrder.items[0]?.href;
         return this.viewport.progressions.has(firstResource) && this.viewport.progressions.get(firstResource)?.start === 0;
     }
     
-    get isPublicationEnd(): boolean {
+    get canGoForward(): boolean {
         const lastResource = this.pub.readingOrder.items[this.pub.readingOrder.items.length - 1]?.href;
         return this.viewport.progressions.has(lastResource) && this.viewport.progressions.get(lastResource)?.end === 1;
     }
