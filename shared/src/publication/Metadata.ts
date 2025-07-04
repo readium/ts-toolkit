@@ -1,4 +1,4 @@
-/* Copyright 2021 Readium Foundation. All rights reserved.
+/* Copyright 2025 Readium Foundation. All rights reserved.
  * Use of this source code is governed by a BSD-style license,
  * available in the LICENSE file present in the Github repository of the project.
  */
@@ -13,6 +13,7 @@ import { Contributors } from './Contributor';
 import { LocalizedString } from './LocalizedString';
 import { ReadingProgression } from './ReadingProgression';
 import { Subjects } from './Subject';
+import { Accessibility } from './accessibility/Accessibility';
 
 /**
  * https://readium.org/webpub-manifest/schema/metadata.schema.json
@@ -52,6 +53,7 @@ export class Metadata {
   public readingProgression?: ReadingProgression;
   public duration?: number;
   public numberOfPages?: number;
+  public accessibility?: Accessibility;
   public otherMetadata?: { [key: string]: any };
 
   /**All metadata not in otherMetadata */
@@ -83,6 +85,7 @@ export class Metadata {
     'readingProgression',
     'duration',
     'numberOfPages',
+    'accessibility',
   ];
 
   /** Creates [Metadata] object */
@@ -116,6 +119,7 @@ export class Metadata {
     readingProgression?: ReadingProgression;
     duration?: number;
     numberOfPages?: number;
+    accessibility?: Accessibility;
     otherMetadata?: { [key: string]: any };
   }) {
     //title always required
@@ -166,6 +170,7 @@ export class Metadata {
     this.readingProgression = values.readingProgression;
     this.duration = values.duration;
     this.numberOfPages = values.numberOfPages;
+    this.accessibility = values.accessibility;
     this.otherMetadata = values.otherMetadata;
   }
 
@@ -201,6 +206,7 @@ export class Metadata {
     const modified = datefromJSON(json.modified);
     const subjects = Subjects.deserialize(json.subject);
     const belongsTo = BelongsTo.deserialize(json.belongsTo);
+    const accessibility = Accessibility.deserialize(json.accessibility);
     const readingProgression = json.readingProgression;
     const duration = positiveNumberfromJSON(json.duration);
     const numberOfPages = positiveNumberfromJSON(json.numberOfPages);
@@ -239,6 +245,7 @@ export class Metadata {
       readingProgression,
       duration,
       numberOfPages,
+      accessibility,
       otherMetadata,
     });
   }
@@ -278,7 +285,7 @@ export class Metadata {
     if (this.duration !== undefined) json.duration = this.duration;
     if (this.numberOfPages !== undefined)
       json.numberOfPages = this.numberOfPages;
-
+    if (this.accessibility) json.accessibility = this.accessibility.serialize();
     if (this.otherMetadata) {
       const metadata = this.otherMetadata;
       Object.keys(metadata).forEach(x => (json[x] = metadata[x]));
