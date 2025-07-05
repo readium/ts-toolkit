@@ -103,7 +103,7 @@ export class Accessibility {
                 : undefined,
             summary: accessibilityJson.summary,
             accessMode: accessibilityJson.accessMode 
-                ? accessibilityJson.accessMode.map(id => AccessMode.deserialize(id))
+                ? accessibilityJson.accessMode.map(value => AccessMode.deserialize(value))
                 .filter((mode): mode is AccessMode => mode !== undefined)
                 : undefined,
             accessModeSufficient: accessibilityJson.accessModeSufficient 
@@ -111,15 +111,15 @@ export class Accessibility {
                 .filter((mode): mode is PrimaryAccessMode => mode !== undefined) 
                 : undefined,
             feature: accessibilityJson.feature 
-                ? accessibilityJson.feature.map(id => Feature.deserialize(id))
+                ? accessibilityJson.feature.map(value => Feature.deserialize(value))
                 .filter((feature): feature is Feature => feature !== undefined)
                 : undefined,
             hazard: accessibilityJson.hazard 
-                ? accessibilityJson.hazard.map(id => Hazard.deserialize(id))
+                ? accessibilityJson.hazard.map(value => Hazard.deserialize(value))
                 .filter((hazard): hazard is Hazard => hazard !== undefined)
                 : undefined,
             exemption: accessibilityJson.exemption 
-                ? accessibilityJson.exemption.map(id => Exemption.deserialize(id))
+                ? accessibilityJson.exemption.map(value => Exemption.deserialize(value))
                 .filter((exemption): exemption is Exemption => exemption !== undefined)
                 : undefined
         });
@@ -251,10 +251,10 @@ export class Certification {
 }
 
 export class AccessMode {
-    public readonly id: string;
+    public readonly value: string;
 
-    constructor(id: string) {
-        this.id = id;
+    constructor(value: string) {
+        this.value = value;
     }
 
     public static deserialize(json: any): AccessMode | undefined {
@@ -263,7 +263,7 @@ export class AccessMode {
     }
 
     public serialize(): any {
-        return this.id;
+        return this.value;
     }
 
     public static readonly AUDITORY = new AccessMode("auditory");
@@ -280,13 +280,13 @@ export class AccessMode {
 }
 
 export class PrimaryAccessMode {
-    public readonly id: string[];
+    public readonly value: string[];
     private static readonly VALID_MODES = new Set(["auditory", "tactile", "textual", "visual"]);
 
-    constructor(id: string[]) {
+    constructor(value: string[]) {
         // Filter out invalid modes and duplicates
-        this.id = Array.from(new Set(
-            id.filter(mode => PrimaryAccessMode.VALID_MODES.has(mode.toLowerCase()))
+        this.value = Array.from(new Set(
+            value.filter(mode => PrimaryAccessMode.VALID_MODES.has(mode.toLowerCase()))
         ));
     }
 
@@ -309,7 +309,7 @@ export class PrimaryAccessMode {
     }
 
     public serialize(): any {
-        return this.id;
+        return this.value;
     }
 
     public static readonly AUDITORY = new PrimaryAccessMode(["auditory"]);
@@ -319,10 +319,10 @@ export class PrimaryAccessMode {
 }
 
 export class Feature {
-    public readonly id: string;
+    public readonly value: string;
 
-    constructor(id: string) {
-        this.id = id;
+    constructor(value: string) {
+        this.value = value;
     }
 
     public static deserialize(json: any): Feature | undefined {
@@ -331,7 +331,7 @@ export class Feature {
     }
 
     public serialize(): any {
-        return this.id;
+        return this.value;
     }
 
     public static readonly NONE = new Feature("none");
@@ -379,10 +379,10 @@ export class Feature {
 }
 
 export class Hazard {
-    public readonly id: string;
+    public readonly value: string;
 
-    constructor(id: string) {
-        this.id = id;
+    constructor(value: string) {
+        this.value = value;
     }
 
     public static deserialize(json: any): Hazard | undefined {
@@ -391,7 +391,7 @@ export class Hazard {
     }
 
     public serialize(): any {
-        return this.id;
+        return this.value;
     }
 
     public static readonly FLASHING = new Hazard("flashing");
@@ -408,10 +408,10 @@ export class Hazard {
 }
 
 export class Exemption {
-    public readonly id: string;
+    public readonly value: string;
 
-    constructor(id: string) {
-        this.id = id;
+    constructor(value: string) {
+        this.value = value;
     }
 
     public static deserialize(json: any): Exemption | undefined {
@@ -420,7 +420,7 @@ export class Exemption {
     }
 
     public serialize(): any {
-        return this.id;
+        return this.value;
     }
 
     public static readonly NONE = new Exemption("none");
