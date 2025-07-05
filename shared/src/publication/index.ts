@@ -1,3 +1,4 @@
+export * from './accessibility';
 export * from './encryption';
 export * from './epub';
 export * from './html';
