@@ -164,13 +164,13 @@ describe('Accessibility Tests', () => {
         expect(Accessibility.deserialize(json)).toEqual(expected);
     });
 
-    it ('parse PrimaryAccessMode with a single access mode', () => {
+    it('parse PrimaryAccessMode with a single access mode', () => {
         const json = {
-            accessModeSufficient: [['textual']]
+            accessModeSufficient: ['textual']
         };
 
         const expected = new Accessibility({
-            accessModeSufficient: [new PrimaryAccessMode(['textual'])]
+            accessModeSufficient: [new PrimaryAccessMode('textual')]
         });
 
         expect(Accessibility.deserialize(json)).toEqual(expected);
@@ -190,11 +190,11 @@ describe('Accessibility Tests', () => {
 
     it('parse PrimaryAccessMode with multiple arrays', () => {
         const json = {
-            accessModeSufficient: [['textual', 'visual'], ['auditory']]
+            accessModeSufficient: [['textual', 'visual'], 'auditory']
         };
 
         const expected = new Accessibility({
-            accessModeSufficient: [new PrimaryAccessMode(['textual', 'visual']), new PrimaryAccessMode(['auditory'])]
+            accessModeSufficient: [new PrimaryAccessMode(['textual', 'visual']), new PrimaryAccessMode('auditory')]
         });
 
         expect(Accessibility.deserialize(json)).toEqual(expected);

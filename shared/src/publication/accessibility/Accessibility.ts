@@ -280,18 +280,37 @@ export class AccessMode {
 }
 
 export class PrimaryAccessMode {
-    public readonly value: string[];
+    public readonly value!: string | string[];
     private static readonly VALID_MODES = new Set(["auditory", "tactile", "textual", "visual"]);
 
-    constructor(value: string[]) {
-        // Filter out invalid modes and duplicates
-        this.value = Array.from(new Set(
-            value.filter(mode => PrimaryAccessMode.VALID_MODES.has(mode.toLowerCase()))
-        ));
+    constructor(value: string | string[]) {
+        if (typeof value === 'string') {
+            if (!PrimaryAccessMode.VALID_MODES.has(value.toLowerCase())) {
+                return;
+            }
+            this.value = value.toLowerCase();
+        } else {
+            // Filter out invalid modes and duplicates
+            const validModes = value.filter(mode => 
+                PrimaryAccessMode.VALID_MODES.has(mode.toLowerCase())
+            );
+            
+            if (validModes.length === 0) {
+                return;
+            }
+            
+            this.value = Array.from(new Set(validModes));
+        }
     }
 
     public static deserialize(json: any): PrimaryAccessMode | undefined {
-        if (!json || !Array.isArray(json)) return;
+        if (!json) return;
+        
+        if (typeof json === 'string') {
+            return new PrimaryAccessMode(json);
+        }
+
+        if (!Array.isArray(json)) return undefined;
         
         // Create a new array with only valid modes
         const validModes = json.filter(mode => {
@@ -308,14 +327,14 @@ export class PrimaryAccessMode {
         return new PrimaryAccessMode(validModes);
     }
 
-    public serialize(): any {
+    public serialize(): string | string[] {
         return this.value;
     }
 
-    public static readonly AUDITORY = new PrimaryAccessMode(["auditory"]);
-    public static readonly TACTILE = new PrimaryAccessMode(["tactile"]);
-    public static readonly TEXTUAL = new PrimaryAccessMode(["textual"]);
-    public static readonly VISUAL = new PrimaryAccessMode(["visual"]);
+    public static readonly AUDITORY = new PrimaryAccessMode("auditory");
+    public static readonly TACTILE = new PrimaryAccessMode("tactile");
+    public static readonly TEXTUAL = new PrimaryAccessMode("textual");
+    public static readonly VISUAL = new PrimaryAccessMode("visual");
 }
 
 export class Feature {
