@@ -824,7 +824,7 @@ export class AccessibilitySummary implements AccessibilityDisplayField {
 
   public static fromPublication(publication: Publication): AccessibilitySummary {
     const a11y = publication.metadata.accessibility;
-    return new AccessibilitySummary(a11y?.summary !== undefined);
+    return new AccessibilitySummary(!!a11y?.summary);
   }
 }
 

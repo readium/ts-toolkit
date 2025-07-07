@@ -1416,9 +1416,8 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             const summary = guide.accessibilitySummary;
             
             // Then
-            expect(summary.shouldDisplay).toBe(true);
-            expect(summary.statements.length).toBe(1);
-            expect(summary.statements[0].displayId).toBe(AccessibilityDisplayString.AccessibilitySummary);
+            expect(summary.shouldDisplay).toBe(false);
+            expect(summary.statements.length).toBe(0);
         });
 
         it('should handle empty summary case', () => {
@@ -1434,9 +1433,8 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             const summary = guide.accessibilitySummary;
             
             // Then
-            expect(summary.shouldDisplay).toBe(true);
-            expect(summary.statements.length).toBe(1);
-            expect(summary.statements[0].displayId).toBe(AccessibilityDisplayString.AccessibilitySummary);
+            expect(summary.shouldDisplay).toBe(false);
+            expect(summary.statements.length).toBe(0);
         });
 
         it('should handle valid summary', () => {
