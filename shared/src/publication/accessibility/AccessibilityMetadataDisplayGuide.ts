@@ -8,8 +8,7 @@ import { Profile } from './Accessibility';
  * Represents a single accessibility claim
  */
 export interface AccessibilityDisplayStatement {
-  id: string;
-  displayId: AccessibilityDisplayString;
+  displayId: string;
   values?: any[];
 }
 
@@ -91,32 +90,36 @@ export class WaysOfReading implements AccessibilityDisplayField {
     this.shouldDisplay = true;
 
     this.statements = [];
-    if (visualAdjustments !== VisualAdjustments.Unknown) {
+    this.statements.push({
+      displayId: visualAdjustments === VisualAdjustments.Modifiable
+        ? AccessibilityDisplayString.WaysOfReadingVisualAdjustmentsModifiable
+        : visualAdjustments === VisualAdjustments.Unmodifiable
+          ? AccessibilityDisplayString.WaysOfReadingVisualAdjustmentsUnmodifiable
+          : AccessibilityDisplayString.WaysOfReadingVisualAdjustmentsUnknown
+    });
+    this.statements.push({
+      displayId: nonvisualReading === NonvisualReading.Readable
+        ? AccessibilityDisplayString.WaysOfReadingNonvisualReadingReadable
+        : nonvisualReading === NonvisualReading.NotFully
+          ? AccessibilityDisplayString.WaysOfReadingNonvisualReadingNotFully
+          : nonvisualReading === NonvisualReading.Unreadable
+            ? AccessibilityDisplayString.WaysOfReadingNonvisualReadingNone
+            : AccessibilityDisplayString.WaysOfReadingNonvisualReadingNoMetadata
+    });
+    if (nonvisualReadingAltText) {
       this.statements.push({
-        id: AccessibilityDisplayString.WaysOfReadingVisualAdjustmentsModifiable,
-        displayId: visualAdjustments === VisualAdjustments.Modifiable
-          ? AccessibilityDisplayString.WaysOfReadingVisualAdjustmentsModifiable
-          : AccessibilityDisplayString.WaysOfReadingVisualAdjustmentsUnmodifiable
+        displayId: AccessibilityDisplayString.WaysOfReadingNonvisualReadingAltText
       });
     }
-    if (nonvisualReading !== NonvisualReading.NoMetadata) {
-      this.statements.push({
-        id: AccessibilityDisplayString.WaysOfReadingNonvisualReading,
-        displayId: AccessibilityDisplayString.WaysOfReadingNonvisualReading
-      });
-      if (nonvisualReadingAltText) {
-        this.statements.push({
-          id: AccessibilityDisplayString.WaysOfReadingNonvisualReadingAltText,
-          displayId: AccessibilityDisplayString.WaysOfReadingNonvisualReadingAltText
-        });
-      }
-    }
-    if (prerecordedAudio !== PrerecordedAudio.NoMetadata) {
-      this.statements.push({
-        id: AccessibilityDisplayString.WaysOfReadingPrerecordedAudio,
-        displayId: AccessibilityDisplayString.WaysOfReadingPrerecordedAudio
-      });
-    }
+    this.statements.push({
+      displayId: prerecordedAudio === PrerecordedAudio.Synchronized
+        ? AccessibilityDisplayString.WaysOfReadingPrerecordedAudioSynchronized
+        : prerecordedAudio === PrerecordedAudio.AudioOnly
+          ? AccessibilityDisplayString.WaysOfReadingPrerecordedAudioOnly
+          : prerecordedAudio === PrerecordedAudio.AudioComplementary
+            ? AccessibilityDisplayString.WaysOfReadingPrerecordedAudioComplementary
+            : AccessibilityDisplayString.WaysOfReadingPrerecordedAudioNoMetadata
+    });
   }
 
   public static fromPublication(publication: Publication): WaysOfReading {
@@ -133,7 +136,7 @@ export class WaysOfReading implements AccessibilityDisplayField {
     const accessModes = a11y.accessMode ?? [];
     const accessModeSufficient = a11y.accessModeSufficient ?? [];
 
-    const allText = accessModes.every((m: AccessMode) => m.value === AccessMode.TEXTUAL.value) ||
+    const allText = accessModes.length > 0 && accessModes.every((m: AccessMode) => m.value === AccessMode.TEXTUAL.value) ||
       accessModeSufficient.some((modes: PrimaryAccessMode) => {
         const modeValue = modes.value;
         if (Array.isArray(modeValue)) {
@@ -151,7 +154,7 @@ export class WaysOfReading implements AccessibilityDisplayField {
         return modeValue === AccessMode.TEXTUAL.value;
       });
 
-    const noText = !accessModes.length && !accessModeSufficient.length ||
+    const noText = !(accessModes.length === 0 && accessModeSufficient.length === 0) &&
       !accessModes.some((m: AccessMode) => m.value === AccessMode.TEXTUAL.value) &&
       !accessModeSufficient.some((modes: PrimaryAccessMode) => {
         const modeValue = modes.value;
@@ -233,32 +236,27 @@ export class Navigation implements AccessibilityDisplayField {
     this.statements = [];
     if (tableOfContents) {
       this.statements.push({
-        id: AccessibilityDisplayString.NavigationToc,
         displayId: AccessibilityDisplayString.NavigationToc
       });
     }
     if (index) {
       this.statements.push({
-        id: AccessibilityDisplayString.NavigationIndex,
         displayId: AccessibilityDisplayString.NavigationIndex
       });
     }
     if (headings) {
       this.statements.push({
-        id: AccessibilityDisplayString.NavigationStructural,
         displayId: AccessibilityDisplayString.NavigationStructural
       });
     }
     if (page) {
       this.statements.push({
-        id: AccessibilityDisplayString.NavigationPageNavigation,
         displayId: AccessibilityDisplayString.NavigationPageNavigation
       });
     }
 
     if (this.statements.length === 0) {
       this.statements.push({
-        id: AccessibilityDisplayString.NavigationNoMetadata,
         displayId: AccessibilityDisplayString.NavigationNoMetadata
       });
     }
@@ -340,62 +338,52 @@ export class RichContent implements AccessibilityDisplayField {
     this.statements = [];
     if (extendedAltTextDescriptions) {
       this.statements.push({
-        id: AccessibilityDisplayString.RichContentExtended,
         displayId: AccessibilityDisplayString.RichContentExtended
       });
     }
     if (mathFormula) {
       this.statements.push({
-        id: AccessibilityDisplayString.RichContentAccessibleMathDescribed,
         displayId: AccessibilityDisplayString.RichContentAccessibleMathDescribed
       });
     }
     if (mathFormulaAsMathML) {
       this.statements.push({
-        id: AccessibilityDisplayString.RichContentAccessibleMathAsMathml,
         displayId: AccessibilityDisplayString.RichContentAccessibleMathAsMathml
       });
     }
     if (mathFormulaAsLaTeX) {
       this.statements.push({
-        id: AccessibilityDisplayString.RichContentAccessibleMathAsLatex,
         displayId: AccessibilityDisplayString.RichContentAccessibleMathAsLatex
       });
     }
     if (chemicalFormulaAsMathML) {
       this.statements.push({
-        id: AccessibilityDisplayString.RichContentAccessibleChemistryAsMathml,
         displayId: AccessibilityDisplayString.RichContentAccessibleChemistryAsMathml
       });
     }
     if (chemicalFormulaAsLaTeX) {
       this.statements.push({
-        id: AccessibilityDisplayString.RichContentAccessibleChemistryAsLatex,
         displayId: AccessibilityDisplayString.RichContentAccessibleChemistryAsLatex
       });
     }
     if (closedCaptions) {
       this.statements.push({
-        id: AccessibilityDisplayString.RichContentClosedCaptions,
         displayId: AccessibilityDisplayString.RichContentClosedCaptions
       });
     }
     if (openCaptions) {
       this.statements.push({
-        id: AccessibilityDisplayString.RichContentOpenCaptions,
         displayId: AccessibilityDisplayString.RichContentOpenCaptions
       });
     }
     if (transcript) {
       this.statements.push({
-        id: AccessibilityDisplayString.RichContentTranscript,
         displayId: AccessibilityDisplayString.RichContentTranscript
       });
     }
 
     if (this.statements.length === 0) {
       this.statements.push({
-        id: AccessibilityDisplayString.RichContentUnknown,
         displayId: AccessibilityDisplayString.RichContentUnknown
       });
     }
@@ -481,79 +469,66 @@ export class AdditionalInformation implements AccessibilityDisplayField {
     this.statements = [];
     if (pageBreakMarkers) {
       this.statements.push({
-        id: AccessibilityDisplayString.AdditionalInformationPageBreaks,
         displayId: AccessibilityDisplayString.AdditionalInformationPageBreaks
       });
     }
     if (aria) {
       this.statements.push({
-        id: AccessibilityDisplayString.AdditionalInformationAria,
         displayId: AccessibilityDisplayString.AdditionalInformationAria
       });
     }
     if (audioDescriptions) {
       this.statements.push({
-        id: AccessibilityDisplayString.AdditionalInformationAudioDescriptions,
         displayId: AccessibilityDisplayString.AdditionalInformationAudioDescriptions
       });
     }
     if (braille) {
       this.statements.push({
-        id: AccessibilityDisplayString.AdditionalInformationBraille,
         displayId: AccessibilityDisplayString.AdditionalInformationBraille
       });
     }
     if (rubyAnnotations) {
       this.statements.push({
-        id: AccessibilityDisplayString.AdditionalInformationRubyAnnotations,
         displayId: AccessibilityDisplayString.AdditionalInformationRubyAnnotations
       });
     }
     if (fullRubyAnnotations) {
       this.statements.push({
-        id: AccessibilityDisplayString.AdditionalInformationFullRubyAnnotations,
         displayId: AccessibilityDisplayString.AdditionalInformationFullRubyAnnotations
       });
     }
     if (highAudioContrast) {
       this.statements.push({
-        id: AccessibilityDisplayString.AdditionalInformationHighContrastBetweenForegroundAndBackgroundAudio,
         displayId: AccessibilityDisplayString.AdditionalInformationHighContrastBetweenForegroundAndBackgroundAudio
       });
     }
     if (highDisplayContrast) {
       this.statements.push({
-        id: AccessibilityDisplayString.AdditionalInformationHighContrastBetweenTextAndBackground,
         displayId: AccessibilityDisplayString.AdditionalInformationHighContrastBetweenTextAndBackground
       });
     }
     if (largePrint) {
       this.statements.push({
-        id: AccessibilityDisplayString.AdditionalInformationLargePrint,
         displayId: AccessibilityDisplayString.AdditionalInformationLargePrint
       });
     }
     if (signLanguage) {
       this.statements.push({
-        id: AccessibilityDisplayString.AdditionalInformationSignLanguage,
         displayId: AccessibilityDisplayString.AdditionalInformationSignLanguage
       });
     }
     if (tactileGraphics) {
       this.statements.push({
-        id: AccessibilityDisplayString.AdditionalInformationTactileGraphics,
         displayId: AccessibilityDisplayString.AdditionalInformationTactileGraphics
       });
     }
     if (tactileObjects) {
       this.statements.push({
-        id: AccessibilityDisplayString.AdditionalInformationTactileObjects,
         displayId: AccessibilityDisplayString.AdditionalInformationTactileObjects
       });
     }
     if (textToSpeechHinting) {
       this.statements.push({
-        id: AccessibilityDisplayString.AdditionalInformationTextToSpeechHinting,
         displayId: AccessibilityDisplayString.AdditionalInformationTextToSpeechHinting
       });
     }
@@ -621,36 +596,54 @@ export class Hazards implements AccessibilityDisplayField {
     this.statements = [];
     if (this.noHazards) {
       this.statements.push({
-        id: 'hazards_none',
-        displayId: AccessibilityDisplayString.RichContentUnknown
+        displayId: AccessibilityDisplayString.HazardsNone
       });
     } else if (this.unknown) {
       this.statements.push({
-        id: 'hazards_unknown',
-        displayId: AccessibilityDisplayString.RichContentUnknown
+        displayId: AccessibilityDisplayString.HazardsUnknown
       });
     } else if (this.noMetadata) {
       this.statements.push({
-        id: 'hazards_no_metadata',
-        displayId: AccessibilityDisplayString.RichContentUnknown
+        displayId: AccessibilityDisplayString.HazardsNoMetadata
       });
     } else {
       if (flashing === HazardType.yes) {
         this.statements.push({
-          id: AccessibilityDisplayString.HazardsFlashing,
           displayId: AccessibilityDisplayString.HazardsFlashing
+        });
+      } else if (flashing === HazardType.unknown) {
+        this.statements.push({
+          displayId: AccessibilityDisplayString.HazardsFlashingUnknown
+        });
+      } else if (flashing === HazardType.no) {
+        this.statements.push({
+          displayId: AccessibilityDisplayString.HazardsFlashingNone
         });
       }
       if (motion === HazardType.yes) {
         this.statements.push({
-          id: AccessibilityDisplayString.HazardsMotion,
           displayId: AccessibilityDisplayString.HazardsMotion
+        });
+      } else if (motion === HazardType.unknown) {
+        this.statements.push({
+          displayId: AccessibilityDisplayString.HazardsMotionUnknown
+        });
+      } else if (motion === HazardType.no) {
+        this.statements.push({
+          displayId: AccessibilityDisplayString.HazardsMotionNone
         });
       }
       if (sound === HazardType.yes) {
         this.statements.push({
-          id: AccessibilityDisplayString.HazardsSound,
           displayId: AccessibilityDisplayString.HazardsSound
+        });
+      } else if (sound === HazardType.unknown) {
+        this.statements.push({
+          displayId: AccessibilityDisplayString.HazardsSoundUnknown
+        });
+      } else if (sound === HazardType.no) {
+        this.statements.push({
+          displayId: AccessibilityDisplayString.HazardsSoundNone
         });
       }
     }
@@ -724,7 +717,6 @@ export class Conformance implements AccessibilityDisplayField {
     this.statements = [];
     if (profiles.length === 0) {
       this.statements.push({
-        id: 'conformance_no',
         displayId: AccessibilityDisplayString.ConformanceNo
       });
       return;
@@ -732,22 +724,18 @@ export class Conformance implements AccessibilityDisplayField {
 
     if (profiles.some(profile => profile.isWCAGLevelAAA)) {
       this.statements.push({
-        id: 'conformance_aaa',
         displayId: AccessibilityDisplayString.ConformanceAaa
       });
     } else if (profiles.some(profile => profile.isWCAGLevelAA)) {
       this.statements.push({
-        id: 'conformance_aa',
         displayId: AccessibilityDisplayString.ConformanceAa
       });
     } else if (profiles.some(profile => profile.isWCAGLevelA)) {
       this.statements.push({
-        id: 'conformance_a',
         displayId: AccessibilityDisplayString.ConformanceA
       });
     } else {
       this.statements.push({
-        id: 'conformance_unknown_standard',
         displayId: AccessibilityDisplayString.ConformanceUnknownStandard
       });
     }
@@ -763,7 +751,7 @@ export class Conformance implements AccessibilityDisplayField {
 * Represents legal exemptions
 */
 export class Legal implements AccessibilityDisplayField {
-  public readonly id = AccessibilityDisplayString.LegalTitle;
+  public readonly id = AccessibilityDisplayString.LegalConsiderationsTitle;
   public readonly title = 'Legal';
   public readonly shouldDisplay: boolean;
   public readonly exemption: boolean;
@@ -778,13 +766,11 @@ export class Legal implements AccessibilityDisplayField {
     this.statements = [];
     if (exemption) {
       this.statements.push({
-        id: 'exemption',
-        displayId: AccessibilityDisplayString.LegalExemption
+        displayId: AccessibilityDisplayString.LegalConsiderationsExempt
       });
     } else {
       this.statements.push({
-        id: 'noMetadata',
-        displayId: AccessibilityDisplayString.LegalNoMetadata
+        displayId: AccessibilityDisplayString.LegalConsiderationsNoMetadata
       });
     }
   }
@@ -803,28 +789,31 @@ export class AccessibilitySummary implements AccessibilityDisplayField {
   public readonly title = 'Accessibility Summary';
   public readonly shouldDisplay: boolean;
 
-  public readonly hasSummary: boolean;
+  public readonly summary: string | undefined | null;
   public readonly statements: AccessibilityDisplayStatement[];
 
   private constructor(
-    hasSummary: boolean = false
+    summary: string | undefined | null
   ) {
-    this.hasSummary = hasSummary;
-
-    this.shouldDisplay = hasSummary;
+    this.summary = summary;
+    this.shouldDisplay = !!summary;
 
     this.statements = [];
-    if (hasSummary) {
+    if (this.shouldDisplay && summary) {
       this.statements.push({
-        id: 'summary',
-        displayId: AccessibilityDisplayString.AccessibilitySummary
+        displayId: "summary", 
+        values: [summary]
+      });
+    } else {
+      this.statements.push({
+        displayId: AccessibilityDisplayString.AccessibilitySummaryNoMetadata
       });
     }
   }
 
   public static fromPublication(publication: Publication): AccessibilitySummary {
     const a11y = publication.metadata.accessibility;
-    return new AccessibilitySummary(!!a11y?.summary);
+    return new AccessibilitySummary(a11y?.summary);
   }
 }
 

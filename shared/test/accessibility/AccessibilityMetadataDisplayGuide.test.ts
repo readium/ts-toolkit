@@ -95,7 +95,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReading)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingVisualAdjustmentsUnknown)).toBe(true);
             });
         });
 
@@ -114,7 +114,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReading)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReadingReadable)).toBe(true);
             });
 
             it('should handle some text content with alt text (not fully readable)', () => {
@@ -132,7 +132,8 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReading)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReadingNotFully)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReadingAltText)).toBe(true);
             });
 
             it('should handle no text content (unreadable)', () => {
@@ -149,15 +150,13 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReading)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReadingNone)).toBe(true);
             });
 
             it('should handle no metadata', () => {
                 // Given
                 const publication = createPublication({
-                    accessibility: new Accessibility({
-                        accessMode: []
-                    })
+                    accessibility: new Accessibility({})
                 });
                 
                 // When
@@ -166,7 +165,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReading)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReadingNoMetadata)).toBe(true);
             });
         });
 
@@ -185,7 +184,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReading)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingPrerecordedAudioSynchronized)).toBe(true);
             });
 
             it('should handle audio only', () => {
@@ -205,7 +204,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReading)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingPrerecordedAudioOnly)).toBe(true);
             });
 
             it('should handle audio complementary', () => {
@@ -222,7 +221,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReading)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingPrerecordedAudioComplementary)).toBe(true);
             });
 
             it('should handle no metadata', () => {
@@ -239,7 +238,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReading)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingPrerecordedAudioNoMetadata)).toBe(true);
             });
         });
     });
@@ -1059,7 +1058,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             
             // Then
             expect(hazards.shouldDisplay).toBe(true);
-            expect(hazards.statements.some(s => s.displayId === AccessibilityDisplayString.RichContentUnknown)).toBe(true);
+            expect(hazards.statements.some(s => s.displayId === AccessibilityDisplayString.HazardsNone)).toBe(true);
             expect(hazards.noHazards).toBe(true);
         });
 
@@ -1077,7 +1076,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             
             // Then
             expect(hazards.shouldDisplay).toBe(true);
-            expect(hazards.statements.some(s => s.displayId === AccessibilityDisplayString.RichContentUnknown)).toBe(true);
+            expect(hazards.statements.some(s => s.displayId === AccessibilityDisplayString.HazardsUnknown)).toBe(true);
             expect(hazards.unknown).toBe(true);
         });
 
@@ -1114,7 +1113,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             
             // Then
             expect(hazards.shouldDisplay).toBe(false);
-            expect(hazards.statements.some(s => s.displayId === AccessibilityDisplayString.RichContentUnknown)).toBe(true);
+            expect(hazards.statements.some(s => s.displayId === AccessibilityDisplayString.HazardsNoMetadata)).toBe(true);
             expect(hazards.noMetadata).toBe(true);
         });
     });
@@ -1228,7 +1227,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(false);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalNoMetadata);
+            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsNoMetadata);
         });
 
         it('should handle no exemptions case', () => {
@@ -1246,7 +1245,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(false);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalNoMetadata);
+            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsNoMetadata);
         });
 
         it('should handle NONE exemption', () => {
@@ -1264,7 +1263,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(true);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalExemption);
+            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsExempt);
         });
 
         it('should handle DOCUMENTED exemption', () => {
@@ -1282,7 +1281,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(true);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalExemption);
+            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsExempt);
         });
 
         it('should handle LEGAL exemption', () => {
@@ -1300,7 +1299,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(true);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalExemption);
+            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsExempt);
         });
 
         it('should handle TEMPORARY exemption', () => {
@@ -1318,7 +1317,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(true);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalExemption);
+            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsExempt);
         });
 
         it('should handle TECHNICAL exemption', () => {
@@ -1336,7 +1335,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(true);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalExemption);
+            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsExempt);
         });
 
         it('should handle EU Accessibility Act exemptions', () => {
@@ -1360,7 +1359,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(true);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalExemption);
+            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsExempt);
         });
 
         it('should handle multiple exemptions', () => {
@@ -1382,7 +1381,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(true);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalExemption);
+            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsExempt);
         });
 
         it('should show no metadata when no exemptions', () => {
@@ -1400,7 +1399,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(false);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalNoMetadata);
+            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsNoMetadata);
         });
     });
 
@@ -1417,7 +1416,8 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             
             // Then
             expect(summary.shouldDisplay).toBe(false);
-            expect(summary.statements.length).toBe(0);
+            expect(summary.statements.length).toBe(1);
+            expect(summary.statements[0].displayId).toBe(AccessibilityDisplayString.AccessibilitySummaryNoMetadata);
         });
 
         it('should handle empty summary case', () => {
@@ -1434,7 +1434,8 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             
             // Then
             expect(summary.shouldDisplay).toBe(false);
-            expect(summary.statements.length).toBe(0);
+            expect(summary.statements.length).toBe(1);
+            expect(summary.statements[0].displayId).toBe(AccessibilityDisplayString.AccessibilitySummaryNoMetadata);
         });
 
         it('should handle valid summary', () => {
@@ -1452,7 +1453,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(summary.shouldDisplay).toBe(true);
             expect(summary.statements.length).toBe(1);
-            expect(summary.statements[0].displayId).toBe(AccessibilityDisplayString.AccessibilitySummary);
+            expect(summary.statements[0].values).toContain('Some summary text');
         });
     });
 });
