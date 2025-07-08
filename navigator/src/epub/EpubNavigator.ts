@@ -639,13 +639,13 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             : this.reflowViewport;
     }
 
-    get isResourceStart(): boolean {
+    get isScrollStart(): boolean {
         const firstHref = this.viewport.readingOrder[0];
         const progression = this.viewport.progressions.get(firstHref);
         return progression?.start === 0;
     }
     
-    get isResourceEnd(): boolean {
+    get isScrollEnd(): boolean {
         const lastHref = this.viewport.readingOrder[this.viewport.readingOrder.length - 1];
         const progression = this.viewport.progressions.get(lastHref);
         return progression?.end === 1;
