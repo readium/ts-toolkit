@@ -73,7 +73,7 @@ export class ReadiumCSS {
       maxChars: settings.maximalLineLength
     });
 
-    const layout = this.updateLayout(settings.fontSize, settings.deprecatedFontSize, settings.scroll, settings.columnCount);
+    const layout = this.updateLayout(settings.fontSize, settings.deprecatedFontSize || settings.iOSPatch, settings.scroll, settings.columnCount);
 
     if (layout?.effectiveContainerWidth)
       this.effectiveContainerWidth = layout?.effectiveContainerWidth;
@@ -103,6 +103,7 @@ export class ReadiumCSS {
       fontWidth: settings.fontWidth,
       invertFilter: settings.invertFilter,
       invertGaijiFilter: settings.invertGaijiFilter,
+      iOSPatch: settings.iOSPatch,
       iPadOSPatch: settings.iPadOSPatch,
       letterSpacing: settings.letterSpacing,
       ligatures: typeof settings.ligatures !== "boolean" 
@@ -132,23 +133,23 @@ export class ReadiumCSS {
     this.userProperties = new UserProperties(updated);
   }
 
-  private updateLayout(scale: number | null, deprecatedImplem: boolean | null, scroll: boolean | null, colCount?: number | null) {
+  private updateLayout(scale: number | null, ignoreCompensation: boolean | null, scroll: boolean | null, colCount?: number | null) {
     const isScroll = scroll ?? this.userProperties.view === "scroll";
 
     if (isScroll) {
-      return this.computeScrollLength(scale, deprecatedImplem);
+      return this.computeScrollLength(scale, ignoreCompensation);
     } else {
-      return this.paginate(scale, deprecatedImplem, colCount);
+      return this.paginate(scale, ignoreCompensation, colCount);
     }
   }
 
-  private getCompensatedMetrics(scale: number | null, deprecatedImplem: boolean | null) {
+  private getCompensatedMetrics(scale: number | null, ignoreCompensation: boolean | null) {
     const zoomFactor = scale || this.userProperties.fontSize || 1;
     const zoomCompensation = zoomFactor < 1 
       ? this.layoutStrategy === LayoutStrategy.margin 
         ? 1 / (zoomFactor + 0.003)
         : 1 / zoomFactor
-      : deprecatedImplem 
+      : ignoreCompensation 
         ? zoomFactor 
         : 1;
 
@@ -168,9 +169,9 @@ export class ReadiumCSS {
   // Note: Kept intentionally verbose for debugging
   // TODO: As scroll shows, the effective line-length
   // should be the same as uncompensated when scale >= 1
-  private paginate(scale: number | null, deprecatedImplem: boolean | null, colCount?: number | null) {
+  private paginate(scale: number | null, ignoreCompensation: boolean | null, colCount?: number | null) {
     const constrainedWidth = Math.round(getContentWidth(this.containerParent) - (this.constraint));
-    const metrics = this.getCompensatedMetrics(scale, deprecatedImplem);
+    const metrics = this.getCompensatedMetrics(scale, ignoreCompensation);
     const zoomCompensation = metrics.zoomCompensation;
     const optimal = metrics.optimal;
     const minimal = metrics.minimal;
@@ -288,9 +289,9 @@ export class ReadiumCSS {
   }
 
   // This behaves as paginate where colCount = 1
-  private computeScrollLength(scale: number | null, deprecatedImplem: boolean | null) {
+  private computeScrollLength(scale: number | null, ignoreCompensation: boolean | null) {
     const constrainedWidth = Math.round(getContentWidth(this.containerParent) - (this.constraint));
-    const metrics = this.getCompensatedMetrics(scale && (scale < 1 || deprecatedImplem) ? scale : 1, deprecatedImplem);
+    const metrics = this.getCompensatedMetrics(scale && (scale < 1 || ignoreCompensation) ? scale : 1, ignoreCompensation);
     const zoomCompensation = metrics.zoomCompensation;
     const optimal = metrics.optimal;
     const maximal = metrics.maximal;
@@ -301,7 +302,7 @@ export class ReadiumCSS {
 
     if (this.layoutStrategy === LayoutStrategy.margin) {
       const computedWidth = Math.min(Math.round(optimal * zoomCompensation), constrainedWidth);
-      effectiveLineLength = deprecatedImplem ? computedWidth : Math.round(computedWidth * zoomCompensation);
+      effectiveLineLength = ignoreCompensation ? computedWidth : Math.round(computedWidth * zoomCompensation);
     } else if (
       this.layoutStrategy === LayoutStrategy.lineLength ||
       this.layoutStrategy === LayoutStrategy.columns
@@ -313,7 +314,7 @@ export class ReadiumCSS {
         effectiveLineLength = constrainedWidth;
       } else {
         const computedWidth = Math.min(Math.round(maximal * zoomCompensation), constrainedWidth);
-        effectiveLineLength = deprecatedImplem ? computedWidth : Math.round(computedWidth * zoomCompensation);
+        effectiveLineLength = ignoreCompensation ? computedWidth : Math.round(computedWidth * zoomCompensation);
       }
     }
 
@@ -329,7 +330,7 @@ export class ReadiumCSS {
   }
 
   resizeHandler() {
-    const pagination = this.updateLayout(this.userProperties.fontSize, this.userProperties.deprecatedFontSize, this.userProperties.view === "scroll", this.cachedColCount);
+    const pagination = this.updateLayout(this.userProperties.fontSize, this.userProperties.deprecatedFontSize || this.userProperties.iOSPatch, this.userProperties.view === "scroll", this.cachedColCount);
     this.userProperties.colCount = pagination.colCount;
     this.userProperties.lineLength = pagination.effectiveLineLength;
     this.effectiveContainerWidth = pagination.effectiveContainerWidth;

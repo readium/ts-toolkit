@@ -21,6 +21,7 @@ export interface IEpubSettings {
   hyphens?: boolean | null,
   invertFilter?: boolean | number | null,
   invertGaijiFilter: boolean | number | null,
+  iOSPatch?: boolean | null,
   iPadOSPatch?: boolean | null,
   layoutStrategy?: LayoutStrategy | null,
   letterSpacing?: number | null,
@@ -65,6 +66,7 @@ export class EpubSettings implements ConfigurableSettings {
   hyphens: boolean | null;
   invertFilter: boolean | number | null;
   invertGaijiFilter: boolean | number | null;
+  iOSPatch: boolean;
   iPadOSPatch: boolean;
   layoutStrategy: LayoutStrategy | null;
   letterSpacing: number | null;
@@ -140,6 +142,13 @@ export class EpubSettings implements ConfigurableSettings {
     this.invertGaijiFilter = typeof preferences.invertGaijiFilter === "boolean" 
       ? preferences.invertGaijiFilter 
       : defaults.invertGaijiFilter ?? null;
+    this.iOSPatch = this.deprecatedFontSize 
+      ? false 
+      : preferences.iOSPatch === false 
+        ? false 
+        : preferences.iOSPatch === true 
+          ? ((sMLWithRequest.OS.iOS || sMLWithRequest.OS.iPadOS) && sMLWithRequest.iOSRequest === "mobile")
+          : defaults.iOSPatch;
     this.iPadOSPatch = this.deprecatedFontSize 
       ? false 
       : preferences.iPadOSPatch === false 
