@@ -12,6 +12,7 @@ export * from './Locator';
 export * from './LocatorCollection';
 export * from './Manifest';
 export * from './Metadata';
+export * from './Profiles';
 export * from './Properties';
 export * from './Publication';
 export * from './PublicationCollection';

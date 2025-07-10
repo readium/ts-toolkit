@@ -12,6 +12,7 @@ import { BelongsTo } from './BelongsTo';
 import { Contributors } from './Contributor';
 import { Layout } from './Layout';
 import { LocalizedString } from './LocalizedString';
+import { Profile } from './Profiles';
 import { ReadingProgression } from './ReadingProgression';
 import { Subjects } from './Subject';
 
@@ -26,6 +27,7 @@ import { Subjects } from './Subject';
 export class Metadata {
   public title: LocalizedString;
   public typeUri?: string;
+  public conformsTo?: Array<Profile>;
   public identifier?: string;
   public subtitle?: LocalizedString;
   public sortAs?: LocalizedString;
@@ -60,6 +62,7 @@ export class Metadata {
   private static readonly mappedProperties = [
     'title',
     '@type',
+    'conformsTo',
     'identifier',
     'subtitle',
     'sortAs',
@@ -92,6 +95,7 @@ export class Metadata {
   constructor(values: {
     title: LocalizedString;
     typeUri?: string;
+    conformsTo?: Array<Profile>;
     identifier?: string;
     subtitle?: LocalizedString;
     sortAs?: LocalizedString;
@@ -125,6 +129,7 @@ export class Metadata {
     //title always required
     this.title = values.title as LocalizedString;
     this.typeUri = values.typeUri;
+    this.conformsTo = values.conformsTo;
     this.identifier = values.identifier;
     this.subtitle = values.subtitle;
     this.sortAs = values.sortAs;
@@ -183,6 +188,7 @@ export class Metadata {
 
     const title = LocalizedString.deserialize(json.title) as LocalizedString;
     const typeUri = json['@type'];
+    const conformsTo = arrayfromJSONorString(json.conformsTo);
     const identifier = json.identifier;
     const subtitle = LocalizedString.deserialize(json.subtitle);
     const sortAs = LocalizedString.deserialize(json.sortAs);
@@ -219,6 +225,7 @@ export class Metadata {
     return new Metadata({
       title,
       typeUri,
+      conformsTo,
       identifier,
       subtitle,
       sortAs,
@@ -255,6 +262,7 @@ export class Metadata {
   public serialize(): any {
     const json: any = { title: this.title.serialize() };
     if (this.typeUri !== undefined) json['@type'] = this.typeUri;
+    if (this.conformsTo) json.conformsTo = this.conformsTo;
     if (this.identifier !== undefined) json.identifier = this.identifier;
     if (this.subtitle) json.subtitle = this.subtitle.serialize();
     if (this.sortAs) json.sortAs = this.sortAs.serialize();
@@ -292,6 +300,48 @@ export class Metadata {
     }
 
     return json;
+  }
+
+  /**
+   * Computes a [Layout] using the [conformsTo] profile and layout property.
+   * 
+   * Special cases:
+   * - EPUB profile defaults to reflowable if layout is not present
+   * - Divina profile defaults to fixed if layout is not present
+   * - Layout is ignored for audiobook and PDF profiles
+   * - Layout is ignored if set to reflowable on a Divina profile
+   * 
+   * Note: Stops at the first matching profile.
+   */
+  public get effectiveLayout(): Layout | null {
+    if (!this.conformsTo) {
+      return null; // Default Web Publication behavior
+    }
+
+    // Check each profile in order, stopping at the first match
+    for (const profile of this.conformsTo) {
+      switch (profile) {
+        case Profile.EPUB:
+          // EPUB defaults to reflowable if layout is not set
+          return this.layout || Layout.reflowable;
+
+        case Profile.DIVINA:
+          // Divina defaults to fixed if layout is not set
+          // Layout is ignored if set to reflowable
+          if (this.layout === Layout.reflowable) {
+            return Layout.fixed;
+          }
+          return this.layout || Layout.fixed;
+
+        case Profile.AUDIOBOOK:
+        case Profile.PDF:
+          // Layout is ignored for audiobook and PDF profiles
+          return null;
+      }
+    }
+
+    // If we get here, we have a conformsTo but no matching profile
+    return null;
   }
 
   /**

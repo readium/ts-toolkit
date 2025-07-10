@@ -5,6 +5,7 @@ import {
   Metadata,
   BelongsTo,
   Layout,
+  Profile,
   ReadingProgression,
   Subject,
   Subjects,
@@ -22,6 +23,7 @@ describe('Metadata Tests', () => {
       Metadata.deserialize({
         identifier: '1234',
         '@type': 'epub',
+        conformsTo: 'https://readium.org/webpub-manifest/profiles/epub',
         title: { en: 'Title', fr: 'Titre' },
         subtitle: { en: 'Subtitle', fr: 'Sous-titre' },
         modified: '2001-01-01T12:36:27.000Z',
@@ -60,6 +62,7 @@ describe('Metadata Tests', () => {
       new Metadata({
         identifier: '1234',
         typeUri: 'epub',
+        conformsTo: [Profile.EPUB],
         title: new LocalizedString({
           en: 'Title',
           fr: 'Titre',
@@ -210,6 +213,7 @@ describe('Metadata Tests', () => {
       new Metadata({
         identifier: '1234',
         typeUri: 'epub',
+        conformsTo: [Profile.EPUB],
         title: new LocalizedString({
           en: 'Title',
           fr: 'Titre',
@@ -303,6 +307,7 @@ describe('Metadata Tests', () => {
     ).toEqual({
       identifier: '1234',
       '@type': 'epub',
+      conformsTo: ['https://readium.org/webpub-manifest/profiles/epub'],
       title: { en: 'Title', fr: 'Titre' },
       subtitle: { en: 'Subtitle', fr: 'Sous-titre' },
       modified: '2001-01-01T12:36:27.000Z',
@@ -446,5 +451,82 @@ describe('Metadata Tests', () => {
         readingProgression: ReadingProgression.auto,
       }).effectiveReadingProgression
     ).toEqual(ReadingProgression.ltr);
+  });
+
+  it('effectiveLayout returns null for Web Publication', () => {
+    const metadata = new Metadata({
+      title: new LocalizedString('Title'),
+    });
+    expect(metadata.effectiveLayout).toBeNull();
+  });
+
+  it('effectiveLayout returns null for PDF profile', () => {
+    const metadata = new Metadata({
+      title: new LocalizedString('Title'),
+      conformsTo: [Profile.PDF],
+      layout: Layout.fixed,
+    });
+    expect(metadata.effectiveLayout).toBeNull();
+  });
+
+  it('effectiveLayout returns null for Audiobook profile', () => {
+    const metadata = new Metadata({
+      title: new LocalizedString('Title'),
+      conformsTo: [Profile.AUDIOBOOK],
+      layout: Layout.reflowable,
+    });
+    expect(metadata.effectiveLayout).toBeNull();
+  });
+
+  it('effectiveLayout returns reflowable for EPUB profile without layout', () => {
+    const metadata = new Metadata({
+      title: new LocalizedString('Title'),
+      conformsTo: [Profile.EPUB],
+    });
+    expect(metadata.effectiveLayout).toBe(Layout.reflowable);
+  });
+
+  it('effectiveLayout returns explicit layout for EPUB profile', () => {
+    const metadata = new Metadata({
+      title: new LocalizedString('Title'),
+      conformsTo: [Profile.EPUB],
+      layout: Layout.fixed,
+    });
+    expect(metadata.effectiveLayout).toBe(Layout.fixed);
+  });
+
+  it('effectiveLayout returns fixed for Divina profile without layout', () => {
+    const metadata = new Metadata({
+      title: new LocalizedString('Title'),
+      conformsTo: [Profile.DIVINA],
+    });
+    expect(metadata.effectiveLayout).toBe(Layout.fixed);
+  });
+
+  it('effectiveLayout ignores reflowable layout for Divina profile', () => {
+    const metadata = new Metadata({
+      title: new LocalizedString('Title'),
+      conformsTo: [Profile.DIVINA],
+      layout: Layout.reflowable,
+    });
+    expect(metadata.effectiveLayout).toBe(Layout.fixed);
+  });
+
+  it('effectiveLayout returns explicit layout for Divina profile', () => {
+    const metadata = new Metadata({
+      title: new LocalizedString('Title'),
+      conformsTo: [Profile.DIVINA],
+      layout: Layout.scrolled,
+    });
+    expect(metadata.effectiveLayout).toBe(Layout.scrolled);
+  });
+
+  it('effectiveLayout stops at first matching profile', () => {
+    const metadata = new Metadata({
+      title: new LocalizedString('Title'),
+      conformsTo: [Profile.EPUB, Profile.DIVINA],
+      layout: Layout.fixed,
+    });
+    expect(metadata.effectiveLayout).toBe(Layout.fixed);
   });
 });
