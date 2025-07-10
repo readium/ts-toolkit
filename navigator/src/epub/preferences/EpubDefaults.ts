@@ -2,7 +2,6 @@ import {
   fontSizeRangeConfig, 
   fontWeightRangeConfig, 
   fontWidthRangeConfig, 
-  LayoutStrategy, 
   TextAlignment, 
   Theme 
 } from "../../preferences/Types";
@@ -38,7 +37,6 @@ export interface IEpubDefaults {
   invertFilter?: boolean | number | null,
   invertGaijiFilter?: boolean | number | null,
   iPadOSPatch?: boolean | null,
-  layoutStrategy?: LayoutStrategy | null,
   letterSpacing?: number | null,
   ligatures?: boolean | null,
   lineHeight?: number | null,
@@ -82,7 +80,6 @@ export class EpubDefaults {
   invertFilter: boolean | number | null;
   invertGaijiFilter: boolean | number | null;
   iPadOSPatch: boolean;
-  layoutStrategy: LayoutStrategy | null;
   letterSpacing: number | null;
   ligatures: boolean | null;
   lineHeight: number | null;
@@ -130,7 +127,6 @@ export class EpubDefaults {
     this.iPadOSPatch = defaults.iPadOSPatch === false 
         ? false 
         : (sMLWithRequest.OS.iPadOS && sMLWithRequest.iOSRequest === "desktop");
-    this.layoutStrategy = ensureEnumValue<LayoutStrategy>(defaults.layoutStrategy, LayoutStrategy) || LayoutStrategy.lineLength;
     this.letterSpacing = ensureNonNegative(defaults.letterSpacing) || null;
     this.ligatures = ensureBoolean(defaults.ligatures) ?? null;
     this.lineHeight = ensureNonNegative(defaults.lineHeight) || null;

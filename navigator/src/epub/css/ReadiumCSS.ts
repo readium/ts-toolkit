@@ -1,6 +1,5 @@
 import { LineLengths } from "../../helpers";
 import { getContentWidth } from "../../helpers/dimensions";
-import { LayoutStrategy } from "../../preferences";
 import { EpubSettings } from "../preferences/EpubSettings";
 import { IUserProperties, RSProperties, UserProperties } from "./Properties";
 
@@ -10,7 +9,6 @@ export interface IReadiumCSS {
   lineLengths: LineLengths;
   container: HTMLElement;
   constraint: number;
-  layoutStrategy?: LayoutStrategy | null;
 }
 
 export class ReadiumCSS {
@@ -20,7 +18,6 @@ export class ReadiumCSS {
   container: HTMLElement;
   containerParent: HTMLElement;
   constraint: number;
-  layoutStrategy: LayoutStrategy;
   private cachedColCount: number | null | undefined;
   private effectiveContainerWidth: number;
 
@@ -31,7 +28,6 @@ export class ReadiumCSS {
     this.container = props.container;
     this.containerParent = props.container.parentElement || document.documentElement;
     this.constraint = props.constraint;
-    this.layoutStrategy = props.layoutStrategy || LayoutStrategy.lineLength;
     this.cachedColCount = props.userProperties.colCount;
     this.effectiveContainerWidth = getContentWidth(this.containerParent);
   }
@@ -42,9 +38,6 @@ export class ReadiumCSS {
 
     if (settings.constraint !== this.constraint) 
       this.constraint = settings.constraint;
-
-    if (settings.layoutStrategy && settings.layoutStrategy !== this.layoutStrategy) 
-      this.layoutStrategy = settings.layoutStrategy;
 
     if (settings.pageGutter !== this.rsProperties.pageGutter)
       this.rsProperties.pageGutter = settings.pageGutter;
@@ -145,9 +138,7 @@ export class ReadiumCSS {
   private getCompensatedMetrics(scale: number | null, deprecatedImplem: boolean | null) {
     const zoomFactor = scale || this.userProperties.fontSize || 1;
     const zoomCompensation = zoomFactor < 1 
-      ? this.layoutStrategy === LayoutStrategy.margin 
-        ? 1 / (zoomFactor + 0.003)
-        : 1 / zoomFactor
+      ? 1 / zoomFactor
       : deprecatedImplem 
         ? zoomFactor 
         : 1;
@@ -188,61 +179,24 @@ export class ReadiumCSS {
     }
     
     if (colCount === null) {
-      if (this.layoutStrategy === LayoutStrategy.margin) {
-        if (constrainedWidth >= optimal) {
-          RCSSColCount = Math.floor(constrainedWidth / optimal);
-          const requiredWidth = Math.round(RCSSColCount * (optimal * zoomCompensation));
-          effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
-        } else {
-          RCSSColCount = 1;
-          effectiveContainerWidth = constrainedWidth;
-        }
-      } else if (this.layoutStrategy === LayoutStrategy.lineLength) {
-        if (constrainedWidth < optimal || maximal === null) {
-          RCSSColCount = 1;
-          effectiveContainerWidth = constrainedWidth;
-        } else {
-          RCSSColCount = Math.floor(constrainedWidth / optimal);
-          const requiredWidth = Math.round(RCSSColCount * (maximal * zoomCompensation));
-          effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
-        }
-      } else if (this.layoutStrategy === LayoutStrategy.columns) {
-        if (constrainedWidth >= optimal) {
-          if (maximal === null) {
-            RCSSColCount = Math.floor(constrainedWidth / optimal);
-            effectiveContainerWidth = constrainedWidth;
-          } else {
-            RCSSColCount = Math.floor(constrainedWidth / (minimal || optimal));
-            const requiredWidth = Math.round((RCSSColCount * (optimal * zoomCompensation)));
-            effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
-          }
-        } else {
-          RCSSColCount = 1;
-          effectiveContainerWidth = constrainedWidth;
-        }
+      if (constrainedWidth < optimal || maximal === null) {
+        RCSSColCount = 1;
+        effectiveContainerWidth = constrainedWidth;
+      } else {
+        RCSSColCount = Math.floor(constrainedWidth / optimal);
+        const requiredWidth = Math.round(RCSSColCount * (maximal * zoomCompensation));
+        effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
       }
     } else if (colCount > 1) {
       const minRequiredWidth = Math.round(colCount * (minimal !== null ? minimal : optimal));
     
       if (constrainedWidth >= minRequiredWidth) {
         RCSSColCount = colCount;
-        if (this.layoutStrategy === LayoutStrategy.margin) {
-          const requiredWidth = Math.round(RCSSColCount * (optimal * zoomCompensation));
+        if (maximal === null) {
+          effectiveContainerWidth = constrainedWidth
+        } else {
+          const requiredWidth = Math.round(RCSSColCount * (maximal * zoomCompensation));
           effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
-        } else if (
-          this.layoutStrategy === LayoutStrategy.lineLength ||
-          this.layoutStrategy === LayoutStrategy.columns
-        ) {
-          if (maximal === null) {
-            effectiveContainerWidth = constrainedWidth
-          } else {
-            const requiredWidth = Math.round(RCSSColCount * (maximal * zoomCompensation));
-            effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
-          }
-
-          if (this.layoutStrategy === LayoutStrategy.columns) {
-            console.error("Columns strategy is not compatible with a column count whose value is a number. Falling back to lineLength strategy.");
-          }
         }
       } else {
         if (minimal !== null && constrainedWidth < Math.round(colCount * minimal)) {
@@ -257,23 +211,11 @@ export class ReadiumCSS {
       RCSSColCount = 1;
       
       if (constrainedWidth >= optimal) {
-        if (this.layoutStrategy === LayoutStrategy.margin) {
-          const requiredWidth = Math.round(optimal * zoomCompensation);
+        if (maximal === null) {
+          effectiveContainerWidth = constrainedWidth
+        } else {
+          const requiredWidth = Math.round(maximal * zoomCompensation);
           effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
-        } else if (
-          this.layoutStrategy === LayoutStrategy.lineLength ||
-          this.layoutStrategy === LayoutStrategy.columns
-        ) {
-          if (maximal === null) {
-            effectiveContainerWidth = constrainedWidth
-          } else {
-            const requiredWidth = Math.round(maximal * zoomCompensation);
-            effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
-          }
-          
-          if (this.layoutStrategy === LayoutStrategy.columns) {
-            console.error("Columns strategy is not compatible with a column count whose value is a number. Falling back to lineLength strategy.");
-          }
         }
       } else {
         effectiveContainerWidth = constrainedWidth 
@@ -299,22 +241,11 @@ export class ReadiumCSS {
     let effectiveContainerWidth = constrainedWidth;
     let effectiveLineLength = Math.round(optimal * zoomCompensation);
 
-    if (this.layoutStrategy === LayoutStrategy.margin) {
-      const computedWidth = Math.min(Math.round(optimal * zoomCompensation), constrainedWidth);
+    if (maximal === null) {
+      effectiveLineLength = constrainedWidth;
+    } else {
+      const computedWidth = Math.min(Math.round(maximal * zoomCompensation), constrainedWidth);
       effectiveLineLength = deprecatedImplem ? computedWidth : Math.round(computedWidth * zoomCompensation);
-    } else if (
-      this.layoutStrategy === LayoutStrategy.lineLength ||
-      this.layoutStrategy === LayoutStrategy.columns
-    ) {
-      if (this.layoutStrategy === LayoutStrategy.columns) {
-        console.error("Columns strategy is not compatible with scroll. Falling back to lineLength strategy.");
-      }
-      if (maximal === null) {
-        effectiveLineLength = constrainedWidth;
-      } else {
-        const computedWidth = Math.min(Math.round(maximal * zoomCompensation), constrainedWidth);
-        effectiveLineLength = deprecatedImplem ? computedWidth : Math.round(computedWidth * zoomCompensation);
-      }
     }
 
     return { 
