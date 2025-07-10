@@ -10,6 +10,7 @@ import {
 } from '../util/JSONParse';
 import { BelongsTo } from './BelongsTo';
 import { Contributors } from './Contributor';
+import { Layout } from './Layout';
 import { LocalizedString } from './LocalizedString';
 import { ReadingProgression } from './ReadingProgression';
 import { Subjects } from './Subject';
@@ -49,6 +50,7 @@ export class Metadata {
   public belongsTo?: BelongsTo;
   public belongsToCollections?: Contributors;
   public belongsToSeries?: Contributors;
+  public layout?: Layout;
   public readingProgression?: ReadingProgression;
   public duration?: number;
   public numberOfPages?: number;
@@ -80,6 +82,7 @@ export class Metadata {
     'modified',
     'subject',
     'belongsTo',
+    'layout',
     'readingProgression',
     'duration',
     'numberOfPages',
@@ -113,6 +116,7 @@ export class Metadata {
     belongsTo?: BelongsTo;
     belongsToCollections?: Contributors;
     belongsToSeries?: Contributors;
+    layout?: Layout;
     readingProgression?: ReadingProgression;
     duration?: number;
     numberOfPages?: number;
@@ -145,7 +149,6 @@ export class Metadata {
     this.belongsTo = values.belongsTo;
     this.belongsToCollections = values.belongsToCollections;
     this.belongsToSeries = values.belongsToSeries;
-
     if (
       this.belongsToCollections &&
       this.belongsToCollections.items.length > 0
@@ -163,6 +166,7 @@ export class Metadata {
       this.belongsTo.items.set('series', this.belongsToSeries);
     }
 
+    this.layout = values.layout;
     this.readingProgression = values.readingProgression;
     this.duration = values.duration;
     this.numberOfPages = values.numberOfPages;
@@ -201,6 +205,7 @@ export class Metadata {
     const modified = datefromJSON(json.modified);
     const subjects = Subjects.deserialize(json.subject);
     const belongsTo = BelongsTo.deserialize(json.belongsTo);
+    const layout = json.layout;
     const readingProgression = json.readingProgression;
     const duration = positiveNumberfromJSON(json.duration);
     const numberOfPages = positiveNumberfromJSON(json.numberOfPages);
@@ -236,6 +241,7 @@ export class Metadata {
       modified,
       subjects,
       belongsTo,
+      layout,
       readingProgression,
       duration,
       numberOfPages,
@@ -273,6 +279,7 @@ export class Metadata {
       json.modified = this.modified.toISOString();
     if (this.subjects) json.subject = this.subjects.serialize();
     if (this.belongsTo) json.belongsTo = this.belongsTo.serialize();
+    if (this.layout) json.layout = this.layout;
     if (this.readingProgression)
       json.readingProgression = this.readingProgression;
     if (this.duration !== undefined) json.duration = this.duration;

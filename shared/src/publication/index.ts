@@ -15,6 +15,7 @@ export * from './Metadata';
 export * from './Properties';
 export * from './Publication';
 export * from './PublicationCollection';
+export * from './Layout';
 export * from './ReadingProgression';
 export * from './Subject';
 export * from './GuidedNavigation';
