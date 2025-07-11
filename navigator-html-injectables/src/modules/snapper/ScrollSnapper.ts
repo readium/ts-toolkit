@@ -18,16 +18,22 @@ export class ScrollSnapper extends Snapper {
         return this.wnd.document.scrollingElement as HTMLElement;
     }
 
-    private reportProgress(data: { progress: number, reference: number }) {
-        this.comms.send("progress", data);
+    private reportProgress() {
+        const scrollTop = this.doc().scrollTop;
+        const scrollHeight = this.doc().scrollHeight;
+        const progress = Math.max(0, Math.min(1, scrollTop / scrollHeight));
+        const viewportEnd = Math.max(0, Math.min(1, (scrollTop + this.wnd.innerHeight) / scrollHeight));
+        this.comms.send("progress", {
+            start: progress,
+            end: viewportEnd
+        });
     }
 
     private handleScroll = () => {
         if (!this.isScrolling) {
             this.isScrolling = true;
             this.wnd.requestAnimationFrame(() => {
-                const progress = this.doc().scrollTop / this.doc().offsetHeight;
-                this.reportProgress({ progress: progress, reference: this.wnd.innerHeight / this.doc().scrollHeight });
+                this.reportProgress();
                 this.isScrolling = false;
             });
         }
@@ -76,7 +82,7 @@ export class ScrollSnapper extends Snapper {
 
             this.wnd.requestAnimationFrame(() => {
               this.doc().scrollTop = this.doc().offsetHeight * position;
-              this.reportProgress({ progress: position, reference: this.wnd.innerHeight / this.doc().scrollHeight });
+              this.reportProgress();
               deselect(this.wnd);
               ack(true);
           });
@@ -90,8 +96,7 @@ export class ScrollSnapper extends Snapper {
             }
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollTop = element.getBoundingClientRect().top + wnd.scrollY - wnd.innerHeight / 2;
-                const progress = this.doc().scrollTop / this.doc().offsetHeight;
-                this.reportProgress({ progress: progress, reference: this.wnd.innerHeight / this.doc().scrollHeight });
+                this.reportProgress();
                 deselect(this.wnd);
                 ack(true);
             });
@@ -122,8 +127,7 @@ export class ScrollSnapper extends Snapper {
             }
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollTop = r.getBoundingClientRect().top + wnd.scrollY - wnd.innerHeight / 2;
-                const progress = this.doc().scrollTop / this.doc().offsetHeight
-                this.reportProgress({ progress: progress, reference: this.wnd.innerHeight / this.doc().scrollHeight });
+                this.reportProgress();
                 deselect(this.wnd);
                 ack(true);
             });
@@ -132,14 +136,14 @@ export class ScrollSnapper extends Snapper {
         comms.register("go_start", ScrollSnapper.moduleName, (_, ack) => {
             if (this.doc().scrollTop === 0) return ack(false);
             this.doc().scrollTop = 0;
-            this.reportProgress({ progress: 0, reference: this.wnd.innerHeight / this.doc().scrollHeight });
+            this.reportProgress();
             ack(true);
         });
 
         comms.register("go_end", ScrollSnapper.moduleName, (_, ack) => {
-            if (this.doc().scrollTop === 0) return ack(false);
-            this.doc().scrollTop = 0;
-            this.reportProgress({ progress: 0, reference: this.wnd.innerHeight / this.doc().scrollHeight });
+            if (this.doc().scrollTop === this.doc().scrollHeight - this.doc().offsetHeight) return ack(false);
+            this.doc().scrollTop = this.doc().scrollHeight - this.doc().offsetHeight;
+            this.reportProgress();
             ack(true);
         })
 
@@ -154,8 +158,7 @@ export class ScrollSnapper extends Snapper {
         ], ScrollSnapper.moduleName, (_, ack) => ack(false));
 
         comms.register("focus", ScrollSnapper.moduleName, (_, ack) => {
-            const progress = this.doc().scrollTop / this.doc().offsetHeight
-            this.reportProgress({ progress: progress, reference: this.wnd.innerHeight / this.doc().scrollHeight });
+            this.reportProgress();
             ack(true);
         });
 

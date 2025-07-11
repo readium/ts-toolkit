@@ -36,6 +36,7 @@ export interface IEpubDefaults {
   hyphens?: boolean | null,
   invertFilter?: boolean | number | null,
   invertGaijiFilter?: boolean | number | null,
+  iOSPatch?: boolean | null,
   iPadOSPatch?: boolean | null,
   letterSpacing?: number | null,
   ligatures?: boolean | null,
@@ -79,6 +80,7 @@ export class EpubDefaults {
   hyphens: boolean | null;
   invertFilter: boolean | number | null;
   invertGaijiFilter: boolean | number | null;
+  iOSPatch: boolean;
   iPadOSPatch: boolean;
   letterSpacing: number | null;
   ligatures: boolean | null;
@@ -124,6 +126,9 @@ export class EpubDefaults {
     this.hyphens = ensureBoolean(defaults.hyphens) ?? null;
     this.invertFilter = ensureFilter(defaults.invertFilter) ?? false;
     this.invertGaijiFilter = ensureFilter(defaults.invertGaijiFilter) ?? false;
+    this.iOSPatch = defaults.iOSPatch === false 
+        ? false 
+        : ((sMLWithRequest.OS.iOS || sMLWithRequest.OS.iPadOS) && sMLWithRequest.iOSRequest === "mobile");
     this.iPadOSPatch = defaults.iPadOSPatch === false 
         ? false 
         : (sMLWithRequest.OS.iPadOS && sMLWithRequest.iOSRequest === "desktop");

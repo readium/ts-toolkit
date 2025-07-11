@@ -1,5 +1,5 @@
 import { EPUBLayout, Link, Locator, Publication, ReadingProgression } from "@readium/shared";
-import { Configurable, ConfigurablePreferences, ConfigurableSettings, LineLengths, VisualNavigator } from "../";
+import { Configurable, ConfigurablePreferences, ConfigurableSettings, LineLengths, VisualNavigator, VisualNavigatorViewport, ProgressionRange } from "../";
 import { FramePoolManager } from "./frame/FramePoolManager";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager";
 import { CommsEventKey, FXLModules, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables";
@@ -65,6 +65,12 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private _preferencesEditor: EpubPreferencesEditor | null = null;
 
     private resizeObserver: ResizeObserver;
+
+    private reflowViewport: VisualNavigatorViewport = {
+        readingOrder: [],
+        progressions: new Map(),
+        positions: null
+    };
 
     constructor(container: HTMLElement, pub: Publication, listeners: EpubNavigatorListeners, positions: Locator[] = [], initialPosition: Locator | undefined = undefined, configuration: EpubNavigatorConfiguration = { preferences: {}, defaults: {} }) {
         super();
@@ -394,7 +400,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 this.listeners.zoom(data as number);
                 break;
             case "progress":
-                this.syncLocation(data as { progress: number, reference: number });
+                this.syncLocation(data as ProgressionRange);
                 break;
             case "log":
                 console.log(this._cframes[0]?.source?.split("/")[3], ...(data as any[]));
@@ -452,7 +458,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
         if(this.layout === EPUBLayout.fixed) {
             const p = this.framePool as FXLFramePoolManager;
-            const old = p.currentNumbers[0];
+            const old = p.viewport.positions![0];
             if(relative === 1) {
                 if(!p.next(p.perPage)) return false;
             } else if(relative === -1) {
@@ -461,7 +467,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 throw Error("Invalid relative value for FXL");
 
             // Apply change
-            const neW = p.currentNumbers[0]
+            const neW = p.viewport.positions![0]
             if(old > neW)
                 for (let j = this.positions.length - 1; j >= 0; j--) {
                     if(this.positions[j].href === this.pub.readingOrder.items[neW-1].href) {
@@ -514,10 +520,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         return true;
     }
 
-    private findLastPositionInProgressionRange(positions: Locator[], range: number[]): Locator | undefined {
+    private findLastPositionInProgressionRange(positions: Locator[], range: ProgressionRange): Locator | undefined {
         const match = positions.findLastIndex((p) => {
             const pr = p.locations.progression;
-            if (pr && pr > Math.min(...range) && pr <= Math.max(...range)) {
+            if (pr && pr > range.start && pr <= range.end) {
                 return true;
             } else {
                 return false;
@@ -526,7 +532,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         return match !== -1 ? positions[match] : undefined;
     }
 
-    private findNearestPositions(fromProgression: { progress: number, reference: number }):  { first: Locator, last: Locator | undefined } {
+    private findNearestPositions(fromProgression: ProgressionRange):  { first: Locator, last: Locator | undefined } {
         // TODO replace with locator service
         const potentialPositions = this.positions.filter(
             (p) => p.href === this.currentLocation.href
@@ -538,13 +544,12 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         // smaller than or equal to the requested progression.
         potentialPositions.some((p, idx) => {
             const pr = p.locations.progression ?? 0;
-            if (fromProgression.progress <= pr) {
+            if (fromProgression.start <= pr) {
                 first = p;
 
                 // If there’s a match, check the last in view, from the next progression
                 const nextPositions = potentialPositions.splice(idx + 1, potentialPositions.length);
-                const range = [fromProgression.progress, fromProgression.progress + fromProgression.reference];
-                last = this.findLastPositionInProgressionRange(nextPositions, range);
+                last = this.findLastPositionInProgressionRange(nextPositions, fromProgression);
 
                 return true;
             }
@@ -553,12 +558,36 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         return { first: first, last: last }
     }
 
-    private async syncLocation(iframeProgress: { progress: number, reference: number }) {
-        const nearestPositions = this.findNearestPositions(iframeProgress)
+    private updateViewport(progression: ProgressionRange) {
+        this.reflowViewport.readingOrder = [];
+        this.reflowViewport.progressions.clear();
+        this.reflowViewport.positions = null;
+    
+        // Use the current position's href
+        if (this.currentLocation) {
+            this.reflowViewport.readingOrder.push(this.currentLocation.href);
+            this.reflowViewport.progressions.set(this.currentLocation.href, progression);
+
+            if (this.currentLocation.locations?.position !== undefined) {
+                this.reflowViewport.positions = [this.currentLocation.locations.position];
+                if (this.lastLocationInView?.locations?.position !== undefined) {
+                    this.reflowViewport.positions.push(this.lastLocationInView.locations.position);
+                }
+            }
+        }
+    }
+
+    private async syncLocation(iframeProgress: ProgressionRange) {
+        const progression = iframeProgress;
+        
+        const nearestPositions = this.findNearestPositions(progression);
+        
         this.currentLocation = nearestPositions.first.copyWithLocations({
-            progression: iframeProgress.progress // Most accurate progression in resource
+            progression: progression.start
         });
+        
         this.lastLocationInView = nearestPositions.last;
+        this.updateViewport(progression);
         this.listeners.positionChanged(this.currentLocation);
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
     }
@@ -604,12 +633,32 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         return this.currentLocation;
     }
 
-    // Starting and ending position currently showing in the reader
-    get currentPositionNumbers(): number[] {
-        if(this.layout === EPUBLayout.fixed)
-         return (this.framePool as FXLFramePoolManager).currentNumbers;
+    get viewport(): VisualNavigatorViewport {
+        return this.layout === EPUBLayout.fixed 
+            ? (this.framePool as FXLFramePoolManager).viewport 
+            : this.reflowViewport;
+    }
 
-        return [this.currentLocator?.locations.position ?? 0, ...(this.lastLocationInView?.locations.position ? [this.lastLocationInView.locations.position] : [])];
+    get isScrollStart(): boolean {
+        const firstHref = this.viewport.readingOrder[0];
+        const progression = this.viewport.progressions.get(firstHref);
+        return progression?.start === 0;
+    }
+    
+    get isScrollEnd(): boolean {
+        const lastHref = this.viewport.readingOrder[this.viewport.readingOrder.length - 1];
+        const progression = this.viewport.progressions.get(lastHref);
+        return progression?.end === 1;
+    }
+    
+    get canGoBackward(): boolean {
+        const firstResource = this.pub.readingOrder.items[0]?.href;
+        return this.viewport.progressions.has(firstResource) && this.viewport.progressions.get(firstResource)?.start === 0;
+    }
+    
+    get canGoForward(): boolean {
+        const lastResource = this.pub.readingOrder.items[this.pub.readingOrder.items.length - 1]?.href;
+        return this.viewport.progressions.has(lastResource) && this.viewport.progressions.get(lastResource)?.end === 1;
     }
 
     // TODO: This is temporary until user settings are implemented.

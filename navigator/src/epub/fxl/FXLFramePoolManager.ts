@@ -5,6 +5,7 @@ import FrameBlobBuider from "../frame/FrameBlobBuilder";
 import { FXLFrameManager } from "./FXLFrameManager";
 import { FXLPeripherals } from "./FXLPeripherals";
 import { FXLSpreader } from "./FXLSpreader";
+import { VisualNavigatorViewport } from "../../Navigator";
 
 const UPPER_BOUNDARY = 8;
 const LOWER_BOUNDARY = 5;
@@ -602,7 +603,25 @@ export class FXLFramePoolManager {
         return ret as DOMRect;
     }
 
-    get currentNumbers(): number[] {
+    get viewport(): VisualNavigatorViewport {
+        const viewport: VisualNavigatorViewport = {
+            readingOrder: [],
+            progressions: new Map(),
+            positions: null
+        };
+        const currentSpread = this.spreader.currentSpread(this.currentSlide, this.perPage);
+        currentSpread.forEach(link => {
+            viewport.readingOrder.push(link.href);
+            viewport.progressions.set(link.href, { start: 0, end: 1 }); // FXL always uses [0,1] progression
+        });
+
+        // Set positions using currentNumbers
+        viewport.positions = this.getCurrentNumbers();
+    
+        return viewport;
+    }
+
+    private getCurrentNumbers(): number[] {
         if(this.perPage < 2) {
             const link = this.pub.readingOrder.items[this.currentSlide];
             return [link.properties?.otherProperties["number"]];

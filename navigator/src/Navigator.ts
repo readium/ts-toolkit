@@ -2,6 +2,17 @@ import { Link, Locator, Publication, ReadingProgression } from "@readium/shared"
 
 type cbb = (ok: boolean) => void;
 
+export interface ProgressionRange {
+    start: number;
+    end: number;
+}
+
+export interface VisualNavigatorViewport {
+    readingOrder: string[];  // Array of href strings for visible resources
+    progressions: Map<string, ProgressionRange>;  // Map from href to visible scroll progression range
+    positions: number[] | null;  // Range of visible positions
+}
+
 export abstract class Navigator {
     abstract get publication(): Publication; // Publication rendered by this navigator.
     abstract get currentLocator(): Locator; // Current position (detailed) in the publication. Can be used to save a bookmark to the current position.
