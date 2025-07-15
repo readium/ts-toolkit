@@ -78,8 +78,13 @@ export class ScrollSnapper extends Snapper {
             // Only the content at the start of the document, 
             // whose height is the viewport height, will be rendered.
             const currentScroll = this.doc().scrollTop;
-            this.doc().scrollTop = currentScroll + 1;
+            if (currentScroll > 1) {
+                this.doc().scrollTop = currentScroll - 1;
+            } else {
+                this.doc().scrollTop = currentScroll + 1;
+            }
             this.doc().scrollTop = currentScroll;
+
         });
 
         comms.register("go_progression", ScrollSnapper.moduleName, (data, ack) => {
