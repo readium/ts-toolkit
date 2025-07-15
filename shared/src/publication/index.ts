@@ -4,6 +4,7 @@ export * from './html';
 export * from './opds';
 export * from './presentation';
 export * from './services';
+export * from './AltIdentifier';
 export * from './BelongsTo';
 export * from './Contributor';
 export * from './Link';

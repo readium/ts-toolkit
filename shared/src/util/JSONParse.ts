@@ -24,8 +24,8 @@ export function positiveNumberfromJSON(json: any): number | undefined {
 }
 
 /** Converts a Set of a string to a string Array object */
-export function setToArray(obj: Set<string>): Array<string> {
-  const list = new Array<string>();
+export function setToArray(obj: Set<any>): Array<any> {
+  const list = new Array<any>();
   obj.forEach(x => list.push(x));
   return list;
 }
