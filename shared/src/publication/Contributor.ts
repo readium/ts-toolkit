@@ -77,9 +77,12 @@ export class Contributor {
         sortAs: json.sortAs,
         identifier: json.identifier,
         altIdentifiers: json.altIdentifier
-          ? json.altIdentifier instanceof Array
-            ? new Set<AltIdentifier>(json.altIdentifier.map((x: AltIdentifier) => AltIdentifier.deserialize(x)).filter((x: AltIdentifier) => x !== undefined))
-            : new Set<AltIdentifier>([AltIdentifier.deserialize(json.altIdentifier)].filter(x => x !== undefined))
+          ? (json.altIdentifier instanceof Array
+            ? new Set<AltIdentifier>(json.altIdentifier
+                .map((x: string | { value: string; scheme?: string }) => AltIdentifier.deserialize(x))
+                .filter((x: AltIdentifier | undefined): x is AltIdentifier => x !== undefined))
+            : new Set<AltIdentifier>([AltIdentifier.deserialize(json.altIdentifier as string | { value: string; scheme?: string })]
+                .filter((x: AltIdentifier | undefined): x is AltIdentifier => x !== undefined)))
           : undefined,
         roles: json.role
           ? new Set<string>(arrayfromJSONorString(json.role))
