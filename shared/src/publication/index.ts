@@ -17,4 +17,5 @@ export * from './Publication';
 export * from './PublicationCollection';
 export * from './ReadingProgression';
 export * from './Subject';
+export * from './TDM';
 export * from './GuidedNavigation';

@@ -13,6 +13,7 @@ import { Contributors } from './Contributor';
 import { LocalizedString } from './LocalizedString';
 import { ReadingProgression } from './ReadingProgression';
 import { Subjects } from './Subject';
+import { TDM } from './TDM';
 
 /**
  * https://readium.org/webpub-manifest/schema/metadata.schema.json
@@ -52,6 +53,7 @@ export class Metadata {
   public readingProgression?: ReadingProgression;
   public duration?: number;
   public numberOfPages?: number;
+  public tdm?: TDM;
   public otherMetadata?: { [key: string]: any };
 
   /**All metadata not in otherMetadata */
@@ -83,6 +85,7 @@ export class Metadata {
     'readingProgression',
     'duration',
     'numberOfPages',
+    'tdm'
   ];
 
   /** Creates [Metadata] object */
@@ -116,6 +119,7 @@ export class Metadata {
     readingProgression?: ReadingProgression;
     duration?: number;
     numberOfPages?: number;
+    tdm?: TDM;
     otherMetadata?: { [key: string]: any };
   }) {
     //title always required
@@ -166,6 +170,7 @@ export class Metadata {
     this.readingProgression = values.readingProgression;
     this.duration = values.duration;
     this.numberOfPages = values.numberOfPages;
+    this.tdm = values.tdm;
     this.otherMetadata = values.otherMetadata;
   }
 
@@ -204,6 +209,7 @@ export class Metadata {
     const readingProgression = json.readingProgression;
     const duration = positiveNumberfromJSON(json.duration);
     const numberOfPages = positiveNumberfromJSON(json.numberOfPages);
+    const tdm = TDM.deserialize(json.tdm);
 
     let otherMetadata = Object.assign({}, json);
     Metadata.mappedProperties.forEach(x => delete otherMetadata[x]);
@@ -239,7 +245,8 @@ export class Metadata {
       readingProgression,
       duration,
       numberOfPages,
-      otherMetadata,
+      tdm,
+      otherMetadata
     });
   }
 
@@ -278,6 +285,7 @@ export class Metadata {
     if (this.duration !== undefined) json.duration = this.duration;
     if (this.numberOfPages !== undefined)
       json.numberOfPages = this.numberOfPages;
+    if (this.tdm) json.tdm = this.tdm.serialize();
 
     if (this.otherMetadata) {
       const metadata = this.otherMetadata;
