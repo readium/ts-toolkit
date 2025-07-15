@@ -39,6 +39,8 @@ export class ColumnSnapper extends Snapper {
     }
 
     reportProgress() {
+        // Contrary to ScrollTop, Android slightly adds to scrollX
+        // So we do not need to round it up
         const scrollX = this.wnd.scrollX;
         const scrollWidth = this.cachedScrollWidth;
         const progress = Math.max(0, Math.min(1, scrollX / scrollWidth));
