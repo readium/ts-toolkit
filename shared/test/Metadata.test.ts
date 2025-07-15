@@ -9,6 +9,7 @@ import {
   Subjects,
   TDM,
   TDMReservation,
+  AltIdentifier,
 } from '../src';
 
 describe('Metadata Tests', () => {
@@ -22,6 +23,7 @@ describe('Metadata Tests', () => {
     expect(
       Metadata.deserialize({
         identifier: '1234',
+        altIdentifier: { scheme: 'http://example.com/scheme', value: 'test-1234' },
         '@type': 'epub',
         title: { en: 'Title', fr: 'Titre' },
         subtitle: { en: 'Subtitle', fr: 'Sous-titre' },
@@ -63,6 +65,10 @@ describe('Metadata Tests', () => {
     ).toEqual(
       new Metadata({
         identifier: '1234',
+        altIdentifier: new AltIdentifier({
+          scheme: 'http://example.com/scheme',
+          value: 'test-1234',
+        }),
         typeUri: 'epub',
         title: new LocalizedString({
           en: 'Title',
@@ -216,6 +222,10 @@ describe('Metadata Tests', () => {
     expect(
       new Metadata({
         identifier: '1234',
+        altIdentifier: new AltIdentifier({
+          scheme: 'http://example.com/scheme',
+          value: 'test-1234',
+        }),
         typeUri: 'epub',
         title: new LocalizedString({
           en: 'Title',
@@ -312,6 +322,7 @@ describe('Metadata Tests', () => {
       }).serialize()
     ).toEqual({
       identifier: '1234',
+      altIdentifier: { scheme: 'http://example.com/scheme', value: 'test-1234' },
       '@type': 'epub',
       title: { en: 'Title', fr: 'Titre' },
       subtitle: { en: 'Subtitle', fr: 'Sous-titre' },

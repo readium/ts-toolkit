@@ -8,6 +8,7 @@ import {
   datefromJSON,
   positiveNumberfromJSON,
 } from '../util/JSONParse';
+import { AltIdentifier } from './AltIdentifier';
 import { BelongsTo } from './BelongsTo';
 import { Contributors } from './Contributor';
 import { LocalizedString } from './LocalizedString';
@@ -27,6 +28,7 @@ export class Metadata {
   public title: LocalizedString;
   public typeUri?: string;
   public identifier?: string;
+  public altIdentifier?: AltIdentifier;
   public subtitle?: LocalizedString;
   public sortAs?: LocalizedString;
   public artists?: Contributors;
@@ -61,6 +63,7 @@ export class Metadata {
     'title',
     '@type',
     'identifier',
+    'altIdentifier',
     'subtitle',
     'sortAs',
     'artist',
@@ -93,6 +96,7 @@ export class Metadata {
     title: LocalizedString;
     typeUri?: string;
     identifier?: string;
+    altIdentifier?: AltIdentifier;
     subtitle?: LocalizedString;
     sortAs?: LocalizedString;
     artists?: Contributors;
@@ -126,6 +130,7 @@ export class Metadata {
     this.title = values.title as LocalizedString;
     this.typeUri = values.typeUri;
     this.identifier = values.identifier;
+    this.altIdentifier = values.altIdentifier;
     this.subtitle = values.subtitle;
     this.sortAs = values.sortAs;
     this.artists = values.artists;
@@ -185,6 +190,7 @@ export class Metadata {
     const title = LocalizedString.deserialize(json.title) as LocalizedString;
     const typeUri = json['@type'];
     const identifier = json.identifier;
+    const altIdentifier = AltIdentifier.deserialize(json.altIdentifier);
     const subtitle = LocalizedString.deserialize(json.subtitle);
     const sortAs = LocalizedString.deserialize(json.sortAs);
     const artists = Contributors.deserialize(json.artist);
@@ -221,6 +227,7 @@ export class Metadata {
       title,
       typeUri,
       identifier,
+      altIdentifier,
       subtitle,
       sortAs,
       artists,
@@ -257,6 +264,7 @@ export class Metadata {
     const json: any = { title: this.title.serialize() };
     if (this.typeUri !== undefined) json['@type'] = this.typeUri;
     if (this.identifier !== undefined) json.identifier = this.identifier;
+    if (this.altIdentifier) json.altIdentifier = this.altIdentifier.serialize();
     if (this.subtitle) json.subtitle = this.subtitle.serialize();
     if (this.sortAs) json.sortAs = this.sortAs.serialize();
     if (this.editors) json.editor = this.editors.serialize();
