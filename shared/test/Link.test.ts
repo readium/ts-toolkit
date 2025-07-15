@@ -49,6 +49,7 @@ describe('Link Tests', () => {
         },
         height: 1024,
         width: 768,
+        size: 1024,
         bitrate: 74.2,
         duration: 45.6,
         language: 'fr',
@@ -65,6 +66,7 @@ describe('Link Tests', () => {
         properties: new Properties({ orientation: 'landscape' }),
         height: 1024,
         width: 768,
+        size: 1024,
         bitrate: 74.2,
         duration: 45.6,
         languages: ['fr'],
@@ -129,6 +131,12 @@ describe('Link Tests', () => {
     expect(link?.height).toBeUndefined();
   });
 
+  it('parse JSON requires positive size', () => {
+    const link = Link.deserialize({ href: 'a', size: -20 });
+    expect(link).toBeDefined();
+    expect(link?.size).toBeUndefined();
+  });
+
   it('parse JSON requires positive bitrate', () => {
     const link = Link.deserialize({ href: 'a', bitrate: -20 });
     expect(link).toBeDefined();
@@ -179,6 +187,7 @@ describe('Link Tests', () => {
         properties: new Properties({ orientation: 'landscape' }),
         height: 1024,
         width: 768,
+        size: 1024,
         bitrate: 74.2,
         duration: 45.6,
         languages: ['fr'],
@@ -202,6 +211,7 @@ describe('Link Tests', () => {
       },
       height: 1024,
       width: 768,
+      size: 1024,
       bitrate: 74.2,
       duration: 45.6,
       language: ['fr'],
