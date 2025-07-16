@@ -100,7 +100,7 @@ export class Contributor {
     const json: any = { name: this.name.serialize() };
     if (this.sortAs !== undefined) json.sortAs = this.sortAs;
     if (this.identifier !== undefined) json.identifier = this.identifier;
-    if (this.altIdentifiers) json.altIdentifier = setToArray(this.altIdentifiers);
+    if (this.altIdentifiers) json.altIdentifier = setToArray(this.altIdentifiers).map(altId => altId.serialize());
     if (this.roles) json.role = setToArray(this.roles);
     if (this.links) json.links = this.links.serialize();
     if (this.position !== undefined) json.position = this.position;
