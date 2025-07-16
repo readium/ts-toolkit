@@ -1,4 +1,4 @@
-import { Properties } from '../src';
+import { Properties, Page } from '../src';
 
 describe('Properties Tests', () => {
   it('parse undefined JSON', () => {
@@ -23,6 +23,12 @@ describe('Properties Tests', () => {
     );
   });
 
+  it('parse page property', () => {
+    const properties = Properties.deserialize({ page: 'left' });
+    expect(properties).toBeDefined();
+    expect(properties!.page).toBe(Page.left);
+  });
+
   it('get minimal JSON', () => {
     expect(new Properties({}).serialize()).toEqual({});
   });
@@ -37,6 +43,12 @@ describe('Properties Tests', () => {
       'other-property1': 'value',
       'other-property2': [42],
     });
+  });
+
+  it('get page property', () => {
+    const properties = new Properties({ page: Page.right });
+    expect(properties.page).toBe(Page.right);
+    expect(properties.serialize()).toEqual({ page: 'right' });
   });
 
   it('copy after adding the given {properties}', () => {
