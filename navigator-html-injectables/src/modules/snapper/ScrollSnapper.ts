@@ -13,7 +13,8 @@ export class ScrollSnapper extends Snapper {
     private wnd!: ReadiumWindow;
     private comms!: Comms;
     private resizeObserver!: ResizeObserver;
-    private isScrolling = false;
+    private scrollEndTimer: number | null = null;
+    private readonly SCROLL_END_DELAY = 100;
 
     private doc() {
         return this.wnd.document.scrollingElement as HTMLElement;
@@ -35,14 +36,23 @@ export class ScrollSnapper extends Snapper {
         });
     }
 
+    // scrollEnd not available in Safari yet so 
+    // we are using the old school timeout method
     private handleScroll = () => {
-        if (!this.isScrolling) {
-            this.isScrolling = true;
-            this.wnd.requestAnimationFrame(() => {
-                this.reportProgress();
-                this.isScrolling = false;
-            });
+        // Clear any existing timeout
+        if (this.scrollEndTimer !== null) {
+            this.wnd.clearTimeout(this.scrollEndTimer);
         }
+
+        // Set a new timeout
+        this.scrollEndTimer = this.wnd.setTimeout(() => {
+            this.onScrollEnd();
+        }, this.SCROLL_END_DELAY);
+    };
+
+    private onScrollEnd = () => {
+        this.scrollEndTimer = null;
+        this.reportProgress();
     };
 
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
@@ -89,7 +99,6 @@ export class ScrollSnapper extends Snapper {
                 this.doc().scrollTop = currentScroll + 1;
             }
             this.doc().scrollTop = currentScroll;
-
         });
 
         comms.register("go_progression", ScrollSnapper.moduleName, (data, ack) => {
@@ -200,6 +209,13 @@ export class ScrollSnapper extends Snapper {
         this.resizeObserver.disconnect();
         if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
         wnd.document.getElementById(SCROLL_SNAPPER_STYLE_ID)?.remove();
+        
+        // Clean up scroll end timer
+        if (this.scrollEndTimer !== null) {
+            clearTimeout(this.scrollEndTimer);
+            this.scrollEndTimer = null;
+        }
+        
         comms.log("ScrollSnapper Unmounted");
         return true;
     }
