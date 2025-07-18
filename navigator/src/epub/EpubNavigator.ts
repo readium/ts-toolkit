@@ -1,4 +1,4 @@
-import { EPUBLayout, Link, Locator, Publication, ReadingProgression } from "@readium/shared";
+import { Layout, Link, Locator, Profile, Publication, ReadingProgression } from "@readium/shared";
 import { Configurable, ConfigurablePreferences, ConfigurableSettings, LineLengths, VisualNavigator } from "../";
 import { FramePoolManager } from "./frame/FramePoolManager";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager";
@@ -56,7 +56,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private currentLocation!: Locator;
     private lastLocationInView: Locator | undefined;
     private currentProgression: ReadingProgression;
-    public readonly layout: EPUBLayout;
+    public readonly layout: Layout;
 
     private _preferences: EpubPreferences;
     private _defaults: EpubDefaults;
@@ -96,7 +96,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             constraint: this._settings.constraint
         });
 
-        this.currentProgression = this.layout === EPUBLayout.reflowable 
+        this.currentProgression = this.layout === Layout.reflowable 
             ? (this._settings.scroll 
                 ? ReadingProgression.ttb 
                 : pub.metadata.effectiveReadingProgression) 
@@ -109,23 +109,23 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this.resizeObserver.observe(this.container.parentElement || document.documentElement);
     }
 
-    public static determineLayout(pub: Publication): EPUBLayout {
-        const presentation = pub.metadata.getPresentation();
-        if(presentation?.layout == EPUBLayout.fixed) return EPUBLayout.fixed;
+    public static determineLayout(pub: Publication): Layout {
+        const layout = pub.metadata.effectiveLayout;
+        if(layout === Layout.fixed) return Layout.fixed;
         if(pub.metadata.otherMetadata && ("http://openmangaformat.org/schema/1.0#version" in pub.metadata.otherMetadata))
-            return EPUBLayout.fixed; // It's fixed layout even though it lacks presentation, although this should really be a divina
-        if(pub.metadata.otherMetadata?.conformsTo === "https://readium.org/webpub-manifest/profiles/divina")
+            return Layout.fixed; // It's fixed layout even though it lacks presentation, although this should really be a divina
+        if(pub.metadata?.conformsTo?.includes(Profile.DIVINA))
             // TODO: this is temporary until there's a divina reader in place
-            return EPUBLayout.fixed;
+            return Layout.fixed;
         // TODO other logic to detect fixed layout publications
 
-        return EPUBLayout.reflowable;
+        return Layout.reflowable;
     }
 
     public async load() {
         if (!this.positions?.length)
             this.positions = await this.pub.positionsFromManifest();
-        if(this.layout === EPUBLayout.fixed) {
+        if(this.layout === Layout.fixed) {
             this.framePool = new FXLFramePoolManager(this.container, this.positions, this.pub);
             this.framePool.listener = (key: CommsEventKey | ManagerEventKey, data: unknown) => {
                 this.eventListener(key, data);
@@ -144,7 +144,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     }
 
     public get settings(): Readonly<EpubSettings> {
-        if (this.layout === EPUBLayout.fixed) {
+        if (this.layout === Layout.fixed) {
             return Object.freeze({ ...this._settings });
         } else {
             // Given all the nasty issues moving auto-pagination to EpubSettings creates
@@ -178,7 +178,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             this._preferencesEditor = new EpubPreferencesEditor(this._preferences, this.settings, this.pub.metadata);
         }
 
-        if (this.layout === EPUBLayout.fixed) {
+        if (this.layout === Layout.fixed) {
             this.handleFXLPrefs(oldSettings, this._settings);
         } else {
             await this.updateCSS(true);
@@ -240,7 +240,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         // and the container may not be the entire width of the document/window
         const parentEl = this.container.parentElement || document.documentElement;
 
-        if (this.layout === EPUBLayout.fixed) {
+        if (this.layout === Layout.fixed) {
             this.container.style.width = `${ getContentWidth(parentEl) - this._settings.constraint }px`;
             (this.framePool as FXLFramePoolManager).resizeHandler();
         } else {
@@ -346,10 +346,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                         }
                     } else console.log("Clicked on", element);
                 } else {
-                    if(this.layout === EPUBLayout.fixed && (this.framePool as FXLFramePoolManager).doNotDisturb)
+                    if(this.layout === Layout.fixed && (this.framePool as FXLFramePoolManager).doNotDisturb)
                         edata.doNotDisturb = true;
 
-                    if(this.layout === EPUBLayout.fixed
+                    if(this.layout === Layout.fixed
                         // TODO handle ttb/btt
                         && (
                             this.currentProgression === ReadingProgression.rtl ||
@@ -408,7 +408,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private determineModules() {
         let modules = Array.from(ModuleLibrary.keys()) as ModuleName[];
 
-        if(this.layout === EPUBLayout.fixed) {
+        if(this.layout === Layout.fixed) {
             return modules.filter((m) => FXLModules.includes(m));
         } else modules = modules.filter((m) => ReflowableModules.includes(m));
 
@@ -450,7 +450,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private async changeResource(relative: number): Promise<boolean> {
         if (relative === 0) return false;
 
-        if(this.layout === EPUBLayout.fixed) {
+        if(this.layout === Layout.fixed) {
             const p = this.framePool as FXLFramePoolManager;
             const old = p.currentNumbers[0];
             if(relative === 1) {
@@ -564,7 +564,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     }
 
     public goBackward(_: boolean, cb: (ok: boolean) => void): void {
-        if(this.layout === EPUBLayout.fixed) {
+        if(this.layout === Layout.fixed) {
             this.changeResource(-1);
             cb(true);
         } else {
@@ -580,7 +580,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     }
 
     public goForward(_: boolean, cb: (ok: boolean) => void): void {
-        if(this.layout === EPUBLayout.fixed) {
+        if(this.layout === Layout.fixed) {
             this.changeResource(1);
             cb(true);
         } else {
@@ -606,7 +606,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
     // Starting and ending position currently showing in the reader
     get currentPositionNumbers(): number[] {
-        if(this.layout === EPUBLayout.fixed)
+        if(this.layout === Layout.fixed)
          return (this.framePool as FXLFramePoolManager).currentNumbers;
 
         return [this.currentLocator?.locations.position ?? 0, ...(this.lastLocationInView?.locations.position ? [this.lastLocationInView.locations.position] : [])];
