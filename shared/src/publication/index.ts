@@ -1,4 +1,3 @@
-export * from './divina';
 export * from './encryption';
 export * from './epub';
 export * from './html';
