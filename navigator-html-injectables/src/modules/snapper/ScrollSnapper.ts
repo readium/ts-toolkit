@@ -68,10 +68,7 @@ export class ScrollSnapper extends Snapper {
                 const deltaY = currentScrollTop - this.lastScrollTop;
                 this.lastScrollTop = currentScrollTop;
 
-                this.comms.send("scroll", {
-                    deltaY,
-                    scrollTop: currentScrollTop
-                });
+                this.comms.send("scroll", deltaY);
             
                 this.isScrolling = false;
             });
