@@ -4,6 +4,7 @@ import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/
 import { ModuleName } from "../ModuleLibrary";
 import { Snapper } from "./Snapper";
 import { rangeFromLocator } from "../../helpers/locator";
+import { forceWebkitRecalc } from "../../helpers/document";
 
 const SCROLL_SNAPPER_STYLE_ID = "readium-scroll-snapper-style";
 
@@ -12,25 +13,46 @@ export class ScrollSnapper extends Snapper {
     private wnd!: ReadiumWindow;
     private comms!: Comms;
     private resizeObserver!: ResizeObserver;
-    private isScrolling = false;
+    private scrollEndTimer: number | null = null;
+    private readonly SCROLL_END_DELAY = 100;
 
     private doc() {
         return this.wnd.document.scrollingElement as HTMLElement;
     }
 
-    private reportProgress(data: { progress: number, reference: number }) {
-        this.comms.send("progress", data);
+    private reportProgress() {
+        // We have to round up the scroll position because
+        // Android may never reach 100% of the scroll height
+        // due to the way it rounds scrollTop…
+        const scrollTop = Math.ceil(this.doc().scrollTop);
+        const scrollHeight = this.doc().scrollHeight;
+        const viewportHeight = this.wnd.innerHeight;
+        const progress = Math.max(0, Math.min(1, scrollTop / scrollHeight));
+        const viewportEnd = Math.max(0, Math.min(1, (scrollTop + viewportHeight) / scrollHeight));
+
+        this.comms.send("progress", {
+            start: progress,
+            end: viewportEnd
+        });
     }
 
+    // scrollEnd not available in Safari yet so 
+    // we are using the old school timeout method
     private handleScroll = () => {
-        if (!this.isScrolling) {
-            this.isScrolling = true;
-            this.wnd.requestAnimationFrame(() => {
-                const progress = this.doc().scrollTop / this.doc().offsetHeight;
-                this.reportProgress({ progress: progress, reference: this.wnd.innerHeight / this.doc().scrollHeight });
-                this.isScrolling = false;
-            });
+        // Clear any existing timeout
+        if (this.scrollEndTimer !== null) {
+            this.wnd.clearTimeout(this.scrollEndTimer);
         }
+
+        // Set a new timeout
+        this.scrollEndTimer = this.wnd.setTimeout(() => {
+            this.onScrollEnd();
+        }, this.SCROLL_END_DELAY);
+    };
+
+    private onScrollEnd = () => {
+        this.scrollEndTimer = null;
+        this.reportProgress();
     };
 
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
@@ -63,6 +85,22 @@ export class ScrollSnapper extends Snapper {
             passive: true
         });
 
+        comms.register("force_webkit_recalc", ScrollSnapper.moduleName, () => {
+            forceWebkitRecalc(this.wnd);
+
+            // We absolutely must do this because overflown content
+            // won’t be rendered if we do not trigger scroll… 
+            // Only the content at the start of the document, 
+            // whose height is the viewport height, will be rendered.
+            const currentScroll = this.doc().scrollTop;
+            if (currentScroll > 1) {
+                this.doc().scrollTop = currentScroll - 1;
+            } else {
+                this.doc().scrollTop = currentScroll + 1;
+            }
+            this.doc().scrollTop = currentScroll;
+        });
+
         comms.register("go_progression", ScrollSnapper.moduleName, (data, ack) => {
             const position = data as number;
 
@@ -76,7 +114,7 @@ export class ScrollSnapper extends Snapper {
 
             this.wnd.requestAnimationFrame(() => {
               this.doc().scrollTop = this.doc().offsetHeight * position;
-              this.reportProgress({ progress: position, reference: this.wnd.innerHeight / this.doc().scrollHeight });
+              this.reportProgress();
               deselect(this.wnd);
               ack(true);
           });
@@ -90,8 +128,7 @@ export class ScrollSnapper extends Snapper {
             }
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollTop = element.getBoundingClientRect().top + wnd.scrollY - wnd.innerHeight / 2;
-                const progress = this.doc().scrollTop / this.doc().offsetHeight;
-                this.reportProgress({ progress: progress, reference: this.wnd.innerHeight / this.doc().scrollHeight });
+                this.reportProgress();
                 deselect(this.wnd);
                 ack(true);
             });
@@ -122,8 +159,7 @@ export class ScrollSnapper extends Snapper {
             }
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollTop = r.getBoundingClientRect().top + wnd.scrollY - wnd.innerHeight / 2;
-                const progress = this.doc().scrollTop / this.doc().offsetHeight
-                this.reportProgress({ progress: progress, reference: this.wnd.innerHeight / this.doc().scrollHeight });
+                this.reportProgress();
                 deselect(this.wnd);
                 ack(true);
             });
@@ -132,14 +168,14 @@ export class ScrollSnapper extends Snapper {
         comms.register("go_start", ScrollSnapper.moduleName, (_, ack) => {
             if (this.doc().scrollTop === 0) return ack(false);
             this.doc().scrollTop = 0;
-            this.reportProgress({ progress: 0, reference: this.wnd.innerHeight / this.doc().scrollHeight });
+            this.reportProgress();
             ack(true);
         });
 
         comms.register("go_end", ScrollSnapper.moduleName, (_, ack) => {
-            if (this.doc().scrollTop === 0) return ack(false);
-            this.doc().scrollTop = 0;
-            this.reportProgress({ progress: 0, reference: this.wnd.innerHeight / this.doc().scrollHeight });
+            if (this.doc().scrollTop === this.doc().scrollHeight - this.doc().offsetHeight) return ack(false);
+            this.doc().scrollTop = this.doc().scrollHeight - this.doc().offsetHeight;
+            this.reportProgress();
             ack(true);
         })
 
@@ -154,8 +190,7 @@ export class ScrollSnapper extends Snapper {
         ], ScrollSnapper.moduleName, (_, ack) => ack(false));
 
         comms.register("focus", ScrollSnapper.moduleName, (_, ack) => {
-            const progress = this.doc().scrollTop / this.doc().offsetHeight
-            this.reportProgress({ progress: progress, reference: this.wnd.innerHeight / this.doc().scrollHeight });
+            this.reportProgress();
             ack(true);
         });
 
@@ -174,6 +209,13 @@ export class ScrollSnapper extends Snapper {
         this.resizeObserver.disconnect();
         if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
         wnd.document.getElementById(SCROLL_SNAPPER_STYLE_ID)?.remove();
+        
+        // Clean up scroll end timer
+        if (this.scrollEndTimer !== null) {
+            clearTimeout(this.scrollEndTimer);
+            this.scrollEndTimer = null;
+        }
+        
         comms.log("ScrollSnapper Unmounted");
         return true;
     }

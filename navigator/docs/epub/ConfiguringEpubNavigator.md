@@ -45,7 +45,7 @@ navigator.submitPreferences(editor.preferences)
 
 Preferences are low-level technical properties. While some of them can be exposed directly to the user, such as the font size, others should not be displayed as-is.
 
-For instance, the `layoutStrategy` is a property that works in combination with `minimalLineLength`, `optimalLineLength` and `maximalLineLength`. It is set by the application and not by the user. It is not necessarily meant to be displayed to the user.
+For instance, line-length is derived from `minimalLineLength`, `optimalLineLength` and `maximalLineLength`. They are not necessarily meant to be displayed to the user, they will almost always be hidden behind a simple setting with the app handling values behind the scenes.
 
 ## Inactive settings
 
@@ -113,7 +113,6 @@ EPUB comes in two very different flavors: reflowable which allows a lot of custo
 | invertFilter             | ✅         | WIP          |
 | invertGaijiFilter        | ✅         |              |
 | iPadOSPatch              | ✅         |              |
-| layoutStrategy           | ✅         |              |
 | letterSpacing            | ✅         |              |
 | ligatures                | ✅         |              |
 | lineHeight               | ✅         |              |
@@ -136,15 +135,9 @@ EPUB comes in two very different flavors: reflowable which allows a lot of custo
 | wordSpacing              | ✅         |              |
 | zoom                     |            | WIP          |
 
-### Layout Strategy
-
-Layout strategy `columns` is not available in scroll mode (`scroll = true`) or when `columnCount` is not `null`.
-
 ### Line length
 
 There is no `lineLength` preference because the effective line length is calculated based on the `optimalLineLength`, `minimalLineLength` and `maximalLineLength` preferences. 
-
-If you prefer to set a line length yourself, you can set `optimalLineLength` to the desired value (`ch|ic` unit) with `layoutStrategy` set to `margins`.
 
 ### Scroll vs paginated
 

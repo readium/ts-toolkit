@@ -4,7 +4,6 @@ import { EpubPreferences } from "./EpubPreferences";
 import { EpubSettings } from "./EpubSettings";
 import { BooleanPreference, EnumPreference, Preference, RangePreference } from "../../preferences/Preference";
 import { 
-  LayoutStrategy,
   TextAlignment, 
   Theme, 
   fontSizeRangeConfig, 
@@ -212,6 +211,17 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
+  get iOSPatch(): BooleanPreference {
+    return new BooleanPreference({
+      initialValue: this.preferences.iOSPatch,
+      effectiveValue: this.settings.iOSPatch || false,
+      isEffective: this.layout === Layout.reflowable,
+      onChange: (newValue: boolean | null | undefined) => {
+        this.updatePreference("iOSPatch", newValue || null);
+      }
+    });
+  }
+
   get iPadOSPatch(): BooleanPreference {
     return new BooleanPreference({
       initialValue: this.preferences.iPadOSPatch,
@@ -221,18 +231,6 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
         this.updatePreference("iPadOSPatch", newValue || null);
       }
     });
-  }
-
-  get layoutStrategy(): EnumPreference<LayoutStrategy> {
-    return new EnumPreference<LayoutStrategy>({
-      initialValue: this.preferences.layoutStrategy,
-      effectiveValue: this.settings.layoutStrategy,
-      isEffective: this.layout === Layout.reflowable,
-      onChange: (newValue: LayoutStrategy | null | undefined) => {
-        this.updatePreference("layoutStrategy", newValue || null);
-      },
-      supportedValues: Object.values(LayoutStrategy)
-    })
   }
 
   get letterSpacing(): RangePreference<number> {

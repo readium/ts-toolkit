@@ -40,5 +40,6 @@ export type CommsCommandKey =
     "unfocus" |
     "focus" |
     "activate" |
-    "shake";
+    "shake" |
+    "force_webkit_recalc";
 ;
