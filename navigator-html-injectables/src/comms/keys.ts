@@ -12,6 +12,7 @@ export type CommsEventKey =
     "no_more" |
     "no_less" |
     "swipe" |
+    "scroll" |
     "progress" |
     "first_visible_locator" |
     "text_selected" |

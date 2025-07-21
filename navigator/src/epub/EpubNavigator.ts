@@ -15,6 +15,11 @@ import { ReadiumCSS } from "./css/ReadiumCSS";
 import { RSProperties, UserProperties } from "./css/Properties";
 import { getContentWidth } from "../helpers/dimensions";
 
+export interface ScrollData {
+    deltaY: number;
+    scrollTop: number;
+}
+
 export type ManagerEventKey = "zoom";
 
 export interface EpubNavigatorConfiguration {
@@ -29,6 +34,7 @@ export interface EpubNavigatorListeners {
     click: (e: FrameClickEvent) => boolean;  // Return true to prevent handling here
     zoom: (scale: number) => void;
     miscPointer: (amount: number) => void;
+    scroll: (data: ScrollData) => void;
     customEvent: (key: string, data: unknown) => void;
     handleLocator: (locator: Locator) => boolean; // Retrun true to prevent handling here
     textSelected: (selection: BasicTextSelection) => void;
@@ -42,6 +48,7 @@ const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListe
     click: listeners.click || (() => false),
     zoom: listeners.zoom || (() => {}),
     miscPointer: listeners.miscPointer || (() => {}),
+    scroll: listeners.scroll || (() => {}),
     customEvent: listeners.customEvent || (() => {}),
     handleLocator: listeners.handleLocator || (() => false),
     textSelected: listeners.textSelected || (() => {})
@@ -395,6 +402,9 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 break;
             case "swipe":
                 // Swipe event
+                break;
+            case "scroll":
+                this.listeners.scroll(data as ScrollData);
                 break;
             case "zoom":
                 this.listeners.zoom(data as number);
