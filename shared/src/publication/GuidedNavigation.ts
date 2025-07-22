@@ -138,8 +138,9 @@ export class GuidedNavigationObject {
 
   /** 
    * Describes the image referenced by the current Guided Navigation Object.
+   * This is a GuidedNavigationObject that should not contain 'level' or 'children' properties.
    */
-  public readonly description?: string;
+  public readonly description?: Omit<GuidedNavigationObject, 'level' | 'children'>;
 
     /**
      * Creates a [GuidedNavigation] object.
@@ -152,7 +153,7 @@ export class GuidedNavigationObject {
         level?: number;
         text?: GuidedNavigationText;
         textref?: string;
-        description?: string;
+        description?: Omit<GuidedNavigationObject, 'level' | 'children'>;
     }) {
         this.audioref = values.audioref;
         this.children = values.children;
@@ -202,7 +203,7 @@ export class GuidedNavigationObject {
             level: typeof json.level === 'number' ? json.level : undefined,
             text: GuidedNavigationText.deserialize(json.text),
             textref: json.textref,
-            description: json.description
+            description: GuidedNavigationObject.deserialize(json.description)
         });
     }
 
@@ -233,7 +234,9 @@ export class GuidedNavigationObject {
             }
         }
         if (this.textref !== undefined) json.textref = this.textref;
-        if (this.description !== undefined) json.description = this.description;
+        if (this.description) {
+            json.description = this.description.serialize();
+        }
         return json;
     }
 

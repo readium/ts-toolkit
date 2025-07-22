@@ -110,7 +110,9 @@ describe('GuidedNavigation Tests', () => {
           ssml: '<speak>Hello</speak>',
           language: 'en'
         },
-        description: 'Description',
+        description: new GuidedNavigationObject({
+          text: new GuidedNavigationText({ plain: 'Description' })
+        }),
         children: [{
           text: 'Child',
           level: 3
@@ -126,7 +128,7 @@ describe('GuidedNavigation Tests', () => {
       expect(obj?.text?.plain).toBe('Hello');
       expect(obj?.text?.ssml).toBe('<speak>Hello</speak>');
       expect(obj?.text?.language).toBe('en');
-      expect(obj?.description).toBe('Description');
+      expect(obj?.description?.text?.plain).toBe('Description');
       expect(obj?.children).toHaveLength(1);
       expect(obj?.children?.[0].text?.plain).toBe('Child');
       expect(obj?.children?.[0].level).toBe(3);
@@ -193,7 +195,9 @@ describe('GuidedNavigation Tests', () => {
           ssml: '<speak>Hello</speak>',
           language: 'en'
         }),
-        description: 'Description',
+        description: new GuidedNavigationObject({
+          text: new GuidedNavigationText({ plain: 'Description' })
+        }),
         children: [
           new GuidedNavigationObject({
             text: new GuidedNavigationText({ plain: 'Child' }),
@@ -215,7 +219,9 @@ describe('GuidedNavigation Tests', () => {
           ssml: '<speak>Hello</speak>',
           language: 'en'
         },
-        description: 'Description',
+        description: new GuidedNavigationObject({
+          text: new GuidedNavigationText({ plain: 'Description' })
+        }),
         children: [{
           text: { plain: 'Child' },
           level: 3
@@ -261,7 +267,9 @@ describe('GuidedNavigation Tests', () => {
           ssml: '<speak>Hello</speak>',
           language: 'en'
         }),
-        description: 'Test description',
+        description: new GuidedNavigationObject({
+          text: new GuidedNavigationText({ plain: 'Test description' })
+        }),
         children: [
           new GuidedNavigationObject({
             text: new GuidedNavigationText({ plain: 'Child' }),
@@ -282,7 +290,9 @@ describe('GuidedNavigation Tests', () => {
           ssml: '<speak>Hello</speak>',
           language: 'en'
         },
-        description: 'Test description',
+        description: {
+          text: { plain: "Test description" }
+        },
         children: [{
           text: { plain: 'Child' },
           level: 3
