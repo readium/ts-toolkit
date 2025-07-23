@@ -1,6 +1,5 @@
 import { Publication } from '../../src/publication/Publication';
 import { AccessibilityMetadataDisplayGuide } from '../../src/publication/accessibility/AccessibilityMetadataDisplayGuide';
-import { AccessibilityDisplayString } from '../../src/publication/accessibility/AccessibilityDisplayString';
 import { Feature, Hazard, Profile, Exemption, AccessMode, Accessibility } from '../../src/publication/accessibility/Accessibility';
 import { Manifest, Metadata, LocalizedString, Links, ReadingProgression, Presentation } from '../../src/publication';
 import { EPUBLayout } from '../../src/publication/epub';
@@ -58,7 +57,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingVisualAdjustmentsModifiable)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.id === "accessibility.display-guide.ways-of-reading.visual-adjustments.modifiable")).toBe(true);
             });
 
             it('should handle fixed layout (unmodifiable)', () => {
@@ -78,7 +77,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingVisualAdjustmentsUnmodifiable)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.id === "accessibility.display-guide.ways-of-reading.visual-adjustments.unmodifiable")).toBe(true);
             });
 
             it('should handle unknown visual adjustments', () => {
@@ -95,7 +94,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingVisualAdjustmentsUnknown)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.id === "accessibility.display-guide.ways-of-reading.visual-adjustments.unknown")).toBe(true);
             });
         });
 
@@ -114,7 +113,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReadingReadable)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.id === "accessibility.display-guide.ways-of-reading.nonvisual-reading.readable")).toBe(true);
             });
 
             it('should handle some text content with alt text (not fully readable)', () => {
@@ -132,8 +131,8 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReadingNotFully)).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReadingAltText)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.id === "accessibility.display-guide.ways-of-reading.nonvisual-reading.not-fully")).toBe(true);
+                expect(waysOfReading.statements.some(s => s.id === "accessibility.display-guide.ways-of-reading.nonvisual-reading.alt-text")).toBe(true);
             });
 
             it('should handle no text content (unreadable)', () => {
@@ -150,7 +149,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReadingNone)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.id === "accessibility.display-guide.ways-of-reading.nonvisual-reading.none")).toBe(true);
             });
 
             it('should handle no metadata', () => {
@@ -165,7 +164,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingNonvisualReadingNoMetadata)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.id === "accessibility.display-guide.ways-of-reading.nonvisual-reading.no-metadata")).toBe(true);
             });
         });
 
@@ -184,7 +183,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingPrerecordedAudioSynchronized)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.id === "accessibility.display-guide.ways-of-reading.prerecorded-audio.synchronized")).toBe(true);
             });
 
             it('should handle audio only', () => {
@@ -204,7 +203,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingPrerecordedAudioOnly)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.id === "accessibility.display-guide.ways-of-reading.prerecorded-audio.only")).toBe(true);
             });
 
             it('should handle audio complementary', () => {
@@ -221,7 +220,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingPrerecordedAudioComplementary)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.id === "accessibility.display-guide.ways-of-reading.prerecorded-audio.complementary")).toBe(true);
             });
 
             it('should handle no metadata', () => {
@@ -238,7 +237,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 
                 // Then
                 expect(waysOfReading.shouldDisplay).toBe(true);
-                expect(waysOfReading.statements.some(s => s.displayId === AccessibilityDisplayString.WaysOfReadingPrerecordedAudioNoMetadata)).toBe(true);
+                expect(waysOfReading.statements.some(s => s.id === "accessibility.display-guide.ways-of-reading.prerecorded-audio.no-metadata")).toBe(true);
             });
         });
     });
@@ -260,7 +259,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(navigation.shouldDisplay).toBe(true);
                 expect(navigation.statements.length).toBe(1);
-                expect(navigation.statements[0].displayId).toBe(AccessibilityDisplayString.NavigationToc);
+                expect(navigation.statements[0].id).toBe("accessibility.display-guide.navigation.toc");
             });
 
             it('should detect index', () => {
@@ -278,7 +277,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(navigation.shouldDisplay).toBe(true);
                 expect(navigation.statements.length).toBe(1);
-                expect(navigation.statements[0].displayId).toBe(AccessibilityDisplayString.NavigationIndex);
+                expect(navigation.statements[0].id).toBe("accessibility.display-guide.navigation.index");
             });
 
             it('should detect headings (structural navigation)', () => {
@@ -296,7 +295,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(navigation.shouldDisplay).toBe(true);
                 expect(navigation.statements.length).toBe(1);
-                expect(navigation.statements[0].displayId).toBe(AccessibilityDisplayString.NavigationStructural);
+                expect(navigation.statements[0].id).toBe("accessibility.display-guide.navigation.structural");
             });
 
             it('should detect page navigation', () => {
@@ -314,7 +313,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(navigation.shouldDisplay).toBe(true);
                 expect(navigation.statements.length).toBe(1);
-                expect(navigation.statements[0].displayId).toBe(AccessibilityDisplayString.NavigationPageNavigation);
+                expect(navigation.statements[0].id).toBe("accessibility.display-guide.navigation.page-navigation");
             });
 
             it('should combine multiple navigation features', () => {
@@ -337,10 +336,10 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(navigation.shouldDisplay).toBe(true);
                 expect(navigation.statements.length).toBe(4);
-                expect(navigation.statements[0].displayId).toBe(AccessibilityDisplayString.NavigationToc);
-                expect(navigation.statements[1].displayId).toBe(AccessibilityDisplayString.NavigationIndex);
-                expect(navigation.statements[2].displayId).toBe(AccessibilityDisplayString.NavigationStructural);
-                expect(navigation.statements[3].displayId).toBe(AccessibilityDisplayString.NavigationPageNavigation);
+                expect(navigation.statements[0].id).toBe("accessibility.display-guide.navigation.toc");
+                expect(navigation.statements[1].id).toBe("accessibility.display-guide.navigation.index");
+                expect(navigation.statements[2].id).toBe("accessibility.display-guide.navigation.structural");
+                expect(navigation.statements[3].id).toBe("accessibility.display-guide.navigation.page-navigation");
             });
         });
 
@@ -360,7 +359,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(navigation.shouldDisplay).toBe(false);
                 expect(navigation.statements.length).toBe(1);
-                expect(navigation.statements[0].displayId).toBe(AccessibilityDisplayString.NavigationNoMetadata);
+                expect(navigation.statements[0].id).toBe("accessibility.display-guide.navigation.no-metadata");
             });
 
             it('should show no metadata when no accessibility metadata', () => {
@@ -376,7 +375,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(navigation.shouldDisplay).toBe(false);
                 expect(navigation.statements.length).toBe(1);
-                expect(navigation.statements[0].displayId).toBe(AccessibilityDisplayString.NavigationNoMetadata);
+                expect(navigation.statements[0].id).toBe("accessibility.display-guide.navigation.no-metadata");
             });
         });
 
@@ -395,7 +394,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(navigation.shouldDisplay).toBe(false);
             expect(navigation.statements.length).toBe(1);
-            expect(navigation.statements[0].displayId).toBe(AccessibilityDisplayString.NavigationNoMetadata);
+            expect(navigation.statements[0].id).toBe("accessibility.display-guide.navigation.no-metadata");
         });
     });
 
@@ -416,7 +415,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(richContent.shouldDisplay).toBe(true);
                 expect(richContent.statements.length).toBe(1);
-                expect(richContent.statements[0].displayId).toBe(AccessibilityDisplayString.RichContentExtended);
+                expect(richContent.statements[0].id).toBe("accessibility.display-guide.rich-content.extended-descriptions");
             });
 
             describe('Math Content', () => {
@@ -435,7 +434,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                     // Then
                     expect(richContent.shouldDisplay).toBe(true);
                     expect(richContent.statements.length).toBe(1);
-                    expect(richContent.statements[0].displayId).toBe(AccessibilityDisplayString.RichContentAccessibleMathDescribed);
+                    expect(richContent.statements[0].id).toBe("accessibility.display-guide.rich-content.accessible-math-described");
                 });
 
                 it('should detect math as MathML', () => {
@@ -453,7 +452,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                     // Then
                     expect(richContent.shouldDisplay).toBe(true);
                     expect(richContent.statements.length).toBe(1);
-                    expect(richContent.statements[0].displayId).toBe(AccessibilityDisplayString.RichContentAccessibleMathAsMathml);
+                    expect(richContent.statements[0].id).toBe("accessibility.display-guide.rich-content.math-as-mathml");
                 });
 
                 it('should detect math as LaTeX', () => {
@@ -471,7 +470,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                     // Then
                     expect(richContent.shouldDisplay).toBe(true);
                     expect(richContent.statements.length).toBe(1);
-                    expect(richContent.statements[0].displayId).toBe(AccessibilityDisplayString.RichContentAccessibleMathAsLatex);
+                    expect(richContent.statements[0].id).toBe("accessibility.display-guide.rich-content.accessible-math-as-latex");
                 });
 
                 it('should combine math features', () => {
@@ -493,9 +492,9 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                     // Then
                     expect(richContent.shouldDisplay).toBe(true);
                     expect(richContent.statements.length).toBe(3);
-                    expect(richContent.statements[0].displayId).toBe(AccessibilityDisplayString.RichContentAccessibleMathDescribed);
-                    expect(richContent.statements[1].displayId).toBe(AccessibilityDisplayString.RichContentAccessibleMathAsMathml);
-                    expect(richContent.statements[2].displayId).toBe(AccessibilityDisplayString.RichContentAccessibleMathAsLatex);
+                    expect(richContent.statements[0].id).toBe("accessibility.display-guide.rich-content.accessible-math-described");
+                    expect(richContent.statements[1].id).toBe("accessibility.display-guide.rich-content.math-as-mathml");
+                    expect(richContent.statements[2].id).toBe("accessibility.display-guide.rich-content.accessible-math-as-latex");
                 });
             });
 
@@ -515,7 +514,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                     // Then
                     expect(richContent.shouldDisplay).toBe(true);
                     expect(richContent.statements.length).toBe(1);
-                    expect(richContent.statements[0].displayId).toBe(AccessibilityDisplayString.RichContentAccessibleChemistryAsMathml);
+                    expect(richContent.statements[0].id).toBe("accessibility.display-guide.rich-content.accessible-chemistry-as-mathml");
                 });
 
                 it('should detect chemical formulas as LaTeX', () => {
@@ -533,7 +532,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                     // Then
                     expect(richContent.shouldDisplay).toBe(true);
                     expect(richContent.statements.length).toBe(1);
-                    expect(richContent.statements[0].displayId).toBe(AccessibilityDisplayString.RichContentAccessibleChemistryAsLatex);
+                    expect(richContent.statements[0].id).toBe("accessibility.display-guide.rich-content.accessible-chemistry-as-latex");
                 });
             });
 
@@ -553,7 +552,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                     // Then
                     expect(richContent.shouldDisplay).toBe(true);
                     expect(richContent.statements.length).toBe(1);
-                    expect(richContent.statements[0].displayId).toBe(AccessibilityDisplayString.RichContentClosedCaptions);
+                    expect(richContent.statements[0].id).toBe("accessibility.display-guide.rich-content.closed-captions");
                 });
 
                 it('should detect open captions', () => {
@@ -571,7 +570,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                     // Then
                     expect(richContent.shouldDisplay).toBe(true);
                     expect(richContent.statements.length).toBe(1);
-                    expect(richContent.statements[0].displayId).toBe(AccessibilityDisplayString.RichContentOpenCaptions);
+                    expect(richContent.statements[0].id).toBe("accessibility.display-guide.rich-content.open-captions");
                 });
             });
 
@@ -590,7 +589,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(richContent.shouldDisplay).toBe(true);
                 expect(richContent.statements.length).toBe(1);
-                expect(richContent.statements[0].displayId).toBe(AccessibilityDisplayString.RichContentTranscript);
+                expect(richContent.statements[0].id).toBe("accessibility.display-guide.rich-content.transcript");
             });
 
             it('should combine multiple rich content features', () => {
@@ -618,15 +617,15 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(richContent.shouldDisplay).toBe(true);
                 expect(richContent.statements.length).toBe(9);
-                expect(richContent.statements[0].displayId).toBe(AccessibilityDisplayString.RichContentExtended);
-                expect(richContent.statements[1].displayId).toBe(AccessibilityDisplayString.RichContentAccessibleMathDescribed);
-                expect(richContent.statements[2].displayId).toBe(AccessibilityDisplayString.RichContentAccessibleMathAsMathml);
-                expect(richContent.statements[3].displayId).toBe(AccessibilityDisplayString.RichContentAccessibleMathAsLatex);
-                expect(richContent.statements[4].displayId).toBe(AccessibilityDisplayString.RichContentAccessibleChemistryAsMathml);
-                expect(richContent.statements[5].displayId).toBe(AccessibilityDisplayString.RichContentAccessibleChemistryAsLatex);
-                expect(richContent.statements[6].displayId).toBe(AccessibilityDisplayString.RichContentClosedCaptions);
-                expect(richContent.statements[7].displayId).toBe(AccessibilityDisplayString.RichContentOpenCaptions);
-                expect(richContent.statements[8].displayId).toBe(AccessibilityDisplayString.RichContentTranscript);
+                expect(richContent.statements[0].id).toBe("accessibility.display-guide.rich-content.extended-descriptions");
+                expect(richContent.statements[1].id).toBe("accessibility.display-guide.rich-content.accessible-math-described");
+                expect(richContent.statements[2].id).toBe("accessibility.display-guide.rich-content.math-as-mathml");
+                expect(richContent.statements[3].id).toBe("accessibility.display-guide.rich-content.accessible-math-as-latex");
+                expect(richContent.statements[4].id).toBe("accessibility.display-guide.rich-content.accessible-chemistry-as-mathml");
+                expect(richContent.statements[5].id).toBe("accessibility.display-guide.rich-content.accessible-chemistry-as-latex");
+                expect(richContent.statements[6].id).toBe("accessibility.display-guide.rich-content.closed-captions");
+                expect(richContent.statements[7].id).toBe("accessibility.display-guide.rich-content.open-captions");
+                expect(richContent.statements[8].id).toBe("accessibility.display-guide.rich-content.transcript");
             });
         });
 
@@ -646,7 +645,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(richContent.shouldDisplay).toBe(false);
                 expect(richContent.statements.length).toBe(1);
-                expect(richContent.statements[0].displayId).toBe(AccessibilityDisplayString.RichContentUnknown);
+                expect(richContent.statements[0].id).toBe("accessibility.display-guide.rich-content.unknown");
             });
 
             it('should show unknown when no accessibility metadata', () => {
@@ -662,7 +661,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(richContent.shouldDisplay).toBe(false);
                 expect(richContent.statements.length).toBe(1);
-                expect(richContent.statements[0].displayId).toBe(AccessibilityDisplayString.RichContentUnknown);
+                expect(richContent.statements[0].id).toBe("accessibility.display-guide.rich-content.unknown");
             });
         });
     });
@@ -684,7 +683,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(additionalInformation.shouldDisplay).toBe(true);
                 expect(additionalInformation.statements.length).toBe(1);
-                expect(additionalInformation.statements[0].displayId).toBe(AccessibilityDisplayString.AdditionalInformationPageBreaks);
+                expect(additionalInformation.statements[0].id).toBe("accessibility.display-guide.additional-accessibility-information.page-breaks");
             });
 
             it('should detect ARIA', () => {
@@ -702,7 +701,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(additionalInformation.shouldDisplay).toBe(true);
                 expect(additionalInformation.statements.length).toBe(1);
-                expect(additionalInformation.statements[0].displayId).toBe(AccessibilityDisplayString.AdditionalInformationAria);
+                expect(additionalInformation.statements[0].id).toBe("accessibility.display-guide.additional-accessibility-information.aria");
             });
 
             it('should detect audio descriptions', () => {
@@ -720,7 +719,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(additionalInformation.shouldDisplay).toBe(true);
                 expect(additionalInformation.statements.length).toBe(1);
-                expect(additionalInformation.statements[0].displayId).toBe(AccessibilityDisplayString.AdditionalInformationAudioDescriptions);
+                expect(additionalInformation.statements[0].id).toBe("accessibility.display-guide.additional-accessibility-information.audio-descriptions");
             });
 
             it('should detect braille', () => {
@@ -738,7 +737,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(additionalInformation.shouldDisplay).toBe(true);
                 expect(additionalInformation.statements.length).toBe(1);
-                expect(additionalInformation.statements[0].displayId).toBe(AccessibilityDisplayString.AdditionalInformationBraille);
+                expect(additionalInformation.statements[0].id).toBe("accessibility.display-guide.additional-accessibility-information.braille");
             });
 
             describe('Ruby Annotations', () => {
@@ -757,7 +756,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                     // Then
                     expect(additionalInformation.shouldDisplay).toBe(true);
                     expect(additionalInformation.statements.length).toBe(1);
-                    expect(additionalInformation.statements[0].displayId).toBe(AccessibilityDisplayString.AdditionalInformationRubyAnnotations);
+                    expect(additionalInformation.statements[0].id).toBe("accessibility.display-guide.additional-accessibility-information.ruby-annotations");
                 });
 
                 it('should detect full ruby annotations', () => {
@@ -775,7 +774,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                     // Then
                     expect(additionalInformation.shouldDisplay).toBe(true);
                     expect(additionalInformation.statements.length).toBe(1);
-                    expect(additionalInformation.statements[0].displayId).toBe(AccessibilityDisplayString.AdditionalInformationFullRubyAnnotations);
+                    expect(additionalInformation.statements[0].id).toBe("accessibility.display-guide.additional-accessibility-information.full-ruby-annotations");
                 });
             });
 
@@ -795,7 +794,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                     // Then
                     expect(additionalInformation.shouldDisplay).toBe(true);
                     expect(additionalInformation.statements.length).toBe(1);
-                    expect(additionalInformation.statements[0].displayId).toBe(AccessibilityDisplayString.AdditionalInformationHighContrastBetweenForegroundAndBackgroundAudio);
+                    expect(additionalInformation.statements[0].id).toBe("accessibility.display-guide.additional-accessibility-information.high-contrast-between-foreground-and-background-audio");
                 });
 
                 it('should detect high contrast display', () => {
@@ -813,7 +812,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                     // Then
                     expect(additionalInformation.shouldDisplay).toBe(true);
                     expect(additionalInformation.statements.length).toBe(1);
-                    expect(additionalInformation.statements[0].displayId).toBe(AccessibilityDisplayString.AdditionalInformationHighContrastBetweenTextAndBackground);
+                    expect(additionalInformation.statements[0].id).toBe("accessibility.display-guide.additional-accessibility-information.high-contrast-between-text-and-background");
                 });
             });
 
@@ -832,7 +831,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(additionalInformation.shouldDisplay).toBe(true);
                 expect(additionalInformation.statements.length).toBe(1);
-                expect(additionalInformation.statements[0].displayId).toBe(AccessibilityDisplayString.AdditionalInformationLargePrint);
+                expect(additionalInformation.statements[0].id).toBe("accessibility.display-guide.additional-accessibility-information.large-print");
             });
 
             it('should detect sign language', () => {
@@ -850,7 +849,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(additionalInformation.shouldDisplay).toBe(true);
                 expect(additionalInformation.statements.length).toBe(1);
-                expect(additionalInformation.statements[0].displayId).toBe(AccessibilityDisplayString.AdditionalInformationSignLanguage);
+                expect(additionalInformation.statements[0].id).toBe("accessibility.display-guide.additional-accessibility-information.sign-language");
             });
 
             describe('Tactile Features', () => {
@@ -869,7 +868,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                     // Then
                     expect(additionalInformation.shouldDisplay).toBe(true);
                     expect(additionalInformation.statements.length).toBe(1);
-                    expect(additionalInformation.statements[0].displayId).toBe(AccessibilityDisplayString.AdditionalInformationTactileGraphics);
+                    expect(additionalInformation.statements[0].id).toBe("accessibility.display-guide.additional-accessibility-information.tactile-graphics");
                 });
 
                 it('should detect tactile objects', () => {
@@ -887,7 +886,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                     // Then
                     expect(additionalInformation.shouldDisplay).toBe(true);
                     expect(additionalInformation.statements.length).toBe(1);
-                    expect(additionalInformation.statements[0].displayId).toBe(AccessibilityDisplayString.AdditionalInformationTactileObjects);
+                    expect(additionalInformation.statements[0].id).toBe("accessibility.display-guide.additional-accessibility-information.tactile-objects");
                 });
             });
 
@@ -906,7 +905,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(additionalInformation.shouldDisplay).toBe(true);
                 expect(additionalInformation.statements.length).toBe(1);
-                expect(additionalInformation.statements[0].displayId).toBe(AccessibilityDisplayString.AdditionalInformationTextToSpeechHinting);
+                expect(additionalInformation.statements[0].id).toBe("accessibility.display-guide.additional-accessibility-information.text-to-speech-hinting");
             });
 
             it('should combine multiple additional information features', () => {
@@ -938,19 +937,19 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Then
                 expect(additionalInformation.shouldDisplay).toBe(true);
                 expect(additionalInformation.statements.length).toBe(13);
-                expect(additionalInformation.statements[0].displayId).toBe(AccessibilityDisplayString.AdditionalInformationPageBreaks);
-                expect(additionalInformation.statements[1].displayId).toBe(AccessibilityDisplayString.AdditionalInformationAria);
-                expect(additionalInformation.statements[2].displayId).toBe(AccessibilityDisplayString.AdditionalInformationAudioDescriptions);
-                expect(additionalInformation.statements[3].displayId).toBe(AccessibilityDisplayString.AdditionalInformationBraille);
-                expect(additionalInformation.statements[4].displayId).toBe(AccessibilityDisplayString.AdditionalInformationRubyAnnotations);
-                expect(additionalInformation.statements[5].displayId).toBe(AccessibilityDisplayString.AdditionalInformationFullRubyAnnotations);
-                expect(additionalInformation.statements[6].displayId).toBe(AccessibilityDisplayString.AdditionalInformationHighContrastBetweenForegroundAndBackgroundAudio);
-                expect(additionalInformation.statements[7].displayId).toBe(AccessibilityDisplayString.AdditionalInformationHighContrastBetweenTextAndBackground);
-                expect(additionalInformation.statements[8].displayId).toBe(AccessibilityDisplayString.AdditionalInformationLargePrint);
-                expect(additionalInformation.statements[9].displayId).toBe(AccessibilityDisplayString.AdditionalInformationSignLanguage);
-                expect(additionalInformation.statements[10].displayId).toBe(AccessibilityDisplayString.AdditionalInformationTactileGraphics);
-                expect(additionalInformation.statements[11].displayId).toBe(AccessibilityDisplayString.AdditionalInformationTactileObjects);
-                expect(additionalInformation.statements[12].displayId).toBe(AccessibilityDisplayString.AdditionalInformationTextToSpeechHinting);
+                expect(additionalInformation.statements[0].id).toBe("accessibility.display-guide.additional-accessibility-information.page-breaks");
+                expect(additionalInformation.statements[1].id).toBe("accessibility.display-guide.additional-accessibility-information.aria");
+                expect(additionalInformation.statements[2].id).toBe("accessibility.display-guide.additional-accessibility-information.audio-descriptions");
+                expect(additionalInformation.statements[3].id).toBe("accessibility.display-guide.additional-accessibility-information.braille");
+                expect(additionalInformation.statements[4].id).toBe("accessibility.display-guide.additional-accessibility-information.ruby-annotations");
+                expect(additionalInformation.statements[5].id).toBe("accessibility.display-guide.additional-accessibility-information.full-ruby-annotations");
+                expect(additionalInformation.statements[6].id).toBe("accessibility.display-guide.additional-accessibility-information.high-contrast-between-foreground-and-background-audio");
+                expect(additionalInformation.statements[7].id).toBe("accessibility.display-guide.additional-accessibility-information.high-contrast-between-text-and-background");
+                expect(additionalInformation.statements[8].id).toBe("accessibility.display-guide.additional-accessibility-information.large-print");
+                expect(additionalInformation.statements[9].id).toBe("accessibility.display-guide.additional-accessibility-information.sign-language");
+                expect(additionalInformation.statements[10].id).toBe("accessibility.display-guide.additional-accessibility-information.tactile-graphics");
+                expect(additionalInformation.statements[11].id).toBe("accessibility.display-guide.additional-accessibility-information.tactile-objects");
+                expect(additionalInformation.statements[12].id).toBe("accessibility.display-guide.additional-accessibility-information.text-to-speech-hinting");
             });
         });
 
@@ -1004,7 +1003,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             
             // Then
             expect(hazards.shouldDisplay).toBe(true);
-            expect(hazards.statements.some(s => s.displayId === AccessibilityDisplayString.HazardsFlashing)).toBe(true);
+            expect(hazards.statements.some(s => s.id === "accessibility.display-guide.hazards.flashing")).toBe(true);
             expect(hazards.flashing).toBe('yes');
         });
 
@@ -1022,7 +1021,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             
             // Then
             expect(hazards.shouldDisplay).toBe(true);
-            expect(hazards.statements.some(s => s.displayId === AccessibilityDisplayString.HazardsMotion)).toBe(true);
+            expect(hazards.statements.some(s => s.id === "accessibility.display-guide.hazards.motion")).toBe(true);
             expect(hazards.motion).toBe('yes');
         });
 
@@ -1040,7 +1039,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             
             // Then
             expect(hazards.shouldDisplay).toBe(true);
-            expect(hazards.statements.some(s => s.displayId === AccessibilityDisplayString.HazardsSound)).toBe(true);
+            expect(hazards.statements.some(s => s.id === "accessibility.display-guide.hazards.sound")).toBe(true);
             expect(hazards.sound).toBe('yes');
         });
 
@@ -1058,7 +1057,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             
             // Then
             expect(hazards.shouldDisplay).toBe(true);
-            expect(hazards.statements.some(s => s.displayId === AccessibilityDisplayString.HazardsNone)).toBe(true);
+            expect(hazards.statements.some(s => s.id === "accessibility.display-guide.hazards.none")).toBe(true);
             expect(hazards.noHazards).toBe(true);
         });
 
@@ -1076,7 +1075,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             
             // Then
             expect(hazards.shouldDisplay).toBe(true);
-            expect(hazards.statements.some(s => s.displayId === AccessibilityDisplayString.HazardsUnknown)).toBe(true);
+            expect(hazards.statements.some(s => s.id === "accessibility.display-guide.hazards.unknown")).toBe(true);
             expect(hazards.unknown).toBe(true);
         });
 
@@ -1113,7 +1112,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             
             // Then
             expect(hazards.shouldDisplay).toBe(false);
-            expect(hazards.statements.some(s => s.displayId === AccessibilityDisplayString.HazardsNoMetadata)).toBe(true);
+            expect(hazards.statements.some(s => s.id === "accessibility.display-guide.hazards.no-metadata")).toBe(true);
             expect(hazards.noMetadata).toBe(true);
         });
     });
@@ -1134,7 +1133,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(conformance.shouldDisplay).toBe(true);
             expect(conformance.statements.length).toBe(1);
-            expect(conformance.statements[0].displayId).toBe(AccessibilityDisplayString.ConformanceAaa);
+            expect(conformance.statements[0].id).toBe("accessibility.display-guide.conformance.aaa");
         });
 
         it('should detect WCAG AA conformance', () => {
@@ -1152,48 +1151,48 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(conformance.shouldDisplay).toBe(true);
             expect(conformance.statements.length).toBe(1);
-            expect(conformance.statements[0].displayId).toBe(AccessibilityDisplayString.ConformanceAa);
+            expect(conformance.statements[0].id).toBe("accessibility.display-guide.conformance.aa");
         });
 
         it('should detect WCAG A conformance', () => {
-            // Given
-            const publication = createPublication({
-                accessibility: new Accessibility({
+                // Given
+                const publication = createPublication({
+                    accessibility: new Accessibility({
                     conformsTo: [Profile.EPUB_A11Y_11_WCAG_21_A]
-                })
-            });
-            
-            // When
-            const guide = new AccessibilityMetadataDisplayGuide(publication);
+                    })
+                });
+                
+                // When
+                const guide = new AccessibilityMetadataDisplayGuide(publication);
             const conformance = guide.conformance;
-            
-            // Then
+                
+                // Then
             expect(conformance.shouldDisplay).toBe(true);
             expect(conformance.statements.length).toBe(1);
-            expect(conformance.statements[0].displayId).toBe(AccessibilityDisplayString.ConformanceA);
-        });
+            expect(conformance.statements[0].id).toBe("accessibility.display-guide.conformance.a");
+            });
 
         it('should show no conformance when no profiles', () => {
-            // Given
-            const publication = createPublication({
-                accessibility: new Accessibility({
+                // Given
+                const publication = createPublication({
+                    accessibility: new Accessibility({
                     conformsTo: []
-                })
-            });
-            
-            // When
-            const guide = new AccessibilityMetadataDisplayGuide(publication);
+                    })
+                });
+                
+                // When
+                const guide = new AccessibilityMetadataDisplayGuide(publication);
             const conformance = guide.conformance;
-            
-            // Then
+                
+                // Then
             expect(conformance.shouldDisplay).toBe(true);
             expect(conformance.statements.length).toBe(1);
-            expect(conformance.statements[0].displayId).toBe(AccessibilityDisplayString.ConformanceNo);
-        });
+            expect(conformance.statements[0].id).toBe("accessibility.display-guide.conformance.no");
+            });
 
         it('should handle multiple conformance profiles', () => {
-            // Given
-            const publication = createPublication({
+                // Given
+                const publication = createPublication({
                 accessibility: new Accessibility({
                     conformsTo: [
                         Profile.EPUB_A11Y_11_WCAG_21_AAA,
@@ -1209,7 +1208,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(conformance.shouldDisplay).toBe(true);
             expect(conformance.statements.length).toBe(1);
-            expect(conformance.statements[0].displayId).toBe(AccessibilityDisplayString.ConformanceAaa);
+            expect(conformance.statements[0].id).toBe("accessibility.display-guide.conformance.aaa");
         });
     });
 
@@ -1227,7 +1226,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(false);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsNoMetadata);
+            expect(legal.statements[0].id).toBe("accessibility.display-guide.legal-considerations.no-metadata");
         });
 
         it('should handle no exemptions case', () => {
@@ -1245,7 +1244,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(false);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsNoMetadata);
+            expect(legal.statements[0].id).toBe("accessibility.display-guide.legal-considerations.no-metadata");
         });
 
         it('should handle NONE exemption', () => {
@@ -1263,7 +1262,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(true);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsExempt);
+            expect(legal.statements[0].id).toBe("accessibility.display-guide.legal-considerations.exempt");
         });
 
         it('should handle DOCUMENTED exemption', () => {
@@ -1281,7 +1280,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(true);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsExempt);
+            expect(legal.statements[0].id).toBe("accessibility.display-guide.legal-considerations.exempt");
         });
 
         it('should handle LEGAL exemption', () => {
@@ -1299,7 +1298,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(true);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsExempt);
+            expect(legal.statements[0].id).toBe("accessibility.display-guide.legal-considerations.exempt");
         });
 
         it('should handle TEMPORARY exemption', () => {
@@ -1317,7 +1316,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(true);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsExempt);
+            expect(legal.statements[0].id).toBe("accessibility.display-guide.legal-considerations.exempt");
         });
 
         it('should handle TECHNICAL exemption', () => {
@@ -1335,7 +1334,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(true);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsExempt);
+            expect(legal.statements[0].id).toBe("accessibility.display-guide.legal-considerations.exempt");
         });
 
         it('should handle EU Accessibility Act exemptions', () => {
@@ -1359,7 +1358,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(true);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsExempt);
+            expect(legal.statements[0].id).toBe("accessibility.display-guide.legal-considerations.exempt");
         });
 
         it('should handle multiple exemptions', () => {
@@ -1381,7 +1380,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(true);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsExempt);
+            expect(legal.statements[0].id).toBe("accessibility.display-guide.legal-considerations.exempt");
         });
 
         it('should show no metadata when no exemptions', () => {
@@ -1399,7 +1398,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(legal.shouldDisplay).toBe(false);
             expect(legal.statements.length).toBe(1);
-            expect(legal.statements[0].displayId).toBe(AccessibilityDisplayString.LegalConsiderationsNoMetadata);
+            expect(legal.statements[0].id).toBe("accessibility.display-guide.legal-considerations.no-metadata");
         });
     });
 
@@ -1415,9 +1414,9 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             const summary = guide.accessibilitySummary;
             
             // Then
-            expect(summary.shouldDisplay).toBe(false);
+            expect(summary.shouldDisplay).toBe(true);
             expect(summary.statements.length).toBe(1);
-            expect(summary.statements[0].displayId).toBe(AccessibilityDisplayString.AccessibilitySummaryNoMetadata);
+            expect(summary.statements[0].id).toBe("accessibility.display-guide.accessibility-summary.no-metadata");
         });
 
         it('should handle empty summary case', () => {
@@ -1433,9 +1432,9 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             const summary = guide.accessibilitySummary;
             
             // Then
-            expect(summary.shouldDisplay).toBe(false);
+            expect(summary.shouldDisplay).toBe(true);
             expect(summary.statements.length).toBe(1);
-            expect(summary.statements[0].displayId).toBe(AccessibilityDisplayString.AccessibilitySummaryNoMetadata);
+            expect(summary.statements[0].id).toBe("accessibility.display-guide.accessibility-summary.no-metadata");
         });
 
         it('should handle valid summary', () => {
@@ -1453,7 +1452,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Then
             expect(summary.shouldDisplay).toBe(true);
             expect(summary.statements.length).toBe(1);
-            expect(summary.statements[0].values).toContain('Some summary text');
+            expect(summary.statements[0].compactString).toBe('Some summary text');
         });
     });
 });

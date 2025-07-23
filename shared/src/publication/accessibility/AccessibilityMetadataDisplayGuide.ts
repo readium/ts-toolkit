@@ -1,15 +1,17 @@
 import { Accessibility, Feature, AccessMode, PrimaryAccessMode, Hazard } from './Accessibility';
 import { Publication } from '../Publication';
-import { AccessibilityDisplayString } from './AccessibilityDisplayString';
 import { EPUBLayout } from '../epub';
 import { Profile } from './Accessibility';
+
+import { localization } from './Localization';
 
 /**
  * Represents a single accessibility claim
  */
 export interface AccessibilityDisplayStatement {
-  displayId: string;
-  values?: any[];
+  id: string;
+  compactString?: string;
+  descriptiveString?: string;
 }
 
 /**
@@ -65,8 +67,8 @@ export enum PrerecordedAudio {
  * access.
  */
 export class WaysOfReading implements AccessibilityDisplayField {
-  public readonly id = AccessibilityDisplayString.WaysOfReadingTitle;
-  public readonly title = 'Ways of Reading';
+  public readonly id = "accessibility.display-guide.ways-of-reading.title";
+  public readonly title: string;
   public readonly shouldDisplay: boolean;
 
   public readonly visualAdjustments: VisualAdjustments;
@@ -88,37 +90,72 @@ export class WaysOfReading implements AccessibilityDisplayField {
 
     // This should be displayed even if there is no metadata
     this.shouldDisplay = true;
+    
+    const titleLocale = localization.getString(this.id);
+    this.title = titleLocale.compact;
 
     this.statements = [];
+    
+    // Visual Adjustments
+    const visualAdjustmentsKey = visualAdjustments === VisualAdjustments.Modifiable
+      ? "accessibility.display-guide.ways-of-reading.visual-adjustments.modifiable"
+      : visualAdjustments === VisualAdjustments.Unmodifiable
+        ? "accessibility.display-guide.ways-of-reading.visual-adjustments.unmodifiable"
+        : "accessibility.display-guide.ways-of-reading.visual-adjustments.unknown";
+    
+    const visualAdjustmentsLocale = localization.getString(visualAdjustmentsKey);
     this.statements.push({
-      displayId: visualAdjustments === VisualAdjustments.Modifiable
-        ? AccessibilityDisplayString.WaysOfReadingVisualAdjustmentsModifiable
-        : visualAdjustments === VisualAdjustments.Unmodifiable
-          ? AccessibilityDisplayString.WaysOfReadingVisualAdjustmentsUnmodifiable
-          : AccessibilityDisplayString.WaysOfReadingVisualAdjustmentsUnknown
+      id: visualAdjustmentsKey,
+      compactString: visualAdjustmentsLocale.compact,
+      descriptiveString: visualAdjustmentsLocale.descriptive
     });
+
+    // Non-visual Reading
+    let nonvisualReadingKey = "";
+    if (nonvisualReading === NonvisualReading.Readable) {
+      nonvisualReadingKey = "accessibility.display-guide.ways-of-reading.nonvisual-reading.readable";
+    } else if (nonvisualReading === NonvisualReading.NotFully) {
+      nonvisualReadingKey = "accessibility.display-guide.ways-of-reading.nonvisual-reading.not-fully";
+    } else if (nonvisualReading === NonvisualReading.Unreadable) {
+      nonvisualReadingKey = "accessibility.display-guide.ways-of-reading.nonvisual-reading.none";
+    } else if (nonvisualReading === NonvisualReading.NoMetadata) {
+      nonvisualReadingKey = "accessibility.display-guide.ways-of-reading.nonvisual-reading.no-metadata";
+    }
+    
+    const nonvisualReadingLocale = localization.getString(nonvisualReadingKey);
     this.statements.push({
-      displayId: nonvisualReading === NonvisualReading.Readable
-        ? AccessibilityDisplayString.WaysOfReadingNonvisualReadingReadable
-        : nonvisualReading === NonvisualReading.NotFully
-          ? AccessibilityDisplayString.WaysOfReadingNonvisualReadingNotFully
-          : nonvisualReading === NonvisualReading.Unreadable
-            ? AccessibilityDisplayString.WaysOfReadingNonvisualReadingNone
-            : AccessibilityDisplayString.WaysOfReadingNonvisualReadingNoMetadata
+      id: nonvisualReadingKey,
+      compactString: nonvisualReadingLocale.compact,
+      descriptiveString: nonvisualReadingLocale.descriptive
     });
+
+    // Non-visual Reading Alt Text
     if (nonvisualReadingAltText) {
+      const altTextLocale = localization.getString("accessibility.display-guide.ways-of-reading.nonvisual-reading.alt-text");
       this.statements.push({
-        displayId: AccessibilityDisplayString.WaysOfReadingNonvisualReadingAltText
+        id: "accessibility.display-guide.ways-of-reading.nonvisual-reading.alt-text",
+        compactString: altTextLocale.compact,
+        descriptiveString: altTextLocale.descriptive
       });
     }
+
+    // Prerecorded Audio
+    let prerecordedAudioKey = "";
+    if (prerecordedAudio === PrerecordedAudio.Synchronized) {
+      prerecordedAudioKey = "accessibility.display-guide.ways-of-reading.prerecorded-audio.synchronized";
+    } else if (prerecordedAudio === PrerecordedAudio.AudioOnly) {
+      prerecordedAudioKey = "accessibility.display-guide.ways-of-reading.prerecorded-audio.only";
+    } else if (prerecordedAudio === PrerecordedAudio.AudioComplementary) {
+      prerecordedAudioKey = "accessibility.display-guide.ways-of-reading.prerecorded-audio.complementary";
+    } else if (prerecordedAudio === PrerecordedAudio.NoMetadata) {
+      prerecordedAudioKey = "accessibility.display-guide.ways-of-reading.prerecorded-audio.no-metadata";
+    }
+    
+    const prerecordedAudioLocale = localization.getString(prerecordedAudioKey);
     this.statements.push({
-      displayId: prerecordedAudio === PrerecordedAudio.Synchronized
-        ? AccessibilityDisplayString.WaysOfReadingPrerecordedAudioSynchronized
-        : prerecordedAudio === PrerecordedAudio.AudioOnly
-          ? AccessibilityDisplayString.WaysOfReadingPrerecordedAudioOnly
-          : prerecordedAudio === PrerecordedAudio.AudioComplementary
-            ? AccessibilityDisplayString.WaysOfReadingPrerecordedAudioComplementary
-            : AccessibilityDisplayString.WaysOfReadingPrerecordedAudioNoMetadata
+      id: prerecordedAudioKey,
+      compactString: prerecordedAudioLocale.compact,
+      descriptiveString: prerecordedAudioLocale.descriptive
     });
   }
 
@@ -208,8 +245,8 @@ export class WaysOfReading implements AccessibilityDisplayField {
  * Navigation features of the content
  */
 export class Navigation implements AccessibilityDisplayField {
-  public readonly id = AccessibilityDisplayString.NavigationTitle;
-  public readonly title = 'Navigation';
+  public readonly id = "accessibility.display-guide.navigation.title";
+  public readonly title: string;
   public readonly shouldDisplay: boolean;
 
   public readonly noMetadata: boolean;
@@ -231,33 +268,51 @@ export class Navigation implements AccessibilityDisplayField {
     this.page = page;
     this.noMetadata = !tableOfContents && !index && !headings && !page;
 
+    const titleLocale = localization.getString(this.id);
+    this.title = titleLocale.compact;
+
     this.shouldDisplay = !this.noMetadata;
 
     this.statements = [];
     if (tableOfContents) {
+      const tocLocale = localization.getString("accessibility.display-guide.navigation.toc");
       this.statements.push({
-        displayId: AccessibilityDisplayString.NavigationToc
+        id: "accessibility.display-guide.navigation.toc",
+        compactString: tocLocale.compact,
+        descriptiveString: tocLocale.descriptive
       });
     }
     if (index) {
+      const indexLocale = localization.getString("accessibility.display-guide.navigation.index");
       this.statements.push({
-        displayId: AccessibilityDisplayString.NavigationIndex
+        id: "accessibility.display-guide.navigation.index",
+        compactString: indexLocale.compact,
+        descriptiveString: indexLocale.descriptive
       });
     }
     if (headings) {
+      const headingsLocale = localization.getString("accessibility.display-guide.navigation.structural");
       this.statements.push({
-        displayId: AccessibilityDisplayString.NavigationStructural
+        id: "accessibility.display-guide.navigation.structural",
+        compactString: headingsLocale.compact,
+        descriptiveString: headingsLocale.descriptive
       });
     }
     if (page) {
+      const pageNavLocale = localization.getString("accessibility.display-guide.navigation.page-navigation");
       this.statements.push({
-        displayId: AccessibilityDisplayString.NavigationPageNavigation
+        id: "accessibility.display-guide.navigation.page-navigation",
+        compactString: pageNavLocale.compact,
+        descriptiveString: pageNavLocale.descriptive
       });
     }
 
     if (this.statements.length === 0) {
+      const noNavLocale = localization.getString("accessibility.display-guide.navigation.no-metadata");
       this.statements.push({
-        displayId: AccessibilityDisplayString.NavigationNoMetadata
+        id: "accessibility.display-guide.navigation.no-metadata",
+        compactString: noNavLocale.compact,
+        descriptiveString: noNavLocale.descriptive
       });
     }
   }
@@ -293,8 +348,8 @@ export enum RichContentType {
  * Rich content features of the content
  */
 export class RichContent implements AccessibilityDisplayField {
-  public readonly id = AccessibilityDisplayString.RichContentTitle;
-  public readonly title = 'Rich Content';
+  public readonly id = "accessibility.display-guide.rich-content.title";
+  public readonly title: string;
   public readonly shouldDisplay: boolean;
 
   public readonly noMetadata: boolean;
@@ -334,57 +389,90 @@ export class RichContent implements AccessibilityDisplayField {
       !closedCaptions && !openCaptions && !transcript;
 
     this.shouldDisplay = !this.noMetadata;
+    
+    const titleLocale = localization.getString(this.id);
+    this.title = titleLocale.compact;
 
     this.statements = [];
     if (extendedAltTextDescriptions) {
+      const extendedLocale = localization.getString("accessibility.display-guide.rich-content.extended-descriptions");
       this.statements.push({
-        displayId: AccessibilityDisplayString.RichContentExtended
+        id: "accessibility.display-guide.rich-content.extended-descriptions",
+        compactString: extendedLocale.compact,
+        descriptiveString: extendedLocale.descriptive
       });
     }
     if (mathFormula) {
+      const mathLocale = localization.getString("accessibility.display-guide.rich-content.accessible-math-described");
       this.statements.push({
-        displayId: AccessibilityDisplayString.RichContentAccessibleMathDescribed
+        id: "accessibility.display-guide.rich-content.accessible-math-described",
+        compactString: mathLocale.compact,
+        descriptiveString: mathLocale.descriptive
       });
     }
     if (mathFormulaAsMathML) {
+      const mathMLLocale = localization.getString("accessibility.display-guide.rich-content.math-as-mathml");
       this.statements.push({
-        displayId: AccessibilityDisplayString.RichContentAccessibleMathAsMathml
+        id: "accessibility.display-guide.rich-content.math-as-mathml",
+        compactString: mathMLLocale.compact,
+        descriptiveString: mathMLLocale.descriptive
       });
     }
     if (mathFormulaAsLaTeX) {
+      const latexLocale = localization.getString("accessibility.display-guide.rich-content.accessible-math-as-latex");
       this.statements.push({
-        displayId: AccessibilityDisplayString.RichContentAccessibleMathAsLatex
+        id: "accessibility.display-guide.rich-content.accessible-math-as-latex",
+        compactString: latexLocale.compact,
+        descriptiveString: latexLocale.descriptive
       });
     }
     if (chemicalFormulaAsMathML) {
+      const chemMLLocale = localization.getString("accessibility.display-guide.rich-content.accessible-chemistry-as-mathml");
       this.statements.push({
-        displayId: AccessibilityDisplayString.RichContentAccessibleChemistryAsMathml
+        id: "accessibility.display-guide.rich-content.accessible-chemistry-as-mathml",
+        compactString: chemMLLocale.compact,
+        descriptiveString: chemMLLocale.descriptive
       });
     }
     if (chemicalFormulaAsLaTeX) {
+      const chemLatexLocale = localization.getString("accessibility.display-guide.rich-content.accessible-chemistry-as-latex");
       this.statements.push({
-        displayId: AccessibilityDisplayString.RichContentAccessibleChemistryAsLatex
+        id: "accessibility.display-guide.rich-content.accessible-chemistry-as-latex",
+        compactString: chemLatexLocale.compact,
+        descriptiveString: chemLatexLocale.descriptive
       });
     }
     if (closedCaptions) {
+      const ccLocale = localization.getString("accessibility.display-guide.rich-content.closed-captions");
       this.statements.push({
-        displayId: AccessibilityDisplayString.RichContentClosedCaptions
+        id: "accessibility.display-guide.rich-content.closed-captions",
+        compactString: ccLocale.compact,
+        descriptiveString: ccLocale.descriptive
       });
     }
     if (openCaptions) {
+      const ocLocale = localization.getString("accessibility.display-guide.rich-content.open-captions");
       this.statements.push({
-        displayId: AccessibilityDisplayString.RichContentOpenCaptions
+        id: "accessibility.display-guide.rich-content.open-captions",
+        compactString: ocLocale.compact,
+        descriptiveString: ocLocale.descriptive
       });
     }
     if (transcript) {
+      const transcriptLocale = localization.getString("accessibility.display-guide.rich-content.transcript");
       this.statements.push({
-        displayId: AccessibilityDisplayString.RichContentTranscript
+        id: "accessibility.display-guide.rich-content.transcript",
+        compactString: transcriptLocale.compact,
+        descriptiveString: transcriptLocale.descriptive
       });
     }
 
     if (this.statements.length === 0) {
+      const unknownLocale = localization.getString("accessibility.display-guide.rich-content.unknown");
       this.statements.push({
-        displayId: AccessibilityDisplayString.RichContentUnknown
+        id: "accessibility.display-guide.rich-content.unknown",
+        compactString: unknownLocale.compact,
+        descriptiveString: unknownLocale.descriptive
       });
     }
   }
@@ -411,8 +499,8 @@ export class RichContent implements AccessibilityDisplayField {
  * Represents additional accessibility information
  */
 export class AdditionalInformation implements AccessibilityDisplayField {
-  public readonly id = AccessibilityDisplayString.AdditionalInformationTitle;
-  public readonly title = 'Additional Information';
+  public readonly id = "accessibility.display-guide.additional-accessibility-information.title";
+  public readonly title: string;
   public readonly shouldDisplay: boolean;
 
   public readonly noMetadata: boolean;
@@ -465,71 +553,113 @@ export class AdditionalInformation implements AccessibilityDisplayField {
       !signLanguage && !tactileGraphics && !tactileObjects && !textToSpeechHinting;
 
     this.shouldDisplay = !this.noMetadata;
+    
+    const titleLocale = localization.getString(this.id);
+    this.title = titleLocale.compact;
 
     this.statements = [];
     if (pageBreakMarkers) {
+      const pageBreaksLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.page-breaks");
       this.statements.push({
-        displayId: AccessibilityDisplayString.AdditionalInformationPageBreaks
+        id: "accessibility.display-guide.additional-accessibility-information.page-breaks",
+        compactString: pageBreaksLocale.compact,
+        descriptiveString: pageBreaksLocale.descriptive
       });
     }
     if (aria) {
+      const ariaLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.aria");
       this.statements.push({
-        displayId: AccessibilityDisplayString.AdditionalInformationAria
+        id: "accessibility.display-guide.additional-accessibility-information.aria",
+        compactString: ariaLocale.compact,
+        descriptiveString: ariaLocale.descriptive
       });
     }
     if (audioDescriptions) {
+      const audioDescLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.audio-descriptions");
       this.statements.push({
-        displayId: AccessibilityDisplayString.AdditionalInformationAudioDescriptions
+        id: "accessibility.display-guide.additional-accessibility-information.audio-descriptions",
+        compactString: audioDescLocale.compact,
+        descriptiveString: audioDescLocale.descriptive
       });
     }
     if (braille) {
+      const brailleLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.braille");
       this.statements.push({
-        displayId: AccessibilityDisplayString.AdditionalInformationBraille
+        id: "accessibility.display-guide.additional-accessibility-information.braille",
+        compactString: brailleLocale.compact,
+        descriptiveString: brailleLocale.descriptive
       });
     }
     if (rubyAnnotations) {
+      const rubyLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.ruby-annotations");
       this.statements.push({
-        displayId: AccessibilityDisplayString.AdditionalInformationRubyAnnotations
+        id: "accessibility.display-guide.additional-accessibility-information.ruby-annotations",
+        compactString: rubyLocale.compact,
+        descriptiveString: rubyLocale.descriptive
       });
     }
     if (fullRubyAnnotations) {
+      const fullRubyLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.full-ruby-annotations");
       this.statements.push({
-        displayId: AccessibilityDisplayString.AdditionalInformationFullRubyAnnotations
+        id: "accessibility.display-guide.additional-accessibility-information.full-ruby-annotations",
+        compactString: fullRubyLocale.compact,
+        descriptiveString: fullRubyLocale.descriptive
       });
     }
     if (highAudioContrast) {
+      const audioContrastLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.high-contrast-between-foreground-and-background-audio");
       this.statements.push({
-        displayId: AccessibilityDisplayString.AdditionalInformationHighContrastBetweenForegroundAndBackgroundAudio
+        id: "accessibility.display-guide.additional-accessibility-information.high-contrast-between-foreground-and-background-audio",
+        compactString: audioContrastLocale.compact,
+        descriptiveString: audioContrastLocale.descriptive
       });
     }
     if (highDisplayContrast) {
+      const displayContrastLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.high-contrast-between-text-and-background");
       this.statements.push({
-        displayId: AccessibilityDisplayString.AdditionalInformationHighContrastBetweenTextAndBackground
+        id: "accessibility.display-guide.additional-accessibility-information.high-contrast-between-text-and-background",
+        compactString: displayContrastLocale.compact,
+        descriptiveString: displayContrastLocale.descriptive
       });
     }
     if (largePrint) {
+      const largePrintLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.large-print");
       this.statements.push({
-        displayId: AccessibilityDisplayString.AdditionalInformationLargePrint
+        id: "accessibility.display-guide.additional-accessibility-information.large-print",
+        compactString: largePrintLocale.compact,
+        descriptiveString: largePrintLocale.descriptive
       });
     }
     if (signLanguage) {
+      const signLanguageLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.sign-language");
       this.statements.push({
-        displayId: AccessibilityDisplayString.AdditionalInformationSignLanguage
+        id: "accessibility.display-guide.additional-accessibility-information.sign-language",
+        compactString: signLanguageLocale.compact,
+        descriptiveString: signLanguageLocale.descriptive
       });
     }
     if (tactileGraphics) {
+      const tactileGraphicsLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.tactile-graphics");
       this.statements.push({
-        displayId: AccessibilityDisplayString.AdditionalInformationTactileGraphics
+        id: "accessibility.display-guide.additional-accessibility-information.tactile-graphics",
+        compactString: tactileGraphicsLocale.compact,
+        descriptiveString: tactileGraphicsLocale.descriptive
       });
     }
     if (tactileObjects) {
+      const tactileObjectsLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.tactile-objects");
       this.statements.push({
-        displayId: AccessibilityDisplayString.AdditionalInformationTactileObjects
+        id: "accessibility.display-guide.additional-accessibility-information.tactile-objects",
+        compactString: tactileObjectsLocale.compact,
+        descriptiveString: tactileObjectsLocale.descriptive
       });
     }
     if (textToSpeechHinting) {
+      const ttsHintingLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.text-to-speech-hinting");
       this.statements.push({
-        displayId: AccessibilityDisplayString.AdditionalInformationTextToSpeechHinting
+        id: "accessibility.display-guide.additional-accessibility-information.text-to-speech-hinting",
+        compactString: ttsHintingLocale.compact,
+        descriptiveString: ttsHintingLocale.descriptive
       });
     }
   }
@@ -567,8 +697,8 @@ export enum HazardType {
  * Represents potential hazards in the content
  */
 export class Hazards implements AccessibilityDisplayField {
-  public readonly id = AccessibilityDisplayString.HazardsTitle;
-  public readonly title = 'Hazards';
+  public readonly id = "accessibility.display-guide.hazards.title";
+  public readonly title: string;
   public readonly shouldDisplay: boolean;
   public readonly noMetadata: boolean;
   public readonly noHazards: boolean;
@@ -586,6 +716,9 @@ export class Hazards implements AccessibilityDisplayField {
     this.flashing = flashing;
     this.motion = motion;
     this.sound = sound;
+    
+    const titleLocale = localization.getString(this.id);
+    this.title = titleLocale.compact;
 
     this.noMetadata = flashing === HazardType.noMetadata && motion === HazardType.noMetadata && sound === HazardType.noMetadata;
     this.noHazards = flashing === HazardType.no && motion === HazardType.no && sound === HazardType.no;
@@ -595,55 +728,91 @@ export class Hazards implements AccessibilityDisplayField {
 
     this.statements = [];
     if (this.noHazards) {
+      const noneLocale = localization.getString("accessibility.display-guide.hazards.none");
       this.statements.push({
-        displayId: AccessibilityDisplayString.HazardsNone
+        id: "accessibility.display-guide.hazards.none",
+        compactString: noneLocale.compact,
+        descriptiveString: noneLocale.descriptive
       });
     } else if (this.unknown) {
+      const unknownLocale = localization.getString("accessibility.display-guide.hazards.unknown");
       this.statements.push({
-        displayId: AccessibilityDisplayString.HazardsUnknown
+        id: "accessibility.display-guide.hazards.unknown",
+        compactString: unknownLocale.compact,
+        descriptiveString: unknownLocale.descriptive
       });
     } else if (this.noMetadata) {
+      const noMetadataLocale = localization.getString("accessibility.display-guide.hazards.no-metadata");
       this.statements.push({
-        displayId: AccessibilityDisplayString.HazardsNoMetadata
+        id: "accessibility.display-guide.hazards.no-metadata",
+        compactString: noMetadataLocale.compact,
+        descriptiveString: noMetadataLocale.descriptive
       });
     } else {
       if (flashing === HazardType.yes) {
+        const flashingLocale = localization.getString("accessibility.display-guide.hazards.flashing");
         this.statements.push({
-          displayId: AccessibilityDisplayString.HazardsFlashing
+          id: "accessibility.display-guide.hazards.flashing",
+          compactString: flashingLocale.compact,
+          descriptiveString: flashingLocale.descriptive
         });
       } else if (flashing === HazardType.unknown) {
+        const flashingUnknownLocale = localization.getString("accessibility.display-guide.hazards.flashing-unknown");
         this.statements.push({
-          displayId: AccessibilityDisplayString.HazardsFlashingUnknown
+          id: "accessibility.display-guide.hazards.flashing-unknown",
+          compactString: flashingUnknownLocale.compact,
+          descriptiveString: flashingUnknownLocale.descriptive
         });
       } else if (flashing === HazardType.no) {
+        const flashingNoneLocale = localization.getString("accessibility.display-guide.hazards.flashing-none");
         this.statements.push({
-          displayId: AccessibilityDisplayString.HazardsFlashingNone
+          id: "accessibility.display-guide.hazards.flashing-none",
+          compactString: flashingNoneLocale.compact,
+          descriptiveString: flashingNoneLocale.descriptive
         });
       }
       if (motion === HazardType.yes) {
+        const motionLocale = localization.getString("accessibility.display-guide.hazards.motion");
         this.statements.push({
-          displayId: AccessibilityDisplayString.HazardsMotion
+          id: "accessibility.display-guide.hazards.motion",
+          compactString: motionLocale.compact,
+          descriptiveString: motionLocale.descriptive
         });
       } else if (motion === HazardType.unknown) {
+        const motionUnknownLocale = localization.getString("accessibility.display-guide.hazards.motion-unknown");
         this.statements.push({
-          displayId: AccessibilityDisplayString.HazardsMotionUnknown
+          id: "accessibility.display-guide.hazards.motion-unknown",
+          compactString: motionUnknownLocale.compact,
+          descriptiveString: motionUnknownLocale.descriptive
         });
       } else if (motion === HazardType.no) {
+        const motionNoneLocale = localization.getString("accessibility.display-guide.hazards.motion-none");
         this.statements.push({
-          displayId: AccessibilityDisplayString.HazardsMotionNone
+          id: "accessibility.display-guide.hazards.motion-none",
+          compactString: motionNoneLocale.compact,
+          descriptiveString: motionNoneLocale.descriptive
         });
       }
       if (sound === HazardType.yes) {
+        const soundLocale = localization.getString("accessibility.display-guide.hazards.sound");
         this.statements.push({
-          displayId: AccessibilityDisplayString.HazardsSound
+          id: "accessibility.display-guide.hazards.sound",
+          compactString: soundLocale.compact,
+          descriptiveString: soundLocale.descriptive
         });
       } else if (sound === HazardType.unknown) {
+        const soundUnknownLocale = localization.getString("accessibility.display-guide.hazards.sound-unknown");
         this.statements.push({
-          displayId: AccessibilityDisplayString.HazardsSoundUnknown
+          id: "accessibility.display-guide.hazards.sound-unknown",
+          compactString: soundUnknownLocale.compact,
+          descriptiveString: soundUnknownLocale.descriptive
         });
       } else if (sound === HazardType.no) {
+        const soundNoneLocale = localization.getString("accessibility.display-guide.hazards.sound-none");
         this.statements.push({
-          displayId: AccessibilityDisplayString.HazardsSoundNone
+          id: "accessibility.display-guide.hazards.sound-none",
+          compactString: soundNoneLocale.compact,
+          descriptiveString: soundNoneLocale.descriptive
         });
       }
     }
@@ -702,8 +871,8 @@ export class Hazards implements AccessibilityDisplayField {
 * Represents conformance to accessibility standards
 */
 export class Conformance implements AccessibilityDisplayField {
-  public readonly id = AccessibilityDisplayString.ConformanceTitle;
-  public readonly title = 'Conformance';
+  public readonly id = "accessibility.display-guide.conformance.title";
+  public readonly title: string;
   public readonly shouldDisplay: boolean;
   public readonly profiles: Profile[];
   public readonly statements: AccessibilityDisplayStatement[];
@@ -713,30 +882,48 @@ export class Conformance implements AccessibilityDisplayField {
     
     // This should be displayed even if there is no metadata
     this.shouldDisplay = true;
+    
+    const titleLocale = localization.getString(this.id);
+    this.title = titleLocale.compact;
 
     this.statements = [];
     if (profiles.length === 0) {
+      const noConformanceLocale = localization.getString("accessibility.display-guide.conformance.no");
       this.statements.push({
-        displayId: AccessibilityDisplayString.ConformanceNo
+        id: "accessibility.display-guide.conformance.no",
+        compactString: noConformanceLocale.compact,
+        descriptiveString: noConformanceLocale.descriptive
       });
       return;
     }
 
     if (profiles.some(profile => profile.isWCAGLevelAAA)) {
+      const aaaLocale = localization.getString("accessibility.display-guide.conformance.aaa");
       this.statements.push({
-        displayId: AccessibilityDisplayString.ConformanceAaa
+        id: "accessibility.display-guide.conformance.aaa",
+        compactString: aaaLocale.compact,
+        descriptiveString: aaaLocale.descriptive
       });
     } else if (profiles.some(profile => profile.isWCAGLevelAA)) {
+      const aaLocale = localization.getString("accessibility.display-guide.conformance.aa");
       this.statements.push({
-        displayId: AccessibilityDisplayString.ConformanceAa
+        id: "accessibility.display-guide.conformance.aa",
+        compactString: aaLocale.compact,
+        descriptiveString: aaLocale.descriptive
       });
     } else if (profiles.some(profile => profile.isWCAGLevelA)) {
+      const aLocale = localization.getString("accessibility.display-guide.conformance.a");
       this.statements.push({
-        displayId: AccessibilityDisplayString.ConformanceA
+        id: "accessibility.display-guide.conformance.a",
+        compactString: aLocale.compact,
+        descriptiveString: aLocale.descriptive
       });
     } else {
+      const unknownLocale = localization.getString("accessibility.display-guide.conformance.unknown-standard");
       this.statements.push({
-        displayId: AccessibilityDisplayString.ConformanceUnknownStandard
+        id: "accessibility.display-guide.conformance.unknown-standard",
+        compactString: unknownLocale.compact,
+        descriptiveString: unknownLocale.descriptive
       });
     }
   }
@@ -746,13 +933,12 @@ export class Conformance implements AccessibilityDisplayField {
     return new Conformance(profiles);
   }
 }
-
 /**
-* Represents legal exemptions
-*/
+ * Represents legal exemptions
+ */
 export class Legal implements AccessibilityDisplayField {
-  public readonly id = AccessibilityDisplayString.LegalConsiderationsTitle;
-  public readonly title = 'Legal';
+  public readonly id = "accessibility.display-guide.legal-considerations.title";
+  public readonly title: string;
   public readonly shouldDisplay: boolean;
   public readonly exemption: boolean;
   public readonly statements: AccessibilityDisplayStatement[];
@@ -762,22 +948,32 @@ export class Legal implements AccessibilityDisplayField {
   ) {
     this.exemption = exemption;
     this.shouldDisplay = this.exemption;
+    
+    const titleLocale = localization.getString(this.id);
+    this.title = titleLocale.compact;
 
     this.statements = [];
     if (exemption) {
+      const exemptLocale = localization.getString("accessibility.display-guide.legal-considerations.exempt");
       this.statements.push({
-        displayId: AccessibilityDisplayString.LegalConsiderationsExempt
+        id: "accessibility.display-guide.legal-considerations.exempt",
+        compactString: exemptLocale.compact,
+        descriptiveString: exemptLocale.descriptive
       });
     } else {
+      const noMetadataLocale = localization.getString("accessibility.display-guide.legal-considerations.no-metadata");
       this.statements.push({
-        displayId: AccessibilityDisplayString.LegalConsiderationsNoMetadata
+        id: "accessibility.display-guide.legal-considerations.no-metadata",
+        compactString: noMetadataLocale.compact,
+        descriptiveString: noMetadataLocale.descriptive
       });
     }
   }
 
   public static fromPublication(publication: Publication): Legal {
     const exemptions = publication.metadata.accessibility?.exemption ?? [];
-    return new Legal(exemptions.length > 0);
+    const hasExemption = exemptions.length > 0;
+    return new Legal(hasExemption);
   }
 }
 
@@ -785,35 +981,39 @@ export class Legal implements AccessibilityDisplayField {
 * Represents the accessibility summary
 */
 export class AccessibilitySummary implements AccessibilityDisplayField {
-  public readonly id = AccessibilityDisplayString.AccessibilitySummaryTitle;
-  public readonly title = 'Accessibility Summary';
+  public readonly id = "accessibility.display-guide.accessibility-summary.title";
+  public readonly title: string;
   public readonly shouldDisplay: boolean;
 
-  public readonly summary: string | undefined | null;
   public readonly statements: AccessibilityDisplayStatement[];
 
-  private constructor(
-    summary: string | undefined | null
-  ) {
-    this.summary = summary;
-    this.shouldDisplay = !!summary;
-
+  private constructor(publication: Publication) {
+    this.shouldDisplay = true;
+    
+    const titleLocale = localization.getString(this.id);
+    this.title = titleLocale.compact;
+    
+    const summary = publication.metadata.accessibility?.summary;
     this.statements = [];
+    
     if (this.shouldDisplay && summary) {
       this.statements.push({
-        displayId: "summary", 
-        values: [summary]
+        id: "accessibility.display-guide.accessibility-summary.summary",
+        compactString: summary,
+        descriptiveString: summary
       });
     } else {
+      const locale = localization.getString("accessibility.display-guide.accessibility-summary.no-metadata");
       this.statements.push({
-        displayId: AccessibilityDisplayString.AccessibilitySummaryNoMetadata
+        id: "accessibility.display-guide.accessibility-summary.no-metadata",
+        compactString: locale.compact,
+        descriptiveString: locale.descriptive
       });
     }
   }
 
   public static fromPublication(publication: Publication): AccessibilitySummary {
-    const a11y = publication.metadata.accessibility;
-    return new AccessibilitySummary(a11y?.summary);
+    return new AccessibilitySummary(publication);
   }
 }
 
