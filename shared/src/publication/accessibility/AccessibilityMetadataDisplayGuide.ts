@@ -67,7 +67,7 @@ export enum PrerecordedAudio {
  * access.
  */
 export class WaysOfReading implements AccessibilityDisplayField {
-  public readonly id = "accessibility.display-guide.ways-of-reading.title";
+  public readonly id = "ways-of-reading.title";
   public readonly title: string;
   public readonly shouldDisplay: boolean;
 
@@ -98,10 +98,10 @@ export class WaysOfReading implements AccessibilityDisplayField {
     
     // Visual Adjustments
     const visualAdjustmentsKey = visualAdjustments === VisualAdjustments.Modifiable
-      ? "accessibility.display-guide.ways-of-reading.visual-adjustments.modifiable"
+      ? "ways-of-reading.visual-adjustments.modifiable"
       : visualAdjustments === VisualAdjustments.Unmodifiable
-        ? "accessibility.display-guide.ways-of-reading.visual-adjustments.unmodifiable"
-        : "accessibility.display-guide.ways-of-reading.visual-adjustments.unknown";
+        ? "ways-of-reading.visual-adjustments.unmodifiable"
+        : "ways-of-reading.visual-adjustments.unknown";
     
     const visualAdjustmentsLocale = localization.getString(visualAdjustmentsKey);
     this.statements.push({
@@ -113,13 +113,13 @@ export class WaysOfReading implements AccessibilityDisplayField {
     // Non-visual Reading
     let nonvisualReadingKey = "";
     if (nonvisualReading === NonvisualReading.Readable) {
-      nonvisualReadingKey = "accessibility.display-guide.ways-of-reading.nonvisual-reading.readable";
+      nonvisualReadingKey = "ways-of-reading.nonvisual-reading.readable";
     } else if (nonvisualReading === NonvisualReading.NotFully) {
-      nonvisualReadingKey = "accessibility.display-guide.ways-of-reading.nonvisual-reading.not-fully";
+      nonvisualReadingKey = "ways-of-reading.nonvisual-reading.not-fully";
     } else if (nonvisualReading === NonvisualReading.Unreadable) {
-      nonvisualReadingKey = "accessibility.display-guide.ways-of-reading.nonvisual-reading.none";
+      nonvisualReadingKey = "ways-of-reading.nonvisual-reading.none";
     } else if (nonvisualReading === NonvisualReading.NoMetadata) {
-      nonvisualReadingKey = "accessibility.display-guide.ways-of-reading.nonvisual-reading.no-metadata";
+      nonvisualReadingKey = "ways-of-reading.nonvisual-reading.no-metadata";
     }
     
     const nonvisualReadingLocale = localization.getString(nonvisualReadingKey);
@@ -131,9 +131,9 @@ export class WaysOfReading implements AccessibilityDisplayField {
 
     // Non-visual Reading Alt Text
     if (nonvisualReadingAltText) {
-      const altTextLocale = localization.getString("accessibility.display-guide.ways-of-reading.nonvisual-reading.alt-text");
+      const altTextLocale = localization.getString("ways-of-reading.nonvisual-reading.alt-text");
       this.statements.push({
-        id: "accessibility.display-guide.ways-of-reading.nonvisual-reading.alt-text",
+        id: "ways-of-reading.nonvisual-reading.alt-text",
         compactString: altTextLocale.compact,
         descriptiveString: altTextLocale.descriptive
       });
@@ -142,13 +142,13 @@ export class WaysOfReading implements AccessibilityDisplayField {
     // Prerecorded Audio
     let prerecordedAudioKey = "";
     if (prerecordedAudio === PrerecordedAudio.Synchronized) {
-      prerecordedAudioKey = "accessibility.display-guide.ways-of-reading.prerecorded-audio.synchronized";
+      prerecordedAudioKey = "ways-of-reading.prerecorded-audio.synchronized";
     } else if (prerecordedAudio === PrerecordedAudio.AudioOnly) {
-      prerecordedAudioKey = "accessibility.display-guide.ways-of-reading.prerecorded-audio.only";
+      prerecordedAudioKey = "ways-of-reading.prerecorded-audio.only";
     } else if (prerecordedAudio === PrerecordedAudio.AudioComplementary) {
-      prerecordedAudioKey = "accessibility.display-guide.ways-of-reading.prerecorded-audio.complementary";
+      prerecordedAudioKey = "ways-of-reading.prerecorded-audio.complementary";
     } else if (prerecordedAudio === PrerecordedAudio.NoMetadata) {
-      prerecordedAudioKey = "accessibility.display-guide.ways-of-reading.prerecorded-audio.no-metadata";
+      prerecordedAudioKey = "ways-of-reading.prerecorded-audio.no-metadata";
     }
     
     const prerecordedAudioLocale = localization.getString(prerecordedAudioKey);
@@ -245,7 +245,7 @@ export class WaysOfReading implements AccessibilityDisplayField {
  * Navigation features of the content
  */
 export class Navigation implements AccessibilityDisplayField {
-  public readonly id = "accessibility.display-guide.navigation.title";
+  public readonly id = "navigation.title";
   public readonly title: string;
   public readonly shouldDisplay: boolean;
 
@@ -275,42 +275,42 @@ export class Navigation implements AccessibilityDisplayField {
 
     this.statements = [];
     if (tableOfContents) {
-      const tocLocale = localization.getString("accessibility.display-guide.navigation.toc");
+      const tocLocale = localization.getString("navigation.toc");
       this.statements.push({
-        id: "accessibility.display-guide.navigation.toc",
+        id: "navigation.toc",
         compactString: tocLocale.compact,
         descriptiveString: tocLocale.descriptive
       });
     }
     if (index) {
-      const indexLocale = localization.getString("accessibility.display-guide.navigation.index");
+      const indexLocale = localization.getString("navigation.index");
       this.statements.push({
-        id: "accessibility.display-guide.navigation.index",
+        id: "navigation.index",
         compactString: indexLocale.compact,
         descriptiveString: indexLocale.descriptive
       });
     }
     if (headings) {
-      const headingsLocale = localization.getString("accessibility.display-guide.navigation.structural");
+      const headingsLocale = localization.getString("navigation.structural");
       this.statements.push({
-        id: "accessibility.display-guide.navigation.structural",
+        id: "navigation.structural",
         compactString: headingsLocale.compact,
         descriptiveString: headingsLocale.descriptive
       });
     }
     if (page) {
-      const pageNavLocale = localization.getString("accessibility.display-guide.navigation.page-navigation");
+      const pageNavLocale = localization.getString("navigation.page-navigation");
       this.statements.push({
-        id: "accessibility.display-guide.navigation.page-navigation",
+        id: "navigation.page-navigation",
         compactString: pageNavLocale.compact,
         descriptiveString: pageNavLocale.descriptive
       });
     }
 
     if (this.statements.length === 0) {
-      const noNavLocale = localization.getString("accessibility.display-guide.navigation.no-metadata");
+      const noNavLocale = localization.getString("navigation.no-metadata");
       this.statements.push({
-        id: "accessibility.display-guide.navigation.no-metadata",
+        id: "navigation.no-metadata",
         compactString: noNavLocale.compact,
         descriptiveString: noNavLocale.descriptive
       });
@@ -348,7 +348,7 @@ export enum RichContentType {
  * Rich content features of the content
  */
 export class RichContent implements AccessibilityDisplayField {
-  public readonly id = "accessibility.display-guide.rich-content.title";
+  public readonly id = "rich-content.title";
   public readonly title: string;
   public readonly shouldDisplay: boolean;
 
@@ -395,82 +395,82 @@ export class RichContent implements AccessibilityDisplayField {
 
     this.statements = [];
     if (extendedAltTextDescriptions) {
-      const extendedLocale = localization.getString("accessibility.display-guide.rich-content.extended-descriptions");
+      const extendedLocale = localization.getString("rich-content.extended-descriptions");
       this.statements.push({
-        id: "accessibility.display-guide.rich-content.extended-descriptions",
+        id: "rich-content.extended-descriptions",
         compactString: extendedLocale.compact,
         descriptiveString: extendedLocale.descriptive
       });
     }
     if (mathFormula) {
-      const mathLocale = localization.getString("accessibility.display-guide.rich-content.accessible-math-described");
+      const mathLocale = localization.getString("rich-content.accessible-math-described");
       this.statements.push({
-        id: "accessibility.display-guide.rich-content.accessible-math-described",
+        id: "rich-content.accessible-math-described",
         compactString: mathLocale.compact,
         descriptiveString: mathLocale.descriptive
       });
     }
     if (mathFormulaAsMathML) {
-      const mathMLLocale = localization.getString("accessibility.display-guide.rich-content.math-as-mathml");
+      const mathMLLocale = localization.getString("rich-content.math-as-mathml");
       this.statements.push({
-        id: "accessibility.display-guide.rich-content.math-as-mathml",
+        id: "rich-content.math-as-mathml",
         compactString: mathMLLocale.compact,
         descriptiveString: mathMLLocale.descriptive
       });
     }
     if (mathFormulaAsLaTeX) {
-      const latexLocale = localization.getString("accessibility.display-guide.rich-content.accessible-math-as-latex");
+      const latexLocale = localization.getString("rich-content.accessible-math-as-latex");
       this.statements.push({
-        id: "accessibility.display-guide.rich-content.accessible-math-as-latex",
+        id: "rich-content.accessible-math-as-latex",
         compactString: latexLocale.compact,
         descriptiveString: latexLocale.descriptive
       });
     }
     if (chemicalFormulaAsMathML) {
-      const chemMLLocale = localization.getString("accessibility.display-guide.rich-content.accessible-chemistry-as-mathml");
+      const chemMLLocale = localization.getString("rich-content.accessible-chemistry-as-mathml");
       this.statements.push({
-        id: "accessibility.display-guide.rich-content.accessible-chemistry-as-mathml",
+        id: "rich-content.accessible-chemistry-as-mathml",
         compactString: chemMLLocale.compact,
         descriptiveString: chemMLLocale.descriptive
       });
     }
     if (chemicalFormulaAsLaTeX) {
-      const chemLatexLocale = localization.getString("accessibility.display-guide.rich-content.accessible-chemistry-as-latex");
+      const chemLatexLocale = localization.getString("rich-content.accessible-chemistry-as-latex");
       this.statements.push({
-        id: "accessibility.display-guide.rich-content.accessible-chemistry-as-latex",
+        id: "rich-content.accessible-chemistry-as-latex",
         compactString: chemLatexLocale.compact,
         descriptiveString: chemLatexLocale.descriptive
       });
     }
     if (closedCaptions) {
-      const ccLocale = localization.getString("accessibility.display-guide.rich-content.closed-captions");
+      const ccLocale = localization.getString("rich-content.closed-captions");
       this.statements.push({
-        id: "accessibility.display-guide.rich-content.closed-captions",
+        id: "rich-content.closed-captions",
         compactString: ccLocale.compact,
         descriptiveString: ccLocale.descriptive
       });
     }
     if (openCaptions) {
-      const ocLocale = localization.getString("accessibility.display-guide.rich-content.open-captions");
+      const ocLocale = localization.getString("rich-content.open-captions");
       this.statements.push({
-        id: "accessibility.display-guide.rich-content.open-captions",
+        id: "rich-content.open-captions",
         compactString: ocLocale.compact,
         descriptiveString: ocLocale.descriptive
       });
     }
     if (transcript) {
-      const transcriptLocale = localization.getString("accessibility.display-guide.rich-content.transcript");
+      const transcriptLocale = localization.getString("rich-content.transcript");
       this.statements.push({
-        id: "accessibility.display-guide.rich-content.transcript",
+        id: "rich-content.transcript",
         compactString: transcriptLocale.compact,
         descriptiveString: transcriptLocale.descriptive
       });
     }
 
     if (this.statements.length === 0) {
-      const unknownLocale = localization.getString("accessibility.display-guide.rich-content.unknown");
+      const unknownLocale = localization.getString("rich-content.unknown");
       this.statements.push({
-        id: "accessibility.display-guide.rich-content.unknown",
+        id: "rich-content.unknown",
         compactString: unknownLocale.compact,
         descriptiveString: unknownLocale.descriptive
       });
@@ -499,7 +499,7 @@ export class RichContent implements AccessibilityDisplayField {
  * Represents additional accessibility information
  */
 export class AdditionalInformation implements AccessibilityDisplayField {
-  public readonly id = "accessibility.display-guide.additional-accessibility-information.title";
+  public readonly id = "additional-accessibility-information.title";
   public readonly title: string;
   public readonly shouldDisplay: boolean;
 
@@ -559,105 +559,105 @@ export class AdditionalInformation implements AccessibilityDisplayField {
 
     this.statements = [];
     if (pageBreakMarkers) {
-      const pageBreaksLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.page-breaks");
+      const pageBreaksLocale = localization.getString("additional-accessibility-information.page-breaks");
       this.statements.push({
-        id: "accessibility.display-guide.additional-accessibility-information.page-breaks",
+        id: "additional-accessibility-information.page-breaks",
         compactString: pageBreaksLocale.compact,
         descriptiveString: pageBreaksLocale.descriptive
       });
     }
     if (aria) {
-      const ariaLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.aria");
+      const ariaLocale = localization.getString("additional-accessibility-information.aria");
       this.statements.push({
-        id: "accessibility.display-guide.additional-accessibility-information.aria",
+        id: "additional-accessibility-information.aria",
         compactString: ariaLocale.compact,
         descriptiveString: ariaLocale.descriptive
       });
     }
     if (audioDescriptions) {
-      const audioDescLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.audio-descriptions");
+      const audioDescLocale = localization.getString("additional-accessibility-information.audio-descriptions");
       this.statements.push({
-        id: "accessibility.display-guide.additional-accessibility-information.audio-descriptions",
+        id: "additional-accessibility-information.audio-descriptions",
         compactString: audioDescLocale.compact,
         descriptiveString: audioDescLocale.descriptive
       });
     }
     if (braille) {
-      const brailleLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.braille");
+      const brailleLocale = localization.getString("additional-accessibility-information.braille");
       this.statements.push({
-        id: "accessibility.display-guide.additional-accessibility-information.braille",
+        id: "additional-accessibility-information.braille",
         compactString: brailleLocale.compact,
         descriptiveString: brailleLocale.descriptive
       });
     }
     if (rubyAnnotations) {
-      const rubyLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.ruby-annotations");
+      const rubyLocale = localization.getString("additional-accessibility-information.ruby-annotations");
       this.statements.push({
-        id: "accessibility.display-guide.additional-accessibility-information.ruby-annotations",
+        id: "additional-accessibility-information.ruby-annotations",
         compactString: rubyLocale.compact,
         descriptiveString: rubyLocale.descriptive
       });
     }
     if (fullRubyAnnotations) {
-      const fullRubyLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.full-ruby-annotations");
+      const fullRubyLocale = localization.getString("additional-accessibility-information.full-ruby-annotations");
       this.statements.push({
-        id: "accessibility.display-guide.additional-accessibility-information.full-ruby-annotations",
+        id: "additional-accessibility-information.full-ruby-annotations",
         compactString: fullRubyLocale.compact,
         descriptiveString: fullRubyLocale.descriptive
       });
     }
     if (highAudioContrast) {
-      const audioContrastLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.high-contrast-between-foreground-and-background-audio");
+      const audioContrastLocale = localization.getString("additional-accessibility-information.high-contrast-between-foreground-and-background-audio");
       this.statements.push({
-        id: "accessibility.display-guide.additional-accessibility-information.high-contrast-between-foreground-and-background-audio",
+        id: "additional-accessibility-information.high-contrast-between-foreground-and-background-audio",
         compactString: audioContrastLocale.compact,
         descriptiveString: audioContrastLocale.descriptive
       });
     }
     if (highDisplayContrast) {
-      const displayContrastLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.high-contrast-between-text-and-background");
+      const displayContrastLocale = localization.getString("additional-accessibility-information.high-contrast-between-text-and-background");
       this.statements.push({
-        id: "accessibility.display-guide.additional-accessibility-information.high-contrast-between-text-and-background",
+        id: "additional-accessibility-information.high-contrast-between-text-and-background",
         compactString: displayContrastLocale.compact,
         descriptiveString: displayContrastLocale.descriptive
       });
     }
     if (largePrint) {
-      const largePrintLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.large-print");
+      const largePrintLocale = localization.getString("additional-accessibility-information.large-print");
       this.statements.push({
-        id: "accessibility.display-guide.additional-accessibility-information.large-print",
+        id: "additional-accessibility-information.large-print",
         compactString: largePrintLocale.compact,
         descriptiveString: largePrintLocale.descriptive
       });
     }
     if (signLanguage) {
-      const signLanguageLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.sign-language");
+      const signLanguageLocale = localization.getString("additional-accessibility-information.sign-language");
       this.statements.push({
-        id: "accessibility.display-guide.additional-accessibility-information.sign-language",
+        id: "additional-accessibility-information.sign-language",
         compactString: signLanguageLocale.compact,
         descriptiveString: signLanguageLocale.descriptive
       });
     }
     if (tactileGraphics) {
-      const tactileGraphicsLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.tactile-graphics");
+      const tactileGraphicsLocale = localization.getString("additional-accessibility-information.tactile-graphics");
       this.statements.push({
-        id: "accessibility.display-guide.additional-accessibility-information.tactile-graphics",
+        id: "additional-accessibility-information.tactile-graphics",
         compactString: tactileGraphicsLocale.compact,
         descriptiveString: tactileGraphicsLocale.descriptive
       });
     }
     if (tactileObjects) {
-      const tactileObjectsLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.tactile-objects");
+      const tactileObjectsLocale = localization.getString("additional-accessibility-information.tactile-objects");
       this.statements.push({
-        id: "accessibility.display-guide.additional-accessibility-information.tactile-objects",
+        id: "additional-accessibility-information.tactile-objects",
         compactString: tactileObjectsLocale.compact,
         descriptiveString: tactileObjectsLocale.descriptive
       });
     }
     if (textToSpeechHinting) {
-      const ttsHintingLocale = localization.getString("accessibility.display-guide.additional-accessibility-information.text-to-speech-hinting");
+      const ttsHintingLocale = localization.getString("additional-accessibility-information.text-to-speech-hinting");
       this.statements.push({
-        id: "accessibility.display-guide.additional-accessibility-information.text-to-speech-hinting",
+        id: "additional-accessibility-information.text-to-speech-hinting",
         compactString: ttsHintingLocale.compact,
         descriptiveString: ttsHintingLocale.descriptive
       });
@@ -697,7 +697,7 @@ export enum HazardType {
  * Represents potential hazards in the content
  */
 export class Hazards implements AccessibilityDisplayField {
-  public readonly id = "accessibility.display-guide.hazards.title";
+  public readonly id = "hazards.title";
   public readonly title: string;
   public readonly shouldDisplay: boolean;
   public readonly noMetadata: boolean;
@@ -728,89 +728,89 @@ export class Hazards implements AccessibilityDisplayField {
 
     this.statements = [];
     if (this.noHazards) {
-      const noneLocale = localization.getString("accessibility.display-guide.hazards.none");
+      const noneLocale = localization.getString("hazards.none");
       this.statements.push({
-        id: "accessibility.display-guide.hazards.none",
+        id: "hazards.none",
         compactString: noneLocale.compact,
         descriptiveString: noneLocale.descriptive
       });
     } else if (this.unknown) {
-      const unknownLocale = localization.getString("accessibility.display-guide.hazards.unknown");
+      const unknownLocale = localization.getString("hazards.unknown");
       this.statements.push({
-        id: "accessibility.display-guide.hazards.unknown",
+        id: "hazards.unknown",
         compactString: unknownLocale.compact,
         descriptiveString: unknownLocale.descriptive
       });
     } else if (this.noMetadata) {
-      const noMetadataLocale = localization.getString("accessibility.display-guide.hazards.no-metadata");
+      const noMetadataLocale = localization.getString("hazards.no-metadata");
       this.statements.push({
-        id: "accessibility.display-guide.hazards.no-metadata",
+        id: "hazards.no-metadata",
         compactString: noMetadataLocale.compact,
         descriptiveString: noMetadataLocale.descriptive
       });
     } else {
       if (flashing === HazardType.yes) {
-        const flashingLocale = localization.getString("accessibility.display-guide.hazards.flashing");
+        const flashingLocale = localization.getString("hazards.flashing");
         this.statements.push({
-          id: "accessibility.display-guide.hazards.flashing",
+          id: "hazards.flashing",
           compactString: flashingLocale.compact,
           descriptiveString: flashingLocale.descriptive
         });
       } else if (flashing === HazardType.unknown) {
-        const flashingUnknownLocale = localization.getString("accessibility.display-guide.hazards.flashing-unknown");
+        const flashingUnknownLocale = localization.getString("hazards.flashing-unknown");
         this.statements.push({
-          id: "accessibility.display-guide.hazards.flashing-unknown",
+          id: "hazards.flashing-unknown",
           compactString: flashingUnknownLocale.compact,
           descriptiveString: flashingUnknownLocale.descriptive
         });
       } else if (flashing === HazardType.no) {
-        const flashingNoneLocale = localization.getString("accessibility.display-guide.hazards.flashing-none");
+        const flashingNoneLocale = localization.getString("hazards.flashing-none");
         this.statements.push({
-          id: "accessibility.display-guide.hazards.flashing-none",
+          id: "hazards.flashing-none",
           compactString: flashingNoneLocale.compact,
           descriptiveString: flashingNoneLocale.descriptive
         });
       }
       if (motion === HazardType.yes) {
-        const motionLocale = localization.getString("accessibility.display-guide.hazards.motion");
+        const motionLocale = localization.getString("hazards.motion");
         this.statements.push({
-          id: "accessibility.display-guide.hazards.motion",
+          id: "hazards.motion",
           compactString: motionLocale.compact,
           descriptiveString: motionLocale.descriptive
         });
       } else if (motion === HazardType.unknown) {
-        const motionUnknownLocale = localization.getString("accessibility.display-guide.hazards.motion-unknown");
+        const motionUnknownLocale = localization.getString("hazards.motion-unknown");
         this.statements.push({
-          id: "accessibility.display-guide.hazards.motion-unknown",
+          id: "hazards.motion-unknown",
           compactString: motionUnknownLocale.compact,
           descriptiveString: motionUnknownLocale.descriptive
         });
       } else if (motion === HazardType.no) {
-        const motionNoneLocale = localization.getString("accessibility.display-guide.hazards.motion-none");
+        const motionNoneLocale = localization.getString("hazards.motion-none");
         this.statements.push({
-          id: "accessibility.display-guide.hazards.motion-none",
+          id: "hazards.motion-none",
           compactString: motionNoneLocale.compact,
           descriptiveString: motionNoneLocale.descriptive
         });
       }
       if (sound === HazardType.yes) {
-        const soundLocale = localization.getString("accessibility.display-guide.hazards.sound");
+        const soundLocale = localization.getString("hazards.sound");
         this.statements.push({
-          id: "accessibility.display-guide.hazards.sound",
+          id: "hazards.sound",
           compactString: soundLocale.compact,
           descriptiveString: soundLocale.descriptive
         });
       } else if (sound === HazardType.unknown) {
-        const soundUnknownLocale = localization.getString("accessibility.display-guide.hazards.sound-unknown");
+        const soundUnknownLocale = localization.getString("hazards.sound-unknown");
         this.statements.push({
-          id: "accessibility.display-guide.hazards.sound-unknown",
+          id: "hazards.sound-unknown",
           compactString: soundUnknownLocale.compact,
           descriptiveString: soundUnknownLocale.descriptive
         });
       } else if (sound === HazardType.no) {
-        const soundNoneLocale = localization.getString("accessibility.display-guide.hazards.sound-none");
+        const soundNoneLocale = localization.getString("hazards.sound-none");
         this.statements.push({
-          id: "accessibility.display-guide.hazards.sound-none",
+          id: "hazards.sound-none",
           compactString: soundNoneLocale.compact,
           descriptiveString: soundNoneLocale.descriptive
         });
@@ -871,7 +871,7 @@ export class Hazards implements AccessibilityDisplayField {
 * Represents conformance to accessibility standards
 */
 export class Conformance implements AccessibilityDisplayField {
-  public readonly id = "accessibility.display-guide.conformance.title";
+  public readonly id = "conformance.title";
   public readonly title: string;
   public readonly shouldDisplay: boolean;
   public readonly profiles: Profile[];
@@ -888,9 +888,9 @@ export class Conformance implements AccessibilityDisplayField {
 
     this.statements = [];
     if (profiles.length === 0) {
-      const noConformanceLocale = localization.getString("accessibility.display-guide.conformance.no");
+      const noConformanceLocale = localization.getString("conformance.no");
       this.statements.push({
-        id: "accessibility.display-guide.conformance.no",
+        id: "conformance.no",
         compactString: noConformanceLocale.compact,
         descriptiveString: noConformanceLocale.descriptive
       });
@@ -898,30 +898,30 @@ export class Conformance implements AccessibilityDisplayField {
     }
 
     if (profiles.some(profile => profile.isWCAGLevelAAA)) {
-      const aaaLocale = localization.getString("accessibility.display-guide.conformance.aaa");
+      const aaaLocale = localization.getString("conformance.aaa");
       this.statements.push({
-        id: "accessibility.display-guide.conformance.aaa",
+        id: "conformance.aaa",
         compactString: aaaLocale.compact,
         descriptiveString: aaaLocale.descriptive
       });
     } else if (profiles.some(profile => profile.isWCAGLevelAA)) {
-      const aaLocale = localization.getString("accessibility.display-guide.conformance.aa");
+      const aaLocale = localization.getString("conformance.aa");
       this.statements.push({
-        id: "accessibility.display-guide.conformance.aa",
+        id: "conformance.aa",
         compactString: aaLocale.compact,
         descriptiveString: aaLocale.descriptive
       });
     } else if (profiles.some(profile => profile.isWCAGLevelA)) {
-      const aLocale = localization.getString("accessibility.display-guide.conformance.a");
+      const aLocale = localization.getString("conformance.a");
       this.statements.push({
-        id: "accessibility.display-guide.conformance.a",
+        id: "conformance.a",
         compactString: aLocale.compact,
         descriptiveString: aLocale.descriptive
       });
     } else {
-      const unknownLocale = localization.getString("accessibility.display-guide.conformance.unknown-standard");
+      const unknownLocale = localization.getString("conformance.unknown-standard");
       this.statements.push({
-        id: "accessibility.display-guide.conformance.unknown-standard",
+        id: "conformance.unknown-standard",
         compactString: unknownLocale.compact,
         descriptiveString: unknownLocale.descriptive
       });
@@ -937,7 +937,7 @@ export class Conformance implements AccessibilityDisplayField {
  * Represents legal exemptions
  */
 export class Legal implements AccessibilityDisplayField {
-  public readonly id = "accessibility.display-guide.legal-considerations.title";
+  public readonly id = "legal-considerations.title";
   public readonly title: string;
   public readonly shouldDisplay: boolean;
   public readonly exemption: boolean;
@@ -954,16 +954,16 @@ export class Legal implements AccessibilityDisplayField {
 
     this.statements = [];
     if (exemption) {
-      const exemptLocale = localization.getString("accessibility.display-guide.legal-considerations.exempt");
+      const exemptLocale = localization.getString("legal-considerations.exempt");
       this.statements.push({
-        id: "accessibility.display-guide.legal-considerations.exempt",
+        id: "legal-considerations.exempt",
         compactString: exemptLocale.compact,
         descriptiveString: exemptLocale.descriptive
       });
     } else {
-      const noMetadataLocale = localization.getString("accessibility.display-guide.legal-considerations.no-metadata");
+      const noMetadataLocale = localization.getString("legal-considerations.no-metadata");
       this.statements.push({
-        id: "accessibility.display-guide.legal-considerations.no-metadata",
+        id: "legal-considerations.no-metadata",
         compactString: noMetadataLocale.compact,
         descriptiveString: noMetadataLocale.descriptive
       });
@@ -981,7 +981,7 @@ export class Legal implements AccessibilityDisplayField {
 * Represents the accessibility summary
 */
 export class AccessibilitySummary implements AccessibilityDisplayField {
-  public readonly id = "accessibility.display-guide.accessibility-summary.title";
+  public readonly id = "accessibility-summary.title";
   public readonly title: string;
   public readonly shouldDisplay: boolean;
 
@@ -998,14 +998,14 @@ export class AccessibilitySummary implements AccessibilityDisplayField {
     
     if (this.shouldDisplay && summary) {
       this.statements.push({
-        id: "accessibility.display-guide.accessibility-summary.summary",
+        id: "accessibility-summary.summary",
         compactString: summary,
         descriptiveString: summary
       });
     } else {
-      const locale = localization.getString("accessibility.display-guide.accessibility-summary.no-metadata");
+      const locale = localization.getString("accessibility-summary.no-metadata");
       this.statements.push({
-        id: "accessibility.display-guide.accessibility-summary.no-metadata",
+        id: "accessibility-summary.no-metadata",
         compactString: locale.compact,
         descriptiveString: locale.descriptive
       });

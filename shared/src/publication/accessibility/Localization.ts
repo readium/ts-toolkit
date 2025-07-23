@@ -8,7 +8,7 @@ export interface L10nString {
 
 export class Localization {
   private static instance: Localization;
-  private locale: Record<string, any> = enUS.publication.metadata;
+  private locale: Record<string, any> = enUS.publication.metadata.accessibility['display-guide'];
 
   private constructor() {}
 

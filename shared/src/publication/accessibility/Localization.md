@@ -19,9 +19,11 @@ import { localization } from '@readium/shared';
 
 // Define your custom locale object
 const customLocale = {
-  "accessibility.display-guide.conformance.aaa": {
-    "compact": "WCAG 2.1 Level AAA",
-    "descriptive": "This publication conforms to WCAG 2.1 Level AAA."
+  conformance: {
+    aaa: {
+      compact: "WCAG 2.1 Level AAA",
+      descriptive: "This publication conforms to WCAG 2.1 Level AAA."
+    }
   },
   // Add more translations as needed
 };
@@ -42,16 +44,15 @@ Example of valid locale values:
 
 ```typescript
 const locale = {
-  accessibility: {
-    "display-guide": {
-      conformance: {
-        aaa: "WCAG 2.1 Level AAA"
-      },
-      hazards: {
-        none: {
-          compact: "No hazards",
-          descriptive: "This content is known to be free of hazards."
-        }
+  conformance: {
+    aaa: {
+      compact: "WCAG 2.1 Level AAA",
+      descriptive: "This publication conforms to WCAG 2.1 Level AAA."
+    },
+    hazards: {
+      none: {
+        compact: "No hazards",
+        descriptive: "This content is known to be free of hazards."
       }
     }
   }
@@ -67,66 +68,66 @@ If a key is not found in the custom locale, the system will fall back to the Eng
 The following keys are used throughout the accessibility metadata system:
 
 ### Conformance
-- `accessibility.display-guide.conformance.no`
-- `accessibility.display-guide.conformance.a`
-- `accessibility.display-guide.conformance.aa`
-- `accessibility.display-guide.conformance.aaa`
-- `accessibility.display-guide.conformance.unknown-standard`
+- `conformance.no`
+- `conformance.a`
+- `conformance.aa`
+- `conformance.aaa`
+- `conformance.unknown-standard`
 
 ### Hazards
-- `accessibility.display-guide.hazards.none`
-- `accessibility.display-guide.hazards.unknown`
-- `accessibility.display-guide.hazards.no-metadata`
-- `accessibility.display-guide.hazards.flashing`
-- `accessibility.display-guide.hazards.flashing-unknown`
-- `accessibility.display-guide.hazards.flashing-none`
-- `accessibility.display-guide.hazards.motion`
-- `accessibility.display-guide.hazards.motion-unknown`
-- `accessibility.display-guide.hazards.motion-none`
-- `accessibility.display-guide.hazards.sound`
-- `accessibility.display-guide.hazards.sound-unknown`
-- `accessibility.display-guide.hazards.sound-none`
+- `hazards.none`
+- `hazards.unknown`
+- `hazards.no-metadata`
+- `hazards.flashing`
+- `hazards.flashing-unknown`
+- `hazards.flashing-none`
+- `hazards.motion`
+- `hazards.motion-unknown`
+- `hazards.motion-none`
+- `hazards.sound`
+- `hazards.sound-unknown`
+- `hazards.sound-none`
 
 ### Navigation
-- `accessibility.display-guide.navigation.toc`
-- `accessibility.display-guide.navigation.index`
-- `accessibility.display-guide.navigation.structural`
-- `accessibility.display-guide.navigation.page-navigation`
-- `accessibility.display-guide.navigation.no-metadata`
+- `navigation.toc`
+- `navigation.index`
+- `navigation.structural`
+- `navigation.page-navigation`
+- `navigation.no-metadata`
 
 ### Rich Content
-- `accessibility.display-guide.rich-content.extended-descriptions`
-- `accessibility.display-guide.rich-content.accessible-math-described`
-- `accessibility.display-guide.rich-content.accessible-math-as-mathml`
-- `accessibility.display-guide.rich-content.accessible-math-as-latex`
-- `accessibility.display-guide.rich-content.accessible-chemistry-as-mathml`
-- `accessibility.display-guide.rich-content.accessible-chemistry-as-latex`
-- `accessibility.display-guide.rich-content.closed-captions`
-- `accessibility.display-guide.rich-content.open-captions`
-- `accessibility.display-guide.rich-content.transcript`
-- `accessibility.display-guide.rich-content.unknown`
+- `rich-content.extended-descriptions`
+- `rich-content.accessible-math-described`
+- `rich-content.accessible-math-as-mathml`
+- `rich-content.accessible-math-as-latex`
+- `rich-content.accessible-chemistry-as-mathml`
+- `rich-content.accessible-chemistry-as-latex`
+- `rich-content.closed-captions`
+- `rich-content.open-captions`
+- `rich-content.transcript`
+- `rich-content.unknown`
 
 ### Additional Accessibility Information
-- `accessibility.display-guide.additional-accessibility-information.page-breaks`
-- `accessibility.display-guide.additional-accessibility-information.aria`
-- `accessibility.display-guide.additional-accessibility-information.audio-descriptions`
-- `accessibility.display-guide.additional-accessibility-information.braille`
-- `accessibility.display-guide.additional-accessibility-information.ruby-annotations`
-- `accessibility.display-guide.additional-accessibility-information.full-ruby-annotations`
-- `accessibility.display-guide.additional-accessibility-information.high-contrast-between-foreground-and-background-audio`
-- `accessibility.display-guide.additional-accessibility-information.high-contrast-between-text-and-background`
-- `accessibility.display-guide.additional-accessibility-information.large-print`
-- `accessibility.display-guide.additional-accessibility-information.sign-language`
-- `accessibility.display-guide.additional-accessibility-information.tactile-graphics`
-- `accessibility.display-guide.additional-accessibility-information.tactile-objects`
-- `accessibility.display-guide.additional-accessibility-information.text-to-speech-hinting`
+- `additional-accessibility-information.page-breaks`
+- `additional-accessibility-information.aria`
+- `additional-accessibility-information.audio-descriptions`
+- `additional-accessibility-information.braille`
+- `additional-accessibility-information.ruby-annotations`
+- `additional-accessibility-information.full-ruby-annotations`
+- `additional-accessibility-information.high-contrast-between-foreground-and-background-audio`
+- `additional-accessibility-information.high-contrast-between-text-and-background`
+- `additional-accessibility-information.large-print`
+- `additional-accessibility-information.sign-language`
+- `additional-accessibility-information.tactile-graphics`
+- `additional-accessibility-information.tactile-objects`
+- `additional-accessibility-information.text-to-speech-hinting`
 
 ### Legal Considerations
-- `accessibility.display-guide.legal-considerations.exempt`
-- `accessibility.display-guide.legal-considerations.no-metadata`
+- `legal-considerations.exempt`
+- `legal-considerations.no-metadata`
 
 ### Accessibility Summary
-- `accessibility.display-guide.accessibility-summary.no-metadata`
+- `accessibility-summary.no-metadata`
 
 ## Best Practices
 
@@ -151,21 +152,16 @@ type LocaleObject = {
 
 // Example usage:
 const customLocale = {
-  accessibility: {
-    "display-guide": {
-      ...,
-      conformance: {
-        aaa: "WCAG 2.1 Level AAA",
-        ...
-      },
-      hazards: {
-        none: {
-          compact: "No hazards",
-          descriptive: "This content is known to be free of hazards."
-        },
-        ...
-      }
-    }
+  conformance: {
+    aaa: "WCAG 2.1 Level AAA",
+    ...
+  },
+  hazards: {
+    none: {
+      compact: "No hazards",
+      descriptive: "This content is known to be free of hazards."
+    },
+    ...
   }
 };
 ```
