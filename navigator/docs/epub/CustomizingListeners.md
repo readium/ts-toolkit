@@ -8,6 +8,7 @@ The following events are exposed:
 - `tap`: fires when a tap has not been handled by default
 - `click`: fires when a click has not been handled
 - `zoom`: fires when the user has zoomed into the iframe
+- `scroll`: fires when the user has scrolled into the iframe
 - `miscPointer`: fires when a tap or a click was made in the middle of the iframe e.g. show/hide UI
 - `customEvent`: fires when the EpubNavigator doesn’t handle the event by default
 - `handleLocator`: fires when a link has been tapped or clicked
@@ -26,6 +27,7 @@ const listeners: EpubNavigatorListeners = {
     return false;
   },
   zoom: function (_scale: number): void {},
+  scroll: function (_delta: number): void {},
   miscPointer: function (_amount: number): void {},
   customEvent: function (_key: string, _data: unknown): void {},
   handleLocator: function (locator: Locator): boolean {
@@ -86,13 +88,17 @@ const listeners: EpubNavigatorListeners = {
 
 Fires when the user has zoomed in a Fixed-Layout publication.
 
+### Scroll
+
+Fires when the user has scrolled in a Fixed-Layout publication. The `delta` is the number of pixels scrolled.
+
 ### miscPointer
 
 Fires when a tap or a click was made in the middle of the iframe e.g. it can be used to show/hide UI.
 
 ### customEvent
 
-Fires when the EpubNavigator doesn’t handle the event by default.
+Fires when a custom event has been triggered from the publication.
 
 ### handleLocator
 
