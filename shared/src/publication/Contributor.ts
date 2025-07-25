@@ -10,6 +10,7 @@ import {
   setToArray,
 } from '../util/JSONParse';
 import { LocalizedString } from './LocalizedString';
+import { AltIdentifier } from './AltIdentifier';
 
 /**
  * Contributor Object for the Readium Web Publication Manifest.
@@ -24,6 +25,9 @@ export class Contributor {
 
   /** An unambiguous reference to this contributor. */
   public readonly identifier?: string;
+
+  /** Alternate identifiers for this contributor. */
+  public readonly altIdentifiers?: Set<AltIdentifier>;
 
   /** The role of the contributor in the publication making. */
   public readonly roles?: Set<string>;
@@ -41,6 +45,7 @@ export class Contributor {
     name: LocalizedString;
     sortAs?: string;
     identifier?: string;
+    altIdentifiers?: Set<AltIdentifier>;
     roles?: Set<string>;
     links?: Links;
     position?: number;
@@ -48,6 +53,7 @@ export class Contributor {
     this.name = values.name;
     this.sortAs = values.sortAs;
     this.identifier = values.identifier;
+    this.altIdentifiers = values.altIdentifiers;
     this.roles = values.roles;
     this.links = values.links;
     this.position = values.position;
@@ -70,6 +76,14 @@ export class Contributor {
         name: LocalizedString.deserialize(json.name) as LocalizedString,
         sortAs: json.sortAs,
         identifier: json.identifier,
+        altIdentifiers: json.altIdentifier
+          ? (json.altIdentifier instanceof Array
+            ? new Set<AltIdentifier>(json.altIdentifier
+                .map((x: string | { value: string; scheme?: string }) => AltIdentifier.deserialize(x))
+                .filter((x: AltIdentifier | undefined): x is AltIdentifier => x !== undefined))
+            : new Set<AltIdentifier>([AltIdentifier.deserialize(json.altIdentifier as string | { value: string; scheme?: string })]
+                .filter((x: AltIdentifier | undefined): x is AltIdentifier => x !== undefined)))
+          : undefined,
         roles: json.role
           ? new Set<string>(arrayfromJSONorString(json.role))
           : undefined,
@@ -86,6 +100,7 @@ export class Contributor {
     const json: any = { name: this.name.serialize() };
     if (this.sortAs !== undefined) json.sortAs = this.sortAs;
     if (this.identifier !== undefined) json.identifier = this.identifier;
+    if (this.altIdentifiers) json.altIdentifier = setToArray(this.altIdentifiers).map(altId => altId.serialize());
     if (this.roles) json.role = setToArray(this.roles);
     if (this.links) json.links = this.links.serialize();
     if (this.position !== undefined) json.position = this.position;

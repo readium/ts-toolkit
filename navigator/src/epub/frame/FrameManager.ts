@@ -1,6 +1,7 @@
 import { Loader, ModuleName } from "@readium/navigator-html-injectables";
 import { FrameComms } from "./FrameComms";
 import { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
+import { sML } from "../../helpers";
 
 
 export class FrameManager {
@@ -95,9 +96,14 @@ export class FrameManager {
                         this.frame.style.removeProperty("opacity");
                         this.frame.style.removeProperty("pointer-events");
                         this.hidden = false;
+
+                        if (sML.UA.WebKit) {
+                            this.comms?.send("force_webkit_recalc", undefined);
+                        }
+
                         res();
                     }
-                    if(atProgress && atProgress > 0) {
+                    if(atProgress !== undefined) {
                         this.comms?.send("go_progression", atProgress, remove);
                     } else {
                         remove();

@@ -44,6 +44,66 @@ export class GuidedNavigationDocument {
 }
 
 /**
+ * Represents a text value containing plain text, SSML, and language information.
+ */
+export class GuidedNavigationText {
+    /** Plain text content */
+    public readonly plain?: string;
+    
+    /** SSML (Speech Synthesis Markup Language) content */
+    public readonly ssml?: string;
+    
+    /** 
+     * BCP 47 language tag
+     * @pattern ^((?<grandfathered>(en-GB-oed|i-ami|i-bnn|i-default|i-enochian|i-hak|i-klingon|i-lux|i-mingo|i-navajo|i-pwn|i-tao|i-tay|i-tsu|sgn-BE-FR|sgn-BE-NL|sgn-CH-DE)|(art-lojban|cel-gaulish|no-bok|no-nyn|zh-guoyu|zh-hakka|zh-min|zh-min-nan|zh-xiang))|((?<language>([A-Za-z]{2,3}(-(?<extlang>[A-Za-z]{3}(-[A-Za-z]{3}){0,2}))?)|[A-Za-z]{4}|[A-Za-z]{5,8})(-(?<script>[A-Za-z]{4}))?(-(?<region>[A-Za-z]{2}|[0-9]{3}))?(-(?<variant>[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(-(?<extension>[0-9A-WY-Za-wy-z](-[A-Za-z0-9]{2,8})+))*(-(?<privateUse>x(-[A-Za-z0-9]{1,8})+))?)|(?<privateUse2>x(-[A-Za-z0-9]{1,8})+))$
+     */
+    public readonly language?: string;
+
+    constructor(values: {
+        plain?: string;
+        ssml?: string;
+        language?: string;
+    }) {
+        this.plain = values.plain;
+        this.ssml = values.ssml;
+        this.language = values.language;
+    }
+
+    /**
+     * Deserializes a GuidedNavigationText from JSON
+     */
+    public static deserialize(json: any): GuidedNavigationText | undefined {
+        if (json === undefined || json === null) return undefined;
+        
+        if (typeof json === 'string') {
+            return new GuidedNavigationText({ plain: json });
+        }
+        
+        // Only create if there are actual values
+        if (json.plain || json.ssml || json.language) {
+            return new GuidedNavigationText({
+                plain: json.plain,
+                ssml: json.ssml,
+                language: json.language
+            });
+        }
+        
+        return undefined;
+    }
+
+    /**
+     * Serializes the text to a plain object
+     */
+    public serialize(): any {
+        const result: any = {};
+        if (this.plain !== undefined) result.plain = this.plain;
+        if (this.ssml !== undefined) result.ssml = this.ssml;
+        if (this.language !== undefined) result.language = this.language;
+        return Object.keys(result).length > 0 ? result : undefined;
+    }
+}
+
+/**
  * Guided Navigation Object
  * https://github.com/readium/guided-navigation/blob/main/schema/object.schema.json
  */
@@ -61,11 +121,26 @@ export class GuidedNavigationObject {
   /** Convey the structural semantics of a publication. */
   public readonly role?: Set<string>;
   
-  /** Textual equivalent of the resources or fragment of the resources referenced by the current Guided Navigation Object. */
-  public readonly text?: string;
+  /** 
+   * Indicates the heading level (1-6) for the navigation object.
+   * @minimum 1
+   * @maximum 6
+   */
+  public readonly level?: number;
+  
+  /** 
+   * Textual equivalent of the resources or fragment of the resources referenced by the current Guided Navigation Object.
+   */
+  public readonly text?: GuidedNavigationText;
   
   /** References a textual resource or a fragment of it. */
   public readonly textref?: string;
+
+  /** 
+   * Describes the image referenced by the current Guided Navigation Object.
+   * This is a GuidedNavigationObject that should not contain 'level' or 'children' properties.
+   */
+  public readonly description?: Omit<GuidedNavigationObject, 'level' | 'children'>;
 
     /**
      * Creates a [GuidedNavigation] object.
@@ -75,41 +150,68 @@ export class GuidedNavigationObject {
         children?: GuidedNavigationObject[];
         imgref?: string;
         role?: Set<string>;
-        text?: string;
+        level?: number;
+        text?: GuidedNavigationText;
         textref?: string;
+        description?: Omit<GuidedNavigationObject, 'level' | 'children'>;
     }) {
         this.audioref = values.audioref;
         this.children = values.children;
         this.imgref = values.imgref;
         this.role = values.role;
+        this.level = values.level !== undefined ? Math.min(6, Math.max(1, values.level)) : undefined;
         this.text = values.text;
         this.textref = values.textref;
+        this.description = values.description;
     }
 
     /**
-     * Parses a [GuidedNavigationObject] from its RWPM JSON representation.
-     *
-     * A GuidedNavigationObject can be parsed from a single string, or a full-fledged object.
-    */
+     * Gets the plain text content.
+     * Returns undefined if no text is available.
+     */
+    public get plainText(): string | undefined {
+        return this.text?.plain;
+    }
+
+    /**
+     * Gets the SSML content if available.
+     */
+    public get ssmlText(): string | undefined {
+        return this.text?.ssml;
+    }
+
+    /**
+     * Gets the language of the text if available.
+     */
+    public get textLanguage(): string | undefined {
+        return this.text?.language;
+    }
+
+    /**
+     * Deserializes a GuidedNavigationObject from JSON
+     */
     public static deserialize(json: any): GuidedNavigationObject | undefined {
-        if (!json) return;
+        if (!json) return undefined;
+        
         return new GuidedNavigationObject({
             audioref: json.audioref,
             children: GuidedNavigationObject.deserializeArray(json.children),
             imgref: json.imgref,
             role: json.role
-            ? new Set<string>(arrayfromJSONorString(json.role))
-            : undefined,
-            text: json.text,
+                ? new Set<string>(arrayfromJSONorString(json.role))
+                : undefined,
+            level: typeof json.level === 'number' ? json.level : undefined,
+            text: GuidedNavigationText.deserialize(json.text),
             textref: json.textref,
+            description: GuidedNavigationObject.deserialize(json.description)
         });
     }
 
     /** 
      * Parses a [GuidedNavigationObject] array from its RWPM JSON representation.
-    */
+     */
     public static deserializeArray(json: any): GuidedNavigationObject[] | undefined {
-        if (!(json instanceof Array)) return;
+        if (!(json instanceof Array)) return undefined;
         return json
             .map<GuidedNavigationObject>((item) => GuidedNavigationObject.deserialize(item) as GuidedNavigationObject)
             .filter((x) => x !== undefined);
@@ -117,15 +219,24 @@ export class GuidedNavigationObject {
 
     /**
      * Serializes a [GuidedNavigationObject] to its RWPM JSON representation.
-    */
+     */
     public serialize(): any {
         const json: any = {};
         if (this.audioref !== undefined) json.audioref = this.audioref;
         if (this.children !== undefined) json.children = this.children.map(x => x.serialize());
         if (this.imgref !== undefined) json.imgref = this.imgref;
         if (this.role !== undefined) json.role = setToArray(this.role);
-        if (this.text !== undefined) json.text = this.text;
+        if (this.level !== undefined) json.level = this.level;
+        if (this.text !== undefined) {
+            const serializedText = this.text.serialize();
+            if (serializedText !== undefined) {
+                json.text = serializedText;
+            }
+        }
         if (this.textref !== undefined) json.textref = this.textref;
+        if (this.description) {
+            json.description = this.description.serialize();
+        }
         return json;
     }
 

@@ -1,4 +1,5 @@
 import {
+  AltIdentifier,
   Contributor,
   Contributors,
   Link,
@@ -28,6 +29,7 @@ describe('Contributor Tests', () => {
       Contributor.deserialize({
         name: 'Colin Greenwood',
         identifier: 'colin',
+        altIdentifier: { scheme: 'http://example.com/author-id', value: 'author-22222' },
         sortAs: 'greenwood',
         role: 'bassist',
         position: 4,
@@ -38,6 +40,11 @@ describe('Contributor Tests', () => {
         name: new LocalizedString('Colin Greenwood'),
         sortAs: 'greenwood',
         identifier: 'colin',
+        altIdentifiers: new Set<AltIdentifier>([
+          new AltIdentifier({
+          scheme: 'http://example.com/author-id',
+          value: 'author-22222',
+        })]),
         roles: new Set<string>(['bassist']),
         position: 4.0,
         links: new Links([
@@ -166,6 +173,12 @@ describe('Contributor Tests', () => {
         name: new LocalizedString('Colin Greenwood'),
         sortAs: 'greenwood',
         identifier: 'colin',
+        altIdentifiers: new Set<AltIdentifier>([
+          new AltIdentifier({
+            scheme: 'http://example.com/author-id',
+            value: 'author-22222',
+          }),
+        ]),
         roles: new Set<string>(['bassist']),
         position: 4.0,
         links: new Links([
@@ -177,6 +190,7 @@ describe('Contributor Tests', () => {
       name: { undefined: 'Colin Greenwood' },
       sortAs: 'greenwood',
       identifier: 'colin',
+      altIdentifier: [{ scheme: 'http://example.com/author-id', value: 'author-22222' }],
       role: ['bassist'],
       position: 4.0,
       links: [{ href: 'http://link1' }, { href: 'http://link2' }],

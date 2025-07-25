@@ -67,7 +67,7 @@ Additionally, the `EpubNavigator` class provides the following properties:
 - `publication`: The publication (`Publication`) rendered by this navigator.
 - `currentLocator`: The current position (`Locator`) in the publication. Can be used to save a bookmark to the current position.
 - `readingProgression`: The current reading progression direction (`ReadingProgression`).
-- `currentPositionNumbers`: The current position numbers in the publication. Can be used to update a progression affordance.
+- `viewport`: Information about what is visible into the current viewport (`Viewport`) i.e. the current resources, their progression, and the positions from the `PositionsList`. Can be used to update a progression affordance.
 
 ### Preferences API
 
@@ -124,3 +124,14 @@ navigator.goRight(true, () => {
   console.log('Navigated to the right');
 });
 ```
+
+## Helpers
+
+Finally, `EpubNavigator` provides a few helpers to help derive information about navigation:
+
+- `canGoForward()`: Returns `true` if the navigator can go forward in the publication.
+- `canGoBackward()`: Returns `true` if the navigator can go backward in the publication.
+- `isScrollStart()`: Returns `true` if the navigator is at the start of the resources in the viewport.
+- `isScrollEnd()`: Returns `true` if the navigator is at the end of the resources in the viewport.
+
+These can come in handy if you want to disable navigation buttons when the user is at the start or end of the publication, or show the UI if the user is scrolling to the end of the resources in the viewport.

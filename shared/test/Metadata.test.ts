@@ -7,6 +7,9 @@ import {
   ReadingProgression,
   Subject,
   Subjects,
+  TDM,
+  TDMReservation,
+  AltIdentifier,
 } from '../src';
 import { Accessibility, Profile, AccessMode, Feature, Hazard, Exemption, PrimaryAccessMode, Certification } from '../src/publication/accessibility/Accessibility';
 
@@ -21,6 +24,7 @@ describe('Metadata Tests', () => {
     expect(
       Metadata.deserialize({
         identifier: '1234',
+        altIdentifier: { scheme: 'http://example.com/scheme', value: 'test-1234' },
         '@type': 'epub',
         title: { en: 'Title', fr: 'Titre' },
         subtitle: { en: 'Subtitle', fr: 'Sous-titre' },
@@ -46,6 +50,10 @@ describe('Metadata Tests', () => {
         description: 'Description',
         duration: 4.24,
         numberOfPages: 240,
+        tdm: {
+          reservation: 'all',
+          policy: 'Some policy text',
+        },
         belongsTo: {
           collection: 'Collection',
           series: 'Series',
@@ -75,6 +83,10 @@ describe('Metadata Tests', () => {
     ).toEqual(
       new Metadata({
         identifier: '1234',
+        altIdentifier: new AltIdentifier({
+          scheme: 'http://example.com/scheme',
+          value: 'test-1234',
+        }),
         typeUri: 'epub',
         title: new LocalizedString({
           en: 'Title',
@@ -135,6 +147,10 @@ describe('Metadata Tests', () => {
         description: 'Description',
         duration: 4.24,
         numberOfPages: 240,
+        tdm: new TDM({
+          reservation: TDMReservation.all,
+          policy: 'Some policy text',
+        }),
         belongsTo: new BelongsTo({
           items: new Map([
             [
@@ -237,10 +253,14 @@ describe('Metadata Tests', () => {
     });
   });
 
-  it('parse full JSON', () => {    
+  it('get full JSON', () => {
     expect(
       new Metadata({
         identifier: '1234',
+        altIdentifier: new AltIdentifier({
+          scheme: 'http://example.com/scheme',
+          value: 'test-1234',
+        }),
         typeUri: 'epub',
         title: new LocalizedString({
           en: 'Title',
@@ -327,6 +347,10 @@ describe('Metadata Tests', () => {
             ],
           ]),
         }),
+        tdm: new TDM({
+          reservation: TDMReservation.all,
+          policy: 'Some policy text',
+        }),
         otherMetadata: {
           'other-metadata1': 'value',
           'other-metadata2': [42],
@@ -351,6 +375,7 @@ describe('Metadata Tests', () => {
       }).serialize()
     ).toEqual({
       identifier: '1234',
+      altIdentifier: { scheme: 'http://example.com/scheme', value: 'test-1234' },
       '@type': 'epub',
       title: { en: 'Title', fr: 'Titre' },
       subtitle: { en: 'Subtitle', fr: 'Sous-titre' },
@@ -383,6 +408,10 @@ describe('Metadata Tests', () => {
         collection: [{ name: { undefined: 'Collection' } }],
         series: [{ name: { undefined: 'Series' } }],
         'schema:Periodical': [{ name: { undefined: 'Periodical' } }],
+      },
+      tdm: {
+        reservation: 'all',
+        policy: 'Some policy text',
       },
       'other-metadata1': 'value',
       'other-metadata2': [42],

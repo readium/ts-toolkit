@@ -42,6 +42,9 @@ export class Link {
   /** Width of the linked resource in pixels. */
   public readonly width?: number;
 
+  /** Size of the linked resource in bytes. */
+  public readonly size?: number;
+
   /** Length of the linked resource in seconds. */
   public readonly duration?: number;
 
@@ -69,6 +72,7 @@ export class Link {
     properties?: Properties;
     height?: number;
     width?: number;
+    size?: number;
     duration?: number;
     bitrate?: number;
     languages?: Array<string>;
@@ -83,6 +87,7 @@ export class Link {
     this.properties = values.properties;
     this.height = values.height;
     this.width = values.width;
+    this.size = values.size;
     this.duration = values.duration;
     this.bitrate = values.bitrate;
     this.languages = values.languages;
@@ -109,6 +114,7 @@ export class Link {
       properties: Properties.deserialize(json.properties),
       height: positiveNumberfromJSON(json.height),
       width: positiveNumberfromJSON(json.width),
+      size: positiveNumberfromJSON(json.size),
       duration: positiveNumberfromJSON(json.duration),
       bitrate: positiveNumberfromJSON(json.bitrate),
       languages: arrayfromJSONorString(json.language),
@@ -129,6 +135,7 @@ export class Link {
     if (this.properties) json.properties = this.properties.serialize();
     if (this.height !== undefined) json.height = this.height;
     if (this.width !== undefined) json.width = this.width;
+    if (this.size !== undefined) json.size = this.size;
     if (this.duration !== undefined) json.duration = this.duration;
     if (this.bitrate !== undefined) json.bitrate = this.bitrate;
     if (this.languages) json.language = this.languages;
