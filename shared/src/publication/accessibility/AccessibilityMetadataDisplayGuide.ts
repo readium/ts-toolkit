@@ -3,7 +3,7 @@ import { Publication } from '../Publication';
 import { EPUBLayout } from '../epub';
 import { Profile } from './Accessibility';
 
-import { localization } from './Localization';
+import { Localization } from './Localization';
 
 /**
  * Represents a single accessibility claim
@@ -91,7 +91,7 @@ export class WaysOfReading implements AccessibilityDisplayField {
     // This should be displayed even if there is no metadata
     this.shouldDisplay = true;
     
-    const titleLocale = localization.getString(this.id);
+    const titleLocale = Localization.getString(this.id);
     this.title = titleLocale.compact;
 
     this.statements = [];
@@ -103,7 +103,7 @@ export class WaysOfReading implements AccessibilityDisplayField {
         ? "ways-of-reading.visual-adjustments.unmodifiable"
         : "ways-of-reading.visual-adjustments.unknown";
     
-    const visualAdjustmentsLocale = localization.getString(visualAdjustmentsKey);
+    const visualAdjustmentsLocale = Localization.getString(visualAdjustmentsKey);
     this.statements.push({
       id: visualAdjustmentsKey,
       compactString: visualAdjustmentsLocale.compact,
@@ -122,7 +122,7 @@ export class WaysOfReading implements AccessibilityDisplayField {
       nonvisualReadingKey = "ways-of-reading.nonvisual-reading.no-metadata";
     }
     
-    const nonvisualReadingLocale = localization.getString(nonvisualReadingKey);
+    const nonvisualReadingLocale = Localization.getString(nonvisualReadingKey);
     this.statements.push({
       id: nonvisualReadingKey,
       compactString: nonvisualReadingLocale.compact,
@@ -131,7 +131,7 @@ export class WaysOfReading implements AccessibilityDisplayField {
 
     // Non-visual Reading Alt Text
     if (nonvisualReadingAltText) {
-      const altTextLocale = localization.getString("ways-of-reading.nonvisual-reading.alt-text");
+      const altTextLocale = Localization.getString("ways-of-reading.nonvisual-reading.alt-text");
       this.statements.push({
         id: "ways-of-reading.nonvisual-reading.alt-text",
         compactString: altTextLocale.compact,
@@ -151,7 +151,7 @@ export class WaysOfReading implements AccessibilityDisplayField {
       prerecordedAudioKey = "ways-of-reading.prerecorded-audio.no-metadata";
     }
     
-    const prerecordedAudioLocale = localization.getString(prerecordedAudioKey);
+    const prerecordedAudioLocale = Localization.getString(prerecordedAudioKey);
     this.statements.push({
       id: prerecordedAudioKey,
       compactString: prerecordedAudioLocale.compact,
@@ -268,14 +268,14 @@ export class Navigation implements AccessibilityDisplayField {
     this.page = page;
     this.noMetadata = !tableOfContents && !index && !headings && !page;
 
-    const titleLocale = localization.getString(this.id);
+    const titleLocale = Localization.getString(this.id);
     this.title = titleLocale.compact;
 
     this.shouldDisplay = !this.noMetadata;
 
     this.statements = [];
     if (tableOfContents) {
-      const tocLocale = localization.getString("navigation.toc");
+      const tocLocale = Localization.getString("navigation.toc");
       this.statements.push({
         id: "navigation.toc",
         compactString: tocLocale.compact,
@@ -283,7 +283,7 @@ export class Navigation implements AccessibilityDisplayField {
       });
     }
     if (index) {
-      const indexLocale = localization.getString("navigation.index");
+      const indexLocale = Localization.getString("navigation.index");
       this.statements.push({
         id: "navigation.index",
         compactString: indexLocale.compact,
@@ -291,7 +291,7 @@ export class Navigation implements AccessibilityDisplayField {
       });
     }
     if (headings) {
-      const headingsLocale = localization.getString("navigation.structural");
+      const headingsLocale = Localization.getString("navigation.structural");
       this.statements.push({
         id: "navigation.structural",
         compactString: headingsLocale.compact,
@@ -299,7 +299,7 @@ export class Navigation implements AccessibilityDisplayField {
       });
     }
     if (page) {
-      const pageNavLocale = localization.getString("navigation.page-navigation");
+      const pageNavLocale = Localization.getString("navigation.page-navigation");
       this.statements.push({
         id: "navigation.page-navigation",
         compactString: pageNavLocale.compact,
@@ -308,7 +308,7 @@ export class Navigation implements AccessibilityDisplayField {
     }
 
     if (this.statements.length === 0) {
-      const noNavLocale = localization.getString("navigation.no-metadata");
+      const noNavLocale = Localization.getString("navigation.no-metadata");
       this.statements.push({
         id: "navigation.no-metadata",
         compactString: noNavLocale.compact,
@@ -390,12 +390,12 @@ export class RichContent implements AccessibilityDisplayField {
 
     this.shouldDisplay = !this.noMetadata;
     
-    const titleLocale = localization.getString(this.id);
+    const titleLocale = Localization.getString(this.id);
     this.title = titleLocale.compact;
 
     this.statements = [];
     if (extendedAltTextDescriptions) {
-      const extendedLocale = localization.getString("rich-content.extended-descriptions");
+      const extendedLocale = Localization.getString("rich-content.extended-descriptions");
       this.statements.push({
         id: "rich-content.extended-descriptions",
         compactString: extendedLocale.compact,
@@ -403,7 +403,7 @@ export class RichContent implements AccessibilityDisplayField {
       });
     }
     if (mathFormula) {
-      const mathLocale = localization.getString("rich-content.accessible-math-described");
+      const mathLocale = Localization.getString("rich-content.accessible-math-described");
       this.statements.push({
         id: "rich-content.accessible-math-described",
         compactString: mathLocale.compact,
@@ -411,7 +411,7 @@ export class RichContent implements AccessibilityDisplayField {
       });
     }
     if (mathFormulaAsMathML) {
-      const mathMLLocale = localization.getString("rich-content.math-as-mathml");
+      const mathMLLocale = Localization.getString("rich-content.math-as-mathml");
       this.statements.push({
         id: "rich-content.math-as-mathml",
         compactString: mathMLLocale.compact,
@@ -419,7 +419,7 @@ export class RichContent implements AccessibilityDisplayField {
       });
     }
     if (mathFormulaAsLaTeX) {
-      const latexLocale = localization.getString("rich-content.accessible-math-as-latex");
+      const latexLocale = Localization.getString("rich-content.accessible-math-as-latex");
       this.statements.push({
         id: "rich-content.accessible-math-as-latex",
         compactString: latexLocale.compact,
@@ -427,7 +427,7 @@ export class RichContent implements AccessibilityDisplayField {
       });
     }
     if (chemicalFormulaAsMathML) {
-      const chemMLLocale = localization.getString("rich-content.accessible-chemistry-as-mathml");
+      const chemMLLocale = Localization.getString("rich-content.accessible-chemistry-as-mathml");
       this.statements.push({
         id: "rich-content.accessible-chemistry-as-mathml",
         compactString: chemMLLocale.compact,
@@ -435,7 +435,7 @@ export class RichContent implements AccessibilityDisplayField {
       });
     }
     if (chemicalFormulaAsLaTeX) {
-      const chemLatexLocale = localization.getString("rich-content.accessible-chemistry-as-latex");
+      const chemLatexLocale = Localization.getString("rich-content.accessible-chemistry-as-latex");
       this.statements.push({
         id: "rich-content.accessible-chemistry-as-latex",
         compactString: chemLatexLocale.compact,
@@ -443,7 +443,7 @@ export class RichContent implements AccessibilityDisplayField {
       });
     }
     if (closedCaptions) {
-      const ccLocale = localization.getString("rich-content.closed-captions");
+      const ccLocale = Localization.getString("rich-content.closed-captions");
       this.statements.push({
         id: "rich-content.closed-captions",
         compactString: ccLocale.compact,
@@ -451,7 +451,7 @@ export class RichContent implements AccessibilityDisplayField {
       });
     }
     if (openCaptions) {
-      const ocLocale = localization.getString("rich-content.open-captions");
+      const ocLocale = Localization.getString("rich-content.open-captions");
       this.statements.push({
         id: "rich-content.open-captions",
         compactString: ocLocale.compact,
@@ -459,7 +459,7 @@ export class RichContent implements AccessibilityDisplayField {
       });
     }
     if (transcript) {
-      const transcriptLocale = localization.getString("rich-content.transcript");
+      const transcriptLocale = Localization.getString("rich-content.transcript");
       this.statements.push({
         id: "rich-content.transcript",
         compactString: transcriptLocale.compact,
@@ -468,7 +468,7 @@ export class RichContent implements AccessibilityDisplayField {
     }
 
     if (this.statements.length === 0) {
-      const unknownLocale = localization.getString("rich-content.unknown");
+      const unknownLocale = Localization.getString("rich-content.unknown");
       this.statements.push({
         id: "rich-content.unknown",
         compactString: unknownLocale.compact,
@@ -554,12 +554,12 @@ export class AdditionalInformation implements AccessibilityDisplayField {
 
     this.shouldDisplay = !this.noMetadata;
     
-    const titleLocale = localization.getString(this.id);
+    const titleLocale = Localization.getString(this.id);
     this.title = titleLocale.compact;
 
     this.statements = [];
     if (pageBreakMarkers) {
-      const pageBreaksLocale = localization.getString("additional-accessibility-information.page-breaks");
+      const pageBreaksLocale = Localization.getString("additional-accessibility-information.page-breaks");
       this.statements.push({
         id: "additional-accessibility-information.page-breaks",
         compactString: pageBreaksLocale.compact,
@@ -567,7 +567,7 @@ export class AdditionalInformation implements AccessibilityDisplayField {
       });
     }
     if (aria) {
-      const ariaLocale = localization.getString("additional-accessibility-information.aria");
+      const ariaLocale = Localization.getString("additional-accessibility-information.aria");
       this.statements.push({
         id: "additional-accessibility-information.aria",
         compactString: ariaLocale.compact,
@@ -575,7 +575,7 @@ export class AdditionalInformation implements AccessibilityDisplayField {
       });
     }
     if (audioDescriptions) {
-      const audioDescLocale = localization.getString("additional-accessibility-information.audio-descriptions");
+      const audioDescLocale = Localization.getString("additional-accessibility-information.audio-descriptions");
       this.statements.push({
         id: "additional-accessibility-information.audio-descriptions",
         compactString: audioDescLocale.compact,
@@ -583,7 +583,7 @@ export class AdditionalInformation implements AccessibilityDisplayField {
       });
     }
     if (braille) {
-      const brailleLocale = localization.getString("additional-accessibility-information.braille");
+      const brailleLocale = Localization.getString("additional-accessibility-information.braille");
       this.statements.push({
         id: "additional-accessibility-information.braille",
         compactString: brailleLocale.compact,
@@ -591,7 +591,7 @@ export class AdditionalInformation implements AccessibilityDisplayField {
       });
     }
     if (rubyAnnotations) {
-      const rubyLocale = localization.getString("additional-accessibility-information.ruby-annotations");
+      const rubyLocale = Localization.getString("additional-accessibility-information.ruby-annotations");
       this.statements.push({
         id: "additional-accessibility-information.ruby-annotations",
         compactString: rubyLocale.compact,
@@ -599,7 +599,7 @@ export class AdditionalInformation implements AccessibilityDisplayField {
       });
     }
     if (fullRubyAnnotations) {
-      const fullRubyLocale = localization.getString("additional-accessibility-information.full-ruby-annotations");
+      const fullRubyLocale = Localization.getString("additional-accessibility-information.full-ruby-annotations");
       this.statements.push({
         id: "additional-accessibility-information.full-ruby-annotations",
         compactString: fullRubyLocale.compact,
@@ -607,7 +607,7 @@ export class AdditionalInformation implements AccessibilityDisplayField {
       });
     }
     if (highAudioContrast) {
-      const audioContrastLocale = localization.getString("additional-accessibility-information.high-contrast-between-foreground-and-background-audio");
+      const audioContrastLocale = Localization.getString("additional-accessibility-information.high-contrast-between-foreground-and-background-audio");
       this.statements.push({
         id: "additional-accessibility-information.high-contrast-between-foreground-and-background-audio",
         compactString: audioContrastLocale.compact,
@@ -615,7 +615,7 @@ export class AdditionalInformation implements AccessibilityDisplayField {
       });
     }
     if (highDisplayContrast) {
-      const displayContrastLocale = localization.getString("additional-accessibility-information.high-contrast-between-text-and-background");
+      const displayContrastLocale = Localization.getString("additional-accessibility-information.high-contrast-between-text-and-background");
       this.statements.push({
         id: "additional-accessibility-information.high-contrast-between-text-and-background",
         compactString: displayContrastLocale.compact,
@@ -623,7 +623,7 @@ export class AdditionalInformation implements AccessibilityDisplayField {
       });
     }
     if (largePrint) {
-      const largePrintLocale = localization.getString("additional-accessibility-information.large-print");
+      const largePrintLocale = Localization.getString("additional-accessibility-information.large-print");
       this.statements.push({
         id: "additional-accessibility-information.large-print",
         compactString: largePrintLocale.compact,
@@ -631,7 +631,7 @@ export class AdditionalInformation implements AccessibilityDisplayField {
       });
     }
     if (signLanguage) {
-      const signLanguageLocale = localization.getString("additional-accessibility-information.sign-language");
+      const signLanguageLocale = Localization.getString("additional-accessibility-information.sign-language");
       this.statements.push({
         id: "additional-accessibility-information.sign-language",
         compactString: signLanguageLocale.compact,
@@ -639,7 +639,7 @@ export class AdditionalInformation implements AccessibilityDisplayField {
       });
     }
     if (tactileGraphics) {
-      const tactileGraphicsLocale = localization.getString("additional-accessibility-information.tactile-graphics");
+      const tactileGraphicsLocale = Localization.getString("additional-accessibility-information.tactile-graphics");
       this.statements.push({
         id: "additional-accessibility-information.tactile-graphics",
         compactString: tactileGraphicsLocale.compact,
@@ -647,7 +647,7 @@ export class AdditionalInformation implements AccessibilityDisplayField {
       });
     }
     if (tactileObjects) {
-      const tactileObjectsLocale = localization.getString("additional-accessibility-information.tactile-objects");
+      const tactileObjectsLocale = Localization.getString("additional-accessibility-information.tactile-objects");
       this.statements.push({
         id: "additional-accessibility-information.tactile-objects",
         compactString: tactileObjectsLocale.compact,
@@ -655,7 +655,7 @@ export class AdditionalInformation implements AccessibilityDisplayField {
       });
     }
     if (textToSpeechHinting) {
-      const ttsHintingLocale = localization.getString("additional-accessibility-information.text-to-speech-hinting");
+      const ttsHintingLocale = Localization.getString("additional-accessibility-information.text-to-speech-hinting");
       this.statements.push({
         id: "additional-accessibility-information.text-to-speech-hinting",
         compactString: ttsHintingLocale.compact,
@@ -717,7 +717,7 @@ export class Hazards implements AccessibilityDisplayField {
     this.motion = motion;
     this.sound = sound;
     
-    const titleLocale = localization.getString(this.id);
+    const titleLocale = Localization.getString(this.id);
     this.title = titleLocale.compact;
 
     this.noMetadata = flashing === HazardType.noMetadata && motion === HazardType.noMetadata && sound === HazardType.noMetadata;
@@ -728,21 +728,21 @@ export class Hazards implements AccessibilityDisplayField {
 
     this.statements = [];
     if (this.noHazards) {
-      const noneLocale = localization.getString("hazards.none");
+      const noneLocale = Localization.getString("hazards.none");
       this.statements.push({
         id: "hazards.none",
         compactString: noneLocale.compact,
         descriptiveString: noneLocale.descriptive
       });
     } else if (this.unknown) {
-      const unknownLocale = localization.getString("hazards.unknown");
+      const unknownLocale = Localization.getString("hazards.unknown");
       this.statements.push({
         id: "hazards.unknown",
         compactString: unknownLocale.compact,
         descriptiveString: unknownLocale.descriptive
       });
     } else if (this.noMetadata) {
-      const noMetadataLocale = localization.getString("hazards.no-metadata");
+      const noMetadataLocale = Localization.getString("hazards.no-metadata");
       this.statements.push({
         id: "hazards.no-metadata",
         compactString: noMetadataLocale.compact,
@@ -750,21 +750,21 @@ export class Hazards implements AccessibilityDisplayField {
       });
     } else {
       if (flashing === HazardType.yes) {
-        const flashingLocale = localization.getString("hazards.flashing");
+        const flashingLocale = Localization.getString("hazards.flashing");
         this.statements.push({
           id: "hazards.flashing",
           compactString: flashingLocale.compact,
           descriptiveString: flashingLocale.descriptive
         });
       } else if (flashing === HazardType.unknown) {
-        const flashingUnknownLocale = localization.getString("hazards.flashing-unknown");
+        const flashingUnknownLocale = Localization.getString("hazards.flashing-unknown");
         this.statements.push({
           id: "hazards.flashing-unknown",
           compactString: flashingUnknownLocale.compact,
           descriptiveString: flashingUnknownLocale.descriptive
         });
       } else if (flashing === HazardType.no) {
-        const flashingNoneLocale = localization.getString("hazards.flashing-none");
+        const flashingNoneLocale = Localization.getString("hazards.flashing-none");
         this.statements.push({
           id: "hazards.flashing-none",
           compactString: flashingNoneLocale.compact,
@@ -772,21 +772,21 @@ export class Hazards implements AccessibilityDisplayField {
         });
       }
       if (motion === HazardType.yes) {
-        const motionLocale = localization.getString("hazards.motion");
+        const motionLocale = Localization.getString("hazards.motion");
         this.statements.push({
           id: "hazards.motion",
           compactString: motionLocale.compact,
           descriptiveString: motionLocale.descriptive
         });
       } else if (motion === HazardType.unknown) {
-        const motionUnknownLocale = localization.getString("hazards.motion-unknown");
+        const motionUnknownLocale = Localization.getString("hazards.motion-unknown");
         this.statements.push({
           id: "hazards.motion-unknown",
           compactString: motionUnknownLocale.compact,
           descriptiveString: motionUnknownLocale.descriptive
         });
       } else if (motion === HazardType.no) {
-        const motionNoneLocale = localization.getString("hazards.motion-none");
+        const motionNoneLocale = Localization.getString("hazards.motion-none");
         this.statements.push({
           id: "hazards.motion-none",
           compactString: motionNoneLocale.compact,
@@ -794,21 +794,21 @@ export class Hazards implements AccessibilityDisplayField {
         });
       }
       if (sound === HazardType.yes) {
-        const soundLocale = localization.getString("hazards.sound");
+        const soundLocale = Localization.getString("hazards.sound");
         this.statements.push({
           id: "hazards.sound",
           compactString: soundLocale.compact,
           descriptiveString: soundLocale.descriptive
         });
       } else if (sound === HazardType.unknown) {
-        const soundUnknownLocale = localization.getString("hazards.sound-unknown");
+        const soundUnknownLocale = Localization.getString("hazards.sound-unknown");
         this.statements.push({
           id: "hazards.sound-unknown",
           compactString: soundUnknownLocale.compact,
           descriptiveString: soundUnknownLocale.descriptive
         });
       } else if (sound === HazardType.no) {
-        const soundNoneLocale = localization.getString("hazards.sound-none");
+        const soundNoneLocale = Localization.getString("hazards.sound-none");
         this.statements.push({
           id: "hazards.sound-none",
           compactString: soundNoneLocale.compact,
@@ -883,12 +883,12 @@ export class Conformance implements AccessibilityDisplayField {
     // This should be displayed even if there is no metadata
     this.shouldDisplay = true;
     
-    const titleLocale = localization.getString(this.id);
+    const titleLocale = Localization.getString(this.id);
     this.title = titleLocale.compact;
 
     this.statements = [];
     if (profiles.length === 0) {
-      const noConformanceLocale = localization.getString("conformance.no");
+      const noConformanceLocale = Localization.getString("conformance.no");
       this.statements.push({
         id: "conformance.no",
         compactString: noConformanceLocale.compact,
@@ -898,28 +898,28 @@ export class Conformance implements AccessibilityDisplayField {
     }
 
     if (profiles.some(profile => profile.isWCAGLevelAAA)) {
-      const aaaLocale = localization.getString("conformance.aaa");
+      const aaaLocale = Localization.getString("conformance.aaa");
       this.statements.push({
         id: "conformance.aaa",
         compactString: aaaLocale.compact,
         descriptiveString: aaaLocale.descriptive
       });
     } else if (profiles.some(profile => profile.isWCAGLevelAA)) {
-      const aaLocale = localization.getString("conformance.aa");
+      const aaLocale = Localization.getString("conformance.aa");
       this.statements.push({
         id: "conformance.aa",
         compactString: aaLocale.compact,
         descriptiveString: aaLocale.descriptive
       });
     } else if (profiles.some(profile => profile.isWCAGLevelA)) {
-      const aLocale = localization.getString("conformance.a");
+      const aLocale = Localization.getString("conformance.a");
       this.statements.push({
         id: "conformance.a",
         compactString: aLocale.compact,
         descriptiveString: aLocale.descriptive
       });
     } else {
-      const unknownLocale = localization.getString("conformance.unknown-standard");
+      const unknownLocale = Localization.getString("conformance.unknown-standard");
       this.statements.push({
         id: "conformance.unknown-standard",
         compactString: unknownLocale.compact,
@@ -949,19 +949,19 @@ export class Legal implements AccessibilityDisplayField {
     this.exemption = exemption;
     this.shouldDisplay = this.exemption;
     
-    const titleLocale = localization.getString(this.id);
+    const titleLocale = Localization.getString(this.id);
     this.title = titleLocale.compact;
 
     this.statements = [];
     if (exemption) {
-      const exemptLocale = localization.getString("legal-considerations.exempt");
+      const exemptLocale = Localization.getString("legal-considerations.exempt");
       this.statements.push({
         id: "legal-considerations.exempt",
         compactString: exemptLocale.compact,
         descriptiveString: exemptLocale.descriptive
       });
     } else {
-      const noMetadataLocale = localization.getString("legal-considerations.no-metadata");
+      const noMetadataLocale = Localization.getString("legal-considerations.no-metadata");
       this.statements.push({
         id: "legal-considerations.no-metadata",
         compactString: noMetadataLocale.compact,
@@ -990,7 +990,7 @@ export class AccessibilitySummary implements AccessibilityDisplayField {
   private constructor(publication: Publication) {
     this.shouldDisplay = true;
     
-    const titleLocale = localization.getString(this.id);
+    const titleLocale = Localization.getString(this.id);
     this.title = titleLocale.compact;
     
     const summary = publication.metadata.accessibility?.summary;
@@ -1003,7 +1003,7 @@ export class AccessibilitySummary implements AccessibilityDisplayField {
         descriptiveString: summary
       });
     } else {
-      const locale = localization.getString("accessibility-summary.no-metadata");
+      const locale = Localization.getString("accessibility-summary.no-metadata");
       this.statements.push({
         id: "accessibility-summary.no-metadata",
         compactString: locale.compact,

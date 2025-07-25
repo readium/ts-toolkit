@@ -4,32 +4,72 @@ This document explains how to use and customize the localization system for acce
 
 ## Overview
 
-The localization system allows consumers to provide their own translations for accessibility metadata strings while falling back to English if a translation is not available. The system is designed to be simple and flexible, using a singleton pattern for easy access throughout the application.
+The localization system allows consumers to provide their own translations for accessibility metadata strings while falling back to English if none is provided. The system uses a singleton pattern for easy access throughout the application and supports multiple registered locales.
 
 ## Default Behavior
 
-By default, the system uses English (`en`) locale strings that are bundled with the package. These strings are imported from `thorium-locales` and cover all accessibility metadata display needs.
+By default, the system uses English (`en`) locale strings that are bundled with the package. These strings are included in the package and cover all accessibility metadata display needs.
 
-## Customizing Locales
+## Using the Localization System
 
-To provide your own translations, you can set a custom locale object using the `setLocale` method:
+### Registering Custom Locales
+
+You can register new locales or override existing ones using the `registerLocale` method:
 
 ```typescript
-import { localization } from '@readium/shared';
-
-// Define your custom locale object
-const customLocale = {
+// Register a new locale
+Localization.registerLocale('es', {
   conformance: {
     aaa: {
-      compact: "WCAG 2.1 Level AAA",
-      descriptive: "This publication conforms to WCAG 2.1 Level AAA."
+      compact: "WCAG 2.1 Nivel AAA",
+      descriptive: "Esta publicación cumple con WCAG 2.1 Nivel AAA."
     }
-  },
-  // Add more translations as needed
-};
+  }
+});
 
-// Set the custom locale
-localization.setLocale(customLocale);
+// Or override an existing locale
+Localization.registerLocale('en', {
+  conformance: {
+    aaa: {
+      compact: "WCAG 2.1 Level AAA (Custom)",
+      descriptive: "This publication conforms to WCAG 2.1 Level AAA (Custom)."
+    }
+  }
+});
+```
+
+### Setting the Current Locale
+
+```typescript
+// Set the current locale by language code
+Localization.setLocale('es');
+
+// Check if the locale was set successfully
+if (Localization.setLocale('es')) {
+  console.log('Locale set successfully');
+} else {
+  console.log('Locale not available');
+}
+```
+
+### Getting Localized Strings
+
+```typescript
+// Get a localized string
+const text = Localization.getString('conformance.aaa');
+// Returns: { compact: "WCAG 2.1 Nivel AAA", descriptive: "..." }
+```
+
+### Getting Available Locales
+
+```typescript
+// Get list of available locale codes
+const availableLocales = Localization.getAvailableLocales();
+// Returns: ['en', 'fr', 'es', ...]
+
+// Get current locale code
+const currentLocale = Localization.getCurrentLocale();
+// Returns: 'es'
 ```
 
 ## Locale Object Structure
@@ -45,10 +85,7 @@ Example of valid locale values:
 ```typescript
 const locale = {
   conformance: {
-    aaa: {
-      compact: "WCAG 2.1 Level AAA",
-      descriptive: "This publication conforms to WCAG 2.1 Level AAA."
-    },
+    aaa: "This publication conforms to WCAG 2.1 Level AAA",
     hazards: {
       none: {
         compact: "No hazards",
@@ -133,8 +170,7 @@ The following keys are used throughout the accessibility metadata system:
 
 1. **Provide both compact and descriptive versions** when possible by using an object with both properties. This allows for more precise control over the display text.
 2. **Test your custom locales** to ensure all necessary keys are provided.
-3. **Extend the default English locale** rather than replacing it entirely to ensure coverage of all possible keys.
-4. **Handle missing translations gracefully** - the system will log warnings for missing keys.
+3. **Handle missing translations gracefully** - the system will log warnings for missing keys.
 
 ## TypeScript Support
 
@@ -153,7 +189,7 @@ type LocaleObject = {
 // Example usage:
 const customLocale = {
   conformance: {
-    aaa: "WCAG 2.1 Level AAA",
+    aaa: "This publication conforms to WCAG 2.1 Level AAA",
     ...
   },
   hazards: {

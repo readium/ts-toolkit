@@ -13,14 +13,5 @@ export default defineConfig({
   define: {
     "import.meta.env.PACKAGE_NAME": JSON.stringify(packageJson.name),
     "import.meta.env.PACKAGE_VERSION": JSON.stringify(packageJson.version),
-  },
-  resolve: {
-    alias: {
-      'thorium-locales': resolve(__dirname, 'node_modules/thorium-locales')
-    }
-  },
-  // Enable JSON import
-  json: {
-    stringify: true
   }
 });
