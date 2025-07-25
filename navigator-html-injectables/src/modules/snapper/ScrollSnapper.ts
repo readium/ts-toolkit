@@ -13,14 +13,19 @@ export class ScrollSnapper extends Snapper {
     private wnd!: ReadiumWindow;
     private comms!: Comms;
     private resizeObserver!: ResizeObserver;
-    private scrollEndTimer: number | null = null;
-    private readonly SCROLL_END_DELAY = 100;
+
+    private initialScrollHandled = false;
+    private isScrolling = false;
+    private lastScrollTop = 0;
+    private isResizing = false;
+    private resizeDebounce: number | null = null;
 
     private doc() {
         return this.wnd.document.scrollingElement as HTMLElement;
     }
 
     private reportProgress() {
+        if (!this.comms.ready) return;
         // We have to round up the scroll position because
         // Android may never reach 100% of the scroll height
         // due to the way it rounds scrollTop…
@@ -36,28 +41,51 @@ export class ScrollSnapper extends Snapper {
         });
     }
 
-    // scrollEnd not available in Safari yet so 
-    // we are using the old school timeout method
     private handleScroll = () => {
-        // Clear any existing timeout
-        if (this.scrollEndTimer !== null) {
-            this.wnd.clearTimeout(this.scrollEndTimer);
+        if (!this.comms.ready) return;
+        
+        // We have to filter scroll from resize events
+        if (this.isResizing) {
+            return;
         }
 
-        // Set a new timeout
-        this.scrollEndTimer = this.wnd.setTimeout(() => {
-            this.onScrollEnd();
-        }, this.SCROLL_END_DELAY);
-    };
+        // We have to filter the first scroll event because
+        // it is triggered by the progression sync’ing
+        // on load, and is not triggered by the user
+        if (!this.initialScrollHandled) {
+            this.lastScrollTop = this.doc().scrollTop;
+            this.initialScrollHandled = true;
+            this.reportProgress();
+            return;
+        }
 
-    private onScrollEnd = () => {
-        this.scrollEndTimer = null;
-        this.reportProgress();
+        if (!this.isScrolling) {
+            this.isScrolling = true;
+            this.wnd.requestAnimationFrame(() => {
+                this.reportProgress();
+
+                const currentScrollTop = this.doc().scrollTop;
+                const deltaY = currentScrollTop - this.lastScrollTop;
+                this.lastScrollTop = currentScrollTop;
+
+                this.comms.send("scroll", deltaY);
+            
+                this.isScrolling = false;
+            });
+        }
     };
 
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
+
+        this.initialScrollHandled = false;
+        this.lastScrollTop = 0;
+        this.isResizing = false;
+        if (this.resizeDebounce) {
+            this.wnd.clearTimeout(this.resizeDebounce);
+            this.resizeDebounce = null;
+        }
 
         wnd.navigator.epubReadingSystem.layoutStyle = "scrolling";
 
@@ -76,14 +104,24 @@ export class ScrollSnapper extends Snapper {
         `;
         wnd.document.head.appendChild(style);
 
+        // We have to debounce resize events so that
+        // we don’t send scroll events when the user
+        // resizes the window
         this.resizeObserver = new ResizeObserver(() => {
-            this.comms.ready && this.handleScroll();
+            if (this.resizeDebounce) {
+                this.wnd.clearTimeout(this.resizeDebounce);
+            }
+            
+            this.isResizing = true;
+            this.resizeDebounce = this.wnd.setTimeout(() => {
+                this.isResizing = false;
+                this.resizeDebounce = null;
+                this.reportProgress();
+            }, 50);
         });
         this.resizeObserver.observe(wnd.document.body);
 
-        wnd.addEventListener("scroll", this.handleScroll, {
-            passive: true
-        });
+        wnd.addEventListener("scroll", this.handleScroll, { passive: true });
 
         comms.register("force_webkit_recalc", ScrollSnapper.moduleName, () => {
             forceWebkitRecalc(this.wnd);
@@ -209,13 +247,6 @@ export class ScrollSnapper extends Snapper {
         this.resizeObserver.disconnect();
         if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
         wnd.document.getElementById(SCROLL_SNAPPER_STYLE_ID)?.remove();
-        
-        // Clean up scroll end timer
-        if (this.scrollEndTimer !== null) {
-            clearTimeout(this.scrollEndTimer);
-            this.scrollEndTimer = null;
-        }
-        
         comms.log("ScrollSnapper Unmounted");
         return true;
     }

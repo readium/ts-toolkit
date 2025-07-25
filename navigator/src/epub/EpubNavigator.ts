@@ -29,6 +29,7 @@ export interface EpubNavigatorListeners {
     click: (e: FrameClickEvent) => boolean;  // Return true to prevent handling here
     zoom: (scale: number) => void;
     miscPointer: (amount: number) => void;
+    scroll: (delta: number) => void;
     customEvent: (key: string, data: unknown) => void;
     handleLocator: (locator: Locator) => boolean; // Retrun true to prevent handling here
     textSelected: (selection: BasicTextSelection) => void;
@@ -42,6 +43,7 @@ const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListe
     click: listeners.click || (() => false),
     zoom: listeners.zoom || (() => {}),
     miscPointer: listeners.miscPointer || (() => {}),
+    scroll: listeners.scroll || (() => {}),
     customEvent: listeners.customEvent || (() => {}),
     handleLocator: listeners.handleLocator || (() => false),
     textSelected: listeners.textSelected || (() => {})
@@ -395,6 +397,9 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 break;
             case "swipe":
                 // Swipe event
+                break;
+            case "scroll":
+                this.listeners.scroll(data as number);
                 break;
             case "zoom":
                 this.listeners.zoom(data as number);
