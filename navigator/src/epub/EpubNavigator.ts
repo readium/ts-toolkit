@@ -17,11 +17,6 @@ import { getContentWidth } from "../helpers/dimensions";
 
 export type ManagerEventKey = "zoom";
 
-enum Flow {
-    paginated = "paginated",
-    scrolling = "scrolling"
-}
-
 export interface EpubNavigatorConfiguration {
     preferences: IEpubPreferences;
     defaults: IEpubDefaults;
@@ -63,8 +58,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private currentLocation!: Locator;
     private lastLocationInView: Locator | undefined;
     private currentProgression: ReadingProgression;
-    public readonly layout: Layout;
-    private flow: Flow;
+    private _layout: Layout;
 
     private _preferences: EpubPreferences;
     private _defaults: EpubDefaults;
@@ -83,7 +77,6 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     constructor(container: HTMLElement, pub: Publication, listeners: EpubNavigatorListeners, positions: Locator[] = [], initialPosition: Locator | undefined = undefined, configuration: EpubNavigatorConfiguration = { preferences: {}, defaults: {} }) {
         super();
         this.pub = pub;
-        this.layout = EpubNavigator.determineLayout(pub);
         this.container = container;
         this.listeners = defaultListeners(listeners);
         this.currentLocation = initialPosition!;
@@ -110,10 +103,9 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             constraint: this._settings.constraint
         });
 
+        this._layout = EpubNavigator.determineLayout(pub, !!this._settings.scroll);
         this.currentProgression = pub.metadata.effectiveReadingProgression;
         
-        this.flow = this._settings.scroll ? Flow.scrolling : Flow.paginated;
-
         // We use a resizeObserver cos’ the container parent may not be the width of 
         // the document/window e.g. app using a docking system with left and right panels.
         // If we observe this.container, that won’t obviously work since we set its width.
@@ -121,15 +113,21 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this.resizeObserver.observe(this.container.parentElement || document.documentElement);
     }
 
-    public static determineLayout(pub: Publication): Layout {
+    public static determineLayout(pub: Publication, scroll?: boolean): Layout {
         const layout = pub.metadata.effectiveLayout;
         if(layout === Layout.fixed) return Layout.fixed;
         if(pub.metadata.otherMetadata && ("http://openmangaformat.org/schema/1.0#version" in pub.metadata.otherMetadata))
-            return Layout.fixed; // It's fixed layout even though it lacks presentation, although this should really be a divina
+            return Layout.fixed; // It's fixed layout even though it lacks layout, although this should really be a divina
         if(pub.metadata?.conformsTo?.includes(Profile.DIVINA))
             // TODO: this is temporary until there's a divina reader in place
             return Layout.fixed;
         // TODO other logic to detect fixed layout publications
+
+        if (layout === Layout.scrolled)
+            return Layout.scrolled;
+
+        if (layout === Layout.reflowable && scroll)
+            return Layout.scrolled;
 
         return Layout.reflowable;
     }
@@ -137,7 +135,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     public async load() {
         if (!this.positions?.length)
             this.positions = await this.pub.positionsFromManifest();
-        if(this.layout === Layout.fixed) {
+        if(this._layout === Layout.fixed) {
             this.framePool = new FXLFramePoolManager(this.container, this.positions, this.pub);
             this.framePool.listener = (key: CommsEventKey | ManagerEventKey, data: unknown) => {
                 this.eventListener(key, data);
@@ -156,7 +154,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     }
 
     public get settings(): Readonly<EpubSettings> {
-        if (this.layout === Layout.fixed) {
+        if (this._layout === Layout.fixed) {
             return Object.freeze({ ...this._settings });
         } else {
             // Given all the nasty issues moving auto-pagination to EpubSettings creates
@@ -190,7 +188,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             this._preferencesEditor = new EpubPreferencesEditor(this._preferences, this.settings, this.pub.metadata);
         }
 
-        if (this.layout === Layout.fixed) {
+        if (this._layout === Layout.fixed) {
             this.handleFXLPrefs(oldSettings, this._settings);
         } else {
             await this.updateCSS(true);
@@ -234,14 +232,14 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
         if (
             this._css.userProperties.view === "paged" && 
-            this.flow === Flow.scrolling
+            this._layout === Layout.scrolled
         ) {
-            await this.switchFlow(Flow.paginated); 
+            await this.setLayout(Layout.reflowable); 
         } else if (
             this._css.userProperties.view === "scroll" && 
-            (this.flow === Flow.paginated)
+            (this._layout === Layout.reflowable)
         ) {
-            await this.switchFlow(Flow.scrolling);
+            await this.setLayout(Layout.scrolled);
         }
 
         this._css.setContainerWidth();
@@ -252,7 +250,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         // and the container may not be the entire width of the document/window
         const parentEl = this.container.parentElement || document.documentElement;
 
-        if (this.layout === Layout.fixed) {
+        if (this._layout === Layout.fixed) {
             this.container.style.width = `${ getContentWidth(parentEl) - this._settings.constraint }px`;
             (this.framePool as FXLFramePoolManager).resizeHandler();
         } else {
@@ -269,6 +267,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 await this.commitCSS(this._css);
             }
         }
+    }
+
+    get layout() {
+        return this._layout;
     }
 
     get ownerWindow() {
@@ -358,11 +360,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                         }
                     } else console.log("Clicked on", element);
                 } else {
-                    if(this.layout === Layout.fixed && (this.framePool as FXLFramePoolManager).doNotDisturb)
+                    if(this._layout === Layout.fixed && (this.framePool as FXLFramePoolManager).doNotDisturb)
                         edata.doNotDisturb = true;
 
-                    if(this.layout === Layout.fixed
-                        // TODO handle ttb/btt
+                    if(this._layout === Layout.fixed
                         && (
                             this.currentProgression === ReadingProgression.rtl ||
                             this.currentProgression === ReadingProgression.ltr
@@ -421,12 +422,12 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private determineModules() {
         let modules = Array.from(ModuleLibrary.keys()) as ModuleName[];
 
-        if(this.layout === Layout.fixed) {
+        if(this._layout === Layout.fixed) {
             return modules.filter((m) => FXLModules.includes(m));
         } else modules = modules.filter((m) => ReflowableModules.includes(m));
-
+        
         // Horizontal vs. Vertical reading
-        if (this.flow === Flow.scrolling)
+        if (this._layout === Layout.scrolled)
             modules = modules.filter((m) => m !== "column_snapper");
         else
             modules = modules.filter((m) => m !== "scroll_snapper");
@@ -463,7 +464,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private async changeResource(relative: number): Promise<boolean> {
         if (relative === 0) return false;
 
-        if(this.layout === Layout.fixed) {
+        if(this._layout === Layout.fixed) {
             const p = this.framePool as FXLFramePoolManager;
             const old = p.viewport.positions![0];
             if(relative === 1) {
@@ -600,7 +601,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     }
 
     public goBackward(_: boolean, cb: (ok: boolean) => void): void {
-        if(this.layout === Layout.fixed) {
+        if(this._layout === Layout.fixed) {
             this.changeResource(-1);
             cb(true);
         } else {
@@ -616,7 +617,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     }
 
     public goForward(_: boolean, cb: (ok: boolean) => void): void {
-        if(this.layout === Layout.fixed) {
+        if(this._layout === Layout.fixed) {
             this.changeResource(1);
             cb(true);
         } else {
@@ -641,7 +642,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     }
 
     get viewport(): VisualNavigatorViewport {
-        return this.layout === Layout.fixed 
+        return this._layout === Layout.fixed 
             ? (this.framePool as FXLFramePoolManager).viewport 
             : this.reflowViewport;
     }
@@ -673,17 +674,9 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         return this.currentProgression;
     }
 
-    // TODO: This is temporary until user settings are implemented.
-    public async setReadingProgression(newProgression: ReadingProgression) {
-        if(this.currentProgression === newProgression || !this.framePool) return;
-        this.currentProgression = newProgression;
-        await this.framePool.update(this.pub, this.currentLocator, this.determineModules(), true);
-        this.attachListener();
-    }
-
-    public async switchFlow(flow: Flow) {
-        if (this.flow === flow) return;
-        this.flow = flow;
+    public async setLayout(layout: Layout) {
+        if (this._layout === layout) return;
+        this._layout = layout;
         await this.framePool.update(this.pub, this.currentLocator, this.determineModules(), true);
         this.attachListener();
     }
