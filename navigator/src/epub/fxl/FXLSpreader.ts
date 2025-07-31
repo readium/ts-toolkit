@@ -36,7 +36,7 @@ export class FXLSpreader {
                 // if(!orientation) item.Properties.Orientation = item.Width > item.Height ? "landscape" : "portrait";
             }
             const isLandscape = item.properties?.otherProperties["orientation"] === Orientation.landscape ? true : false;
-            if((!item.properties?.otherProperties["page"] || redo)) item.properties = item.properties?.add({
+            if((!item.properties?.page || redo)) item.properties = item.properties?.add({
                 "page": isLandscape ? // If a landscape image
                     "center" : // Center it
                     ((((this.shift ? 0 : 1) + index - this.nLandscape) % 2) ? 
@@ -64,14 +64,14 @@ export class FXLSpreader {
                 this.shift = false;
 
             // If last was a true single, and this spread is a center page (that's not special), something's wrong
-            if(wasLastSingle && single.properties?.otherProperties["page"] === Page.center) {
+            if(wasLastSingle && single.properties?.page === Page.center) {
                 this.spreads[index - 1][0].addProperties({"addBlank": true});
                 /*if(single.findFlag("final"))
                     this.nLandscape++;*/
             }
 
             // If this single page spread is an orphaned component of a double page spread (and it's not the first page)
-            if(orientation === Orientation.portrait && single.properties?.otherProperties["page"] !== "center" && single.properties?.otherProperties["number"] > 1)
+            if(orientation === Orientation.portrait && single.properties?.page !== "center" && single.properties?.otherProperties["number"] > 1)
                 wasLastSingle = true;
             else
                 wasLastSingle = false;
@@ -85,7 +85,7 @@ export class FXLSpreader {
         spine.items.forEach((item, index) => {
             if(!index && this.shift) {
                 this.spreads.push([item]);
-            } else if(item.properties?.otherProperties["page"] === Page.center) { // If a center (single) page spread, push immediately and reset current set
+            } else if(item.properties?.page === Page.center) { // If a center (single) page spread, push immediately and reset current set
                 if(currentSet.length > 0) this.spreads.push(currentSet);
                 this.spreads.push([item]);
                 currentSet = [];
