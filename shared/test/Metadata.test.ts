@@ -381,7 +381,7 @@ describe('Metadata Tests', () => {
         title: new LocalizedString('Title'),
       }).serialize()
     ).toEqual({
-      title: { undefined: 'Title' },
+      title: { undefined: 'Title' }
     });
   });
 
@@ -393,9 +393,7 @@ describe('Metadata Tests', () => {
   }
 
   it('effectiveReadingProgression falls back on LTR', () => {
-    const metadata = createMetadata({
-      readingProgression: ReadingProgression.auto,
-    });
+    const metadata = createMetadata({});
     expect(metadata.effectiveReadingProgression).toEqual(
       ReadingProgression.ltr
     );
@@ -414,31 +412,26 @@ describe('Metadata Tests', () => {
     expect(
       createMetadata({
         languages: ['zh-Hant'],
-        readingProgression: ReadingProgression.auto,
       }).effectiveReadingProgression
     ).toEqual(ReadingProgression.rtl);
     expect(
       createMetadata({
         languages: ['zh-TW'],
-        readingProgression: ReadingProgression.auto,
       }).effectiveReadingProgression
     ).toEqual(ReadingProgression.rtl);
     expect(
       createMetadata({
         languages: ['ar'],
-        readingProgression: ReadingProgression.auto,
       }).effectiveReadingProgression
     ).toEqual(ReadingProgression.rtl);
     expect(
       createMetadata({
         languages: ['fa'],
-        readingProgression: ReadingProgression.auto,
       }).effectiveReadingProgression
     ).toEqual(ReadingProgression.rtl);
     expect(
       createMetadata({
         languages: ['he'],
-        readingProgression: ReadingProgression.auto,
       }).effectiveReadingProgression
     ).toEqual(ReadingProgression.rtl);
     expect(
@@ -453,7 +446,6 @@ describe('Metadata Tests', () => {
     expect(
       createMetadata({
         languages: ['ar', 'fa'],
-        readingProgression: ReadingProgression.auto,
       }).effectiveReadingProgression
     ).toEqual(ReadingProgression.ltr);
   });
@@ -462,7 +454,6 @@ describe('Metadata Tests', () => {
     expect(
       createMetadata({
         languages: ['AR'],
-        readingProgression: ReadingProgression.auto,
       }).effectiveReadingProgression
     ).toEqual(ReadingProgression.rtl);
   });
@@ -471,13 +462,11 @@ describe('Metadata Tests', () => {
     expect(
       createMetadata({
         languages: ['ar-foo'],
-        readingProgression: ReadingProgression.auto,
       }).effectiveReadingProgression
     ).toEqual(ReadingProgression.rtl);
     expect(
       createMetadata({
         languages: ['zh-foo'],
-        readingProgression: ReadingProgression.auto,
       }).effectiveReadingProgression
     ).toEqual(ReadingProgression.ltr);
   });

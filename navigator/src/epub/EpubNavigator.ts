@@ -17,6 +17,11 @@ import { getContentWidth } from "../helpers/dimensions";
 
 export type ManagerEventKey = "zoom";
 
+enum Flow {
+    paginated = "paginated",
+    scrolling = "scrolling"
+}
+
 export interface EpubNavigatorConfiguration {
     preferences: IEpubPreferences;
     defaults: IEpubDefaults;
@@ -59,6 +64,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private lastLocationInView: Locator | undefined;
     private currentProgression: ReadingProgression;
     public readonly layout: Layout;
+    private flow: Flow;
 
     private _preferences: EpubPreferences;
     private _defaults: EpubDefaults;
@@ -104,11 +110,9 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             constraint: this._settings.constraint
         });
 
-        this.currentProgression = this.layout === Layout.reflowable 
-            ? (this._settings.scroll 
-                ? ReadingProgression.ttb 
-                : pub.metadata.effectiveReadingProgression) 
-            : pub.metadata.effectiveReadingProgression;
+        this.currentProgression = pub.metadata.effectiveReadingProgression;
+        
+        this.flow = this._settings.scroll ? Flow.scrolling : Flow.paginated;
 
         // We use a resizeObserver cos’ the container parent may not be the width of 
         // the document/window e.g. app using a docking system with left and right panels.
@@ -230,14 +234,14 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
         if (
             this._css.userProperties.view === "paged" && 
-            this.readingProgression === ReadingProgression.ttb
+            this.flow === Flow.scrolling
         ) {
-            await this.setReadingProgression(this.pub.metadata.effectiveReadingProgression); 
+            await this.switchFlow(Flow.paginated); 
         } else if (
             this._css.userProperties.view === "scroll" && 
-            (this.readingProgression === ReadingProgression.ltr || this.readingProgression === ReadingProgression.rtl)
+            (this.flow === Flow.paginated)
         ) {
-            await this.setReadingProgression(ReadingProgression.ttb);
+            await this.switchFlow(Flow.scrolling);
         }
 
         this._css.setContainerWidth();
@@ -376,8 +380,6 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
                     const handled = key === "click" ? this.listeners.click(edata) : this.listeners.tap(edata);
                     if(handled) break;
-                    if (this.currentProgression === ReadingProgression.ttb || this.currentProgression === ReadingProgression.btt)
-                        return; // Not applicable to vertical reading yet. TODO
 
                     const oneQuarter = ((this._cframes.length === 2 ? this._cframes[0]!.window.innerWidth + this._cframes[1]!.window.innerWidth : this._cframes[0]!.window.innerWidth) * window.devicePixelRatio) / 4;
                     // open UI if middle screen is clicked/tapped
@@ -424,7 +426,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         } else modules = modules.filter((m) => ReflowableModules.includes(m));
 
         // Horizontal vs. Vertical reading
-        if (this.readingProgression === ReadingProgression.ttb || this.readingProgression === ReadingProgression.btt)
+        if (this.flow === Flow.scrolling)
             modules = modules.filter((m) => m !== "column_snapper");
         else
             modules = modules.filter((m) => m !== "scroll_snapper");
@@ -675,6 +677,13 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     public async setReadingProgression(newProgression: ReadingProgression) {
         if(this.currentProgression === newProgression || !this.framePool) return;
         this.currentProgression = newProgression;
+        await this.framePool.update(this.pub, this.currentLocator, this.determineModules(), true);
+        this.attachListener();
+    }
+
+    public async switchFlow(flow: Flow) {
+        if (this.flow === flow) return;
+        this.flow = flow;
         await this.framePool.update(this.pub, this.currentLocator, this.determineModules(), true);
         this.attachListener();
     }

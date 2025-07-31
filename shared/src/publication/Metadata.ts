@@ -361,16 +361,12 @@ export class Metadata {
   }
 
   /**
-   * Computes a [ReadingProgression] when the value of [readingProgression] is set to
-   * auto, using the publication language.
+   * Computes a [ReadingProgression] when the value of [readingProgression] is undefined, using the publication language.
    *
    * See this issue for more details: https://github.com/readium/architecture/issues/113
    */
   public get effectiveReadingProgression(): ReadingProgression {
-    if (
-      this.readingProgression &&
-      this.readingProgression !== ReadingProgression.auto
-    ) {
+    if (this.readingProgression) {
       return this.readingProgression;
     }
 
