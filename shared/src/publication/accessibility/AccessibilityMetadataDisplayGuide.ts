@@ -1,6 +1,6 @@
 import { Accessibility, Feature, AccessMode, PrimaryAccessMode, Hazard } from './Accessibility';
 import { Publication } from '../Publication';
-import { Profile } from './Accessibility';
+import { AccessibilityProfile } from './Accessibility';
 
 import { Localization } from './Localization';
 import { Layout } from '../Layout';
@@ -874,10 +874,10 @@ export class Conformance implements AccessibilityDisplayField {
   public readonly id = "conformance.title";
   public readonly title: string;
   public readonly shouldDisplay: boolean;
-  public readonly profiles: Profile[];
+  public readonly profiles: AccessibilityProfile[];
   public readonly statements: AccessibilityDisplayStatement[];
 
-  private constructor(profiles: Profile[] = []) {
+  private constructor(profiles: AccessibilityProfile[] = []) {
     this.profiles = profiles;
     
     // This should be displayed even if there is no metadata
