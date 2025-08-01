@@ -1,10 +1,10 @@
 import { ModuleName } from "@readium/navigator-html-injectables";
-import { Locator, Publication, ReadingProgression, Orientation, Page, Link, Spread } from "@readium/shared";
+import { Locator, Publication, ReadingProgression, Page, Link } from "@readium/shared";
 import { FrameCommsListener } from "../frame";
 import FrameBlobBuider from "../frame/FrameBlobBuilder";
 import { FXLFrameManager } from "./FXLFrameManager";
 import { FXLPeripherals } from "./FXLPeripherals";
-import { FXLSpreader } from "./FXLSpreader";
+import { FXLSpreader, Orientation, Spread } from "./FXLSpreader";
 import { VisualNavigatorViewport } from "../../Navigator";
 
 const UPPER_BOUNDARY = 8;
@@ -48,7 +48,7 @@ export class FXLFramePoolManager {
         this.container = container;
         this.positions = positions;
         this.pub = pub;
-        this.spreadPresentation = pub.metadata.getPresentation()?.spread || Spread.auto;
+        this.spreadPresentation = pub.metadata.otherMetadata?.spread || Spread.auto;
 
         if(this.pub.metadata.effectiveReadingProgression !== ReadingProgression.rtl && this.pub.metadata.effectiveReadingProgression !== ReadingProgression.ltr)
             // TODO support TTB and BTT
@@ -79,7 +79,7 @@ export class FXLFramePoolManager {
 
             // this.pages.push(fm);
             this.pool.set(link.href, fm);
-            fm.width = 100 / this.length * (link.properties?.getOrientation() === Orientation.landscape || link.properties?.otherProperties["addBlank"] ? this.perPage : 1);
+            fm.width = 100 / this.length * (link.properties?.otherProperties["orientation"] === Orientation.landscape || link.properties?.otherProperties["addBlank"] ? this.perPage : 1);
             fm.height = this.height;
         });
     }
@@ -124,7 +124,7 @@ export class FXLFramePoolManager {
             this.pool.forEach((frm, linkHref) => {
                 let i = this.pub.readingOrder.items.findIndex(l => l.href === linkHref);
                 const link = this.pub.readingOrder.items[i];
-                frm.width = 100 / this.length * (link.properties?.getOrientation() === Orientation.landscape || link.properties?.otherProperties["addBlank"] ? this.perPage : 1);
+                frm.width = 100 / this.length * (link.properties?.otherProperties["orientation"] === Orientation.landscape || link.properties?.otherProperties["addBlank"] ? this.perPage : 1);
                 frm.height = this.height;
                 if(!frm.loaded) return;
                 const spread = this.spreader.findByLink(link)!;

@@ -56,9 +56,9 @@ export abstract class VisualNavigator extends Navigator {
       * Moves to the left content portion (eg. page) relative to the reading progression direction.
       */
      goLeft(animated = false, completion: cbb) {
-        if(this.readingProgression === ReadingProgression.ltr || this.readingProgression === ReadingProgression.ttb || this.readingProgression === ReadingProgression.auto)
+        if(this.readingProgression === ReadingProgression.ltr)
             this.goBackward(animated, completion);
-        else if(this.readingProgression === ReadingProgression.rtl || this.readingProgression === ReadingProgression.btt)
+        else if(this.readingProgression === ReadingProgression.rtl)
             this.goForward(animated, completion);
      }
 
@@ -66,9 +66,9 @@ export abstract class VisualNavigator extends Navigator {
       * Moves to the right content portion (eg. page) relative to the reading progression direction.
       */
      goRight(animated = false, completion: cbb) {
-        if(this.readingProgression === ReadingProgression.ltr || this.readingProgression === ReadingProgression.ttb || this.readingProgression === ReadingProgression.auto)
+        if(this.readingProgression === ReadingProgression.ltr)
             this.goForward(animated, completion);
-        else if(this.readingProgression === ReadingProgression.rtl || this.readingProgression === ReadingProgression.btt)
+        else if(this.readingProgression === ReadingProgression.rtl)
             this.goBackward(animated, completion);
      }
 }

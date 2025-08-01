@@ -3,6 +3,12 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
+export enum Page {
+  left = 'left',
+  right = 'right',
+  center = 'center'
+}
+
 /**
  * Properties associated to the linked resource.
  *
@@ -14,6 +20,10 @@ export class Properties {
 
   constructor(values: { [key: string]: any }) {
     this.otherProperties = values;
+  }
+
+  get page(): Page | undefined {
+    return this.otherProperties['page'] as Page | undefined;
   }
 
   /**

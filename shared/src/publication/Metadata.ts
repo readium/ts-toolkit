@@ -11,7 +11,9 @@ import {
 import { AltIdentifier } from './AltIdentifier';
 import { BelongsTo } from './BelongsTo';
 import { Contributors } from './Contributor';
+import { Layout } from './Layout';
 import { LocalizedString } from './LocalizedString';
+import { Profile } from './Profiles';
 import { ReadingProgression } from './ReadingProgression';
 import { Subjects } from './Subject';
 import { Accessibility } from './accessibility/Accessibility';
@@ -28,6 +30,7 @@ import { TDM } from './TDM';
 export class Metadata {
   public title: LocalizedString;
   public typeUri?: string;
+  public conformsTo?: Array<Profile>;
   public identifier?: string;
   public altIdentifier?: AltIdentifier;
   public subtitle?: LocalizedString;
@@ -53,6 +56,7 @@ export class Metadata {
   public belongsTo?: BelongsTo;
   public belongsToCollections?: Contributors;
   public belongsToSeries?: Contributors;
+  public layout?: Layout;
   public readingProgression?: ReadingProgression;
   public duration?: number;
   public numberOfPages?: number;
@@ -64,6 +68,7 @@ export class Metadata {
   private static readonly mappedProperties = [
     'title',
     '@type',
+    'conformsTo',
     'identifier',
     'altIdentifier',
     'subtitle',
@@ -87,6 +92,7 @@ export class Metadata {
     'modified',
     'subject',
     'belongsTo',
+    'layout',
     'readingProgression',
     'duration',
     'numberOfPages',
@@ -98,6 +104,7 @@ export class Metadata {
   constructor(values: {
     title: LocalizedString;
     typeUri?: string;
+    conformsTo?: Array<Profile>;
     identifier?: string;
     altIdentifier?: AltIdentifier;
     subtitle?: LocalizedString;
@@ -123,6 +130,7 @@ export class Metadata {
     belongsTo?: BelongsTo;
     belongsToCollections?: Contributors;
     belongsToSeries?: Contributors;
+    layout?: Layout;
     readingProgression?: ReadingProgression;
     duration?: number;
     numberOfPages?: number;
@@ -133,6 +141,7 @@ export class Metadata {
     //title always required
     this.title = values.title as LocalizedString;
     this.typeUri = values.typeUri;
+    this.conformsTo = values.conformsTo;
     this.identifier = values.identifier;
     this.altIdentifier = values.altIdentifier;
     this.subtitle = values.subtitle;
@@ -158,7 +167,6 @@ export class Metadata {
     this.belongsTo = values.belongsTo;
     this.belongsToCollections = values.belongsToCollections;
     this.belongsToSeries = values.belongsToSeries;
-
     if (
       this.belongsToCollections &&
       this.belongsToCollections.items.length > 0
@@ -176,6 +184,7 @@ export class Metadata {
       this.belongsTo.items.set('series', this.belongsToSeries);
     }
 
+    this.layout = values.layout;
     this.readingProgression = values.readingProgression;
     this.duration = values.duration;
     this.numberOfPages = values.numberOfPages;
@@ -194,6 +203,7 @@ export class Metadata {
 
     const title = LocalizedString.deserialize(json.title) as LocalizedString;
     const typeUri = json['@type'];
+    const conformsTo = arrayfromJSONorString(json.conformsTo);
     const identifier = json.identifier;
     const altIdentifier = AltIdentifier.deserialize(json.altIdentifier);
     const subtitle = LocalizedString.deserialize(json.subtitle);
@@ -218,6 +228,7 @@ export class Metadata {
     const subjects = Subjects.deserialize(json.subject);
     const belongsTo = BelongsTo.deserialize(json.belongsTo);
     const accessibility = Accessibility.deserialize(json.accessibility);
+    const layout = json.layout;
     const readingProgression = json.readingProgression;
     const duration = positiveNumberfromJSON(json.duration);
     const numberOfPages = positiveNumberfromJSON(json.numberOfPages);
@@ -232,6 +243,7 @@ export class Metadata {
     return new Metadata({
       title,
       typeUri,
+      conformsTo,
       identifier,
       altIdentifier,
       subtitle,
@@ -255,6 +267,7 @@ export class Metadata {
       modified,
       subjects,
       belongsTo,
+      layout,
       readingProgression,
       duration,
       numberOfPages,
@@ -270,6 +283,7 @@ export class Metadata {
   public serialize(): any {
     const json: any = { title: this.title.serialize() };
     if (this.typeUri !== undefined) json['@type'] = this.typeUri;
+    if (this.conformsTo) json.conformsTo = this.conformsTo;
     if (this.identifier !== undefined) json.identifier = this.identifier;
     if (this.altIdentifier) json.altIdentifier = this.altIdentifier.serialize();
     if (this.subtitle) json.subtitle = this.subtitle.serialize();
@@ -295,6 +309,7 @@ export class Metadata {
       json.modified = this.modified.toISOString();
     if (this.subjects) json.subject = this.subjects.serialize();
     if (this.belongsTo) json.belongsTo = this.belongsTo.serialize();
+    if (this.layout) json.layout = this.layout;
     if (this.readingProgression)
       json.readingProgression = this.readingProgression;
     if (this.duration !== undefined) json.duration = this.duration;
@@ -312,16 +327,54 @@ export class Metadata {
   }
 
   /**
-   * Computes a [ReadingProgression] when the value of [readingProgression] is set to
-   * auto, using the publication language.
+   * Computes a [Layout] using the [conformsTo] profile and layout property.
+   * 
+   * Special cases:
+   * - EPUB profile defaults to reflowable if layout is not present
+   * - Divina profile defaults to fixed if layout is not present
+   * - Layout is ignored for audiobook and PDF profiles
+   * - Layout is ignored if set to reflowable on a Divina profile
+   * 
+   * Note: Stops at the first matching profile.
+   */
+  public get effectiveLayout(): Layout | null {
+    if (!this.conformsTo) {
+      return null; // Default Web Publication behavior
+    }
+
+    // Check each profile in order, stopping at the first match
+    for (const profile of this.conformsTo) {
+      switch (profile) {
+        case Profile.EPUB:
+          // EPUB defaults to reflowable if layout is not set
+          return this.layout || Layout.reflowable;
+
+        case Profile.DIVINA:
+          // Divina defaults to fixed if layout is not set
+          // Layout is ignored if set to reflowable
+          if (this.layout === Layout.reflowable) {
+            return Layout.fixed;
+          }
+          return this.layout || Layout.fixed;
+
+        case Profile.AUDIOBOOK:
+        case Profile.PDF:
+          // Layout is ignored for audiobook and PDF profiles
+          return null;
+      }
+    }
+
+    // If we get here, we have a conformsTo but no matching profile
+    return null;
+  }
+
+  /**
+   * Computes a [ReadingProgression] when the value of [readingProgression] is undefined, using the publication language.
    *
    * See this issue for more details: https://github.com/readium/architecture/issues/113
    */
   public get effectiveReadingProgression(): ReadingProgression {
-    if (
-      this.readingProgression &&
-      this.readingProgression !== ReadingProgression.auto
-    ) {
+    if (this.readingProgression) {
       return this.readingProgression;
     }
 

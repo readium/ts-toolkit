@@ -22,14 +22,4 @@ describe('Epub Properties Tests', () => {
       new Properties({ contains: ['mathml', 'mathml'] }).getContains()
     ).toEqual(new Set(['mathml']));
   });
-
-  it('get Properties {layout} when available', () => {
-    expect(new Properties({ layout: 'fixed' }).getLayout()).toEqual(
-      EPUBLayout.fixed
-    );
-  });
-
-  it('get Properties {layout} when missing', () => {
-    expect(new Properties({}).getLayout()).toBeUndefined();
-  });
 });

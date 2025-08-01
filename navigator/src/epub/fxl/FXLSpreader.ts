@@ -1,4 +1,17 @@
-import { Link, Links, Orientation, Page, Publication, ReadingProgression, Spread } from "@readium/shared";
+import { Link, Links, Page, Publication, ReadingProgression } from "@readium/shared";
+
+export enum Orientation {
+    auto = "auto",
+    landscape = "landscape",
+    portrait = "portrait",
+}
+
+export enum Spread {
+    auto = "auto",
+    both = "both",
+    none = "none",
+    landscape = "landscape",
+}
 
 export class FXLSpreader {
     shift = true; // TODO getter
@@ -22,8 +35,8 @@ export class FXLSpreader {
                 });
                 // if(!orientation) item.Properties.Orientation = item.Width > item.Height ? "landscape" : "portrait";
             }
-            const isLandscape = item.properties?.getOrientation() === Orientation.landscape ? true : false;
-            if((!item.properties?.getPage() || redo)) item.properties = item.properties?.add({
+            const isLandscape = item.properties?.otherProperties["orientation"] === Orientation.landscape ? true : false;
+            if((!item.properties?.page || redo)) item.properties = item.properties?.add({
                 "page": isLandscape ? // If a landscape image
                     "center" : // Center it
                     ((((this.shift ? 0 : 1) + index - this.nLandscape) % 2) ? 
@@ -44,21 +57,21 @@ export class FXLSpreader {
             if(item.length > 1)
                 return; // Only left with single-page "spreads"
             const single = item[0];
-            const orientation = single.properties?.getOrientation();
+            const orientation = single.properties?.otherProperties["orientation"];
 
             // First page is landscape/spread means no shift
-            if(index === 0 && (orientation === Orientation.landscape || (orientation !== Orientation.portrait && ((single.width || 0) > (single.height || 0) || single.properties?.getSpread() === Spread.both))))
+            if(index === 0 && (orientation === Orientation.landscape || (orientation !== Orientation.portrait && ((single.width || 0) > (single.height || 0) || single.properties?.otherProperties["spread"] === Spread.both))))
                 this.shift = false;
 
             // If last was a true single, and this spread is a center page (that's not special), something's wrong
-            if(wasLastSingle && single.properties?.getPage() === Page.center) {
+            if(wasLastSingle && single.properties?.page === Page.center) {
                 this.spreads[index - 1][0].addProperties({"addBlank": true});
                 /*if(single.findFlag("final"))
                     this.nLandscape++;*/
             }
 
             // If this single page spread is an orphaned component of a double page spread (and it's not the first page)
-            if(orientation === Orientation.portrait && single.properties?.getPage() !== "center" && single.properties?.otherProperties["number"] > 1)
+            if(orientation === Orientation.portrait && single.properties?.page !== "center" && single.properties?.otherProperties["number"] > 1)
                 wasLastSingle = true;
             else
                 wasLastSingle = false;
@@ -72,7 +85,7 @@ export class FXLSpreader {
         spine.items.forEach((item, index) => {
             if(!index && this.shift) {
                 this.spreads.push([item]);
-            } else if(item.properties?.getPage() === Page.center) { // If a center (single) page spread, push immediately and reset current set
+            } else if(item.properties?.page === Page.center) { // If a center (single) page spread, push immediately and reset current set
                 if(currentSet.length > 0) this.spreads.push(currentSet);
                 this.spreads.push([item]);
                 currentSet = [];

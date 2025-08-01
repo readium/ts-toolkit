@@ -23,7 +23,7 @@ describe('Publication Tests', () => {
           title: new LocalizedString(values?.title || 'Title'),
           languages: [values?.language || 'en'],
           readingProgression:
-            values?.readingProgression || ReadingProgression.auto,
+            values?.readingProgression,
         }),
         links: values?.links || new Links([]),
         readingOrder: values?.readingOrder || new Links([]),
