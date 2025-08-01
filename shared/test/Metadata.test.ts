@@ -11,9 +11,9 @@ import {
   Subjects,
   TDM,
   TDMReservation,
-  AltIdentifier,
+  AltIdentifier
 } from '../src';
-import { Accessibility, Profile, AccessMode, Feature, Hazard, Exemption, PrimaryAccessMode, Certification } from '../src/publication/accessibility/Accessibility';
+import { Accessibility, AccessMode, AccessibilityProfile, Feature, Hazard, Exemption, PrimaryAccessMode, Certification } from '../src/publication/accessibility/Accessibility';
 
 describe('Metadata Tests', () => {
   it('parse minimal JSON', () => {
@@ -191,7 +191,7 @@ describe('Metadata Tests', () => {
           'other-metadata2': [42],
         },
         accessibility: new Accessibility({
-          conformsTo: [Profile.EPUB_A11Y_10_WCAG_20_AA],
+          conformsTo: [AccessibilityProfile.EPUB_A11Y_10_WCAG_20_AA],
           certification: new Certification(
             'Certifier',
             'Certification',
@@ -364,7 +364,7 @@ describe('Metadata Tests', () => {
           'other-metadata2': [42],
         },
         accessibility: new Accessibility({
-          conformsTo: [Profile.EPUB_A11Y_10_WCAG_20_AA],
+          conformsTo: [AccessibilityProfile.EPUB_A11Y_10_WCAG_20_AA],
           certification: new Certification(
             'Certifier',
             'Certification',

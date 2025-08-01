@@ -1,9 +1,9 @@
 import { Accessibility, Feature, AccessMode, PrimaryAccessMode, Hazard } from './Accessibility';
 import { Publication } from '../Publication';
-import { EPUBLayout } from '../epub';
 import { Profile } from './Accessibility';
 
 import { Localization } from './Localization';
+import { Layout } from '../Layout';
 
 /**
  * Represents a single accessibility claim
@@ -162,7 +162,7 @@ export class WaysOfReading implements AccessibilityDisplayField {
   public static fromPublication(publication: Publication): WaysOfReading {
     const a11y = publication.metadata.accessibility ?? new Accessibility();
     const features = a11y.feature ?? [];
-    const isFXL = publication.metadata.getPresentation()?.layout === EPUBLayout.fixed;
+    const isFXL = publication.metadata.layout === Layout.fixed;
 
     const visualAdjustments = features.some(f => f.value === Feature.DISPLAY_TRANSFORMABILITY.value)
       ? VisualAdjustments.Modifiable

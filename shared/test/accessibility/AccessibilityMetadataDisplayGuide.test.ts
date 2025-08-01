@@ -1,19 +1,18 @@
 import { Publication } from '../../src/publication/Publication';
 import { AccessibilityMetadataDisplayGuide } from '../../src/publication/accessibility/AccessibilityMetadataDisplayGuide';
-import { Feature, Hazard, Profile, Exemption, AccessMode, Accessibility } from '../../src/publication/accessibility/Accessibility';
-import { Manifest, Metadata, LocalizedString, Links, ReadingProgression, Presentation } from '../../src/publication';
-import { EPUBLayout } from '../../src/publication/epub';
+import { Feature, Hazard, AccessibilityProfile, Exemption, AccessMode, Accessibility } from '../../src/publication/accessibility/Accessibility';
+import { Manifest, Metadata, LocalizedString, Links, ReadingProgression, Layout } from '../../src/publication';
 
 // Factory function to create test publications
 function createPublication(values?: {
   title?: string;
   language?: string;
+  layout?: Layout;
   readingProgression?: ReadingProgression;
   links?: Links;
   readingOrder?: Links;
   resources?: Links;
   accessibility?: Accessibility;
-  presentation?: Presentation;
 }): Publication {
   // Create fresh instances
   const links = values?.links || new Links([]);
@@ -24,9 +23,7 @@ function createPublication(values?: {
     languages: [values?.language || 'en'],
     readingProgression: values?.readingProgression || ReadingProgression.auto,
     accessibility: values?.accessibility || new Accessibility({}),
-    otherMetadata: {
-      presentation: values?.presentation || new Presentation({})
-    }
+    layout: values?.layout || Layout.reflowable,
   });
   
   return new Publication({
@@ -63,9 +60,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             it('should handle fixed layout (unmodifiable)', () => {
                 // Given
                 const publication = createPublication({
-                    presentation: new Presentation({
-                        layout: EPUBLayout.fixed
-                    }),
+                    layout: Layout.fixed,
                     accessibility: new Accessibility({
                         feature: []
                     })
@@ -1122,7 +1117,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Given
             const publication = createPublication({
                 accessibility: new Accessibility({
-                    conformsTo: [Profile.EPUB_A11Y_11_WCAG_21_AAA]
+                    conformsTo: [AccessibilityProfile.EPUB_A11Y_11_WCAG_21_AAA]
                 })
             });
             
@@ -1140,7 +1135,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
             // Given
             const publication = createPublication({
                 accessibility: new Accessibility({
-                    conformsTo: [Profile.EPUB_A11Y_11_WCAG_21_AA]
+                    conformsTo: [AccessibilityProfile.EPUB_A11Y_11_WCAG_21_AA]
                 })
             });
             
@@ -1158,7 +1153,7 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 // Given
                 const publication = createPublication({
                     accessibility: new Accessibility({
-                    conformsTo: [Profile.EPUB_A11Y_11_WCAG_21_A]
+                    conformsTo: [AccessibilityProfile.EPUB_A11Y_11_WCAG_21_A]
                     })
                 });
                 
@@ -1195,8 +1190,8 @@ describe('AccessibilityMetadataDisplayGuide', () => {
                 const publication = createPublication({
                 accessibility: new Accessibility({
                     conformsTo: [
-                        Profile.EPUB_A11Y_11_WCAG_21_AAA,
-                        Profile.EPUB_A11Y_11_WCAG_21_AA
+                        AccessibilityProfile.EPUB_A11Y_11_WCAG_21_AAA,
+                        AccessibilityProfile.EPUB_A11Y_11_WCAG_21_AA
                     ]
                 })
             });

@@ -1,4 +1,4 @@
-import { Accessibility, Profile, AccessMode, Feature, Hazard, Exemption, PrimaryAccessMode, Certification } from '../../src/publication/accessibility/Accessibility';
+import { Accessibility, AccessibilityProfile, AccessMode, Feature, Hazard, Exemption, PrimaryAccessMode, Certification } from '../../src/publication/accessibility/Accessibility';
 
 describe('Accessibility Tests', () => {
     it('parse undefined JSON', () => {
@@ -80,8 +80,8 @@ describe('Accessibility Tests', () => {
 
         const expected = new Accessibility({
             conformsTo: [
-                Profile.EPUB_A11Y_11_WCAG_21_AA,
-                Profile.EPUB_A11Y_10_WCAG_20_AA
+                AccessibilityProfile.EPUB_A11Y_11_WCAG_21_AA,
+                AccessibilityProfile.EPUB_A11Y_10_WCAG_20_AA
             ],
             certification: new Certification(
                 "certifier",
@@ -259,8 +259,8 @@ describe('Accessibility Tests', () => {
     it('serialize Profile', () => {
         const accessibility = new Accessibility({
             conformsTo: [
-                Profile.EPUB_A11Y_11_WCAG_21_AA,
-                Profile.EPUB_A11Y_10_WCAG_20_AA
+                AccessibilityProfile.EPUB_A11Y_11_WCAG_21_AA,
+                AccessibilityProfile.EPUB_A11Y_10_WCAG_20_AA
             ]
         });
 
@@ -352,7 +352,7 @@ describe('Accessibility Tests', () => {
 
     it('serialize full JSON', () => {
         const accessibility = new Accessibility({
-            conformsTo: [Profile.EPUB_A11Y_10_WCAG_20_AA],
+            conformsTo: [AccessibilityProfile.EPUB_A11Y_10_WCAG_20_AA],
             certification: new Certification('Certifier', 'Certification', 'https://example.com/report'),
             summary: 'This publication is accessible with text-to-speech and screen reader support',
             accessMode: [new AccessMode('textual'), new AccessMode('visual')],
@@ -394,7 +394,7 @@ describe('Accessibility Tests', () => {
 
     it('serialize handles undefined values', () => {
         const accessibility = new Accessibility({
-            conformsTo: [Profile.EPUB_A11Y_10_WCAG_20_AA]
+            conformsTo: [AccessibilityProfile.EPUB_A11Y_10_WCAG_20_AA]
         });
 
         expect(accessibility.serialize()).toEqual({

@@ -13,7 +13,7 @@ export class Accessibility {
     /**
      * An established standard to which the described resource conforms.
      */
-    public conformsTo: Profile[];
+    public conformsTo: AccessibilityProfile[];
 
     /**
      * Certification of accessible publications.
@@ -51,7 +51,7 @@ export class Accessibility {
     public exemption: Exemption[];
 
     constructor(values: {
-        conformsTo?: Profile[],
+        conformsTo?: AccessibilityProfile[],
         certification?: Certification | null,
         summary?: string | null,
         accessMode?: AccessMode[],
@@ -95,8 +95,8 @@ export class Accessibility {
 
         return new Accessibility({
             conformsTo: accessibilityJson.conformsTo 
-                ? accessibilityJson.conformsTo.map(uri => Profile.deserialize(uri))
-                .filter((profile): profile is Profile => profile !== undefined)
+                ? accessibilityJson.conformsTo.map(uri => AccessibilityProfile.deserialize(uri))
+                .filter((profile): profile is AccessibilityProfile => profile !== undefined)
                 : undefined,
             certification: accessibilityJson.certification 
                 ? Certification.deserialize(accessibilityJson.certification)
@@ -160,54 +160,54 @@ export class Accessibility {
     }
 }
 
-export class Profile {
+export class AccessibilityProfile {
     public readonly uri: string;
 
     constructor(uri: string) {
         this.uri = uri;
     }
 
-    public static deserialize(json: any): Profile | undefined {
+    public static deserialize(json: any): AccessibilityProfile | undefined {
         if (!json || typeof json !== 'string') return;
-        return new Profile(json);
+        return new AccessibilityProfile(json);
     }
 
     public serialize(): any {
         return this.uri;
     }
 
-    public static readonly EPUB_A11Y_10_WCAG_20_A = new Profile('http://www.idpf.org/epub/a11y/accessibility-20170105.html#wcag-a');
-    public static readonly EPUB_A11Y_10_WCAG_20_AA = new Profile('http://www.idpf.org/epub/a11y/accessibility-20170105.html#wcag-aa');
-    public static readonly EPUB_A11Y_10_WCAG_20_AAA = new Profile('http://www.idpf.org/epub/a11y/accessibility-20170105.html#wcag-aaa');
-    public static readonly EPUB_A11Y_11_WCAG_20_A = new Profile('https://www.w3.org/TR/epub-a11y-11#wcag-2.0-a');
-    public static readonly EPUB_A11Y_11_WCAG_20_AA = new Profile('https://www.w3.org/TR/epub-a11y-11#wcag-2.0-aa');
-    public static readonly EPUB_A11Y_11_WCAG_20_AAA = new Profile('https://www.w3.org/TR/epub-a11y-11#wcag-2.0-aaa');
-    public static readonly EPUB_A11Y_11_WCAG_21_A = new Profile('https://www.w3.org/TR/epub-a11y-11#wcag-2.1-a');
-    public static readonly EPUB_A11Y_11_WCAG_21_AA = new Profile('https://www.w3.org/TR/epub-a11y-11#wcag-2.1-aa');
-    public static readonly EPUB_A11Y_11_WCAG_21_AAA = new Profile('https://www.w3.org/TR/epub-a11y-11#wcag-2.1-aaa');
-    public static readonly EPUB_A11Y_11_WCAG_22_A = new Profile('https://www.w3.org/TR/epub-a11y-11#wcag-2.2-a');
-    public static readonly EPUB_A11Y_11_WCAG_22_AA = new Profile('https://www.w3.org/TR/epub-a11y-11#wcag-2.2-aa');
-    public static readonly EPUB_A11Y_11_WCAG_22_AAA = new Profile('https://www.w3.org/TR/epub-a11y-11#wcag-2.2-aaa');
+    public static readonly EPUB_A11Y_10_WCAG_20_A = new AccessibilityProfile('http://www.idpf.org/epub/a11y/accessibility-20170105.html#wcag-a');
+    public static readonly EPUB_A11Y_10_WCAG_20_AA = new AccessibilityProfile('http://www.idpf.org/epub/a11y/accessibility-20170105.html#wcag-aa');
+    public static readonly EPUB_A11Y_10_WCAG_20_AAA = new AccessibilityProfile('http://www.idpf.org/epub/a11y/accessibility-20170105.html#wcag-aaa');
+    public static readonly EPUB_A11Y_11_WCAG_20_A = new AccessibilityProfile('https://www.w3.org/TR/epub-a11y-11#wcag-2.0-a');
+    public static readonly EPUB_A11Y_11_WCAG_20_AA = new AccessibilityProfile('https://www.w3.org/TR/epub-a11y-11#wcag-2.0-aa');
+    public static readonly EPUB_A11Y_11_WCAG_20_AAA = new AccessibilityProfile('https://www.w3.org/TR/epub-a11y-11#wcag-2.0-aaa');
+    public static readonly EPUB_A11Y_11_WCAG_21_A = new AccessibilityProfile('https://www.w3.org/TR/epub-a11y-11#wcag-2.1-a');
+    public static readonly EPUB_A11Y_11_WCAG_21_AA = new AccessibilityProfile('https://www.w3.org/TR/epub-a11y-11#wcag-2.1-aa');
+    public static readonly EPUB_A11Y_11_WCAG_21_AAA = new AccessibilityProfile('https://www.w3.org/TR/epub-a11y-11#wcag-2.1-aaa');
+    public static readonly EPUB_A11Y_11_WCAG_22_A = new AccessibilityProfile('https://www.w3.org/TR/epub-a11y-11#wcag-2.2-a');
+    public static readonly EPUB_A11Y_11_WCAG_22_AA = new AccessibilityProfile('https://www.w3.org/TR/epub-a11y-11#wcag-2.2-aa');
+    public static readonly EPUB_A11Y_11_WCAG_22_AAA = new AccessibilityProfile('https://www.w3.org/TR/epub-a11y-11#wcag-2.2-aaa');
 
     public get isWCAGLevelA(): boolean {
-        return this === Profile.EPUB_A11Y_10_WCAG_20_A ||
-               this === Profile.EPUB_A11Y_11_WCAG_20_A ||
-               this === Profile.EPUB_A11Y_11_WCAG_21_A ||
-               this === Profile.EPUB_A11Y_11_WCAG_22_A;
+        return this === AccessibilityProfile.EPUB_A11Y_10_WCAG_20_A ||
+               this === AccessibilityProfile.EPUB_A11Y_11_WCAG_20_A ||
+               this === AccessibilityProfile.EPUB_A11Y_11_WCAG_21_A ||
+               this === AccessibilityProfile.EPUB_A11Y_11_WCAG_22_A;
     }
 
     public get isWCAGLevelAA(): boolean {
-        return this === Profile.EPUB_A11Y_10_WCAG_20_AA ||
-               this === Profile.EPUB_A11Y_11_WCAG_20_AA ||
-               this === Profile.EPUB_A11Y_11_WCAG_21_AA ||
-               this === Profile.EPUB_A11Y_11_WCAG_22_AA;
+        return this === AccessibilityProfile.EPUB_A11Y_10_WCAG_20_AA ||
+               this === AccessibilityProfile.EPUB_A11Y_11_WCAG_20_AA ||
+               this === AccessibilityProfile.EPUB_A11Y_11_WCAG_21_AA ||
+               this === AccessibilityProfile.EPUB_A11Y_11_WCAG_22_AA;
     }
 
     public get isWCAGLevelAAA(): boolean {
-        return this === Profile.EPUB_A11Y_10_WCAG_20_AAA ||
-               this === Profile.EPUB_A11Y_11_WCAG_20_AAA ||
-               this === Profile.EPUB_A11Y_11_WCAG_21_AAA ||
-               this === Profile.EPUB_A11Y_11_WCAG_22_AAA;
+        return this === AccessibilityProfile.EPUB_A11Y_10_WCAG_20_AAA ||
+               this === AccessibilityProfile.EPUB_A11Y_11_WCAG_20_AAA ||
+               this === AccessibilityProfile.EPUB_A11Y_11_WCAG_21_AAA ||
+               this === AccessibilityProfile.EPUB_A11Y_11_WCAG_22_AAA;
     }
 }
 
