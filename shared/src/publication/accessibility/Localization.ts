@@ -82,6 +82,11 @@ class LocalizationImpl {
     return current;
   }
 
+  /**
+   * Gets a localized string by key
+   * @param key The key for the string to retrieve
+   * @returns The localized string as a [L10nString], or an empty string if not found
+   */
   public getString(key: string): L10nString {
     // First try the current locale
     let value = this.getNestedValue(this.locale, key);
@@ -104,4 +109,7 @@ class LocalizationImpl {
   }
 }
 
+/**
+ * The singleton instance of the [Localization] class.
+ */
 export const Localization = LocalizationImpl.getInstance();
