@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-08-29
+
+### Added
+
+- `Accessibility` class has been added to the default profile.
+- `Accessibility` property has been added to `Metadata`.
+- `AccessibilityMetadataDisplayGuide` class has been added as a helper to handle display of accessibility metadata for user-facing features.
+
 ## [2.0.0] - 2025-08-01
 
 ### Added
