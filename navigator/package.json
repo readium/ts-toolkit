@@ -31,9 +31,9 @@
   "types": "./types/src/index.d.ts",
   "exports": {
     ".": {
+      "types": "./types/src/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.umd.cjs",
-      "types": "./types/src/index.d.ts"
+      "require": "./dist/index.umd.cjs"
     }
   },
   "files": [
@@ -48,17 +48,17 @@
     "build": "tsc && vite build"
   },
   "devDependencies": {
-    "@laynezh/vite-plugin-lib-assets": "^0.5.25",
-    "@readium/css": ">=2.0.0-beta.18",
+    "@laynezh/vite-plugin-lib-assets": "^2.1.0",
+    "@readium/css": "2.0.0-beta.18",
     "@readium/navigator-html-injectables": "workspace:*",
     "@readium/shared": "workspace:*",
     "@types/path-browserify": "^1.0.3",
     "css-selector-generator": "^3.6.9",
     "path-browserify": "^1.0.1",
     "tslib": "^2.8.1",
-    "typescript": "^5.6.3",
-    "typescript-plugin-css-modules": "^5.1.0",
+    "typescript": "^5.9.2",
+    "typescript-plugin-css-modules": "^5.2.0",
     "user-agent-data-types": "^0.4.2",
-    "vite": "^4.5.5"
+    "vite": "^7.1.3"
   }
 }

@@ -2,7 +2,7 @@ import { MediaType } from '../../../src/util/mediatype/MediaType';
 
 describe('MediaType Tests', () => {
   it('throws error for invalid types', () => {
-    expect(() => MediaType.parse({ mediaType: 'application' })).toThrowError(
+    expect(() => MediaType.parse({ mediaType: 'application' })).toThrow(
       'Invalid media type'
     );
     expect(() =>
