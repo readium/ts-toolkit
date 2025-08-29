@@ -161,12 +161,17 @@ export class ReadiumCSS {
   // TODO: As scroll shows, the effective line-length
   // should be the same as uncompensated when scale >= 1
   private paginate(scale: number | null, ignoreCompensation: boolean | null, colCount?: number | null) {
-    const constrainedWidth = Math.round(getContentWidth(this.containerParent) - (this.constraint));
+    const constrainedWidth = Math.round(getContentWidth(this.containerParent) - this.constraint);
     const metrics = this.getCompensatedMetrics(scale, ignoreCompensation);
-    const zoomCompensation = metrics.zoomCompensation;
-    const optimal = metrics.optimal;
-    const minimal = metrics.minimal;
-    const maximal = metrics.maximal;
+    const { zoomCompensation, optimal, minimal, maximal } = metrics;
+
+    // Helper function for single column width calculation
+    const getSingleColWidth = (): number => {
+      if (constrainedWidth >= optimal && maximal !== null) {
+        return Math.min(Math.round(maximal * zoomCompensation), constrainedWidth);
+      }
+      return constrainedWidth;
+    };
 
     let RCSSColCount = 1;
     let effectiveContainerWidth = constrainedWidth;
@@ -180,13 +185,12 @@ export class ReadiumCSS {
     }
     
     if (colCount === null) {
-      if (constrainedWidth < optimal || maximal === null) {
-        RCSSColCount = 1;
-        effectiveContainerWidth = constrainedWidth;
-      } else {
+      if (constrainedWidth >= optimal && maximal !== null) {
         RCSSColCount = Math.floor(constrainedWidth / optimal);
         const requiredWidth = Math.round(RCSSColCount * (maximal * zoomCompensation));
         effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
+      } else {
+        effectiveContainerWidth = getSingleColWidth();
       }
     } else if (colCount > 1) {
       const minRequiredWidth = Math.round(colCount * (minimal !== null ? minimal : optimal));
@@ -202,25 +206,22 @@ export class ReadiumCSS {
       } else {
         if (minimal !== null && constrainedWidth < Math.round(colCount * minimal)) {
           RCSSColCount = Math.floor(constrainedWidth / minimal);
+          if (RCSSColCount <= 1) {
+            RCSSColCount = 1;
+            effectiveContainerWidth = getSingleColWidth();
+          } else {
+            const requiredWidth = Math.round(RCSSColCount * (optimal * zoomCompensation));
+            effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
+          }
         } else {
           RCSSColCount = colCount;
+          const requiredWidth = Math.round(RCSSColCount * (optimal * zoomCompensation));
+          effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
         }
-        const requiredWidth = Math.round((RCSSColCount * (optimal * zoomCompensation)));
-        effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
       }
     } else {
       RCSSColCount = 1;
-      
-      if (constrainedWidth >= optimal) {
-        if (maximal === null) {
-          effectiveContainerWidth = constrainedWidth
-        } else {
-          const requiredWidth = Math.round(maximal * zoomCompensation);
-          effectiveContainerWidth = Math.min(requiredWidth, constrainedWidth);
-        }
-      } else {
-        effectiveContainerWidth = constrainedWidth 
-      }
+      effectiveContainerWidth = getSingleColWidth();
     }
 
     return { 

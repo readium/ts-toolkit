@@ -674,7 +674,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         return this.currentProgression;
     }
 
-    public async setLayout(layout: Layout) {
+    private async setLayout(layout: Layout) {
         if (this._layout === layout) return;
         this._layout = layout;
         await this.framePool.update(this.pub, this.currentLocator, this.determineModules(), true);
