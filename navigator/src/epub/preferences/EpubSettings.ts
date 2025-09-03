@@ -1,5 +1,5 @@
 import { ConfigurableSettings } from "../../preferences/Configurable";
-import { TextAlignment, Theme } from "../../preferences/Types";
+import { TextAlignment } from "../../preferences/Types";
 import { EpubDefaults } from "./EpubDefaults";
 import { EpubPreferences } from "./EpubPreferences";
 
@@ -44,7 +44,6 @@ export interface IEpubSettings {
   textAlign?: TextAlignment | null,
   textColor?: string | null,
   textNormalization?: boolean | null,
-  theme?: Theme | null,
   visitedColor?: string | null,
   wordSpacing?: number | null
 }
@@ -88,7 +87,6 @@ export class EpubSettings implements ConfigurableSettings {
   textAlign: TextAlignment | null;
   textColor: string | null;
   textNormalization: boolean | null;
-  theme: Theme | null;
   visitedColor: string | null;
   wordSpacing: number | null;
 
@@ -225,7 +223,6 @@ export class EpubSettings implements ConfigurableSettings {
     this.textNormalization = typeof preferences.textNormalization === "boolean" 
       ? preferences.textNormalization 
       : defaults.textNormalization ?? null;
-    this.theme = preferences.theme || defaults.theme || null;
     this.visitedColor = preferences.visitedColor || defaults.visitedColor || null;
     this.wordSpacing = preferences.wordSpacing !== undefined 
       ? preferences.wordSpacing 

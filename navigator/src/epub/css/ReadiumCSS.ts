@@ -73,7 +73,6 @@ export class ReadiumCSS {
     
     const updated: IUserProperties = {
       a11yNormalize: settings.textNormalization,
-      appearance: settings.theme,
       backgroundColor: settings.backgroundColor,
       blendFilter: settings.blendFilter,
       bodyHyphens: typeof settings.hyphens !== "boolean" 

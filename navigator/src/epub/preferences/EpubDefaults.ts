@@ -2,8 +2,7 @@ import {
   fontSizeRangeConfig, 
   fontWeightRangeConfig, 
   fontWidthRangeConfig, 
-  TextAlignment, 
-  Theme 
+  TextAlignment
 } from "../../preferences/Types";
 
 import { 
@@ -59,7 +58,6 @@ export interface IEpubDefaults {
   textAlign?: TextAlignment | null,
   textColor?: string | null,
   textNormalization?: boolean | null,
-  theme?: Theme | null,
   visitedColor?: string | null,
   wordSpacing?: number | null
 }
@@ -103,7 +101,6 @@ export class EpubDefaults {
   textAlign: TextAlignment | null;
   textColor: string | null;
   textNormalization: boolean | null;
-  theme: Theme | null;
   visitedColor: string | null;
   wordSpacing: number | null;
 
@@ -150,7 +147,6 @@ export class EpubDefaults {
     this.textAlign = ensureEnumValue<TextAlignment>(defaults.textAlign, TextAlignment) || null;
     this.textColor = ensureString(defaults.textColor) || null;
     this.textNormalization = ensureBoolean(defaults.textNormalization) ?? false;
-    this.theme = ensureEnumValue<Theme>(defaults.theme, Theme) || null;
     this.visitedColor = ensureString(defaults.visitedColor) || null;
     this.wordSpacing = ensureNonNegative(defaults.wordSpacing) || null;
 

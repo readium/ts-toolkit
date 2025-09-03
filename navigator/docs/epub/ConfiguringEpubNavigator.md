@@ -130,7 +130,6 @@ EPUB comes in two very different flavors: reflowable which allows a lot of custo
 | textAlign                | ✅         |              |
 | textColor                | ✅         |              |
 | textNormalization        | ✅         |              |
-| theme                    | ✅         |              |
 | visitedColor             | ✅         |              |
 | wordSpacing              | ✅         |              |
 | zoom                     |            | WIP          |

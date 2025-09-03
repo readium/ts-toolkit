@@ -5,12 +5,6 @@ export enum TextAlignment {
   justify = "justify"
 };
 
-export enum Theme {
-  sepia = "sepia",
-  night = "night",
-  custom = "custom"
-}
-
 export type RangeConfig = {
   range: [number, number],
   step: number

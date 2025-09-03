@@ -1,4 +1,4 @@
-import { TextAlignment, Theme } from "../../preferences/Types";
+import { TextAlignment } from "../../preferences/Types";
 
 export type BodyHyphens = "auto" | "none";
 export type BoxSizing = "content-box" | "border-box";
@@ -51,7 +51,6 @@ abstract class Properties {
 export interface IUserProperties {
   advancedSettings?: boolean | null;
   a11yNormalize?: boolean | null;
-  appearance?: Theme | null;
   backgroundColor?: string | null;
   blendFilter?: boolean | null;
   bodyHyphens?: BodyHyphens | null;
@@ -87,7 +86,6 @@ export interface IUserProperties {
 
 export class UserProperties extends Properties {
   a11yNormalize: boolean | null;
-  appearance: Theme | null;
   backgroundColor: string | null;
   blendFilter: boolean | null;
   bodyHyphens: BodyHyphens | null;
@@ -123,7 +121,6 @@ export class UserProperties extends Properties {
   constructor(props: IUserProperties) {
     super();
     this.a11yNormalize = props.a11yNormalize ?? null;
-    this.appearance = props.appearance ?? null;
     this.backgroundColor = props.backgroundColor ?? null;
     this.blendFilter = props.blendFilter ?? null;
     this.bodyHyphens = props.bodyHyphens ?? null;
@@ -161,7 +158,6 @@ export class UserProperties extends Properties {
     const cssProperties: { [key: string]: string } = {};
 
     if (this.a11yNormalize) cssProperties["--USER__a11yNormalize"] = this.toFlag("a11y");
-    if (this.appearance) cssProperties["--USER__appearance"] = this.toFlag(this.appearance);
     if (this.backgroundColor) cssProperties["--USER__backgroundColor"] = this.backgroundColor;
     if (this.blendFilter) cssProperties["--USER__blendFilter"] = this.toFlag("blend");
     if (this.bodyHyphens) cssProperties["--USER__bodyHyphens"] = this.bodyHyphens;

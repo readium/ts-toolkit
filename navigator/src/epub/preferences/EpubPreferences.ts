@@ -2,7 +2,6 @@ import { ConfigurablePreferences } from "../../preferences/Configurable";
 
 import { 
   TextAlignment, 
-  Theme, 
   fontSizeRangeConfig, 
   fontWeightRangeConfig, 
   fontWidthRangeConfig 
@@ -56,7 +55,6 @@ export interface IEpubPreferences {
   textAlign?: TextAlignment | null,
   textColor?: string | null,
   textNormalization?: boolean | null,
-  theme?: Theme | null,
   visitedColor?: string | null,
   wordSpacing?: number | null
 }
@@ -100,7 +98,6 @@ export class EpubPreferences implements ConfigurablePreferences {
   textAlign?: TextAlignment | null;
   textColor?: string | null;
   textNormalization?: boolean | null;
-  theme?: Theme | null;
   visitedColor?: string | null;
   wordSpacing?: number | null;
 
@@ -140,7 +137,6 @@ export class EpubPreferences implements ConfigurablePreferences {
     this.textAlign = ensureEnumValue<TextAlignment>(preferences.textAlign, TextAlignment);
     this.textColor = ensureString(preferences.textColor);
     this.textNormalization = ensureBoolean(preferences.textNormalization);
-    this.theme = ensureEnumValue<Theme>(preferences.theme, Theme);
     this.visitedColor = ensureString(preferences.visitedColor);
     this.wordSpacing = ensureNonNegative(preferences.wordSpacing);
 

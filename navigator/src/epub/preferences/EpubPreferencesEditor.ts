@@ -5,13 +5,12 @@ import { EpubSettings } from "./EpubSettings";
 import { BooleanPreference, EnumPreference, Preference, RangePreference } from "../../preferences/Preference";
 import { 
   TextAlignment, 
-  Theme, 
   fontSizeRangeConfig, 
   fontWeightRangeConfig, 
   fontWidthRangeConfig 
 } from "../../preferences/Types";
 
-import defaultColors from "@readium/css/css/vars/day.json";
+import defaultColors from "@readium/css/css/vars/colors.json";
 
 // WIP: will change cos’ of all the missing pieces
 export class EpubPreferencesEditor implements IPreferencesEditor {
@@ -480,18 +479,6 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       onChange: (newValue: boolean | null | undefined) => {
         this.updatePreference("textNormalization", newValue || null);
       }
-    });
-  }
-
-  get theme(): EnumPreference<Theme> {
-    return new EnumPreference<Theme>({
-      initialValue: this.preferences.theme,
-      effectiveValue: this.settings.theme || null,
-      isEffective: this.layout !== Layout.fixed,
-      onChange: (newValue: Theme | null | undefined) => {
-        this.updatePreference("theme", newValue || null);
-      },
-      supportedValues: Object.values(Theme)
     });
   }
 
