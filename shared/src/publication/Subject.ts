@@ -110,6 +110,6 @@ export class Subjects {
    * Serializes a [Subjects] to its RWPM JSON representation.
    */
   public serialize(): any {
-    return this.items.map((x) => x.serialize());
+    return this.items.map(x => x.serialize());
   }
 }
