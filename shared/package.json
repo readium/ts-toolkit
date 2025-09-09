@@ -48,7 +48,6 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "update-accessibility-locales": "node update-accessibility-locales.mjs",
-    "postinstall": "npm run update-accessibility-locales",
     "test": "jest",
     "size": "size-limit"
   },
