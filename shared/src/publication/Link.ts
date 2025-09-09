@@ -107,7 +107,7 @@ export class Link {
       type: json.type,
       title: json.title,
       rels: json.rel
-        ? json.rel instanceof Array
+        ? Array.isArray(json.rel)
           ? new Set<string>(json.rel as Array<string>)
           : new Set<string>([json.rel as string])
         : undefined,
@@ -226,7 +226,7 @@ export class Links {
    * Creates a list of [Link] from its RWPM JSON representation.
    */
   public static deserialize(json: any): Links | undefined {
-    if (!(json && json instanceof Array)) return;
+    if (!(json && Array.isArray(json))) return;
     return new Links(
       json
         .map<Link>(item => Link.deserialize(item) as Link)

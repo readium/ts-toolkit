@@ -102,7 +102,7 @@ export class LocatorCollection {
 
     let jsonList = json.locators;
 
-    if (jsonList && jsonList instanceof Array) {
+    if (jsonList && Array.isArray(jsonList)) {
       locators = jsonList
         .map<Locator>(x => Locator.deserialize(x) as Locator)
         .filter(x => x !== undefined);

@@ -98,7 +98,7 @@ export class Subjects {
    */
   public static deserialize(json: any): Subjects | undefined {
     if (!json) return;
-    const items = json instanceof Array ? json : [json];
+    const items = Array.isArray(json) ? json : [json];
     return new Subjects(
       items
         .map<Subject>(item => Subject.deserialize(item) as Subject)
@@ -110,6 +110,6 @@ export class Subjects {
    * Serializes a [Subjects] to its RWPM JSON representation.
    */
   public serialize(): any {
-    return this.items.map(x => x.serialize());
+    return this.items.map((x) => x.serialize());
   }
 }
