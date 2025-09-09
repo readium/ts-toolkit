@@ -25,7 +25,7 @@ export class BelongsTo {
    * Parses a [BelongsTo] from its RWPM JSON representation.
    */
   public static deserialize(json: any): BelongsTo | undefined {
-    if (!(json && json instanceof Object)) return;
+    if (!(json && typeof json === 'object')) return;
 
     const items = new Map<string, Collection>();
     Object.entries(json).forEach(([key, value]) => {

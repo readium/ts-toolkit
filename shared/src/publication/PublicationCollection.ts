@@ -42,7 +42,7 @@ export class PublicationCollection {
     if (Array.isArray(json)) {
       // Parses an array of links.
       links = Links.deserialize(json);
-    } else if (json instanceof Object) {
+    } else if (typeof json === 'object') {
       // Parses a sub-collection object.
       links = Links.deserialize(json.links);
 
