@@ -77,7 +77,7 @@ export class Contributor {
         sortAs: json.sortAs,
         identifier: json.identifier,
         altIdentifiers: json.altIdentifier
-          ? (json.altIdentifier instanceof Array
+          ? (Array.isArray(json.altIdentifier)
             ? new Set<AltIdentifier>(json.altIdentifier
                 .map((x: string | { value: string; scheme?: string }) => AltIdentifier.deserialize(x))
                 .filter((x: AltIdentifier | undefined): x is AltIdentifier => x !== undefined))
@@ -127,7 +127,7 @@ export class Contributors {
    */
   public static deserialize(json: any): Contributors | undefined {
     if (!json) return;
-    const items = json instanceof Array ? json : [json];
+    const items = Array.isArray(json) ? json : [json];
     return new Contributors(
       items
         .map<Contributor>(item => Contributor.deserialize(item) as Contributor)

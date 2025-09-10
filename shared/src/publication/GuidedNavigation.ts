@@ -211,7 +211,7 @@ export class GuidedNavigationObject {
      * Parses a [GuidedNavigationObject] array from its RWPM JSON representation.
      */
     public static deserializeArray(json: any): GuidedNavigationObject[] | undefined {
-        if (!(json instanceof Array)) return undefined;
+        if (!(Array.isArray(json))) return undefined;
         return json
             .map<GuidedNavigationObject>((item) => GuidedNavigationObject.deserialize(item) as GuidedNavigationObject)
             .filter((x) => x !== undefined);

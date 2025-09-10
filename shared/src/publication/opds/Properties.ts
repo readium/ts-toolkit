@@ -61,7 +61,7 @@ Properties.prototype.getIndirectAcquisitions = function():
   | Array<Acquisition>
   | undefined {
   const json = this.otherProperties['indirectAcquisition'];
-  if (!(json && json instanceof Array)) return;
+  if (!(json && Array.isArray(json))) return;
   return json
     .map<Acquisition>(item => Acquisition.deserialize(item) as Acquisition)
     .filter(x => x !== undefined);

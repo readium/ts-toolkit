@@ -35,7 +35,7 @@ export class Acquisition {
   }
 
   public static deserializeArray(json: any): Array<Acquisition> | undefined {
-    if (!(json instanceof Array)) return;
+    if (!(Array.isArray(json))) return;
     return json
       .map<Acquisition>(item => Acquisition.deserialize(item) as Acquisition)
       .filter(x => x !== undefined);

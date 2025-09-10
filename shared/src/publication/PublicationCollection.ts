@@ -39,10 +39,10 @@ export class PublicationCollection {
     let metadata: Map<string, any> | undefined;
     let subcollections: Map<string, Array<PublicationCollection>> | undefined;
 
-    if (json instanceof Array) {
+    if (Array.isArray(json)) {
       // Parses an array of links.
       links = Links.deserialize(json);
-    } else if (json instanceof Object) {
+    } else if (typeof json === 'object') {
       // Parses a sub-collection object.
       links = Links.deserialize(json.links);
 
@@ -86,7 +86,7 @@ export class PublicationCollection {
           const list = new Array<PublicationCollection>();
           list.push(collection);
           collections.set(role, list);
-        } else if (subJSON instanceof Array) {
+        } else if (Array.isArray(subJSON)) {
           // Parses a list of collection objects.
           const list = subJSON
             .map<PublicationCollection>(

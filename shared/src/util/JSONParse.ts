@@ -1,6 +1,6 @@
 /** Parses the given array (or undefined it it's not an array) */
 export function arrayfromJSON(json: any): Array<any> | undefined {
-  return json && json instanceof Array ? json : undefined;
+  return json && Array.isArray(json) ? json : undefined;
 }
 
 export function arrayfromJSONorString(json: any): Array<any> | undefined {
