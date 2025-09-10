@@ -1,6 +1,6 @@
 {
   "name": "@readium/navigator-html-injectables",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "type": "module",
   "description": "An embeddable solution for connecting frames of HTML publications with a Readium Navigator",
   "author": "readium",
