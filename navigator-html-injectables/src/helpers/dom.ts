@@ -20,7 +20,7 @@ export interface ReadiumWindow extends Window {
     _readium_cssSelectorGenerator: {
         getCssSelector: typeof getCssSelector;
     };
-    navigator: Navigator & { epubReadingSystem: EPUBReadingSystem };
+    navigator: Navigator & { epubReadingSystem?: EPUBReadingSystem };
 }
 
 export function deselect(wnd: ReadiumWindow) {

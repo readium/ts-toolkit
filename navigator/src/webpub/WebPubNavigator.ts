@@ -1,0 +1,378 @@
+import { Link, Locator, Publication, ReadingProgression, LocatorLocations } from "@readium/shared";
+import { VisualNavigator, VisualNavigatorViewport, ProgressionRange } from "../Navigator";
+import { WebPubFramePoolManager } from "./WebPubFramePoolManager";
+import { BasicTextSelection, CommsEventKey, FrameClickEvent, ModuleLibrary, ModuleName, WebPubModules } from "@readium/navigator-html-injectables";
+import * as path from "path-browserify";
+import { ManagerEventKey } from "../epub/EpubNavigator";
+
+export interface WebPubNavigatorListeners {
+    frameLoaded: (wnd: Window) => void;
+    positionChanged: (locator: Locator) => void;
+    tap: (e: FrameClickEvent) => boolean;
+    click: (e: FrameClickEvent) => boolean;
+    zoom: (scale: number) => void;
+    scroll: (delta: number) => void;
+    customEvent: (key: string, data: unknown) => void;
+    handleLocator: (locator: Locator) => boolean;
+    textSelected: (selection: BasicTextSelection) => void;
+}
+
+const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorListeners => ({
+    frameLoaded: listeners.frameLoaded || (() => {}),
+    positionChanged: listeners.positionChanged || (() => {}),
+    tap: listeners.tap || (() => false),
+    click: listeners.click || (() => false),
+    zoom: listeners.zoom || (() => {}),
+    scroll: listeners.scroll || (() => {}),
+    customEvent: listeners.customEvent || (() => {}),
+    handleLocator: listeners.handleLocator || (() => false),
+    textSelected: listeners.textSelected || (() => {})
+});
+
+class WebPubNavigator extends VisualNavigator {
+    private readonly pub: Publication;
+    private readonly container: HTMLElement;
+    private readonly listeners: WebPubNavigatorListeners;
+    private framePool: WebPubFramePoolManager;
+    private currentIndex: number = 0;
+    private currentLocation: Locator;
+    private webViewport: VisualNavigatorViewport = {
+        readingOrder: [],
+        progressions: new Map(),
+        positions: null
+    };
+
+    constructor(container: HTMLElement, pub: Publication, listeners: WebPubNavigatorListeners, initialPosition: Locator | undefined = undefined) {
+        super();
+        this.pub = pub;
+        this.container = container;
+        this.listeners = defaultListeners(listeners);
+        this.framePool = new WebPubFramePoolManager(this.container);
+        this.currentLocation = initialPosition || this.createCurrentLocator();
+
+        this.attachListener();
+    }
+
+    async load(): Promise<void> {
+        await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
+
+        // Notify listeners of initial position
+        this.listeners.positionChanged(this.currentLocation);
+    }
+
+    public eventListener(key: CommsEventKey | ManagerEventKey, data: unknown) {
+        switch (key) {
+            case "_pong":
+                this.listeners.frameLoaded(this.framePool.currentFrames[0]!.iframe.contentWindow!);
+                this.listeners.positionChanged(this.currentLocation);
+                break;
+            case "first_visible_locator":
+                const loc = Locator.deserialize(data as string);
+                if(!loc) break;
+                this.currentLocation = new Locator({
+                    href: this.currentLocation.href,
+                    type: this.currentLocation.type,
+                    title: this.currentLocation.title,
+                    locations: loc?.locations,
+                    text: loc?.text
+                });
+                this.listeners.positionChanged(this.currentLocation);
+                break;
+            case "text_selected":
+                this.listeners.textSelected(data as BasicTextSelection);
+                break;
+            case "click":
+            case "tap":
+                const edata = data as FrameClickEvent;
+                if (edata.interactiveElement) {
+                    const element = new DOMParser().parseFromString(
+                        edata.interactiveElement,
+                        "text/html"
+                    ).body.children[0];
+                    if (
+                        element.nodeType === element.ELEMENT_NODE &&
+                        element.nodeName === "A" &&
+                        element.hasAttribute("href")
+                    ) {
+                        const origHref = element.attributes.getNamedItem("href")?.value!;
+                        if (origHref.startsWith("#")) {
+                            this.go(this.currentLocation.copyWithLocations({
+                                fragments: [origHref.substring(1)]
+                            }), false, () => { });
+                        } else if(
+                            origHref.startsWith("http://") ||
+                            origHref.startsWith("https://") ||
+                            origHref.startsWith("mailto:") ||
+                            origHref.startsWith("tel:")
+                        ) {
+                            this.listeners.handleLocator(new Link({
+                                href: origHref,
+                            }).locator);
+                        } else {
+                            try {
+                                this.goLink(new Link({
+                                    href: path.join(path.dirname(this.currentLocation.href), origHref)
+                                }), false, () => { });
+                            } catch (error) {
+                                console.warn(`Couldn't go to link for ${origHref}: ${error}`);
+                                this.listeners.handleLocator(new Link({
+                                    href: origHref,
+                                }).locator);
+                            }
+                        }
+                    } else console.log("Clicked on", element);
+                } else {
+                    const handled = key === "click" ? this.listeners.click(edata) : this.listeners.tap(edata);
+                    if(handled) break;
+                }
+                break;
+            case "scroll":
+                this.listeners.scroll(data as number);
+                break;
+            case "zoom":
+                this.listeners.zoom(data as number);
+                break;
+            case "progress":
+                this.syncLocation(data as ProgressionRange);
+                break;
+            case "log":
+                console.log(this.framePool.currentFrames[0]?.source?.split("/")[3], ...(data as any[]));
+                break;
+            default:
+                this.listeners.customEvent(key, data);
+                break;
+        }
+    }
+
+    private determineModules(): ModuleName[] {
+        let modules = Array.from(ModuleLibrary.keys()) as ModuleName[];
+
+        // For WebPub, use the predefined WebPubModules array and filter
+        return modules.filter((m) => WebPubModules.includes(m));
+    }
+
+    private attachListener() {
+        if (this.framePool.currentFrames[0]?.msg) {
+            this.framePool.currentFrames[0].msg.listener = (key: CommsEventKey | ManagerEventKey, value: unknown) => {
+                this.eventListener(key, value);
+            };
+        }
+    }
+
+    private async apply() {
+        await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
+
+        this.attachListener();
+
+        const idx = this.pub.readingOrder.findIndexWithHref(this.currentLocation.href);
+        if (idx < 0)
+            throw Error("Link for " + this.currentLocation.href + " not found!");
+    }
+
+    public async destroy() {
+        await this.framePool?.destroy();
+    }
+
+    private async changeResource(relative: number): Promise<boolean> {
+        if (relative === 0) return false;
+
+        const curr = this.pub.readingOrder.findIndexWithHref(this.currentLocation.href);
+        const i = Math.max(
+            0,
+            Math.min(this.pub.readingOrder.items.length - 1, curr + relative)
+        );
+        if (i === curr) {
+            return false;
+        }
+        this.currentIndex = i;
+        this.currentLocation = this.createCurrentLocator();
+        await this.apply();
+        return true;
+    }
+
+    private updateViewport(progression: ProgressionRange) {
+        this.webViewport.readingOrder = [];
+        this.webViewport.progressions.clear();
+        this.webViewport.positions = null;
+
+        // Use the current position's href
+        if (this.currentLocation) {
+            this.webViewport.readingOrder.push(this.currentLocation.href);
+            this.webViewport.progressions.set(this.currentLocation.href, progression);
+
+            if (this.currentLocation.locations?.position !== undefined) {
+                this.webViewport.positions = [this.currentLocation.locations.position];
+                // WebPub doesn't have lastLocationInView like EPUB, so no second position
+            }
+        }
+    }
+
+    private async syncLocation(iframeProgress: ProgressionRange): Promise<void> {
+        const progression = iframeProgress;
+        if (this.currentLocation) {
+            this.currentLocation = this.currentLocation.copyWithLocations({
+                progression: progression.start
+            });
+        }
+
+        this.updateViewport(progression);
+        this.listeners.positionChanged(this.currentLocation);
+        await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
+    }
+
+    goBackward(_animated: boolean, cb: (ok: boolean) => void): void {
+        this.changeResource(-1).then((success) => {
+            cb(success);
+        });
+    }
+
+    goForward(_animated: boolean, cb: (ok: boolean) => void): void {
+        this.changeResource(1).then((success) => {
+            cb(success);
+        });
+    }
+
+    get currentLocator(): Locator {
+        return this.currentLocation;
+    }
+
+    get viewport(): VisualNavigatorViewport {
+        return this.webViewport;
+    }
+
+    get isScrollStart(): boolean {
+        const firstHref = this.viewport.readingOrder[0];
+        const progression = this.viewport.progressions.get(firstHref);
+        return progression?.start === 0;
+    }
+
+    get isScrollEnd(): boolean {
+        const lastHref = this.viewport.readingOrder[this.viewport.readingOrder.length - 1];
+        const progression = this.viewport.progressions.get(lastHref);
+        return progression?.end === 1;
+    }
+
+    get canGoBackward(): boolean {
+        const firstResource = this.pub.readingOrder.items[0]?.href;
+        return !(this.viewport.progressions.has(firstResource) && this.viewport.progressions.get(firstResource)?.start === 0);
+    }
+
+    get canGoForward(): boolean {
+        const lastResource = this.pub.readingOrder.items[this.pub.readingOrder.items.length - 1]?.href;
+        return !(this.viewport.progressions.has(lastResource) && this.viewport.progressions.get(lastResource)?.end === 1);
+    }
+
+    get readingProgression(): ReadingProgression {
+        return this.pub.metadata.effectiveReadingProgression;
+    }
+
+    get publication(): Publication {
+        return this.pub;
+    }
+
+    private async loadLocator(locator: Locator, cb: (ok: boolean) => void) {
+        let done = false;
+        let cssSelector = (typeof locator.locations.getCssSelector === 'function') && locator.locations.getCssSelector();
+        if(locator.text?.highlight) {
+            done = await new Promise<boolean>((res, _) => {
+                // Attempt to go to a highlighted piece of text in the resource
+                this.framePool.currentFrames[0]!.msg!.send(
+                    "go_text",
+                    cssSelector ? [
+                        locator.text?.serialize(),
+                        cssSelector // Include CSS selector if it exists
+                    ] : locator.text?.serialize(),
+                    (ok) => res(ok)
+                );
+            });
+        } else if(cssSelector) {
+            done = await new Promise<boolean>((res, _) => {
+                this.framePool.currentFrames[0]!.msg!.send(
+                    "go_text",
+                    [
+                        "", // No text!
+                        cssSelector // Just CSS selector
+                    ],
+                    (ok) => res(ok)
+                );
+            });
+        }
+        if(done) {
+            cb(done);
+            return;
+        }
+        // This sanity check has to be performed because we're still passing non-locator class
+        // locator objects to this function. This is not good and should eventually be forbidden
+        // or the locator should be deserialized sometime before this function.
+        const hid = (typeof locator.locations.htmlId === 'function') && locator.locations.htmlId();
+        if(hid)
+            done = await new Promise<boolean>((res, _) => {
+                // Attempt to go to an HTML ID in the resource
+                this.framePool.currentFrames[0]!.msg!.send("go_id", hid, (ok) => res(ok));
+            });
+        if(done) {
+            cb(done);
+            return;
+        }
+
+        const progression = locator?.locations?.progression;
+        const hasProgression = progression && progression > 0;
+        if(hasProgression)
+            done = await new Promise<boolean>((res, _) => {
+                // Attempt to go to a progression in the resource
+                this.framePool.currentFrames[0]!.msg!.send("go_progression", progression, (ok) => res(ok));
+            });
+        else done = true;
+        cb(done);
+    }
+
+    public go(locator: Locator, _: boolean, cb: (ok: boolean) => void): void {
+        const href = locator.href.split("#")[0];
+        let link = this.pub.readingOrder.findWithHref(href);
+        if(!link) {
+            return cb(this.listeners.handleLocator(locator));
+        }
+
+        this.currentLocation = this.createCurrentLocator();
+        this.apply().then(() => this.loadLocator(locator, (ok) => cb(ok))).then(() => {
+            // Now that we've gone to the right locator, we can attach the listeners.
+            // Doing this only at this stage reduces janky UI with multiple locator updates.
+            this.attachListener();
+        });
+    }
+
+    public goLink(link: Link, animated: boolean, cb: (ok: boolean) => void): void {
+        return this.go(link.locator, animated, cb);
+    }
+
+    // Specifics to WebPub
+    // Util method
+    private createCurrentLocator(): Locator {
+        const readingOrder = this.pub.readingOrder;
+        const currentLink = readingOrder.items[this.currentIndex];
+
+        if (!currentLink) {
+            throw new Error("No current resource available");
+        }
+
+        // Check if we're on the same resource
+        const isSameResource = this.currentLocation && this.currentLocation.href === currentLink.href;
+
+        // Preserve progression if staying on same resource, otherwise start from beginning
+        const progression = isSameResource && this.currentLocation.locations.progression
+            ? this.currentLocation.locations.progression
+            : 0;
+
+        return this.pub.manifest.locatorFromLink(currentLink) || new Locator({
+            href: currentLink.href,
+            type: currentLink.type || "text/html",
+            locations: new LocatorLocations({
+                fragments: [],
+                progression: progression,
+                position: this.currentIndex + 1
+            })
+        });
+    }
+}
+
+export const ExperimentalWebPubNavigator = WebPubNavigator;

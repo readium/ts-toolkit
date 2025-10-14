@@ -237,7 +237,7 @@ export class ColumnSnapper extends Snapper {
         this.comms = comms;
         if(!super.mount(wnd, comms)) return false;
 
-        wnd.navigator.epubReadingSystem.layoutStyle = "paginated";
+        wnd.navigator.epubReadingSystem && (wnd.navigator.epubReadingSystem.layoutStyle = "paginated");
 
         // Add styling to hide the scrollbar
         const d = wnd.document.createElement("style");
