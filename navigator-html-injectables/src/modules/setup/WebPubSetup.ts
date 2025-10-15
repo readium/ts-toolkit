@@ -26,11 +26,10 @@ export class WebPubSetup extends Module {
             false
         );
 
-        // Send ready message to parent when setup is complete
-        wnd.parent.postMessage({
-            type: "_pong",
-            source: wnd.location.href
-        }, "*");
+        // Handle activate message to prevent timeout warnings
+        comms.register("activate", WebPubSetup.moduleName, (_, ack) => {
+            ack(true);
+        });
 
         comms.log("WebPubSetup Mounted");
         return true;
