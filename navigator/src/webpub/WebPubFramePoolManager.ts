@@ -72,9 +72,9 @@ export class WebPubFramePoolManager {
                 }
 
                 // PREVIOUS/NEXT FRAMES: create adjacent chapters for smooth navigation
-                if((j === i - 1 || j === i + 1) && j >= 0 && j < pub.readingOrder.items.length) {
-                    if(!creation.includes(l.href)) creation.push(l.href);
-                }
+                // if((j === i - 1 || j === i + 1) && j >= 0 && j < pub.readingOrder.items.length) {
+                //    if(!creation.includes(l.href)) creation.push(l.href);
+                // }
             });
             disposal.forEach(async href => {
                 if(creation.includes(href)) return;
