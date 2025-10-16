@@ -94,17 +94,15 @@ export class WebPubSnapper extends Snapper {
                 this.reportProgress();
             }, 50);
         });
-        this.resizeObserver.observe(this.wnd.document.body);
+        this.resizeObserver.observe(wnd.document.body);
 
-        // Set up scroll handling
-        this.wnd.addEventListener("scroll", this.handleScroll, { passive: true });
+        wnd.addEventListener("scroll", this.handleScroll, { passive: true });
 
-        // Register communication handlers
-        this.comms.register("go_progression", WebPubSnapper.moduleName, (data, ack) => {
+        comms.register("go_progression", WebPubSnapper.moduleName, (data, ack) => {
             const position = data as number;
 
             if (position < 0 || position > 1) {
-                this.comms.send("error", {
+                comms.send("error", {
                     message: "go_progression must be given a position from 0.0 to 1.0"
                 });
                 ack(false);
@@ -112,7 +110,7 @@ export class WebPubSnapper extends Snapper {
             }
 
             this.wnd.requestAnimationFrame(() => {
-                this.doc().scrollTop = this.doc().scrollHeight * position;
+                this.doc().scrollTop = this.doc().offsetHeight * position;
                 this.reportProgress();
                 deselect(this.wnd);
                 ack(true);
@@ -120,20 +118,20 @@ export class WebPubSnapper extends Snapper {
         });
 
         this.comms.register("go_id", WebPubSnapper.moduleName, (data, ack) => {
-            const element = this.wnd.document.getElementById(data as string);
+            const element = wnd.document.getElementById(data as string);
             if(!element) {
                 ack(false);
                 return;
             }
             this.wnd.requestAnimationFrame(() => {
-                this.doc().scrollTop = element.getBoundingClientRect().top + this.wnd.scrollY - this.wnd.innerHeight / 2;
+                this.doc().scrollTop = element.getBoundingClientRect().top + wnd.scrollY - wnd.innerHeight / 2;
                 this.reportProgress();
                 deselect(this.wnd);
                 ack(true);
             });
         });
 
-        this.comms.register("go_text", WebPubSnapper.moduleName, (data, ack) => {
+        comms.register("go_text", WebPubSnapper.moduleName, (data, ack) => {
             let cssSelector = undefined;
             if(Array.isArray(data)) {
                 if(data.length > 1)
@@ -142,7 +140,7 @@ export class WebPubSnapper extends Snapper {
             }
             const text = LocatorText.deserialize(data);
             const r = rangeFromLocator(this.wnd.document, new Locator({
-                href: this.wnd.location.href,
+                href: wnd.location.href,
                 type: "text/html",
                 text,
                 locations: cssSelector ? new LocatorLocations({
@@ -156,44 +154,48 @@ export class WebPubSnapper extends Snapper {
                 return;
             }
             this.wnd.requestAnimationFrame(() => {
-                this.doc().scrollTop = r.getBoundingClientRect().top + this.wnd.scrollY - this.wnd.innerHeight / 2;
+                this.doc().scrollTop = r.getBoundingClientRect().top + wnd.scrollY - wnd.innerHeight / 2;
                 this.reportProgress();
                 deselect(this.wnd);
                 ack(true);
             });
         });
 
-        this.comms.register("go_start", WebPubSnapper.moduleName, (_, ack) => {
+        comms.register("go_start", WebPubSnapper.moduleName, (_, ack) => {
             if (this.doc().scrollTop === 0) return ack(false);
             this.doc().scrollTop = 0;
             this.reportProgress();
             ack(true);
         });
 
-        this.comms.register("go_end", WebPubSnapper.moduleName, (_, ack) => {
+        comms.register("go_end", WebPubSnapper.moduleName, (_, ack) => {
             if (this.doc().scrollTop === this.doc().scrollHeight - this.doc().offsetHeight) return ack(false);
             this.doc().scrollTop = this.doc().scrollHeight - this.doc().offsetHeight;
             this.reportProgress();
             ack(true);
         });
 
-        this.comms.register("focus", WebPubSnapper.moduleName, (_, ack) => {
-            this.reportProgress();
-            ack(true);
-        });
-
-        this.comms.register("unfocus", WebPubSnapper.moduleName, (_, ack) => {
+        comms.register("unfocus", WebPubSnapper.moduleName, (_, ack) => {
             deselect(this.wnd);
             ack(true);
         });
 
-        this.comms.register("first_visible_locator", WebPubSnapper.moduleName, (_, ack) => {
-            const locator = findFirstVisibleLocator(this.wnd, true);
-            this.comms.send("first_visible_locator", locator.serialize());
+        comms.register([
+            "go_next",
+            "go_prev",
+        ], WebPubSnapper.moduleName, (_, ack) => ack(false));
+        comms.register("focus", WebPubSnapper.moduleName, (_, ack) => {
+            this.reportProgress();
             ack(true);
         });
 
-        this.comms.log("WebPubSnapper Mounted");
+        comms.register("first_visible_locator", WebPubSnapper.moduleName, (_, ack) => {
+            const locator = findFirstVisibleLocator(wnd, true);
+            comms.send("first_visible_locator", locator.serialize());
+            ack(true);
+        });
+
+        comms.log("WebPubSnapper Mounted");
         return true;
     }
 
