@@ -1,6 +1,6 @@
 {
   "name": "@readium/navigator",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "type": "module",
   "description": "Next generation SDK for publications in Web Apps",
   "author": "readium",
