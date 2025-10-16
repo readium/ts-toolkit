@@ -48,7 +48,16 @@ class WebPubNavigator extends VisualNavigator {
         this.container = container;
         this.listeners = defaultListeners(listeners);
         this.framePool = new WebPubFramePoolManager(this.container);
-        this.currentLocation = initialPosition || this.createCurrentLocator();
+        if (initialPosition && typeof initialPosition.copyWithLocations === 'function') {
+            this.currentLocation = initialPosition;
+            // Update currentIndex to match the initial position
+            const index = this.pub.readingOrder.findIndexWithHref(initialPosition.href);
+            if (index >= 0) {
+                this.currentIndex = index;
+            }
+        } else {
+            this.currentLocation = this.createCurrentLocator();
+        }
     }
 
     async load(): Promise<void> {
@@ -56,6 +65,7 @@ class WebPubNavigator extends VisualNavigator {
 
         this.attachListener();
 
+        // Notify listeners of initial position
         this.listeners.positionChanged(this.currentLocation);
     }
 
@@ -330,6 +340,12 @@ class WebPubNavigator extends VisualNavigator {
         let link = this.pub.readingOrder.findWithHref(href);
         if(!link) {
             return cb(this.listeners.handleLocator(locator));
+        }
+
+         // Update currentIndex to point to the found link
+        const index = this.pub.readingOrder.findIndexWithHref(href);
+        if (index >= 0) {
+            this.currentIndex = index;
         }
 
         this.currentLocation = this.createCurrentLocator();
