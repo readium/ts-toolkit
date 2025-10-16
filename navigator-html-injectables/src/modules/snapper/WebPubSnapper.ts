@@ -193,6 +193,7 @@ export class WebPubSnapper extends Snapper {
             ack(true);
         });
 
+        this.comms.log("WebPubSnapper Mounted");
         return true;
     }
 
@@ -200,6 +201,7 @@ export class WebPubSnapper extends Snapper {
         comms.unregisterAll(WebPubSnapper.moduleName);
         this.resizeObserver.disconnect();
         if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
+        comms.log("WebPubSnapper Unmounted");
         return true;
     }
 }

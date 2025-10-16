@@ -49,14 +49,13 @@ class WebPubNavigator extends VisualNavigator {
         this.listeners = defaultListeners(listeners);
         this.framePool = new WebPubFramePoolManager(this.container);
         this.currentLocation = initialPosition || this.createCurrentLocator();
-
-        this.attachListener();
     }
 
     async load(): Promise<void> {
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
 
-        // Notify listeners of initial position
+        this.attachListener();
+
         this.listeners.positionChanged(this.currentLocation);
     }
 

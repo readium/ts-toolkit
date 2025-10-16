@@ -1,4 +1,4 @@
-import { Loader, ModuleName, WebPubModules } from "@readium/navigator-html-injectables";
+import { Loader, ModuleName } from "@readium/navigator-html-injectables";
 import { FrameComms } from "../epub/frame/FrameComms";
 import { ReadiumWindow } from "../../../navigator-html-injectables/types/src/helpers/dom";
 
@@ -14,12 +14,18 @@ export class WebPubFrameManager {
     constructor(source: string) {
         this.frame = document.createElement("iframe");
         this.frame.classList.add("readium-navigator-iframe");
+        this.frame.style.visibility = "hidden";
+        this.frame.style.setProperty("aria-hidden", "true");
+        this.frame.style.opacity = "0";
         this.frame.style.position = "absolute";
         this.frame.style.pointerEvents = "none";
+        this.frame.style.transition = "visibility 0s, opacity 0.1s linear";
+        // Protect against background color bleeding
+        this.frame.style.backgroundColor = "#FFFFFF";
         this.source = source;
     }
 
-    async load(modules: ModuleName[] = WebPubModules): Promise<Window> {
+    async load(modules: ModuleName[] = []): Promise<Window> {
         return new Promise((res, rej) => {
             if(this.loader) {
                 const wnd = this.frame.contentWindow!;
@@ -57,17 +63,23 @@ export class WebPubFrameManager {
     }
 
     async hide(): Promise<void> {
-        if (this.destroyed) return;
-        if (this.frame.parentElement) {
-            if (this.comms === undefined || !this.comms.ready) return;
+        if(this.destroyed) return;
+        this.frame.style.visibility = "hidden";
+        this.frame.style.setProperty("aria-hidden", "true");
+        this.frame.style.opacity = "0";
+        this.frame.style.pointerEvents = "none";
+
+        if(this.frame.parentElement) {
+            if(this.comms === undefined || !this.comms.ready) return;
             return new Promise((res, _) => {
                 this.comms?.send("unfocus", undefined, (_: boolean) => {
                     this.comms?.halt();
                     res();
                 });
             });
-        } else
+        } else {
             this.comms?.halt();
+        }
     }
 
     async show(atProgress?: number): Promise<void> {
@@ -75,13 +87,24 @@ export class WebPubFrameManager {
         if (!this.frame.parentElement) throw Error("Trying to show frame that is not attached to the DOM");
         if (this.comms) this.comms.resume();
         else this.comms = new FrameComms(this.frame.contentWindow!, this.source);
+
         return new Promise((res, _) => {
             this.comms?.send("activate", undefined, () => {
                 this.comms?.send("focus", undefined, () => {
-                    if (atProgress !== undefined) {
-                        this.comms?.send("go_progression", atProgress, (_: boolean) => res());
-                    } else {
+                    const remove = () => {
+                        // Remove hiding CSS properties (show the frame)
+                        this.frame.style.removeProperty("visibility");
+                        this.frame.style.removeProperty("aria-hidden");
+                        this.frame.style.removeProperty("opacity");
+                        this.frame.style.removeProperty("pointer-events");
+
                         res();
+                    };
+
+                    if (atProgress !== undefined) {
+                        this.comms?.send("go_progression", atProgress, remove);
+                    } else {
+                        remove();
                     }
                 });
             });
@@ -101,14 +124,6 @@ export class WebPubFrameManager {
     get window() {
         if(this.destroyed || !this.frame.contentWindow) throw Error("Trying to use frame window when it doesn't exist");
         return this.frame.contentWindow;
-    }
-
-    get atLeft() {
-        return this.window.scrollX < 5;
-    }
-
-    get atRight() {
-        return this.window.scrollX > this.window.document.scrollingElement!.scrollWidth - this.window.innerWidth - 5
     }
 
     get msg() {
