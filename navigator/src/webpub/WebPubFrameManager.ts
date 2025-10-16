@@ -1,6 +1,7 @@
 import { Loader, ModuleName } from "@readium/navigator-html-injectables";
 import { FrameComms } from "../epub/frame/FrameComms";
 import { ReadiumWindow } from "../../../navigator-html-injectables/types/src/helpers/dom";
+import { sML } from "../helpers";
 
 export class WebPubFrameManager {
     private frame: HTMLIFrameElement;
@@ -92,14 +93,17 @@ export class WebPubFrameManager {
             this.comms?.send("activate", undefined, () => {
                 this.comms?.send("focus", undefined, () => {
                     const remove = () => {
-                        // Remove hiding CSS properties (show the frame)
                         this.frame.style.removeProperty("visibility");
                         this.frame.style.removeProperty("aria-hidden");
                         this.frame.style.removeProperty("opacity");
                         this.frame.style.removeProperty("pointer-events");
 
+                        if (sML.UA.WebKit) {
+                            this.comms?.send("force_webkit_recalc", undefined);
+                        }
+
                         res();
-                    };
+                    }
 
                     if (atProgress !== undefined) {
                         this.comms?.send("go_progression", atProgress, remove);
