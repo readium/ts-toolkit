@@ -2,7 +2,6 @@ import { Link, Locator, Publication, ReadingProgression, LocatorLocations } from
 import { VisualNavigator, VisualNavigatorViewport, ProgressionRange } from "../Navigator";
 import { WebPubFramePoolManager } from "./WebPubFramePoolManager";
 import { BasicTextSelection, CommsEventKey, FrameClickEvent, ModuleLibrary, ModuleName, WebPubModules } from "@readium/navigator-html-injectables";
-import * as path from "path-browserify";
 import { ManagerEventKey } from "../epub/EpubNavigator";
 
 export interface WebPubNavigatorListeners {
@@ -109,8 +108,6 @@ class WebPubNavigator extends VisualNavigator {
                                 fragments: [origHref.substring(1)]
                             }), false, () => { });
                         } else if(
-                            origHref.startsWith("http://") ||
-                            origHref.startsWith("https://") ||
                             origHref.startsWith("mailto:") ||
                             origHref.startsWith("tel:")
                         ) {
@@ -118,12 +115,32 @@ class WebPubNavigator extends VisualNavigator {
                                 href: origHref,
                             }).locator);
                         } else {
+                            // Handle internal links that should navigate within the WebPub
+                            // This includes relative links and full URLs that might be in the readingOrder
                             try {
-                                this.goLink(new Link({
-                                    href: path.join(path.dirname(this.currentLocation.href), origHref)
-                                }), false, () => { });
+                                let hrefToCheck = origHref;
+
+                                // If it's a full URL, use it directly for checking
+                                if (origHref.startsWith("http://") || origHref.startsWith("https://")) {
+                                    hrefToCheck = origHref;
+                                } else {
+                                    // For relative URLs, resolve against current location
+                                    const currentUrl = new URL(this.currentLocation.href);
+                                    const resolvedUrl = new URL(origHref, currentUrl);
+                                    hrefToCheck = resolvedUrl.href;
+                                }
+
+                                const link = this.pub.readingOrder.findWithHref(hrefToCheck);
+                                if (link) {
+                                    this.goLink(link, false, () => { });
+                                } else {
+                                    console.warn(`Internal link not found in readingOrder: ${hrefToCheck}`);
+                                    this.listeners.handleLocator(new Link({
+                                        href: origHref,
+                                    }).locator);
+                                }
                             } catch (error) {
-                                console.warn(`Couldn't go to link for ${origHref}: ${error}`);
+                                console.warn(`Couldn't resolve internal link for ${origHref}: ${error}`);
                                 this.listeners.handleLocator(new Link({
                                     href: origHref,
                                 }).locator);
