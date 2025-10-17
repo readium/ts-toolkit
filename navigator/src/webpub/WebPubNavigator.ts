@@ -119,14 +119,22 @@ class WebPubNavigator extends VisualNavigator {
                             // Handle internal links that should navigate within the WebPub
                             // This includes relative links and full URLs that might be in the readingOrder
                             try {
-                                let hrefToCheck = origHref;
+                                let hrefToCheck;
 
-                                // If it's a full URL, use it directly for checking
+                                // If origHref is already a full URL, use it directly
                                 if (origHref.startsWith("http://") || origHref.startsWith("https://")) {
                                     hrefToCheck = origHref;
                                 } else {
-                                    // For relative URLs, use path operations that work regardless of base URL format
-                                    hrefToCheck = path.join(path.dirname(this.currentLocation.href), origHref);
+                                    // For relative URLs, use different strategies based on base URL format
+                                    if (this.currentLocation.href.startsWith("http://") || this.currentLocation.href.startsWith("https://")) {
+                                        // Base URL is absolute, use URL constructor
+                                        const currentUrl = new URL(this.currentLocation.href);
+                                        const resolvedUrl = new URL(origHref, currentUrl);
+                                        hrefToCheck = resolvedUrl.href;
+                                    } else {
+                                        // Base URL is relative, use path operations
+                                        hrefToCheck = path.join(path.dirname(this.currentLocation.href), origHref);
+                                    }
                                 }
 
                                 const link = this.pub.readingOrder.findWithHref(hrefToCheck);
