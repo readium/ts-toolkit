@@ -2,6 +2,7 @@ import { Link, Locator, Publication, ReadingProgression, LocatorLocations } from
 import { VisualNavigator, VisualNavigatorViewport, ProgressionRange } from "../Navigator";
 import { WebPubFramePoolManager } from "./WebPubFramePoolManager";
 import { BasicTextSelection, CommsEventKey, FrameClickEvent, ModuleLibrary, ModuleName, WebPubModules } from "@readium/navigator-html-injectables";
+import * as path from "path-browserify";
 import { ManagerEventKey } from "../epub/EpubNavigator";
 
 export interface WebPubNavigatorListeners {
@@ -124,10 +125,8 @@ class WebPubNavigator extends VisualNavigator {
                                 if (origHref.startsWith("http://") || origHref.startsWith("https://")) {
                                     hrefToCheck = origHref;
                                 } else {
-                                    // For relative URLs, resolve against current location
-                                    const currentUrl = new URL(this.currentLocation.href);
-                                    const resolvedUrl = new URL(origHref, currentUrl);
-                                    hrefToCheck = resolvedUrl.href;
+                                    // For relative URLs, use path operations that work regardless of base URL format
+                                    hrefToCheck = path.join(path.dirname(this.currentLocation.href), origHref);
                                 }
 
                                 const link = this.pub.readingOrder.findWithHref(hrefToCheck);
