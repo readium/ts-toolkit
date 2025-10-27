@@ -6,13 +6,16 @@ import { WebPubFrameManager } from "./WebPubFrameManager";
 export class WebPubFramePoolManager {
     private readonly container: HTMLElement;
     private _currentFrame: WebPubFrameManager | undefined;
+    private currentCssProperties: { [key: string]: string } | undefined;
     private readonly pool: Map<string, WebPubFrameManager> = new Map();
     private readonly blobs: Map<string, string> = new Map();
     private readonly inprogress: Map<string, Promise<void>> = new Map();
+    private pendingUpdates: Map<string, { inPool: boolean }> = new Map();
     private currentBaseURL: string | undefined;
 
-    constructor(container: HTMLElement) {
+    constructor(container: HTMLElement, cssProperties?: { [key: string]: string }) {
         this.container = container;
+        this.currentCssProperties = cssProperties;
     }
 
     async destroy() {
@@ -90,11 +93,22 @@ export class WebPubFramePoolManager {
             this.currentBaseURL = pub.baseURL;
 
             const creator = async (href: string) => {
+                // Check if blob needs to be recreated due to CSS property changes
+                if(this.pendingUpdates.has(href) && this.pendingUpdates.get(href)?.inPool === false) {
+                    const url = this.blobs.get(href);
+                    if(url) {
+                        URL.revokeObjectURL(url);
+                        this.blobs.delete(href);
+                        this.pendingUpdates.delete(href);
+                    }
+                }
+
                 if(this.pool.has(href)) {
                     const fm = this.pool.get(href)!;
                     if(!this.blobs.has(href)) {
                         await fm.destroy();
                         this.pool.delete(href);
+                        this.pendingUpdates.delete(href);
                     } else {
                         await fm.load(modules);
                         return;
@@ -103,7 +117,7 @@ export class WebPubFramePoolManager {
                 const itm = pub.readingOrder.findWithHref(href);
                 if(!itm) return;
                 if(!this.blobs.has(href)) {
-                    const blobBuilder = new WebPubBlobBuilder(pub, this.currentBaseURL || "", itm);
+                    const blobBuilder = new WebPubBlobBuilder(pub, this.currentBaseURL || "", itm, this.currentCssProperties);
                     const blobURL = await blobBuilder.build();
                     this.blobs.set(href, blobURL);
                 }
@@ -139,6 +153,39 @@ export class WebPubFramePoolManager {
         this.inprogress.delete(newHref);
     }
 
+    setCSSProperties(properties: { [key: string]: string }) {
+        const deepCompare = (obj1: { [key: string]: string }, obj2: { [key: string]: string }) => {
+            const keys1 = Object.keys(obj1);
+            const keys2 = Object.keys(obj2);
+
+            if (keys1.length !== keys2.length) {
+              return false;
+            }
+
+            for (const key of keys1) {
+              if (obj1[key] !== obj2[key]) {
+                return false;
+              }
+            }
+
+            return true;
+        };
+
+        // If CSSProperties have changed, we update the currentCssProperties,
+        // and set the CSS Properties to all frames already in the pool
+        // We also need to invalidate the blobs and recreate them with the new properties.
+        // We do that in update, by updating them when needed (they are added into the pool)
+        // so that we do not invalidate and recreate blobs over and over again.
+        if(!deepCompare(this.currentCssProperties || {}, properties)) {
+            this.currentCssProperties = properties;
+            this.pool.forEach((frame) => {
+                frame.setCSSProperties(properties);
+            });
+            for (const href of this.blobs.keys()) {
+                this.pendingUpdates.set(href, { inPool: this.pool.has(href) });
+            }
+        }
+    }
     get currentFrames(): (WebPubFrameManager | undefined)[] {
         return [this._currentFrame];
     }

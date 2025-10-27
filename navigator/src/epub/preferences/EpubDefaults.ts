@@ -15,7 +15,7 @@ import {
   ensureString, 
   ensureValueInRange, 
   withFallback
-} from "./guards";
+} from "../../preferences/guards";
 
 import { sMLWithRequest } from "../../helpers";
 

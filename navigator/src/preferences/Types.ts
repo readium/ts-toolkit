@@ -24,3 +24,8 @@ export const fontWidthRangeConfig: RangeConfig = {
   range: [50, 250],
   step: 10
 }
+
+export const zoomRangeConfig: RangeConfig = {
+  range: [0.7, 4],
+  step: 0.05
+}

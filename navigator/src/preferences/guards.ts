@@ -29,13 +29,12 @@ export function ensureString(value: string | null | undefined): string | null | 
 }
 
 export function ensureBoolean(value: boolean | null | undefined): boolean | null | undefined {
-  return typeof value === "boolean" 
-    ? value 
-    : value === undefined || value === null 
-      ? value 
+  return typeof value === "boolean"
+    ? value
+    : value === undefined || value === null
+      ? value
       : undefined;
 }
-
 
 export function ensureEnumValue<T extends string>(value: T | null | undefined, enumType: Record<T, string>): T | null | undefined {
   if (value === undefined) {

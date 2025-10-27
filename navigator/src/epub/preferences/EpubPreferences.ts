@@ -14,7 +14,7 @@ import {
   ensureNonNegative, 
   ensureString, 
   ensureValueInRange 
-} from "./guards";
+} from "../../preferences/guards";
 
 export interface IEpubPreferences {
   backgroundColor?: string | null,

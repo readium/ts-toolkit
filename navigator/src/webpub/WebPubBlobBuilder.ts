@@ -1,4 +1,5 @@
 import { Link, Publication } from "@readium/shared";
+import { webPubStylesheet } from "./css/WebPubStylesheet";
 
 // Utilities (matching FrameBlobBuilder pattern)
 const blobify = (source: string, type: string) => URL.createObjectURL(new Blob([source], { type }));
@@ -7,6 +8,12 @@ const scriptify = (doc: Document, source: string) => {
     const s = doc.createElement("script");
     s.dataset.readium = "true";
     s.src = source.startsWith("blob:") ? source : blobify(source, "text/javascript");
+    return s;
+}
+const styleify = (doc: Document, source: string) => {
+    const s = doc.createElement("style");
+    s.dataset.readium = "true";
+    s.textContent = source;
     return s;
 }
 
@@ -46,11 +53,13 @@ export class WebPubBlobBuilder {
     private readonly item: Link;
     private readonly burl: string;
     private readonly pub: Publication;
+    private readonly cssProperties?: { [key: string]: string };
 
-    constructor(pub: Publication, baseURL: string, item: Link) {
+    constructor(pub: Publication, baseURL: string, item: Link, cssProperties?: { [key: string]: string }) {
         this.pub = pub;
         this.item = item;
         this.burl = item.toURL(baseURL) || "";
+        this.cssProperties = cssProperties;
     }
 
     public async build(): Promise<string> {
@@ -74,7 +83,7 @@ export class WebPubBlobBuilder {
             const details = perror.querySelector("div");
             throw new Error(`Failed parsing item ${this.item.href}: ${details?.textContent || perror.textContent}`);
         }
-        return this.finalizeDOM(doc, this.burl, this.item.mediaType, txt);
+        return this.finalizeDOM(doc, this.burl, this.item.mediaType, txt, this.cssProperties);
     }
 
     private hasExecutable(doc: Document): boolean {
@@ -84,8 +93,22 @@ export class WebPubBlobBuilder {
         );
     }
 
-    private finalizeDOM(doc: Document, base: string | undefined, mediaType: any, txt?: string): string {
+    private setProperties(cssProperties: { [key: string]: string }, doc: Document) {
+        for (const key in cssProperties) {
+            const value = cssProperties[key];
+            if (value) doc.documentElement.style.setProperty(key, value);
+        }
+    }
+
+    private finalizeDOM(doc: Document, base: string | undefined, mediaType: any, txt?: string, cssProperties?: { [key: string]: string }): string {
         if(!doc) return "";
+
+        // Add WebPubCSS stylesheet at end of head (like EPUB ReadiumCSS-after)
+        const webPubStyle = styleify(doc, webPubStylesheet);
+        doc.head.appendChild(webPubStyle);
+        if (cssProperties) {
+            this.setProperties(cssProperties, doc);
+        }
 
         doc.body.querySelectorAll("img").forEach((img) => {
             img.setAttribute("fetchpriority", "high");
@@ -97,7 +120,6 @@ export class WebPubBlobBuilder {
             b.dataset.readium = "true";
             doc.head.firstChild!.before(b);
         }
-
 
         const hasExecutable = this.hasExecutable(doc);
         if(hasExecutable) doc.head.firstChild!.before(rBefore(doc));

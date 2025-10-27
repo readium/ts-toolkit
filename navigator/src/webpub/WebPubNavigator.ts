@@ -1,9 +1,22 @@
 import { Link, Locator, Publication, ReadingProgression, LocatorLocations } from "@readium/shared";
 import { VisualNavigator, VisualNavigatorViewport, ProgressionRange } from "../Navigator";
+import { Configurable } from "../preferences/Configurable";
 import { WebPubFramePoolManager } from "./WebPubFramePoolManager";
 import { BasicTextSelection, CommsEventKey, FrameClickEvent, ModuleLibrary, ModuleName, WebPubModules } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
 import { ManagerEventKey } from "../epub/EpubNavigator";
+import { WebPubCSS } from "./css/WebPubCSS";
+import { UserProperties } from "./css/Properties";
+import { IWebPubPreferences, WebPubPreferences } from "./preferences/WebPubPreferences";
+import { IWebPubDefaults, WebPubDefaults } from "./preferences/WebPubDefaults";
+import { WebPubSettings } from "./preferences/WebPubSettings";
+import { IPreferencesEditor } from "../preferences/PreferencesEditor";
+import { WebPubPreferencesEditor } from "./preferences/WebPubPreferencesEditor";
+
+export interface WebPubNavigatorConfiguration {
+    preferences: IWebPubPreferences;
+    defaults: IWebPubDefaults;
+}
 
 export interface WebPubNavigatorListeners {
     frameLoaded: (wnd: Window) => void;
@@ -27,27 +40,43 @@ const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorL
     customEvent: listeners.customEvent || (() => {}),
     handleLocator: listeners.handleLocator || (() => false),
     textSelected: listeners.textSelected || (() => {})
-});
+})
 
-class WebPubNavigator extends VisualNavigator {
+export class WebPubNavigator extends VisualNavigator implements Configurable<WebPubSettings, WebPubPreferences> {
     private readonly pub: Publication;
     private readonly container: HTMLElement;
     private readonly listeners: WebPubNavigatorListeners;
-    private framePool: WebPubFramePoolManager;
+    private framePool!: WebPubFramePoolManager;
     private currentIndex: number = 0;
     private currentLocation: Locator;
+
+    private _preferences: WebPubPreferences;
+    private _defaults: WebPubDefaults;
+    private _settings: WebPubSettings;
+    private _css: WebPubCSS;
+    private _preferencesEditor: WebPubPreferencesEditor | null = null;
+    
     private webViewport: VisualNavigatorViewport = {
         readingOrder: [],
         progressions: new Map(),
         positions: null
     };
 
-    constructor(container: HTMLElement, pub: Publication, listeners: WebPubNavigatorListeners, initialPosition: Locator | undefined = undefined) {
+    constructor(container: HTMLElement, pub: Publication, listeners: WebPubNavigatorListeners, initialPosition: Locator | undefined = undefined, configuration: WebPubNavigatorConfiguration = { preferences: {}, defaults: {} }) {
         super();
         this.pub = pub;
         this.container = container;
         this.listeners = defaultListeners(listeners);
-        this.framePool = new WebPubFramePoolManager(this.container);
+
+        // Initialize preference system
+        this._preferences = new WebPubPreferences(configuration.preferences);
+        this._defaults = new WebPubDefaults(configuration.defaults);
+        this._settings = new WebPubSettings(this._preferences, this._defaults);
+        this._css = new WebPubCSS({
+            userProperties: new UserProperties({ zoom: this._settings.zoom })
+        });
+
+        // Initialize current location
         if (initialPosition && typeof initialPosition.copyWithLocations === 'function') {
             this.currentLocation = initialPosition;
             // Update currentIndex to match the initial position
@@ -60,13 +89,61 @@ class WebPubNavigator extends VisualNavigator {
         }
     }
 
-    async load(): Promise<void> {
-        await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
+    public async load() {
+        await this.updateCSS(false);
+        const cssProperties = this.compileCSSProperties(this._css);
+        this.framePool = new WebPubFramePoolManager(this.container, cssProperties);
 
-        this.attachListener();
+        await this.apply();
+    }
 
-        // Notify listeners of initial position
-        this.listeners.positionChanged(this.currentLocation);
+    // Configurable interface implementation
+    public get settings(): Readonly<WebPubSettings> {
+        return Object.freeze({ ...this._settings });
+    }
+
+    public get preferencesEditor(): IPreferencesEditor {
+        if (this._preferencesEditor === null) {
+            this._preferencesEditor = new WebPubPreferencesEditor(this._preferences, this.settings, this.pub.metadata);
+        }
+        return this._preferencesEditor;
+    }
+
+    public async submitPreferences(preferences: WebPubPreferences) {
+        this._preferences = this._preferences.merging(preferences) as WebPubPreferences;
+        await this.applyPreferences();
+    }
+
+    private async applyPreferences() {
+        this._settings = new WebPubSettings(this._preferences, this._defaults);
+
+        if (this._preferencesEditor !== null) {
+            this._preferencesEditor = new WebPubPreferencesEditor(this._preferences, this.settings, this.pub.metadata);
+        }
+
+        // Apply preferences using CSS system like EPUB
+        await this.updateCSS(true);
+    }
+
+    private async updateCSS(commit: boolean) {
+        this._css.update(this._settings);
+
+        if (commit) await this.commitCSS(this._css);
+    };
+
+    private compileCSSProperties(css: WebPubCSS) {
+        const properties: { [key: string]: string } = {};
+        
+        for (const [key, value] of Object.entries(css.userProperties.toCSSProperties())) {
+            properties[key] = value;
+        }
+
+        return properties;
+    }
+
+    private async commitCSS(css: WebPubCSS) {
+        const properties = this.compileCSSProperties(css);
+        this.framePool.setCSSProperties(properties);
     }
 
     public eventListener(key: CommsEventKey | ManagerEventKey, data: unknown) {
