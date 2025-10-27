@@ -1,4 +1,3 @@
-import { Metadata } from "@readium/shared";
 import { IPreferencesEditor } from "../../preferences/PreferencesEditor";
 import { WebPubPreferences } from "./WebPubPreferences";
 import { WebPubSettings } from "./WebPubSettings";
@@ -9,12 +8,10 @@ import { zoomRangeConfig } from "../../preferences/Types";
 export class WebPubPreferencesEditor implements IPreferencesEditor {
   preferences: WebPubPreferences;
   private settings: WebPubSettings;
-  private metadata: Metadata | null;
 
-  constructor(initialPreferences: WebPubPreferences, settings: WebPubSettings, metadata: Metadata) {
+  constructor(initialPreferences: WebPubPreferences, settings: WebPubSettings) {
     this.preferences = initialPreferences;
     this.settings = settings;
-    this.metadata = metadata;
   }
 
   clear() {

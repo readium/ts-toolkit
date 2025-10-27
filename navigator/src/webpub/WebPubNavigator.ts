@@ -104,7 +104,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
     public get preferencesEditor(): IPreferencesEditor {
         if (this._preferencesEditor === null) {
-            this._preferencesEditor = new WebPubPreferencesEditor(this._preferences, this.settings, this.pub.metadata);
+            this._preferencesEditor = new WebPubPreferencesEditor(this._preferences, this.settings);
         }
         return this._preferencesEditor;
     }
@@ -118,7 +118,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         this._settings = new WebPubSettings(this._preferences, this._defaults);
 
         if (this._preferencesEditor !== null) {
-            this._preferencesEditor = new WebPubPreferencesEditor(this._preferences, this.settings, this.pub.metadata);
+            this._preferencesEditor = new WebPubPreferencesEditor(this._preferences, this.settings);
         }
 
         // Apply preferences using CSS system like EPUB
@@ -133,7 +133,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
     private compileCSSProperties(css: WebPubCSS) {
         const properties: { [key: string]: string } = {};
-        
+
         for (const [key, value] of Object.entries(css.userProperties.toCSSProperties())) {
             properties[key] = value;
         }
