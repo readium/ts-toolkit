@@ -1,19 +1,63 @@
 import { ConfigurablePreferences } from "../../preferences/Configurable";
 
-import { zoomRangeConfig } from "../../preferences/Types";
+import { 
+  fontWeightRangeConfig, 
+  TextAlignment, 
+  zoomRangeConfig 
+} from "../../preferences/Types";
 
 import {
+  ensureBoolean,
+  ensureEnumValue,
+  ensureNonNegative,
+  ensureString,
   ensureValueInRange
 } from "../../preferences/guards";
 
 export interface IWebPubPreferences {
-  zoom?: number | null;
+  fontFamily?: string | null,
+  fontWeight?: number | null,
+  hyphens?: boolean | null,
+  letterSpacing?: number | null,
+  ligatures?: boolean | null,
+  lineHeight?: number | null,
+  noRuby?: boolean | null,
+  paragraphIndent?: number | null,
+  paragraphSpacing?: number | null,
+  textAlign?: TextAlignment | null,
+  textNormalization?: boolean | null,
+  wordSpacing?: number | null,
+  zoom?: number | null
 }
 
 export class WebPubPreferences implements ConfigurablePreferences {
+  fontFamily?: string | null;
+  fontWeight?: number | null;
+  hyphens?: boolean | null;
+  letterSpacing?: number | null;
+  ligatures?: boolean | null;
+  lineHeight?: number | null;
+  noRuby?: boolean | null;
+  paragraphIndent?: number | null;
+  paragraphSpacing?: number | null;
+  textAlign?: TextAlignment | null;
+  textNormalization?: boolean | null;
+  wordSpacing?: number | null;
   zoom?: number | null;
 
   constructor(preferences: IWebPubPreferences = {}) {
+    this.fontFamily = ensureString(preferences.fontFamily);
+    this.fontWeight = ensureValueInRange(preferences.fontWeight, fontWeightRangeConfig.range);
+    this.hyphens = ensureBoolean(preferences.hyphens);
+    this.letterSpacing = ensureNonNegative(preferences.letterSpacing);
+    this.ligatures = ensureBoolean(preferences.ligatures);
+    this.lineHeight = ensureNonNegative(preferences.lineHeight);
+    this.noRuby = ensureBoolean(preferences.noRuby);
+    this.paragraphIndent = ensureNonNegative(preferences.paragraphIndent);
+    this.paragraphSpacing = ensureNonNegative(preferences.paragraphSpacing);
+    this.textAlign = ensureEnumValue<TextAlignment>(preferences.textAlign, TextAlignment);
+    this.textNormalization = ensureBoolean(preferences.textNormalization);
+    this.wordSpacing = ensureNonNegative(preferences.wordSpacing);
     this.zoom = ensureValueInRange(preferences.zoom, zoomRangeConfig.range);
   }
 

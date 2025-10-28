@@ -1,27 +1,71 @@
+import { TextAlignment } from "../../preferences/Types";
+import { BodyHyphens, Ligatures, Properties } from "../../css/Properties";
+
 export interface IUserProperties {
+  a11yNormalize?: boolean | null;
+  bodyHyphens?: BodyHyphens | null;
+  fontFamily?: string | null;
+  fontWeight?: number | null;
+  letterSpacing?: number | null;
+  ligatures?: Ligatures | null;
+  lineHeight?: number | null;
+  noRuby?: boolean | null;
+  paraIndent?: number | null;
+  paraSpacing?: number | null;
+  textAlign?: TextAlignment | null;
+  wordSpacing?: number | null;
   zoom: number | null;
 }
 
-export class UserProperties {
+export class UserProperties extends Properties {
+  a11yNormalize: boolean | null;
+  bodyHyphens: BodyHyphens | null;
+  fontFamily: string | null;
+  fontWeight: number | null;
+  letterSpacing: number | null;
+  ligatures: Ligatures | null;
+  lineHeight: number | null;
+  noRuby: boolean | null;
+  paraIndent: number | null;
+  paraSpacing: number | null;
+  textAlign: TextAlignment | null;
+  wordSpacing: number | null;
   zoom: number | null;
 
   constructor(props: IUserProperties) {
+    super();
+    this.a11yNormalize = props.a11yNormalize ?? null;
+    this.bodyHyphens = props.bodyHyphens ?? null;
+    this.fontFamily = props.fontFamily ?? null;
+    this.fontWeight = props.fontWeight ?? null;
+    this.letterSpacing = props.letterSpacing ?? null;
+    this.ligatures = props.ligatures ?? null;
+    this.lineHeight = props.lineHeight ?? null;
+    this.noRuby = props.noRuby ?? null;
+    this.paraIndent = props.paraIndent ?? null;
+    this.paraSpacing = props.paraSpacing ?? null;
+    this.textAlign = props.textAlign ?? null;
+    this.wordSpacing = props.wordSpacing ?? null;
     this.zoom = props.zoom ?? null;
   }
 
-    private toPercentage(value: number, ratio: boolean = false) {
-    if (ratio || value > 0 && value <= 1) {
-      return `${ Math.round(value * 100) }%`;
-    } else {
-      return `${ value }%`;
-    }
-  }
+  toCSSProperties() {
+    const cssProperties: { [key: string]: string } = {};
 
-  toCSSProperties(): { [key: string]: string } {
-    const properties: { [key: string]: string } = {};
+    if (this.a11yNormalize) cssProperties["--USER__a11yNormalize"] = this.toFlag("a11y");
+    if (this.bodyHyphens) cssProperties["--USER__bodyHyphens"] = this.bodyHyphens;
+    if (this.fontFamily) cssProperties["--USER__fontFamily"] = this.fontFamily;
+    if (this.fontWeight != null) cssProperties["--USER__fontWeight"] = this.toUnitless(this.fontWeight);
+    if (this.letterSpacing != null) cssProperties["--USER__letterSpacing"] = this.toRem(this.letterSpacing);
+    if (this.ligatures) cssProperties["--USER__ligatures"] = this.ligatures;
+    if (this.lineHeight != null) cssProperties["--USER__lineHeight"] = this.toUnitless(this.lineHeight);
+    if (this.noRuby) cssProperties["--USER__noRuby"] = this.toFlag("noRuby");
+    if (this.paraIndent != null) cssProperties["--USER__paraIndent"] = this.toRem(this.paraIndent);
+    if (this.paraSpacing != null) cssProperties["--USER__paraSpacing"] = this.toRem(this.paraSpacing);
+    if (this.textAlign) cssProperties["--USER__textAlign"] = this.textAlign;
+    if (this.wordSpacing != null) cssProperties["--USER__wordSpacing"] = this.toRem(this.wordSpacing);
+    if (this.zoom !== null) cssProperties["--USER__zoom"] = this.toPercentage(this.zoom, true);
 
-    if (this.zoom !== null) properties["--USER__zoom"] = this.toPercentage(this.zoom, true);
-
-    return properties;
+    return cssProperties;
   }
 }

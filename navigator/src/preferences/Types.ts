@@ -10,6 +10,11 @@ export type RangeConfig = {
   step: number
 }
 
+export const filterRangeConfig: RangeConfig = {
+  range: [0, 100],
+  step: 1
+}
+
 export const fontSizeRangeConfig: RangeConfig = {
   range: [0.7, 4],
   step: 0.05
@@ -23,6 +28,36 @@ export const fontWeightRangeConfig: RangeConfig = {
 export const fontWidthRangeConfig: RangeConfig = {
   range: [50, 250],
   step: 10
+}
+
+export const letterSpacingRangeConfig: RangeConfig = {
+  range: [0, 1],
+  step: .125
+}
+
+export const lineHeightRangeConfig: RangeConfig = {
+  range: [1, 2],
+  step: .1
+}
+
+export const lineLengthRangeConfig: RangeConfig = {
+  range: [20, 100],
+  step: 1
+}
+
+export const paragraphIndentRangeConfig: RangeConfig = {
+  range: [0, 3],
+  step: .25
+}
+
+export const paragraphSpacingRangeConfig: RangeConfig = {
+  range: [0, 3],
+  step: .25
+}
+
+export const wordSpacingRangeConfig: RangeConfig = {
+  range: [0, 2],
+  step: .125
 }
 
 export const zoomRangeConfig: RangeConfig = {

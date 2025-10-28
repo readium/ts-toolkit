@@ -5,9 +5,16 @@ import { EpubSettings } from "./EpubSettings";
 import { BooleanPreference, EnumPreference, Preference, RangePreference } from "../../preferences/Preference";
 import { 
   TextAlignment, 
+  filterRangeConfig, 
   fontSizeRangeConfig, 
   fontWeightRangeConfig, 
-  fontWidthRangeConfig 
+  fontWidthRangeConfig, 
+  letterSpacingRangeConfig,
+  lineHeightRangeConfig,
+  lineLengthRangeConfig,
+  paragraphIndentRangeConfig,
+  paragraphSpacingRangeConfig,
+  wordSpacingRangeConfig
 } from "../../preferences/Types";
 
 import defaultColors from "@readium/css/css/vars/colors.json";
@@ -85,8 +92,8 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       onChange: (newValue: number | boolean | null | undefined) => {
         this.updatePreference("darkenFilter", newValue || null);
       },
-      supportedRange: [0, 100],
-      step: 1
+      supportedRange: filterRangeConfig.range,
+      step: filterRangeConfig.step
     });
   }
 
@@ -192,8 +199,8 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       onChange: (newValue: number | boolean | null | undefined) => {
         this.updatePreference("invertFilter", newValue || null);
       },
-      supportedRange: [0, 100],
-      step: 1
+      supportedRange: filterRangeConfig.range,
+      step: filterRangeConfig.step
     });
   }
 
@@ -205,8 +212,8 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       onChange: (newValue: number | boolean | null | undefined) => {
         this.updatePreference("invertGaijiFilter", newValue || null);
       },
-      supportedRange: [0, 100],
-      step: 1
+      supportedRange: filterRangeConfig.range,
+      step: filterRangeConfig.step
     });
   }
 
@@ -240,8 +247,8 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("letterSpacing", newValue || null);
       },
-      supportedRange: [0, 1],
-      step: .125
+      supportedRange: letterSpacingRangeConfig.range,
+      step: letterSpacingRangeConfig.step
     });
   }
 
@@ -266,8 +273,8 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("lineHeight", newValue || null);
       },
-      supportedRange: [1, 2],
-      step: .1
+      supportedRange: lineHeightRangeConfig.range,
+      step: lineHeightRangeConfig.step
     });
   }
 
@@ -290,8 +297,8 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("maximalLineLength", newValue);
       },
-      supportedRange: [20, 100],
-      step: 1
+      supportedRange: lineLengthRangeConfig.range,
+      step: lineLengthRangeConfig.step
     });
   }
 
@@ -303,8 +310,8 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("minimalLineLength", newValue);
       },
-      supportedRange: [20, 100],
-      step: 1
+      supportedRange: lineLengthRangeConfig.range,
+      step: lineLengthRangeConfig.step
     });
   }
 
@@ -327,8 +334,8 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("optimalLineLength", newValue as number);
       },
-      supportedRange: [20, 100],
-      step: 1
+      supportedRange: lineLengthRangeConfig.range,
+      step: lineLengthRangeConfig.step
     });
   }
 
@@ -351,8 +358,8 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("paragraphIndent", newValue || null);
       },
-      supportedRange: [0, 3],
-      step: .25
+      supportedRange: paragraphIndentRangeConfig.range,
+      step: paragraphIndentRangeConfig.step
     });
   }
 
@@ -364,8 +371,8 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("paragraphSpacing", newValue || null);
       },
-      supportedRange: [0, 3],
-      step: .25
+      supportedRange: paragraphSpacingRangeConfig.range,
+      step: paragraphSpacingRangeConfig.step
     });
   }
 
@@ -501,8 +508,8 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("wordSpacing", newValue || null);
       },
-      supportedRange: [0, 2],
-      step: 0.125
+      supportedRange: wordSpacingRangeConfig.range,
+      step: wordSpacingRangeConfig.step
     });
   }
 }
