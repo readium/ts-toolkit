@@ -1,19 +1,19 @@
 import { WebPubSettings } from "../preferences/WebPubSettings";
-import { IUserProperties, UserProperties } from "./Properties";
+import { IWebUserProperties, WebUserProperties } from "./Properties";
 
 export interface IWebPubCSS {
-  userProperties: UserProperties;
+  userProperties: WebUserProperties;
 }
 
 export class WebPubCSS {
-  userProperties: UserProperties;
+  userProperties: WebUserProperties;
 
   constructor(props: IWebPubCSS) {
     this.userProperties = props.userProperties;
   }
 
   update(settings: WebPubSettings) {
-    const updated: IUserProperties = {
+    const updated: IWebUserProperties = {
       a11yNormalize: settings.textNormalization,
       bodyHyphens: typeof settings.hyphens !== "boolean" 
         ? null 
@@ -37,6 +37,6 @@ export class WebPubCSS {
       zoom: settings.zoom
     };
 
-    this.userProperties = new UserProperties(updated);
+    this.userProperties = new WebUserProperties(updated);
   }
 }

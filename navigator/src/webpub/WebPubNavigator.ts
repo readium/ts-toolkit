@@ -6,7 +6,7 @@ import { BasicTextSelection, CommsEventKey, FrameClickEvent, ModuleLibrary, Modu
 import * as path from "path-browserify";
 import { ManagerEventKey } from "../epub/EpubNavigator";
 import { WebPubCSS } from "./css/WebPubCSS";
-import { UserProperties } from "./css/Properties";
+import { WebUserProperties } from "./css/Properties";
 import { IWebPubPreferences, WebPubPreferences } from "./preferences/WebPubPreferences";
 import { IWebPubDefaults, WebPubDefaults } from "./preferences/WebPubDefaults";
 import { WebPubSettings } from "./preferences/WebPubSettings";
@@ -73,7 +73,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         this._defaults = new WebPubDefaults(configuration.defaults);
         this._settings = new WebPubSettings(this._preferences, this._defaults);
         this._css = new WebPubCSS({
-            userProperties: new UserProperties({ zoom: this._settings.zoom })
+            userProperties: new WebUserProperties({ zoom: this._settings.zoom })
         });
 
         // Initialize current location

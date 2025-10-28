@@ -1,7 +1,7 @@
 import { TextAlignment } from "../../preferences/Types";
 import { BodyHyphens, Ligatures, Properties } from "../../css/Properties";
 
-export interface IUserProperties {
+export interface IWebUserProperties {
   a11yNormalize?: boolean | null;
   bodyHyphens?: BodyHyphens | null;
   fontFamily?: string | null;
@@ -17,7 +17,7 @@ export interface IUserProperties {
   zoom: number | null;
 }
 
-export class UserProperties extends Properties {
+export class WebUserProperties extends Properties {
   a11yNormalize: boolean | null;
   bodyHyphens: BodyHyphens | null;
   fontFamily: string | null;
@@ -32,7 +32,7 @@ export class UserProperties extends Properties {
   wordSpacing: number | null;
   zoom: number | null;
 
-  constructor(props: IUserProperties) {
+  constructor(props: IWebUserProperties) {
     super();
     this.a11yNormalize = props.a11yNormalize ?? null;
     this.bodyHyphens = props.bodyHyphens ?? null;
