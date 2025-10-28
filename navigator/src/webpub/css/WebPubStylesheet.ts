@@ -176,4 +176,27 @@ export const webPubStylesheet = `
 :root[style*="--USER__zoom"] body {
   zoom: var(--USER__zoom) !important;
 }
+
+:root[style*="--USER__zoom"] figure:has(> img),
+:root[style*="--USER__zoom"] figure:has(> video),
+:root[style*="--USER__zoom"] figure:has(> svg),
+:root[style*="--USER__zoom"] figure:has(> canvas),
+:root[style*="--USER__zoom"] figure:has(> iframe),
+:root[style*="--USER__zoom"] figure:has(> audio),
+:root[style*="--USER__zoom"] div:has(> img),
+:root[style*="--USER__zoom"] div:has(> video),
+:root[style*="--USER__zoom"] div:has(> svg),
+:root[style*="--USER__zoom"] div:has(> canvas),
+:root[style*="--USER__zoom"] div:has(> iframe),
+:root[style*="--USER__zoom"] div:has(> audio),
+:root[style*="--USER__zoom"] table {
+  zoom: calc(100% / var(--USER__zoom)) !important;
+}
+
+:root[style*="--USER__zoom"] figcaption,
+:root[style*="--USER__zoom"] caption,
+:root[style*="--USER__zoom"] td,
+:root[style*="--USER__zoom"] th {
+  zoom: var(--USER__zoom) !important;
+}
 `;
