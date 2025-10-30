@@ -1,4 +1,4 @@
-import { Link, Locator, Publication, ReadingProgression, LocatorLocations } from "@readium/shared";
+import { Feature, Link, Locator, Publication, ReadingProgression, LocatorLocations } from "@readium/shared";
 import { VisualNavigator, VisualNavigatorViewport, ProgressionRange } from "../Navigator";
 import { Configurable } from "../preferences/Configurable";
 import { WebPubFramePoolManager } from "./WebPubFramePoolManager";
@@ -72,7 +72,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         // Initialize preference system
         this._preferences = new WebPubPreferences(configuration.preferences);
         this._defaults = new WebPubDefaults(configuration.defaults);
-        this._settings = new WebPubSettings(this._preferences, this._defaults);
+        this._settings = new WebPubSettings(this._preferences, this._defaults, this.hasDisplayTransformability);
         this._css = new WebPubCSS({
             userProperties: new WebUserProperties({ zoom: this._settings.zoom })
         });
@@ -116,7 +116,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     }
 
     private async applyPreferences() {
-        this._settings = new WebPubSettings(this._preferences, this._defaults);
+        this._settings = new WebPubSettings(this._preferences, this._defaults, this.hasDisplayTransformability);
 
         if (this._preferencesEditor !== null) {
             this._preferencesEditor = new WebPubPreferencesEditor(this._preferences, this.settings, this.pub.metadata);
@@ -153,6 +153,12 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
      */
     public get _cframes(): (WebPubFrameManager | undefined)[] {
         return this.framePool.currentFrames;
+    }
+
+    private get hasDisplayTransformability(): boolean {
+        return this.pub.metadata?.accessibility?.feature?.some(
+            f => f.value === Feature.DISPLAY_TRANSFORMABILITY.value
+        ) ?? false;
     }
 
     public eventListener(key: CommsEventKey | ManagerEventKey, data: unknown) {
