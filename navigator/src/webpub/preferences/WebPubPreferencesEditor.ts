@@ -33,11 +33,17 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
     this.preferences[key] = value;
   }
 
+  private get isDisplayTransformable(): boolean {
+    return this.metadata?.accessibility?.feature?.some(
+      f => f.value === Feature.DISPLAY_TRANSFORMABILITY.value
+    ) ?? false; // Default to false if no metadata
+  }
+
   get fontFamily(): Preference<string> {
     return new Preference<string>({
       initialValue: this.preferences.fontFamily,
       effectiveValue: this.settings.fontFamily || null,
-      isEffective: this.metadata?.accessibility?.feature?.includes(Feature.DISPLAY_TRANSFORMABILITY) ?? false,
+      isEffective: this.isDisplayTransformable,
       onChange: (newValue: string | null | undefined) => {
         this.updatePreference("fontFamily", newValue || null);
       }
@@ -48,7 +54,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
     return new RangePreference<number>({
       initialValue: this.preferences.fontWeight,
       effectiveValue: this.settings.fontWeight || 400,
-      isEffective: this.metadata?.accessibility?.feature?.includes(Feature.DISPLAY_TRANSFORMABILITY) ?? false,
+      isEffective: this.isDisplayTransformable,
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("fontWeight", newValue || null);
       },
@@ -61,7 +67,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
     return new BooleanPreference({
       initialValue: this.preferences.hyphens,
       effectiveValue: this.settings.hyphens || false,
-      isEffective: this.metadata?.accessibility?.feature?.includes(Feature.DISPLAY_TRANSFORMABILITY) ?? false,
+      isEffective: this.isDisplayTransformable,
       onChange: (newValue: boolean | null | undefined) => {
         this.updatePreference("hyphens", newValue || null);
       }
@@ -72,7 +78,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
     return new RangePreference<number>({
       initialValue: this.preferences.letterSpacing,
       effectiveValue: this.settings.letterSpacing || 0,
-      isEffective: this.metadata?.accessibility?.feature?.includes(Feature.DISPLAY_TRANSFORMABILITY) ?? false,
+      isEffective: this.isDisplayTransformable,
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("letterSpacing", newValue || null);
       },
@@ -85,7 +91,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
     return new BooleanPreference({
       initialValue: this.preferences.ligatures,
       effectiveValue: this.settings.ligatures || true,
-      isEffective: this.metadata?.accessibility?.feature?.includes(Feature.DISPLAY_TRANSFORMABILITY) ?? false,
+      isEffective: this.isDisplayTransformable,
       onChange: (newValue: boolean | null | undefined) => {
         this.updatePreference("ligatures", newValue || null);
       }
@@ -96,7 +102,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
     return new RangePreference<number>({
       initialValue: this.preferences.lineHeight,
       effectiveValue: this.settings.lineHeight,
-      isEffective: this.metadata?.accessibility?.feature?.includes(Feature.DISPLAY_TRANSFORMABILITY) ?? false,
+      isEffective: this.isDisplayTransformable,
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("lineHeight", newValue || null);
       },
@@ -109,7 +115,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
     return new BooleanPreference({
       initialValue: this.preferences.noRuby,
       effectiveValue: this.settings.noRuby || false,
-      isEffective: this.metadata?.accessibility?.feature?.includes(Feature.DISPLAY_TRANSFORMABILITY) ?? false,
+      isEffective: this.isDisplayTransformable,
       onChange: (newValue: boolean | null | undefined) => {
         this.updatePreference("noRuby", newValue || null);
       }
@@ -120,7 +126,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
     return new RangePreference<number>({
       initialValue: this.preferences.paragraphIndent,
       effectiveValue: this.settings.paragraphIndent || 0,
-      isEffective: this.metadata?.accessibility?.feature?.includes(Feature.DISPLAY_TRANSFORMABILITY) ?? false,
+      isEffective: this.isDisplayTransformable,
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("paragraphIndent", newValue || null);
       },
@@ -133,7 +139,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
     return new RangePreference<number>({
       initialValue: this.preferences.paragraphSpacing,
       effectiveValue: this.settings.paragraphSpacing || 0,
-      isEffective: this.metadata?.accessibility?.feature?.includes(Feature.DISPLAY_TRANSFORMABILITY) ?? false,
+      isEffective: this.isDisplayTransformable,
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("paragraphSpacing", newValue || null);
       },
@@ -146,7 +152,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
     return new EnumPreference<TextAlignment>({
       initialValue: this.preferences.textAlign,
       effectiveValue: this.settings.textAlign || TextAlignment.start,
-      isEffective: this.metadata?.accessibility?.feature?.includes(Feature.DISPLAY_TRANSFORMABILITY) ?? false,
+      isEffective: this.isDisplayTransformable,
       onChange: (newValue: TextAlignment | null | undefined) => {
         this.updatePreference("textAlign", newValue || null);
       },
@@ -158,7 +164,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
     return new BooleanPreference({
       initialValue: this.preferences.textNormalization,
       effectiveValue: this.settings.textNormalization || false,
-      isEffective: this.metadata?.accessibility?.feature?.includes(Feature.DISPLAY_TRANSFORMABILITY) ?? false,
+      isEffective: this.isDisplayTransformable,
       onChange: (newValue: boolean | null | undefined) => {
         this.updatePreference("textNormalization", newValue || null);
       }
@@ -169,7 +175,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
     return new RangePreference<number>({
       initialValue: this.preferences.wordSpacing,
       effectiveValue: this.settings.wordSpacing || 0,
-      isEffective: this.metadata?.accessibility?.feature?.includes(Feature.DISPLAY_TRANSFORMABILITY) ?? false,
+      isEffective: this.isDisplayTransformable,
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("wordSpacing", newValue || null);
       },
