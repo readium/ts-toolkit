@@ -256,8 +256,30 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new BooleanPreference({
       initialValue: this.preferences.ligatures,
       effectiveValue: this.settings.ligatures || true,
-      isEffective: this.layout !== Layout.fixed
-        && this.preferences.ligatures !== null || false,
+      isEffective: (() => {
+        // Always respect explicit null (disabled) preference
+        if (this.preferences.ligatures === null) {
+          return false;
+        }
+        
+        // Disable for fixed layout
+        if (this.layout === Layout.fixed) {
+          return false;
+        }
+        
+        // Check for languages/scripts that should disable ligatures
+        // ReadiumCSS does not apply in CJK
+        const primaryLang = this.metadata?.languages?.[0]?.toLowerCase();
+        if (primaryLang) {
+          // Disable for Chinese, Japanese, Korean, and Traditional Mongolian (mn-Mong)
+          if (["zh", "ja", "ko", "mn-mong"].some(lang => primaryLang.startsWith(lang))) {
+            return false;
+          }
+        }
+        
+        // Enable by default
+        return true;
+      })(),
       onChange: (newValue: boolean | null | undefined) => {
         this.updatePreference("ligatures", newValue || null);
       }
