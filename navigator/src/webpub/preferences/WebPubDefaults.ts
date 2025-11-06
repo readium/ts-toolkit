@@ -12,10 +12,14 @@ import {
   ensureString
 } from "../../preferences/guards";
 
+import { sMLWithRequest } from "../../helpers";
+
 export interface IWebPubDefaults {
   fontFamily?: string | null,
   fontWeight?: number | null,
   hyphens?: boolean | null,
+  iOSPatch?: boolean | null,
+  iPadOSPatch?: boolean | null,
   letterSpacing?: number | null,
   ligatures?: boolean | null,
   lineHeight?: number | null,
@@ -32,6 +36,8 @@ export class WebPubDefaults {
   fontFamily: string | null;
   fontWeight: number | null;
   hyphens: boolean | null;
+  iOSPatch: boolean | null;
+  iPadOSPatch: boolean | null;
   letterSpacing: number | null;
   ligatures: boolean | null;
   lineHeight: number | null;
@@ -47,6 +53,12 @@ export class WebPubDefaults {
     this.fontFamily = ensureString(defaults.fontFamily) || null;
     this.fontWeight = ensureValueInRange(defaults.fontWeight, fontWeightRangeConfig.range) || null;
     this.hyphens = ensureBoolean(defaults.hyphens) ?? null;
+    this.iOSPatch = defaults.iOSPatch === false 
+        ? false 
+        : ((sMLWithRequest.OS.iOS || sMLWithRequest.OS.iPadOS) && sMLWithRequest.iOSRequest === "mobile");
+    this.iPadOSPatch = defaults.iPadOSPatch === false 
+        ? false 
+        : (sMLWithRequest.OS.iPadOS && sMLWithRequest.iOSRequest === "desktop");
     this.letterSpacing = ensureNonNegative(defaults.letterSpacing) || null;
     this.ligatures = ensureBoolean(defaults.ligatures) ?? null;
     this.lineHeight = ensureNonNegative(defaults.lineHeight) || null;

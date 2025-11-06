@@ -18,6 +18,8 @@ export interface IWebPubPreferences {
   fontFamily?: string | null,
   fontWeight?: number | null,
   hyphens?: boolean | null,
+  iOSPatch?: boolean | null,
+  iPadOSPatch?: boolean | null,
   letterSpacing?: number | null,
   ligatures?: boolean | null,
   lineHeight?: number | null,
@@ -34,6 +36,8 @@ export class WebPubPreferences implements ConfigurablePreferences {
   fontFamily?: string | null;
   fontWeight?: number | null;
   hyphens?: boolean | null;
+  iOSPatch?: boolean | null;
+  iPadOSPatch?: boolean | null;
   letterSpacing?: number | null;
   ligatures?: boolean | null;
   lineHeight?: number | null;
@@ -49,6 +53,8 @@ export class WebPubPreferences implements ConfigurablePreferences {
     this.fontFamily = ensureString(preferences.fontFamily);
     this.fontWeight = ensureValueInRange(preferences.fontWeight, fontWeightRangeConfig.range);
     this.hyphens = ensureBoolean(preferences.hyphens);
+    this.iOSPatch = ensureBoolean(preferences.iOSPatch);
+    this.iPadOSPatch = ensureBoolean(preferences.iPadOSPatch);
     this.letterSpacing = ensureNonNegative(preferences.letterSpacing);
     this.ligatures = ensureBoolean(preferences.ligatures);
     this.lineHeight = ensureNonNegative(preferences.lineHeight);

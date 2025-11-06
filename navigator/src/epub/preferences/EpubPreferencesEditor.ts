@@ -257,7 +257,6 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       initialValue: this.preferences.ligatures,
       effectiveValue: this.settings.ligatures || true,
       isEffective: this.layout !== Layout.fixed
-        && this.metadata?.languages?.some(lang => lang === "ar" || lang === "fa")
         && this.preferences.ligatures !== null || false,
       onChange: (newValue: boolean | null | undefined) => {
         this.updatePreference("ligatures", newValue || null);

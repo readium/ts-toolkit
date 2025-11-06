@@ -6,6 +6,8 @@ export interface IWebUserProperties {
   bodyHyphens?: BodyHyphens | null;
   fontFamily?: string | null;
   fontWeight?: number | null;
+  iOSPatch?: boolean | null;
+  iPadOSPatch?: boolean | null;
   letterSpacing?: number | null;
   ligatures?: Ligatures | null;
   lineHeight?: number | null;
@@ -22,6 +24,8 @@ export class WebUserProperties extends Properties {
   bodyHyphens: BodyHyphens | null;
   fontFamily: string | null;
   fontWeight: number | null;
+  iOSPatch: boolean | null;
+  iPadOSPatch: boolean | null;
   letterSpacing: number | null;
   ligatures: Ligatures | null;
   lineHeight: number | null;
@@ -38,6 +42,8 @@ export class WebUserProperties extends Properties {
     this.bodyHyphens = props.bodyHyphens ?? null;
     this.fontFamily = props.fontFamily ?? null;
     this.fontWeight = props.fontWeight ?? null;
+    this.iOSPatch = props.iOSPatch ?? null;
+    this.iPadOSPatch = props.iPadOSPatch ?? null;
     this.letterSpacing = props.letterSpacing ?? null;
     this.ligatures = props.ligatures ?? null;
     this.lineHeight = props.lineHeight ?? null;
@@ -56,6 +62,8 @@ export class WebUserProperties extends Properties {
     if (this.bodyHyphens) cssProperties["--USER__bodyHyphens"] = this.bodyHyphens;
     if (this.fontFamily) cssProperties["--USER__fontFamily"] = this.fontFamily;
     if (this.fontWeight != null) cssProperties["--USER__fontWeight"] = this.toUnitless(this.fontWeight);
+    if (this.iOSPatch) cssProperties["--USER__iOSPatch"] = this.toFlag("iOSPatch");
+    if (this.iPadOSPatch) cssProperties["--USER__iPadOSPatch"] = this.toFlag("iPadOSPatch");
     if (this.letterSpacing != null) cssProperties["--USER__letterSpacing"] = this.toRem(this.letterSpacing);
     if (this.ligatures) cssProperties["--USER__ligatures"] = this.ligatures;
     if (this.lineHeight != null) cssProperties["--USER__lineHeight"] = this.toUnitless(this.lineHeight);

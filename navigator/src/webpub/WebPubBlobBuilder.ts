@@ -1,9 +1,16 @@
 import { Link, Publication } from "@readium/shared";
-import { webPubStylesheet } from "./css/WebPubStylesheet";
 
-// Utilities (matching FrameBlobBuilder pattern)
+// Readium CSS imports
+// The "?inline" query is to prevent some bundlers from injecting these into the page (e.g. vite)
+// @ts-ignore
+import readiumCSSWebPub from "@readium/css/css/dist/webPub/ReadiumCSS-webPub.css?inline";
+
+// Utilities
 const blobify = (source: string, type: string) => URL.createObjectURL(new Blob([source], { type }));
 const stripJS = (source: string) => source.replace(/\/\/.*/g, "").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\n/g, "").replace(/\s+/g, " ");
+const stripCSS = (source: string) => source.replace(/\/\*(?:(?!\*\/)[\s\S])*\*\/|[\r\n\t]+/g, '').replace(/ {2,}/g, ' ')
+    // Fully resolve absolute local URLs created by bundlers since it's going into a blob
+    .replace(/url\((?!(https?:)?\/\/)("?)\/([^\)]+)/g, `url($2${window.location.origin}/$3`);
 const scriptify = (doc: Document, source: string) => {
     const s = doc.createElement("script");
     s.dataset.readium = "true";
@@ -11,16 +18,18 @@ const scriptify = (doc: Document, source: string) => {
     return s;
 }
 const styleify = (doc: Document, source: string) => {
-    const s = doc.createElement("style");
+    const s = doc.createElement("link");
     s.dataset.readium = "true";
-    s.textContent = source;
+    s.rel = "stylesheet";
+    s.type = "text/css";
+    s.href = source.startsWith("blob:") ? source : blobify(source, "text/css");
     return s;
 }
 
 type CacheFunction = () => string;
 const resourceBlobCache = new Map<string, string>();
 const cached = (key: string, cacher: CacheFunction) => {
-    if (resourceBlobCache.has(key)) return resourceBlobCache.get(key)!;
+    if(resourceBlobCache.has(key)) return resourceBlobCache.get(key)!;
     const value = cacher();
     resourceBlobCache.set(key, value);
     return value;
@@ -103,9 +112,9 @@ export class WebPubBlobBuilder {
     private finalizeDOM(doc: Document, base: string | undefined, mediaType: any, txt?: string, cssProperties?: { [key: string]: string }): string {
         if(!doc) return "";
 
-        // Add WebPubCSS stylesheet at end of head (like EPUB ReadiumCSS-after)
-        const webPubStyle = styleify(doc, webPubStylesheet);
-        doc.head.appendChild(webPubStyle);
+        // ReadiumCSS WebPub
+        doc.head.appendChild(styleify(doc, cached("ReadiumCSS-webpub", () => blobify(stripCSS(readiumCSSWebPub), "text/css"))));
+
         if (cssProperties) {
             this.setProperties(cssProperties, doc);
         }

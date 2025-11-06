@@ -22,6 +22,8 @@ export class WebPubCSS {
           : "none",
       fontFamily: settings.fontFamily,
       fontWeight: settings.fontWeight,
+      iOSPatch: settings.iOSPatch,
+      iPadOSPatch: settings.iPadOSPatch,
       letterSpacing: settings.letterSpacing,
       ligatures: typeof settings.ligatures !== "boolean" 
         ? null 

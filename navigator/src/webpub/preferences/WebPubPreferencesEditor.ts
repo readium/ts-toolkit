@@ -74,6 +74,28 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
+  get iOSPatch(): BooleanPreference {
+      return new BooleanPreference({
+        initialValue: this.preferences.iOSPatch,
+        effectiveValue: this.settings.iOSPatch || false,
+        isEffective: true,
+        onChange: (newValue: boolean | null | undefined) => {
+          this.updatePreference("iOSPatch", newValue || null);
+        }
+      });
+    }
+  
+    get iPadOSPatch(): BooleanPreference {
+      return new BooleanPreference({
+        initialValue: this.preferences.iPadOSPatch,
+        effectiveValue: this.settings.iPadOSPatch || false,
+        isEffective: true,
+        onChange: (newValue: boolean | null | undefined) => {
+          this.updatePreference("iPadOSPatch", newValue || null);
+        }
+      });
+    }
+
   get letterSpacing(): RangePreference<number> {
     return new RangePreference<number>({
       initialValue: this.preferences.letterSpacing,
