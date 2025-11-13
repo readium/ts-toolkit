@@ -4,9 +4,7 @@ import { Module } from "./Module";
 import { rangeFromLocator } from "../helpers/locator";
 import { ModuleName } from "./ModuleLibrary";
 import { Rect, getClientRectsNoOverlap } from "../helpers/rect";
-import { getProperty } from "../helpers/css";
 import { ReadiumWindow } from "../helpers/dom";
-import { isDarkColor } from "../helpers/color";
 
 export enum Width {
     Wrap = "wrap", // Smallest width fitting the CSS border box.
@@ -249,18 +247,16 @@ class DecorationGroup {
 
         let template = this.wnd.document.createElement("template");
         // template.innerHTML = item.decoration.element.trim();
-        // TODO more styles logic
-
-        const isDarkMode = getProperty(this.wnd, "--USER__appearance") === "readium-night-on" ||
-            isDarkColor(getProperty(this.wnd, "--USER__backgroundColor"));
+        // Previously we tried to use CSS mix-blend-mode to guarantee contrast, but it was inconsistent
+        // with the native highlight, and was not good enough given the background-color can be completely
+        // arbitrary, and no longer just Readium CSS’ night mode, which was removed in V2 anyway.
+        // In the future, a set of color helpers will be added to help with this.
 
         template.innerHTML = `
         <div
             class="r2-highlight-0"
             style="${[
                 `background-color: ${item.decoration?.style?.tint ?? "yellow"} !important`,
-                //"opacity: 0.3 !important",
-                `mix-blend-mode: ${isDarkMode ? "exclusion" : "multiply"} !important`,
                 "opacity: 1 !important",
                 "box-sizing: border-box !important"
             ].join("; ")}"
