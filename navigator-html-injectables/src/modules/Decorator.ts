@@ -254,7 +254,7 @@ class DecorationGroup {
 
         template.innerHTML = `
         <div
-            class="r2-highlight-0"
+            class="readium-highlight"
             style="${[
                 `background-color: ${item.decoration?.style?.tint ?? "yellow"} !important`,
                 "opacity: 1 !important",
