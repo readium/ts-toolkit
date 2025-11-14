@@ -252,7 +252,8 @@ class DecorationGroup {
         // TODO more styles logic
 
         const isDarkMode = getProperty(this.wnd, "--USER__appearance") === "readium-night-on" ||
-            isDarkColor(getProperty(this.wnd, "--USER__backgroundColor"));
+            isDarkColor(getProperty(this.wnd, "--USER__backgroundColor")) ||
+            isDarkColor(this.wnd.getComputedStyle(this.wnd.document.documentElement).getPropertyValue("background-color"));
 
         template.innerHTML = `
         <div
