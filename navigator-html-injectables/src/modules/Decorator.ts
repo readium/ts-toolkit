@@ -251,9 +251,7 @@ class DecorationGroup {
         // template.innerHTML = item.decoration.element.trim();
         // TODO more styles logic
 
-        const isDarkMode = getProperty(this.wnd, "--USER__appearance") === "readium-night-on" ||
-            isDarkColor(getProperty(this.wnd, "--USER__backgroundColor")) ||
-            isDarkColor(this.wnd.getComputedStyle(this.wnd.document.documentElement).getPropertyValue("background-color"));
+        const isDarkMode = this.getCurrentDarkMode();
 
         template.innerHTML = `
         <div
@@ -361,6 +359,12 @@ class DecorationGroup {
         return this.container;
     }
 
+    getCurrentDarkMode(): boolean {
+        return getProperty(this.wnd, "--USER__appearance") === "readium-night-on" ||
+            isDarkColor(getProperty(this.wnd, "--USER__backgroundColor")) ||
+            isDarkColor(this.wnd.getComputedStyle(this.wnd.document.documentElement).getPropertyValue("background-color"));
+    }
+
     /**
      * Removes the group container.
      */
@@ -378,6 +382,7 @@ class DecorationGroup {
 export class Decorator extends Module {
     static readonly moduleName: ModuleName = "decorator";
     private resizeObserver!: ResizeObserver;
+    private backgroundObserver!: MutationObserver;
     private wnd!: ReadiumWindow;
     /*private readonly lastSize = {
         width: 0,
@@ -392,6 +397,22 @@ export class Decorator extends Module {
         // TODO cleanup all decorators
         this.groups.forEach(g => g.clear());
         this.groups.clear();
+    }
+
+    private updateAllBlendModes() {
+        const highlights = this.wnd.document.querySelectorAll(".readium-highlight");
+        const isDarkMode = this.groups.values().next().value?.getCurrentDarkMode() ?? false;
+        
+        highlights.forEach(highlight => {
+            (highlight as HTMLElement).style.setProperty("mix-blend-mode", isDarkMode ? "exclusion" : "multiply", "important");
+        });
+    }
+
+    private extractCustomProperty(style: string | null, propertyName: string): string | null {
+        if (!style) return null;
+        
+        const match = style.match(new RegExp(`${propertyName}:\\s*([^;]+)`));
+        return match ? match[1].trim() : null;
     }
 
     private handleResize() {
@@ -444,6 +465,38 @@ export class Decorator extends Module {
         wnd.addEventListener("orientationchange", this.handleResizer);
         wnd.addEventListener("resize", this.handleResizer);
 
+        // Set up MutationObserver to watch for CSS custom property changes
+        this.backgroundObserver = new MutationObserver((mutations) => {
+            const shouldUpdate = mutations.some(mutation => {
+                if (mutation.type === "attributes" && mutation.attributeName === "style") {
+                    const element = mutation.target as Element;
+                    const oldStyle = mutation.oldValue;
+                    const newStyle = element.getAttribute("style");
+                    
+                    // Check if the relevant CSS custom properties actually changed
+                    const oldAppearance = this.extractCustomProperty(oldStyle, "--USER__appearance");
+                    const newAppearance = this.extractCustomProperty(newStyle, "--USER__appearance");
+                    const oldBgColor = this.extractCustomProperty(oldStyle, "--USER__backgroundColor");
+                    const newBgColor = this.extractCustomProperty(newStyle, "--USER__backgroundColor");
+                    
+                    return oldAppearance !== newAppearance || 
+                           oldBgColor !== newBgColor;
+                }
+                return false;
+            });
+            
+            if (shouldUpdate) {
+                this.updateAllBlendModes();
+            }
+        });
+        
+        this.backgroundObserver.observe(wnd.document.documentElement, {
+            attributes: true,
+            attributeFilter: ["style"],
+            attributeOldValue: true,
+            subtree: true
+        });
+
         comms.log("Decorator Mounted");
         return true;
     }
@@ -454,6 +507,7 @@ export class Decorator extends Module {
 
         comms.unregisterAll(Decorator.moduleName);
         this.resizeObserver.disconnect();
+        this.backgroundObserver.disconnect();
         this.cleanup();
 
         comms.log("Decorator Unmounted");
