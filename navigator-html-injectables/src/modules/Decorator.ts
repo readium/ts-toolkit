@@ -6,7 +6,9 @@ import { ModuleName } from "./ModuleLibrary";
 import { Rect, getClientRectsNoOverlap } from "../helpers/rect";
 import { getProperty } from "../helpers/css";
 import { ReadiumWindow } from "../helpers/dom";
-import { isDarkColor } from "../helpers/color";
+import { isDarkColor, getContrastingTextColor } from "../helpers/color";
+
+const DEFAULT_HIGHLIGHT_COLOR = "#FFFF00"; // Yellow in HEX
 
 export enum Width {
     Wrap = "wrap", // Smallest width fitting the CSS border box.
@@ -183,8 +185,8 @@ class DecorationGroup {
         // TODO add caching layer ("vdom") to this so we aren't completely replacing the CSS every time
         stylesheet.innerHTML = `
         ::highlight(${this.id}) {
-            color: black;
-            background-color: ${item.decoration?.style?.tint ?? "yellow"};
+            color: ${getContrastingTextColor(item.decoration?.style?.tint ?? DEFAULT_HIGHLIGHT_COLOR)};
+            background-color: ${item.decoration?.style?.tint ?? DEFAULT_HIGHLIGHT_COLOR};
         }`;
     }
 
@@ -258,7 +260,7 @@ class DecorationGroup {
             data-readium="true" 
             class="readium-highlight"
             style="${[
-                `background-color: ${item.decoration?.style?.tint ?? "yellow"} !important`,
+                `background-color: ${item.decoration?.style?.tint ?? DEFAULT_HIGHLIGHT_COLOR} !important`,
                 //"opacity: 0.3 !important",
                 `mix-blend-mode: ${isDarkMode ? "exclusion" : "multiply"} !important`,
                 "opacity: 1 !important",

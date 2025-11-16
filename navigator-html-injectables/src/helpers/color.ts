@@ -1,4 +1,15 @@
 export const colorToRgba = (color: string): { r: number; g: number; b: number; a: number; } => {
+  // Handle colors by using Canvas API's color conversion
+  if (!color.startsWith("#") && !color.startsWith("rgb")) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.fillStyle = color;
+      const computedColor = ctx.fillStyle;
+      color = computedColor;
+    }
+  }
+
   if (color.startsWith("rgb")) {
     const rgb = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/i);
     if (rgb) {
@@ -69,3 +80,7 @@ export const isDarkColor = (color: string): boolean => {
 };
 
 export const isLightColor = (color: string): boolean => !isDarkColor(color);
+
+export const getContrastingTextColor = (backgroundColor: string): "black" | "white" => {
+  return isDarkColor(backgroundColor) ? "white" : "black";
+};
