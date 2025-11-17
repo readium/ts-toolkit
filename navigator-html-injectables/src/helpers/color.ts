@@ -96,7 +96,8 @@ export const colorToRgba = (color: string): { r: number; g: number; b: number; a
   }
   
   // If we couldn't parse the color, warn and return default
-  console.warn(`Could not parse color format: ${color}. Falling back to ${DEFAULT_COLOR} to check contrast. Please make sure your color value can be computed to HEX or RGB(A) format.`);
+  // Decorator-specific ATM
+  console.warn(`Decorator: could not parse color format: ${color}. Falling back to ${DEFAULT_COLOR} to check contrast. Please make sure your color value can be computed to HEX or RGB(A) format.`);
   
   // Cache null to avoid repeated warnings + entire conversion process
   colorCache.set(color, null);
