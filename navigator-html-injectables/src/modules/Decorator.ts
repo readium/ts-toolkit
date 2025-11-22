@@ -105,9 +105,7 @@ class DecorationGroup {
             }
             // Check if the range itself contains elements that cannot be highlighted
             const rangeFragment = range.cloneContents();
-            const tempDiv = this.wnd.document.createElement('div');
-            tempDiv.appendChild(rangeFragment);
-            if(tempDiv.querySelector(cannotNativeHighlight.join(", ").toLowerCase())) {
+            if(rangeFragment.querySelector(cannotNativeHighlight.join(", ").toLowerCase())) {
                 // Range contains elements that definitely cannot be highlighted
                 this.notTextFlag?.set(id, true);
             }
