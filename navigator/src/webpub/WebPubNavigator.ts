@@ -8,12 +8,13 @@ import { WebPubFrameManager } from "./WebPubFrameManager";
 
 import { ManagerEventKey } from "../epub/EpubNavigator";
 import { WebPubCSS } from "./css/WebPubCSS";
-import { WebUserProperties } from "./css/Properties";
+import { WebUserProperties, WebRSProperties } from "./css/Properties";
 import { IWebPubPreferences, WebPubPreferences } from "./preferences/WebPubPreferences";
 import { IWebPubDefaults, WebPubDefaults } from "./preferences/WebPubDefaults";
 import { WebPubSettings } from "./preferences/WebPubSettings";
 import { IPreferencesEditor } from "../preferences/PreferencesEditor";
 import { WebPubPreferencesEditor } from "./preferences/WebPubPreferencesEditor";
+
 export interface WebPubNavigatorConfiguration {
     preferences: IWebPubPreferences;
     defaults: IWebPubDefaults;
@@ -74,6 +75,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         this._defaults = new WebPubDefaults(configuration.defaults);
         this._settings = new WebPubSettings(this._preferences, this._defaults, this.hasDisplayTransformability);
         this._css = new WebPubCSS({
+            rsProperties: new WebRSProperties({ experiments: this._settings.experiments || null }),
             userProperties: new WebUserProperties({ zoom: this._settings.zoom })
         });
 
@@ -135,6 +137,12 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private compileCSSProperties(css: WebPubCSS) {
         const properties: { [key: string]: string } = {};
 
+        // Include RS properties (i.e. experiments)
+        for (const [key, value] of Object.entries(css.rsProperties.toCSSProperties())) {
+            properties[key] = value;
+        }
+
+        // Include user properties
         for (const [key, value] of Object.entries(css.userProperties.toCSSProperties())) {
             properties[key] = value;
         }

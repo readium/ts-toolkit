@@ -1,4 +1,5 @@
 import { 
+  ExperimentKey,
   fontWeightRangeConfig, 
   TextAlignment, 
   zoomRangeConfig 
@@ -9,7 +10,8 @@ import {
   ensureEnumValue,
   ensureNonNegative,
   ensureValueInRange,
-  ensureString
+  ensureString,
+  ensureExperiment
 } from "../../preferences/guards";
 
 import { sMLWithRequest } from "../../helpers";
@@ -29,7 +31,8 @@ export interface IWebPubDefaults {
   textAlign?: TextAlignment | null,
   textNormalization?: boolean | null,
   wordSpacing?: number | null,
-  zoom?: number | null
+  zoom?: number | null,
+  experiments?: Array<ExperimentKey> | null,
 }
 
 export class WebPubDefaults {
@@ -48,6 +51,7 @@ export class WebPubDefaults {
   textNormalization: boolean | null;
   wordSpacing: number | null;
   zoom: number;
+  experiments: Array<ExperimentKey> | null;
 
   constructor(defaults: IWebPubDefaults) {
     this.fontFamily = ensureString(defaults.fontFamily) || null;
@@ -69,5 +73,6 @@ export class WebPubDefaults {
     this.textNormalization = ensureBoolean(defaults.textNormalization) ?? false;
     this.wordSpacing = ensureNonNegative(defaults.wordSpacing) || null;
     this.zoom = ensureValueInRange(defaults.zoom, zoomRangeConfig.range) || 1;
+    this.experiments = ensureExperiment(defaults.experiments) ?? null;
   }
 }

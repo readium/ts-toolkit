@@ -1,18 +1,25 @@
 import { WebPubSettings } from "../preferences/WebPubSettings";
-import { IWebUserProperties, WebUserProperties } from "./Properties";
+import { IWebUserProperties, WebRSProperties, WebUserProperties } from "./Properties";
 
 export interface IWebPubCSS {
+  rsProperties: WebRSProperties;
   userProperties: WebUserProperties;
 }
 
 export class WebPubCSS {
+  rsProperties: WebRSProperties;
   userProperties: WebUserProperties;
 
   constructor(props: IWebPubCSS) {
+    this.rsProperties = props.rsProperties;
     this.userProperties = props.userProperties;
   }
 
   update(settings: WebPubSettings) {
+    if (settings.experiments) {
+      this.rsProperties.experiments = settings.experiments;
+    }
+
     const updated: IWebUserProperties = {
       a11yNormalize: settings.textNormalization,
       bodyHyphens: typeof settings.hyphens !== "boolean" 

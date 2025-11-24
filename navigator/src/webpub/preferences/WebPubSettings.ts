@@ -1,5 +1,5 @@
 import { ConfigurableSettings } from "../../preferences/Configurable";
-import { TextAlignment } from "../../preferences/Types";
+import { ExperimentKey, TextAlignment } from "../../preferences/Types";
 import { WebPubDefaults } from "./WebPubDefaults";
 import { WebPubPreferences } from "./WebPubPreferences";
 
@@ -20,7 +20,8 @@ export interface IWebPubSettings {
   textAlign?: TextAlignment | null,
   textNormalization?: boolean | null,
   wordSpacing?: number | null,
-  zoom?: number | null;
+  zoom?: number | null,
+  experiments?: Array<ExperimentKey> | null,
 }
 
 export class WebPubSettings implements ConfigurableSettings {
@@ -39,6 +40,7 @@ export class WebPubSettings implements ConfigurableSettings {
   textNormalization: boolean | null = null;
   wordSpacing: number | null = null;
   zoom: number | null;
+  experiments: Array<ExperimentKey> | null;
 
   constructor(preferences: WebPubPreferences, defaults: WebPubDefaults, hasDisplayTransformability: boolean) {
     if (hasDisplayTransformability) {
@@ -103,5 +105,7 @@ export class WebPubSettings implements ConfigurableSettings {
       : defaults.zoom !== undefined
         ? defaults.zoom
         : null;
+
+    this.experiments = defaults.experiments || null;
   }
 }
