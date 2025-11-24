@@ -1,4 +1,4 @@
-import { TextAlignment } from "../../preferences/Types";
+import { ExperimentKey, TextAlignment } from "../../preferences/Types";
 import { 
   BodyHyphens, 
   BoxSizing, 
@@ -214,6 +214,7 @@ export interface IRSProperties {
   textColor?: string | null;
   typeScale?: TypeScale | null;
   visitedColor?: string | null;
+  experiments?: Array<ExperimentKey> | null;
 }
 
 export class RSProperties extends Properties {
@@ -258,6 +259,7 @@ export class RSProperties extends Properties {
   textColor: string | null;
   typeScale: TypeScale | null;
   visitedColor: string | null;
+  experiments: Array<ExperimentKey> | null;
 
   constructor(props: IRSProperties) {
     super();
@@ -302,6 +304,7 @@ export class RSProperties extends Properties {
     this.textColor = props.textColor ?? null;
     this.typeScale = props.typeScale ?? null;
     this.visitedColor = props.visitedColor ?? null;
+    this.experiments = props.experiments ?? null;
   }
 
   toCSSProperties(): { [key: string]: string; } {
@@ -348,6 +351,13 @@ export class RSProperties extends Properties {
     if (this.textColor) cssProperties["--RS__textColor"] = this.textColor;
     if (this.typeScale) cssProperties["--RS__typeScale"] = this.toUnitless(this.typeScale);
     if (this.visitedColor) cssProperties["--RS__visitedColor"] = this.visitedColor;
+
+    if (this.experiments) {
+      this.experiments.forEach((experiment) => {
+        // Shortcut as we know it is the RS scope and can use toFlag
+        cssProperties["--RS__" + experiment] = this.toFlag(experiment);
+      });
+    };
 
     return cssProperties;
   }

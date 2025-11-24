@@ -1,3 +1,7 @@
+import experiments from "@readium/css/css/vars/experiments.json";
+
+export type ExperimentKey = keyof typeof experiments;
+
 export enum TextAlignment {
   start = "start",
   left = "left",

@@ -54,6 +54,9 @@ export class ReadiumCSS {
     if (settings.scrollPaddingTop !== this.rsProperties.scrollPaddingTop)
       this.rsProperties.scrollPaddingTop = settings.scrollPaddingTop;
 
+    if (settings.experiments !== this.rsProperties.experiments)
+      this.rsProperties.experiments = settings.experiments;
+
     // This has to be updated before pagination
     // otherwise the metrics won’t be correct for line length
     this.lineLengths.update({
