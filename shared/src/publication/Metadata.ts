@@ -287,7 +287,7 @@ export class Metadata {
     if (this.identifier !== undefined) json.identifier = this.identifier;
     if (this.altIdentifier) json.altIdentifier = this.altIdentifier.serialize();
     if (this.subtitle) json.subtitle = this.subtitle.serialize();
-    if (this.sortAs) json.sortAs = this.sortAs.serialize();
+    if (this.sortAs) json.sortAs = this.sortAs.getTranslation();
     if (this.editors) json.editor = this.editors.serialize();
     if (this.artists) json.artist = this.artists.serialize();
     if (this.authors) json.author = this.authors.serialize();
