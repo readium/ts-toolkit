@@ -1,4 +1,4 @@
-// Lazy canvas initialization
+// Lazy canvas initialization for color conversion
 let canvas: HTMLCanvasElement | null = null;
 let ctx: CanvasRenderingContext2D | null = null;
 
@@ -8,100 +8,110 @@ const DEFAULT_COLOR = { r: 255, g: 255, b: 255, a: 1 };
 // Cache for computed color conversions
 const colorCache = new Map<string, { r: number; g: number; b: number; a: number; } | null>();
 
-const getCanvasContext = () => {
+const getCanvasContext = (): CanvasRenderingContext2D | null => {
   if (!canvas) {
     canvas = document.createElement("canvas");
-    ctx = canvas.getContext("2d");
+    canvas.width = 1;
+    canvas.height = 1;
+    ctx = canvas.getContext("2d", { willReadFrequently: true });
   }
   return ctx;
 };
 
-export const colorToRgba = (color: string): { r: number; g: number; b: number; a: number; } => {
+const isSpecialColorValue = (color: string): boolean => {
+  if (!color) return true;
+  
+  const normalizedColor = color.trim().toLowerCase();
+  
+  // Check for CSS variables
+  if (normalizedColor.startsWith("var(")) {
+    return true;
+  }
+  
+  // Check for CSS color keywords
+  const cssKeywords = [
+    "transparent",
+    "currentcolor",
+    "inherit",
+    "initial",
+    "revert",
+    "unset",
+    "revert-layer"
+  ];
+  
+  if (cssKeywords.includes(normalizedColor)) {
+    return true;
+  }
+  
+  // Check for gradients
+  const gradientTypes = [
+    "linear-gradient",
+    "radial-gradient",
+    "conic-gradient",
+    "repeating-linear-gradient",
+    "repeating-radial-gradient",
+    "repeating-conic-gradient"
+  ];
+  
+  return gradientTypes.some(grad => normalizedColor.includes(grad));
+};
+
+const warnAboutInvalidColor = (color: string, reason: string): void => {
+  console.warn(
+    `[Decorator] Could not parse color: "${color}". ${reason} Falling back to ${JSON.stringify(DEFAULT_COLOR)} to compute contrast. Please use a CSS color value that can be computed to RGB(A).`
+  );
+};
+
+export const colorToRgba = (color: string): { r: number; g: number; b: number; a: number } => {
   // Check cache first
   const cached = colorCache.get(color);
   if (cached !== undefined) {
-    if (cached === null) {
-      return DEFAULT_COLOR; // Return default white for previously failed colors
-    }
-    return cached;
+    return cached ?? DEFAULT_COLOR;
   }
 
-  // Use Canvas API to convert any CSS color to “standardized” format
+  // Check for special color values
+  if (isSpecialColorValue(color)) {
+    warnAboutInvalidColor(color, "Unsupported color format or special value.");
+    colorCache.set(color, null);
+    return DEFAULT_COLOR;
+  }
+
   const context = getCanvasContext();
-  let computedColor = color;
-  
-  if (context) {
-    context.fillStyle = color;
-    computedColor = context.fillStyle;
+  if (!context) {
+    warnAboutInvalidColor(color, "Could not get canvas context.");
+    colorCache.set(color, null);
+    return DEFAULT_COLOR;
   }
 
-  // Parse the computed color value from canvas
-  if (computedColor.startsWith("rgb")) {
-    // Regex that handles both comma and space separators, slash for alpha
-    const rgba = computedColor.match(/rgba?\(([\d.]+%?)[,\s]+([\d.]+%?)[,\s]+([\d.]+%?)(?:[\/,]\s*([\d.]+%?))?\)/);
-
-    if (rgba) {
-      const parseValue = (val: string): number => {
-        if (val.endsWith("%")) {
-          return Math.round(parseFloat(val) * 2.55); // Convert percentage to 0-255
-        }
-        return parseFloat(val);
-      };
-      
-      const parseAlpha = (val: string): number => {
-        if (val.endsWith("%")) {
-          return parseFloat(val) / 100; // Convert percentage to 0-1
-        }
-        return parseFloat(val);
-      };
-      
-      const result = {
-        r: parseValue(rgba[1]),  // 0-255
-        g: parseValue(rgba[2]),  // 0-255
-        b: parseValue(rgba[3]),  // 0-255
-        a: rgba[4] ? parseAlpha(rgba[4]) : 1,  // 0-1
-      };
-      
-      // Cache the result for future use
-      colorCache.set(color, result);
-      return result;
-    }
-  } else if (computedColor.startsWith("#")) {
-    const hex = computedColor.slice(1);
-    let result;
+  // Clear the canvas
+  context.clearRect(0, 0, 1, 1);
+  
+  try {
+    // Set the color and draw a 1x1 pixel
+    context.fillStyle = color;
+    context.fillRect(0, 0, 1, 1);
     
-    if (hex.length === 3 || hex.length === 4) {
-      result = {
-        r: parseInt(hex[0] + hex[0], 16),  // 0-255
-        g: parseInt(hex[1] + hex[1], 16),  // 0-255
-        b: parseInt(hex[2] + hex[2], 16),  // 0-255
-        a: hex.length === 4 ? parseInt(hex[3] + hex[3], 16) / 255 : 1,  // 0-1
-      };
-    } else if (hex.length === 6 || hex.length === 8) {
-      result = {
-        r: parseInt(hex[0] + hex[1], 16),  // 0-255
-        g: parseInt(hex[2] + hex[3], 16),  // 0-255
-        b: parseInt(hex[4] + hex[5], 16),  // 0-255
-        a: hex.length === 8 ? parseInt(hex[6] + hex[7], 16) / 255 : 1,  // 0-1
-      };
-    } else {
-      // Invalid hex length, cache null and return default
+    // Get the pixel data
+    const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data;
+    
+    // If the color is completely transparent, return default
+    if (a === 0) {
+      warnAboutInvalidColor(color, "Fully transparent color.");
       colorCache.set(color, null);
       return DEFAULT_COLOR;
     }
     
+    // Convert from 0-255 to 0-1 for alpha
+    const result = { r, g, b, a: a / 255 };
+    
     // Cache the result for future use
     colorCache.set(color, result);
     return result;
+  } catch (error) {
+    warnAboutInvalidColor(color, `Error: ${error instanceof Error ? error.message : String(error)}`);
+    colorCache.set(color, null);
+    return DEFAULT_COLOR;
   }
-  
-  // If we couldn't parse the color, warn and return default
-  // Decorator-specific ATM
-  console.warn(`Decorator: could not parse color format: ${color}. Falling back to ${DEFAULT_COLOR} to check contrast. Please make sure your color value can be computed to HEX or RGB(A) format.`);
-  
-  // Cache null to avoid repeated warnings + entire conversion process
-  colorCache.set(color, null);
-  return DEFAULT_COLOR;
 };
 
 const toLinear = (c: number): number => {
