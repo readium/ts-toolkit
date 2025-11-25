@@ -2,6 +2,7 @@ import { ModuleName } from "@readium/navigator-html-injectables";
 import { Locator, Publication } from "@readium/shared";
 import FrameBlobBuider from "./FrameBlobBuilder";
 import { FrameManager } from "./FrameManager";
+import { EpubInjections } from "../preferences";
 
 const UPPER_BOUNDARY = 5;
 const LOWER_BOUNDARY = 3;
@@ -16,11 +17,13 @@ export class FramePoolManager {
     private readonly inprogress: Map<string, Promise<void>> = new Map();
     private pendingUpdates: Map<string, { inPool: boolean }> = new Map();
     private currentBaseURL: string | undefined;
+    private injections: EpubInjections | undefined;
 
-    constructor(container: HTMLElement, positions: Locator[], cssProperties?: { [key: string]: string }) {
+    constructor(container: HTMLElement, positions: Locator[], cssProperties?: { [key: string]: string }, injections?: EpubInjections) {
         this.container = container;
         this.positions = positions;
         this.currentCssProperties = cssProperties;
+        this.injections = injections;
     }
 
     async destroy() {
@@ -129,7 +132,7 @@ export class FramePoolManager {
                 const itm = pub.readingOrder.findWithHref(href);
                 if(!itm) return; // TODO throw?
                 if(!this.blobs.has(href)) {
-                    const blobBuilder = new FrameBlobBuider(pub, this.currentBaseURL || "", itm, this.currentCssProperties);
+                    const blobBuilder = new FrameBlobBuider(pub, this.currentBaseURL || "", itm, this.currentCssProperties, this.injections);
                     const blobURL = await blobBuilder.build();
                     this.blobs.set(href, blobURL);
                 }

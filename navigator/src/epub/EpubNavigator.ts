@@ -9,7 +9,7 @@ import { FXLFrameManager } from "./fxl/FXLFrameManager";
 import { FrameManager } from "./frame/FrameManager";
 import { IEpubPreferences, EpubPreferences } from "./preferences/EpubPreferences";
 import { IEpubDefaults, EpubDefaults } from "./preferences/EpubDefaults";
-import { EpubSettings } from "./preferences";
+import { EpubInjections, EpubSettings } from "./preferences";
 import { EpubPreferencesEditor } from "./preferences/EpubPreferencesEditor";
 import { ReadiumCSS } from "./css/ReadiumCSS";
 import { RSProperties, UserProperties } from "./css/Properties";
@@ -20,6 +20,7 @@ export type ManagerEventKey = "zoom";
 export interface EpubNavigatorConfiguration {
     preferences: IEpubPreferences;
     defaults: IEpubDefaults;
+    injections?: EpubInjections;
 }
 
 export interface EpubNavigatorListeners {
@@ -65,6 +66,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private _settings: EpubSettings;
     private _css: ReadiumCSS;
     private _preferencesEditor: EpubPreferencesEditor | null = null;
+    private _injections?: EpubInjections;
 
     private resizeObserver: ResizeObserver;
 
@@ -74,7 +76,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         positions: null
     };
 
-    constructor(container: HTMLElement, pub: Publication, listeners: EpubNavigatorListeners, positions: Locator[] = [], initialPosition: Locator | undefined = undefined, configuration: EpubNavigatorConfiguration = { preferences: {}, defaults: {} }) {
+    constructor(container: HTMLElement, pub: Publication, listeners: EpubNavigatorListeners, positions: Locator[] = [], initialPosition: Locator | undefined = undefined, configuration: EpubNavigatorConfiguration = { preferences: {}, defaults: {}, injections: { css: {}, js: {} } }) {
         super();
         this.pub = pub;
         this.container = container;
@@ -84,6 +86,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             this.positions = positions;
 
         this._preferences = new EpubPreferences(configuration.preferences);
+        this._injections = configuration.injections;
         this._defaults = new EpubDefaults(configuration.defaults);
         this._settings = new EpubSettings(this._preferences, this._defaults);
         this._css = new ReadiumCSS({ 
@@ -143,7 +146,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         } else {
             await this.updateCSS(false);
             const cssProperties = this.compileCSSProperties(this._css);
-            this.framePool = new FramePoolManager(this.container, this.positions, cssProperties);
+            this.framePool = new FramePoolManager(this.container, this.positions, cssProperties, this._injections);
         }
 
         if(this.currentLocation === undefined)
