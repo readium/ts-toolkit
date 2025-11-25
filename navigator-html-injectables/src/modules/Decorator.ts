@@ -182,11 +182,15 @@ class DecorationGroup {
         const [stylesheet, highlighter]: [HTMLStyleElement, any] = this.requireContainer(true) as [HTMLStyleElement, unknown];
         highlighter.add(item.range);
 
+        const backgroundColor = getProperty(this.wnd, "--USER__backgroundColor") || 
+                              this.wnd.getComputedStyle(this.wnd.document.documentElement).getPropertyValue("background-color");
+        const tint = item.decoration?.style?.tint ?? DEFAULT_HIGHLIGHT_COLOR;
+
         // TODO add caching layer ("vdom") to this so we aren't completely replacing the CSS every time
         stylesheet.innerHTML = `
         ::highlight(${this.id}) {
-            color: ${getContrastingTextColor(item.decoration?.style?.tint ?? DEFAULT_HIGHLIGHT_COLOR)};
-            background-color: ${item.decoration?.style?.tint ?? DEFAULT_HIGHLIGHT_COLOR};
+            color: ${getContrastingTextColor(tint, backgroundColor)};
+            background-color: ${tint};
         }`;
     }
 
@@ -401,12 +405,9 @@ export class Decorator extends Module {
         this.groups.clear();
     }
 
-    private updateAllBlendModes() {
-        const highlights = this.wnd.document.querySelectorAll(".readium-highlight");
-        const isDarkMode = this.groups.values().next().value?.getCurrentDarkMode() ?? false;
-        
-        highlights.forEach(highlight => {
-            (highlight as HTMLElement).style.setProperty("mix-blend-mode", isDarkMode ? "exclusion" : "multiply", "important");
+    private updateHighlightStyles() {
+        this.groups.forEach(group => {
+            group.requestLayout();
         });
     }
 
@@ -488,7 +489,7 @@ export class Decorator extends Module {
             });
             
             if (shouldUpdate) {
-                this.updateAllBlendModes();
+                this.updateHighlightStyles();
             }
         });
         

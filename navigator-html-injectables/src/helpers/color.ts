@@ -62,9 +62,13 @@ const warnAboutInvalidColor = (color: string, reason: string): void => {
   );
 };
 
-export const colorToRgba = (color: string): { r: number; g: number; b: number; a: number } => {
-  // Check cache first
-  const cached = colorCache.get(color);
+export const colorToRgba = (
+  color: string, 
+  backgroundColor: string | null = null
+): { r: number; g: number; b: number; a: number } => {
+  // Check cache with background key if provided
+  const cacheKey = backgroundColor ? `${color}|${backgroundColor}` : color;
+  const cached = colorCache.get(cacheKey);
   if (cached !== undefined) {
     return cached ?? DEFAULT_COLOR;
   }
@@ -72,14 +76,14 @@ export const colorToRgba = (color: string): { r: number; g: number; b: number; a
   // Check for special color values
   if (isSpecialColorValue(color)) {
     warnAboutInvalidColor(color, "Unsupported color format or special value.");
-    colorCache.set(color, null);
+    colorCache.set(cacheKey, null);
     return DEFAULT_COLOR;
   }
 
   const context = getCanvasContext();
   if (!context) {
     warnAboutInvalidColor(color, "Could not get canvas context.");
-    colorCache.set(color, null);
+    colorCache.set(cacheKey, null);
     return DEFAULT_COLOR;
   }
 
@@ -87,29 +91,32 @@ export const colorToRgba = (color: string): { r: number; g: number; b: number; a
   context.clearRect(0, 0, 1, 1);
   
   try {
-    // Set the color and draw a 1x1 pixel
+    // Draw background if provided
+    if (backgroundColor) {
+      context.fillStyle = backgroundColor;
+      context.fillRect(0, 0, 1, 1);
+    }
+    
+    // Draw the color
     context.fillStyle = color;
     context.fillRect(0, 0, 1, 1);
     
-    // Get the pixel data
+    // Get the resulting pixel data
     const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data;
     
     // If the color is completely transparent, return default
     if (a === 0) {
       warnAboutInvalidColor(color, "Fully transparent color.");
-      colorCache.set(color, null);
+      colorCache.set(cacheKey, null);
       return DEFAULT_COLOR;
     }
     
-    // Convert from 0-255 to 0-1 for alpha
     const result = { r, g, b, a: a / 255 };
-    
-    // Cache the result for future use
-    colorCache.set(color, result);
+    colorCache.set(cacheKey, result);
     return result;
   } catch (error) {
     warnAboutInvalidColor(color, `Error: ${error instanceof Error ? error.message : String(error)}`);
-    colorCache.set(color, null);
+    colorCache.set(cacheKey, null);
     return DEFAULT_COLOR;
   }
 };
@@ -135,26 +142,32 @@ export const getLuminance = (color: { r: number; g: number; b: number; a?: numbe
   return luminance;
 };
 
-export const checkContrast = (color1: string, color2: string): number => {
-  const luminance1 = getLuminance(colorToRgba(color1));
-  const luminance2 = getLuminance(colorToRgba(color2));
-
-  // Ensure luminance1 is the lighter color
-  const l1 = Math.max(luminance1, luminance2);
-  const l2 = Math.min(luminance1, luminance2);
-
-  // WCAG 2.2 contrast ratio formula
-  return (l1 + 0.05) / (l2 + 0.05);
+export const checkContrast = (
+  color1: string | { r: number; g: number; b: number; a?: number },
+  color2: string | { r: number; g: number; b: number; a?: number }
+): number => {
+  const rgba1 = typeof color1 === "string" ? colorToRgba(color1) : color1;
+  const rgba2 = typeof color2 === "string" ? colorToRgba(color2) : color2;
+  
+  const l1 = getLuminance(rgba1);
+  const l2 = getLuminance(rgba2);
+  
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
 };
 
-export const isDarkColor = (color: string): boolean => {
-  const contrastWithWhite = checkContrast(color, "#FFFFFF");
-  const contrastWithBlack = checkContrast(color, "#000000");
+export const isDarkColor = (color: string, blendedWith: string | null = null): boolean => {
+  const blended = colorToRgba(color, blendedWith);
+  const contrastWithWhite = checkContrast(blended, { r: 255, g: 255, b: 255, a: 1 });
+  const contrastWithBlack = checkContrast(blended, { r: 0, g: 0, b: 0, a: 1 });
   return contrastWithWhite > contrastWithBlack;
 };
 
-export const isLightColor = (color: string): boolean => !isDarkColor(color);
+export const isLightColor = (color: string, blendedWith: string | null = null): boolean => {
+  return !isDarkColor(color, blendedWith);
+};
 
-export const getContrastingTextColor = (backgroundColor: string): "black" | "white" => {
-  return isDarkColor(backgroundColor) ? "white" : "black";
+export const getContrastingTextColor = (color: string, blendedWith: string | null = null): "black" | "white" => {
+  return isDarkColor(color, blendedWith) ? "white" : "black";
 };
