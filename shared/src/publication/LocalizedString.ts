@@ -9,7 +9,7 @@
 export class LocalizedString {
   public readonly translations: { [key: string]: string };
 
-  public static readonly UNDEFINED_LANGUAGE = 'undefined';
+  public static readonly UNDEFINED_LANGUAGE = 'und';
   public static readonly LANGUAGE_EN = 'en';
 
   /**
