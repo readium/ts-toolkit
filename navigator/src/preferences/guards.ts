@@ -1,5 +1,4 @@
-import experiments from "@readium/css/css/vars/experiments.json";
-import { ExperimentKey } from './Types';
+import { ExperimentKey, experiments } from './Types';
 
 export function ensureLessThanOrEqual<T extends number | null | undefined>(value: T, compareTo: T): T | undefined {
   if (value === undefined || value === null) {
@@ -87,9 +86,7 @@ export function withFallback<T>(value: T | null | undefined, defaultValue: T | n
   return value === undefined ? defaultValue : value;
 }
 
-export function ensureExperiment(
-  experimentsInput: ExperimentKey[] | null | undefined
-): ExperimentKey[] | null | undefined {
+export function ensureExperiment(experimentsInput: ExperimentKey[] | null | undefined): ExperimentKey[] | null | undefined {
   if (experimentsInput === undefined) {
     return undefined;
   }

@@ -1,4 +1,4 @@
-import { ExperimentKey, TextAlignment } from "../../preferences/Types";
+import { ExperimentKey, experiments, TextAlignment } from "../../preferences/Types";
 import { BodyHyphens, Ligatures, Properties } from "../../css/Properties";
 
 export interface IWebUserProperties {
@@ -94,9 +94,8 @@ export class WebRSProperties extends Properties {
     const cssProperties: { [key: string]: string } = {};
 
     if (this.experiments) {
-      this.experiments.forEach((experiment) => {
-        // Shortcut as we know it is the RS scope and can use toFlag
-        cssProperties["--RS__" + experiment] = this.toFlag(experiment);
+      this.experiments.forEach((exp) => {
+        cssProperties["--RS__" + exp] = experiments[exp].value;
       });
     };
 

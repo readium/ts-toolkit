@@ -1,6 +1,8 @@
-import experiments from "@readium/css/css/vars/experiments.json";
+import RCSSExperiments from "@readium/css/css/vars/experiments.json";
 
-export type ExperimentKey = keyof typeof experiments;
+export type ExperimentKey = keyof typeof RCSSExperiments;
+
+export const experiments = RCSSExperiments;
 
 export enum TextAlignment {
   start = "start",
