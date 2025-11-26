@@ -1,6 +1,9 @@
-// Lazy canvas initialization for color conversion
-let canvas: HTMLCanvasElement | null = null;
-let ctx: CanvasRenderingContext2D | null = null;
+// Lazy canvas/offscreen canvas initialization for color conversion
+let canvas: HTMLCanvasElement | OffscreenCanvas | null = null;
+let ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null = null;
+
+// Track which pixel to use next for color sampling (0-24 for 5x5 grid)
+let currentPixelIndex = 0;
 
 // Default color for failed conversions
 const DEFAULT_COLOR = { r: 255, g: 255, b: 255, a: 1 };
@@ -8,12 +11,26 @@ const DEFAULT_COLOR = { r: 255, g: 255, b: 255, a: 1 };
 // Cache for computed color conversions
 const colorCache = new Map<string, { r: number; g: number; b: number; a: number; } | null>();
 
-const getCanvasContext = (): CanvasRenderingContext2D | null => {
+const getCanvasContext = (): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null => {
   if (!canvas) {
-    canvas = document.createElement("canvas");
-    canvas.width = 1;
-    canvas.height = 1;
-    ctx = canvas.getContext("2d", { willReadFrequently: true });
+    // Try to use OffscreenCanvas if available
+    if (typeof OffscreenCanvas !== "undefined") {
+      canvas = new OffscreenCanvas(5, 5);
+      ctx = canvas.getContext("2d", { 
+        willReadFrequently: true,
+        desynchronized: true 
+      });
+    } else {
+      // Fall back to regular canvas
+      const htmlCanvas = document.createElement("canvas");
+      htmlCanvas.width = 5;
+      htmlCanvas.height = 5;
+      canvas = htmlCanvas;
+      ctx = htmlCanvas.getContext("2d", { 
+        willReadFrequently: true,
+        desynchronized: true 
+      });
+    }
   }
   return ctx;
 };
@@ -87,22 +104,37 @@ export const colorToRgba = (
     return DEFAULT_COLOR;
   }
 
-  // Clear the canvas
-  context.clearRect(0, 0, 1, 1);
-  
   try {
-    // Draw background if provided
-    if (backgroundColor) {
-      context.fillStyle = backgroundColor;
-      context.fillRect(0, 0, 1, 1);
+    // Clear and initialize canvas at the start of each cycle
+    if (currentPixelIndex === 0) {
+      context.clearRect(0, 0, 5, 5);
     }
     
-    // Draw the color
-    context.fillStyle = color;
-    context.fillRect(0, 0, 1, 1);
+    // Calculate which pixel to use for this operation
+    const x = currentPixelIndex % 5;
+    const y = Math.floor(currentPixelIndex / 5);
+
+    // Clear just this pixel to ensure clean state
+    context.clearRect(x, y, 1, 1);
+
+    // Fill background color if provided
+    if (backgroundColor) {
+      context.fillStyle = backgroundColor;
+      context.fillRect(x, y, 1, 1);
+    }
     
-    // Get the resulting pixel data
-    const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data;
+    // Draw the color at the current pixel
+    context.fillStyle = color;
+    context.fillRect(x, y, 1, 1);
+    
+    // Get the pixel data for this specific pixel
+    const imageData = context.getImageData(x, y, 1, 1);
+    
+    // Move to next pixel for next call
+    currentPixelIndex = (currentPixelIndex + 1) % 25;
+
+    // Get the pixel data for the pixel we just sampled
+    const [r, g, b, a] = imageData.data;
     
     // If the color is completely transparent, return default
     if (a === 0) {
