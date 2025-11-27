@@ -5,6 +5,7 @@ import { ModuleName } from "../ModuleLibrary";
 import { Snapper } from "./Snapper";
 import { rangeFromLocator } from "../../helpers/locator";
 import { forceWebkitRecalc } from "../../helpers/document";
+import { PatternAnalyzer } from "../../helpers/PatternAnalyzer";
 
 export class WebPubSnapper extends Snapper {
     static readonly moduleName: ModuleName = "webpub_snapper";
@@ -12,6 +13,9 @@ export class WebPubSnapper extends Snapper {
     private wnd!: ReadiumWindow;
     private comms!: Comms;
     private resizeObserver!: ResizeObserver;
+    private patternAnalyzer: PatternAnalyzer | null = null;
+    private lastScrollTime: number = 0;
+    private isScrollProtectionEnabled = false;
 
     private initialScrollHandled = false;
     private isScrolling = false;
@@ -38,7 +42,7 @@ export class WebPubSnapper extends Snapper {
         });
     }
 
-    private handleScroll = () => {
+    private handleScroll = (e: Event) => {
         if (!this.comms.ready) return;
 
         // Filter resize events
@@ -63,12 +67,51 @@ export class WebPubSnapper extends Snapper {
                 const deltaY = currentScrollTop - this.lastScrollTop;
                 this.lastScrollTop = currentScrollTop;
 
+                // Record scroll for pattern analysis if protection is enabled
+                if (this.isScrollProtectionEnabled && Math.abs(deltaY) > 5) { // Ignore tiny scrolls
+                    const now = Date.now();
+                    const timeDelta = now - (this.lastScrollTime || now);
+                    if (this.patternAnalyzer) {
+                        const isSuspicious = this.patternAnalyzer.analyze(
+                            deltaY > 0 ? "down" : "up",
+                            Math.abs(deltaY),
+                            timeDelta
+                        );
+                        if (isSuspicious) {
+                            this.comms?.send("suspicious_activity", {
+                                type: "automated_scrolling",
+                                timestamp: Date.now(),
+                                event: e
+                            });
+                        }
+                    }
+                    this.lastScrollTime = now;
+                }
+
                 this.comms.send("scroll", deltaY);
 
                 this.isScrolling = false;
             });
         }
     };
+
+        private enableScrollProtection() {
+        if (!this.patternAnalyzer) {
+            this.patternAnalyzer = new PatternAnalyzer({
+                maxVelocity: 10,    // pixels/ms (adjust as needed)
+                minVariance: 0.05,  // Allow for very consistent scrolling
+                historySize: 20     // More samples for better detection
+            });
+        }
+        this.isScrollProtectionEnabled = true;
+    }
+
+    private disableScrollProtection() {
+        if (!this.patternAnalyzer) return;
+        this.patternAnalyzer.clear();
+        this.patternAnalyzer = null;
+        this.isScrollProtectionEnabled = false;
+    }
 
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
@@ -194,6 +237,19 @@ export class WebPubSnapper extends Snapper {
 
         comms.register("unfocus", WebPubSnapper.moduleName, (_, ack) => {
             deselect(this.wnd);
+            ack(true);
+        });
+
+        // Add scroll protection handlers
+        comms.register("enable_scroll_protection", WebPubSnapper.moduleName, (_, ack) => {
+            this.enableScrollProtection();
+            this.comms.log("Scroll protection enabled");
+            ack(true);
+        });
+
+        comms.register("disable_scroll_protection", WebPubSnapper.moduleName, (_, ack) => {
+            this.disableScrollProtection();
+            this.comms.log("Scroll protection disabled");
             ack(true);
         });
 

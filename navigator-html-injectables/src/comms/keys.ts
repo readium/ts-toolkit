@@ -17,7 +17,8 @@ export type CommsEventKey =
     "first_visible_locator" |
     "text_selected" |
     "media_play" |
-    "media_pause";
+    "media_pause" |
+    "suspicious_activity";
 ;
 
 export type CommsCommandKey =
@@ -42,5 +43,8 @@ export type CommsCommandKey =
     "focus" |
     "activate" |
     "shake" |
-    "force_webkit_recalc";
+    "force_webkit_recalc" |
+    "content_protect" |
+    "enable_scroll_protection" |
+    "disable_scroll_protection";
 ;
