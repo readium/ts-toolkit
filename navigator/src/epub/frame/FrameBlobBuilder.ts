@@ -207,8 +207,7 @@ export default class FrameBlobBuider {
             if (this.injections) {
                 // any css injections to add? blobify the values and add the key as id
                 if (this.injections.css) {
-                    Object.keys(this.injections.css).forEach((key) => {
-                        const cssContent = this.injections!.css![key];
+                    Object.entries(this.injections.css).forEach(([key, cssContent]) => {
                         const cssBlobUrl = blobify(stripCSS(cssContent), "text/css");
                         const linkElement = doc.createElement("link");
                         linkElement.dataset.readium = "true";
@@ -222,8 +221,7 @@ export default class FrameBlobBuider {
 
                 // any js injections to add? blobify the values and add the key as id
                 if (this.injections.js) {
-                    Object.keys(this.injections.js).forEach((key) => {
-                        const jsContent = this.injections!.js![key];
+                    Object.entries(this.injections.js).forEach(([key, jsContent])  => {
                         const jsBlobUrl = blobify(stripJS(jsContent), "text/javascript");
                         const scriptElement = doc.createElement("script");
                         scriptElement.dataset.readium = "true";
