@@ -2,6 +2,7 @@ import { ModuleName } from "@readium/navigator-html-injectables";
 import { Locator, Publication } from "@readium/shared";
 import { WebPubBlobBuilder } from "./WebPubBlobBuilder";
 import { WebPubFrameManager } from "./WebPubFrameManager";
+import { WebPubInjections } from "./preferences";
 
 export class WebPubFramePoolManager {
     private readonly container: HTMLElement;
@@ -12,10 +13,12 @@ export class WebPubFramePoolManager {
     private readonly inprogress: Map<string, Promise<void>> = new Map();
     private pendingUpdates: Map<string, { inPool: boolean }> = new Map();
     private currentBaseURL: string | undefined;
+    private injections: WebPubInjections | undefined;
 
-    constructor(container: HTMLElement, cssProperties?: { [key: string]: string }) {
+    constructor(container: HTMLElement, cssProperties?: { [key: string]: string }, injections?: WebPubInjections) {
         this.container = container;
         this.currentCssProperties = cssProperties;
+        this.injections = injections;
     }
 
     async destroy() {
@@ -117,7 +120,7 @@ export class WebPubFramePoolManager {
                 const itm = pub.readingOrder.findWithHref(href);
                 if(!itm) return;
                 if(!this.blobs.has(href)) {
-                    const blobBuilder = new WebPubBlobBuilder(pub, this.currentBaseURL || "", itm, this.currentCssProperties);
+                    const blobBuilder = new WebPubBlobBuilder(pub, this.currentBaseURL || "", itm, this.currentCssProperties, this.injections);
                     const blobURL = await blobBuilder.build();
                     this.blobs.set(href, blobURL);
                 }

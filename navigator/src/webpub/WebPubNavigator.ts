@@ -14,9 +14,11 @@ import { IWebPubDefaults, WebPubDefaults } from "./preferences/WebPubDefaults";
 import { WebPubSettings } from "./preferences/WebPubSettings";
 import { IPreferencesEditor } from "../preferences/PreferencesEditor";
 import { WebPubPreferencesEditor } from "./preferences/WebPubPreferencesEditor";
+import { WebPubInjections } from "./preferences";
 export interface WebPubNavigatorConfiguration {
     preferences: IWebPubPreferences;
     defaults: IWebPubDefaults;
+    injections?: WebPubInjections;
 }
 
 export interface WebPubNavigatorListeners {
@@ -56,6 +58,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private _settings: WebPubSettings;
     private _css: WebPubCSS;
     private _preferencesEditor: WebPubPreferencesEditor | null = null;
+    private _injections: WebPubInjections | undefined;
     
     private webViewport: VisualNavigatorViewport = {
         readingOrder: [],
@@ -63,7 +66,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         positions: null
     };
 
-    constructor(container: HTMLElement, pub: Publication, listeners: WebPubNavigatorListeners, initialPosition: Locator | undefined = undefined, configuration: WebPubNavigatorConfiguration = { preferences: {}, defaults: {} }) {
+    constructor(container: HTMLElement, pub: Publication, listeners: WebPubNavigatorListeners, initialPosition: Locator | undefined = undefined, configuration: WebPubNavigatorConfiguration = { preferences: {}, defaults: {}, injections: { css: {}, js: {} } }) {
         super();
         this.pub = pub;
         this.container = container;
@@ -71,6 +74,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
         // Initialize preference system
         this._preferences = new WebPubPreferences(configuration.preferences);
+        this._injections = configuration.injections;
         this._defaults = new WebPubDefaults(configuration.defaults);
         this._settings = new WebPubSettings(this._preferences, this._defaults, this.hasDisplayTransformability);
         this._css = new WebPubCSS({
@@ -93,7 +97,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     public async load() {
         await this.updateCSS(false);
         const cssProperties = this.compileCSSProperties(this._css);
-        this.framePool = new WebPubFramePoolManager(this.container, cssProperties);
+        this.framePool = new WebPubFramePoolManager(this.container, cssProperties, this._injections);
 
         await this.apply();
     }

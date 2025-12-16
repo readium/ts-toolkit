@@ -4,6 +4,7 @@ import { Link, Publication } from "@readium/shared";
 // The "?inline" query is to prevent some bundlers from injecting these into the page (e.g. vite)
 // @ts-ignore
 import readiumCSSWebPub from "@readium/css/css/dist/webPub/ReadiumCSS-webPub.css?inline";
+import { WebPubInjections } from "./preferences";
 
 // Utilities
 const blobify = (source: string, type: string) => URL.createObjectURL(new Blob([source], { type }));
@@ -63,12 +64,14 @@ export class WebPubBlobBuilder {
     private readonly burl: string;
     private readonly pub: Publication;
     private readonly cssProperties?: { [key: string]: string };
+    private readonly injections?: WebPubInjections;
 
-    constructor(pub: Publication, baseURL: string, item: Link, cssProperties?: { [key: string]: string }) {
+    constructor(pub: Publication, baseURL: string, item: Link, cssProperties?: { [key: string]: string }, injections?: WebPubInjections) {
         this.pub = pub;
         this.item = item;
         this.burl = item.toURL(baseURL) || "";
         this.cssProperties = cssProperties;
+        this.injections = injections;
     }
 
     public async build(): Promise<string> {
@@ -117,6 +120,34 @@ export class WebPubBlobBuilder {
 
         if (cssProperties) {
             this.setProperties(cssProperties, doc);
+        }
+
+        if (this.injections) {
+            // any css injections to add? blobify the values and add the key as id
+            if (this.injections.css) {
+                Object.entries(this.injections.css).forEach(([key, cssContent]) => {
+                    const cssBlobUrl = blobify(stripCSS(cssContent), "text/css");
+                    const linkElement = doc.createElement("link");
+                    linkElement.dataset.readium = "true";
+                    linkElement.id = key;
+                    linkElement.rel = "stylesheet";
+                    linkElement.type = "text/css";
+                    linkElement.href = cssBlobUrl;
+                    doc.head.appendChild(linkElement);
+                });
+            }
+
+            // any js injections to add? blobify the values and add the key as id
+            if (this.injections.js) {
+                Object.entries(this.injections.js).forEach(([key, jsContent])  => {
+                    const jsBlobUrl = blobify(stripJS(jsContent), "text/javascript");
+                    const scriptElement = doc.createElement("script");
+                    scriptElement.dataset.readium = "true";
+                    scriptElement.id = key;
+                    scriptElement.src = jsBlobUrl;
+                    doc.head.appendChild(scriptElement);
+                });
+            }
         }
 
         doc.body.querySelectorAll("img").forEach((img) => {
