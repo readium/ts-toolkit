@@ -1,6 +1,6 @@
 {
   "name": "@readium/navigator-html-injectables",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "type": "module",
   "description": "An embeddable solution for connecting frames of HTML publications with a Readium Navigator",
   "author": "readium",
@@ -51,7 +51,7 @@
     "@readium/shared": "workspace:*",
     "css-selector-generator": "^3.6.9",
     "tslib": "^2.8.1",
-    "typescript": "^5.9.2",
-    "vite": "^7.1.5"
+    "typescript": "^5.9.3",
+    "vite": "^7.2.4"
   }
 }

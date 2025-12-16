@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.2] - 2025-11-28
+
+### Added
+
+- `Decorator` now applies a contrasting color for highlighted text, based on the `tint` and the `background-color` of the document element. ([#173](https://github.com/readium/ts-toolkit/pull/173))
+- `Decorator` now observes mutation events on the document element to update the contrasting color and `mix-blend-mode` of the fallback implementation. ([#173](https://github.com/readium/ts-toolkit/pull/173))
+
+### Changed
+
+- To be consistent with the other injectables, `Decorator` rects are now using className `readium-highlight` instead of `r2-highlight-0`, and a `data-readium` attribute set to `true`.
+
+### Fixed
+
+- Fixed check of selection range that cannot use the Highlight API. Previously, the check was catching ranges for which the ancestor contained an incompatible element e.g. `img`. It now makes sure this element is in the actual range. ([#170](https://github.com/readium/ts-toolkit/pull/170))
+
 ## [2.2.1] - 2025-10-28
 
 ### Added
