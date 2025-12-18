@@ -38,7 +38,7 @@ describe('Contributor Tests', () => {
     ).toEqual(
       new Contributor({
         name: new LocalizedString('Colin Greenwood'),
-        sortAs: 'greenwood',
+        sortAs: new LocalizedString('greenwood'),
         identifier: 'colin',
         altIdentifiers: new Set<AltIdentifier>([
           new AltIdentifier({
@@ -171,7 +171,7 @@ describe('Contributor Tests', () => {
     expect(
       new Contributor({
         name: new LocalizedString('Colin Greenwood'),
-        sortAs: 'greenwood',
+        sortAs: new LocalizedString('greenwood'),
         identifier: 'colin',
         altIdentifiers: new Set<AltIdentifier>([
           new AltIdentifier({
@@ -188,7 +188,7 @@ describe('Contributor Tests', () => {
       }).serialize()
     ).toEqual({
       name: { undefined: 'Colin Greenwood' },
-      sortAs: 'greenwood',
+      sortAs: { undefined: 'greenwood' },
       identifier: 'colin',
       altIdentifier: [{ scheme: 'http://example.com/author-id', value: 'author-22222' }],
       role: ['bassist'],

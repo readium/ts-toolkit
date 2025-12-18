@@ -29,7 +29,7 @@ describe('Subject Tests', () => {
     ).toEqual(
       new Subject({
         name: new LocalizedString('Science Fiction'),
-        sortAs: 'science-fiction',
+        sortAs: new LocalizedString('science-fiction'),
         scheme: 'http://scheme',
         code: 'CODE',
         links: new Links([
@@ -132,7 +132,7 @@ describe('Subject Tests', () => {
     expect(
       new Subject({
         name: new LocalizedString('Science Fiction'),
-        sortAs: 'science-fiction',
+        sortAs: new LocalizedString('science-fiction'),
         scheme: 'http://scheme',
         code: 'CODE',
         links: new Links([
@@ -142,7 +142,7 @@ describe('Subject Tests', () => {
       }).serialize()
     ).toEqual({
       name: { undefined: 'Science Fiction' },
-      sortAs: 'science-fiction',
+      sortAs: { undefined: 'science-fiction' },
       scheme: 'http://scheme',
       code: 'CODE',
       links: [{ href: 'pub1' }, { href: 'pub2' }],
