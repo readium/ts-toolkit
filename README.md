@@ -39,4 +39,3 @@ Then workspaces should be all set up and you can build them from their directory
 - [Shared](./shared/): shared models to be used across other Readium projects and implementations in Typescript.
 - [Navigator](./navigator/): a navigator for web platforms based on the readium Navigator spec.
 - [Navigator-html-injectables](./navigator-html-injectables/): provides access and control over a resource from a navigator on any modern browser or embedded browser frame.
-- [Testapp/vanilla](./testapp/vanilla/): an example of how to use the ts-toolkit.
