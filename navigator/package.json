@@ -45,7 +45,8 @@
     "node": ">=18"
   },
   "scripts": {
-    "build": "tsc && vite build"
+    "build": "node scripts/generate-css-selector.js && tsc && vite build",
+    "generate:css-selector": "node scripts/generate-css-selector.js"
   },
   "devDependencies": {
     "@laynezh/vite-plugin-lib-assets": "^2.1.3",
