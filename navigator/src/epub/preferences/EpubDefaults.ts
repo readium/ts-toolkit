@@ -1,4 +1,5 @@
 import { 
+  ExperimentKey,
   fontSizeRangeConfig, 
   fontWeightRangeConfig, 
   fontWidthRangeConfig, 
@@ -8,13 +9,14 @@ import {
 import { 
   ensureBoolean, 
   ensureEnumValue, 
+  ensureExperiment, 
   ensureFilter, 
   ensureLessThanOrEqual, 
   ensureMoreThanOrEqual, 
   ensureNonNegative, 
   ensureString, 
   ensureValueInRange, 
-  withFallback
+  withFallback 
 } from "../../preferences/guards";
 
 import { sMLWithRequest } from "../../helpers";
@@ -59,7 +61,8 @@ export interface IEpubDefaults {
   textColor?: string | null,
   textNormalization?: boolean | null,
   visitedColor?: string | null,
-  wordSpacing?: number | null
+  wordSpacing?: number | null,
+  experiments?: Array<ExperimentKey> | null
 }
 
 export class EpubDefaults {
@@ -103,6 +106,7 @@ export class EpubDefaults {
   textNormalization: boolean | null;
   visitedColor: string | null;
   wordSpacing: number | null;
+  experiments: Array<ExperimentKey> | null;
 
   constructor(defaults: IEpubDefaults) {
     this.backgroundColor = ensureString(defaults.backgroundColor) || null;
@@ -153,5 +157,7 @@ export class EpubDefaults {
     this.optimalLineLength = ensureNonNegative(defaults.optimalLineLength) || 65;
     this.maximalLineLength = withFallback(ensureMoreThanOrEqual(defaults.maximalLineLength, this.optimalLineLength), 80);
     this.minimalLineLength = withFallback(ensureLessThanOrEqual(defaults.minimalLineLength, this.optimalLineLength), 40);
+
+    this.experiments = ensureExperiment(defaults.experiments) || null;
   }
 }

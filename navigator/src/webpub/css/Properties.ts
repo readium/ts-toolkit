@@ -1,4 +1,4 @@
-import { TextAlignment } from "../../preferences/Types";
+import { ExperimentKey, experiments, TextAlignment } from "../../preferences/Types";
 import { BodyHyphens, Ligatures, Properties } from "../../css/Properties";
 
 export interface IWebUserProperties {
@@ -73,6 +73,31 @@ export class WebUserProperties extends Properties {
     if (this.textAlign) cssProperties["--USER__textAlign"] = this.textAlign;
     if (this.wordSpacing != null) cssProperties["--USER__wordSpacing"] = this.toRem(this.wordSpacing);
     if (this.zoom !== null) cssProperties["--USER__zoom"] = this.toPercentage(this.zoom, true);
+
+    return cssProperties;
+  }
+}
+
+export interface IWebRSProperties {
+  experiments: Array<ExperimentKey> | null;
+}
+
+export class WebRSProperties extends Properties {
+  experiments: Array<ExperimentKey> | null;
+
+  constructor(props: IWebRSProperties) {
+    super();
+    this.experiments = props.experiments ?? null;
+  }
+
+  toCSSProperties() {
+    const cssProperties: { [key: string]: string } = {};
+
+    if (this.experiments) {
+      this.experiments.forEach((exp) => {
+        cssProperties["--RS__" + exp] = experiments[exp].value;
+      });
+    };
 
     return cssProperties;
   }

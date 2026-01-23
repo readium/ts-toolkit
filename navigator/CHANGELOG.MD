@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.6] – 2026-01-19
+
+### Added
+
+- Added `highlight-id` data attribute to non-experimental decoration items, containing the ID of the Decorator ([#184](https://github.com/readium/ts-toolkit/pull/184))
+
+## [2.2.5] - 2025-11-28
+
+### Added
+
+- More defenses to iframes in EpubNavigator
+- Support for ReadiumCSS experimental flags in Preferences API ([#176](https://github.com/readium/ts-toolkit/pull/176))
+
+### Changed
+
+- Updated ReadiumCSS to `v2.0.0-beta.24`
+
 ## [2.2.4] - 2025-11-06
 
 ### Added

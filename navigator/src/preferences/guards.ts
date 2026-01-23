@@ -1,3 +1,5 @@
+import { ExperimentKey, experiments } from './Types';
+
 export function ensureLessThanOrEqual<T extends number | null | undefined>(value: T, compareTo: T): T | undefined {
   if (value === undefined || value === null) {
     return value;
@@ -82,4 +84,14 @@ export function ensureValueInRange(value: number | null | undefined, range: [num
 
 export function withFallback<T>(value: T | null | undefined, defaultValue: T | null): T | null {
   return value === undefined ? defaultValue : value;
+}
+
+export function ensureExperiment(experimentsInput: ExperimentKey[] | null | undefined): ExperimentKey[] | null | undefined {
+  if (experimentsInput === undefined) {
+    return undefined;
+  }
+  if (experimentsInput === null) {
+    return null;
+  }
+  return experimentsInput.filter(exp => exp in experiments);
 }

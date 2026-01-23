@@ -1,5 +1,5 @@
 import { ConfigurableSettings } from "../../preferences/Configurable";
-import { TextAlignment } from "../../preferences/Types";
+import { ExperimentKey, TextAlignment } from "../../preferences/Types";
 import { EpubDefaults } from "./EpubDefaults";
 import { EpubPreferences } from "./EpubPreferences";
 
@@ -45,7 +45,8 @@ export interface IEpubSettings {
   textColor?: string | null,
   textNormalization?: boolean | null,
   visitedColor?: string | null,
-  wordSpacing?: number | null
+  wordSpacing?: number | null,
+  experiments?: Array<ExperimentKey> | null
 }
 
 export class EpubSettings implements ConfigurableSettings {
@@ -89,6 +90,7 @@ export class EpubSettings implements ConfigurableSettings {
   textNormalization: boolean | null;
   visitedColor: string | null;
   wordSpacing: number | null;
+  experiments: Array<ExperimentKey> | null;
 
   constructor(preferences: EpubPreferences, defaults: EpubDefaults) {
     this.backgroundColor = preferences.backgroundColor || defaults.backgroundColor || null;
@@ -229,5 +231,7 @@ export class EpubSettings implements ConfigurableSettings {
       : defaults.wordSpacing !== undefined 
         ? defaults.wordSpacing 
         : null;
+
+    this.experiments = defaults.experiments || null;
   }
 }
