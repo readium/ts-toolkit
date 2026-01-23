@@ -33,7 +33,7 @@ describe('LocalizedString Tests', () => {
 
   it('get JSON with one translation and no language', () => {
     expect(new LocalizedString('a string').serialize()).toEqual({
-      undefined: 'a string',
+      und: 'a string',
     });
   });
 
@@ -42,12 +42,12 @@ describe('LocalizedString Tests', () => {
       new LocalizedString({
         en: 'a string',
         fr: 'une chaîne',
-        undefined: 'bir metin',
+        und: 'bir metin',
       }).serialize()
     ).toEqual({
       en: 'a string',
       fr: 'une chaîne',
-      undefined: 'bir metin',
+      und: 'bir metin',
     });
   });
 
@@ -74,7 +74,7 @@ describe('LocalizedString Tests', () => {
       new LocalizedString({
         foo: 'a string',
         bar: 'une chaîne',
-        undefined: 'Surgh',
+        und: 'Surgh',
       }).getTranslation()
     ).toEqual('Surgh');
   });

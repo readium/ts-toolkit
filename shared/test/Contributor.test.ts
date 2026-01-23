@@ -163,7 +163,7 @@ describe('Contributor Tests', () => {
         name: new LocalizedString('Colin Greenwood'),
       }).serialize()
     ).toEqual({
-      name: { undefined: 'Colin Greenwood' },
+      name: { und: 'Colin Greenwood' },
     });
   });
 
@@ -187,7 +187,7 @@ describe('Contributor Tests', () => {
         ]),
       }).serialize()
     ).toEqual({
-      name: { undefined: 'Colin Greenwood' },
+      name: { und: 'Colin Greenwood' },
       sortAs: 'greenwood',
       identifier: 'colin',
       altIdentifier: [{ scheme: 'http://example.com/author-id', value: 'author-22222' }],
@@ -211,7 +211,7 @@ describe('Contributor Tests', () => {
       ]).serialize()
     ).toEqual([
       {
-        name: { undefined: 'Thom Yorke' },
+        name: { und: 'Thom Yorke' },
       },
       {
         name: { en: 'Jonny Greenwood', fr: 'Jean Boisvert' },

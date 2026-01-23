@@ -124,7 +124,7 @@ describe('Subject Tests', () => {
         name: new LocalizedString('Science Fiction'),
       }).serialize()
     ).toEqual({
-      name: { undefined: 'Science Fiction' },
+      name: { und: 'Science Fiction' },
     });
   });
 
@@ -141,7 +141,7 @@ describe('Subject Tests', () => {
         ]),
       }).serialize()
     ).toEqual({
-      name: { undefined: 'Science Fiction' },
+      name: { und: 'Science Fiction' },
       sortAs: 'science-fiction',
       scheme: 'http://scheme',
       code: 'CODE',
@@ -160,10 +160,10 @@ describe('Subject Tests', () => {
       ]).serialize()
     ).toEqual([
       {
-        name: { undefined: 'Fantasy' },
+        name: { und: 'Fantasy' },
       },
       {
-        name: { undefined: 'Science Fiction' },
+        name: { und: 'Science Fiction' },
         scheme: 'http://scheme',
       },
     ]);
