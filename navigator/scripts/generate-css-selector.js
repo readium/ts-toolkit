@@ -12,12 +12,6 @@ try {
   
   // Replace all occurrences of cssSelectorGenerator with _readium_cssSelectorGenerator, case-insensitive
   content = content.replace(/(_?)cssSelectorGenerator/gi, "_readium_cssSelectorGenerator");
-  
-  // Add pattern to blacklist attributes containing colons
-  content = content.replace(
-    /blacklist:\[\]/,
-    "blacklist:[/.*:.*/]"
-  );
 
   // Create the output directory if it doesn't exist
   mkdirSync(dirname(outputFile), { recursive: true });
