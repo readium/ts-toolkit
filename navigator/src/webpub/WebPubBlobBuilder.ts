@@ -1,4 +1,5 @@
 import { Link, Publication } from "@readium/shared";
+import { Injector } from "../injection/Injector";
 
 // Readium CSS imports
 // The "?inline" query is to prevent some bundlers from injecting these into the page (e.g. vite)
@@ -63,12 +64,22 @@ export class WebPubBlobBuilder {
     private readonly burl: string;
     private readonly pub: Publication;
     private readonly cssProperties?: { [key: string]: string };
+    private readonly injector: Injector | null = null;
 
-    constructor(pub: Publication, baseURL: string, item: Link, cssProperties?: { [key: string]: string }) {
+    constructor(
+        pub: Publication,
+        baseURL: string,
+        item: Link,
+        options: {
+            cssProperties?: { [key: string]: string };
+            injector?: Injector | null;
+        }
+    ) {
         this.pub = pub;
         this.item = item;
         this.burl = item.toURL(baseURL) || "";
-        this.cssProperties = cssProperties;
+        this.cssProperties = options.cssProperties;
+        this.injector = options.injector ?? null;
     }
 
     public async build(): Promise<string> {
@@ -91,6 +102,11 @@ export class WebPubBlobBuilder {
         if(perror) {
             const details = perror.querySelector("div");
             throw new Error(`Failed parsing item ${this.item.href}: ${details?.textContent || perror.textContent}`);
+        }
+
+        // Apply resource injections if injection service is provided
+        if (this.injector) {
+            await this.injector.injectForDocument(doc, this.item);
         }
         return this.finalizeDOM(doc, this.burl, this.item.mediaType, txt, this.cssProperties);
     }

@@ -1,5 +1,6 @@
 import { MediaType } from "@readium/shared";
 import { Link, Publication } from "@readium/shared";
+import { Injector } from "../../injection/Injector";
 
 // Readium CSS imports
 // The "?inline" query is to prevent some bundlers from injecting these into the page (e.g. vite)
@@ -104,12 +105,22 @@ export default class FrameBlobBuider {
     private readonly burl: string;
     private readonly pub: Publication;
     private readonly cssProperties?: { [key: string]: string };
+    private readonly injector: Injector | null = null;
 
-    constructor(pub: Publication, baseURL: string, item: Link, cssProperties?: { [key: string]: string }) {
+    constructor(
+        pub: Publication,
+        baseURL: string,
+        item: Link,
+        options: {
+            cssProperties?: { [key: string]: string };
+            injector?: Injector | null;
+        }
+    ) {
         this.pub = pub;
         this.item = item;
         this.burl = item.toURL(baseURL) || "";
-        this.cssProperties = cssProperties;
+        this.cssProperties = options.cssProperties;
+        this.injector = options.injector ?? null;
     }
 
     public async build(fxl = false): Promise<string> {
@@ -127,15 +138,23 @@ export default class FrameBlobBuider {
         // Load the HTML resource
         const txt = await this.pub.get(this.item).readAsString();
         if(!txt) throw new Error(`Failed reading item ${this.item.href}`);
+        
         const doc = new DOMParser().parseFromString(
             txt,
             this.item.mediaType.string as DOMParserSupportedType
         );
+        
         const perror = doc.querySelector("parsererror");
-        if(perror) {
+        if (perror) {
             const details = perror.querySelector("div");
             throw new Error(`Failed parsing item ${this.item.href}: ${details?.textContent || perror.textContent}`);
         }
+
+        // Apply resource injections if injection service is provided
+        if (this.injector) {
+            await this.injector.injectForDocument(doc, this.item);
+        }
+
         return this.finalizeDOM(doc, this.pub.baseURL, this.burl, this.item.mediaType, fxl, this.cssProperties);
     }
 
@@ -183,6 +202,15 @@ export default class FrameBlobBuider {
     private finalizeDOM(doc: Document, root: string | undefined, base: string | undefined, mediaType: MediaType, fxl = false, cssProperties?: { [key: string]: string }): string {
         if(!doc) return "";
 
+        // Get allowed domains from injector if it exists
+        const allowedDomains = this.injector?.getAllowedDomains?.() || [];
+        
+        // Always include the root domain if provided
+        const domains = [...new Set([
+            ...(root ? [root] : []),
+            ...allowedDomains
+        ])].filter(Boolean);
+
         // Inject styles
         if(!fxl) {
             // Readium CSS Before
@@ -190,8 +218,9 @@ export default class FrameBlobBuider {
             doc.head.firstChild ? doc.head.firstChild.before(rcssBefore) : doc.head.appendChild(rcssBefore);
 
             // Readium CSS defaults
-            if(!this.hasStyle(doc))
-                rcssBefore.after(styleify(doc, cached("ReadiumCSS-default", () => blobify(stripCSS(readiumCSSDefault), "text/css"))))
+            if(!this.hasStyle(doc)) {
+                rcssBefore.after(styleify(doc, cached("ReadiumCSS-default", () => blobify(stripCSS(readiumCSSDefault), "text/css"))));
+            }
 
             // Readium CSS After
             doc.head.appendChild(styleify(doc, cached("ReadiumCSS-after", () => blobify(stripCSS(readiumCSSAfter), "text/css"))));
@@ -269,10 +298,10 @@ export default class FrameBlobBuider {
         doc.head.firstChild!.before(cssSelectorGenerator(doc)); // CSS selector utility
         if (hasExecutable) doc.head.appendChild(rAfter(doc)); // Another execution prevention script
 
-        // Add CSP
+        // Add CSP with allowed domains
         const meta = doc.createElement("meta");
         meta.httpEquiv = "Content-Security-Policy";
-        meta.content = csp(root ? [root] : []);
+        meta.content = csp(domains);
         meta.dataset.readium = "true";
         doc.head.firstChild!.before(meta);
 
