@@ -1,6 +1,6 @@
 import { IInjectableRule, IInjectable } from "../injection/Injectable";
 import { stripJS, stripCSS } from "../helpers/minify";
-import { Layout } from "@readium/shared";
+import { Metadata, Layout } from "@readium/shared";
 
 import readiumCSSAfter from "@readium/css/css/dist/ReadiumCSS-after.css?raw";
 import readiumCSSBefore from "@readium/css/css/dist/ReadiumCSS-before.css?raw";
@@ -13,8 +13,8 @@ import onloadProxyContent from "../dom/_readium_executionCleanup.js?raw";
 /**
  * Creates injectable rules for EPUB content documents
  */
-export function createReadiumEpubRules(layout: Layout): IInjectableRule[] {
-    const isFixedLayout = layout === Layout.fixed;
+export function createReadiumEpubRules(metadata: Metadata): IInjectableRule[] {
+    const isFixedLayout = metadata.effectiveLayout === Layout.fixed;
     
     const injectables: IInjectable[] = [
         // CSS Selector Generator - always injected

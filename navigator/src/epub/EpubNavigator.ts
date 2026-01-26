@@ -112,7 +112,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this.currentProgression = pub.metadata.effectiveReadingProgression;
         
         // Combine Readium rules with user-provided injectables
-        const readiumRules = createReadiumEpubRules(this._layout);
+        const readiumRules = createReadiumEpubRules(pub.metadata);
         const userConfig = configuration.injectables || { rules: [], allowedDomains: [] };
         
         this._injector = new Injector({
