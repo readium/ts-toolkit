@@ -83,13 +83,18 @@ export class Injector implements IInjector {
     private readonly createdBlobUrls: Set<string> = new Set();
     private readonly rules: IInjectableRule[];
     private readonly allowedDomains: string[] = [];
-
-    // Store the first chunk of each blob (16 bytes) for content-based identification
-    private blobContentCache = new Map<string, string>();
-    private blobCounter = 0;
+    private injectableIdCounter = 0;
     
     constructor(config: IInjectablesConfig) {
-        this.rules = config.rules;
+        // Assign IDs to injectables that don't have them
+        this.rules = config.rules.map(rule => ({
+            ...rule,
+            injectables: rule.injectables.map(injectable => ({
+                ...injectable,
+                id: injectable.id || `injectable-${this.injectableIdCounter++}`
+            }))
+        }));
+        
         this.allowedDomains = config.allowedDomains || [];
     }
     
@@ -129,42 +134,24 @@ export class Injector implements IInjector {
         });
     }
 
-    private async getBlobKey(blob: Blob): Promise<string> {
-        // For small blobs, we can use the entire content as a key
-        if (blob.size <= 64) {
-            const content = await blob.text();
-            return `blob-${content.length}-${content}`;
-        }
-
-        // For larger blobs, use the first and last 32 bytes as a fingerprint
-        const firstChunk = await blob.slice(0, 32).text();
-        const lastChunk = blob.size > 32 ? await blob.slice(-32).text() : "";
-        const contentKey = `${blob.size}-${firstChunk}-${lastChunk}`;
+    private async getOrCreateBlobUrl(resource: IInjectable): Promise<string> {
+        // Use the injectable ID as the cache key
+        const cacheKey = resource.id!; // ID is guaranteed to exist after constructor
         
-        // Check if we've seen this content before
-        if (this.blobContentCache.has(contentKey)) {
-            return this.blobContentCache.get(contentKey)!;
-        }
-        
-        // If not, generate a new key and store it
-        const key = `blob-${this.blobCounter++}`;
-        this.blobContentCache.set(contentKey, key);
-        return key;
-    }
-
-    private async getOrCreateBlobUrl(blob: Blob): Promise<string> {
-        const key = await this.getBlobKey(blob);
-        
-        if (this.blobStore.has(key)) {
-            const entry = this.blobStore.get(key)!;
+        if (this.blobStore.has(cacheKey)) {
+            const entry = this.blobStore.get(cacheKey)!;
             entry.refCount++;
             return entry.url;
         }
 
-        const url = URL.createObjectURL(blob);
-        this.blobStore.set(key, { url, refCount: 1 });
-        this.createdBlobUrls.add(url);
-        return url;
+        if ("blob" in resource) {
+            const url = URL.createObjectURL(resource.blob);
+            this.blobStore.set(cacheKey, { url, refCount: 1 });
+            this.createdBlobUrls.add(url);
+            return url;
+        }
+        
+        throw new Error("Resource must have a blob property");
     }
 
     public async releaseBlobUrl(url: string): Promise<void> {
@@ -197,7 +184,7 @@ export class Injector implements IInjector {
             }
             return resolvedUrl;
         } else {
-            return this.getOrCreateBlobUrl(resource.blob);
+            return this.getOrCreateBlobUrl(resource);
         }
     }
 
@@ -233,6 +220,10 @@ export class Injector implements IInjector {
         
         try {
             for (const resource of rule.injectables) {
+                if (resource.condition && !resource.condition(doc)) {
+                    continue; // Skip this injectable
+                }
+
                 const target = resource.target === "head" ? doc.head : doc.body;
                 if (!target) continue;
 
