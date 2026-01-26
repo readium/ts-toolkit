@@ -1,9 +1,9 @@
 import { Link } from "@readium/shared";
 
 export interface IBaseInjectable {
-    type: "script" | "link";
+    as: "script" | "link";
     target: "head" | "body";
-    insertion: "prepend" | "append";
+    insert: "prepend" | "append";
     attributes?: Omit<{
         [key: string]: string | undefined;
         type?: string;

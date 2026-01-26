@@ -173,7 +173,7 @@ export class Injector implements IInjector {
             attributes: {
                 ...resource.attributes,
                 rel: "preload",
-                as: resource.type === "script" ? "script" : "style"
+                as: resource.as
             }
         };
         
@@ -182,13 +182,13 @@ export class Injector implements IInjector {
     }
 
     private createElement(doc: Document, resource: IInjectable, source: string): HTMLElement {
-        if (resource.type === "script") {
+        if (resource.as === "script") {
             return scriptify(doc, resource, source);
         }
-        if (resource.type === "link") {
+        if (resource.as === "link") {
             return linkify(doc, resource, source);
         }
-        throw new Error(`Unsupported element type: ${resource.type}`);
+        throw new Error(`Unsupported element type: ${resource.as}`);
     }
 
     private async applyRule(doc: Document, rule: IInjectableRule): Promise<void> {
@@ -209,7 +209,7 @@ export class Injector implements IInjector {
                         const element = this.createElement(doc, resource, url);
                         createdElements.push({ element, url });
                         
-                        if (resource.insertion === "prepend") {
+                        if (resource.insert === "prepend") {
                             target.prepend(element);
                         } else {
                             target.append(element);
