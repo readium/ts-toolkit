@@ -224,7 +224,7 @@ export class Injector implements IInjector {
                     continue; // Skip this injectable
                 }
 
-                const target = resource.target === "head" ? doc.head : doc.body;
+                const target = resource.target === "body" ? doc.body : doc.head;
                 if (!target) continue;
 
                 let url: string | null = null;

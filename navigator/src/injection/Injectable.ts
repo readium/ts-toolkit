@@ -3,8 +3,8 @@ import { Link } from "@readium/shared";
 export interface IBaseInjectable {
     id?: string;
     as: "script" | "link";
-    target: "head" | "body";
-    insert: "prepend" | "append";
+    target?: "head" | "body";
+    insert?: "prepend" | "append";
     condition?: (doc: Document) => boolean;
     attributes?: Omit<{
         [key: string]: string | undefined;
