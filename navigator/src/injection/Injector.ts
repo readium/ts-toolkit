@@ -5,18 +5,18 @@ const scriptify = (doc: Document, resource: IUrlInjectable | IBlobInjectable, so
     const s = doc.createElement("script");
     s.dataset.readium = "true";
     
-    // Create attributes object with source URL
-    const attributes = {
-        ...(resource.attributes || {}),
-        src: source  // Always set src to the processed source URL (could be blob: or https:)
-    };
+    // Create attributes object, explicitly excluding href and src
+    const { href, src, ...safeAttributes } = resource.attributes || {};
     
-    // Apply all attributes
-    Object.entries(attributes).forEach(([key, value]) => {
+    // Apply all safe attributes
+    Object.entries(safeAttributes).forEach(([key, value]) => {
         if (value !== undefined) {
             s.setAttribute(key, value);
         }
     });
+    
+    // Always set src from the processed URL
+    s.src = source;
     
     return s;
 };
@@ -25,17 +25,18 @@ const linkify = (doc: Document, resource: IUrlInjectable | IBlobInjectable, sour
     const s = doc.createElement("link");
     s.dataset.readium = "true";
     
-    // Apply all attributes from the resource, including href
-    const attributes = {
-        ...(resource.attributes || {}),
-        href: source  // Use the processed source URL as href
-    };
+    // Create attributes object, explicitly excluding href and src
+    const { href, src, ...safeAttributes } = resource.attributes || {};
     
-    Object.entries(attributes).forEach(([key, value]) => {
+    // Apply all safe attributes
+    Object.entries(safeAttributes).forEach(([key, value]) => {
         if (value !== undefined) {
             s.setAttribute(key, value);
         }
     });
+    
+    // Always set href from the processed URL
+    s.href = source;
     
     return s;
 };

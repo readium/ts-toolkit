@@ -4,14 +4,12 @@ export interface IBaseInjectable {
     type: "script" | "link";
     target: "head" | "body";
     insertion: "prepend" | "append";
-    attributes?: {
+    attributes?: Omit<{
         [key: string]: string | undefined;
         type?: string;
         rel?: string;
-        href?: string;
-        src?: string;
         crossorigin?: string;
-    };
+    }, "href" | "src">;  // "href" and "src" are handled by url/blob, not as attributes
 }
 
 export interface IUrlInjectable extends IBaseInjectable {
