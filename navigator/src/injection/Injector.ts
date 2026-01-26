@@ -1,12 +1,36 @@
 import { IInjectableRule, IInjectable, IInjector, IInjectablesConfig, IUrlInjectable, IBlobInjectable } from "./Injectable";
 import { Link } from "@readium/shared";
 
+const inferTypeFromResource = (resource: IUrlInjectable | IBlobInjectable): string | undefined => {
+    // If blob has a type, use it
+    if ("blob" in resource && resource.blob.type) {
+        return resource.blob.type;
+    }
+    
+    // For scripts, default to text/javascript
+    if (resource.as === "script") {
+        return "text/javascript";
+    }
+    
+    // For links, try to infer from URL extension
+    if (resource.as === "link" && "url" in resource) {
+        const url = resource.url.toLowerCase();
+        if (url.endsWith(".css")) return "text/css";
+        if ([".js", ".mjs", ".cjs"].some(ext => url.endsWith(ext))) return "text/javascript";
+    }
+    
+    return undefined;
+};
+
 const scriptify = (doc: Document, resource: IUrlInjectable | IBlobInjectable, source: string): HTMLScriptElement => {
     const s = doc.createElement("script");
     s.dataset.readium = "true";
     
     // Create attributes object, explicitly excluding href and src
-    const { href, src, ...safeAttributes } = resource.attributes || {};
+    const { href, src, type, ...safeAttributes } = resource.attributes || {};
+    
+    // Use provided type or infer it
+    const finalType = type || inferTypeFromResource(resource);
     
     // Apply all safe attributes
     Object.entries(safeAttributes).forEach(([key, value]) => {
@@ -14,6 +38,11 @@ const scriptify = (doc: Document, resource: IUrlInjectable | IBlobInjectable, so
             s.setAttribute(key, value);
         }
     });
+    
+    // Set type if we have it
+    if (finalType) {
+        s.type = finalType;
+    }
     
     // Always set src from the processed URL
     s.src = source;
@@ -26,7 +55,10 @@ const linkify = (doc: Document, resource: IUrlInjectable | IBlobInjectable, sour
     s.dataset.readium = "true";
     
     // Create attributes object, explicitly excluding href and src
-    const { href, src, ...safeAttributes } = resource.attributes || {};
+    const { href, src, type, ...safeAttributes } = resource.attributes || {};
+    
+    // Use provided type or infer it
+    const finalType = type || inferTypeFromResource(resource);
     
     // Apply all safe attributes
     Object.entries(safeAttributes).forEach(([key, value]) => {
@@ -34,6 +66,11 @@ const linkify = (doc: Document, resource: IUrlInjectable | IBlobInjectable, sour
             s.setAttribute(key, value);
         }
     });
+    
+    // Set type if we have it
+    if (finalType) {
+        s.type = finalType;
+    }
     
     // Always set href from the processed URL
     s.href = source;
