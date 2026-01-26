@@ -209,6 +209,7 @@ class DecorationGroup {
 
         const itemContainer = this.wnd.document.createElement("div");
         itemContainer.setAttribute("id", item.id);
+        itemContainer.dataset.highlightId = item.decoration.id;
         // itemContainer.dataset.style = item.decoration.style; // TODO style
         itemContainer.style.setProperty("pointer-events", "none");
 

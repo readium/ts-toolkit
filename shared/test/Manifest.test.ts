@@ -136,7 +136,7 @@ describe('Manifest Tests', () => {
         readingOrder: new Links([]),
       }).serialize()
     ).toEqual({
-      metadata: { title: { undefined: 'Title' } },
+      metadata: { title: { und: 'Title' } },
       links: [],
       readingOrder: [],
     });
@@ -177,7 +177,7 @@ describe('Manifest Tests', () => {
       }).serialize()
     ).toEqual({
       '@context': ['https://readium.org/webpub-manifest/context.jsonld'],
-      metadata: { title: { undefined: 'Title' } },
+      metadata: { title: { und: 'Title' } },
       links: [{ href: '/manifest.json', rel: ['self'] }],
       readingOrder: [{ href: '/chap1.html', type: 'text/html' }],
       resources: [{ href: '/image.png', type: 'image/png' }],
