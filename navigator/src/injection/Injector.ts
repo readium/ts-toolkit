@@ -291,13 +291,12 @@ export class Injector implements IInjector {
                 const domain = parsed.hostname;
                 return this.allowedDomains.some(allowed => 
                     domain === allowed || 
-                    (allowed.startsWith(".") && domain.endsWith(allowed))
+                    (allowed.startsWith(".") && domain.endsWith(allowed) && 
+                    (domain.length === allowed.length || domain.charAt(domain.length - allowed.length - 1) === "."))
                 );
             }
 
-            // Default to allowing https URLs if no allowed domains are specified
-            if (parsed.protocol === "https:") return true;
-            
+            // No allowed domains specified - deny external URLs
             return false;
         } catch {
             return false;
