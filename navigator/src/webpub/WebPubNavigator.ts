@@ -15,6 +15,7 @@ import { WebPubSettings } from "./preferences/WebPubSettings";
 import { IPreferencesEditor } from "../preferences/PreferencesEditor";
 import { WebPubPreferencesEditor } from "./preferences/WebPubPreferencesEditor";
 import { Injector } from "../injection/Injector";
+import { createReadiumWebPubRules } from "../injection/webpubInjectables";
 import { IInjectablesConfig } from "../injection/Injectable";
 
 export interface WebPubNavigatorConfiguration {
@@ -83,7 +84,14 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             userProperties: new WebUserProperties({ zoom: this._settings.zoom })
         });
 
-        this._injector = configuration.injectables ? new Injector(configuration.injectables) : null;
+        // Combine WebPub rules with user-provided injectables
+        const webpubRules = createReadiumWebPubRules();
+        const userConfig = configuration.injectables || { rules: [], allowedDomains: [] };
+        
+        this._injector = new Injector({
+            rules: [...webpubRules, ...userConfig.rules],
+            allowedDomains: userConfig.allowedDomains
+        });
 
         // Initialize current location
         if (initialPosition && typeof initialPosition.copyWithLocations === 'function') {

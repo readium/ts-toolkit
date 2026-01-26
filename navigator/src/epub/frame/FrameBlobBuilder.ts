@@ -2,87 +2,6 @@ import { MediaType } from "@readium/shared";
 import { Link, Publication } from "@readium/shared";
 import { Injector } from "../../injection/Injector";
 
-// Readium CSS imports
-// The "?inline" query is to prevent some bundlers from injecting these into the page (e.g. vite)
-// @ts-ignore
-import readiumCSSAfter from "@readium/css/css/dist/ReadiumCSS-after.css?inline";
-// @ts-ignore
-import readiumCSSBefore from "@readium/css/css/dist/ReadiumCSS-before.css?inline";
-// @ts-ignore
-import readiumCSSDefault from "@readium/css/css/dist/ReadiumCSS-default.css?inline";
-
-// Import the pre-built CSS selector generator
-// This has to be injected because you need to be in the iframe's context for it to work properly
-import cssSelectorGeneratorContent from "../../dom/_readium_cssSelectorGenerator.js?raw";
-
-// Utilities
-const blobify = (source: string, type: string) => URL.createObjectURL(new Blob([source], { type }));
-const stripJS = (source: string) => source.replace(/\/\/.*/g, "").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\n/g, "").replace(/\s+/g, " ");
-const stripCSS = (source: string) => source.replace(/\/\*(?:(?!\*\/)[\s\S])*\*\/|[\r\n\t]+/g, '').replace(/ {2,}/g, ' ')
-    // Fully resolve absolute local URLs created by bundlers since it's going into a blob
-    .replace(/url\((?!(https?:)?\/\/)("?)\/([^\)]+)/g, `url($2${window.location.origin}/$3`);
-const scriptify = (doc: Document, source: string) => {
-    const s = doc.createElement("script");
-    s.dataset.readium = "true";
-    s.src = source.startsWith("blob:") ? source : blobify(source, "text/javascript");
-    return s;
-}
-const styleify = (doc: Document, source: string) => {
-    const s = doc.createElement("link");
-    s.dataset.readium = "true";
-    s.rel = "stylesheet";
-    s.type = "text/css";
-    s.href = source.startsWith("blob:") ? source : blobify(source, "text/css");
-    return s;
-}
-
-type CacheFunction = () => string;
-const resourceBlobCache = new Map<string, string>();
-const cached = (key: string, cacher: CacheFunction) => {
-    if(resourceBlobCache.has(key)) return resourceBlobCache.get(key)!;
-    const value = cacher();
-    resourceBlobCache.set(key, value);
-    return value;
-};
-
-const cssSelectorGenerator = (doc: Document) => scriptify(doc, cached("css-selector-generator", () => blobify(
-    cssSelectorGeneratorContent,
-    "text/javascript"
-)));
-
-// Note: we aren't blocking some of the events right now to try and be as nonintrusive as possible.
-// For a more comprehensive implementation, see https://github.com/hackademix/noscript/blob/3a83c0e4a506f175e38b0342dad50cdca3eae836/src/content/syncFetchPolicy.js#L142
-// The snippet of code at the beginning of this source is an attempt at defence against JS using persistent storage
-const rBefore = (doc: Document) => scriptify(doc, cached("JS-Before", () => blobify(stripJS(`
-    const noop=()=>{},emptyObj={},emptyPromise=()=>Promise.resolve(void 0),fakeStorage={getItem:noop,setItem:noop,removeItem:noop,clear:noop,key:noop,length:0};["localStorage","sessionStorage"].forEach((e=>Object.defineProperty(window,e,{get:()=>fakeStorage,configurable:!0}))),Object.defineProperty(document,"cookie",{get:()=>"",set:noop,configurable:!0}),Object.defineProperty(window,"indexedDB",{get:()=>{},configurable:!0}),Object.defineProperty(window,"caches",{get:()=>emptyObj,configurable:!0}),Object.defineProperty(navigator,"storage",{get:()=>({persist:emptyPromise,persisted:emptyPromise,estimate:()=>Promise.resolve({quota:0,usage:0})}),configurable:!0}),Object.defineProperty(navigator,"serviceWorker",{get:()=>({register:emptyPromise,getRegistration:emptyPromise,ready:emptyPromise()}),configurable:!0});
-
-    window._readium_blockedEvents = [];
-    window._readium_blockEvents = true;
-    window._readium_eventBlocker = (e) => {
-        if(!window._readium_blockEvents) return;
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        _readium_blockedEvents.push([
-            1, e, e.currentTarget || e.target
-        ]);
-    };
-    window.addEventListener("DOMContentLoaded", window._readium_eventBlocker, true);
-    window.addEventListener("load", window._readium_eventBlocker, true);`
-), "text/javascript")));
-const rAfter = (doc: Document) => scriptify(doc, cached("JS-After", () => blobify(stripJS(`
-    if(window.onload) window.onload = new Proxy(window.onload, {
-        apply: function(target, receiver, args) {
-            if(!window._readium_blockEvents) {
-                Reflect.apply(target, receiver, args);
-                return;
-            }
-            _readium_blockedEvents.push([
-                0, target, receiver, args
-            ]);
-        }
-    });`
-), "text/javascript")));
-
 const csp = (domains: string[]) => {
     const d = domains.join(" ");
     return [
@@ -170,29 +89,6 @@ export default class FrameBlobBuider {
         return this.finalizeDOM(doc, this.pub.baseURL, this.burl, this.item.mediaType, true);
     }
 
-    // Has JS that may have side-effects when the document is loaded, without any user interaction
-    private hasExecutable(doc: Document): boolean {
-        // This is not a 100% comprehensive check of all possibilities for JS execution,
-        // but it covers what the prevention scripts cover. Other possibilities include:
-        // - <iframe> src
-        // - <img> with onload/onerror
-        // - <meta http-equiv="refresh" content="xxx">
-        return (
-            !!doc.querySelector("script") || // Any <script> elements
-            !!doc.querySelector("body[onload]:not(body[onload=''])") // <body> that executes JS on load
-        );
-    }
-
-    private hasStyle(doc: Document): boolean {
-        if(
-            doc.querySelector("link[rel='stylesheet']") || // Any CSS link
-            doc.querySelector("style") || // Any <style> element
-            doc.querySelector("[style]:not([style=''])") // Any element with style attribute set
-        ) return true;
-
-        return false;
-    }
-
     private setProperties(cssProperties: { [key: string]: string }, doc: Document) {
         for (const key in cssProperties) {
             const value = cssProperties[key];
@@ -212,23 +108,11 @@ export default class FrameBlobBuider {
             ...allowedDomains
         ])].filter(Boolean);
 
-        // Inject styles
-        if(!fxl) {
-            // Readium CSS Before
-            const rcssBefore = styleify(doc, cached("ReadiumCSS-before", () => blobify(stripCSS(readiumCSSBefore), "text/css")));
-            doc.head.firstChild ? doc.head.firstChild.before(rcssBefore) : doc.head.appendChild(rcssBefore);
+        // CSS and script injection is now handled by the Injector system
 
-            // Readium CSS defaults
-            if(!this.hasStyle(doc)) {
-                rcssBefore.after(styleify(doc, cached("ReadiumCSS-default", () => blobify(stripCSS(readiumCSSDefault), "text/css"))));
-            }
-
-            // Readium CSS After
-            doc.head.appendChild(styleify(doc, cached("ReadiumCSS-after", () => blobify(stripCSS(readiumCSSAfter), "text/css"))));
-
-            if (cssProperties) {
-                this.setProperties(cssProperties, doc);
-            }
+        // Apply CSS properties if provided (only for reflowable)
+        if (cssProperties && !fxl) {
+            this.setProperties(cssProperties, doc);
         }
 
         // Set all <img> elements to high priority
@@ -293,19 +177,12 @@ export default class FrameBlobBuider {
             doc.head.firstChild!.before(b);
         }
 
-        // Inject script to prevent in-publication scripts from executing until we want them to
-        const hasExecutable = this.hasExecutable(doc);
-        if (hasExecutable) doc.head.firstChild!.before(rBefore(doc));
-        doc.head.firstChild!.before(cssSelectorGenerator(doc)); // CSS selector utility
-        if (hasExecutable) doc.head.appendChild(rAfter(doc)); // Another execution prevention script
-
         // Add CSP with allowed domains
         const meta = doc.createElement("meta");
         meta.httpEquiv = "Content-Security-Policy";
         meta.content = csp(domains);
         meta.dataset.readium = "true";
         doc.head.firstChild!.before(meta);
-
 
         // Make blob from doc
         return URL.createObjectURL(

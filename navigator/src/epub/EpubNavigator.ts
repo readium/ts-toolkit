@@ -15,6 +15,7 @@ import { ReadiumCSS } from "./css/ReadiumCSS";
 import { RSProperties, UserProperties } from "./css/Properties";
 import { getContentWidth } from "../helpers/dimensions";
 import { Injector } from "../injection/Injector";
+import { createReadiumEpubRules } from "../injection/epubInjectables";
 import { IInjectablesConfig } from "../injection/Injectable";
 
 export type ManagerEventKey = "zoom";
@@ -109,7 +110,15 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
         this._layout = EpubNavigator.determineLayout(pub, !!this._settings.scroll);
         this.currentProgression = pub.metadata.effectiveReadingProgression;
-        this._injector = configuration.injectables ? new Injector(configuration.injectables) : null;
+        
+        // Combine Readium rules with user-provided injectables
+        const readiumRules = createReadiumEpubRules(this._layout);
+        const userConfig = configuration.injectables || { rules: [], allowedDomains: [] };
+        
+        this._injector = new Injector({
+            rules: [...readiumRules, ...userConfig.rules],
+            allowedDomains: userConfig.allowedDomains
+        });
         
         // We use a resizeObserver cos’ the container parent may not be the width of 
         // the document/window e.g. app using a docking system with left and right panels.
