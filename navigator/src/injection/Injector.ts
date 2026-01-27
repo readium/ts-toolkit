@@ -95,6 +95,16 @@ export class Injector implements IInjector {
     private injectableIdCounter = 0;
     
     constructor(config: IInjectablesConfig) {
+        // Validate allowed domains - they should be proper URLs for external resources
+        this.allowedDomains = (config.allowedDomains || []).map(domain => {
+            try {
+                new URL(domain);
+                return domain;
+            } catch {
+                throw new Error(`Invalid allowed domain: "${domain}". Must be a valid URL (e.g., "https://fonts.googleapis.com").`);
+            }
+        });
+        
         // Assign IDs to injectables that don't have them
         this.rules = config.rules.map(rule => {
             const processedRule: IInjectableRule = { ...rule };
@@ -117,8 +127,6 @@ export class Injector implements IInjector {
             
             return processedRule;
         });
-        
-        this.allowedDomains = config.allowedDomains || [];
     }
     
     public dispose(): void {
@@ -322,12 +330,11 @@ export class Injector implements IInjector {
 
             // Check against allowed domains if any are specified
             if (this.allowedDomains.length > 0) {
-                const domain = parsed.hostname;
-                return this.allowedDomains.some(allowed => 
-                    domain === allowed || 
-                    (allowed.startsWith(".") && domain.endsWith(allowed) && 
-                    (domain.length === allowed.length || domain.charAt(domain.length - allowed.length - 1) === "."))
-                );
+                const origin = parsed.origin;
+                return this.allowedDomains.some(allowed => {
+                    const allowedOrigin = new URL(allowed).origin;
+                    return origin === allowedOrigin;
+                });
             }
 
             // No allowed domains specified - deny external URLs
