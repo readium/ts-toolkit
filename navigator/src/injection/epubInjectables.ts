@@ -16,13 +16,13 @@ import onloadProxyContent from "../dom/_readium_executionCleanup.js?raw";
 export function createReadiumEpubRules(metadata: Metadata): IInjectableRule[] {
     const isFixedLayout = metadata.effectiveLayout === Layout.fixed;
     
-    const injectables: IInjectable[] = [
+    // Core injectables that should be prepended
+    const prependInjectables: IInjectable[] = [
         // CSS Selector Generator - always injected
         {
             id: "css-selector-generator",
             as: "script",
             target: "head",
-            insert: "prepend",
             blob: new Blob([stripJS(cssSelectorGeneratorContent)], { type: "text/javascript" })
         },
         // Execution Prevention - conditional (has executable scripts)
@@ -30,16 +30,18 @@ export function createReadiumEpubRules(metadata: Metadata): IInjectableRule[] {
             id: "execution-prevention",
             as: "script",
             target: "head",
-            insert: "prepend",
             blob: new Blob([stripJS(executionPreventionContent)], { type: "text/javascript" }),
             condition: (doc: Document) => !!(doc.querySelector("script") || doc.querySelector("body[onload]:not(body[onload=''])"))
-        },
+        }
+    ];
+
+    // Core injectables that should be appended
+    const appendInjectables: IInjectable[] = [
         // Onload Proxy - conditional (has executable scripts)
         {
             id: "onload-proxy",
             as: "script",
             target: "head",
-            insert: "append",
             blob: new Blob([stripJS(onloadProxyContent)], { type: "text/javascript" }),
             condition: (doc: Document) => !!(doc.querySelector("script") || doc.querySelector("body[onload]:not(body[onload=''])"))
         }
@@ -47,24 +49,24 @@ export function createReadiumEpubRules(metadata: Metadata): IInjectableRule[] {
 
     // Only add Readium CSS for reflowable documents
     if (!isFixedLayout) {
-        injectables.unshift(
-            // Readium CSS Before - only for reflowable
-            {
-                id: "readium-css-before",
-                as: "link",
-                target: "head",
-                insert: "prepend",
-                blob: new Blob([stripCSS(readiumCSSBefore)], { type: "text/css" }),
-                attributes: { rel: "stylesheet" }
-            },
+        // Readium CSS Before - prepended for reflowable
+        prependInjectables.unshift({
+            id: "readium-css-before",
+            as: "link",
+            target: "head",
+            blob: new Blob([stripCSS(readiumCSSBefore)], { type: "text/css" }),
+            rel: "stylesheet"
+        });
+        
+        // Readium CSS Default and After - appended for reflowable
+        appendInjectables.unshift(
             // Readium CSS Default - only for reflowable AND no existing styles
             {
                 id: "readium-css-default",
                 as: "link",
                 target: "head",
-                insert: "append",
                 blob: new Blob([stripCSS(readiumCSSDefault)], { type: "text/css" }),
-                attributes: { rel: "stylesheet" },
+                rel: "stylesheet",
                 condition: (doc: Document) => !(doc.querySelector("link[rel='stylesheet']") || doc.querySelector("style") || doc.querySelector("[style]:not([style=''])"))
             },
             // Readium CSS After - only for reflowable
@@ -72,9 +74,8 @@ export function createReadiumEpubRules(metadata: Metadata): IInjectableRule[] {
                 id: "readium-css-after",
                 as: "link",
                 target: "head",
-                insert: "append",
                 blob: new Blob([stripCSS(readiumCSSAfter)], { type: "text/css" }),
-                attributes: { rel: "stylesheet" }
+                rel: "stylesheet"
             }
         );
     }
@@ -82,7 +83,8 @@ export function createReadiumEpubRules(metadata: Metadata): IInjectableRule[] {
     return [
         {
             resources: [/\.xhtml$/, /\.html$/],
-            injectables
+            prepend: prependInjectables,
+            append: appendInjectables
         }
     ];
 }

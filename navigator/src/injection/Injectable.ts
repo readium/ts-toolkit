@@ -1,17 +1,24 @@
 import { Link } from "@readium/shared";
 
+type ForbiddenAttributes = "type" | "rel" | "href" | "src";
+type AllowedAttributes = {
+    [K in string]: K extends ForbiddenAttributes 
+        ? never 
+        : (string | boolean | undefined);
+} & {
+    [K in ForbiddenAttributes]?: never;
+};
+
 export interface IBaseInjectable {
     id?: string;
     as: "script" | "link";
     target?: "head" | "body";
-    insert?: "prepend" | "append";
+    type?: string;
+    rel?: string;
     condition?: (doc: Document) => boolean;
-    attributes?: Omit<{
-        [key: string]: string | undefined;
-        type?: string;
-        rel?: string;
-        crossorigin?: string;
-    }, "href" | "src">;  // "href" and "src" are handled by url/blob, not as attributes
+        
+    // Extra attributes - type and rel are forbidden here since they are at root
+    attributes?: AllowedAttributes;
 }
 
 export interface IUrlInjectable extends IBaseInjectable {
@@ -35,9 +42,14 @@ export interface IInjectableRule {
     resources: Array<string | RegExp>;
     
     /**
-     * Resources to inject into matching documents.
+     * Resources to inject at the beginning of the target (in array order)
      */
-    injectables: IInjectable[];
+    prepend?: IInjectable[];
+    
+    /**
+     * Resources to inject at the end of the target (in array order)
+     */
+    append?: IInjectable[];
 }
 
 export interface IInjectablesConfig {

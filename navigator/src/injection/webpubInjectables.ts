@@ -11,13 +11,13 @@ import onloadProxyContent from "../dom/_readium_executionCleanup.js?raw";
  * Creates injectable rules for WebPub content documents
  */
 export function createReadiumWebPubRules(): IInjectableRule[] {
-    const injectables: IInjectable[] = [
+    // Core injectables that should be prepended
+    const prependInjectables: IInjectable[] = [
         // CSS Selector Generator - always injected
         {
             id: "css-selector-generator",
             as: "script",
             target: "head",
-            insert: "prepend",
             blob: new Blob([stripJS(cssSelectorGeneratorContent)], { type: "text/javascript" })
         },
         // WebPub Properties - always injected (sets up event blocking to false)
@@ -25,15 +25,17 @@ export function createReadiumWebPubRules(): IInjectableRule[] {
             id: "webpub-properties",
             as: "script",
             target: "head",
-            insert: "prepend",
             blob: new Blob([stripJS(webpubPropertiesContent)], { type: "text/javascript" })
-        },
+        }
+    ];
+
+    // Core injectables that should be appended
+    const appendInjectables: IInjectable[] = [
         // Onload Proxy - conditional (has executable scripts)
         {
             id: "onload-proxy",
             as: "script",
             target: "head",
-            insert: "append",
             blob: new Blob([stripJS(onloadProxyContent)], { type: "text/javascript" }),
             condition: (doc: Document) => !!(doc.querySelector("script") || doc.querySelector("body[onload]:not(body[onload=''])"))
         },
@@ -42,16 +44,16 @@ export function createReadiumWebPubRules(): IInjectableRule[] {
             id: "readium-css-webpub",
             as: "link",
             target: "head",
-            insert: "append",
             blob: new Blob([stripCSS(readiumCSSWebPub)], { type: "text/css" }),
-            attributes: { rel: "stylesheet" }
+            rel: "stylesheet"
         }
     ];
 
     return [
         {
             resources: [/\.xhtml$/, /\.html$/],
-            injectables
+            prepend: prependInjectables,
+            append: appendInjectables
         }
     ];
 }

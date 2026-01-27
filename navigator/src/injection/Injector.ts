@@ -22,27 +22,41 @@ const inferTypeFromResource = (resource: IUrlInjectable | IBlobInjectable): stri
     return undefined;
 };
 
+const applyAttributes = (element: HTMLElement, resource: IUrlInjectable | IBlobInjectable): void => {
+    // Apply extra attributes, filtering out root-level properties
+    if (resource.attributes) {
+        Object.entries(resource.attributes).forEach(([key, value]) => {
+            // Skip root-level properties to prevent conflicts
+            if (key === "type" || key === "rel" || key === "href" || key === "src") {
+                return;
+            }
+            
+            if (value !== undefined && value !== null) {
+                // Convert boolean attributes to proper HTML format
+                if (typeof value === "boolean") {
+                    if (value) {
+                        element.setAttribute(key, "");
+                    }
+                } else {
+                    element.setAttribute(key, value);
+                }
+            }
+        });
+    }
+};
+
 const scriptify = (doc: Document, resource: IUrlInjectable | IBlobInjectable, source: string): HTMLScriptElement => {
     const s = doc.createElement("script");
     s.dataset.readium = "true";
     
-    // Create attributes object, explicitly excluding href and src
-    const { href, src, type, ...safeAttributes } = resource.attributes || {};
-    
-    // Use provided type or infer it
-    const finalType = type || inferTypeFromResource(resource);
-    
-    // Apply all safe attributes
-    Object.entries(safeAttributes).forEach(([key, value]) => {
-        if (value !== undefined) {
-            s.setAttribute(key, value);
-        }
-    });
-    
-    // Set type if we have it
+    // Apply root-level type if provided
+    const finalType = resource.type || inferTypeFromResource(resource);
     if (finalType) {
         s.type = finalType;
     }
+    
+    // Apply extra attributes
+    applyAttributes(s, resource);
     
     // Always set src from the processed URL
     s.src = source;
@@ -54,23 +68,18 @@ const linkify = (doc: Document, resource: IUrlInjectable | IBlobInjectable, sour
     const s = doc.createElement("link");
     s.dataset.readium = "true";
     
-    // Create attributes object, explicitly excluding href and src
-    const { href, src, type, ...safeAttributes } = resource.attributes || {};
+    // Apply root-level rel if provided
+    if (resource.rel) {
+        s.rel = resource.rel;
+    }
     
-    // Use provided type or infer it
-    const finalType = type || inferTypeFromResource(resource);
-    
-    // Apply all safe attributes
-    Object.entries(safeAttributes).forEach(([key, value]) => {
-        if (value !== undefined) {
-            s.setAttribute(key, value);
-        }
-    });
-    
-    // Set type if we have it
+    const finalType = resource.type || inferTypeFromResource(resource);
     if (finalType) {
         s.type = finalType;
     }
+    
+    // Apply extra attributes
+    applyAttributes(s, resource);
     
     // Always set href from the processed URL
     s.href = source;
@@ -87,13 +96,27 @@ export class Injector implements IInjector {
     
     constructor(config: IInjectablesConfig) {
         // Assign IDs to injectables that don't have them
-        this.rules = config.rules.map(rule => ({
-            ...rule,
-            injectables: rule.injectables.map(injectable => ({
-                ...injectable,
-                id: injectable.id || `injectable-${this.injectableIdCounter++}`
-            }))
-        }));
+        this.rules = config.rules.map(rule => {
+            const processedRule: IInjectableRule = { ...rule };
+            
+            // Process prepend injectables (reverse to preserve order when prepending)
+            if (rule.prepend) {
+                processedRule.prepend = rule.prepend.map(injectable => ({
+                    ...injectable,
+                    id: injectable.id || `injectable-${this.injectableIdCounter++}`
+                })).reverse(); // Reverse here so we can process normally later
+            }
+            
+            // Process append injectables (keep original order)
+            if (rule.append) {
+                processedRule.append = rule.append.map(injectable => ({
+                    ...injectable,
+                    id: injectable.id || `injectable-${this.injectableIdCounter++}`
+                }));
+            }
+            
+            return processedRule;
+        });
         
         this.allowedDomains = config.allowedDomains || [];
     }
@@ -189,14 +212,14 @@ export class Injector implements IInjector {
     }
 
     private createPreloadLink(doc: Document, resource: IUrlInjectable, url: string): void {
-        if (!resource.attributes?.rel?.includes("preload")) return;
+        if (resource.rel !== "preload") return;
         
         // Create a new resource object with preload attributes
         const preloadResource: IUrlInjectable = {
             ...resource,
+            rel: "preload",
             attributes: {
                 ...resource.attributes,
-                rel: "preload",
                 as: resource.as
             }
         };
@@ -218,38 +241,24 @@ export class Injector implements IInjector {
     private async applyRule(doc: Document, rule: IInjectableRule): Promise<void> {
         const createdElements: { element: HTMLElement; url: string }[] = [];
         
+        // Collect all injectables that pass their conditions before modifying the document
+        const prependInjectables = rule.prepend ? rule.prepend.filter(resource => 
+            !resource.condition || resource.condition(doc)
+        ) : [];
+        
+        const appendInjectables = rule.append ? rule.append.filter(resource => 
+            !resource.condition || resource.condition(doc)
+        ) : [];
+        
         try {
-            for (const resource of rule.injectables) {
-                if (resource.condition && !resource.condition(doc)) {
-                    continue; // Skip this injectable
-                }
-
-                const target = resource.target === "body" ? doc.body : doc.head;
-                if (!target) continue;
-
-                let url: string | null = null;
-                try {
-                    url = await this.getResourceUrl(resource, doc);
-                    
-                    if (resource.attributes?.rel === "preload" && "url" in resource) {
-                        this.createPreloadLink(doc, resource, url);
-                    } else {
-                        const element = this.createElement(doc, resource, url);
-                        createdElements.push({ element, url });
-                        
-                        if (resource.insert === "prepend") {
-                            target.prepend(element);
-                        } else {
-                            target.append(element);
-                        }
-                    }
-                } catch (error) {
-                    console.error("Failed to process resource:", error);
-                    if (url && "blob" in resource) {
-                        await this.releaseBlobUrl(url);
-                    }
-                    throw error;
-                }
+            // Process prepend injectables first (already reversed in constructor)
+            for (const resource of prependInjectables) {
+                await this.processInjectable(resource, doc, createdElements, "prepend");
+            }
+            
+            // Process append injectables next (in order)
+            for (const resource of appendInjectables) {
+                await this.processInjectable(resource, doc, createdElements, "append");
             }
         } catch (error) {
             // Clean up any created elements on error
@@ -260,6 +269,40 @@ export class Injector implements IInjector {
                 } catch (cleanupError) {
                     console.error("Error during cleanup:", cleanupError);
                 }
+            }
+            throw error;
+        }
+    }
+    
+    private async processInjectable(
+        resource: IInjectable, 
+        doc: Document, 
+        createdElements: { element: HTMLElement; url: string }[], 
+        position: "prepend" | "append"
+    ): Promise<void> {
+        const target = resource.target === "body" ? doc.body : doc.head;
+        if (!target) return;
+
+        let url: string | null = null;
+        try {
+            url = await this.getResourceUrl(resource, doc);
+            
+            if (resource.rel === "preload" && "url" in resource) {
+                this.createPreloadLink(doc, resource, url);
+            } else {
+                const element = this.createElement(doc, resource, url);
+                createdElements.push({ element, url });
+                
+                if (position === "prepend") {
+                    target.prepend(element);
+                } else {
+                    target.append(element);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to process resource:", error);
+            if (url && "blob" in resource) {
+                await this.releaseBlobUrl(url);
             }
             throw error;
         }
