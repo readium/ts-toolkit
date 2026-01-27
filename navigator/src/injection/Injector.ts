@@ -1,7 +1,7 @@
-import { IInjectableRule, IInjectable, IInjector, IInjectablesConfig, IUrlInjectable, IBlobInjectable } from "./Injectable";
+import { IInjectableRule, IInjectable, IInjector, IInjectablesConfig } from "./Injectable";
 import { Link } from "@readium/shared";
 
-const inferTypeFromResource = (resource: IUrlInjectable | IBlobInjectable): string | undefined => {
+const inferTypeFromResource = (resource: IInjectable): string | undefined => {
     // If blob has a type, use it
     if ("blob" in resource && resource.blob.type) {
         return resource.blob.type;
@@ -22,7 +22,7 @@ const inferTypeFromResource = (resource: IUrlInjectable | IBlobInjectable): stri
     return undefined;
 };
 
-const applyAttributes = (element: HTMLElement, resource: IUrlInjectable | IBlobInjectable): void => {
+const applyAttributes = (element: HTMLElement, resource: IInjectable): void => {
     // Apply extra attributes, filtering out root-level properties
     if (resource.attributes) {
         Object.entries(resource.attributes).forEach(([key, value]) => {
@@ -45,9 +45,14 @@ const applyAttributes = (element: HTMLElement, resource: IUrlInjectable | IBlobI
     }
 };
 
-const scriptify = (doc: Document, resource: IUrlInjectable | IBlobInjectable, source: string): HTMLScriptElement => {
+const scriptify = (doc: Document, resource: IInjectable, source: string): HTMLScriptElement => {
     const s = doc.createElement("script");
     s.dataset.readium = "true";
+    
+    // Set the injectable ID if provided
+    if (resource.id) {
+        s.id = resource.id;
+    }
     
     // Apply root-level type if provided
     const finalType = resource.type || inferTypeFromResource(resource);
@@ -64,9 +69,14 @@ const scriptify = (doc: Document, resource: IUrlInjectable | IBlobInjectable, so
     return s;
 };
 
-const linkify = (doc: Document, resource: IUrlInjectable | IBlobInjectable, source: string): HTMLLinkElement => {
+const linkify = (doc: Document, resource: IInjectable, source: string): HTMLLinkElement => {
     const s = doc.createElement("link");
     s.dataset.readium = "true";
+    
+    // Set the injectable ID if provided
+    if (resource.id) {
+        s.id = resource.id;
+    }
     
     // Apply root-level rel if provided
     if (resource.rel) {
@@ -219,11 +229,11 @@ export class Injector implements IInjector {
         }
     }
 
-    private createPreloadLink(doc: Document, resource: IUrlInjectable, url: string): void {
-        if (resource.rel !== "preload") return;
+    private createPreloadLink(doc: Document, resource: IInjectable, url: string): void {
+        if (resource.as !== "link" || resource.rel !== "preload") return;
         
         // Create a new resource object with preload attributes
-        const preloadResource: IUrlInjectable = {
+        const preloadResource: IInjectable = {
             ...resource,
             rel: "preload",
             attributes: {
@@ -243,7 +253,7 @@ export class Injector implements IInjector {
         if (resource.as === "link") {
             return linkify(doc, resource, source);
         }
-        throw new Error(`Unsupported element type: ${resource.as}`);
+        throw new Error(`Unsupported element type: ${(resource as any).as}`);
     }
 
     private async applyRule(doc: Document, rule: IInjectableRule): Promise<void> {

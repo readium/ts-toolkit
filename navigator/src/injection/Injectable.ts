@@ -11,25 +11,33 @@ type AllowedAttributes = {
 
 export interface IBaseInjectable {
     id?: string;
-    as: "script" | "link";
     target?: "head" | "body";
     type?: string;
-    rel?: string;
     condition?: (doc: Document) => boolean;
         
     // Extra attributes - type and rel are forbidden here since they are at root
     attributes?: AllowedAttributes;
 }
 
-export interface IUrlInjectable extends IBaseInjectable {
-    url: string;  // Must be absolute HTTPS URL
+export interface IScriptInjectable extends IBaseInjectable {
+    as: "script";
+    rel?: never; // Scripts don't have rel
 }
 
-export interface IBlobInjectable extends IBaseInjectable {
-    blob: Blob;   // Raw Blob object
+export interface ILinkInjectable extends IBaseInjectable {
+    as: "link";
+    rel: string;
 }
 
-export type IInjectable = IUrlInjectable | IBlobInjectable;
+export interface IUrlInjectable {
+    url: string;
+}
+
+export interface IBlobInjectable {
+    blob: Blob;
+}
+
+export type IInjectable = (IScriptInjectable | ILinkInjectable) & (IUrlInjectable | IBlobInjectable);
 
 /**
  * Defines a rule for resource injection, specifying which resources to inject into which documents.

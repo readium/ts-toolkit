@@ -4,7 +4,7 @@ import { stripJS, stripCSS } from "../helpers/minify";
 import readiumCSSWebPub from "@readium/css/css/dist/webPub/ReadiumCSS-webPub.css?raw";
 
 import cssSelectorGeneratorContent from "../dom/_readium_cssSelectorGenerator.js?raw";
-import webpubPropertiesContent from "../dom/_readium_webpubProperties.js?raw";
+import webpubExecutionContent from "../dom/_readium_webpubExecution.js?raw";
 import onloadProxyContent from "../dom/_readium_executionCleanup.js?raw";
 
 /**
@@ -20,12 +20,12 @@ export function createReadiumWebPubRules(): IInjectableRule[] {
             target: "head",
             blob: new Blob([stripJS(cssSelectorGeneratorContent)], { type: "text/javascript" })
         },
-        // WebPub Properties - always injected (sets up event blocking to false)
+        // WebPub Execution - always injected (sets up event blocking to false)
         {
-            id: "webpub-properties",
+            id: "webpub-execution",
             as: "script",
             target: "head",
-            blob: new Blob([stripJS(webpubPropertiesContent)], { type: "text/javascript" })
+            blob: new Blob([stripJS(webpubExecutionContent)], { type: "text/javascript" })
         }
     ];
 
