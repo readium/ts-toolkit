@@ -42,10 +42,19 @@ Rules define which injectables should be applied to which documents based on URL
 ```typescript
 const rule: IInjectableRule = {
   resources: [/* Resources from readingOrder or regex patterns */],
-  prepend: [/* injectables to prepend to their target (head/body) */],
-  append: [/* injectables to append to their target (head/body) */]
+  prepend: [/* injectables to load before existing scripts and styles */],
+  append: [/* injectables to load after existing scripts and styles */]
 };
 ```
+
+### Understanding prepend vs append
+
+When injecting resources, the order matters:
+
+- **prepend**: Your resources are loaded **before** the built-in and document's existing scripts and styles
+- **append**: Your resources are loaded **after** the built-in and document's existing scripts and styles
+
+This affects loading order and can impact how styles cascade or when scripts execute.
 
 ### Configuration
 
