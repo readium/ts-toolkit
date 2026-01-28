@@ -8,7 +8,15 @@ The localization system allows consumers to provide their own translations for a
 
 ## Default Behavior
 
-By default, the system uses English (`en`) locale strings that are bundled with the package. These strings are included in the package and cover all accessibility metadata display needs.
+By default, the system uses English (`en`) locale strings that are bundled with the package. These strings are included in the package and cover all accessibility metadata display needs. The system supports the following locales out of the box:
+
+- `en` - English
+- `fr` - French
+- `ar` - Arabic
+- `da` - Danish
+- `it` - Italian
+- `pt_PT` - Portuguese (Portugal)
+- `sv` - Swedish
 
 ## Using the Localization System
 
@@ -41,16 +49,21 @@ Localization.registerLocale('en', {
 ### Setting the Current Locale
 
 ```typescript
-// Set the current locale by language code
-Localization.setLocale('es');
+// Set the current locale by language code (returns a Promise<boolean>)
+const success = await Localization.setLocale('es');
 
-// Check if the locale was set successfully
-if (Localization.setLocale('es')) {
-  console.log('Locale set successfully');
-} else {
-  console.log('Locale not available');
-}
+// Or using promises
+Localization.setLocale('es')
+  .then(success => {
+    if (success) {
+      console.log('Locale set successfully');
+    } else {
+      console.log('Locale not available');
+    }
+  });
 ```
+
+> **Note:** `setLocale` is an async operation as it may need to load the locale data. Make sure to `await` the result or handle the Promise accordingly.
 
 ### Getting Localized Strings
 
@@ -97,6 +110,22 @@ const locale = {
 ```
 
 ## Fallback Behavior
+
+When a string is not found in the current locale, the system will automatically fall back to the English (`en`) version if available. If the string is not found in either locale, an empty string will be returned and a warning will be logged to the console.
+
+## Preloading Locales
+
+For better performance, you can preload locales that will be needed later:
+
+```typescript
+// Preload a specific locale
+await Localization.loadLocale('fr');
+
+// Check if a locale is already loaded
+if (Localization.getCurrentLocale() === 'fr') {
+  // Locale is loaded and ready to use
+}
+```
 
 If a key is not found in the custom locale, the system will fall back to the English locale. If the key is not found in either locale, a warning will be logged to the console and an empty string will be returned.
 

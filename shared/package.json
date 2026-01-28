@@ -47,9 +47,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "update-accessibility-locales": "node update-accessibility-locales.mjs",
     "test": "jest",
-    "size": "size-limit"
+    "size": "size-limit",
+    "update-locales": "pnpm remove @edrlab/thorium-locales && pnpm add @edrlab/thorium-locales@github:edrlab/thorium-locales"
   },
   "size-limit": [
     {
@@ -57,6 +57,9 @@
       "limit": "50 KB"
     }
   ],
+  "dependencies": {
+    "@edrlab/thorium-locales": "github:edrlab/thorium-locales"
+  },
   "devDependencies": {
     "@babel/core": "^7.28.6",
     "@babel/preset-env": "^7.28.6",
