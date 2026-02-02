@@ -13,5 +13,11 @@ export default defineConfig({
   define: {
     "import.meta.env.PACKAGE_NAME": JSON.stringify(packageJson.name),
     "import.meta.env.PACKAGE_VERSION": JSON.stringify(packageJson.version),
+  },
+  resolve: {
+    alias: {
+      // Treat shared as internal source code when building standalone
+      "@readium/shared": resolve(__dirname, "../shared/src")
+    }
   }
 });
