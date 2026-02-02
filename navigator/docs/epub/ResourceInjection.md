@@ -1,6 +1,26 @@
-# Resource Injection System
+# Injection API
 
-The Readium Navigator includes a powerful resource injection system that allows you to dynamically inject CSS, JavaScript, and other resources into EPUB and WebPub content documents. This system is used internally to provide core functionality like ReadiumCSS, script execution control, and CSS selector generation.
+The Readium Navigator includes a resource injection system that allows you to dynamically inject CSS, JavaScript, and other resources into EPUB and WebPub content documents. This system is used internally to provide core functionality like ReadiumCSS, script execution control, and CSS selector generation.
+
+> [!IMPORTANT]
+> This API is still experimental and may change in future versions.
+
+## When to use
+
+The Injection API is primarily designed to handle static resources that need to be injected into documents at load time, such as:
+
+- **Styling resources** - CSS stylesheets, themes, visual presentation
+- **Initialization scripts** - Code that runs once on document load
+- **Font resources** - Typography and text rendering assets  
+- **Static libraries** - Third-party code that doesn't require ongoing interaction
+
+Although possible, the following use cases are discouraged for this API:
+
+- **Dynamic DOM manipulation** after page load
+- **Cross-frame communication** between iframe and parent window
+- **Event-driven features** that require ongoing interaction
+
+For these use cases, we are aware that APIs might not exist yet, and Injection API is the only option for now, despite being the wrong tool for the job.
 
 ## Overview
 
@@ -170,7 +190,7 @@ const customRule: IInjectableRule = {
     {
       id: "custom-styles",
       as: "link",
-      blob: new Blob([".highlight { background: yellow; }"], { type: "text/css" }),
+      blob: new Blob(["selector { property: value; }"], { type: "text/css" }),
       rel: "stylesheet"
     }
   ],
