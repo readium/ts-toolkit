@@ -49,6 +49,7 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "@readium/shared": "workspace:*",
     "css-selector-generator": "^3.8.0",
     "rimraf": "^6.1.2",
     "tslib": "^2.8.1",
