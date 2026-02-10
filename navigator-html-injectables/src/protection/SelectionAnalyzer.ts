@@ -8,26 +8,21 @@ export class SelectionAnalyzer {
     private events: SelectionEvent[] = [];
     private selectionStartTime = 0;
     private lastSelectionTime = 0;
-    private selectionCount = 0;
     private lastSelectionPosition = 0;
     private selectionPatterns: number[] = [];
-    private readonly SELECTION_THRESHOLD: number;
+    private lastSelectedText = "";
 
     constructor(
         private readonly options: {
             maxSelectionsPerSecond: number;
             minVariance: number;
             historySize: number;
-            selectionThreshold?: number;
         } = {
-            maxSelectionsPerSecond: 20,
-            minVariance: 5,
-            historySize: 10,
-            selectionThreshold: 20
+            maxSelectionsPerSecond: 50,
+            minVariance: 2,
+            historySize: 10
         }
-    ) {
-        this.SELECTION_THRESHOLD = this.options.selectionThreshold ?? 20;
-    }
+    ) {}
 
     public analyze(selection: Selection | null): boolean {
         if (!selection) {
@@ -35,7 +30,8 @@ export class SelectionAnalyzer {
             return false;
         }
 
-        if (selection.toString().length === 0) {
+        const selectedText = selection.toString();
+        if (selectedText.length === 0) {
             this.clear();
             return false;
         }
@@ -46,20 +42,29 @@ export class SelectionAnalyzer {
 
         const now = Date.now();
 
+        // Only analyze if selection is meaningful and completed (not ongoing)
+        // Check if user has actually finished selecting (mouse up or selection timeout)
+        const timeSinceLastSelection = now - this.lastSelectionTime;
+        const isCompletedSelection = timeSinceLastSelection > 500; // Wait 500ms to assume selection is complete
+        
+        if (!isCompletedSelection || selectedText.length <= 3 || selectedText === this.lastSelectedText) {
+            return false;
+        }
+
         // Track selection frequency
         if (now - this.lastSelectionTime > 1000) {
-            this.selectionCount = 0;
             this.lastSelectionTime = now;
         }
-        this.selectionCount++;
 
         if (this.selectionStartTime === 0) {
             this.selectionStartTime = now;
         }
 
+        // Store current selection for comparison
+        this.lastSelectedText = selectedText;
+
         // Analyze selection pattern
-        const isSuspicious = this.analyzeSelectionPattern(selection, now) || 
-                           this.selectionCount > this.SELECTION_THRESHOLD;
+        const isSuspicious = this.analyzeSelectionPattern(selection, now);
 
         // Clean up old events
         this.cleanup(now);
@@ -78,17 +83,17 @@ export class SelectionAnalyzer {
         const speed = text.length / Math.max(1, duration);
         
         // Check for unnaturally fast selection
-        if (speed > 100) return true; // 100 chars/ms is superhuman
+        if (speed > this.options.maxSelectionsPerSecond) return true;
         
         // Analyze selection pattern (human selections have more variance)
         const currentPosition = range.startOffset;
         const distance = Math.abs(currentPosition - this.lastSelectionPosition);
         this.selectionPatterns.push(distance);
         
-        if (this.selectionPatterns.length > 5) {
+        if (this.selectionPatterns.length > this.options.historySize) {
             this.selectionPatterns.shift();
             const variance = this.calculateVariance(this.selectionPatterns);
-            if (variance < 5) { // Very consistent patterns suggest automation
+            if (variance < this.options.minVariance) { // Very consistent patterns suggest automation
                 return true;
             }
         }
@@ -112,8 +117,8 @@ export class SelectionAnalyzer {
         this.events = [];
         this.selectionStartTime = 0;
         this.lastSelectionTime = 0;
-        this.selectionCount = 0;
         this.lastSelectionPosition = 0;
         this.selectionPatterns = [];
+        this.lastSelectedText = "";
     }
 }

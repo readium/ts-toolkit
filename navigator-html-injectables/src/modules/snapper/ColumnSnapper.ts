@@ -6,7 +6,7 @@ import { ModuleName } from "../ModuleLibrary";
 import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
 import { rangeFromLocator } from "../../helpers/locator";
 import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/dom";
-import { PatternAnalyzer } from "../../helpers/PatternAnalyzer";
+import { PatternAnalyzer } from "../../protection/PatternAnalyzer";
 
 const COLUMN_SNAPPER_STYLE_ID = "readium-column-snapper-style";
 const SNAP_DURATION = 200; // Milliseconds
@@ -115,7 +115,7 @@ export class ColumnSnapper extends Snapper {
                     timeDelta
                 );
                 if (isSuspicious) {
-                    this.comms?.send("suspicious_activity", {
+                    this.comms?.send("content_protection", {
                         type: "suspicious_snapping",
                         timestamp: Date.now(),
                         event: null
@@ -265,18 +265,12 @@ export class ColumnSnapper extends Snapper {
         if (!this.patternAnalyzer) {
             this.patternAnalyzer = new PatternAnalyzer({
                 maxVelocity: 1000,  // pixels/ms (adjust based on your page width)
-                minVariance: 0.1,
-                historySize: 10
+                minVariance: 0.1,   // Allow for some variation in swipe speed
+                historySize: 5      // Fewer samples needed for swipe detection
             });
+            this.isSnapProtectionEnabled = true;
+            this.comms?.log("Snap protection enabled");
         }
-        this.isSnapProtectionEnabled = true;
-    }
-
-    private disableSnapProtection() {
-        if (!this.patternAnalyzer) return;
-        this.patternAnalyzer.clear();
-        this.patternAnalyzer = null;
-        this.isSnapProtectionEnabled = false;
     }
 
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
@@ -365,16 +359,9 @@ export class ColumnSnapper extends Snapper {
         // we need to check the syle attribute on the documentElement (ReadiumCSS props)
         this.mutationObserver.observe(wnd.document.documentElement, {attributes: true, attributeFilter: ["style"]});
         
-        // Add scroll protection handlers (using existing commands from keys.ts)
-        comms.register("enable_scroll_protection", ColumnSnapper.moduleName, (_, ack) => {
+        // Enable snap protection if requested
+        comms.register("scroll_protection", ColumnSnapper.moduleName, (_, ack) => {
             this.enableSnapProtection();
-            this.comms.log("Snap protection enabled");
-            ack(true);
-        });
-
-        comms.register("disable_scroll_protection", ColumnSnapper.moduleName, (_, ack) => {
-            this.disableSnapProtection();
-            this.comms.log("Snap protection disabled");
             ack(true);
         });
 
@@ -550,7 +537,11 @@ export class ColumnSnapper extends Snapper {
         this.resizeObserver.disconnect();
         this.mutationObserver.disconnect();
 
-        this.disableSnapProtection();
+        if (this.patternAnalyzer) {
+            this.patternAnalyzer.clear();
+            this.patternAnalyzer = null;
+            this.isSnapProtectionEnabled = false;
+        }
 
         wnd.removeEventListener("touchstart", this.onTouchStarter);
         wnd.removeEventListener("touchend", this.onTouchEnder);

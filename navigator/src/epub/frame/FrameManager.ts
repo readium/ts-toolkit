@@ -2,6 +2,7 @@ import { Loader, ModuleName } from "@readium/navigator-html-injectables";
 import { FrameComms } from "./FrameComms";
 import { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
 import { sML } from "../../helpers";
+import type { IContentProtectionConfig } from "../../Navigator";
 
 
 export class FrameManager {
@@ -11,10 +12,13 @@ export class FrameManager {
     private comms: FrameComms | undefined;
     private hidden: boolean = true;
     private destroyed: boolean = false;
-
+    private readonly contentProtectionConfig: IContentProtectionConfig;
     private currModules: ModuleName[] = [];
 
-    constructor(source: string) {
+    constructor(
+        source: string,
+        contentProtectionConfig: IContentProtectionConfig = {}
+    ) {
         this.frame = document.createElement("iframe");
         this.frame.sandbox.value = "allow-same-origin allow-scripts";
         this.frame.classList.add("readium-navigator-iframe");
@@ -25,6 +29,10 @@ export class FrameManager {
         this.frame.style.pointerEvents = "none";
         this.frame.style.transition = "visibility 0s, opacity 0.1s linear";
         this.source = source;
+
+        // Use the provided content protection config directly without overriding defaults
+        this.contentProtectionConfig = { ...contentProtectionConfig };
+
     }
 
     async load(modules: ModuleName[]): Promise<Window> {
@@ -55,6 +63,23 @@ export class FrameManager {
             }
             this.frame.contentWindow!.location.replace(this.source);
         });
+    }
+
+    private applyContentProtection() {
+        if (this.comms) {
+            // Send peripherals protection config
+            this.comms.send("peripherals_protection", this.contentProtectionConfig);
+
+            // Apply scroll protection
+            if (this.contentProtectionConfig.enableScrollProtection) {
+                this.comms.send("scroll_protection", {});
+            }
+
+            // Apply print protection if configured
+            if (this.contentProtectionConfig.protectPrinting) {
+                this.comms.send("print_protection", this.contentProtectionConfig.protectPrinting);
+            }
+        }
     }
 
     async destroy() {
@@ -91,6 +116,9 @@ export class FrameManager {
         return new Promise((res, _) => {
             this.comms?.send("activate", undefined, () => {
                 this.comms?.send("focus", undefined, () => {
+                    // Apply content protection synchronously
+                    this.applyContentProtection();
+                    
                     const remove = () => {
                         this.frame.style.removeProperty("visibility");
                         this.frame.style.removeProperty("aria-hidden");

@@ -5,7 +5,8 @@ import { ModuleName } from "../ModuleLibrary";
 import { Snapper } from "./Snapper";
 import { rangeFromLocator } from "../../helpers/locator";
 import { forceWebkitRecalc } from "../../helpers/document";
-import { PatternAnalyzer } from "../../helpers/PatternAnalyzer";
+import { PatternAnalyzer } from "../../protection/PatternAnalyzer";
+import { SCROLL_PROTECTION_CONFIG } from "../../protection/config";
 
 const SCROLL_SNAPPER_STYLE_ID = "readium-scroll-snapper-style";
 
@@ -83,10 +84,15 @@ export class ScrollSnapper extends Snapper {
                             timeDelta
                         );
                         if (isSuspicious) {
-                            this.comms?.send("suspicious_activity", {
-                                type: "automated_scrolling",
+                            const target = e.target && "tagName" in e.target ? 
+                                { tagName: (e.target as Element).tagName } : null;
+                                
+                            this.comms?.send("content_protection", {
+                                type: "suspicious_scrolling",
                                 timestamp: Date.now(),
-                                event: e
+                                scrollDelta: deltaY,
+                                scrollDirection: deltaY > 0 ? "down" : "up",
+                                targetElement: target
                             });
                         }
                     }
@@ -102,20 +108,10 @@ export class ScrollSnapper extends Snapper {
 
     private enableScrollProtection() {
         if (!this.patternAnalyzer) {
-            this.patternAnalyzer = new PatternAnalyzer({
-                maxVelocity: 10,    // pixels/ms (adjust as needed)
-                minVariance: 0.05,  // Allow for very consistent scrolling
-                historySize: 20     // More samples for better detection
-            });
+            this.patternAnalyzer = new PatternAnalyzer(SCROLL_PROTECTION_CONFIG);
+            this.isScrollProtectionEnabled = true;
+            this.comms?.log("Scroll protection enabled");
         }
-        this.isScrollProtectionEnabled = true;
-    }
-
-    private disableScrollProtection() {
-        if (!this.patternAnalyzer) return;
-        this.patternAnalyzer.clear();
-        this.patternAnalyzer = null;
-        this.isScrollProtectionEnabled = false;
     }
 
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
@@ -265,16 +261,9 @@ export class ScrollSnapper extends Snapper {
             ack(true);
         });
 
-        // Add scroll protection handlers
-        comms.register("enable_scroll_protection", ScrollSnapper.moduleName, (_, ack) => {
+        // Enable scroll protection if requested
+        comms.register("scroll_protection", ScrollSnapper.moduleName, (_, ack) => {
             this.enableScrollProtection();
-            this.comms.log("Scroll protection enabled");
-            ack(true);
-        });
-
-        comms.register("disable_scroll_protection", ScrollSnapper.moduleName, (_, ack) => {
-            this.disableScrollProtection();
-            this.comms.log("Scroll protection disabled");
             ack(true);
         });
 

@@ -1,4 +1,5 @@
 import { Link, Locator, Publication, ReadingProgression } from "@readium/shared";
+import { ContentProtectionConfig, PrintProtectionConfig } from "@readium/navigator-html-injectables";
 
 type cbb = (ok: boolean) => void;
 
@@ -11,6 +12,12 @@ export interface VisualNavigatorViewport {
     readingOrder: string[];  // Array of href strings for visible resources
     progressions: Map<string, ProgressionRange>;  // Map from href to visible scroll progression range
     positions: number[] | null;  // Range of visible positions
+}
+
+export interface IContentProtectionConfig extends ContentProtectionConfig { 
+    protectPrinting?: PrintProtectionConfig;
+    checkAutomation?: boolean;
+    checkIFrameEmbedding?: boolean;
 }
 
 export abstract class Navigator {

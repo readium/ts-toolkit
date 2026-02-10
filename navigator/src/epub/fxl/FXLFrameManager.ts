@@ -3,6 +3,7 @@ import { Page, ReadingProgression } from "@readium/shared";
 import { FrameComms } from "../frame/FrameComms";
 import { FXLPeripherals } from "./FXLPeripherals";
 import { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
+import { IContentProtectionConfig } from "../../Navigator";
 
 export class FXLFrameManager {
     private frame: HTMLIFrameElement;
@@ -10,7 +11,7 @@ export class FXLFrameManager {
     public source: string;
     private comms: FrameComms | undefined;
     private readonly peripherals: FXLPeripherals;
-
+    private readonly contentProtectionConfig: IContentProtectionConfig;
     private currModules: ModuleName[] = [];
 
     // NEW
@@ -19,9 +20,16 @@ export class FXLFrameManager {
     private loadPromise: Promise<Window> | undefined;
     private showPromise: Promise<void> | undefined;
 
-    constructor(peripherals: FXLPeripherals, direction: ReadingProgression, debugHref: string) {
+    constructor(
+        peripherals: FXLPeripherals, 
+        direction: ReadingProgression, 
+        debugHref: string,
+        contentProtectionConfig: IContentProtectionConfig = {}
+    ) {
         this.peripherals = peripherals;
         this.debugHref = debugHref;
+        // Use the provided content protection config directly without overriding defaults
+        this.contentProtectionConfig = { ...contentProtectionConfig };
         this.frame = document.createElement("iframe");
         this.frame.sandbox.value = "allow-same-origin allow-scripts";
         this.frame.classList.add("readium-navigator-iframe");
@@ -78,6 +86,8 @@ export class FXLFrameManager {
                 const wnd = this.frame.contentWindow!;
                 this.loader = new Loader(wnd as ReadiumWindow, modules);
                 this.currModules = modules;
+                this.comms = new FrameComms(wnd, new URL(this.source).origin);
+                this.applyContentProtection();
                 this.peripherals.observe(this.wrapper);
                 this.peripherals.observe(wnd);
                 try { res(wnd); } catch (error) {};
@@ -234,6 +244,18 @@ export class FXLFrameManager {
                 res();
             });
         });
+    }
+
+    private applyContentProtection() {
+        if (this.comms) {
+            // Send peripherals protection config
+            this.comms.send("peripherals_protection", this.contentProtectionConfig);
+
+            // Apply print protection if configured
+            if (this.contentProtectionConfig.protectPrinting) {
+                this.comms.send("print_protection", this.contentProtectionConfig.protectPrinting);
+            }
+        }
     }
 
     get element() {

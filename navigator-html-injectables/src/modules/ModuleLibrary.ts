@@ -7,7 +7,7 @@ import { ReflowableSetup } from "./setup/ReflowableSetup";
 import { FixedSetup } from "./setup/FixedSetup";
 import { Decorator } from "./Decorator";
 import { WebPubSetup } from "./setup/WebPubSetup";
-import { ContentProtection } from "./ContentProtection";
+import { PrintProtector } from "../protection/PrintProtector";
 
 // All the module names. TODO: Come up with a better way of collecting these in a way TS will recognize
 export type ModuleName =
@@ -21,14 +21,14 @@ export type ModuleName =
     "reflowable_setup" |
     "peripherals" |
     "webpub_setup" |
-    "content_protection";
+    "print_protection";
 
 // Modules that are valid for FXL publications
 export const FXLModules: ModuleName[] = [
     "fixed_setup",
     "decorator",
     "peripherals",
-    "content_protection"
+    "print_protection"
 ];
 
 // Modules that are valid for reflowable publications
@@ -38,7 +38,7 @@ export const ReflowableModules: ModuleName[] = [
     "peripherals",
     "column_snapper",
     "scroll_snapper",
-    "content_protection"
+    "print_protection"
 ];
 
 // Modules that are valid for WebPub publications (simple scroll-based)
@@ -47,7 +47,7 @@ export const WebPubModules: ModuleName[] = [
     "webpub_snapper",
     "decorator",
     "peripherals",
-    "content_protection"
+    "print_protection"
 ];
 
 export const ModuleLibrary = new Map<string, ModuleDerived>([
@@ -60,5 +60,5 @@ export const ModuleLibrary = new Map<string, ModuleDerived>([
     Decorator,
     ColumnSnapper,
     ScrollSnapper,
-    ContentProtection
+    PrintProtector
 ].map(m => [m.moduleName, m])); // Turn module list into K/V list for quick access by name

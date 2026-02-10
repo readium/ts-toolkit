@@ -2,7 +2,7 @@ import { Feature, Link, Locator, Publication, ReadingProgression, LocatorLocatio
 import { VisualNavigator, VisualNavigatorViewport, ProgressionRange } from "../Navigator";
 import { Configurable } from "../preferences/Configurable";
 import { WebPubFramePoolManager } from "./WebPubFramePoolManager";
-import { BasicTextSelection, CommsEventKey, FrameClickEvent, ModuleLibrary, ModuleName, WebPubModules } from "@readium/navigator-html-injectables";
+import { BasicTextSelection, CommsEventKey, FrameClickEvent, ModuleLibrary, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
 import { WebPubFrameManager } from "./WebPubFrameManager";
 
@@ -17,11 +17,14 @@ import { WebPubPreferencesEditor } from "./preferences/WebPubPreferencesEditor";
 import { Injector } from "../injection/Injector";
 import { createReadiumWebPubRules } from "../injection/webpubInjectables";
 import { IInjectablesConfig } from "../injection/Injectable";
+import { IContentProtectionConfig } from "../Navigator";
+import { NavigatorProtector, NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector";
 
 export interface WebPubNavigatorConfiguration {
     preferences: IWebPubPreferences;
     defaults: IWebPubDefaults;
     injectables?: IInjectablesConfig;
+    contentProtection?: IContentProtectionConfig;
 }
 
 export interface WebPubNavigatorListeners {
@@ -34,6 +37,7 @@ export interface WebPubNavigatorListeners {
     customEvent: (key: string, data: unknown) => void;
     handleLocator: (locator: Locator) => boolean;
     textSelected: (selection: BasicTextSelection) => void;
+    contentProtection: (type: string, data: SuspiciousActivityEvent) => void;
 }
 
 const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorListeners => ({
@@ -45,7 +49,8 @@ const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorL
     scroll: listeners.scroll || (() => {}),
     customEvent: listeners.customEvent || (() => {}),
     handleLocator: listeners.handleLocator || (() => false),
-    textSelected: listeners.textSelected || (() => {})
+    textSelected: listeners.textSelected || (() => {}),
+    contentProtection: listeners.contentProtection || (() => {}),
 })
 
 export class WebPubNavigator extends VisualNavigator implements Configurable<WebPubSettings, WebPubPreferences> {
@@ -62,6 +67,9 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private _css: WebPubCSS;
     private _preferencesEditor: WebPubPreferencesEditor | null = null;
     private readonly _injector: Injector | null = null;
+    private readonly _contentProtection: IContentProtectionConfig;
+    private readonly _navigatorProtector: NavigatorProtector | null = null;
+    private readonly _suspiciousActivityListener: ((event: Event) => void) | null = null;
     
     private webViewport: VisualNavigatorViewport = {
         readingOrder: [],
@@ -93,8 +101,23 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             allowedDomains: userConfig.allowedDomains
         });
 
+        // Initialize content protection with provided config or default values
+        this._contentProtection = configuration.contentProtection || {};
+
+        // Initialize navigator protection if configured
+        if (this._contentProtection.disableKeyboardShortcuts || this._contentProtection.disableContextMenu) {
+            this._navigatorProtector = new NavigatorProtector(this._contentProtection);
+            
+            // Listen for custom events from NavigatorProtector
+            this._suspiciousActivityListener = (event: Event) => {
+                const customEvent = event as CustomEvent;
+                this.listeners.contentProtection(customEvent.detail.type, customEvent.detail);
+            };
+            window.addEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
+        }
+
         // Initialize current location
-        if (initialPosition && typeof initialPosition.copyWithLocations === 'function') {
+        if (initialPosition && typeof initialPosition.copyWithLocations === "function") {
             this.currentLocation = initialPosition;
             // Update currentIndex to match the initial position
             const index = this.pub.readingOrder.findIndexWithHref(initialPosition.href);
@@ -109,7 +132,12 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     public async load() {
         await this.updateCSS(false);
         const cssProperties = this.compileCSSProperties(this._css);
-        this.framePool = new WebPubFramePoolManager(this.container, cssProperties, this._injector);
+        this.framePool = new WebPubFramePoolManager(
+            this.container, 
+            cssProperties, 
+            this._injector,
+            this._contentProtection
+        );
 
         await this.apply();
     }
@@ -282,6 +310,10 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             case "progress":
                 this.syncLocation(data as ProgressionRange);
                 break;
+            case "content_protection":
+                const activity = data as SuspiciousActivityEvent;
+                this.listeners.contentProtection(activity.type, activity);
+                break;
             case "log":
                 console.log(this.framePool.currentFrames[0]?.source?.split("/")[3], ...(data as any[]));
                 break;
@@ -317,6 +349,10 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     }
 
     public async destroy() {
+        if (this._suspiciousActivityListener) {
+            window.removeEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
+        }
+        this._navigatorProtector?.destroy();
         await this.framePool?.destroy();
     }
 
@@ -419,7 +455,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
     private async loadLocator(locator: Locator, cb: (ok: boolean) => void) {
         let done = false;
-        let cssSelector = (typeof locator.locations.getCssSelector === 'function') && locator.locations.getCssSelector();
+        let cssSelector = (typeof locator.locations.getCssSelector === "function") && locator.locations.getCssSelector();
         if(locator.text?.highlight) {
             done = await new Promise<boolean>((res, _) => {
                 // Attempt to go to a highlighted piece of text in the resource
@@ -451,7 +487,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         // This sanity check has to be performed because we're still passing non-locator class
         // locator objects to this function. This is not good and should eventually be forbidden
         // or the locator should be deserialized sometime before this function.
-        const hid = (typeof locator.locations.htmlId === 'function') && locator.locations.htmlId();
+        const hid = (typeof locator.locations.htmlId === "function") && locator.locations.htmlId();
         if(hid)
             done = await new Promise<boolean>((res, _) => {
                 // Attempt to go to an HTML ID in the resource

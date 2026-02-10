@@ -2,6 +2,7 @@ import { Loader, ModuleName } from "@readium/navigator-html-injectables";
 import { FrameComms } from "../epub/frame/FrameComms";
 import { ReadiumWindow } from "../../../navigator-html-injectables/types/src/helpers/dom";
 import { sML } from "../helpers";
+import { IContentProtectionConfig } from "../Navigator";
 
 export class WebPubFrameManager {
     private frame: HTMLIFrameElement;
@@ -10,10 +11,13 @@ export class WebPubFrameManager {
     private comms: FrameComms | undefined;
     private hidden: boolean = true;
     private destroyed: boolean = false;
-
+    private readonly contentProtectionConfig: IContentProtectionConfig;
     private currModules: ModuleName[] = [];
 
-    constructor(source: string) {
+    constructor(
+        source: string,
+        contentProtectionConfig: IContentProtectionConfig = {}
+    ) {
         this.frame = document.createElement("iframe");
         this.frame.classList.add("readium-navigator-iframe");
         this.frame.style.visibility = "hidden";
@@ -25,14 +29,33 @@ export class WebPubFrameManager {
         // Protect against background color bleeding
         this.frame.style.backgroundColor = "#FFFFFF";
         this.source = source;
+        
+        // Use the provided content protection config directly without overriding defaults
+        this.contentProtectionConfig = { ...contentProtectionConfig };
+    }
+
+    private applyContentProtection() {
+        if (this.comms) {
+            // Send peripherals protection config
+            this.comms.send("peripherals_protection", this.contentProtectionConfig);
+
+            // Apply scroll protection if enabled
+            if (this.contentProtectionConfig.enableScrollProtection) {
+                this.comms.send("scroll_protection", {});
+            }
+
+            // Apply print protection if configured
+            if (this.contentProtectionConfig.protectPrinting) {
+                this.comms.send("print_protection", this.contentProtectionConfig.protectPrinting);
+            }
+        }
     }
 
     async load(modules: ModuleName[] = []): Promise<Window> {
         return new Promise((res, rej) => {
-            if(this.loader) {
+            if (this.loader) {
                 const wnd = this.frame.contentWindow!;
-                // Check if currently loaded modules are equal
-                if([...this.currModules].sort().join("|") === [...modules].sort().join("|")) {
+                if ([...this.currModules].sort().join("|") === [...modules].sort().join("|")) {
                     try { res(wnd); } catch (error) {};
                     return;
                 }
@@ -48,6 +71,9 @@ export class WebPubFrameManager {
                 const wnd = this.frame.contentWindow!;
                 this.loader = new Loader(wnd as ReadiumWindow, modules);
                 this.currModules = modules;
+                // Initialize comms and apply content protection
+                this.comms = new FrameComms(wnd, this.source);
+                this.applyContentProtection();
                 try { res(wnd); } catch (error) {}
             };
             this.frame.onerror = (err) => {

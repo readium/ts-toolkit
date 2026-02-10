@@ -18,7 +18,7 @@ export type CommsEventKey =
     "text_selected" |
     "media_play" |
     "media_pause" |
-    "suspicious_activity";
+    "content_protection";
 ;
 
 export type CommsCommandKey =
@@ -44,7 +44,21 @@ export type CommsCommandKey =
     "activate" |
     "shake" |
     "force_webkit_recalc" |
-    "content_protect" |
-    "enable_scroll_protection" |
-    "disable_scroll_protection";
+    "peripherals_protection" |
+    "scroll_protection" |
+    "print_protection";
 ;
+
+export type SuspiciousActivityType = 
+    | "developer_tools"
+    | "select_all"
+    | "suspicious_selection"
+    | `custom:${string}`  // Allow custom event types with 'custom:' prefix
+    | "bulk_copy"
+    | "suspicious_scrolling"
+    | "suspicious_snapping"
+    | "drag_detected"
+    | "drop_detected"
+    | "print"
+    | "context_menu"
+    | "blocked_keyboard_shortcut";

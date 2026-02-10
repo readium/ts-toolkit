@@ -1,10 +1,16 @@
-import { SuspiciousActivityEvent } from "../types/protection";
 import { Comms } from "../comms/comms";
 import { Module } from "./Module";
 import { ReadiumWindow, nearestInteractiveElement } from "../helpers/dom";
-import { keyManager } from "../helpers/KeyCombinationManager";
-import { BulkCopyProtector, BulkCopyProtectionOptions } from "../helpers/BulkCopyProtector";
-import { SelectionAnalyzer } from "../helpers/SelectionAnalyzer";
+import { 
+    BulkCopyProtector, 
+    keyManager, 
+    SelectionAnalyzer, 
+    DEV_TOOLS_COMBOS, 
+    SELECT_ALL_COMBOS, 
+    PRINT_COMBOS, 
+    KeyboardShortcut 
+} from "../protection";
+import { SuspiciousActivityType } from "../comms";
 
 export interface FrameClickEvent {
     defaultPrevented: boolean;
@@ -26,30 +32,111 @@ export interface BasicTextSelection {
     targetFrameSrc: string;
 }
 
-export interface ContentProtectionData {
-    // Enable/disable selection monitoring
-    selection?: { maxChars?: number } | false;
-    
-    // Enable/disable copy protection
-    copy?: { maxSelectionPercent?: number; minThreshold?: number } | false;
-    
-    // Enable/disable context menu
-    contextMenu?: boolean;
-    
-    // Enable/disable drag and drop
-    dragAndDrop?: boolean;
-    
-    // Configure keyboard shortcuts
-    keyboardShortcuts?: { 
-        allowDevTools?: boolean; 
-        allowSelectAll?: boolean; 
-    } | false;
+export interface BaseSuspiciousActivityEvent {
+    type: SuspiciousActivityType;
+    timestamp: number;
+}
+
+export interface DeveloperToolsEvent extends BaseSuspiciousActivityEvent {
+    type: "developer_tools";
+    key: string;
+    code: string;
+    ctrlKey: boolean;
+    altKey: boolean;
+    shiftKey: boolean;
+    metaKey: boolean;
+}
+
+export interface SelectAllEvent extends BaseSuspiciousActivityEvent {
+    type: "select_all";
+    key: string;
+    code: string;
+    ctrlKey: boolean;
+    altKey: boolean;
+    shiftKey: boolean;
+    metaKey: boolean;
+}
+
+export interface BulkCopyEvent extends BaseSuspiciousActivityEvent {
+    type: "bulk_copy";
+    clipboardTypes: readonly string[];
+}
+
+export interface SuspiciousSelectionEvent extends BaseSuspiciousActivityEvent {
+    type: "suspicious_selection";
+    selectionLength: number;
+    selectionPreview: string;
+    eventType: string;
+}
+
+export interface DragDetectedEvent extends BaseSuspiciousActivityEvent {
+    type: "drag_detected";
+    dataTransferTypes: readonly string[];
+}
+
+export interface DropDetectedEvent extends BaseSuspiciousActivityEvent {
+    type: "drop_detected";
+    dataTransferTypes: readonly string[];
+    fileCount: number;
+}
+
+export interface PrintEvent extends BaseSuspiciousActivityEvent {
+    type: "print";
+    key: string;
+    code: string;
+    ctrlKey: boolean;
+    altKey: boolean;
+    shiftKey: boolean;
+    metaKey: boolean;
+}
+
+export interface ContextMenuEvent extends BaseSuspiciousActivityEvent {
+    type: "context_menu";
+    button: number;
+    buttons: number;
+    clientX: number;
+    clientY: number;
+}
+
+export interface BlockedKeyboardShortcutEvent extends Omit<BaseSuspiciousActivityEvent, 'type'> {
+    type: "blocked_keyboard_shortcut" | `custom:${string}`;
+    key: string;
+    code: string;
+    ctrlKey: boolean;
+    altKey: boolean;
+    shiftKey: boolean;
+    metaKey: boolean;
+}
+
+export type SuspiciousActivityEvent = 
+    | DeveloperToolsEvent
+    | SelectAllEvent
+    | BulkCopyEvent
+    | SuspiciousSelectionEvent
+    | DragDetectedEvent
+    | DropDetectedEvent
+    | PrintEvent
+    | ContextMenuEvent
+    | BlockedKeyboardShortcutEvent;
+
+export interface ContentProtectionConfig {
+    monitorSelection?: boolean;
+    protectCopy?: boolean | {
+        maxSelectionPercent?: number;
+        minThreshold?: number;
+        absoluteMaxChars?: number;
+    };
+    disableContextMenu?: boolean;
+    disableDragAndDrop?: boolean;
+    disableKeyboardShortcuts?: KeyboardShortcut[];
+    enableScrollProtection?: boolean;
 }
 
 export class Peripherals extends Module {
     static readonly moduleName = "peripherals";
     private wnd!: ReadiumWindow;
     private comms!: Comms;
+    private configApplied = false; // Track if config has been applied
 
     // State management
     private cleanupCallbacks: (() => void)[] = [];
@@ -59,7 +146,7 @@ export class Peripherals extends Module {
     private isContextMenuEnabled = false;
     private isDragAndDropEnabled = false;
     private isSelectionMonitoringEnabled = false;
-    private isBulkCopyProtectionEnabled = true;
+    private isBulkCopyProtectionEnabled = false;
     
     // Selection analysis
     private selectionAnalyzer: SelectionAnalyzer | null = null;
@@ -67,102 +154,143 @@ export class Peripherals extends Module {
     // Bulk copy protection
     private bulkCopyProtector: BulkCopyProtector | null = null;
 
-    private enableContextMenu(): void {
+    private addContextMenuPrevention(): void {
         if (this.isContextMenuEnabled || !this.wnd) return;
         this.wnd.document.addEventListener("contextmenu", this.onContext);
         this.isContextMenuEnabled = true;
     }
 
-    private disableContextMenu(): void {
+    private removeContextMenuPrevention(): void {
         if (!this.isContextMenuEnabled || !this.wnd) return;
         this.wnd.document.removeEventListener("contextmenu", this.onContext);
         this.isContextMenuEnabled = false;
     }
 
-    private enableDragAndDrop(): void {
+    private addDragAndDropPrevention(): void {
         if (this.isDragAndDropEnabled || !this.wnd) return;
         this.wnd.document.addEventListener("dragstart", this.onDragStart);
         this.wnd.document.addEventListener("drop", this.onDrop);
         this.isDragAndDropEnabled = true;
     }
 
-    private disableDragAndDrop(): void {
+    private removeDragAndDropPrevention(): void {
         if (!this.isDragAndDropEnabled || !this.wnd) return;
         this.wnd.document.removeEventListener("dragstart", this.onDragStart);
         this.wnd.document.removeEventListener("drop", this.onDrop);
         this.isDragAndDropEnabled = false;
     }
 
-    private enableKeyboardShortcuts(features: {
-        devTools?: boolean;
-        selectAll?: boolean;
-    } = {}): void {
+    private enableKeyboardShortcutsProtection(shortcuts: KeyboardShortcut[] = []): void {
         // Clear any existing state
         keyManager.detach();
         this.cleanupCallbacks = [];
         
-        // Developer tools detection (Cmd+Option+I, Cmd+Option+J, Cmd+Option+U, F12, etc.)
-        if (features.devTools !== false) {
-            const devToolsCombos = [
-                { key: "i", meta: true, alt: true },
-                { key: "j", meta: true, alt: true },
-                { key: "u", meta: true, alt: true },
-                { key: "F12" },
-                { key: "F12", shift: true },
-                { key: "F12", ctrl: true, shift: true },
-                { key: "F12", meta: true, alt: true },
-            ];
-
-            // Register developer tools key combinations
-            const unregisterDevTools = keyManager.subscribeCombinations(
-                devToolsCombos,
-                (event) => this.onDeveloperToolsAttempt(event)
-            );
-            this.cleanupCallbacks.push(unregisterDevTools);
+        // If no shortcuts are provided, enable all protections
+        const enableAll = shortcuts.length === 0;
+        
+        // Map of shortcut names to their corresponding handlers and combos
+        const shortcutMap = {
+            devTools: {
+                handler: (event: Event) => this.onDeveloperToolsAttempt(event as KeyboardEvent),
+                combos: DEV_TOOLS_COMBOS,
+                name: "Developer tools"
+            },
+            selectAll: {
+                handler: (event: Event) => this.onSelectAll(event as KeyboardEvent),
+                combos: SELECT_ALL_COMBOS,
+                name: "Select all"
+            },
+            print: {
+                handler: (event: Event) => this.onPrintAttempt(event as KeyboardEvent),
+                combos: PRINT_COMBOS,
+                name: "Print"
+            }
+        };
+        
+        // If enableAll is true, we'll enable all shortcuts
+        if (enableAll) {
+            Object.values(shortcutMap).forEach(({ handler, combos, name }) => {
+                const unregister = keyManager.subscribeCombinations(combos, handler);
+                this.cleanupCallbacks.push(unregister);
+                this.comms?.log(`${name} protection enabled`);
+            });
+        } else {
+            // Otherwise, enable only the specified shortcuts
+            const enabledShortcuts = new Set(shortcuts.map(s => 
+                typeof s === "string" ? s as "devTools" | "selectAll" | "print" : "custom" as const
+            ));
+            
+            for (const [key, { handler, combos, name }] of Object.entries(shortcutMap)) {
+                if (enabledShortcuts.has(key as "devTools" | "selectAll" | "print")) {
+                    const unregister = keyManager.subscribeCombinations(combos, handler);
+                    this.cleanupCallbacks.push(unregister);
+                    this.comms?.log(`${name} protection enabled`);
+                }
+            }
+            
+            // Handle custom key combos
+            for (const shortcut of shortcuts) {
+                if (typeof shortcut !== "string") {
+                    const unregister = keyManager.subscribeCombinations([shortcut], (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        
+                        // Create the keyboard shortcut event with custom or default type
+                        const activityEvent: BlockedKeyboardShortcutEvent = {
+                            type: shortcut.type 
+                                ? `custom:${shortcut.type}`
+                                : "blocked_keyboard_shortcut",
+                            timestamp: Date.now(),
+                            key: event.key,
+                            code: event.code,
+                            ctrlKey: event.ctrlKey,
+                            altKey: event.altKey,
+                            shiftKey: event.shiftKey,
+                            metaKey: event.metaKey
+                        };
+                        this.comms?.send("content_protection", activityEvent);
+                    });
+                    this.cleanupCallbacks.push(unregister);
+                }
+            }
         }
-
-        // Select All shortcut
-        if (features.selectAll) {
-            const selectAllCombos = [
-                { key: "a", meta: true },    // Cmd+A on Mac
-                { key: "a", ctrl: true }     // Ctrl+A on Windows/Linux
-            ];
-            const unregisterSelectAll = keyManager.subscribeCombinations(
-                selectAllCombos,
-                (event) => this.onSelectAll(event)
-            );
-            this.cleanupCallbacks.push(unregisterSelectAll);
-        }
-
+        
         // Attach the key manager to the document
         if (this.wnd) {
             keyManager.attach(this.wnd.document);
         }
     }
     
-    private disableKeyboardShortcuts(): void {
+    private disableKeyboardShortcutsProtection(): void {
         keyManager.detach();
         this.cleanupCallbacks = [];
     }
 
-    private enableBulkCopyProtection(options: Partial<BulkCopyProtectionOptions> = {}): void {
+    private addBulkCopyProtection(options?: {
+        enabled: boolean;
+        maxSelectionPercent: number;
+        minThreshold: number;
+        absoluteMaxChars: number;
+    }): void {
         if (this.isBulkCopyProtectionEnabled || !this.wnd) return;
         
         const defaultOptions = {
             enabled: true,
-            maxSelectionPercent: 0.7,   // 70% of document
-            absoluteMaxChars: 10000,    // Absolute max characters that can be selected
-            minThreshold: 100,          // Minimum number of characters to start enforcing limits
-            ...options
+            maxSelectionPercent: 0.7,
+            minThreshold: 100,
+            absoluteMaxChars: 50000,
+            historySize: 20     // More samples for better detection
         };
         
-        this.bulkCopyProtector = new BulkCopyProtector(this.wnd, defaultOptions);
+        const finalOptions = options ? { ...defaultOptions, ...options } : defaultOptions;
+        
+        this.bulkCopyProtector = new BulkCopyProtector(this.wnd, finalOptions);
         this.wnd.document.addEventListener("copy", this.preventBulkCopy, true);
         this.wnd.document.addEventListener("cut", this.preventBulkCopy, true);
         this.isBulkCopyProtectionEnabled = true;
     }
 
-    private disableBulkCopyProtection(): void {
+    private removeBulkCopyProtection(): void {
         if (!this.isBulkCopyProtectionEnabled || !this.wnd) return;
         
         this.wnd.document.removeEventListener("copy", this.preventBulkCopy, true);
@@ -176,13 +304,18 @@ export class Peripherals extends Module {
         event.preventDefault();
         event.stopPropagation();
         
-        const activityEvent: SuspiciousActivityEvent = {
-            type: "developer_tools_attempt",
-            event: event,
-            timestamp: Date.now()
+        const activityEvent: DeveloperToolsEvent = {
+            type: "developer_tools",
+            timestamp: Date.now(),
+            key: event.key,
+            code: event.code,
+            ctrlKey: event.ctrlKey,
+            altKey: event.altKey,
+            shiftKey: event.shiftKey,
+            metaKey: event.metaKey
         };
         
-        this.comms?.send("suspicious_activity", activityEvent);
+        this.comms?.send("content_protection", activityEvent);
     }
 
     private onSelectAll(event: KeyboardEvent) {
@@ -196,14 +329,34 @@ export class Peripherals extends Module {
         //    selection.addRange(range);
         }
         
-        const activityEvent: SuspiciousActivityEvent = {
-            type: "select_all_attempt",
-            event: event,
-            timestamp: Date.now()
+        const activityEvent: SelectAllEvent = {
+            type: "select_all",
+            timestamp: Date.now(),
+            key: event.key,
+            code: event.code,
+            ctrlKey: event.ctrlKey,
+            altKey: event.altKey,
+            shiftKey: event.shiftKey,
+            metaKey: event.metaKey
         };
         
-        this.comms?.send("suspicious_activity", activityEvent);
+        this.comms?.send("content_protection", activityEvent);
         return false;
+    }
+
+    private onPrintAttempt(event: KeyboardEvent) {
+        event.preventDefault();
+        const activityEvent: PrintEvent = {
+            type: "print",
+            timestamp: Date.now(),
+            key: event.key,
+            code: event.code,
+            ctrlKey: event.ctrlKey,
+            metaKey: event.metaKey,
+            shiftKey: event.shiftKey,
+            altKey: event.altKey
+        };
+        this.comms?.send("content_protection", activityEvent);
     }
 
     private preventBulkCopy = (event: ClipboardEvent) => {
@@ -212,12 +365,14 @@ export class Peripherals extends Module {
         }
         
         if (!this.bulkCopyProtector.shouldAllowCopy(event)) {
-            const activityEvent: SuspiciousActivityEvent = {
-                type: "suspicious_copy",
-                event: event,
-                timestamp: Date.now()
+            event.preventDefault();
+            
+            const activityEvent: BulkCopyEvent = {
+                type: "bulk_copy",
+                timestamp: Date.now(),
+                clipboardTypes: event.clipboardData?.types ? [...event.clipboardData.types] : []
             };
-            this.comms?.send("suspicious_activity", activityEvent);
+            this.comms?.send("content_protection", activityEvent);
             return false;
         }
         return true;
@@ -229,27 +384,32 @@ export class Peripherals extends Module {
         }
         
         const selection = this.wnd.getSelection();
-        if (this.selectionAnalyzer.analyze(selection)) {
-            const activityEvent: SuspiciousActivityEvent = {
+        if (selection && selection.type === "Range" && this.selectionAnalyzer.analyze(selection)) {
+            const selectedText = selection.toString();
+            
+            const activityEvent: SuspiciousSelectionEvent = {
                 type: "suspicious_selection",
-                event: event,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                selectionLength: selectedText.length,
+                selectionPreview: selectedText.substring(0, 100), // First 100 chars for analysis
+                eventType: event?.type || "unknown"
             };
-            this.comms?.send("suspicious_activity", activityEvent);
+            this.comms?.send("content_protection", activityEvent);
         }
     };
 
-    private enableSelectionMonitoring(): void {
-        if (this.isSelectionMonitoringEnabled || !this.wnd) {
-            return;
-        }
-        
-        this.selectionAnalyzer = new SelectionAnalyzer();
+    private addSelectionMonitoring(): void {
+        if (this.isSelectionMonitoringEnabled || !this.wnd) return;
+        this.selectionAnalyzer = new SelectionAnalyzer({
+            maxSelectionsPerSecond: 10, // catch rapid bot-like selections
+            minVariance: 5,             // detect consistent patterns
+            historySize: 20             // Samples for analysis
+        });
         this.wnd.document.addEventListener("selectionchange", this.handleSelection);
         this.isSelectionMonitoringEnabled = true;
     }
     
-    private disableSelectionMonitoring(): void {
+    private removeSelectionMonitoring(): void {
         if (!this.isSelectionMonitoringEnabled || !this.wnd) {
             return;
         }
@@ -261,39 +421,52 @@ export class Peripherals extends Module {
     }
 
     private onDragStart = (event: DragEvent) => {
-        if (!this.isDragAndDropEnabled) {
+        if (this.isDragAndDropEnabled) {
+            // Drag and drop protection is enabled - prevent it
             event.preventDefault();
-            this.comms?.send("suspicious_activity", {
+            const activityEvent: DragDetectedEvent = {
                 type: "drag_detected",
-                event: event,
-                timestamp: Date.now()
-            });
+                timestamp: Date.now(),
+                dataTransferTypes: event.dataTransfer?.types ? [...event.dataTransfer.types] : []
+            };
+            this.comms?.send("content_protection", activityEvent);
             return false;
+        } else {
+            return true;
         }
-        return true;
     };
 
     private onDrop = (event: DragEvent) => {
-        if (!this.isDragAndDropEnabled) {
+        if (this.isDragAndDropEnabled) {
+            // Drag and drop protection is enabled - prevent it
             event.preventDefault();
-            this.comms?.send("suspicious_activity", {
+            const dataTransfer = event.dataTransfer;
+            const activityEvent: DropDetectedEvent = {
                 type: "drop_detected",
-                event: event,
-                timestamp: Date.now()
-            });
+                timestamp: Date.now(),
+                dataTransferTypes: dataTransfer?.types ? [...dataTransfer.types] : [],
+                fileCount: dataTransfer?.files?.length || 0
+            };
+            this.comms?.send("content_protection", activityEvent);
             return false;
+        } else {
+            return true;
         }
-        return true;
     };
 
     private onContext = (event: MouseEvent) => {
-        if (!this.isContextMenuEnabled) {
+        if (this.isContextMenuEnabled) {
+            // Context menu protection is enabled - prevent it
             event.preventDefault();
-            this.comms?.send("suspicious_activity", {
+            const activityEvent: ContextMenuEvent = {
                 type: "context_menu",
-                event: event,
-                timestamp: Date.now()
-            });
+                timestamp: Date.now(),
+                button: event.button,
+                buttons: event.buttons,
+                clientX: event.clientX,
+                clientY: event.clientY
+            };
+            this.comms?.send("content_protection", activityEvent);
         }
     };
 
@@ -388,72 +561,56 @@ export class Peripherals extends Module {
         this.comms?.unregisterAll(Peripherals.moduleName);
 
         // Single handler for all content protection features
-        this.comms?.register("content_protect", Peripherals.moduleName, (data: unknown, ack) => {
-            const contentData = data as ContentProtectionData;
-            try {
-                // Selection monitoring
-                if ("selection" in contentData) {
-                    if (contentData.selection === false) {
-                        this.disableSelectionMonitoring();
-                        this.comms?.log("Selection monitoring disabled");
-                    } else {
-                        this.enableSelectionMonitoring();
-                        this.comms?.log("Selection monitoring enabled");
-                    }
+        this.comms?.register("peripherals_protection", Peripherals.moduleName, (data: unknown, ack) => {
+            const config = data as ContentProtectionConfig;
+            
+            // Apply config only on first call, then ignore subsequent calls (immutable)
+            if (!this.configApplied) {
+                this.configApplied = true;
+                
+                // Selection
+                if (config.monitorSelection) {
+                    this.addSelectionMonitoring();
+                    this.comms?.log("Selection monitoring enabled");
                 }
-
-                // Copy protection
-                if ("copy" in contentData) {
-                    if (contentData.copy === false) {
-                        this.disableBulkCopyProtection();
-                        this.comms?.log("Bulk copy protection disabled");
-                    } else {
-                        this.enableBulkCopyProtection(contentData.copy);
-                        this.comms?.log("Bulk copy protection enabled");
-                    }
+                
+                // Copy
+                if (typeof config.protectCopy === "object") {
+                    // Limited copying with custom thresholds
+                    const copyConfig = config.protectCopy;
+                    this.addBulkCopyProtection({
+                        enabled: true,
+                        maxSelectionPercent: copyConfig.maxSelectionPercent ?? 0.7,
+                        minThreshold: copyConfig.minThreshold ?? 100,
+                        absoluteMaxChars: copyConfig.absoluteMaxChars ?? 50000
+                    });
+                    this.comms?.log("Copy protection enabled (limited)");
+                } else if (config.protectCopy === true) {
+                    // Block all copying
+                    this.addBulkCopyProtection({ enabled: true, maxSelectionPercent: 0, minThreshold: 0, absoluteMaxChars: 0 });
+                    this.comms?.log("Copy protection enabled (blocked all)");
                 }
-
+                
                 // Context menu
-                if (contentData.contextMenu !== undefined) {
-                    if (contentData.contextMenu) {
-                        this.enableContextMenu();
-                        this.comms?.log("Context menu enabled");
-                    } else {
-                        this.disableContextMenu();
-                        this.comms?.log("Context menu disabled");
-                    }
+                if (config.disableContextMenu) {
+                    this.addContextMenuPrevention();
+                    this.comms?.log("Context menu protection enabled");
                 }
-
+                
                 // Drag and drop
-                if (contentData.dragAndDrop !== undefined) {
-                    if (contentData.dragAndDrop) {
-                        this.enableDragAndDrop();
-                        this.comms?.log("Drag and drop enabled");
-                    } else {
-                        this.disableDragAndDrop();
-                        this.comms?.log("Drag and drop disabled");
-                    }
+                if (config.disableDragAndDrop) {
+                    this.addDragAndDropPrevention();
+                    this.comms?.log("Drag and drop protection enabled");
                 }
-
+                
                 // Keyboard shortcuts
-                if ("keyboardShortcuts" in contentData) {
-                    if (contentData.keyboardShortcuts === false) {
-                        this.disableKeyboardShortcuts();
-                        this.comms?.log("Keyboard shortcuts disabled");
-                    } else {
-                        this.enableKeyboardShortcuts({
-                            devTools: contentData.keyboardShortcuts?.allowDevTools ?? true,
-                            selectAll: contentData.keyboardShortcuts?.allowSelectAll ?? true
-                        });
-                        this.comms?.log("Keyboard shortcuts enabled");
-                    }
+                if (config.disableKeyboardShortcuts && config.disableKeyboardShortcuts.length > 0) {
+                    this.enableKeyboardShortcutsProtection(config.disableKeyboardShortcuts);
+                    this.comms?.log(`Keyboard shortcuts protection enabled`);
                 }
-
-                ack(true);
-            } catch (error) {
-                console.error("Error in content protection:", error);
-                ack(false);
             }
+            
+            ack(true);
         });
     }
 
@@ -476,11 +633,11 @@ export class Peripherals extends Module {
 
     unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         // Clean up optional features
-        this.disableBulkCopyProtection();
-        this.disableSelectionMonitoring();
-        this.disableContextMenu();
-        this.disableDragAndDrop();
-        this.disableKeyboardShortcuts();
+        this.removeBulkCopyProtection();
+        this.removeSelectionMonitoring();
+        this.removeContextMenuPrevention();
+        this.removeDragAndDropPrevention();
+        this.disableKeyboardShortcutsProtection();
         
         // Clean up event listeners
         this.cleanupCallbacks.forEach(cleanup => cleanup());

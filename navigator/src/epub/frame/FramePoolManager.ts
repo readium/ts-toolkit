@@ -3,6 +3,7 @@ import { Locator, Publication } from "@readium/shared";
 import FrameBlobBuider from "./FrameBlobBuilder";
 import { FrameManager } from "./FrameManager";
 import { Injector } from "../../injection/Injector";
+import { IContentProtectionConfig } from "../../Navigator";
 
 const UPPER_BOUNDARY = 5;
 const LOWER_BOUNDARY = 3;
@@ -18,17 +19,20 @@ export class FramePoolManager {
     private pendingUpdates: Map<string, { inPool: boolean }> = new Map();
     private currentBaseURL: string | undefined;
     private readonly injector: Injector | null = null;
+    private readonly contentProtectionConfig: IContentProtectionConfig;
 
     constructor(
         container: HTMLElement, 
         positions: Locator[], 
         cssProperties?: { [key: string]: string },
-        injector?: Injector | null
+        injector?: Injector | null,
+        contentProtectionConfig?: IContentProtectionConfig
     ) {
         this.container = container;
         this.positions = positions;
         this.currentCssProperties = cssProperties;
         this.injector = injector ?? null;
+        this.contentProtectionConfig = contentProtectionConfig || {};
     }
 
     async destroy() {
@@ -164,7 +168,7 @@ export class FramePoolManager {
                 }
 
                 // Create <iframe>
-                const fm = new FrameManager(this.blobs.get(href)!);
+                const fm = new FrameManager(this.blobs.get(href)!, this.contentProtectionConfig);
                 if(href !== newHref) await fm.hide(); // Avoid unecessary hide
                 this.container.appendChild(fm.iframe);
                 await fm.load(modules);

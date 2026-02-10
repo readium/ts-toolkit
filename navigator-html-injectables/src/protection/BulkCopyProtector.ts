@@ -1,4 +1,4 @@
-import { ReadiumWindow } from "./dom";
+import { ReadiumWindow } from "../helpers/dom";
 
 export interface BulkCopyProtectionOptions {
     enabled: boolean;
@@ -14,9 +14,9 @@ export class BulkCopyProtector {
 
     constructor(
         private readonly window: ReadiumWindow,
-        initialOptions: BulkCopyProtectionOptions
+        options: BulkCopyProtectionOptions
     ) {
-        this.options = { ...initialOptions };
+        this.options = options;
     }
 
     public shouldAllowCopy(event: ClipboardEvent): boolean {
@@ -58,6 +58,6 @@ export class BulkCopyProtector {
     public destroy(): void {
         this.lastSelectionLength = 0;
         this.lastSelectionTime = 0;
-        this.options = { ...this.options, enabled: false };
+        this.options.enabled = false;
     }
 }

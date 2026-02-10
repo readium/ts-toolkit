@@ -1,10 +1,4 @@
-type KeyCombo = {
-    key: string;
-    ctrl?: boolean;
-    shift?: boolean;
-    alt?: boolean;
-    meta?: boolean;
-};
+import type { KeyCombo } from "./KeyboardCombinations";
 
 type KeyHandler = (event: KeyboardEvent) => void;
 
@@ -31,7 +25,13 @@ class KeyCombinationManager {
     }
 
     private getComboId(combo: KeyCombo): string {
-        return `${combo.key.toLowerCase()}:${combo.ctrl ? 1 : 0}:${combo.shift ? 1 : 0}:${combo.alt ? 1 : 0}:${combo.meta ? 1 : 0}`;
+        // Use "in" operator to check for explicitly set false values
+        const ctrl = "ctrl" in combo ? (combo.ctrl ? 1 : 0) : 0;
+        const shift = "shift" in combo ? (combo.shift ? 1 : 0) : 0;
+        const alt = "alt" in combo ? (combo.alt ? 1 : 0) : 0;
+        const meta = "meta" in combo ? (combo.meta ? 1 : 0) : 0;
+        
+        return `${combo.keyCode}:${ctrl}:${shift}:${alt}:${meta}`;
     }
 
     /**
@@ -67,11 +67,14 @@ class KeyCombinationManager {
     }
 
     private handleKeyDown(event: Event): void {
-        if (this.subscriptions.size === 0) return;
+        
+        if (this.subscriptions.size === 0) {
+            return;
+        }
 
         const keyboardEvent = event as KeyboardEvent;
         const combo: KeyCombo = {
-            key: keyboardEvent.key,
+            keyCode: keyboardEvent.keyCode,  // Use stable keyCode
             ctrl: keyboardEvent.ctrlKey,
             shift: keyboardEvent.shiftKey,
             alt: keyboardEvent.altKey,
@@ -79,6 +82,7 @@ class KeyCombinationManager {
         };
 
         const id = this.getComboId(combo);
+        
         const subscription = this.subscriptions.get(id);
         if (subscription) {
             subscription.handler(keyboardEvent);
@@ -90,6 +94,7 @@ class KeyCombinationManager {
      * @param element The target element to listen for key events on (defaults to document)
      */
     public attach(element: EventTarget = document): void {
+        
         if (this.element) {
             this.detach();
         }
@@ -106,11 +111,11 @@ class KeyCombinationManager {
      * Detach all event listeners and clear all subscriptions
      */
     public detach(): void {
-        if (this.element) {
-            this.element.removeEventListener("keydown", this.boundHandleKeyDown);
-            this.element = null;
-            this.subscriptions.clear();
+        if (this.element && this.boundHandleKeyDown) {
+            this.element.removeEventListener("keydown", this.boundHandleKeyDown, { capture: true } as any);
         }
+        this.element = null;
+        this.subscriptions.clear();
     }
 
     /**
