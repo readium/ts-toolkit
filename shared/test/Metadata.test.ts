@@ -255,7 +255,7 @@ describe('Metadata Tests', () => {
         title: new LocalizedString('Title'),
       }).serialize()
     ).toEqual({
-      title: { undefined: 'Title' },
+      title: { und: 'Title' },
     });
   });
 
@@ -393,31 +393,31 @@ describe('Metadata Tests', () => {
       language: ['en', 'fr'],
       sortAs: { en: 'sort key', fr: 'clé de tri' },
       subject: [
-        { name: { undefined: 'Science Fiction' } },
-        { name: { undefined: 'Fantasy' } },
+        { name: { und: 'Science Fiction' } },
+        { name: { und: 'Fantasy' } },
       ],
-      author: [{ name: { undefined: 'Author' } }],
-      translator: [{ name: { undefined: 'Translator' } }],
-      editor: [{ name: { undefined: 'Editor' } }],
-      artist: [{ name: { undefined: 'Artist' } }],
-      illustrator: [{ name: { undefined: 'Illustrator' } }],
-      letterer: [{ name: { undefined: 'Letterer' } }],
-      penciler: [{ name: { undefined: 'Penciler' } }],
-      colorist: [{ name: { undefined: 'Colorist' } }],
-      inker: [{ name: { undefined: 'Inker' } }],
-      narrator: [{ name: { undefined: 'Narrator' } }],
-      contributor: [{ name: { undefined: 'Contributor' } }],
-      publisher: [{ name: { undefined: 'Publisher' } }],
-      imprint: [{ name: { undefined: 'Imprint' } }],
+      author: [{ name: { und: 'Author' } }],
+      translator: [{ name: { und: 'Translator' } }],
+      editor: [{ name: { und: 'Editor' } }],
+      artist: [{ name: { und: 'Artist' } }],
+      illustrator: [{ name: { und: 'Illustrator' } }],
+      letterer: [{ name: { und: 'Letterer' } }],
+      penciler: [{ name: { und: 'Penciler' } }],
+      colorist: [{ name: { und: 'Colorist' } }],
+      inker: [{ name: { und: 'Inker' } }],
+      narrator: [{ name: { und: 'Narrator' } }],
+      contributor: [{ name: { und: 'Contributor' } }],
+      publisher: [{ name: { und: 'Publisher' } }],
+      imprint: [{ name: { und: 'Imprint' } }],
       layout: 'fixed',
       readingProgression: 'rtl',
       description: 'Description',
       duration: 4.24,
       numberOfPages: 240,
       belongsTo: {
-        collection: [{ name: { undefined: 'Collection' } }],
-        series: [{ name: { undefined: 'Series' } }],
-        'schema:Periodical': [{ name: { undefined: 'Periodical' } }],
+        collection: [{ name: { und: 'Collection' } }],
+        series: [{ name: { und: 'Series' } }],
+        'schema:Periodical': [{ name: { und: 'Periodical' } }],
       },
       tdm: {
         reservation: 'all',
@@ -451,7 +451,7 @@ describe('Metadata Tests', () => {
         title: new LocalizedString('Title'),
       }).serialize()
     ).toEqual({
-      title: { undefined: 'Title' }
+      title: { und: 'Title' }
     });
   });
 

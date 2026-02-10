@@ -14,7 +14,7 @@ export class Subject {
   public readonly name: LocalizedString;
 
   /** Provides a string that a machine can sort. */
-  public readonly sortAs?: string;
+  public readonly sortAs?: LocalizedString;
 
   /** EPUB 3.1 opf:term. */
   public readonly code?: string;
@@ -28,7 +28,7 @@ export class Subject {
   /** Creates a [Subject]. */
   constructor(values: {
     name: LocalizedString;
-    sortAs?: string;
+    sortAs?: LocalizedString;
     code?: string;
     scheme?: string;
     links?: Links;
@@ -56,7 +56,7 @@ export class Subject {
       if (!json.name) return;
       return new Subject({
         name: LocalizedString.deserialize(json.name) as LocalizedString,
-        sortAs: json.sortAs,
+        sortAs: json.sortAs ? LocalizedString.deserialize(json.sortAs) : undefined,
         code: json.code,
         scheme: json.scheme,
         links: Links.deserialize(json.links),
@@ -69,7 +69,7 @@ export class Subject {
    */
   public serialize(): any {
     const json: any = { name: this.name.serialize() };
-    if (this.sortAs !== undefined) json.sortAs = this.sortAs;
+    if (this.sortAs !== undefined) json.sortAs = this.sortAs.serialize();
     if (this.code !== undefined) json.code = this.code;
     if (this.scheme !== undefined) json.scheme = this.scheme;
     if (this.links) json.links = this.links.serialize();

@@ -5,3 +5,4 @@ export * from './audio';
 export * from './helpers';
 export * from './preferences';
 export * from './css';
+export * from './injection';

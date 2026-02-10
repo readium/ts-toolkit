@@ -1,3 +1,4 @@
+import { SUPPORTED_LANGUAGES } from '../../src/publication/accessibility/SupportedLanguages';
 import { Localization } from '../../src/publication/accessibility/Localization';
 
 describe('Localization', () => {
@@ -18,7 +19,7 @@ describe('Localization', () => {
     expect(l10n.getCurrentLocale()).toBe('en');
   });
 
-  it('should register a new locale', () => {
+  it('should register a new locale', async () => {
     const l10n = Localization;
     const testLocale = {
       test: {
@@ -30,7 +31,8 @@ describe('Localization', () => {
     };
 
     l10n.registerLocale('test', testLocale);
-    expect(l10n.setLocale('test')).toBe(true);
+    const result = await l10n.setLocale('test');
+    expect(result).toBe(true);
     expect(l10n.getCurrentLocale()).toBe('test');
     expect(l10n.getString('test.key').compact).toBe('Test');
     expect(l10n.getString('test.key').descriptive).toBe('Test Description');
@@ -94,8 +96,41 @@ describe('Localization', () => {
     const l10n = Localization;
     const locales = l10n.getAvailableLocales();
     
-    expect(locales).toContain('en');
-    expect(locales).toContain('fr');
-    expect(locales.length).toBeGreaterThanOrEqual(2);
+    expect(locales).toEqual(SUPPORTED_LANGUAGES);
+  });
+
+  it('should load and set a locale using jsonLoaders', async () => {
+    const l10n = Localization;
+    
+    // First, verify the French locale is in the available locales
+    const initialLocales = l10n.getAvailableLocales();
+    expect(initialLocales).toContain('fr');
+    
+    // Get a valid key that exists in the localization files
+    const key = 'hazards.none';
+    
+    // Get the English value first for comparison
+    const englishValue = l10n.getString(key);
+    
+    // Verify the English value is valid
+    expect(englishValue).toBeDefined();
+    expect(englishValue.compact).toBeTruthy();
+    expect(englishValue.descriptive).toBeTruthy();
+    
+    // Load and set the French locale
+    const result = await l10n.setLocale('fr');
+    
+    // Verify the locale was set successfully
+    expect(result).toBe(true);
+    expect(l10n.getCurrentLocale()).toBe('fr');
+    
+    // Verify we can get a string in French
+    const frenchValue = l10n.getString(key);
+    
+    // Verify the French value is valid and different from English
+    expect(frenchValue).toBeDefined();
+    expect(frenchValue.compact).toBeTruthy();
+    expect(frenchValue.descriptive).toBeTruthy();
+    expect(frenchValue).not.toEqual(englishValue);
   });
 });

@@ -21,7 +21,7 @@ function createPublication(values?: {
   const metadata = new Metadata({
     title: new LocalizedString(values?.title || 'Title'),
     languages: [values?.language || 'en'],
-    readingProgression: values?.readingProgression || ReadingProgression.auto,
+    readingProgression: values?.readingProgression || ReadingProgression.ltr,
     accessibility: values?.accessibility || new Accessibility({}),
     layout: values?.layout || Layout.reflowable,
   });

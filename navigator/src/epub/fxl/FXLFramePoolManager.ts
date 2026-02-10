@@ -6,6 +6,7 @@ import { FXLFrameManager } from "./FXLFrameManager";
 import { FXLPeripherals } from "./FXLPeripherals";
 import { FXLSpreader, Orientation, Spread } from "./FXLSpreader";
 import { VisualNavigatorViewport } from "../../Navigator";
+import { Injector } from "../../injection/Injector";
 
 const UPPER_BOUNDARY = 8;
 const LOWER_BOUNDARY = 5;
@@ -26,6 +27,7 @@ export class FXLFramePoolManager {
     private readonly delayedTimeout: Map<string, number> = new Map();
     private currentBaseURL: string | undefined;
     private previousFrames: FXLFrameManager[] = [];
+    private readonly injector: Injector | null = null;
 
     // NEW
     private readonly bookElement: HTMLDivElement;
@@ -44,10 +46,16 @@ export class FXLFramePoolManager {
     // private readonly pages: FXLFrameManager[] = [];
     public readonly peripherals: FXLPeripherals;
 
-    constructor(container: HTMLElement, positions: Locator[], pub: Publication) {
+    constructor(
+        container: HTMLElement, 
+        positions: Locator[], 
+        pub: Publication,
+        injector?: Injector | null
+    ) {
         this.container = container;
         this.positions = positions;
         this.pub = pub;
+        this.injector = injector ?? null;
         this.spreadPresentation = pub.metadata.otherMetadata?.spread || Spread.auto;
 
         if(this.pub.metadata.effectiveReadingProgression !== ReadingProgression.rtl && this.pub.metadata.effectiveReadingProgression !== ReadingProgression.ltr)
@@ -393,6 +401,9 @@ export class FXLFramePoolManager {
         // Revoke all blobs
         this.blobs.forEach(v => URL.revokeObjectURL(v));
 
+        // Clean up injector if it exists
+        this.injector?.dispose();
+
         // Empty container of elements
         this.container.childNodes.forEach(v => {
             if(v.nodeType === Node.ELEMENT_NODE || v.nodeType === Node.TEXT_NODE) v.remove();
@@ -495,7 +506,14 @@ export class FXLFramePoolManager {
                 const itm = pub.readingOrder.items[index];
                 if(!itm) return; // TODO throw?
                 if(!this.blobs.has(href)) {
-                    const blobBuilder = new FrameBlobBuider(pub, this.currentBaseURL || "", itm);
+                    const blobBuilder = new FrameBlobBuider(
+                        pub, 
+                        this.currentBaseURL || "", 
+                        itm,
+                        {
+                            injector: this.injector
+                        }
+                    );
                     const blobURL = await blobBuilder.build(true);
                     this.blobs.set(href, blobURL);
                 }

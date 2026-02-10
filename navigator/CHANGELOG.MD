@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.9] – 2026-02-03
+
+### Fixed
+
+- Fixed code from `Shared` being duplicated in the build output ([#192](https://github.com/readium/ts-toolkit/issues/192))
+- Fixed type generation issues by ensuring clean rebuild of declaration files
+
+### Changed
+
+- Migrated internal resources i.e. blobified stylesheets and scripts from `BlobBuilders` to new Injection API
+
+## [2.2.8] – 2026-02-02
+
+### Added
+
+- Experimental Injection API (Injectable types + `Injector` class) for injecting static resources into content documents
+
+### Changed
+
+- Migrated internal resources i.e. blobified stylesheets and scripts from `BlobBuilders` to new Injection API
+
+## [2.2.7] – 2026-01-22
+
+### Changed
+
+- Updated dependencies and created a script to handle `css-selector-generator` and resolve a bug with namespaced attributes ([#117](https://github.com/readium/ts-toolkit/issues/117)).
+
+## [2.2.6] – 2026-01-19
+
+### Added
+
+- Added `highlight-id` data attribute to non-experimental decoration items, containing the ID of the Decorator ([#184](https://github.com/readium/ts-toolkit/pull/184))
+
+## [2.2.5] - 2025-11-28
+
+### Added
+
+- More defenses to iframes in EpubNavigator
+- Support for ReadiumCSS experimental flags in Preferences API ([#176](https://github.com/readium/ts-toolkit/pull/176))
+
+### Changed
+
+- Updated ReadiumCSS to `v2.0.0-beta.24`
+
 ## [2.2.4] - 2025-11-06
 
 ### Added

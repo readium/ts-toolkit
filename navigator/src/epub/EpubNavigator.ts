@@ -14,12 +14,16 @@ import { EpubPreferencesEditor } from "./preferences/EpubPreferencesEditor";
 import { ReadiumCSS } from "./css/ReadiumCSS";
 import { RSProperties, UserProperties } from "./css/Properties";
 import { getContentWidth } from "../helpers/dimensions";
+import { Injector } from "../injection/Injector";
+import { createReadiumEpubRules } from "../injection/epubInjectables";
+import { IInjectablesConfig } from "../injection/Injectable";
 
 export type ManagerEventKey = "zoom";
 
 export interface EpubNavigatorConfiguration {
     preferences: IEpubPreferences;
     defaults: IEpubDefaults;
+    injectables?: IInjectablesConfig;
 }
 
 export interface EpubNavigatorListeners {
@@ -65,6 +69,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private _settings: EpubSettings;
     private _css: ReadiumCSS;
     private _preferencesEditor: EpubPreferencesEditor | null = null;
+    private readonly _injector: Injector | null = null;
 
     private resizeObserver: ResizeObserver;
 
@@ -106,6 +111,15 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this._layout = EpubNavigator.determineLayout(pub, !!this._settings.scroll);
         this.currentProgression = pub.metadata.effectiveReadingProgression;
         
+        // Combine Readium rules with user-provided injectables
+        const readiumRules = createReadiumEpubRules(pub.metadata);
+        const userConfig = configuration.injectables || { rules: [], allowedDomains: [] };
+        
+        this._injector = new Injector({
+            rules: [...readiumRules, ...userConfig.rules],
+            allowedDomains: userConfig.allowedDomains
+        });
+        
         // We use a resizeObserver cos’ the container parent may not be the width of 
         // the document/window e.g. app using a docking system with left and right panels.
         // If we observe this.container, that won’t obviously work since we set its width.
@@ -136,14 +150,24 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         if (!this.positions?.length)
             this.positions = await this.pub.positionsFromManifest();
         if(this._layout === Layout.fixed) {
-            this.framePool = new FXLFramePoolManager(this.container, this.positions, this.pub);
+            this.framePool = new FXLFramePoolManager(
+                this.container, 
+                this.positions, 
+                this.pub,
+                this._injector
+            );
             this.framePool.listener = (key: CommsEventKey | ManagerEventKey, data: unknown) => {
                 this.eventListener(key, data);
             }
         } else {
             await this.updateCSS(false);
             const cssProperties = this.compileCSSProperties(this._css);
-            this.framePool = new FramePoolManager(this.container, this.positions, cssProperties);
+            this.framePool = new FramePoolManager(
+                this.container, 
+                this.positions, 
+                cssProperties,
+                this._injector
+            );
         }
 
         if(this.currentLocation === undefined)

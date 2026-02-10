@@ -1,30 +1,95 @@
 // Localization.ts
-import enUS from './locales/en.json';
-import frFR from './locales/fr.json';
+
+import { SUPPORTED_LANGUAGES } from './SupportedLanguages';
+// Static import for English (default locale)
+import enLocale from '@edrlab/thorium-locales/publication-metadata/en.json';
 
 export interface L10nString {
   compact: string;
   descriptive: string;
 }
 
-type LocaleData = Record<string, any>;
+type LocaleValue = string | L10nString | LocaleData;
+interface LocaleData {
+  [key: string]: LocaleValue | LocaleValue[];
+}
+
+// Dynamic imports for non-English locales
+const jsonLoaders: Record<string, () => Promise<{ default: any }>> = {
+  'fr': () => import('@edrlab/thorium-locales/publication-metadata/fr.json'),
+  'ar': () => import('@edrlab/thorium-locales/publication-metadata/ar.json'),
+  'da': () => import('@edrlab/thorium-locales/publication-metadata/da.json'),
+//  'el': () => import('@edrlab/thorium-locales/publication-metadata/el.json'),
+//  'et': () => import('@edrlab/thorium-locales/publication-metadata/et.json'),
+  'it': () => import('@edrlab/thorium-locales/publication-metadata/it.json'),
+  'pt_PT': () => import('@edrlab/thorium-locales/publication-metadata/pt_PT.json'),
+  'sv': () => import('@edrlab/thorium-locales/publication-metadata/sv.json'),
+//  'tr': () => import('@edrlab/thorium-locales/publication-metadata/tr.json'),
+//  'uk': () => import('@edrlab/thorium-locales/publication-metadata/uk.json')
+};
+
+// Extract English accessibility data
+const englishAccessibilityData = enLocale?.publication?.metadata?.accessibility?.['display-guide'] || {};
 
 class LocalizationImpl {
   private static instance: LocalizationImpl;
   private currentLocaleCode: string = 'en';
-  private locale: LocaleData = enUS;
-  private availableLocales: Record<string, LocaleData> = {
-    'en': enUS,
-    'fr': frFR
-  };
+  private locale: LocaleData = englishAccessibilityData;
+  private loadedLocales: Record<string, LocaleData> = {};
 
-  private constructor() {}
+  private constructor() {
+    // Load English into loaded locales since it's our default
+    this.loadedLocales['en'] = englishAccessibilityData;
+  }
 
   public static getInstance(): LocalizationImpl {
     if (!LocalizationImpl.instance) {
       LocalizationImpl.instance = new LocalizationImpl();
     }
     return LocalizationImpl.instance;
+  }
+
+  /**
+   * Loads a locale dynamically
+   * @param localeCode BCP 47 language code (e.g., 'en', 'fr')
+   * @returns Promise indicating if the locale was loaded successfully
+   */
+  public async loadLocale(localeCode: string): Promise<boolean> {
+    // Check if locale is enabled
+    if (!SUPPORTED_LANGUAGES.includes(localeCode)) {
+      console.warn(`Locale '${localeCode}' is not enabled`);
+      return false;
+    }
+
+    // Skip if already loaded
+    if (localeCode in this.loadedLocales) {
+      return true;
+    }
+    
+    try {
+      // Check if we have a loader for this locale
+      if (!(localeCode in jsonLoaders)) {
+        console.warn(`Locale file not found for: ${localeCode}`);
+        return false;
+      }
+      
+      const localeModule = await jsonLoaders[localeCode]();
+      const data = localeModule.default;
+      
+      // Extract the accessibility.display-guide part
+      const accessibilityData = data?.publication?.metadata?.accessibility?.['display-guide'];
+      
+      if (accessibilityData) {
+        this.loadedLocales[localeCode] = accessibilityData;
+        return true;
+      } else {
+        console.warn(`No accessibility strings found in locale ${localeCode}`);
+        return false;
+      }
+    } catch (error) {
+      console.warn(`Failed to load locale ${localeCode}:`, error);
+      return false;
+    }
   }
 
   /**
@@ -36,20 +101,25 @@ class LocalizationImpl {
     if (!localeCode || typeof localeCode !== 'string') {
       throw new Error('Locale code must be a non-empty string');
     }
-    this.availableLocales[localeCode] = localeData;
+    this.loadedLocales[localeCode] = localeData;
   }
 
   /**
-   * Sets the current locale by language code
-   * @param localeCode BCP 47 language code (e.g., 'en', 'fr-FR')
-   * @returns boolean indicating if the locale was set successfully
+   * Sets the current locale by language code, loading it dynamically if needed
+   * @param localeCode BCP 47 language code (e.g., 'en', 'fr')
+   * @returns Promise indicating if the locale was set successfully
    */
-  public setLocale(localeCode: string): boolean {
-    if (!(localeCode in this.availableLocales)) {
+  public async setLocale(localeCode: string): Promise<boolean> {
+    if (!(localeCode in this.loadedLocales)) {
+      await this.loadLocale(localeCode);
+    }
+    
+    if (!(localeCode in this.loadedLocales)) {
       console.warn(`Locale '${localeCode}' is not available`);
       return false;
     }
-    this.locale = this.availableLocales[localeCode];
+    
+    this.locale = this.loadedLocales[localeCode];
     this.currentLocaleCode = localeCode;
     return true;
   }
@@ -65,7 +135,7 @@ class LocalizationImpl {
    * Gets a list of available locale codes
    */
   public getAvailableLocales(): string[] {
-    return Object.keys(this.availableLocales);
+    return SUPPORTED_LANGUAGES;
   }
 
   private getNestedValue(obj: any, path: string): string | L10nString | undefined {
@@ -93,7 +163,7 @@ class LocalizationImpl {
     
     // If not found and current locale is not English, try falling back to English
     if (value === undefined && this.currentLocaleCode !== 'en') {
-      value = this.getNestedValue(this.availableLocales['en'], key);
+      value = this.getNestedValue(this.loadedLocales['en'], key);
     }
     
     // If we have a value, return it with proper formatting

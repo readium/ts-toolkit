@@ -2,6 +2,7 @@ import { ModuleName } from "@readium/navigator-html-injectables";
 import { Locator, Publication } from "@readium/shared";
 import FrameBlobBuider from "./FrameBlobBuilder";
 import { FrameManager } from "./FrameManager";
+import { Injector } from "../../injection/Injector";
 
 const UPPER_BOUNDARY = 5;
 const LOWER_BOUNDARY = 3;
@@ -16,11 +17,18 @@ export class FramePoolManager {
     private readonly inprogress: Map<string, Promise<void>> = new Map();
     private pendingUpdates: Map<string, { inPool: boolean }> = new Map();
     private currentBaseURL: string | undefined;
+    private readonly injector: Injector | null = null;
 
-    constructor(container: HTMLElement, positions: Locator[], cssProperties?: { [key: string]: string }) {
+    constructor(
+        container: HTMLElement, 
+        positions: Locator[], 
+        cssProperties?: { [key: string]: string },
+        injector?: Injector | null
+    ) {
         this.container = container;
         this.positions = positions;
         this.currentCssProperties = cssProperties;
+        this.injector = injector ?? null;
     }
 
     async destroy() {
@@ -47,7 +55,13 @@ export class FramePoolManager {
         this.pool.clear();
 
         // Revoke all blobs
-        this.blobs.forEach(v => URL.revokeObjectURL(v));
+        this.blobs.forEach(v => {
+            this.injector?.releaseBlobUrl?.(v);
+            URL.revokeObjectURL(v);
+        });
+
+        // Clean up injector if it exists
+        this.injector?.dispose();
 
         // Empty container of elements
         this.container.childNodes.forEach(v => {
@@ -90,7 +104,10 @@ export class FramePoolManager {
             // Check if base URL of publication has changed
             if(this.currentBaseURL !== undefined && pub.baseURL !== this.currentBaseURL) {
                 // Revoke all blobs
-                this.blobs.forEach(v => URL.revokeObjectURL(v));
+                this.blobs.forEach(v => {
+                    this.injector?.releaseBlobUrl?.(v);
+                    URL.revokeObjectURL(v);
+                });
                 this.blobs.clear();
             }
             this.currentBaseURL = pub.baseURL;
@@ -103,13 +120,17 @@ export class FramePoolManager {
                     // when navigating backwards, where paginated will go the
                     // start of the resource instead of the end due to the
                     // corrupted width ColumnSnapper (injectables) gets on init
-                    this.blobs.forEach(v => URL.revokeObjectURL(v));
+                    this.blobs.forEach(v => {
+                        this.injector?.releaseBlobUrl?.(v);
+                        URL.revokeObjectURL(v);
+                    });
                     this.blobs.clear();
                     this.pendingUpdates.clear();
                 }
                 if(this.pendingUpdates.has(href) && this.pendingUpdates.get(href)?.inPool === false) {
                     const url = this.blobs.get(href);
                     if(url) {
+                        this.injector?.releaseBlobUrl?.(url);
                         URL.revokeObjectURL(url);
                         this.blobs.delete(href);
                         this.pendingUpdates.delete(href);
@@ -129,7 +150,15 @@ export class FramePoolManager {
                 const itm = pub.readingOrder.findWithHref(href);
                 if(!itm) return; // TODO throw?
                 if(!this.blobs.has(href)) {
-                    const blobBuilder = new FrameBlobBuider(pub, this.currentBaseURL || "", itm, this.currentCssProperties);
+                    const blobBuilder = new FrameBlobBuider(
+                        pub, 
+                        this.currentBaseURL || "", 
+                        itm, 
+                        {
+                            cssProperties: this.currentCssProperties,
+                            injector: this.injector
+                        }
+                    );
                     const blobURL = await blobBuilder.build();
                     this.blobs.set(href, blobURL);
                 }

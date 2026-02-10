@@ -2,6 +2,7 @@ import { ModuleName } from "@readium/navigator-html-injectables";
 import { Locator, Publication } from "@readium/shared";
 import { WebPubBlobBuilder } from "./WebPubBlobBuilder";
 import { WebPubFrameManager } from "./WebPubFrameManager";
+import { Injector } from "../injection/Injector";
 
 export class WebPubFramePoolManager {
     private readonly container: HTMLElement;
@@ -12,10 +13,16 @@ export class WebPubFramePoolManager {
     private readonly inprogress: Map<string, Promise<void>> = new Map();
     private pendingUpdates: Map<string, { inPool: boolean }> = new Map();
     private currentBaseURL: string | undefined;
+    private readonly injector?: Injector | null = null;
 
-    constructor(container: HTMLElement, cssProperties?: { [key: string]: string }) {
+    constructor(
+        container: HTMLElement, 
+        cssProperties?: { [key: string]: string },
+        injector?: Injector | null
+    ) {
         this.container = container;
         this.currentCssProperties = cssProperties;
+        this.injector = injector;
     }
 
     async destroy() {
@@ -42,8 +49,14 @@ export class WebPubFramePoolManager {
         this.pool.clear();
 
         // Revoke all blobs
-        this.blobs.forEach(v => URL.revokeObjectURL(v));
+        this.blobs.forEach(v => {
+            this.injector?.releaseBlobUrl?.(v);
+            URL.revokeObjectURL(v);
+        });
         this.blobs.clear();
+
+        // Clean up injector if it exists
+        this.injector?.dispose();
 
         // Empty container of elements
         this.container.childNodes.forEach(v => {
@@ -87,7 +100,10 @@ export class WebPubFramePoolManager {
             });
 
             if(this.currentBaseURL !== undefined && pub.baseURL !== this.currentBaseURL) {
-                this.blobs.forEach(v => URL.revokeObjectURL(v));
+                this.blobs.forEach(v => {
+                    this.injector?.releaseBlobUrl?.(v);
+                    URL.revokeObjectURL(v);
+                });
                 this.blobs.clear();
             }
             this.currentBaseURL = pub.baseURL;
@@ -97,6 +113,7 @@ export class WebPubFramePoolManager {
                 if(this.pendingUpdates.has(href) && this.pendingUpdates.get(href)?.inPool === false) {
                     const url = this.blobs.get(href);
                     if(url) {
+                        this.injector?.releaseBlobUrl?.(url);
                         URL.revokeObjectURL(url);
                         this.blobs.delete(href);
                         this.pendingUpdates.delete(href);
@@ -117,7 +134,15 @@ export class WebPubFramePoolManager {
                 const itm = pub.readingOrder.findWithHref(href);
                 if(!itm) return;
                 if(!this.blobs.has(href)) {
-                    const blobBuilder = new WebPubBlobBuilder(pub, this.currentBaseURL || "", itm, this.currentCssProperties);
+                    const blobBuilder = new WebPubBlobBuilder(
+                        pub, 
+                        this.currentBaseURL || "",
+                        itm,
+                        {
+                            cssProperties: this.currentCssProperties,
+                            injector: this.injector
+                        }
+                    );
                     const blobURL = await blobBuilder.build();
                     this.blobs.set(href, blobURL);
                 }

@@ -14,10 +14,14 @@ import { IWebPubDefaults, WebPubDefaults } from "./preferences/WebPubDefaults";
 import { WebPubSettings } from "./preferences/WebPubSettings";
 import { IPreferencesEditor } from "../preferences/PreferencesEditor";
 import { WebPubPreferencesEditor } from "./preferences/WebPubPreferencesEditor";
+import { Injector } from "../injection/Injector";
+import { createReadiumWebPubRules } from "../injection/webpubInjectables";
+import { IInjectablesConfig } from "../injection/Injectable";
 
 export interface WebPubNavigatorConfiguration {
     preferences: IWebPubPreferences;
     defaults: IWebPubDefaults;
+    injectables?: IInjectablesConfig;
 }
 
 export interface WebPubNavigatorListeners {
@@ -57,6 +61,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private _settings: WebPubSettings;
     private _css: WebPubCSS;
     private _preferencesEditor: WebPubPreferencesEditor | null = null;
+    private readonly _injector: Injector | null = null;
     
     private webViewport: VisualNavigatorViewport = {
         readingOrder: [],
@@ -79,6 +84,15 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             userProperties: new WebUserProperties({ zoom: this._settings.zoom })
         });
 
+        // Combine WebPub rules with user-provided injectables
+        const webpubRules = createReadiumWebPubRules();
+        const userConfig = configuration.injectables || { rules: [], allowedDomains: [] };
+        
+        this._injector = new Injector({
+            rules: [...webpubRules, ...userConfig.rules],
+            allowedDomains: userConfig.allowedDomains
+        });
+
         // Initialize current location
         if (initialPosition && typeof initialPosition.copyWithLocations === 'function') {
             this.currentLocation = initialPosition;
@@ -95,7 +109,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     public async load() {
         await this.updateCSS(false);
         const cssProperties = this.compileCSSProperties(this._css);
-        this.framePool = new WebPubFramePoolManager(this.container, cssProperties);
+        this.framePool = new WebPubFramePoolManager(this.container, cssProperties, this._injector);
 
         await this.apply();
     }

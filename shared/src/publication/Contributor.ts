@@ -21,7 +21,7 @@ export class Contributor {
   public readonly name: LocalizedString;
 
   /** The string used to sort the name of the contributor. */
-  public readonly sortAs?: string;
+  public readonly sortAs?: LocalizedString;
 
   /** An unambiguous reference to this contributor. */
   public readonly identifier?: string;
@@ -43,7 +43,7 @@ export class Contributor {
    */
   constructor(values: {
     name: LocalizedString;
-    sortAs?: string;
+    sortAs?: LocalizedString;
     identifier?: string;
     altIdentifiers?: Set<AltIdentifier>;
     roles?: Set<string>;
@@ -74,7 +74,7 @@ export class Contributor {
       if (!json.name) return;
       return new Contributor({
         name: LocalizedString.deserialize(json.name) as LocalizedString,
-        sortAs: json.sortAs,
+        sortAs: LocalizedString.deserialize(json.sortAs),
         identifier: json.identifier,
         altIdentifiers: json.altIdentifier
           ? (Array.isArray(json.altIdentifier)
@@ -98,7 +98,7 @@ export class Contributor {
    */
   public serialize(): any {
     const json: any = { name: this.name.serialize() };
-    if (this.sortAs !== undefined) json.sortAs = this.sortAs;
+    if (this.sortAs !== undefined) json.sortAs = this.sortAs.serialize();
     if (this.identifier !== undefined) json.identifier = this.identifier;
     if (this.altIdentifiers) json.altIdentifier = setToArray(this.altIdentifiers).map(altId => altId.serialize());
     if (this.roles) json.role = setToArray(this.roles);
