@@ -40,9 +40,9 @@ export class WebPubFrameManager {
             this.comms.send("peripherals_protection", this.contentProtectionConfig);
 
             // Apply scroll protection if enabled
-            if (this.contentProtectionConfig.enableScrollProtection) {
-                this.comms.send("scroll_protection", {});
-            }
+        //    if (this.contentProtectionConfig.enableScrollProtection) {
+        //        this.comms.send("scroll_protection", {});
+        //    }
 
             // Apply print protection if configured
             if (this.contentProtectionConfig.protectPrinting) {

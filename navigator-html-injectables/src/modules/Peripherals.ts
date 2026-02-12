@@ -129,7 +129,7 @@ export interface ContentProtectionConfig {
     disableContextMenu?: boolean;
     disableDragAndDrop?: boolean;
     disableKeyboardShortcuts?: KeyboardShortcut[];
-    enableScrollProtection?: boolean;
+//    enableScrollProtection?: boolean;
 }
 
 export class Peripherals extends Module {

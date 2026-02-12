@@ -264,7 +264,7 @@ export class ColumnSnapper extends Snapper {
     private enableSnapProtection() {
         if (!this.patternAnalyzer) {
             this.patternAnalyzer = new PatternAnalyzer({
-                maxVelocity: 1000,  // pixels/ms (adjust based on your page width)
+                maxVelocity: this.wnd.innerWidth,  // page width
                 minVariance: 0.1,   // Allow for some variation in swipe speed
                 historySize: 5      // Fewer samples needed for swipe detection
             });

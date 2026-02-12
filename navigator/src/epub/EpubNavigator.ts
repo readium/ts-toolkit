@@ -128,16 +128,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             allowedDomains: userConfig.allowedDomains
         });
 
-        this._contentProtection = configuration.contentProtection || {
-            monitorSelection: true,
-            protectCopy: true,
-            disableContextMenu: true,
-            disableDragAndDrop: true,
-            disableKeyboardShortcuts: ["devTools", "selectAll", "print"],
-            enableScrollProtection: false,
-            checkAutomation: true,
-            checkIFrameEmbedding: true
-        };
+        this._contentProtection = configuration.contentProtection || {};
         
         // Initialize navigator protection if configured
         if (this._contentProtection.disableKeyboardShortcuts || this._contentProtection.disableContextMenu) {
