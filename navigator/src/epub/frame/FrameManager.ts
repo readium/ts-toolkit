@@ -66,19 +66,18 @@ export class FrameManager {
     }
 
     private applyContentProtection() {
-        if (this.comms) {
-            // Send peripherals protection config
-            this.comms.send("peripherals_protection", this.contentProtectionConfig);
+        if (!this.comms) this.comms!.resume();
+        // Send peripherals protection config
+        this.comms!.send("peripherals_protection", this.contentProtectionConfig);
 
-            // Apply scroll protection
+        // Apply scroll protection
         //    if (this.contentProtectionConfig.enableScrollProtection) {
         //        this.comms.send("scroll_protection", {});
         //    }
 
-            // Apply print protection if configured
-            if (this.contentProtectionConfig.protectPrinting) {
-                this.comms.send("print_protection", this.contentProtectionConfig.protectPrinting);
-            }
+        // Apply print protection if configured
+        if (this.contentProtectionConfig.protectPrinting) {
+            this.comms!.send("print_protection", this.contentProtectionConfig.protectPrinting);
         }
     }
 

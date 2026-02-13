@@ -34,23 +34,6 @@ export class WebPubFrameManager {
         this.contentProtectionConfig = { ...contentProtectionConfig };
     }
 
-    private applyContentProtection() {
-        if (this.comms) {
-            // Send peripherals protection config
-            this.comms.send("peripherals_protection", this.contentProtectionConfig);
-
-            // Apply scroll protection if enabled
-        //    if (this.contentProtectionConfig.enableScrollProtection) {
-        //        this.comms.send("scroll_protection", {});
-        //    }
-
-            // Apply print protection if configured
-            if (this.contentProtectionConfig.protectPrinting) {
-                this.comms.send("print_protection", this.contentProtectionConfig.protectPrinting);
-            }
-        }
-    }
-
     async load(modules: ModuleName[] = []): Promise<Window> {
         return new Promise((res, rej) => {
             if (this.loader) {
@@ -71,9 +54,6 @@ export class WebPubFrameManager {
                 const wnd = this.frame.contentWindow!;
                 this.loader = new Loader(wnd as ReadiumWindow, modules);
                 this.currModules = modules;
-                // Initialize comms and apply content protection
-                this.comms = new FrameComms(wnd, this.source);
-                this.applyContentProtection();
                 try { res(wnd); } catch (error) {}
             };
             this.frame.onerror = (err) => {
@@ -88,6 +68,22 @@ export class WebPubFrameManager {
         this.loader?.destroy();
         this.frame.remove();
         this.destroyed = true;
+    }
+
+    private applyContentProtection() {
+        if (!this.comms) this.comms!.resume();
+        // Send peripherals protection config
+        this.comms!.send("peripherals_protection", this.contentProtectionConfig);
+
+        // Apply scroll protection if enabled
+        //    if (this.contentProtectionConfig.enableScrollProtection) {
+        //        this.comms.send("scroll_protection", {});
+        //    }
+
+        // Apply print protection if configured
+        if (this.contentProtectionConfig.protectPrinting) {
+            this.comms!.send("print_protection", this.contentProtectionConfig.protectPrinting);
+        }
     }
 
     async hide(): Promise<void> {
@@ -120,6 +116,8 @@ export class WebPubFrameManager {
         return new Promise((res, _) => {
             this.comms?.send("activate", undefined, () => {
                 this.comms?.send("focus", undefined, () => {
+                    // Apply content protection synchronously
+                    this.applyContentProtection();
                     const remove = () => {
                         this.frame.style.removeProperty("visibility");
                         this.frame.style.removeProperty("aria-hidden");

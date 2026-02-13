@@ -86,8 +86,6 @@ export class FXLFrameManager {
                 const wnd = this.frame.contentWindow!;
                 this.loader = new Loader(wnd as ReadiumWindow, modules);
                 this.currModules = modules;
-                this.comms = new FrameComms(wnd, new URL(this.source).origin);
-                this.applyContentProtection();
                 this.peripherals.observe(this.wrapper);
                 this.peripherals.observe(wnd);
                 try { res(wnd); } catch (error) {};
@@ -206,6 +204,18 @@ export class FXLFrameManager {
             this.comms?.halt();
     }
 
+    private applyContentProtection() {
+        if (!this.comms) this.comms!.resume();
+
+        // Send peripherals protection config
+        this.comms!.send("peripherals_protection", this.contentProtectionConfig);
+
+        // Apply print protection if configured
+        if (this.contentProtectionConfig.protectPrinting) {
+            this.comms!.send("print_protection", this.contentProtectionConfig.protectPrinting);
+        }
+    }
+
     private cachedPage: Page | undefined = undefined;
     async show(page: Page): Promise<void> {
         if(!this.frame.parentElement) {
@@ -231,6 +241,7 @@ export class FXLFrameManager {
             this.comms!.send("focus", undefined, (_: boolean) => {
                 // this.showPromise = undefined; Don't do this
                 this.update(this.cachedPage);
+                this.applyContentProtection();
                 res();
             });
         });
@@ -244,18 +255,6 @@ export class FXLFrameManager {
                 res();
             });
         });
-    }
-
-    private applyContentProtection() {
-        if (this.comms) {
-            // Send peripherals protection config
-            this.comms.send("peripherals_protection", this.contentProtectionConfig);
-
-            // Apply print protection if configured
-            if (this.contentProtectionConfig.protectPrinting) {
-                this.comms.send("print_protection", this.contentProtectionConfig.protectPrinting);
-            }
-        }
     }
 
     get element() {
