@@ -3,7 +3,6 @@ import { Module } from "./Module";
 import { ReadiumWindow, nearestInteractiveElement } from "../helpers/dom";
 import { BulkCopyProtector, BulkCopyProtectionOptions } from "../protection/BulkCopyProtector";
 import { 
-    keyManager, 
     SelectionAnalyzer, 
     DEV_TOOLS_COMBOS, 
     SELECT_ALL_COMBOS, 
@@ -182,65 +181,38 @@ export class Peripherals extends Module {
         this.isDragAndDropEnabled = false;
     }
 
+    private keyDownHandler: ((event: KeyboardEvent) => void) | null = null;
+
     private enableKeyboardShortcutsProtection(shortcuts: KeyboardShortcut[] = []): void {
         // Clear any existing state
-        keyManager.detach();
-        this.cleanupCallbacks = [];
+        this.disableKeyboardShortcutsProtection();
         
-        // If no shortcuts are provided, enable all protections
-        const enableAll = shortcuts.length === 0;
-        
-        // Map of shortcut names to their corresponding handlers and combos
-        const shortcutMap = {
-            devTools: {
-                handler: (event: Event) => this.onDeveloperToolsAttempt(event as KeyboardEvent),
-                combos: DEV_TOOLS_COMBOS,
-                name: "Developer tools"
-            },
-            selectAll: {
-                handler: (event: Event) => this.onSelectAll(event as KeyboardEvent),
-                combos: SELECT_ALL_COMBOS,
-                name: "Select all"
-            },
-            print: {
-                handler: (event: Event) => this.onPrintAttempt(event as KeyboardEvent),
-                combos: PRINT_COMBOS,
-                name: "Print"
-            }
-        };
-        
-        // If enableAll is true, we'll enable all shortcuts
-        if (enableAll) {
-            Object.values(shortcutMap).forEach(({ handler, combos, name }) => {
-                const unregister = keyManager.subscribeCombinations(combos, handler);
-                this.cleanupCallbacks.push(unregister);
-                this.comms?.log(`${name} protection enabled`);
-            });
-        } else {
-            // Otherwise, enable only the specified shortcuts
-            const enabledShortcuts = new Set(shortcuts.map(s => 
-                typeof s === "string" ? s as "devTools" | "selectAll" | "print" : "custom" as const
-            ));
-            
-            for (const [key, { handler, combos, name }] of Object.entries(shortcutMap)) {
-                if (enabledShortcuts.has(key as "devTools" | "selectAll" | "print")) {
-                    const unregister = keyManager.subscribeCombinations(combos, handler);
-                    this.cleanupCallbacks.push(unregister);
-                    this.comms?.log(`${name} protection enabled`);
-                }
-            }
-            
-            // Handle custom key combos
-            for (const shortcut of shortcuts) {
-                if (typeof shortcut !== "string") {
-                    const unregister = keyManager.subscribeCombinations([shortcut], (event) => {
+        // Create a map of all possible shortcuts
+        const allShortcuts = [
+            ...DEV_TOOLS_COMBOS.map(combo => ({
+                ...combo,
+                handler: (event: KeyboardEvent) => this.onDeveloperToolsAttempt(event)
+            })),
+            ...SELECT_ALL_COMBOS.map(combo => ({
+                ...combo,
+                handler: (event: KeyboardEvent) => this.onSelectAll(event)
+            })),
+            ...PRINT_COMBOS.map(combo => ({
+                ...combo,
+                handler: (event: KeyboardEvent) => this.onPrintAttempt(event)
+            })),
+            ...shortcuts
+                .filter((s): s is Exclude<KeyboardShortcut, string> => typeof s !== "string")
+                .map(customCombo => ({
+                    ...customCombo,
+                    type: "custom",
+                    handler: (event: KeyboardEvent) => {
                         event.preventDefault();
                         event.stopPropagation();
                         
-                        // Create the keyboard shortcut event with custom or default type
                         const activityEvent: BlockedKeyboardShortcutEvent = {
-                            type: shortcut.type 
-                                ? `custom:${shortcut.type}`
+                            type: customCombo.type 
+                                ? `custom:${customCombo.type}`
                                 : "blocked_keyboard_shortcut",
                             timestamp: Date.now(),
                             key: event.key,
@@ -251,21 +223,68 @@ export class Peripherals extends Module {
                             metaKey: event.metaKey
                         };
                         this.comms?.send("content_protection", activityEvent);
-                    });
-                    this.cleanupCallbacks.push(unregister);
+                    }
+                }))
+        ];
+
+        // If no shortcuts are provided, enable all protections
+        const enableAll = shortcuts.length === 0;
+        
+        // Create a set of enabled shortcut types
+        const enabledTypes = new Set(
+            enableAll 
+                ? ["devTools", "selectAll", "print"] 
+                : shortcuts.map(s => typeof s === "string" ? s : "custom")
+        );
+
+        // Create a single keydown handler for all shortcuts
+        this.keyDownHandler = (event: KeyboardEvent) => {
+            for (const shortcut of allShortcuts) {
+                const { keyCode, ctrl, shift, alt, meta, handler, type } = shortcut;
+                const keyMatch = event.keyCode === keyCode;
+                const ctrlMatch = ctrl === undefined || event.ctrlKey === ctrl;
+                const shiftMatch = shift === undefined || event.shiftKey === shift;
+                const altMatch = alt === undefined || event.altKey === alt;
+                const metaMatch = meta === undefined || event.metaKey === meta;
+                
+                if (keyMatch && ctrlMatch && shiftMatch && altMatch && metaMatch) {
+                    // Skip if this is a named shortcut that's not enabled
+                    if (type && !enabledTypes.has(type) && type !== "custom") continue;
+                    
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    handler(event);
+                    break; // Only handle one shortcut per keypress
                 }
             }
-        }
-        
-        // Attach the key manager to the document
+        };
+
+        // Add the event listener
         if (this.wnd) {
-            keyManager.attach(this.wnd.document);
+            this.wnd.document.addEventListener("keydown", this.keyDownHandler, {
+                capture: true,
+                passive: false
+            });
+            
+            // Log enabled protections
+            if (enableAll) {
+                this.comms?.log("All keyboard shortcut protections enabled");
+            } else {
+                enabledTypes.forEach(type => {
+                    this.comms?.log(`${type} protection enabled`);
+                });
+            }
         }
     }
     
     private disableKeyboardShortcutsProtection(): void {
-        keyManager.detach();
-        this.cleanupCallbacks = [];
+        if (this.wnd && this.keyDownHandler) {
+            this.wnd.document.removeEventListener("keydown", this.keyDownHandler, {
+                capture: true
+            } as any);
+            this.keyDownHandler = null;
+        }
     }
 
     private addBulkCopyProtection(options: Partial<BulkCopyProtectionOptions> = {}): void {
