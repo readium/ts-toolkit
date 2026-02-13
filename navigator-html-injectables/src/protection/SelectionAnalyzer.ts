@@ -4,6 +4,12 @@ interface SelectionEvent {
     length: number;
 }
 
+export interface SelectionAnalyzerOptions {
+    maxSelectionsPerSecond: number;
+    minVariance: number;
+    historySize: number;
+}
+
 export class SelectionAnalyzer {
     private events: SelectionEvent[] = [];
     private selectionStartTime = 0;

@@ -27,7 +27,7 @@ export class PrintProtector extends Module {
                     display: none !important;
                 }
                 body::after {
-                    content: "${config.watermark || 'Confidential - Do not distribute'}";
+                    content: "${config.watermark || 'Printing has been disabled'}";
                     font-size: 24px;
                     display: block;
                     text-align: center;
@@ -47,9 +47,7 @@ export class PrintProtector extends Module {
         wnd.addEventListener("beforeprint", this.beforePrintHandler);
     }
 
-    private registerCommsHandlers() {
-        this.comms?.unregisterAll(PrintProtector.moduleName);
-        
+    private registerPrintHandlers() {        
         this.comms?.register("print_protection", PrintProtector.moduleName, (data: unknown) => {
             const config = data as PrintProtectionConfig;
             
@@ -66,7 +64,7 @@ export class PrintProtector extends Module {
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
-        this.registerCommsHandlers();
+        this.registerPrintHandlers();
         return true;
     }
 
@@ -80,6 +78,9 @@ export class PrintProtector extends Module {
             this.styleElement.parentNode.removeChild(this.styleElement);
             this.styleElement = null;
         }
+        
+        // Unregister all print protection handlers
+        this.comms?.unregisterAll(PrintProtector.moduleName);
         
         this.configApplied = false;
         return true;

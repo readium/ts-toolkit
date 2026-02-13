@@ -1,8 +1,8 @@
 import { Comms } from "../comms/comms";
 import { Module } from "./Module";
 import { ReadiumWindow, nearestInteractiveElement } from "../helpers/dom";
+import { BulkCopyProtector, BulkCopyProtectionOptions } from "../protection/BulkCopyProtector";
 import { 
-    BulkCopyProtector, 
     keyManager, 
     SelectionAnalyzer, 
     DEV_TOOLS_COMBOS, 
@@ -11,6 +11,7 @@ import {
     KeyboardShortcut 
 } from "../protection";
 import { SuspiciousActivityType } from "../comms";
+import { BULK_COPY_CONFIG, SELECTION_ANALYZER_CONFIG } from "../protection/config";
 
 export interface FrameClickEvent {
     defaultPrevented: boolean;
@@ -60,12 +61,13 @@ export interface SelectAllEvent extends BaseSuspiciousActivityEvent {
 export interface BulkCopyEvent extends BaseSuspiciousActivityEvent {
     type: "bulk_copy";
     clipboardTypes: readonly string[];
+    selectedText?: string;
 }
 
 export interface SuspiciousSelectionEvent extends BaseSuspiciousActivityEvent {
     type: "suspicious_selection";
     selectionLength: number;
-    selectionPreview: string;
+    selectedText: string;
     eventType: string;
 }
 
@@ -98,7 +100,7 @@ export interface ContextMenuEvent extends BaseSuspiciousActivityEvent {
     clientY: number;
 }
 
-export interface BlockedKeyboardShortcutEvent extends Omit<BaseSuspiciousActivityEvent, 'type'> {
+export interface BlockedKeyboardShortcutEvent extends Omit<BaseSuspiciousActivityEvent, "type"> {
     type: "blocked_keyboard_shortcut" | `custom:${string}`;
     key: string;
     code: string;
@@ -266,21 +268,10 @@ export class Peripherals extends Module {
         this.cleanupCallbacks = [];
     }
 
-    private addBulkCopyProtection(options?: {
-        enabled: boolean;
-        maxSelectionPercent: number;
-        minThreshold: number;
-        absoluteMaxChars: number;
-    }): void {
+    private addBulkCopyProtection(options: Partial<BulkCopyProtectionOptions> = {}): void {
         if (this.isBulkCopyProtectionEnabled || !this.wnd) return;
         
-        const defaultOptions = {
-            enabled: true,
-            maxSelectionPercent: 0.7,
-            minThreshold: 100,
-            absoluteMaxChars: 50000,
-            historySize: 20     // More samples for better detection
-        };
+        const defaultOptions = BULK_COPY_CONFIG;
         
         const finalOptions = options ? { ...defaultOptions, ...options } : defaultOptions;
         
@@ -367,10 +358,12 @@ export class Peripherals extends Module {
         if (!this.bulkCopyProtector.shouldAllowCopy(event)) {
             event.preventDefault();
             
+            const selection = window.getSelection()?.toString();
             const activityEvent: BulkCopyEvent = {
                 type: "bulk_copy",
                 timestamp: Date.now(),
-                clipboardTypes: event.clipboardData?.types ? [...event.clipboardData.types] : []
+                clipboardTypes: event.clipboardData?.types ? [...event.clipboardData.types] : [],
+                selectedText: selection || undefined
             };
             this.comms?.send("content_protection", activityEvent);
             return false;
@@ -391,7 +384,7 @@ export class Peripherals extends Module {
                 type: "suspicious_selection",
                 timestamp: Date.now(),
                 selectionLength: selectedText.length,
-                selectionPreview: selectedText.substring(0, 100), // First 100 chars for analysis
+                selectedText: selectedText,
                 eventType: event?.type || "unknown"
             };
             this.comms?.send("content_protection", activityEvent);
@@ -400,11 +393,7 @@ export class Peripherals extends Module {
 
     private addSelectionMonitoring(): void {
         if (this.isSelectionMonitoringEnabled || !this.wnd) return;
-        this.selectionAnalyzer = new SelectionAnalyzer({
-            maxSelectionsPerSecond: 10, // catch rapid bot-like selections
-            minVariance: 5,             // detect consistent patterns
-            historySize: 20             // Samples for analysis
-        });
+        this.selectionAnalyzer = new SelectionAnalyzer(SELECTION_ANALYZER_CONFIG);
         this.wnd.document.addEventListener("selectionchange", this.handleSelection);
         this.isSelectionMonitoringEnabled = true;
     }
@@ -556,10 +545,7 @@ export class Peripherals extends Module {
     }
     private readonly onClicker = this.onClick.bind(this);
 
-    private registerCommsHandlers() {
-        // Remove all previous handlers
-        this.comms?.unregisterAll(Peripherals.moduleName);
-
+    private registerProtectionHandlers() {
         // Single handler for all content protection features
         this.comms?.register("peripherals_protection", Peripherals.moduleName, (data: unknown, ack) => {
             const config = data as ContentProtectionConfig;
@@ -577,17 +563,19 @@ export class Peripherals extends Module {
                 // Copy
                 if (typeof config.protectCopy === "object") {
                     // Limited copying with custom thresholds
-                    const copyConfig = config.protectCopy;
                     this.addBulkCopyProtection({
                         enabled: true,
-                        maxSelectionPercent: copyConfig.maxSelectionPercent ?? 0.7,
-                        minThreshold: copyConfig.minThreshold ?? 100,
-                        absoluteMaxChars: copyConfig.absoluteMaxChars ?? 50000
+                        ...config.protectCopy
                     });
                     this.comms?.log("Copy protection enabled (limited)");
                 } else if (config.protectCopy === true) {
                     // Block all copying
-                    this.addBulkCopyProtection({ enabled: true, maxSelectionPercent: 0, minThreshold: 0, absoluteMaxChars: 0 });
+                    this.addBulkCopyProtection({ 
+                        enabled: true, 
+                        maxSelectionPercent: 0, 
+                        minThreshold: 0, 
+                        absoluteMaxChars: 0 
+                    });
                     this.comms?.log("Copy protection enabled (blocked all)");
                 }
                 
@@ -618,8 +606,8 @@ export class Peripherals extends Module {
         this.wnd = wnd;
         this.comms = comms;
         
-        // Register comms handlers
-        this.registerCommsHandlers();
+        // Register protection handlers
+        this.registerProtectionHandlers();
         
         // Core event listeners (always active)
         wnd.document.addEventListener("pointerdown", this.onPointerDown);
@@ -649,7 +637,7 @@ export class Peripherals extends Module {
         wnd.document.removeEventListener("pointermove", this.onPointerMove);
         wnd.document.removeEventListener("click", this.onClicker);
         
-        // Unregister all comms handlers
+        // Unregister all handlers
         comms.unregisterAll(Peripherals.moduleName);
         
         // Reset config applied flag for fresh instances
