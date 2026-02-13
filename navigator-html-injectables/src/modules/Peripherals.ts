@@ -651,7 +651,10 @@ export class Peripherals extends Module {
         
         // Unregister all comms handlers
         comms.unregisterAll(Peripherals.moduleName);
-
+        
+        // Reset config applied flag for fresh instances
+        this.configApplied = false;
+        
         comms.log("Peripherals Unmounted");
         return true;
     }
