@@ -1,0 +1,329 @@
+# Content Protection
+
+This is not a complete protection system, but rather a set of tools to help protect content from unauthorized use.
+
+If you are looking for a complete protection system, you should have server-side authentication, content encryption, and proper access controls in place.
+
+The content protection system provides client-side features to deter casual content extraction and make automated scraping more difficult. Note that these are not security measures and can be bypassed by determined users. For actual content protection, implement proper server-side authentication and authorization.
+
+## Core Features
+
+```typescript
+interface ContentProtectionConfig {
+    // Monitor text selection for suspicious patterns (e.g., automated scraping)
+    // Default: false
+    monitorSelection?: boolean;
+    
+    // Configure copy protection
+    // - boolean: true to enable with default settings, false to disable
+    // - object: Fine-grained control over copy protection
+    protectCopy?: boolean | {
+        // Maximum percentage of content that can be selected (0-1)
+        // Default: 0.7 (70%)
+        maxSelectionPercent?: number;
+        
+        // Minimum number of characters that can be selected before protection kicks in
+        // This prevents false positives on small selections
+        // Default: 100
+        minThreshold?: number;
+        
+        // Absolute maximum number of characters that can be copied in total
+        // Default: 50000
+        absoluteMaxChars?: number;
+    };
+    
+    // Disable right-click context menu
+    // Default: false
+    disableContextMenu?: boolean;
+    
+    // Disable drag and drop functionality
+    // Prevents dragging content out of the reader
+    // Default: false
+    disableDragAndDrop?: boolean;
+    
+    // Disable specific keyboard shortcuts
+    disableKeyboardShortcuts?: Array<
+        "devTools" |    // F12, Cmd+Option+I, etc.
+        "selectAll" |   // Cmd+A/Ctrl+A
+        "print" |       // Cmd+P/Ctrl+P
+        KeyCombo       // Custom key combination
+    >;
+    
+    // Print protection configuration
+    protectPrinting?: {
+        // Disable printing completely
+        // Default: false
+        disable?: boolean;
+        
+        // Optional watermark text to show when printing is disabled
+        // Default: "Printing has been disabled"
+        watermark?: string;
+    };
+    
+    // Enable automation detection (e.g., Selenium, Puppeteer)
+    // Triggers "automation_detected" event when automation tools are detected
+    // Default: false
+    checkAutomation?: boolean;
+    
+    // Check for embedding in iframes
+    // Triggers "iframe_embedding_detected" event when embedding is detected
+    // Default: false
+    checkIFrameEmbedding?: boolean;
+}
+
+// Custom key combination for keyboard shortcuts
+interface KeyCombo {
+    // Numeric key code that doesn't change across keyboard layouts
+    // Common key codes:
+    // - 65: "A" key
+    // - 73: "I" key (used for dev tools)
+    // - 80: "P" key (used for print)
+    // - 123: F12 key
+    // See full list: https://keycode.info/
+    keyCode: number;
+    
+    // Modifier keys (all optional)
+    ctrl?: boolean;   // Control key (⌃)
+    shift?: boolean;  // Shift key (⇧)
+    alt?: boolean;    // Alt/Option key (⌥)
+    meta?: boolean;   // Command key (⌘) on Mac, Windows key on Windows
+    
+    // Optional type for custom handling
+    // Will be included in the protection event
+    type?: string;
+}
+```
+
+## Protection Features
+
+### 1. Copy
+- **Bulk Copy Monitoring**: Tracks copy/paste operations and selection patterns
+  - Can detect some patterns of automated extraction
+  - Triggers `suspicious_selection` event for unusual activity
+  - Note: Not a foolproof protection against content extraction
+
+### 2. Context Menu
+- Disables right-click context menu to prevent easy access to developer tools
+- Configurable via `disableContextMenu`
+
+### 3. Drag and Drop
+- Prevents dragging content out of the reader
+- Configurable via `disableDragAndDrop`
+
+### 4. Keyboard Shortcut
+- Blocks common developer tools shortcuts (F12, Cmd+Option+I, etc.)
+- Blocks text selection (Cmd+A/Ctrl+A)
+- Blocks printing shortcuts (Cmd+P/Ctrl+P)
+- Supports custom key combinations using `KeyCombo` interface
+- Configurable via `disableKeyboardShortcuts`
+
+### 5. Print
+- Blocks print keyboard shortcuts (Cmd+P/Ctrl+P)
+- If print attempt is successful, replaces the content with a watermark
+
+### 6. Automation
+- Detects common automation tools like Selenium and Puppeteer
+- Triggers the `contentProtection` event with type `automation_detected` when detected
+- Enabled via `checkAutomation`
+
+### 7. IFrame Embedding
+- Detects when content is embedded in iframes
+- Can detect cross-origin iframe embedding
+- Triggers `contentProtection` event with type `iframe_embedding_detected` when detected
+- Enabled via `checkIFrameEmbedding`
+
+## Event Types
+
+Content protection triggers events with the following types:
+
+- `automation_detected`: When browser automation tools are detected
+- `iframe_embedding_detected`: When content is embedded in an iframe
+- `developer_tools`: When opening developer tools is attempted
+- `select_all`: When select-all is attempted
+- `suspicious_selection`: When suspicious text selection patterns are detected
+- `bulk_copy`: When bulk copying is detected
+- `drag_detected`: When content is dragged
+- `drop_detected`: When content is dropped
+- `print`: When printing is attempted
+- `context_menu`: When opening context menu is attempted
+- `blocked_keyboard_shortcut`: When a blocked keyboard shortcut is used
+- `custom:*`: Custom shortcut types (prefixed with `custom:`)
+
+### Example Configuration
+
+```typescript
+const navigator = new EpubNavigator(container, publication, listeners, {
+    contentProtection: {
+        // Basic protection
+        disableContextMenu: true,
+        disableDragAndDrop: true,
+        
+        // Keyboard shortcuts to disable
+        disableKeyboardShortcuts: [
+            "devTools",  // Disable F12, Cmd+Option+I, etc.
+            "selectAll", // Disable Cmd+A/Ctrl+A
+            { keyCode: 83, ctrl: true } // Disable Ctrl+S
+        ],
+        
+        // Print protection
+        protectPrinting: {
+            disable: true,
+            watermark: "Printing disabled"
+        },
+        
+        // Advanced protection
+        monitorSelection: true,
+        protectCopy: {
+            maxSelectionPercent: 0.7,
+            minThreshold: 100,
+            absoluteMaxChars: 50000
+        },
+        
+        // Security features
+        checkAutomation: true,
+        checkIFrameEmbedding: true
+    }
+});
+```
+
+## Event Handling
+
+The content protection system emits events for various protection-related activities. You can listen for these events through the `contentProtection` event handler:
+
+```typescript
+navigator.listeners.contentProtection = (type: string, detail: any) => {
+    console.log(`[Content Protection] ${type}`, detail);
+    
+    switch (type) {
+        // Automation detection
+        case "automation_detected":
+            // Fired when an automation tool is detected
+            // detail: { tool: string, timestamp: number }
+            console.log("Automation tool detected:", detail.tool);
+            break;
+            
+        // IFrame embedding
+        case "iframe_embedding_detected":
+            // Fired when content is embedded in an iframe
+            // detail: { isCrossOrigin: boolean, timestamp: number }
+            console.log("Embedding detected in iframe");
+            break;
+            
+        // Context menu
+        case "context_menu":
+            // Fired when context menu is accessed
+            // detail: { button: number, buttons: number, clientX: number, clientY: number, timestamp: number }
+            console.log("Context menu accessed at:", detail.clientX, detail.clientY);
+            break;
+            
+        // Drag and drop
+        case "drag_detected":
+            // Fired when content is dragged
+            // detail: { dataTransferTypes: string[], timestamp: number }
+            console.log("Drag detected with types:", detail.dataTransferTypes);
+            break;
+            
+        case "drop_detected":
+            // Fired when content is dropped
+            // detail: { dataTransferTypes: string[], fileCount: number, timestamp: number }
+            console.log("Drop detected with", detail.fileCount, "files");
+            break;
+            
+        // Bulk copy protection
+        case "bulk_copy":
+            // Fired when bulk copy is detected and prevented
+            // detail: { 
+            //   clipboardTypes: string[], 
+            //   selectedText?: string,
+            //   selectionLength?: number,
+            //   timestamp: number 
+            // }
+            console.log("Bulk copy prevented. Selection length:", detail.selectionLength);
+            break;
+            
+        // Suspicious selection patterns
+        case "suspicious_selection":
+            // Fired when suspicious selection pattern is detected
+            // detail: {
+            //   selectionLength: number,
+            //   selectedText?: string,
+            //   eventType: string,
+            //   timestamp: number
+            // }
+            console.log("Suspicious selection detected:", detail.selectionLength, "characters");
+            break;
+            
+        // Keyboard shortcuts
+        case "blocked_keyboard_shortcut":
+            // Fired when a protected keyboard shortcut is used
+            // detail: {
+            //   key: string,
+            //   code: string,
+            //   ctrlKey: boolean,
+            //   altKey: boolean,
+            //   shiftKey: boolean,
+            //   metaKey: boolean,
+            //   type?: string,
+            //   timestamp: number
+            // }
+            const keys = [
+                detail.ctrlKey ? "Ctrl" : "",
+                detail.altKey ? "Alt" : "",
+                detail.shiftKey ? "Shift" : "",
+                detail.metaKey ? (navigator.platform.includes("Mac") ? "Cmd" : "Win") : "",
+                detail.key
+            ].filter(Boolean).join("+");
+            console.log("Blocked keyboard shortcut:", keys);
+            break;
+            
+        // Print protection
+        case "print_attempt":
+            // Fired when printing is attempted
+            // detail: { timestamp: number }
+            console.log("Print attempt detected");
+            break;
+            
+        // Custom events from key combinations
+        case "custom:save_shortcut":
+            // Fired when a custom key combination is used
+            // detail: { ...keyboardEvent, timestamp: number }
+            console.log("Custom save shortcut detected");
+            break;
+    }
+};
+```
+The idea is that you can add extra layers of protection to your content by responding to these events if you deem it necessary. 
+
+```typescript
+// Example of responding to protection events
+navigator.listeners.contentProtection = (type, detail) => {
+    switch (type) {
+        case "bulk_copy":
+            if (detail.selectionLength > 1000) {
+                // Show a warning to the user
+                showWarning("Copying large portions of content is not allowed.");
+            }
+            break;
+            
+        case "suspicious_selection":
+            // Log potential scraping attempts
+            logSuspiciousActivity({
+                type: "suspicious_selection",
+                length: detail.selectionLength,
+                timestamp: new Date().toISOString()
+            });
+            break;
+            
+        case "automation_detected":
+            // Notify server about automation tool detection
+            reportAutomationAttempt(detail.tool);
+            break;
+    }
+};
+```
+
+## Limitations
+
+1. Client-side protection can be bypassed by determined attackers
+2. Should be used in conjunction with server-side protection
+3. Some protection features may affect user experience and accessibility
