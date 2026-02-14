@@ -26,8 +26,8 @@ export const SELECTION_ANALYZER_CONFIG: SelectionAnalyzerOptions = {
 
 export const BULK_COPY_CONFIG: BulkCopyProtectionOptions = {
     enabled: true,
-    maxSelectionPercent: 0.7,
+    maxSelectionPercent: 0.1,
     minThreshold: 100,
-    absoluteMaxChars: 50000,
+    absoluteMaxChars: 5000,
     historySize: 20
 }

@@ -32,7 +32,7 @@ interface ContentProtectionConfig {
     // - object: Fine-grained control over copy protection
     protectCopy?: boolean | {
         // Maximum percentage of content that can be selected (0-1)
-        // Default: 0.7 (70%)
+        // Default: 0.1 (10%)
         maxSelectionPercent?: number;
         
         // Minimum number of characters that can be selected before protection kicks in
@@ -41,7 +41,7 @@ interface ContentProtectionConfig {
         minThreshold?: number;
         
         // Absolute maximum number of characters that can be copied in total
-        // Default: 50000
+        // Default: 5000
         absoluteMaxChars?: number;
         
         // Number of recent copy attempts to keep in history for pattern analysis
