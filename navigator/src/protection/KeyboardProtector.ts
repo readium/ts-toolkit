@@ -36,6 +36,9 @@ function expandShortcuts(shortcuts: KeyboardShortcut[] = []): KeyCombo[] {
                 case "print":
                     result.push(...PRINT_COMBOS);
                     break;
+                case "save":
+                    result.push(...SAVE_COMBOS);
+                    break;
             }
         } else {
             // It's a KeyCombo object
