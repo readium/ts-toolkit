@@ -37,24 +37,31 @@ export interface BaseSuspiciousActivityEvent {
     timestamp: number;
 }
 
-export interface DeveloperToolsEvent extends BaseSuspiciousActivityEvent {
-    type: "developer_tools";
+// Common interface for all keyboard-related events
+export interface KeyboardEventData {
     key: string;
     code: string;
+    keyCode: number;
     ctrlKey: boolean;
     altKey: boolean;
     shiftKey: boolean;
     metaKey: boolean;
 }
 
-export interface SelectAllEvent extends BaseSuspiciousActivityEvent {
+export interface DeveloperToolsEvent extends BaseSuspiciousActivityEvent, KeyboardEventData {
+    type: "developer_tools";
+}
+
+export interface SelectAllEvent extends BaseSuspiciousActivityEvent, KeyboardEventData {
     type: "select_all";
-    key: string;
-    code: string;
-    ctrlKey: boolean;
-    altKey: boolean;
-    shiftKey: boolean;
-    metaKey: boolean;
+}
+
+export interface PrintEvent extends BaseSuspiciousActivityEvent, KeyboardEventData {
+    type: "print";
+}
+
+export interface BlockedKeyboardShortcutEvent extends Omit<BaseSuspiciousActivityEvent, "type">, KeyboardEventData {
+    type: "blocked_keyboard_shortcut" | `custom:${string}`;
 }
 
 export interface BulkCopyEvent extends BaseSuspiciousActivityEvent {
@@ -82,32 +89,12 @@ export interface DropDetectedEvent extends BaseSuspiciousActivityEvent {
     fileCount: number;
 }
 
-export interface PrintEvent extends BaseSuspiciousActivityEvent {
-    type: "print";
-    key: string;
-    code: string;
-    ctrlKey: boolean;
-    altKey: boolean;
-    shiftKey: boolean;
-    metaKey: boolean;
-}
-
 export interface ContextMenuEvent extends BaseSuspiciousActivityEvent {
     type: "context_menu";
     button: number;
     buttons: number;
     clientX: number;
     clientY: number;
-}
-
-export interface BlockedKeyboardShortcutEvent extends Omit<BaseSuspiciousActivityEvent, "type"> {
-    type: "blocked_keyboard_shortcut" | `custom:${string}`;
-    key: string;
-    code: string;
-    ctrlKey: boolean;
-    altKey: boolean;
-    shiftKey: boolean;
-    metaKey: boolean;
 }
 
 export type SuspiciousActivityEvent = 
@@ -221,6 +208,7 @@ export class Peripherals extends Module {
                             timestamp: Date.now(),
                             key: event.key,
                             code: event.code,
+                            keyCode: event.keyCode,
                             ctrlKey: event.ctrlKey,
                             altKey: event.altKey,
                             shiftKey: event.shiftKey,
@@ -314,6 +302,7 @@ export class Peripherals extends Module {
             timestamp: Date.now(),
             key: event.key,
             code: event.code,
+            keyCode: event.keyCode,
             ctrlKey: event.ctrlKey,
             altKey: event.altKey,
             shiftKey: event.shiftKey,
@@ -339,6 +328,7 @@ export class Peripherals extends Module {
             timestamp: Date.now(),
             key: event.key,
             code: event.code,
+            keyCode: event.keyCode,
             ctrlKey: event.ctrlKey,
             altKey: event.altKey,
             shiftKey: event.shiftKey,
@@ -355,6 +345,7 @@ export class Peripherals extends Module {
             type: "print",
             timestamp: Date.now(),
             key: event.key,
+            keyCode: event.keyCode,
             code: event.code,
             ctrlKey: event.ctrlKey,
             metaKey: event.metaKey,
