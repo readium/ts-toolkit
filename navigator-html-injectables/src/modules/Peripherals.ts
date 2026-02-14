@@ -6,7 +6,8 @@ import { SelectionAnalyzer, SelectionAnalyzerOptions } from "../protection/Selec
 import { 
     DEV_TOOLS_COMBOS, 
     SELECT_ALL_COMBOS, 
-    PRINT_COMBOS, 
+    PRINT_COMBOS,
+    SAVE_COMBOS,
     KeyboardShortcut 
 } from "../protection";
 import { SuspiciousActivityType } from "../comms";
@@ -60,6 +61,10 @@ export interface PrintEvent extends BaseSuspiciousActivityEvent, KeyboardEventDa
     type: "print";
 }
 
+export interface SaveEvent extends BaseSuspiciousActivityEvent, KeyboardEventData {
+    type: "save";
+}
+
 export interface BlockedKeyboardShortcutEvent extends Omit<BaseSuspiciousActivityEvent, "type">, KeyboardEventData {
     type: "blocked_keyboard_shortcut" | `custom:${string}`;
 }
@@ -105,6 +110,7 @@ export type SuspiciousActivityEvent =
     | DragDetectedEvent
     | DropDetectedEvent
     | PrintEvent
+    | SaveEvent
     | ContextMenuEvent
     | BlockedKeyboardShortcutEvent;
 
@@ -190,6 +196,12 @@ export class Peripherals extends Module {
                 ? PRINT_COMBOS.map(combo => ({
                     ...combo,
                     handler: (event: KeyboardEvent) => this.onPrintAttempt(event)
+                }))
+                : [],
+            ...shortcuts.includes("save") 
+                ? SAVE_COMBOS.map(combo => ({
+                    ...combo,
+                    handler: (event: KeyboardEvent) => this.onSaveAttempt(event)
                 }))
                 : [],
             ...shortcuts
@@ -343,6 +355,22 @@ export class Peripherals extends Module {
         event.preventDefault();
         const activityEvent: PrintEvent = {
             type: "print",
+            timestamp: Date.now(),
+            key: event.key,
+            keyCode: event.keyCode,
+            code: event.code,
+            ctrlKey: event.ctrlKey,
+            metaKey: event.metaKey,
+            shiftKey: event.shiftKey,
+            altKey: event.altKey
+        };
+        this.comms?.send("content_protection", activityEvent);
+    }
+
+    private onSaveAttempt(event: KeyboardEvent) {
+        event.preventDefault();
+        const activityEvent: SaveEvent = {
+            type: "save",
             timestamp: Date.now(),
             key: event.key,
             keyCode: event.keyCode,

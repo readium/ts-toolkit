@@ -64,6 +64,7 @@ interface ContentProtectionConfig {
         "devTools" |    // F12, Cmd+Option+I, etc.
         "selectAll" |   // Cmd+A/Ctrl+A
         "print" |       // Cmd+P/Ctrl+P
+        "save" |        // Cmd+S/Ctrl+S
         KeyCombo       // Custom key combination
     >;
     
@@ -136,6 +137,7 @@ interface KeyCombo {
 - Blocks common developer tools shortcuts (F12, Cmd+Option+I, etc.)
 - Blocks text selection (Cmd+A/Ctrl+A)
 - Blocks printing shortcuts (Cmd+P/Ctrl+P)
+- Blocks save shortcuts (Cmd+S/Ctrl+S)
 - Supports custom key combinations using `KeyCombo` interface
 - Configurable via `disableKeyboardShortcuts`
 
@@ -167,6 +169,7 @@ Content protection triggers events with the following types:
 - `drag_detected`: When content is dragged
 - `drop_detected`: When content is dropped
 - `print`: When printing is attempted
+- `save`: When save is attempted
 - `context_menu`: When opening context menu is attempted
 - `blocked_keyboard_shortcut`: When a blocked keyboard shortcut is used
 - `custom:*`: Custom shortcut types (prefixed with `custom:`)
@@ -182,9 +185,10 @@ const navigator = new EpubNavigator(container, publication, listeners, {
         
         // Keyboard shortcuts to disable
         disableKeyboardShortcuts: [
-            "devTools",  // Disable F12, Cmd+Option+I, etc.
-            "selectAll", // Disable Cmd+A/Ctrl+A
-            { keyCode: 83, ctrl: true } // Disable Ctrl+S
+            "devTools",   // Disable F12, Cmd+Option+I, etc.
+            "selectAll",  // Disable Cmd+A/Ctrl+A
+            "save",       // Disable Cmd+S/Ctrl+S
+            "print",      // Disable Cmd+P/Ctrl+P
         ],
         
         // Print protection
@@ -284,14 +288,15 @@ navigator.listeners.contentProtection = (type: string, detail: any) => {
         case "blocked_keyboard_shortcut":
             // Fired when a protected keyboard shortcut is used
             // detail: {
-            //   key: string,
-            //   code: string,
-            //   ctrlKey: boolean,
-            //   altKey: boolean,
-            //   shiftKey: boolean,
-            //   metaKey: boolean,
-            //   type?: string,
-            //   timestamp: number
+            //   key: string,      // The key value of the key pressed
+            //   code: string,     // Physical key code
+            //   keyCode: number,  // Legacy key code
+            //   ctrlKey: boolean, // Whether Ctrl key was pressed
+            //   altKey: boolean,  // Whether Alt/Option key was pressed
+            //   shiftKey: boolean,// Whether Shift key was pressed
+            //   metaKey: boolean, // Whether Meta/Command key was pressed
+            //   type?: string,    // Custom type if specified in key combo
+            //   timestamp: number // When the event occurred
             // }
             const keys = [
                 detail.ctrlKey ? "Ctrl" : "",
@@ -304,17 +309,35 @@ navigator.listeners.contentProtection = (type: string, detail: any) => {
             break;
             
         // Print protection
-        case "print_attempt":
-            // Fired when printing is attempted
-            // detail: { timestamp: number }
-            console.log("Print attempt detected");
+        case "print":
+            // Fired when print keyboard shortcuts are detected (e.g., Cmd+P/Ctrl+P)
+            // detail: {
+            //   timestamp: number,
+            //   key: string,
+            //   keyCode: number,
+            //   code: string,
+            //   ctrlKey: boolean,
+            //   metaKey: boolean,
+            //   shiftKey: boolean,
+            //   altKey: boolean
+            // }
+            console.log("Print attempt detected:", detail);
             break;
             
-        // Custom events from key combinations
-        case "custom:save_shortcut":
-            // Fired when a custom key combination is used
-            // detail: { ...keyboardEvent, timestamp: number }
-            console.log("Custom save shortcut detected");
+        // Save protection
+        case "save":
+            // Fired when save is attempted (Cmd+S/Ctrl+S)
+            // detail: {
+            //   key: string,      // The key value of the key pressed
+            //   code: string,     // Physical key code
+            //   keyCode: number,  // Legacy key code
+            //   ctrlKey: boolean, // Whether Ctrl key was pressed
+            //   altKey: boolean,  // Whether Alt/Option key was pressed
+            //   shiftKey: boolean,// Whether Shift key was pressed
+            //   metaKey: boolean, // Whether Meta/Command key was pressed
+            //   timestamp: number // When the event occurred
+            // }
+            console.log("Save attempt detected", detail);
             break;
     }
 };

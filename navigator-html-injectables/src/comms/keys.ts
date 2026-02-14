@@ -52,6 +52,7 @@ export type CommsCommandKey =
 export type SuspiciousActivityType = 
     | "developer_tools"
     | "select_all"
+    | "save"
     | "suspicious_selection"
     | `custom:${string}`  // Allow custom event types with 'custom:' prefix
     | "bulk_copy"

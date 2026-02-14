@@ -1,4 +1,4 @@
-export type KeyboardShortcut = "devTools" | "selectAll" | "print" | KeyCombo;
+export type KeyboardShortcut = "devTools" | "selectAll" | "print" | "save" | KeyCombo;
 
 export interface KeyCombo {
     keyCode: number;  // Use stable keyCode that doesn't change across layouts
@@ -37,4 +37,10 @@ export const PRINT_COMBOS: KeyCombo[] = [
     { keyCode: 80, ctrl: true, shift: true },       // P key (Ctrl+Shift+P)
     { keyCode: 80, meta: true, alt: true },         // P key (Cmd+Alt+P)
     { keyCode: 80, ctrl: true, alt: true }          // P key (Ctrl+Alt+P)
+];
+
+// Save shortcuts (using stable keyCode)
+export const SAVE_COMBOS: KeyCombo[] = [
+    { keyCode: 83, meta: true },    // S key (Cmd+S)
+    { keyCode: 83, ctrl: true }     // S key (Ctrl+S)
 ];
