@@ -10,6 +10,8 @@ export interface SelectionAnalyzerOptions {
     historySize: number;
 }
 
+import { SELECTION_ANALYZER_CONFIG } from './config';
+
 export class SelectionAnalyzer {
     private events: SelectionEvent[] = [];
     private selectionStartTime = 0;
@@ -19,15 +21,7 @@ export class SelectionAnalyzer {
     private lastSelectedText = "";
 
     constructor(
-        private readonly options: {
-            maxSelectionsPerSecond: number;
-            minVariance: number;
-            historySize: number;
-        } = {
-            maxSelectionsPerSecond: 50,
-            minVariance: 2,
-            historySize: 10
-        }
+        private readonly options: SelectionAnalyzerOptions = SELECTION_ANALYZER_CONFIG
     ) {}
 
     public analyze(selection: Selection | null): boolean {
@@ -48,13 +42,22 @@ export class SelectionAnalyzer {
 
         const now = Date.now();
 
-        // Only analyze if selection is meaningful and completed (not ongoing)
-        // Check if user has actually finished selecting (mouse up or selection timeout)
-        const timeSinceLastSelection = now - this.lastSelectionTime;
-        const isCompletedSelection = timeSinceLastSelection > 500; // Wait 500ms to assume selection is complete
-        
-        if (!isCompletedSelection || selectedText.length <= 3 || selectedText === this.lastSelectedText) {
+        // Only analyze meaningful selections (not too short, not duplicates)
+        if (selectedText.length <= 50 || selectedText === this.lastSelectedText) {
             return false;
+        }
+
+        // Start timing if this is a new selection
+        if (this.selectionStartTime === 0) {
+            this.selectionStartTime = now;
+            this.lastSelectedText = selectedText;
+            return false; // Don't analyze first selection, just track it
+        }
+
+        // Check if enough time has passed for selection to be complete
+        const timeSinceStart = now - this.selectionStartTime;
+        if (timeSinceStart < 500) {
+            return false; // Still selecting, wait longer
         }
 
         // Track selection frequency
@@ -84,9 +87,9 @@ export class SelectionAnalyzer {
         const range = selection.getRangeAt(0);
         const text = range.toString();
         
-        // Calculate selection speed (characters/ms)
-        const duration = now - this.selectionStartTime;
-        const speed = text.length / Math.max(1, duration);
+        // Calculate selection speed (characters per second)
+        const duration = (now - this.selectionStartTime) / 1000; // Convert to seconds
+        const speed = text.length / Math.max(1, duration); // Characters per second
         
         // Check for unnaturally fast selection
         if (speed > this.options.maxSelectionsPerSecond) return true;

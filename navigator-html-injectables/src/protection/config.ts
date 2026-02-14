@@ -19,8 +19,8 @@ export const SCROLL_PROTECTION_CONFIG: PatternAnalyzerOptions = {
 };
 
 export const SELECTION_ANALYZER_CONFIG: SelectionAnalyzerOptions = {
-    maxSelectionsPerSecond: 100,
-    minVariance: 20,
+    maxSelectionsPerSecond: 500,
+    minVariance: 50,
     historySize: 20
 };
 
