@@ -123,11 +123,7 @@ export type SuspiciousActivityEvent =
 
 export interface ContentProtectionConfig {
     monitorSelection?: boolean | SelectionAnalyzerOptions;
-    protectCopy?: boolean | {
-        maxSelectionPercent?: number;
-        minThreshold?: number;
-        absoluteMaxChars?: number;
-    };
+    protectCopy?: boolean | Omit<BulkCopyProtectionOptions, "enabled">;
     disableContextMenu?: boolean;
     disableDragAndDrop?: boolean;
     disableKeyboardShortcuts?: KeyboardShortcut[];

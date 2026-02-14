@@ -43,6 +43,11 @@ interface ContentProtectionConfig {
         // Absolute maximum number of characters that can be copied in total
         // Default: 50000
         absoluteMaxChars?: number;
+        
+        // Number of recent copy attempts to keep in history for pattern analysis
+        // Used to detect bulk copy patterns
+        // Default: 20
+        historySize?: number;
     };
     
     // Disable right-click context menu
@@ -197,7 +202,8 @@ const navigator = new EpubNavigator(container, publication, listeners, {
         protectCopy: {
             maxSelectionPercent: 0.7,
             minThreshold: 100,
-            absoluteMaxChars: 50000
+            absoluteMaxChars: 50000,
+            historySize: 30
         },
         
         // Security features
