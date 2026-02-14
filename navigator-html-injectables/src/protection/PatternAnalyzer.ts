@@ -1,3 +1,5 @@
+import { DEFAULT_PATTERN_ANALYZER_CONFIG } from "./config";
+
 type Direction = "left" | "right" | "up" | "down";
 
 export interface PatternAnalyzerOptions {
@@ -8,7 +10,10 @@ export interface PatternAnalyzerOptions {
     maxConsistentScrolls?: number; // Maximum number of consistent scrolls before flagging
 }
 
+// TODO: Improve for scroll protection, 
+// currently disabled because of false positives
 export class PatternAnalyzer {
+    private options: PatternAnalyzerOptions;
     private history: Array<{
         timestamp: number;
         direction: Direction;
@@ -19,12 +24,10 @@ export class PatternAnalyzer {
     private consistentScrollCount = 0;
     
     constructor(
-        private options: PatternAnalyzerOptions
+        options: Partial<PatternAnalyzerOptions> = {}
     ) {
-        // Set defaults for optional parameters
-        this.options.historySize = this.options.historySize || 20;
-        this.options.minDirectionChanges = this.options.minDirectionChanges ?? 0.3;
-        this.options.maxConsistentScrolls = this.options.maxConsistentScrolls ?? 10;
+        // Merge provided options with default config
+        this.options = { ...DEFAULT_PATTERN_ANALYZER_CONFIG, ...options };
     }
 
     analyze(direction: Direction, distance: number, timeDelta: number): boolean {

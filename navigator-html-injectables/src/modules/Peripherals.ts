@@ -61,6 +61,7 @@ export interface BulkCopyEvent extends BaseSuspiciousActivityEvent {
     type: "bulk_copy";
     clipboardTypes: readonly string[];
     selectedText?: string;
+    selectionLength?: number;
 }
 
 export interface SuspiciousSelectionEvent extends BaseSuspiciousActivityEvent {
@@ -151,6 +152,7 @@ export class Peripherals extends Module {
     
     // Selection analysis
     private selectionAnalyzer: SelectionAnalyzer | null = null;
+    private currentSelection: string | null = null;
     
     // Bulk copy protection
     private bulkCopyProtector: BulkCopyProtector | null = null;
@@ -187,20 +189,26 @@ export class Peripherals extends Module {
         // Clear any existing state
         this.disableKeyboardShortcutsProtection();
         
-        // Create a map of all possible shortcuts
-        const allShortcuts = [
-            ...DEV_TOOLS_COMBOS.map(combo => ({
-                ...combo,
-                handler: (event: KeyboardEvent) => this.onDeveloperToolsAttempt(event)
-            })),
-            ...SELECT_ALL_COMBOS.map(combo => ({
-                ...combo,
-                handler: (event: KeyboardEvent) => this.onSelectAll(event)
-            })),
-            ...PRINT_COMBOS.map(combo => ({
-                ...combo,
-                handler: (event: KeyboardEvent) => this.onPrintAttempt(event)
-            })),
+        // Filter shortcuts to only include those that were explicitly requested
+        const enabledShortcuts = [
+            ...shortcuts.includes("devTools") 
+                ? DEV_TOOLS_COMBOS.map(combo => ({
+                    ...combo,
+                    handler: (event: KeyboardEvent) => this.onDeveloperToolsAttempt(event)
+                }))
+                : [],
+            ...shortcuts.includes("selectAll") 
+                ? SELECT_ALL_COMBOS.map(combo => ({
+                    ...combo,
+                    handler: (event: KeyboardEvent) => this.onSelectAll(event)
+                }))
+                : [],
+            ...shortcuts.includes("print") 
+                ? PRINT_COMBOS.map(combo => ({
+                    ...combo,
+                    handler: (event: KeyboardEvent) => this.onPrintAttempt(event)
+                }))
+                : [],
             ...shortcuts
                 .filter((s): s is Exclude<KeyboardShortcut, string> => typeof s !== "string")
                 .map(customCombo => ({
@@ -227,20 +235,10 @@ export class Peripherals extends Module {
                 }))
         ];
 
-        // If no shortcuts are provided, enable all protections
-        const enableAll = shortcuts.length === 0;
-        
-        // Create a set of enabled shortcut types
-        const enabledTypes = new Set(
-            enableAll 
-                ? ["devTools", "selectAll", "print"] 
-                : shortcuts.map(s => typeof s === "string" ? s : "custom")
-        );
-
         // Create a single keydown handler for all shortcuts
         this.keyDownHandler = (event: KeyboardEvent) => {
-            for (const shortcut of allShortcuts) {
-                const { keyCode, ctrl, shift, alt, meta, handler, type } = shortcut;
+            for (const shortcut of enabledShortcuts) {
+                const { keyCode, ctrl, shift, alt, meta, handler } = shortcut;
                 const keyMatch = event.keyCode === keyCode;
                 const ctrlMatch = ctrl === undefined || event.ctrlKey === ctrl;
                 const shiftMatch = shift === undefined || event.shiftKey === shift;
@@ -248,9 +246,6 @@ export class Peripherals extends Module {
                 const metaMatch = meta === undefined || event.metaKey === meta;
                 
                 if (keyMatch && ctrlMatch && shiftMatch && altMatch && metaMatch) {
-                    // Skip if this is a named shortcut that's not enabled
-                    if (type && !enabledTypes.has(type) && type !== "custom") continue;
-                    
                     event.preventDefault();
                     event.stopPropagation();
                     
@@ -268,13 +263,17 @@ export class Peripherals extends Module {
             });
             
             // Log enabled protections
-            if (enableAll) {
-                this.comms?.log("All keyboard shortcut protections enabled");
-            } else {
-                enabledTypes.forEach(type => {
-                    this.comms?.log(`${type} protection enabled`);
-                });
-            }
+            const types = shortcuts.map(s => {
+                if (typeof s === "string") return s;
+                const keys = [];
+                if (s.ctrl) keys.push("Ctrl");
+                if (s.alt) keys.push("Alt");
+                if (s.shift) keys.push("Shift");
+                if (s.meta) keys.push("Meta");
+                keys.push(`K${s.keyCode}`);
+                return keys.join("+");
+            });
+            this.comms?.log(`Keyboard protections enabled: ${types.join(", ")}`);
         }
     }
     
@@ -377,12 +376,12 @@ export class Peripherals extends Module {
         if (!this.bulkCopyProtector.shouldAllowCopy(event)) {
             event.preventDefault();
             
-            const selection = window.getSelection()?.toString();
             const activityEvent: BulkCopyEvent = {
                 type: "bulk_copy",
                 timestamp: Date.now(),
                 clipboardTypes: event.clipboardData?.types ? [...event.clipboardData.types] : [],
-                selectedText: selection || undefined
+                selectedText: this.currentSelection || undefined,
+                selectionLength: this.currentSelection?.length
             };
             this.comms?.send("content_protection", activityEvent);
             return false;
@@ -396,17 +395,22 @@ export class Peripherals extends Module {
         }
         
         const selection = this.wnd.getSelection();
-        if (selection && selection.type === "Range" && this.selectionAnalyzer.analyze(selection)) {
-            const selectedText = selection.toString();
+        if (selection) {
+            this.currentSelection = selection.toString();
+            const isSuspicious = this.selectionAnalyzer.analyze(selection);
             
-            const activityEvent: SuspiciousSelectionEvent = {
-                type: "suspicious_selection",
-                timestamp: Date.now(),
-                selectionLength: selectedText.length,
-                selectedText: selectedText,
-                eventType: event?.type || "unknown"
-            };
-            this.comms?.send("content_protection", activityEvent);
+            if (isSuspicious && this.currentSelection) {
+                const activityEvent: SuspiciousSelectionEvent = {
+                    type: "suspicious_selection",
+                    timestamp: Date.now(),
+                    selectionLength: this.currentSelection.length,
+                    selectedText: this.currentSelection,
+                    eventType: event?.type || "selectionchange"
+                };
+                this.comms?.send("content_protection", activityEvent);
+            }
+        } else {
+            this.currentSelection = null;
         }
     };
 
@@ -595,7 +599,7 @@ export class Peripherals extends Module {
                         minThreshold: 0, 
                         absoluteMaxChars: 0 
                     });
-                    this.comms?.log("Copy protection enabled (blocked all)");
+                    this.comms?.log("Copy protection enabled");
                 }
                 
                 // Context menu

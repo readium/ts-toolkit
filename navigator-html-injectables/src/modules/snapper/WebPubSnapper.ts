@@ -5,8 +5,8 @@ import { ModuleName } from "../ModuleLibrary";
 import { Snapper } from "./Snapper";
 import { rangeFromLocator } from "../../helpers/locator";
 import { forceWebkitRecalc } from "../../helpers/document";
-import { PatternAnalyzer } from "../../protection/PatternAnalyzer";
-import { SCROLL_PROTECTION_CONFIG } from "../../protection/config";
+//import { PatternAnalyzer } from "../../protection/PatternAnalyzer";
+// import { SCROLL_PROTECTION_CONFIG } from "../../protection/config";
 
 export class WebPubSnapper extends Snapper {
     static readonly moduleName: ModuleName = "webpub_snapper";
@@ -14,9 +14,9 @@ export class WebPubSnapper extends Snapper {
     private wnd!: ReadiumWindow;
     private comms!: Comms;
     private resizeObserver!: ResizeObserver;
-    private patternAnalyzer: PatternAnalyzer | null = null;
-    private lastScrollTime: number = 0;
-    private isScrollProtectionEnabled = false;
+    // private patternAnalyzer: PatternAnalyzer | null = null;
+    // private lastScrollTime: number = 0;
+    // private isScrollProtectionEnabled = false;
 
     private initialScrollHandled = false;
     private isScrolling = false;
@@ -43,7 +43,7 @@ export class WebPubSnapper extends Snapper {
         });
     }
 
-    private handleScroll = (e: Event) => {
+    private handleScroll = (_e: Event) => {
         if (!this.comms.ready) return;
 
         // Filter resize events
@@ -68,6 +68,7 @@ export class WebPubSnapper extends Snapper {
                 const deltaY = currentScrollTop - this.lastScrollTop;
                 this.lastScrollTop = currentScrollTop;
 
+                /* TODO: Enable when scroll protection is improved
                 // Record scroll for pattern analysis if protection is enabled
                 if (this.isScrollProtectionEnabled && Math.abs(deltaY) > 5) { // Ignore tiny scrolls
                     const now = Date.now();
@@ -79,8 +80,8 @@ export class WebPubSnapper extends Snapper {
                             timeDelta
                         );
                         if (isSuspicious) {
-                            const target = e.target && "tagName" in e.target ? 
-                                { tagName: (e.target as Element).tagName } : null;
+                            const target = _e.target && "tagName" in _e.target ? 
+                                { tagName: (_e.target as Element).tagName } : null;
                                 
                             this.comms?.send("content_protection", {
                                 type: "suspicious_scrolling",
@@ -93,6 +94,7 @@ export class WebPubSnapper extends Snapper {
                     }
                     this.lastScrollTime = now;
                 }
+                */
 
                 this.comms.send("scroll", deltaY);
 
@@ -101,6 +103,7 @@ export class WebPubSnapper extends Snapper {
         }
     };
 
+        /* TODO: Enable when scroll protection is improved
         private enableScrollProtection() {
         if (!this.patternAnalyzer) {
             this.patternAnalyzer = new PatternAnalyzer(SCROLL_PROTECTION_CONFIG);
@@ -108,6 +111,7 @@ export class WebPubSnapper extends Snapper {
             this.comms?.log("Scroll protection enabled");
         }
     }
+    */
 
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
@@ -236,11 +240,12 @@ export class WebPubSnapper extends Snapper {
             ack(true);
         });
 
-        // Enable scroll protection if requested
+        /* TODO: Enable scroll protection if requested
         comms.register("scroll_protection", WebPubSnapper.moduleName, (_, ack) => {
             this.enableScrollProtection();
             ack(true);
         });
+        */
 
         comms.register([
             "go_next",
@@ -266,12 +271,14 @@ export class WebPubSnapper extends Snapper {
         this.resizeObserver.disconnect();
         if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
         
+        /* TODO: Enable when scroll protection is improved
         if (this.patternAnalyzer) {
             this.patternAnalyzer.clear();
             this.patternAnalyzer = null;
             this.isScrollProtectionEnabled = false;
         }
-        
+        */
+
         comms.log("WebPubSnapper Unmounted");
         return true;
     }

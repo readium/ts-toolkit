@@ -45,7 +45,7 @@ export type CommsCommandKey =
     "shake" |
     "force_webkit_recalc" |
     "peripherals_protection" |
-    "scroll_protection" |
+    // "scroll_protection" |
     "print_protection";
 ;
 
@@ -55,8 +55,8 @@ export type SuspiciousActivityType =
     | "suspicious_selection"
     | `custom:${string}`  // Allow custom event types with 'custom:' prefix
     | "bulk_copy"
-    | "suspicious_scrolling"
-    | "suspicious_snapping"
+    // | "suspicious_scrolling"
+    // | "suspicious_snapping"
     | "drag_detected"
     | "drop_detected"
     | "print"

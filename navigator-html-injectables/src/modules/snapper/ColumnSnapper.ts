@@ -6,7 +6,7 @@ import { ModuleName } from "../ModuleLibrary";
 import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
 import { rangeFromLocator } from "../../helpers/locator";
 import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/dom";
-import { PatternAnalyzer } from "../../protection/PatternAnalyzer";
+// import { PatternAnalyzer } from "../../protection/PatternAnalyzer";
 
 const COLUMN_SNAPPER_STYLE_ID = "readium-column-snapper-style";
 const SNAP_DURATION = 200; // Milliseconds
@@ -22,11 +22,11 @@ enum ScrollTouchState {
  */
 export class ColumnSnapper extends Snapper {
     static readonly moduleName: ModuleName = "column_snapper";
-    private isSnapProtectionEnabled = false;
+    // private isSnapProtectionEnabled = false;
     private resizeObserver!: ResizeObserver;
     private mutationObserver!: MutationObserver;
-    private patternAnalyzer: PatternAnalyzer | null = null;
-    private lastTurnTime: number = 0;
+    // private patternAnalyzer: PatternAnalyzer | null = null;
+    // private lastTurnTime: number = 0;
     private wnd!: ReadiumWindow;
     private comms!: Comms;
     private doc() { return this.wnd.document.scrollingElement as HTMLElement; }
@@ -101,9 +101,11 @@ export class ColumnSnapper extends Snapper {
             ((factor * cdo) > 0 ? 2 : 1);
 
         const so = this.snapOffset(currentOffset + hurdle);
-        const direction = so > this.scrollOffset() ? "right" : "left";
         
-        // Check for suspicious snap patterns if protection is enabled
+        /* TODO: Enable when scroll protection is improved
+        const direction = so > this.scrollOffset() ? "right" : "left";
+
+        Check for suspicious snap patterns if protection is enabled
         if (this.isSnapProtectionEnabled) {
             const now = Date.now();
             const timeDelta = now - (this.lastTurnTime || now);
@@ -124,6 +126,7 @@ export class ColumnSnapper extends Snapper {
             }
             this.lastTurnTime = now;
         }
+        */
         
         if(smooth && so !== this.scrollOffset()) { // Smooth snapping
             this.snappingCancelled = false;
@@ -261,6 +264,7 @@ export class ColumnSnapper extends Snapper {
     }
     private readonly onTouchMover = this.onTouchMove.bind(this);
 
+    /* TODO: Enable when scroll protection is improved
     private enableSnapProtection() {
         if (!this.patternAnalyzer) {
             this.patternAnalyzer = new PatternAnalyzer({
@@ -272,6 +276,7 @@ export class ColumnSnapper extends Snapper {
             this.comms?.log("Snap protection enabled");
         }
     }
+    */
 
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
@@ -359,11 +364,12 @@ export class ColumnSnapper extends Snapper {
         // we need to check the syle attribute on the documentElement (ReadiumCSS props)
         this.mutationObserver.observe(wnd.document.documentElement, {attributes: true, attributeFilter: ["style"]});
         
-        // Enable snap protection if requested
+        /* TODO: Enable snap protection if requested
         comms.register("scroll_protection", ColumnSnapper.moduleName, (_, ack) => {
             this.enableSnapProtection();
             ack(true);
         });
+        */
 
         const scrollToOffset = (offset: number): boolean => {
             const oldScrollLeft = this.doc().scrollLeft;
@@ -537,11 +543,13 @@ export class ColumnSnapper extends Snapper {
         this.resizeObserver.disconnect();
         this.mutationObserver.disconnect();
 
+        /* TODO: Enable when scroll protection is improved
         if (this.patternAnalyzer) {
             this.patternAnalyzer.clear();
             this.patternAnalyzer = null;
             this.isSnapProtectionEnabled = false;
         }
+        */
 
         wnd.removeEventListener("touchstart", this.onTouchStarter);
         wnd.removeEventListener("touchend", this.onTouchEnder);
