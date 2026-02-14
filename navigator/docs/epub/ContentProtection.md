@@ -11,8 +11,21 @@ The content protection system provides client-side features to deter casual cont
 ```typescript
 interface ContentProtectionConfig {
     // Monitor text selection for suspicious patterns (e.g., automated scraping)
-    // Default: false
-    monitorSelection?: boolean;
+    // - boolean: true to enable with default settings, false to disable
+    // - object: Fine-grained control over selection monitoring
+    monitorSelection?: boolean | {
+        // Maximum number of selections per second to detect automation
+        // Default: 500
+        maxSelectionsPerSecond?: number;
+        
+        // Minimum variance in selection patterns (lower values indicate more consistent patterns)
+        // Default: 50
+        minVariance?: number;
+        
+        // Number of recent selections to keep in history for pattern analysis
+        // Default: 20
+        historySize?: number;
+    };
     
     // Configure copy protection
     // - boolean: true to enable with default settings, false to disable
@@ -96,37 +109,41 @@ interface KeyCombo {
 
 ## Protection Features
 
-### 1. Copy
-- **Bulk Copy Monitoring**: Tracks copy/paste operations and selection patterns
-  - Can detect some patterns of automated extraction
-  - Triggers `suspicious_selection` event for unusual activity
-  - Note: Not a foolproof protection against content extraction
+### 1. Selection Monitoring
+- **Pattern Analysis**: Detects unusual text selection patterns
+  - Only analyzes significant selections
+  - Triggers `suspicious_selection` event when automation is detected
+ 
+### 2. Copy Protection
+- **Bulk Copy Monitoring**: Tracks copy operations
+  - Prevents excessive copying
+  - Triggers `bulk_copy` event for suspicious activity
 
-### 2. Context Menu
+### 3. Context Menu
 - Disables right-click context menu to prevent easy access to developer tools
 - Configurable via `disableContextMenu`
 
-### 3. Drag and Drop
+### 4. Drag and Drop
 - Prevents dragging content out of the reader
 - Configurable via `disableDragAndDrop`
 
-### 4. Keyboard Shortcut
+### 5. Keyboard Shortcut
 - Blocks common developer tools shortcuts (F12, Cmd+Option+I, etc.)
 - Blocks text selection (Cmd+A/Ctrl+A)
 - Blocks printing shortcuts (Cmd+P/Ctrl+P)
 - Supports custom key combinations using `KeyCombo` interface
 - Configurable via `disableKeyboardShortcuts`
 
-### 5. Print
+### 6. Print
 - Blocks print keyboard shortcuts (Cmd+P/Ctrl+P)
 - If print attempt is successful, replaces the content with a watermark
 
-### 6. Automation
+### 7. Automation
 - Detects common automation tools like Selenium and Puppeteer
 - Triggers the `contentProtection` event with type `automation_detected` when detected
 - Enabled via `checkAutomation`
 
-### 7. IFrame Embedding
+### 8. IFrame Embedding
 - Detects when content is embedded in iframes
 - Can detect cross-origin iframe embedding
 - Triggers `contentProtection` event with type `iframe_embedding_detected` when detected
@@ -172,7 +189,11 @@ const navigator = new EpubNavigator(container, publication, listeners, {
         },
         
         // Advanced protection
-        monitorSelection: true,
+        monitorSelection: {
+            maxSelectionsPerSecond: 400,  // More sensitive to fast selections
+            minVariance: 30,             // Lower threshold for more aggressive detection
+            historySize: 30              // Larger history for better pattern detection
+        },
         protectCopy: {
             maxSelectionPercent: 0.7,
             minThreshold: 100,

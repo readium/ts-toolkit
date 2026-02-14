@@ -2,8 +2,8 @@ import { Comms } from "../comms/comms";
 import { Module } from "./Module";
 import { ReadiumWindow, nearestInteractiveElement } from "../helpers/dom";
 import { BulkCopyProtector, BulkCopyProtectionOptions } from "../protection/BulkCopyProtector";
+import { SelectionAnalyzer, SelectionAnalyzerOptions } from "../protection/SelectionAnalyzer";
 import { 
-    SelectionAnalyzer, 
     DEV_TOOLS_COMBOS, 
     SELECT_ALL_COMBOS, 
     PRINT_COMBOS, 
@@ -122,7 +122,7 @@ export type SuspiciousActivityEvent =
     | BlockedKeyboardShortcutEvent;
 
 export interface ContentProtectionConfig {
-    monitorSelection?: boolean;
+    monitorSelection?: boolean | SelectionAnalyzerOptions;
     protectCopy?: boolean | {
         maxSelectionPercent?: number;
         minThreshold?: number;
@@ -414,9 +414,12 @@ export class Peripherals extends Module {
         }
     };
 
-    private addSelectionMonitoring(): void {
+    private addSelectionMonitoring(options?: SelectionAnalyzerOptions): void {
         if (this.isSelectionMonitoringEnabled || !this.wnd) return;
-        this.selectionAnalyzer = new SelectionAnalyzer(SELECTION_ANALYZER_CONFIG);
+        
+        // Use provided options or fall back to default config
+        const analyzerOptions = options || SELECTION_ANALYZER_CONFIG;
+        this.selectionAnalyzer = new SelectionAnalyzer(analyzerOptions);
         this.wnd.document.addEventListener("selectionchange", this.handleSelection);
         this.isSelectionMonitoringEnabled = true;
     }
@@ -577,9 +580,12 @@ export class Peripherals extends Module {
             if (!this.configApplied) {
                 this.configApplied = true;
                 
-                // Selection
+                // Selection monitoring with optional configuration
                 if (config.monitorSelection) {
-                    this.addSelectionMonitoring();
+                    const options = typeof config.monitorSelection === "boolean" 
+                        ? undefined 
+                        : config.monitorSelection;
+                    this.addSelectionMonitoring(options);
                     this.comms?.log("Selection monitoring enabled");
                 }
                 
