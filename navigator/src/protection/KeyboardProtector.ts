@@ -2,12 +2,14 @@ import { NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "./NavigatorProtector";
 import { 
     DEV_TOOLS_COMBOS, 
     SELECT_ALL_COMBOS, 
-    PRINT_COMBOS, 
+    PRINT_COMBOS,
+    SAVE_COMBOS, 
     KeyCombo,
     KeyboardShortcut,
     DeveloperToolsEvent, 
     SelectAllEvent, 
-    PrintEvent, 
+    PrintEvent,
+    SaveEvent, 
     ContextMenuEvent,
     BlockedKeyboardShortcutEvent
 } from "@readium/navigator-html-injectables";
@@ -102,7 +104,7 @@ export class KeyboardProtector {
             );
             
             // Determine the event type based on the key combination
-            let activityEvent: DeveloperToolsEvent | SelectAllEvent | PrintEvent | BlockedKeyboardShortcutEvent;
+            let activityEvent: DeveloperToolsEvent | SelectAllEvent | PrintEvent | SaveEvent | BlockedKeyboardShortcutEvent;
             
             if (this.isDevToolsCombo(combo)) {
                 activityEvent = {
@@ -110,6 +112,7 @@ export class KeyboardProtector {
                     timestamp: Date.now(),
                     key: event.key,
                     code: event.code,
+                    keyCode: event.keyCode,
                     ctrlKey: event.ctrlKey,
                     altKey: event.altKey,
                     shiftKey: event.shiftKey,
@@ -121,6 +124,7 @@ export class KeyboardProtector {
                     timestamp: Date.now(),
                     key: event.key,
                     code: event.code,
+                    keyCode: event.keyCode,
                     ctrlKey: event.ctrlKey,
                     altKey: event.altKey,
                     shiftKey: event.shiftKey,
@@ -132,6 +136,19 @@ export class KeyboardProtector {
                     timestamp: Date.now(),
                     key: event.key,
                     code: event.code,
+                    keyCode: event.keyCode,
+                    ctrlKey: event.ctrlKey,
+                    metaKey: event.metaKey,
+                    shiftKey: event.shiftKey,
+                    altKey: event.altKey
+                };
+            } else if (this.isSaveCombo(combo)) {
+                activityEvent = {
+                    type: "save",
+                    timestamp: Date.now(),
+                    key: event.key,
+                    code: event.code,
+                    keyCode: event.keyCode,
                     ctrlKey: event.ctrlKey,
                     metaKey: event.metaKey,
                     shiftKey: event.shiftKey,
@@ -144,6 +161,7 @@ export class KeyboardProtector {
                     timestamp: Date.now(),
                     key: event.key,
                     code: event.code,
+                    keyCode: event.keyCode,
                     ctrlKey: event.ctrlKey,
                     altKey: event.altKey,
                     shiftKey: event.shiftKey,
@@ -156,6 +174,7 @@ export class KeyboardProtector {
                     timestamp: Date.now(),
                     key: event.key,
                     code: event.code,
+                    keyCode: event.keyCode,
                     ctrlKey: event.ctrlKey,
                     altKey: event.altKey,
                     shiftKey: event.shiftKey,
@@ -197,6 +216,16 @@ export class KeyboardProtector {
             (printCombo.shift === undefined || printCombo.shift === combo.shift) &&
             (printCombo.alt === undefined || printCombo.alt === combo.alt) &&
             (printCombo.meta === undefined || printCombo.meta === combo.meta)
+        );
+    }
+    
+    private isSaveCombo(combo: KeyCombo): boolean {
+        return SAVE_COMBOS.some(saveCombo => 
+            saveCombo.keyCode === combo.keyCode &&
+            (saveCombo.ctrl === undefined || saveCombo.ctrl === combo.ctrl) &&
+            (saveCombo.shift === undefined || saveCombo.shift === combo.shift) &&
+            (saveCombo.alt === undefined || saveCombo.alt === combo.alt) &&
+            (saveCombo.meta === undefined || saveCombo.meta === combo.meta)
         );
     }
     
