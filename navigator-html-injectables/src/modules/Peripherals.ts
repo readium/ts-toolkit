@@ -4,14 +4,15 @@ import { ReadiumWindow, nearestInteractiveElement } from "../helpers/dom";
 import { BulkCopyProtector, BulkCopyProtectionOptions } from "../protection/BulkCopyProtector";
 import { SelectionAnalyzer, SelectionAnalyzerOptions } from "../protection/SelectionAnalyzer";
 import { 
-    DEV_TOOLS_COMBOS, 
-    SELECT_ALL_COMBOS, 
-    PRINT_COMBOS,
-    SAVE_COMBOS,
     KeyboardShortcut 
 } from "../protection";
 import { SuspiciousActivityType } from "../comms";
 import { BULK_COPY_CONFIG, SELECTION_ANALYZER_CONFIG } from "../protection/config";
+import { 
+    KeyCombinationManager, 
+    ActivityEventDispatcher,
+    BlockedKeyboardShortcutEvent 
+} from "../protection/KeyCombinationManager";
 
 export interface FrameClickEvent {
     defaultPrevented: boolean;
@@ -63,10 +64,6 @@ export interface PrintEvent extends BaseSuspiciousActivityEvent, KeyboardEventDa
 
 export interface SaveEvent extends BaseSuspiciousActivityEvent, KeyboardEventData {
     type: "save";
-}
-
-export interface BlockedKeyboardShortcutEvent extends Omit<BaseSuspiciousActivityEvent, "type">, KeyboardEventData {
-    type: "blocked_keyboard_shortcut" | `custom:${string}`;
 }
 
 export interface BulkCopyEvent extends BaseSuspiciousActivityEvent {
@@ -145,6 +142,9 @@ export class Peripherals extends Module {
     
     // Bulk copy protection
     private bulkCopyProtector: BulkCopyProtector | null = null;
+    
+    // Key combination manager
+    private keyManager = new KeyCombinationManager();
 
     private addContextMenuPrevention(): void {
         if (this.isContextMenuEnabled || !this.wnd) return;
@@ -178,99 +178,33 @@ export class Peripherals extends Module {
         // Clear any existing state
         this.disableKeyboardShortcutsProtection();
         
-        // Filter shortcuts to only include those that were explicitly requested
-        const enabledShortcuts = [
-            ...shortcuts.includes("devTools") 
-                ? DEV_TOOLS_COMBOS.map(combo => ({
-                    ...combo,
-                    handler: (event: KeyboardEvent) => this.onDeveloperToolsAttempt(event)
-                }))
-                : [],
-            ...shortcuts.includes("selectAll") 
-                ? SELECT_ALL_COMBOS.map(combo => ({
-                    ...combo,
-                    handler: (event: KeyboardEvent) => this.onSelectAll(event)
-                }))
-                : [],
-            ...shortcuts.includes("print") 
-                ? PRINT_COMBOS.map(combo => ({
-                    ...combo,
-                    handler: (event: KeyboardEvent) => this.onPrintAttempt(event)
-                }))
-                : [],
-            ...shortcuts.includes("save") 
-                ? SAVE_COMBOS.map(combo => ({
-                    ...combo,
-                    handler: (event: KeyboardEvent) => this.onSaveAttempt(event)
-                }))
-                : [],
-            ...shortcuts
-                .filter((s): s is Exclude<KeyboardShortcut, string> => typeof s !== "string")
-                .map(customCombo => ({
-                    ...customCombo,
-                    type: "custom",
-                    handler: (event: KeyboardEvent) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        
-                        const activityEvent: BlockedKeyboardShortcutEvent = {
-                            type: customCombo.type 
-                                ? `custom:${customCombo.type}`
-                                : "blocked_keyboard_shortcut",
-                            timestamp: Date.now(),
-                            key: event.key,
-                            code: event.code,
-                            keyCode: event.keyCode,
-                            ctrlKey: event.ctrlKey,
-                            altKey: event.altKey,
-                            shiftKey: event.shiftKey,
-                            metaKey: event.metaKey
-                        };
-                        this.comms?.send("content_protection", activityEvent);
-                    }
-                }))
-        ];
-
-        // Create a single keydown handler for all shortcuts
-        this.keyDownHandler = (event: KeyboardEvent) => {
-            for (const shortcut of enabledShortcuts) {
-                const { keyCode, ctrl, shift, alt, meta, handler } = shortcut;
-                const keyMatch = event.keyCode === keyCode;
-                const ctrlMatch = ctrl === undefined || event.ctrlKey === ctrl;
-                const shiftMatch = shift === undefined || event.shiftKey === shift;
-                const altMatch = alt === undefined || event.altKey === alt;
-                const metaMatch = meta === undefined || event.metaKey === meta;
-                
-                if (keyMatch && ctrlMatch && shiftMatch && altMatch && metaMatch) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    
-                    handler(event);
-                    break; // Only handle one shortcut per keypress
-                }
-            }
+        // Create activity event dispatcher
+        const dispatcher: ActivityEventDispatcher = (activityEvent) => {
+            this.comms?.send("content_protection", activityEvent);
         };
-
+        
+        // Create unified handler using centralized KeyCombinationManager
+        this.keyDownHandler = this.keyManager.createUnifiedHandler(shortcuts, dispatcher);
+        
         // Add the event listener
         if (this.wnd) {
             this.wnd.document.addEventListener("keydown", this.keyDownHandler, {
                 capture: true,
-                passive: false
-            });
-            
-            // Log enabled protections
-            const types = shortcuts.map(s => {
-                if (typeof s === "string") return s;
-                const keys = [];
-                if (s.ctrl) keys.push("Ctrl");
-                if (s.alt) keys.push("Alt");
-                if (s.shift) keys.push("Shift");
-                if (s.meta) keys.push("Meta");
-                keys.push(`K${s.keyCode}`);
-                return keys.join("+");
-            });
-            this.comms?.log(`Keyboard protections enabled: ${types.join(", ")}`);
+            } as any);
         }
+        
+        // Log enabled shortcuts for debugging
+        const types = shortcuts.map(s => {
+            if (typeof s === "string") return s;
+            const keys = [];
+            if (s.ctrl) keys.push("Ctrl");
+            if (s.alt) keys.push("Alt");
+            if (s.shift) keys.push("Shift");
+            if (s.meta) keys.push("Meta");
+            keys.push(`K${s.keyCode}`);
+            return keys.join("+");
+        });
+        this.comms?.log(`Keyboard protections enabled: ${types.join(", ")}`);
     }
     
     private disableKeyboardShortcutsProtection(): void {
@@ -303,84 +237,6 @@ export class Peripherals extends Module {
         this.bulkCopyProtector?.destroy();
         this.bulkCopyProtector = null;
         this.isBulkCopyProtectionEnabled = false;
-    }
-
-    private onDeveloperToolsAttempt(event: KeyboardEvent): void {
-        event.preventDefault();
-        event.stopPropagation();
-        
-        const activityEvent: DeveloperToolsEvent = {
-            type: "developer_tools",
-            timestamp: Date.now(),
-            key: event.key,
-            code: event.code,
-            keyCode: event.keyCode,
-            ctrlKey: event.ctrlKey,
-            altKey: event.altKey,
-            shiftKey: event.shiftKey,
-            metaKey: event.metaKey
-        };
-        
-        this.comms?.send("content_protection", activityEvent);
-    }
-
-    private onSelectAll(event: KeyboardEvent) {
-        event.preventDefault();
-        
-        const selection = this.wnd.getSelection();
-        if (selection) {
-        //    const range = this.wnd.document.createRange();
-        //    range.selectNodeContents(this.wnd.document.body);
-            selection.removeAllRanges();
-        //    selection.addRange(range);
-        }
-        
-        const activityEvent: SelectAllEvent = {
-            type: "select_all",
-            timestamp: Date.now(),
-            key: event.key,
-            code: event.code,
-            keyCode: event.keyCode,
-            ctrlKey: event.ctrlKey,
-            altKey: event.altKey,
-            shiftKey: event.shiftKey,
-            metaKey: event.metaKey
-        };
-        
-        this.comms?.send("content_protection", activityEvent);
-        return false;
-    }
-
-    private onPrintAttempt(event: KeyboardEvent) {
-        event.preventDefault();
-        const activityEvent: PrintEvent = {
-            type: "print",
-            timestamp: Date.now(),
-            key: event.key,
-            keyCode: event.keyCode,
-            code: event.code,
-            ctrlKey: event.ctrlKey,
-            metaKey: event.metaKey,
-            shiftKey: event.shiftKey,
-            altKey: event.altKey
-        };
-        this.comms?.send("content_protection", activityEvent);
-    }
-
-    private onSaveAttempt(event: KeyboardEvent) {
-        event.preventDefault();
-        const activityEvent: SaveEvent = {
-            type: "save",
-            timestamp: Date.now(),
-            key: event.key,
-            keyCode: event.keyCode,
-            code: event.code,
-            ctrlKey: event.ctrlKey,
-            metaKey: event.metaKey,
-            shiftKey: event.shiftKey,
-            altKey: event.altKey
-        };
-        this.comms?.send("content_protection", activityEvent);
     }
 
     private preventBulkCopy = (event: ClipboardEvent) => {
