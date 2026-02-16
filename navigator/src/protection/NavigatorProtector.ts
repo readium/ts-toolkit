@@ -1,6 +1,7 @@
 import { AutomationDetector } from "./AutomationDetector";
 import { IframeEmbeddingDetector } from "./IframeEmbeddingDetector";
 import { KeyboardProtector } from "./KeyboardProtector";
+import { PrintProtector } from "./PrintProtector";
 import { IContentProtectionConfig } from "../Navigator";
 
 export const NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT = "readium:navigator:suspiciousActivity";
@@ -9,6 +10,7 @@ export class NavigatorProtector {
     private automationDetector?: AutomationDetector;
     private iframeEmbeddingDetector?: IframeEmbeddingDetector;
     private keyboardProtector?: KeyboardProtector;
+    private printProtector?: PrintProtector;
 
     private dispatchSuspiciousActivity(type: string, detail: Record<string, unknown>) {
         const event = new CustomEvent(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, {
@@ -47,11 +49,22 @@ export class NavigatorProtector {
                 blockContextMenu: config.disableContextMenu ?? false
             });
         }
+
+        // Enable print protection if configured
+        if (config.protectPrinting?.disable) {
+            this.printProtector = new PrintProtector({
+                ...config.protectPrinting,
+                onPrintAttempt: () => {
+                    this.dispatchSuspiciousActivity("print", {});
+                }
+            });
+        }
     }
 
     public destroy() {
         this.automationDetector?.destroy();
         this.iframeEmbeddingDetector?.destroy();
         this.keyboardProtector?.destroy();
+        this.printProtector?.destroy();
     }
 }

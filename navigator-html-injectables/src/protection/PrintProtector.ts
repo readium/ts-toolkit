@@ -28,7 +28,7 @@ export class PrintProtector extends Module {
                 }
                 body::after {
                     content: "${config.watermark || 'Printing has been disabled'}";
-                    font-size: 24px;
+                    font-size: 200%;
                     display: block;
                     text-align: center;
                     margin-top: 50vh;
@@ -39,7 +39,6 @@ export class PrintProtector extends Module {
         wnd.document.head.appendChild(style);
         this.styleElement = style;
 
-        // Prevent print dialog from opening
         this.beforePrintHandler = (e: Event) => {
             e.preventDefault();
             return false;
@@ -86,5 +85,3 @@ export class PrintProtector extends Module {
         return true;
     }
 }
-
-export default PrintProtector;
