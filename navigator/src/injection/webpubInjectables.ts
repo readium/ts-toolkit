@@ -10,7 +10,12 @@ import onloadProxyContent from "../dom/_readium_executionCleanup.js?raw";
 /**
  * Creates injectable rules for WebPub content documents
  */
-export function createReadiumWebPubRules(): IInjectableRule[] {
+export function createReadiumWebPubRules(hrefs: string[] = []): IInjectableRule[] {
+    // Create exact match patterns for manifest hrefs
+    const resources = hrefs.length > 0 
+        ? hrefs 
+        : [/\.html$/, /\.xhtml$/, /\/$/]; // fallback patterns
+    
     // Core injectables that should be prepended
     const prependInjectables: IInjectable[] = [
         // CSS Selector Generator - always injected
@@ -51,7 +56,7 @@ export function createReadiumWebPubRules(): IInjectableRule[] {
 
     return [
         {
-            resources: [/\.xhtml$/, /\.html$/],
+            resources: resources,
             prepend: prependInjectables,
             append: appendInjectables
         }

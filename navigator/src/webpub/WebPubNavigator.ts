@@ -93,7 +93,10 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         });
 
         // Combine WebPub rules with user-provided injectables
-        const webpubRules = createReadiumWebPubRules();
+        const htmlHrefs = pub.readingOrder.items
+            .filter(item => item.mediaType.isHTML)
+            .map(item => item.href);
+        const webpubRules = createReadiumWebPubRules(htmlHrefs);
         const userConfig = configuration.injectables || { rules: [], allowedDomains: [] };
         
         this._injector = new Injector({
