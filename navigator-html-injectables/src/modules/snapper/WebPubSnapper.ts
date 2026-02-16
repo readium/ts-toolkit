@@ -177,7 +177,7 @@ export class WebPubSnapper extends Snapper {
             });
         });
 
-        this.comms.register("go_id", WebPubSnapper.moduleName, (data, ack) => {
+        comms.register("go_id", WebPubSnapper.moduleName, (data, ack) => {
             const element = wnd.document.getElementById(data as string);
             if(!element) {
                 ack(false);

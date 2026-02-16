@@ -63,13 +63,6 @@ export class WebPubFrameManager {
         });
     }
 
-    async destroy() {
-        await this.hide();
-        this.loader?.destroy();
-        this.frame.remove();
-        this.destroyed = true;
-    }
-
     private applyContentProtection() {
         if (!this.comms) this.comms!.resume();
         // Send peripherals protection config
@@ -84,6 +77,13 @@ export class WebPubFrameManager {
         if (this.contentProtectionConfig.protectPrinting) {
             this.comms!.send("print_protection", this.contentProtectionConfig.protectPrinting);
         }
+    }
+
+    async destroy() {
+        await this.hide();
+        this.loader?.destroy();
+        this.frame.remove();
+        this.destroyed = true;
     }
 
     async hide(): Promise<void> {

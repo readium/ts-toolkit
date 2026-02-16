@@ -296,6 +296,14 @@ export class ScrollSnapper extends Snapper {
         this.resizeObserver.disconnect();
         if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
         wnd.document.getElementById(SCROLL_SNAPPER_STYLE_ID)?.remove();
+
+         /* TODO: Enable when scroll protection is improved
+        if (this.patternAnalyzer) {
+            this.patternAnalyzer.clear();
+            this.patternAnalyzer = null;
+            this.isScrollProtectionEnabled = false;
+        }
+        */
         comms.log("ScrollSnapper Unmounted");
         return true;
     }
