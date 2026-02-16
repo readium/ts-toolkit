@@ -13,6 +13,7 @@ The following events are exposed:
 - `customEvent`: fires when the EpubNavigator doesn’t handle the event by default
 - `handleLocator`: fires when a link has been tapped or clicked
 - `textSelected`: fires when text was selected inside the iframe
+- `contentProtection`: fires when the content protection is triggered
 
 Your listeners object should look like this if you do not customize them at all.
 
@@ -34,6 +35,7 @@ const listeners: EpubNavigatorListeners = {
     return false;
   },
   textSelected: function (_selection: BasicTextSelection): void {},
+  contentProtection: function (_event: ContentProtectionEvent): void {},
 };
 ```
 
@@ -107,3 +109,7 @@ Fires when an external link has been tapped or clicked.
 ### textSelected
 
 Fires when text has been selected inside the iframe.
+
+### contentProtection
+
+Fires when the content protection is triggered. See [Content Protection](./ContentProtection.md) for more information.

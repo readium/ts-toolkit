@@ -156,6 +156,14 @@ interface KeyCombo {
 - Triggers `contentProtection` event with type `iframe_embedding_detected` when detected
 - Enabled via `checkIFrameEmbedding`
 
+## Layering
+
+Protection features should be thought as layers. If one feature fails, the next one comes into play. 
+
+For example, if the print shortcut fails, print protection can be used to prevent the user from printing the content. If the automation detection fails, selection monitoring and bulk copy monitoring can be used to prevent the user from copying the content. Etc.
+
+It is really important to understand how to combine these features to reinforce the entire protection system.
+
 ## Event Types
 
 Content protection triggers events with the following types:
