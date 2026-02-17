@@ -93,8 +93,7 @@ export interface DropDetectedEvent extends BaseSuspiciousActivityEvent {
     fileCount: number;
 }
 
-export interface ContextMenuEvent extends BaseSuspiciousActivityEvent {
-    type: "context_menu";
+export interface ContextMenuEvent extends Omit<BaseSuspiciousActivityEvent, "type"> {
     clientX: number;
     clientY: number;
     selectedText?: Omit<BasicTextSelection, "targetFrameSrc">;
@@ -109,7 +108,6 @@ export type SuspiciousActivityEvent =
     | DropDetectedEvent
     | PrintEvent
     | SaveEvent
-    | ContextMenuEvent
     | BlockedKeyboardShortcutEvent;
 
 export interface ContentProtectionConfig {
@@ -378,7 +376,6 @@ export class Peripherals extends Module {
             const rect = domRectList?.[0];
             
             const activityEvent: ContextMenuEvent = {
-                type: "context_menu",
                 timestamp: Date.now(),
                 clientX: event.clientX,
                 clientY: event.clientY,
@@ -393,7 +390,7 @@ export class Peripherals extends Module {
                 }),
                 targetFrameSrc: this.wnd.location.href
             };
-            this.comms?.send("content_protection", activityEvent);
+            this.comms?.send("context_menu", activityEvent);
         }
     };
 

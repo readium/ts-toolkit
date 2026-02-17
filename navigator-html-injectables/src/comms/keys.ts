@@ -16,6 +16,7 @@ export type CommsEventKey =
     "progress" |
     "first_visible_locator" |
     "text_selected" |
+    "context_menu" |
     "media_play" |
     "media_pause" |
     "content_protection";
@@ -50,16 +51,15 @@ export type CommsCommandKey =
 ;
 
 export type SuspiciousActivityType = 
-    | "developer_tools"
-    | "select_all"
-    | "save"
-    | "suspicious_selection"
-    | `custom:${string}`  // Allow custom event types with 'custom:' prefix
-    | "bulk_copy"
-    // | "suspicious_scrolling"
-    // | "suspicious_snapping"
-    | "drag_detected"
-    | "drop_detected"
-    | "print"
-    | "context_menu"
-    | "blocked_keyboard_shortcut";
+    "developer_tools" |
+    "select_all" |
+    "save" |
+    "suspicious_selection" |
+    "bulk_copy" |
+    // "suspicious_scrolling" |
+    // "suspicious_snapping" |
+    "drag_detected" |
+    "drop_detected" |
+    "print" |
+    "blocked_keyboard_shortcut" |
+    `custom:${string}`; // Allow custom event types with 'custom:' prefix

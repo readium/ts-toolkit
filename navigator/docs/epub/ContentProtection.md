@@ -128,6 +128,7 @@ interface KeyCombo {
 ### 3. Context Menu
 - Disables right-click context menu to prevent easy access to developer tools
 - Configurable via `disableContextMenu`
+- **Important**: this triggers its own listener when disabled. See [Customizing Listeners](./CustomizingListeners.md#contextMenu) for more information.
 
 ### 4. Drag and Drop
 - Prevents dragging content out of the reader
@@ -178,7 +179,6 @@ Content protection triggers events with the following types:
 - `drop_detected`: When content is dropped
 - `print`: When printing is attempted
 - `save`: When save is attempted
-- `context_menu`: When opening context menu is attempted
 - `blocked_keyboard_shortcut`: When a blocked keyboard shortcut is used
 - `custom:*`: Custom shortcut types (prefixed with `custom:`)
 
@@ -254,25 +254,6 @@ navigator.listeners.contentProtection = (type: string, data: SuspiciousActivityE
             //   timestamp: number
             // }
             console.log("Embedding detected in iframe");
-            break;
-            
-        // Context menu
-        case "context_menu":
-            // Fired when context menu is accessed
-            // detail: { 
-            //   clientX: number, 
-            //   clientY: number, 
-            //   timestamp: number,
-            //   targetFrameSrc: string,
-            //   selectedText?: {
-            //     text: string,
-            //     x: number,
-            //     y: number,
-            //     width: number,
-            //     height: number
-            //   }
-            // }
-            console.log("Context menu accessed at:", detail.clientX, detail.clientY);
             break;
             
         // Drag and drop

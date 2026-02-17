@@ -2,7 +2,7 @@ import { Layout, Link, Locator, Profile, Publication, ReadingProgression } from 
 import { Configurable, ConfigurablePreferences, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../";
 import { FramePoolManager } from "./frame/FramePoolManager";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager";
-import { CommsEventKey, FXLModules, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables";
+import { CommsEventKey, ContextMenuEvent, FXLModules, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables";
 import { BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
 import { FXLFrameManager } from "./fxl/FXLFrameManager";
@@ -41,6 +41,7 @@ export interface EpubNavigatorListeners {
     handleLocator: (locator: Locator) => boolean; // Return true to prevent handling here
     textSelected: (selection: BasicTextSelection) => void;
     contentProtection: (type: string, data: SuspiciousActivityEvent) => void;
+    contextMenu: (data: ContextMenuEvent) => void;
     // showToc: () => void;
 }
 
@@ -52,10 +53,11 @@ const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListe
     zoom: listeners.zoom || (() => {}),
     miscPointer: listeners.miscPointer || (() => {}),
     scroll: listeners.scroll || (() => {}),
-    contentProtection: listeners.contentProtection || (() => {}),
     customEvent: listeners.customEvent || (() => {}),
     handleLocator: listeners.handleLocator || (() => false),
-    textSelected: listeners.textSelected || (() => {})
+    textSelected: listeners.textSelected || (() => {}),
+    contentProtection: listeners.contentProtection || (() => {}),
+    contextMenu: listeners.contextMenu || (() => {}),
 })
 
 export class EpubNavigator extends VisualNavigator implements Configurable<ConfigurableSettings, ConfigurablePreferences> {
@@ -137,7 +139,11 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             // Listen for custom events from NavigatorProtector
             this._suspiciousActivityListener = (event: Event) => {
                 const { type, ...activity } = (event as CustomEvent).detail;
-                this.listeners.contentProtection(type, activity);
+                if (type === "context_menu") {
+                    this.listeners.contextMenu(activity as ContextMenuEvent);
+                } else {
+                    this.listeners.contentProtection(type, activity);
+                }
             };
             window.addEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
         }
@@ -461,6 +467,9 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             case "content_protection":
                 const activity = data as SuspiciousActivityEvent;
                 this.listeners.contentProtection(activity.type, activity);
+                break;
+            case "context_menu":
+                this.listeners.contextMenu(data as ContextMenuEvent);
                 break;
             case "log":
                 console.log(this._cframes[0]?.source?.split("/")[3], ...(data as any[]));

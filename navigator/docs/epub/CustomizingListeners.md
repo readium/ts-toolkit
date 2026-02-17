@@ -14,6 +14,7 @@ The following events are exposed:
 - `handleLocator`: fires when a link has been tapped or clicked
 - `textSelected`: fires when text was selected inside the iframe
 - `contentProtection`: fires when the content protection is triggered
+- `contextMenu`: fires when the context menu is triggered (must be disabled in the `contentProtection` configuration, see [Content Protection](./ContentProtection.md) for more information)
 
 Your listeners object should look like this if you do not customize them at all.
 
@@ -36,6 +37,7 @@ const listeners: EpubNavigatorListeners = {
   },
   textSelected: function (_selection: BasicTextSelection): void {},
   contentProtection: function (_event: ContentProtectionEvent): void {},
+  contextMenu: function (_event: ContextMenuEvent): void {},
 };
 ```
 
@@ -113,3 +115,10 @@ Fires when text has been selected inside the iframe.
 ### contentProtection
 
 Fires when the content protection is triggered. See [Content Protection](./ContentProtection.md) for more information.
+
+### contextMenu
+
+Fires when the context menu is triggered. 
+
+> [!WARNING] 
+> Will not fire if the context menu is not disabled from the `contentProtection` configuration. See [Content Protection](./ContentProtection.md) for more information.

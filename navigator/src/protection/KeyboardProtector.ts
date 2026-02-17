@@ -55,7 +55,7 @@ export class KeyboardProtector {
         event.stopPropagation();
         
         // Dispatch custom event for context menu
-        const activityEvent: ContextMenuEvent = {
+        const activityEvent: ContextMenuEvent & { type: "context_menu" } = {
             type: "context_menu",
             timestamp: Date.now(),
             clientX: event.clientX,
