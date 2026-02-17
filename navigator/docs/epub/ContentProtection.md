@@ -227,44 +227,73 @@ const navigator = new EpubNavigator(container, publication, listeners, {
 
 ## Event Handling
 
-The content protection system emits events for various protection-related activities. You can listen for these events through the `contentProtection` event handler:
+The content protection system emits events for various protection-related activities. You can listen for these events through the `contentProtection` event handler. The handler receives two parameters:
+1. `type`: The type of protection event (string)
+2. `data`: The event data object (SuspiciousActivityEvent)
 
 ```typescript
-navigator.listeners.contentProtection = (type: string, detail: any) => {
-    console.log(`[Content Protection] ${type}`, detail);
+navigator.listeners.contentProtection = (type: string, data: SuspiciousActivityEvent) => {
+    console.log(`[Content Protection] ${type}`, data);
     
     switch (type) {
         // Automation detection
         case "automation_detected":
             // Fired when an automation tool is detected
-            // detail: { tool: string, timestamp: number }
-            console.log("Automation tool detected:", detail.tool);
+            // data: { 
+            //   tool: string,
+            //   timestamp: number
+            // }
+            console.log("Automation tool detected:", data.tool);
             break;
             
         // IFrame embedding
         case "iframe_embedding_detected":
             // Fired when content is embedded in an iframe
-            // detail: { isCrossOrigin: boolean, timestamp: number }
+            // detail: {
+            //   isCrossOrigin: boolean,
+            //   timestamp: number
+            // }
             console.log("Embedding detected in iframe");
             break;
             
         // Context menu
         case "context_menu":
             // Fired when context menu is accessed
-            // detail: { button: number, buttons: number, clientX: number, clientY: number, timestamp: number }
+            // detail: { 
+            //   clientX: number, 
+            //   clientY: number, 
+            //   timestamp: number,
+            //   targetFrameSrc: string,
+            //   selectedText?: {
+            //     text: string,
+            //     x: number,
+            //     y: number,
+            //     width: number,
+            //     height: number
+            //   }
+            // }
             console.log("Context menu accessed at:", detail.clientX, detail.clientY);
             break;
             
         // Drag and drop
         case "drag_detected":
             // Fired when content is dragged
-            // detail: { dataTransferTypes: string[], timestamp: number }
+            // detail: { 
+            //   dataTransferTypes: readonly string[], 
+            //   timestamp: number,
+            //   targetFrameSrc: string
+            // }
             console.log("Drag detected with types:", detail.dataTransferTypes);
             break;
             
         case "drop_detected":
             // Fired when content is dropped
-            // detail: { dataTransferTypes: string[], fileCount: number, timestamp: number }
+            // detail: { 
+            //   dataTransferTypes: readonly string[], 
+            //   fileCount: number, 
+            //   timestamp: number,
+            //   targetFrameSrc: string
+            // }
             console.log("Drop detected with", detail.fileCount, "files");
             break;
             
@@ -272,10 +301,17 @@ navigator.listeners.contentProtection = (type: string, detail: any) => {
         case "bulk_copy":
             // Fired when bulk copy is detected and prevented
             // detail: { 
-            //   clipboardTypes: string[], 
-            //   selectedText?: string,
+            //   clipboardTypes: readonly string[], 
+            //   selectedText?: {
+            //     text: string,
+            //     x: number,
+            //     y: number,
+            //     width: number,
+            //     height: number
+            //   },
             //   selectionLength?: number,
-            //   timestamp: number 
+            //   timestamp: number,
+            //   targetFrameSrc: string
             // }
             console.log("Bulk copy prevented. Selection length:", detail.selectionLength);
             break;
@@ -285,9 +321,16 @@ navigator.listeners.contentProtection = (type: string, detail: any) => {
             // Fired when suspicious selection pattern is detected
             // detail: {
             //   selectionLength: number,
-            //   selectedText?: string,
+            //   selectedText: {
+            //     text: string,
+            //     x: number,
+            //     y: number,
+            //     width: number,
+            //     height: number
+            //   },
             //   eventType: string,
-            //   timestamp: number
+            //   timestamp: number,
+            //   targetFrameSrc: string
             // }
             console.log("Suspicious selection detected:", detail.selectionLength, "characters");
             break;
@@ -304,7 +347,8 @@ navigator.listeners.contentProtection = (type: string, detail: any) => {
             //   shiftKey: boolean,// Whether Shift key was pressed
             //   metaKey: boolean, // Whether Meta/Command key was pressed
             //   type?: string,    // Custom type if specified in key combo
-            //   timestamp: number // When the event occurred
+            //   timestamp: number, // When the event occurred
+            //   targetFrameSrc: string
             // }
             const keys = [
                 detail.ctrlKey ? "Ctrl" : "",
@@ -320,14 +364,15 @@ navigator.listeners.contentProtection = (type: string, detail: any) => {
         case "print":
             // Fired when print keyboard shortcuts are detected (e.g., Cmd+P/Ctrl+P)
             // detail: {
-            //   timestamp: number,
-            //   key: string,
-            //   keyCode: number,
-            //   code: string,
-            //   ctrlKey: boolean,
-            //   metaKey: boolean,
-            //   shiftKey: boolean,
-            //   altKey: boolean
+            //   key: string,      // The key value of the key pressed
+            //   code: string,     // Physical key code
+            //   keyCode: number,  // Legacy key code
+            //   ctrlKey: boolean, // Whether Ctrl key was pressed
+            //   altKey: boolean,  // Whether Alt/Option key was pressed
+            //   shiftKey: boolean,// Whether Shift key was pressed
+            //   metaKey: boolean, // Whether Meta/Command key was pressed
+            //   timestamp: number, // When the event occurred
+            //   targetFrameSrc: string
             // }
             console.log("Print attempt detected:", detail);
             break;
@@ -343,7 +388,8 @@ navigator.listeners.contentProtection = (type: string, detail: any) => {
             //   altKey: boolean,  // Whether Alt/Option key was pressed
             //   shiftKey: boolean,// Whether Shift key was pressed
             //   metaKey: boolean, // Whether Meta/Command key was pressed
-            //   timestamp: number // When the event occurred
+            //   timestamp: number, // When the event occurred
+            //   targetFrameSrc: string
             // }
             console.log("Save attempt detected", detail);
             break;

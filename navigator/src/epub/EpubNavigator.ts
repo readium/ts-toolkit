@@ -136,8 +136,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             
             // Listen for custom events from NavigatorProtector
             this._suspiciousActivityListener = (event: Event) => {
-                const customEvent = event as CustomEvent;
-                this.listeners.contentProtection(customEvent.detail.type, customEvent.detail);
+                const { type, ...activity } = (event as CustomEvent).detail;
+                this.listeners.contentProtection(type, activity);
             };
             window.addEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
         }
