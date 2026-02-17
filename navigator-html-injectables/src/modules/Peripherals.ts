@@ -37,6 +37,8 @@ export interface BasicTextSelection {
 export interface BaseSuspiciousActivityEvent {
     type: SuspiciousActivityType;
     timestamp: number;
+    targetFrameSrc: string;
+
 }
 
 // Common interface for all keyboard-related events
@@ -69,14 +71,14 @@ export interface SaveEvent extends BaseSuspiciousActivityEvent, KeyboardEventDat
 export interface BulkCopyEvent extends BaseSuspiciousActivityEvent {
     type: "bulk_copy";
     clipboardTypes: readonly string[];
-    selectedText?: string;
+    selectedText?: Omit<BasicTextSelection, "targetFrameSrc">;
     selectionLength?: number;
 }
 
 export interface SuspiciousSelectionEvent extends BaseSuspiciousActivityEvent {
     type: "suspicious_selection";
     selectionLength: number;
-    selectedText: string;
+    selectedText: Omit<BasicTextSelection, "targetFrameSrc">;
     eventType: string;
 }
 
@@ -93,10 +95,9 @@ export interface DropDetectedEvent extends BaseSuspiciousActivityEvent {
 
 export interface ContextMenuEvent extends BaseSuspiciousActivityEvent {
     type: "context_menu";
-    button: number;
-    buttons: number;
     clientX: number;
     clientY: number;
+    selectedText?: Omit<BasicTextSelection, "targetFrameSrc">;
 }
 
 export type SuspiciousActivityEvent = 
@@ -184,7 +185,7 @@ export class Peripherals extends Module {
         };
         
         // Create unified handler using centralized KeyCombinationManager
-        this.keyDownHandler = this.keyManager.createUnifiedHandler(shortcuts, dispatcher);
+        this.keyDownHandler = this.keyManager.createUnifiedHandler(this.wnd.location.href, shortcuts, dispatcher);
         
         // Add the event listener
         if (this.wnd) {
@@ -247,12 +248,25 @@ export class Peripherals extends Module {
         if (!this.bulkCopyProtector.shouldAllowCopy(event)) {
             event.preventDefault();
             
+            const selection = this.wnd.getSelection();
+            const selectedText = selection?.toString() || '';
+            const domRectList = selectedText ? selection?.getRangeAt(0)?.getClientRects() : null;
+            const rect = domRectList?.[0];
+            
             const activityEvent: BulkCopyEvent = {
                 type: "bulk_copy",
                 timestamp: Date.now(),
                 clipboardTypes: event.clipboardData?.types ? [...event.clipboardData.types] : [],
-                selectedText: this.currentSelection || undefined,
-                selectionLength: this.currentSelection?.length
+                selectedText: rect ? {
+                    text: selectedText,
+                    x: rect.x,
+                    y: rect.y,
+                    width: rect.width,
+                    height: rect.height
+                } : undefined,
+                selectionLength: selectedText.length,
+                targetFrameSrc: this.wnd.location.href
+
             };
             this.comms?.send("content_protection", activityEvent);
             return false;
@@ -271,12 +285,24 @@ export class Peripherals extends Module {
             const isSuspicious = this.selectionAnalyzer.analyze(selection);
             
             if (isSuspicious && this.currentSelection) {
+                const selection = this.wnd.getSelection();
+                const selectedText = selection?.toString() || '';
+                const domRectList = (selectedText && selection?.rangeCount) ? selection.getRangeAt(0)?.getClientRects() : null;
+                const rect = domRectList?.[0];
+                
                 const activityEvent: SuspiciousSelectionEvent = {
                     type: "suspicious_selection",
                     timestamp: Date.now(),
-                    selectionLength: this.currentSelection.length,
-                    selectedText: this.currentSelection,
-                    eventType: event?.type || "selectionchange"
+                    selectionLength: selectedText.length,
+                        selectedText: {
+                        text: selectedText,
+                        x: rect?.x ?? 0,
+                        y: rect?.y ?? 0,
+                        width: rect?.width ?? 0,
+                        height: rect?.height ?? 0
+                    },
+                    eventType: event?.type || "selectionchange",
+                    targetFrameSrc: this.wnd.location.href
                 };
                 this.comms?.send("content_protection", activityEvent);
             }
@@ -313,7 +339,8 @@ export class Peripherals extends Module {
             const activityEvent: DragDetectedEvent = {
                 type: "drag_detected",
                 timestamp: Date.now(),
-                dataTransferTypes: event.dataTransfer?.types ? [...event.dataTransfer.types] : []
+                dataTransferTypes: event.dataTransfer?.types ? [...event.dataTransfer.types] : [],
+                targetFrameSrc: this.wnd.location.href
             };
             this.comms?.send("content_protection", activityEvent);
             return false;
@@ -331,7 +358,8 @@ export class Peripherals extends Module {
                 type: "drop_detected",
                 timestamp: Date.now(),
                 dataTransferTypes: dataTransfer?.types ? [...dataTransfer.types] : [],
-                fileCount: dataTransfer?.files?.length || 0
+                fileCount: dataTransfer?.files?.length || 0,
+                targetFrameSrc: this.wnd.location.href
             };
             this.comms?.send("content_protection", activityEvent);
             return false;
@@ -344,13 +372,26 @@ export class Peripherals extends Module {
         if (this.isContextMenuEnabled) {
             // Context menu protection is enabled - prevent it
             event.preventDefault();
+            const selection = this.wnd.getSelection();
+            const selectedText = selection?.toString() || '';
+            const domRectList = (selectedText && selection?.rangeCount) ? selection.getRangeAt(0)?.getClientRects() : null;
+            const rect = domRectList?.[0];
+            
             const activityEvent: ContextMenuEvent = {
                 type: "context_menu",
                 timestamp: Date.now(),
-                button: event.button,
-                buttons: event.buttons,
                 clientX: event.clientX,
-                clientY: event.clientY
+                clientY: event.clientY,
+                ...(rect && {
+                    selectedText: {
+                        text: selectedText,
+                        x: rect.x,
+                        y: rect.y,
+                        width: rect.width,
+                        height: rect.height
+                    }
+                }),
+                targetFrameSrc: this.wnd.location.href
             };
             this.comms?.send("content_protection", activityEvent);
         }
@@ -371,7 +412,7 @@ export class Peripherals extends Module {
                 y: rect.y,
                 width: rect.width,
                 height: rect.height,
-                targetFrameSrc: this.wnd?.location?.href,
+                targetFrameSrc: this.wnd?.location?.href
             }
             this.comms.send("text_selected", textSelection as BasicTextSelection);
         }

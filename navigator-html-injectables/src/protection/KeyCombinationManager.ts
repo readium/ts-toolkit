@@ -51,7 +51,8 @@ export class KeyCombinationManager {
      */
     private createActivityEvent(
         event: KeyboardEvent, 
-        type: SuspiciousActivityType
+        type: SuspiciousActivityType,
+        targetFrameSrc: string,
     ): BlockedKeyboardShortcutEvent {
         return {
             type: type as BlockedKeyboardShortcutEvent['type'],
@@ -62,7 +63,8 @@ export class KeyCombinationManager {
             ctrlKey: event.ctrlKey,
             altKey: event.altKey,
             shiftKey: event.shiftKey,
-            metaKey: event.metaKey
+            metaKey: event.metaKey,
+            targetFrameSrc: targetFrameSrc
         };
     }
 
@@ -92,6 +94,7 @@ export class KeyCombinationManager {
      * Creates handlers for keyboard shortcuts with centralized activity event dispatch
      */
     public createProtectionHandlers(
+        targetFrameSrc: string,
         shortcuts: KeyboardShortcut[],
         dispatcher: ActivityEventDispatcher
     ): KeyComboWithHandler[] {
@@ -102,7 +105,7 @@ export class KeyCombinationManager {
             handlers.push(...DEV_TOOLS_COMBOS.map(combo => ({
                 ...combo,
                 handler: (event: KeyboardEvent) => {
-                    const activityEvent = this.createActivityEvent(event, "developer_tools");
+                    const activityEvent = this.createActivityEvent(event, "developer_tools", targetFrameSrc);
                     dispatcher(activityEvent);
                 }
             })));
@@ -112,7 +115,7 @@ export class KeyCombinationManager {
             handlers.push(...SELECT_ALL_COMBOS.map(combo => ({
                 ...combo,
                 handler: (event: KeyboardEvent) => {
-                    const activityEvent = this.createActivityEvent(event, "select_all");
+                    const activityEvent = this.createActivityEvent(event, "select_all", targetFrameSrc);
                     dispatcher(activityEvent);
                 }
             })));
@@ -122,7 +125,7 @@ export class KeyCombinationManager {
             handlers.push(...PRINT_COMBOS.map(combo => ({
                 ...combo,
                 handler: (event: KeyboardEvent) => {
-                    const activityEvent = this.createActivityEvent(event, "print");
+                    const activityEvent = this.createActivityEvent(event, "print", targetFrameSrc);
                     dispatcher(activityEvent);
                 }
             })));
@@ -132,7 +135,7 @@ export class KeyCombinationManager {
             handlers.push(...SAVE_COMBOS.map(combo => ({
                 ...combo,
                 handler: (event: KeyboardEvent) => {
-                    const activityEvent = this.createActivityEvent(event, "save");
+                    const activityEvent = this.createActivityEvent(event, "save", targetFrameSrc);
                     dispatcher(activityEvent);
                 }
             })));
@@ -143,8 +146,8 @@ export class KeyCombinationManager {
         handlers.push(...customCombos.map(combo => ({
             ...combo,
             handler: (event: KeyboardEvent) => {
-                const eventType = this.getActivityEventType(combo);
-                const activityEvent = this.createActivityEvent(event, eventType);
+                const eventType = this.getActivityEventType(combo, targetFrameSrc);
+                const activityEvent = this.createActivityEvent(event, eventType, targetFrameSrc);
                 dispatcher(activityEvent);
             }
         })));
@@ -156,10 +159,11 @@ export class KeyCombinationManager {
      * Creates a unified keyboard event handler that processes all shortcuts
      */
     public createUnifiedHandler(
+        targetFrameSrc: string,
         shortcuts: KeyboardShortcut[],
-        dispatcher: ActivityEventDispatcher
+        dispatcher: ActivityEventDispatcher,
     ): (event: KeyboardEvent) => void {
-        const handlers = this.createProtectionHandlers(shortcuts, dispatcher);
+        const handlers = this.createProtectionHandlers(targetFrameSrc, shortcuts, dispatcher);
         
         return (event: KeyboardEvent) => {
             for (const handlerConfig of handlers) {

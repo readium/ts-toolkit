@@ -36,7 +36,7 @@ export class KeyboardProtector {
             };
             
             // Create unified handler using centralized KeyCombinationManager
-            this.keydownHandler = this.keyManager.createUnifiedHandler(disableKeyboardShortcuts, dispatcher);
+            this.keydownHandler = this.keyManager.createUnifiedHandler("", disableKeyboardShortcuts, dispatcher);
             if (this.keydownHandler) {
                 document.addEventListener("keydown", this.keydownHandler, true);
             }
@@ -58,10 +58,10 @@ export class KeyboardProtector {
         const activityEvent: ContextMenuEvent = {
             type: "context_menu",
             timestamp: Date.now(),
-            button: event.button,
-            buttons: event.buttons,
             clientX: event.clientX,
-            clientY: event.clientY
+            clientY: event.clientY,
+            targetFrameSrc: ''
+
         };
         
         const customEvent = new CustomEvent(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, {
