@@ -4,7 +4,7 @@ import { ReadiumWindow, nearestInteractiveElement } from "../helpers/dom";
 import { BulkCopyProtector, BulkCopyProtectionOptions } from "../protection/BulkCopyProtector";
 import { SelectionAnalyzer, SelectionAnalyzerOptions } from "../protection/SelectionAnalyzer";
 import { 
-    KeyboardShortcut 
+    KeyboardPeripheral 
 } from "../protection";
 import { SuspiciousActivityType } from "../comms";
 import { BULK_COPY_CONFIG, SELECTION_ANALYZER_CONFIG } from "../protection/config";
@@ -115,7 +115,6 @@ export interface ContentProtectionConfig {
     protectCopy?: boolean | Omit<BulkCopyProtectionOptions, "enabled">;
     disableContextMenu?: boolean;
     disableDragAndDrop?: boolean;
-    disableKeyboardShortcuts?: KeyboardShortcut[];
 //    enableScrollProtection?: boolean;
 }
 
@@ -173,13 +172,13 @@ export class Peripherals extends Module {
 
     private keyDownHandler: ((event: KeyboardEvent) => void) | null = null;
 
-    private enableKeyboardShortcutsProtection(shortcuts: KeyboardShortcut[] = []): void {
+    private enableKeyboardShortcutsProtection(shortcuts: KeyboardPeripheral[] = []): void {
         // Clear any existing state
         this.disableKeyboardShortcutsProtection();
         
         // Create activity event dispatcher
         const dispatcher: ActivityEventDispatcher = (activityEvent) => {
-            this.comms?.send("content_protection", activityEvent);
+            this.comms?.send("keyboard_peripherals", activityEvent);
         };
         
         // Create unified handler using centralized KeyCombinationManager
@@ -188,21 +187,12 @@ export class Peripherals extends Module {
         // Add the event listener
         if (this.wnd) {
             this.wnd.document.addEventListener("keydown", this.keyDownHandler, {
-                capture: true,
-            } as any);
+                capture: true
+            });
         }
         
         // Log enabled shortcuts for debugging
-        const types = shortcuts.map(s => {
-            if (typeof s === "string") return s;
-            const keys = [];
-            if (s.ctrl) keys.push("Ctrl");
-            if (s.alt) keys.push("Alt");
-            if (s.shift) keys.push("Shift");
-            if (s.meta) keys.push("Meta");
-            keys.push(`K${s.keyCode}`);
-            return keys.join("+");
-        });
+        const types = shortcuts.map(s => `custom:${s.type}`);
         this.comms?.log(`Keyboard protections enabled: ${types.join(", ")}`);
     }
     
@@ -210,7 +200,7 @@ export class Peripherals extends Module {
         if (this.wnd && this.keyDownHandler) {
             this.wnd.document.removeEventListener("keydown", this.keyDownHandler, {
                 capture: true
-            } as any);
+            });
             this.keyDownHandler = null;
         }
     }
@@ -483,7 +473,7 @@ export class Peripherals extends Module {
     private registerProtectionHandlers() {
         // Single handler for all content protection features
         this.comms?.register("peripherals_protection", Peripherals.moduleName, (data: unknown, ack) => {
-            const config = data as ContentProtectionConfig;
+            const config = data as ContentProtectionConfig & { disableKeyboardShortcuts?: KeyboardPeripheral[] };
             
             // Apply config only on first call, then ignore subsequent calls (immutable)
             if (!this.configApplied) {

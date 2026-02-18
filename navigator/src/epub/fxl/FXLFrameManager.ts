@@ -3,7 +3,7 @@ import { Page, ReadingProgression } from "@readium/shared";
 import { FrameComms } from "../frame/FrameComms";
 import { FXLPeripherals } from "./FXLPeripherals";
 import { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
-import { IContentProtectionConfig } from "../../Navigator";
+import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator";
 
 export class FXLFrameManager {
     private frame: HTMLIFrameElement;
@@ -12,6 +12,7 @@ export class FXLFrameManager {
     private comms: FrameComms | undefined;
     private readonly peripherals: FXLPeripherals;
     private readonly contentProtectionConfig: IContentProtectionConfig;
+    private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
     private currModules: ModuleName[] = [];
 
     // NEW
@@ -24,12 +25,14 @@ export class FXLFrameManager {
         peripherals: FXLPeripherals, 
         direction: ReadingProgression, 
         debugHref: string,
-        contentProtectionConfig: IContentProtectionConfig = {}
+        contentProtectionConfig: IContentProtectionConfig = {},
+        keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = {}
     ) {
         this.peripherals = peripherals;
         this.debugHref = debugHref;
         // Use the provided content protection config directly without overriding defaults
         this.contentProtectionConfig = { ...contentProtectionConfig };
+        this.keyboardPeripheralsConfig = { ...keyboardPeripheralsConfig };
         this.frame = document.createElement("iframe");
         this.frame.sandbox.value = "allow-same-origin allow-scripts";
         this.frame.classList.add("readium-navigator-iframe");
@@ -207,8 +210,12 @@ export class FXLFrameManager {
     private applyContentProtection() {
         if (!this.comms) this.comms!.resume();
 
-        // Send peripherals protection config
-        this.comms!.send("peripherals_protection", this.contentProtectionConfig);
+        // Send combined protection config: content protection + keyboard peripherals
+        const combinedConfig = {
+            ...this.contentProtectionConfig,
+            ...this.keyboardPeripheralsConfig
+        };
+        this.comms!.send("peripherals_protection", combinedConfig);
 
         // Apply print protection if configured
         if (this.contentProtectionConfig.protectPrinting) {

@@ -2,7 +2,7 @@ import { Layout, Link, Locator, Profile, Publication, ReadingProgression } from 
 import { Configurable, ConfigurablePreferences, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../";
 import { FramePoolManager } from "./frame/FramePoolManager";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager";
-import { CommsEventKey, ContextMenuEvent, FXLModules, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables";
+import { CommsEventKey, ContextMenuEvent, FXLModules, KeyboardEventData, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables";
 import { BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
 import { FXLFrameManager } from "./fxl/FXLFrameManager";
@@ -17,7 +17,7 @@ import { getContentWidth } from "../helpers/dimensions";
 import { Injector } from "../injection/Injector";
 import { createReadiumEpubRules } from "../injection/epubInjectables";
 import { IInjectablesConfig } from "../injection/Injectable";
-import { IContentProtectionConfig } from "../Navigator";
+import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator";
 import { NavigatorProtector, NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector";
 
 export type ManagerEventKey = "zoom";
@@ -27,6 +27,7 @@ export interface EpubNavigatorConfiguration {
     defaults: IEpubDefaults;
     injectables?: IInjectablesConfig;
     contentProtection?: IContentProtectionConfig;
+    keyboardPeripherals?: IKeyboardPeripheralsConfig;
 }
 
 export interface EpubNavigatorListeners {
@@ -42,6 +43,7 @@ export interface EpubNavigatorListeners {
     textSelected: (selection: BasicTextSelection) => void;
     contentProtection: (type: string, data: SuspiciousActivityEvent) => void;
     contextMenu: (data: ContextMenuEvent) => void;
+    peripheral: (data: KeyboardEventData) => void;
     // showToc: () => void;
 }
 
@@ -58,6 +60,7 @@ const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListe
     textSelected: listeners.textSelected || (() => {}),
     contentProtection: listeners.contentProtection || (() => {}),
     contextMenu: listeners.contextMenu || (() => {}),
+    peripheral: listeners.peripheral || (() => {}),
 })
 
 export class EpubNavigator extends VisualNavigator implements Configurable<ConfigurableSettings, ConfigurablePreferences> {
@@ -78,6 +81,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private _preferencesEditor: EpubPreferencesEditor | null = null;
     private readonly _injector: Injector | null = null;
     private readonly _contentProtection: IContentProtectionConfig;
+    private readonly _keyboardPeripherals: IKeyboardPeripheralsConfig;
     private readonly _navigatorProtector: NavigatorProtector | null = null;
     private readonly _suspiciousActivityListener: ((event: Event) => void) | null = null;
 
@@ -131,15 +135,16 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         });
 
         this._contentProtection = configuration.contentProtection || {};
+        this._keyboardPeripherals = configuration.keyboardPeripherals || {};
         
         // Initialize navigator protection if any protection is configured
-        if (this._contentProtection.disableKeyboardShortcuts || 
+        if (this._keyboardPeripherals.disableKeyboardShortcuts || 
             this._contentProtection.disableContextMenu ||
             this._contentProtection.checkAutomation ||
             this._contentProtection.checkIFrameEmbedding ||
             this._contentProtection.monitorDevTools ||
             this._contentProtection.protectPrinting?.disable) {
-            this._navigatorProtector = new NavigatorProtector(this._contentProtection);
+            this._navigatorProtector = new NavigatorProtector(this._contentProtection, this._keyboardPeripherals);
             
             // Listen for custom events from NavigatorProtector
             this._suspiciousActivityListener = (event: Event) => {
@@ -188,7 +193,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 this.positions, 
                 this.pub,
                 this._injector,
-                this._contentProtection
+                this._contentProtection,
+                this._keyboardPeripherals
             );
             this.framePool.listener = (key: CommsEventKey | ManagerEventKey, data: unknown) => {
                 this.eventListener(key, data);
@@ -201,7 +207,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 this.positions, 
                 cssProperties,
                 this._injector,
-                this._contentProtection
+                this._contentProtection,
+                this._keyboardPeripherals
             );
         }
 
@@ -475,6 +482,9 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 break;
             case "context_menu":
                 this.listeners.contextMenu(data as ContextMenuEvent);
+                break;
+            case "keyboard_peripherals":
+                this.listeners.peripheral(data as KeyboardEventData);
                 break;
             case "log":
                 console.log(this._cframes[0]?.source?.split("/")[3], ...(data as any[]));

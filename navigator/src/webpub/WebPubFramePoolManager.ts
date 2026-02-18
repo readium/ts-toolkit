@@ -3,7 +3,7 @@ import { Locator, Publication } from "@readium/shared";
 import { WebPubBlobBuilder } from "./WebPubBlobBuilder";
 import { WebPubFrameManager } from "./WebPubFrameManager";
 import { Injector } from "../injection/Injector";
-import { IContentProtectionConfig } from "../Navigator";
+import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator";
 
 export class WebPubFramePoolManager {
     private readonly container: HTMLElement;
@@ -16,17 +16,20 @@ export class WebPubFramePoolManager {
     private currentBaseURL: string | undefined;
     private readonly injector?: Injector | null = null;
     private readonly contentProtectionConfig: IContentProtectionConfig;
+    private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
 
     constructor(
         container: HTMLElement, 
         cssProperties?: { [key: string]: string },
         injector?: Injector | null,
-        contentProtectionConfig: IContentProtectionConfig = {}
+        contentProtectionConfig: IContentProtectionConfig = {},
+        keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = {}
     ) {
         this.container = container;
         this.currentCssProperties = cssProperties;
         this.injector = injector;
         this.contentProtectionConfig = contentProtectionConfig;
+        this.keyboardPeripheralsConfig = keyboardPeripheralsConfig;
     }
 
     async destroy() {
@@ -151,7 +154,7 @@ export class WebPubFramePoolManager {
                     this.blobs.set(href, blobURL);
                 }
 
-                const fm = new WebPubFrameManager(this.blobs.get(href)!, this.contentProtectionConfig);
+                const fm = new WebPubFrameManager(this.blobs.get(href)!, this.contentProtectionConfig, this.keyboardPeripheralsConfig);
                 if(href !== newHref) await fm.hide();
                 this.container.appendChild(fm.iframe);
                 await fm.load(modules);

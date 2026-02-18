@@ -2,7 +2,7 @@ import { Feature, Link, Locator, Publication, ReadingProgression, LocatorLocatio
 import { VisualNavigator, VisualNavigatorViewport, ProgressionRange } from "../Navigator";
 import { Configurable } from "../preferences/Configurable";
 import { WebPubFramePoolManager } from "./WebPubFramePoolManager";
-import { BasicTextSelection, CommsEventKey, FrameClickEvent, ModuleLibrary, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
+import { BasicTextSelection, CommsEventKey, FrameClickEvent, KeyboardEventData, ModuleLibrary, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
 import { WebPubFrameManager } from "./WebPubFrameManager";
 
@@ -17,7 +17,7 @@ import { WebPubPreferencesEditor } from "./preferences/WebPubPreferencesEditor";
 import { Injector } from "../injection/Injector";
 import { createReadiumWebPubRules } from "../injection/webpubInjectables";
 import { IInjectablesConfig } from "../injection/Injectable";
-import { IContentProtectionConfig } from "../Navigator";
+import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator";
 import { NavigatorProtector, NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector";
 
 export interface WebPubNavigatorConfiguration {
@@ -25,6 +25,7 @@ export interface WebPubNavigatorConfiguration {
     defaults: IWebPubDefaults;
     injectables?: IInjectablesConfig;
     contentProtection?: IContentProtectionConfig;
+    keyboardPeripherals?: IKeyboardPeripheralsConfig;
 }
 
 export interface WebPubNavigatorListeners {
@@ -38,6 +39,7 @@ export interface WebPubNavigatorListeners {
     handleLocator: (locator: Locator) => boolean;
     textSelected: (selection: BasicTextSelection) => void;
     contentProtection: (type: string, data: SuspiciousActivityEvent) => void;
+    peripheral: (data: KeyboardEventData) => void;
 }
 
 const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorListeners => ({
@@ -51,6 +53,7 @@ const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorL
     handleLocator: listeners.handleLocator || (() => false),
     textSelected: listeners.textSelected || (() => {}),
     contentProtection: listeners.contentProtection || (() => {}),
+    peripheral: listeners.peripheral || (() => {})
 })
 
 export class WebPubNavigator extends VisualNavigator implements Configurable<WebPubSettings, WebPubPreferences> {
@@ -68,6 +71,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private _preferencesEditor: WebPubPreferencesEditor | null = null;
     private readonly _injector: Injector | null = null;
     private readonly _contentProtection: IContentProtectionConfig;
+    private readonly _keyboardPeripherals: IKeyboardPeripheralsConfig;
     private readonly _navigatorProtector: NavigatorProtector | null = null;
     private readonly _suspiciousActivityListener: ((event: Event) => void) | null = null;
     
@@ -106,15 +110,16 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
         // Initialize content protection with provided config or default values
         this._contentProtection = configuration.contentProtection || {};
+        this._keyboardPeripherals = configuration.keyboardPeripherals || {};
 
         // Initialize navigator protection if any protection is configured
-        if (this._contentProtection.disableKeyboardShortcuts || 
+        if (this._keyboardPeripherals.disableKeyboardShortcuts || 
             this._contentProtection.disableContextMenu ||
             this._contentProtection.checkAutomation ||
             this._contentProtection.checkIFrameEmbedding ||
             this._contentProtection.monitorDevTools ||
             this._contentProtection.protectPrinting?.disable) {
-            this._navigatorProtector = new NavigatorProtector(this._contentProtection);
+            this._navigatorProtector = new NavigatorProtector(this._contentProtection, this._keyboardPeripherals);
             
             // Listen for custom events from NavigatorProtector
             this._suspiciousActivityListener = (event: Event) => {
@@ -144,7 +149,8 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             this.container, 
             cssProperties, 
             this._injector,
-            this._contentProtection
+            this._contentProtection,
+            this._keyboardPeripherals
         );
 
         await this.apply();
@@ -321,6 +327,9 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             case "content_protection":
                 const activity = data as SuspiciousActivityEvent;
                 this.listeners.contentProtection(activity.type, activity);
+                break;
+            case "keyboard_peripherals":
+                this.listeners.peripheral(data as KeyboardEventData);
                 break;
             case "log":
                 console.log(this.framePool.currentFrames[0]?.source?.split("/")[3], ...(data as any[]));

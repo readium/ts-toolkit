@@ -1,7 +1,11 @@
 import { Link, Locator, Publication, ReadingProgression } from "@readium/shared";
-import { ContentProtectionConfig, PrintProtectionConfig } from "@readium/navigator-html-injectables";
+import { ContentProtectionConfig, PrintProtectionConfig, KeyboardShortcut } from "@readium/navigator-html-injectables";
 
 type cbb = (ok: boolean) => void;
+
+export interface IKeyboardPeripheralsConfig {
+    disableKeyboardShortcuts?: KeyboardShortcut[];
+}
 
 export interface ProgressionRange {
     start: number;
