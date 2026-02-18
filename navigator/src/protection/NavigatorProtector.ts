@@ -1,4 +1,5 @@
 import { AutomationDetector } from "./AutomationDetector";
+import { DevToolsDetector } from "./DevToolsDetector";
 import { IframeEmbeddingDetector } from "./IframeEmbeddingDetector";
 import { KeyboardProtector } from "./KeyboardProtector";
 import { PrintProtector } from "./PrintProtector";
@@ -8,6 +9,7 @@ export const NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT = "readium:navigator:suspicious
 
 export class NavigatorProtector {
     private automationDetector?: AutomationDetector;
+    private devToolsDetector?: DevToolsDetector;
     private iframeEmbeddingDetector?: IframeEmbeddingDetector;
     private keyboardProtector?: KeyboardProtector;
     private printProtector?: PrintProtector;
@@ -24,11 +26,33 @@ export class NavigatorProtector {
     }
 
     constructor(config: IContentProtectionConfig = {}) {
+        // Enable DevTools detection if explicitly enabled in config
+        if (config.monitorDevTools) {
+            this.devToolsDetector = new DevToolsDetector({
+                onDetected: () => {
+                    this.dispatchSuspiciousActivity("developer_tools", {
+                        targetFrameSrc: window.location.href,
+                        key: "",
+                        code: "",
+                        keyCode: -1,
+                        ctrlKey: false,
+                        altKey: false,
+                        shiftKey: false,
+                        metaKey: false,
+                        timestamp: Date.now()
+                    });
+                }
+            });
+        }
+
         // Enable automation detection if explicitly enabled in config
         if (config.checkAutomation) {
             this.automationDetector = new AutomationDetector({
                 onDetected: (tool: string) => {
-                    this.dispatchSuspiciousActivity("automation_detected", { tool });
+                    this.dispatchSuspiciousActivity("automation_detected", { 
+                        tool,
+                        timestamp: Date.now()
+                    });
                 }
             });
         }
@@ -37,7 +61,10 @@ export class NavigatorProtector {
         if (config.checkIFrameEmbedding) {
             this.iframeEmbeddingDetector = new IframeEmbeddingDetector({
                 onDetected: (isCrossOrigin: boolean) => {
-                    this.dispatchSuspiciousActivity("iframe_embedding_detected", { isCrossOrigin });
+                    this.dispatchSuspiciousActivity("iframe_embedding_detected", {
+                        isCrossOrigin,
+                        timestamp: Date.now()
+                    });
                 }
             });
         }
@@ -55,7 +82,9 @@ export class NavigatorProtector {
             this.printProtector = new PrintProtector({
                 ...config.protectPrinting,
                 onPrintAttempt: () => {
-                    this.dispatchSuspiciousActivity("print", {});
+                    this.dispatchSuspiciousActivity("print", {
+                        timestamp: Date.now()
+                    });
                 }
             });
         }
@@ -63,6 +92,7 @@ export class NavigatorProtector {
 
     public destroy() {
         this.automationDetector?.destroy();
+        this.devToolsDetector?.destroy();
         this.iframeEmbeddingDetector?.destroy();
         this.keyboardProtector?.destroy();
         this.printProtector?.destroy();

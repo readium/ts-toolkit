@@ -107,8 +107,13 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         // Initialize content protection with provided config or default values
         this._contentProtection = configuration.contentProtection || {};
 
-        // Initialize navigator protection if configured
-        if (this._contentProtection.disableKeyboardShortcuts || this._contentProtection.disableContextMenu) {
+        // Initialize navigator protection if any protection is configured
+        if (this._contentProtection.disableKeyboardShortcuts || 
+            this._contentProtection.disableContextMenu ||
+            this._contentProtection.checkAutomation ||
+            this._contentProtection.checkIFrameEmbedding ||
+            this._contentProtection.monitorDevTools ||
+            this._contentProtection.protectPrinting?.disable) {
             this._navigatorProtector = new NavigatorProtector(this._contentProtection);
             
             // Listen for custom events from NavigatorProtector

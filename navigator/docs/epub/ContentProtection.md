@@ -88,6 +88,11 @@ interface ContentProtectionConfig {
     // Triggers "iframe_embedding_detected" event when embedding is detected
     // Default: false
     checkIFrameEmbedding?: boolean;
+
+    // Monitor dev tools
+    // Triggers "developer_tools" event when dev tools are opened
+    // Default: false
+    monitorDevTools?: boolean;
 }
 
 // Custom key combination for keyboard shortcuts
@@ -151,11 +156,16 @@ interface KeyCombo {
 - Triggers the `contentProtection` event with type `automation_detected` when detected
 - Enabled via `checkAutomation`
 
-### 8. IFrame Embedding
+### 9. IFrame Embedding
 - Detects when content is embedded in iframes
 - Can detect cross-origin iframe embedding
 - Triggers `contentProtection` event with type `iframe_embedding_detected` when detected
 - Enabled via `checkIFrameEmbedding`
+
+### 9. Developer Tools Monitoring
+- Detects when browser developer tools are opened
+- Triggers the `contentProtection` event with type `developer_tools` when detected
+- Enabled via `monitorDevTools`
 
 ## Layering
 
@@ -220,7 +230,8 @@ const navigator = new EpubNavigator(container, publication, listeners, {
         
         // Security features
         checkAutomation: true,
-        checkIFrameEmbedding: true
+        checkIFrameEmbedding: true,
+        monitorDevTools: true
     }
 });
 ```

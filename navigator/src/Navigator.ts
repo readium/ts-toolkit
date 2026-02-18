@@ -18,6 +18,7 @@ export interface IContentProtectionConfig extends ContentProtectionConfig {
     protectPrinting?: PrintProtectionConfig;
     checkAutomation?: boolean;
     checkIFrameEmbedding?: boolean;
+    monitorDevTools?: boolean;
 }
 
 export abstract class Navigator {
