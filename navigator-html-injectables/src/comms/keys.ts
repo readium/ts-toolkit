@@ -47,6 +47,7 @@ export type CommsCommandKey =
     "shake" |
     "force_webkit_recalc" |
     "peripherals_protection" |
+    "keyboard_peripherals" |
     // "scroll_protection" |
     "print_protection";
 ;

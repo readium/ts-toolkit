@@ -19,6 +19,7 @@ import { createReadiumEpubRules } from "../injection/epubInjectables";
 import { IInjectablesConfig } from "../injection/Injectable";
 import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator";
 import { NavigatorProtector, NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector";
+import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../peripherals/KeyboardPeripherals";
 
 export type ManagerEventKey = "zoom";
 
@@ -83,7 +84,9 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private readonly _contentProtection: IContentProtectionConfig;
     private readonly _keyboardPeripherals: IKeyboardPeripheralsConfig;
     private readonly _navigatorProtector: NavigatorProtector | null = null;
+    private readonly _keyboardPeripheralsManager: KeyboardPeripherals | null = null;
     private readonly _suspiciousActivityListener: ((event: Event) => void) | null = null;
+    private readonly _keyboardPeripheralListener: ((event: Event) => void) | null = null;
 
     private resizeObserver: ResizeObserver;
 
@@ -135,16 +138,20 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         });
 
         this._contentProtection = configuration.contentProtection || {};
-        this._keyboardPeripherals = configuration.keyboardPeripherals || {};
+        
+        // Merge keyboard peripherals
+        this._keyboardPeripherals = this.mergeKeyboardPeripherals(
+            this._contentProtection,
+            configuration.keyboardPeripherals || []
+        );
         
         // Initialize navigator protection if any protection is configured
-        if (this._keyboardPeripherals.disableKeyboardShortcuts || 
-            this._contentProtection.disableContextMenu ||
+        if (this._contentProtection.disableContextMenu ||
             this._contentProtection.checkAutomation ||
             this._contentProtection.checkIFrameEmbedding ||
             this._contentProtection.monitorDevTools ||
             this._contentProtection.protectPrinting?.disable) {
-            this._navigatorProtector = new NavigatorProtector(this._contentProtection, this._keyboardPeripherals);
+            this._navigatorProtector = new NavigatorProtector(this._contentProtection);
             
             // Listen for custom events from NavigatorProtector
             this._suspiciousActivityListener = (event: Event) => {
@@ -156,6 +163,20 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 }
             };
             window.addEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
+        }
+        
+        // Initialize keyboard peripherals separately (works independently of protection)
+        if (this._keyboardPeripherals.length > 0) {
+            this._keyboardPeripheralsManager = new KeyboardPeripherals({
+                keyboardPeripherals: this._keyboardPeripherals
+            });
+            
+            // Listen for keyboard peripheral events from main window
+            this._keyboardPeripheralListener = (event: Event) => {
+                const activity = (event as CustomEvent).detail;
+                this.listeners.peripheral(activity);
+            };
+            window.addEventListener(NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT, this._keyboardPeripheralListener);
         }
         
         // We use a resizeObserver cos’ the container parent may not be the width of 
@@ -537,7 +558,11 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         if (this._suspiciousActivityListener) {
             window.removeEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
         }
+        if (this._keyboardPeripheralListener) {
+            window.removeEventListener(NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT, this._keyboardPeripheralListener);
+        }
         this._navigatorProtector?.destroy();
+        this._keyboardPeripheralsManager?.destroy();
         await this.framePool?.destroy();
     }
 

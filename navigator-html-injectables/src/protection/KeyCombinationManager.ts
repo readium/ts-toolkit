@@ -1,12 +1,11 @@
 import { KeyCombo, KeyboardPeripheral } from "./KeyboardCombinations";
-import { SuspiciousActivityType } from "../comms/keys";
-import { BaseSuspiciousActivityEvent, KeyboardEventData } from "../modules/Peripherals";
+import { BaseKeyboardPeripheralEvent, KeyboardEventData } from "../modules/Peripherals";
 
 export type KeyHandler = (event: KeyboardEvent) => void;
-export type ActivityEventDispatcher = (event: BlockedKeyboardShortcutEvent) => void;
+export type ActivityEventDispatcher = (event: KeyboardPeripheralEvent) => void;
 
-export interface BlockedKeyboardShortcutEvent extends Omit<BaseSuspiciousActivityEvent, "type">, KeyboardEventData {
-    type: "blocked_keyboard_shortcut" | `custom:${string}`;
+export interface KeyboardPeripheralEvent extends BaseKeyboardPeripheralEvent, KeyboardEventData {
+    type: string;
 }
 
 export interface KeyComboWithHandler extends KeyCombo {
@@ -50,11 +49,11 @@ export class KeyCombinationManager {
      */
     private createActivityEvent(
         event: KeyboardEvent, 
-        type: SuspiciousActivityType,
+        type: string,
         targetFrameSrc: string,
-    ): BlockedKeyboardShortcutEvent {
+    ): KeyboardPeripheralEvent {
         return {
-            type: type as BlockedKeyboardShortcutEvent['type'],
+            type: type,
             timestamp: Date.now(),
             key: event.key,
             code: event.code,
@@ -84,7 +83,7 @@ export class KeyCombinationManager {
             handlers.push(...shortcut.keyCombos.map(combo => ({
                 ...combo,
                 handler: (event: KeyboardEvent) => {
-                    const eventType = `custom:${shortcut.type}` as SuspiciousActivityType;
+                    const eventType = shortcut.type;
                     const activityEvent = this.createActivityEvent(event, eventType, targetFrameSrc);
                     dispatcher(activityEvent);
                 }

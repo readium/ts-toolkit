@@ -61,7 +61,7 @@ export class FXLFramePoolManager {
         this.pub = pub;
         this.injector = injector ?? null;
         this.contentProtectionConfig = contentProtectionConfig || {};
-        this.keyboardPeripheralsConfig = keyboardPeripheralsConfig || {};
+        this.keyboardPeripheralsConfig = keyboardPeripheralsConfig || [];
         this.spreadPresentation = pub.metadata.otherMetadata?.spread || Spread.auto;
 
         if(this.pub.metadata.effectiveReadingProgression !== ReadingProgression.rtl && this.pub.metadata.effectiveReadingProgression !== ReadingProgression.ltr)

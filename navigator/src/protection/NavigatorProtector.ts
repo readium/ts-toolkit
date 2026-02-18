@@ -1,9 +1,9 @@
 import { AutomationDetector } from "./AutomationDetector";
 import { DevToolsDetector } from "./DevToolsDetector";
 import { IframeEmbeddingDetector } from "./IframeEmbeddingDetector";
-import { KeyboardProtector } from "./KeyboardProtector";
 import { PrintProtector } from "./PrintProtector";
-import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator";
+import { ContextMenuProtector } from "./ContextMenuProtector";
+import { IContentProtectionConfig } from "../Navigator";
 
 export const NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT = "readium:navigator:suspiciousActivity";
 
@@ -11,8 +11,8 @@ export class NavigatorProtector {
     private automationDetector?: AutomationDetector;
     private devToolsDetector?: DevToolsDetector;
     private iframeEmbeddingDetector?: IframeEmbeddingDetector;
-    private keyboardProtector?: KeyboardProtector;
     private printProtector?: PrintProtector;
+    private contextMenuProtector?: ContextMenuProtector;
 
     private dispatchSuspiciousActivity(type: string, detail: Record<string, unknown>) {
         const event = new CustomEvent(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, {
@@ -25,7 +25,9 @@ export class NavigatorProtector {
         window.dispatchEvent(event);
     }
 
-    constructor(config: IContentProtectionConfig = {}, keyboardPeripherals: IKeyboardPeripheralsConfig = {}) {
+    constructor(
+        config: IContentProtectionConfig = {}
+    ) {
         // Enable DevTools detection if explicitly enabled in config
         if (config.monitorDevTools) {
             this.devToolsDetector = new DevToolsDetector({
@@ -69,14 +71,6 @@ export class NavigatorProtector {
             });
         }
 
-        // Enable keyboard protection based on keyboardPeripherals and contentProtection
-        if ((keyboardPeripherals.disableKeyboardShortcuts && keyboardPeripherals.disableKeyboardShortcuts.length > 0) || config.disableContextMenu) {
-            this.keyboardProtector = new KeyboardProtector({
-                disableKeyboardShortcuts: keyboardPeripherals.disableKeyboardShortcuts || [],
-                blockContextMenu: config.disableContextMenu ?? false
-            });
-        }
-
         // Enable print protection if configured
         if (config.protectPrinting?.disable) {
             this.printProtector = new PrintProtector({
@@ -88,13 +82,22 @@ export class NavigatorProtector {
                 }
             });
         }
+        
+        // Enable context menu protection if configured
+        if (config.disableContextMenu) {
+            this.contextMenuProtector = new ContextMenuProtector({
+                onContextMenuBlocked: (event) => {
+                    this.dispatchSuspiciousActivity("context_menu", event as unknown as Record<string, unknown>);
+                }
+            });
+        }
     }
 
     public destroy() {
         this.automationDetector?.destroy();
         this.devToolsDetector?.destroy();
         this.iframeEmbeddingDetector?.destroy();
-        this.keyboardProtector?.destroy();
         this.printProtector?.destroy();
+        this.contextMenuProtector?.destroy();
     }
 }

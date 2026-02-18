@@ -23,13 +23,13 @@ export class WebPubFramePoolManager {
         cssProperties?: { [key: string]: string },
         injector?: Injector | null,
         contentProtectionConfig: IContentProtectionConfig = {},
-        keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = {}
+        keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = []
     ) {
         this.container = container;
         this.currentCssProperties = cssProperties;
         this.injector = injector;
         this.contentProtectionConfig = contentProtectionConfig;
-        this.keyboardPeripheralsConfig = keyboardPeripheralsConfig;
+        this.keyboardPeripheralsConfig = [...keyboardPeripheralsConfig];
     }
 
     async destroy() {

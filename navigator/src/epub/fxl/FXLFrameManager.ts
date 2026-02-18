@@ -26,13 +26,13 @@ export class FXLFrameManager {
         direction: ReadingProgression, 
         debugHref: string,
         contentProtectionConfig: IContentProtectionConfig = {},
-        keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = {}
+        keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = []
     ) {
         this.peripherals = peripherals;
         this.debugHref = debugHref;
         // Use the provided content protection config directly without overriding defaults
         this.contentProtectionConfig = { ...contentProtectionConfig };
-        this.keyboardPeripheralsConfig = { ...keyboardPeripheralsConfig };
+        this.keyboardPeripheralsConfig = [...keyboardPeripheralsConfig];
         this.frame = document.createElement("iframe");
         this.frame.sandbox.value = "allow-same-origin allow-scripts";
         this.frame.classList.add("readium-navigator-iframe");
@@ -210,12 +210,13 @@ export class FXLFrameManager {
     private applyContentProtection() {
         if (!this.comms) this.comms!.resume();
 
-        // Send combined protection config: content protection + keyboard peripherals
-        const combinedConfig = {
-            ...this.contentProtectionConfig,
-            ...this.keyboardPeripheralsConfig
-        };
-        this.comms!.send("peripherals_protection", combinedConfig);
+        // Send content protection config
+        this.comms!.send("peripherals_protection", this.contentProtectionConfig);
+        
+        // Send keyboard peripherals separately
+        if (this.keyboardPeripheralsConfig && this.keyboardPeripheralsConfig.length > 0) {
+            this.comms!.send("keyboard_peripherals", this.keyboardPeripheralsConfig);
+        }
 
         // Apply print protection if configured
         if (this.contentProtectionConfig.protectPrinting) {

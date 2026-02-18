@@ -11,7 +11,7 @@ import { BULK_COPY_CONFIG, SELECTION_ANALYZER_CONFIG } from "../protection/confi
 import { 
     KeyCombinationManager, 
     ActivityEventDispatcher,
-    BlockedKeyboardShortcutEvent 
+    KeyboardPeripheralEvent
 } from "../protection/KeyCombinationManager";
 
 export interface FrameClickEvent {
@@ -38,7 +38,6 @@ export interface BaseSuspiciousActivityEvent {
     type: SuspiciousActivityType;
     timestamp: number;
     targetFrameSrc: string;
-
 }
 
 // Common interface for all keyboard-related events
@@ -50,6 +49,13 @@ export interface KeyboardEventData {
     altKey: boolean;
     shiftKey: boolean;
     metaKey: boolean;
+}
+
+// Base interface for keyboard peripheral events
+export interface BaseKeyboardPeripheralEvent {
+    type: string;
+    timestamp: number;
+    targetFrameSrc: string;
 }
 
 export interface DeveloperToolsEvent extends BaseSuspiciousActivityEvent, KeyboardEventData {
@@ -108,13 +114,16 @@ export type SuspiciousActivityEvent =
     | DropDetectedEvent
     | PrintEvent
     | SaveEvent
-    | BlockedKeyboardShortcutEvent;
+    | KeyboardPeripheralEvent;
 
 export interface ContentProtectionConfig {
     monitorSelection?: boolean | SelectionAnalyzerOptions;
     protectCopy?: boolean | Omit<BulkCopyProtectionOptions, "enabled">;
     disableContextMenu?: boolean;
     disableDragAndDrop?: boolean;
+    disableSelectAll?: boolean;
+    disableSave?: boolean;
+    monitorDevTools?: boolean;
 //    enableScrollProtection?: boolean;
 }
 
@@ -172,9 +181,9 @@ export class Peripherals extends Module {
 
     private keyDownHandler: ((event: KeyboardEvent) => void) | null = null;
 
-    private enableKeyboardShortcutsProtection(shortcuts: KeyboardPeripheral[] = []): void {
+    private enableKeyboardPeripherals(shortcuts: KeyboardPeripheral[] = []): void {
         // Clear any existing state
-        this.disableKeyboardShortcutsProtection();
+        this.disableKeyboardPeripherals();
         
         // Create activity event dispatcher
         const dispatcher: ActivityEventDispatcher = (activityEvent) => {
@@ -190,13 +199,9 @@ export class Peripherals extends Module {
                 capture: true
             });
         }
-        
-        // Log enabled shortcuts for debugging
-        const types = shortcuts.map(s => `custom:${s.type}`);
-        this.comms?.log(`Keyboard protections enabled: ${types.join(", ")}`);
     }
     
-    private disableKeyboardShortcutsProtection(): void {
+    private disableKeyboardPeripherals(): void {
         if (this.wnd && this.keyDownHandler) {
             this.wnd.document.removeEventListener("keydown", this.keyDownHandler, {
                 capture: true
@@ -473,7 +478,7 @@ export class Peripherals extends Module {
     private registerProtectionHandlers() {
         // Single handler for all content protection features
         this.comms?.register("peripherals_protection", Peripherals.moduleName, (data: unknown, ack) => {
-            const config = data as ContentProtectionConfig & { disableKeyboardShortcuts?: KeyboardPeripheral[] };
+            const config = data as ContentProtectionConfig;
             
             // Apply config only on first call, then ignore subsequent calls (immutable)
             if (!this.configApplied) {
@@ -518,12 +523,18 @@ export class Peripherals extends Module {
                     this.addDragAndDropPrevention();
                     this.comms?.log("Drag and drop protection enabled");
                 }
-                
-                // Keyboard shortcuts
-                if (config.disableKeyboardShortcuts && config.disableKeyboardShortcuts.length > 0) {
-                    this.enableKeyboardShortcutsProtection(config.disableKeyboardShortcuts);
-                    this.comms?.log(`Keyboard shortcuts protection enabled`);
-                }
+            }
+            
+            ack(true);
+        });
+
+        // Separate handler for keyboard peripherals
+        this.comms?.register("keyboard_peripherals", Peripherals.moduleName, (data: unknown, ack) => {
+            const keyboardPeripherals = data as KeyboardPeripheral[];
+            
+            if (keyboardPeripherals && keyboardPeripherals.length > 0) {
+                this.enableKeyboardPeripherals(keyboardPeripherals);
+                this.comms?.log(`Keyboard peripherals enabled: ${keyboardPeripherals.map(p => p.type).join(", ")}`);
             }
             
             ack(true);
@@ -553,7 +564,7 @@ export class Peripherals extends Module {
         this.removeSelectionMonitoring();
         this.removeContextMenuPrevention();
         this.removeDragAndDropPrevention();
-        this.disableKeyboardShortcutsProtection();
+        this.disableKeyboardPeripherals();
         
         // Clean up event listeners
         this.cleanupCallbacks.forEach(cleanup => cleanup());

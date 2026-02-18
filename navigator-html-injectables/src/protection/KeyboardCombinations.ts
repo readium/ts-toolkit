@@ -1,5 +1,3 @@
-export type KeyboardShortcut = "devTools" | "selectAll" | "print" | "save" | KeyboardPeripheral;
-
 export interface KeyCombo {
     keyCode: number;  // Use stable keyCode that doesn't change across layouts
     ctrl?: boolean;

@@ -35,7 +35,7 @@ export class FramePoolManager {
         this.currentCssProperties = cssProperties;
         this.injector = injector ?? null;
         this.contentProtectionConfig = contentProtectionConfig || {};
-        this.keyboardPeripheralsConfig = keyboardPeripheralsConfig || {};
+        this.keyboardPeripheralsConfig = keyboardPeripheralsConfig || [];
     }
 
     async destroy() {

@@ -1,11 +1,9 @@
 import { Link, Locator, Publication, ReadingProgression } from "@readium/shared";
-import { ContentProtectionConfig, PrintProtectionConfig, KeyboardShortcut } from "@readium/navigator-html-injectables";
+import { ContentProtectionConfig, PrintProtectionConfig, KeyboardPeripheral, DEV_TOOLS, SELECT_ALL, PRINT, SAVE } from "@readium/navigator-html-injectables";
 
 type cbb = (ok: boolean) => void;
 
-export interface IKeyboardPeripheralsConfig {
-    disableKeyboardShortcuts?: KeyboardShortcut[];
-}
+export type IKeyboardPeripheralsConfig = KeyboardPeripheral[];
 
 export interface ProgressionRange {
     start: number;
@@ -22,7 +20,6 @@ export interface IContentProtectionConfig extends ContentProtectionConfig {
     protectPrinting?: PrintProtectionConfig;
     checkAutomation?: boolean;
     checkIFrameEmbedding?: boolean;
-    monitorDevTools?: boolean;
 }
 
 export abstract class Navigator {
@@ -55,6 +52,31 @@ export abstract class Navigator {
      * Destroy all resources associated with this navigator. Synonymous with "unmount"
      */
     abstract destroy(): void;
+
+    /**
+     * Merges keyboard peripherals from content protection config with user-provided peripherals
+     */
+    protected mergeKeyboardPeripherals(
+        config: IContentProtectionConfig,
+        keyboardPeripherals: IKeyboardPeripheralsConfig = []
+    ): IKeyboardPeripheralsConfig {
+        const peripherals = [...keyboardPeripherals];
+        
+        if (config.disableSelectAll) {
+            peripherals.push(SELECT_ALL);
+        }
+        if (config.disableSave) {
+            peripherals.push(SAVE);
+        }
+        if (config.monitorDevTools) {
+            peripherals.push(DEV_TOOLS);
+        }
+        if (config.protectPrinting?.disable) {
+            peripherals.push(PRINT);
+        }
+        
+        return peripherals;
+    }
 }
 
 export abstract class VisualNavigator extends Navigator {

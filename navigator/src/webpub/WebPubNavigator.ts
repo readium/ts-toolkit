@@ -19,6 +19,7 @@ import { createReadiumWebPubRules } from "../injection/webpubInjectables";
 import { IInjectablesConfig } from "../injection/Injectable";
 import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator";
 import { NavigatorProtector, NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector";
+import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../peripherals/KeyboardPeripherals";
 
 export interface WebPubNavigatorConfiguration {
     preferences: IWebPubPreferences;
@@ -54,7 +55,7 @@ const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorL
     handleLocator: listeners.handleLocator || (() => false),
     textSelected: listeners.textSelected || (() => {}),
     contentProtection: listeners.contentProtection || (() => {}),
-    contextMenu: listeners.contextMenu || (() => {})
+    contextMenu: listeners.contextMenu || (() => {}),
     peripheral: listeners.peripheral || (() => {})
 })
 
@@ -75,7 +76,9 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private readonly _contentProtection: IContentProtectionConfig;
     private readonly _keyboardPeripherals: IKeyboardPeripheralsConfig;
     private readonly _navigatorProtector: NavigatorProtector | null = null;
+    private readonly _keyboardPeripheralsManager: KeyboardPeripherals | null = null;
     private readonly _suspiciousActivityListener: ((event: Event) => void) | null = null;
+    private readonly _keyboardPeripheralListener: ((event: Event) => void) | null = null;
     
     private webViewport: VisualNavigatorViewport = {
         readingOrder: [],
@@ -112,16 +115,20 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
         // Initialize content protection with provided config or default values
         this._contentProtection = configuration.contentProtection || {};
-        this._keyboardPeripherals = configuration.keyboardPeripherals || {};
+        
+        // Merge keyboard peripherals
+        this._keyboardPeripherals = this.mergeKeyboardPeripherals(
+            this._contentProtection,
+            configuration.keyboardPeripherals || []
+        );
 
         // Initialize navigator protection if any protection is configured
-        if (this._keyboardPeripherals.disableKeyboardShortcuts || 
-            this._contentProtection.disableContextMenu ||
+        if (this._contentProtection.disableContextMenu ||
             this._contentProtection.checkAutomation ||
             this._contentProtection.checkIFrameEmbedding ||
             this._contentProtection.monitorDevTools ||
             this._contentProtection.protectPrinting?.disable) {
-            this._navigatorProtector = new NavigatorProtector(this._contentProtection, this._keyboardPeripherals);
+            this._navigatorProtector = new NavigatorProtector(this._contentProtection);
             
             // Listen for custom events from NavigatorProtector
             this._suspiciousActivityListener = (event: Event) => {
@@ -129,6 +136,20 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
                 this.listeners.contentProtection(customEvent.detail.type, customEvent.detail);
             };
             window.addEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
+        }
+        
+        // Initialize keyboard peripherals separately (works independently of protection)
+        if (this._keyboardPeripherals.length > 0) {
+            this._keyboardPeripheralsManager = new KeyboardPeripherals({
+                keyboardPeripherals: this._keyboardPeripherals
+            });
+            
+            // Listen for keyboard peripheral events from main window
+            this._keyboardPeripheralListener = (event: Event) => {
+                const activity = (event as CustomEvent).detail;
+                this.listeners.peripheral(activity);
+            };
+            window.addEventListener(NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT, this._keyboardPeripheralListener);
         }
 
         // Initialize current location
@@ -332,6 +353,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
                 break;
             case "context_menu":
                 this.listeners.contextMenu(data as ContextMenuEvent);
+                break;
             case "keyboard_peripherals":
                 this.listeners.peripheral(data as KeyboardEventData);
                 break;
@@ -373,7 +395,11 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         if (this._suspiciousActivityListener) {
             window.removeEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
         }
+        if (this._keyboardPeripheralListener) {
+            window.removeEventListener(NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT, this._keyboardPeripheralListener);
+        }
         this._navigatorProtector?.destroy();
+        this._keyboardPeripheralsManager?.destroy();
         await this.framePool?.destroy();
     }
 
