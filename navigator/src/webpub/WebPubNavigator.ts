@@ -2,7 +2,7 @@ import { Feature, Link, Locator, Publication, ReadingProgression, LocatorLocatio
 import { VisualNavigator, VisualNavigatorViewport, ProgressionRange } from "../Navigator";
 import { Configurable } from "../preferences/Configurable";
 import { WebPubFramePoolManager } from "./WebPubFramePoolManager";
-import { BasicTextSelection, CommsEventKey, FrameClickEvent, ModuleLibrary, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
+import { BasicTextSelection, CommsEventKey, ContextMenuEvent, FrameClickEvent, ModuleLibrary, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
 import { WebPubFrameManager } from "./WebPubFrameManager";
 
@@ -38,6 +38,7 @@ export interface WebPubNavigatorListeners {
     handleLocator: (locator: Locator) => boolean;
     textSelected: (selection: BasicTextSelection) => void;
     contentProtection: (type: string, data: SuspiciousActivityEvent) => void;
+    contextMenu: (data: ContextMenuEvent) => void;
 }
 
 const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorListeners => ({
@@ -51,6 +52,7 @@ const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorL
     handleLocator: listeners.handleLocator || (() => false),
     textSelected: listeners.textSelected || (() => {}),
     contentProtection: listeners.contentProtection || (() => {}),
+    contextMenu: listeners.contextMenu || (() => {})
 })
 
 export class WebPubNavigator extends VisualNavigator implements Configurable<WebPubSettings, WebPubPreferences> {
@@ -321,6 +323,9 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             case "content_protection":
                 const activity = data as SuspiciousActivityEvent;
                 this.listeners.contentProtection(activity.type, activity);
+                break;
+            case "context_menu":
+                this.listeners.contextMenu(data as ContextMenuEvent);
                 break;
             case "log":
                 console.log(this.framePool.currentFrames[0]?.source?.split("/")[3], ...(data as any[]));
