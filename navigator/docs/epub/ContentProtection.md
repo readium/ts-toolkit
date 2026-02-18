@@ -59,15 +59,6 @@ interface ContentProtectionConfig {
     // Default: false
     disableDragAndDrop?: boolean;
     
-    // Disable specific keyboard shortcuts
-    disableKeyboardShortcuts?: Array<
-        "devTools" |    // F12, Cmd+Option+I, etc.
-        "selectAll" |   // Cmd+A/Ctrl+A
-        "print" |       // Cmd+P/Ctrl+P
-        "save" |        // Cmd+S/Ctrl+S
-        KeyCombo       // Custom key combination
-    >;
-    
     // Print protection configuration
     protectPrinting?: {
         // Disable printing completely
@@ -93,28 +84,16 @@ interface ContentProtectionConfig {
     // Triggers "developer_tools" event when dev tools are opened
     // Default: false
     monitorDevTools?: boolean;
-}
 
-// Custom key combination for keyboard shortcuts
-interface KeyCombo {
-    // Numeric key code that doesn't change across keyboard layouts
-    // Common key codes:
-    // - 65: "A" key
-    // - 73: "I" key (used for dev tools)
-    // - 80: "P" key (used for print)
-    // - 123: F12 key
-    // See full list: https://keycode.info/
-    keyCode: number;
-    
-    // Modifier keys (all optional)
-    ctrl?: boolean;   // Control key (⌃)
-    shift?: boolean;  // Shift key (⇧)
-    alt?: boolean;    // Alt/Option key (⌥)
-    meta?: boolean;   // Command key (⌘) on Mac, Windows key on Windows
-    
-    // Optional type for custom handling
-    // Will be included in the protection event
-    type?: string;
+    // Disable Select All functionality (Ctrl+A/Cmd+A)
+    // Triggers "select_all" event when attempted
+    // Default: false
+    disableSelectAll?: boolean;
+
+    // Disable Save functionality (Ctrl+S/Cmd+S)
+    // Triggers "save" event when attempted
+    // Default: false
+    disableSave?: boolean;
 }
 ```
 
@@ -139,30 +118,22 @@ interface KeyCombo {
 - Prevents dragging content out of the reader
 - Configurable via `disableDragAndDrop`
 
-### 5. Keyboard Shortcut
-- Blocks common developer tools shortcuts (F12, Cmd+Option+I, etc.)
-- Blocks text selection (Cmd+A/Ctrl+A)
-- Blocks printing shortcuts (Cmd+P/Ctrl+P)
-- Blocks save shortcuts (Cmd+S/Ctrl+S)
-- Supports custom key combinations using `KeyCombo` interface
-- Configurable via `disableKeyboardShortcuts`
-
-### 6. Print
+### 5. Print
 - Blocks print keyboard shortcuts (Cmd+P/Ctrl+P)
 - If print attempt is successful, replaces the content with a watermark
 
-### 7. Automation
+### 6. Automation
 - Detects common automation tools like Selenium and Puppeteer
 - Triggers the `contentProtection` event with type `automation_detected` when detected
 - Enabled via `checkAutomation`
 
-### 9. IFrame Embedding
+### 7. IFrame Embedding
 - Detects when content is embedded in iframes
 - Can detect cross-origin iframe embedding
 - Triggers `contentProtection` event with type `iframe_embedding_detected` when detected
 - Enabled via `checkIFrameEmbedding`
 
-### 9. Developer Tools Monitoring
+### 8. Developer Tools Monitoring
 - Detects when browser developer tools are opened
 - Triggers the `contentProtection` event with type `developer_tools` when detected
 - Enabled via `monitorDevTools`
@@ -182,15 +153,10 @@ Content protection triggers events with the following types:
 - `automation_detected`: When browser automation tools are detected
 - `iframe_embedding_detected`: When content is embedded in an iframe
 - `developer_tools`: When opening developer tools is attempted
-- `select_all`: When select-all is attempted
 - `suspicious_selection`: When suspicious text selection patterns are detected
 - `bulk_copy`: When bulk copying is detected
 - `drag_detected`: When content is dragged
 - `drop_detected`: When content is dropped
-- `print`: When printing is attempted
-- `save`: When save is attempted
-- `blocked_keyboard_shortcut`: When a blocked keyboard shortcut is used
-- `custom:*`: Custom shortcut types (prefixed with `custom:`)
 
 ### Example Configuration
 
@@ -200,14 +166,6 @@ const navigator = new EpubNavigator(container, publication, listeners, {
         // Basic protection
         disableContextMenu: true,
         disableDragAndDrop: true,
-        
-        // Keyboard shortcuts to disable
-        disableKeyboardShortcuts: [
-            "devTools",   // Disable F12, Cmd+Option+I, etc.
-            "selectAll",  // Disable Cmd+A/Ctrl+A
-            "save",       // Disable Cmd+S/Ctrl+S
-            "print",      // Disable Cmd+P/Ctrl+P
-        ],
         
         // Print protection
         protectPrinting: {
@@ -231,10 +189,21 @@ const navigator = new EpubNavigator(container, publication, listeners, {
         // Security features
         checkAutomation: true,
         checkIFrameEmbedding: true,
-        monitorDevTools: true
+        monitorDevTools: true,
+        disableSelectAll: true,
+        disableSave: true
     }
 });
 ```
+
+## Side effects
+
+When setting some options, shortcuts will be prevented by default, and reported through `eventListener.peripheral`. 
+
+- `disableSelectAll`: Prevents common shortcuts (Ctrl+A/Cmd+A) and reports `select_all` through `peripheral` eventListener
+- `disableSave`: Prevents common shortcuts (Ctrl+S/Cmd+S) and reports `save` through `peripheral` eventListener
+- `monitorDevTools`: Prevents common shortcuts (Ctrl+Shift+I/Cmd+Option+I) and reports `devtools` through `peripheral` eventListener
+- `protectPrinting.disabled`: Prevents common shortcuts (Ctrl+P/Cmd+P) and reports `print` through `peripheral` eventListener
 
 ## Event Handling
 
@@ -327,31 +296,6 @@ navigator.listeners.contentProtection = (type: string, data: SuspiciousActivityE
             console.log("Suspicious selection detected:", detail.selectionLength, "characters");
             break;
             
-        // Keyboard shortcuts
-        case "blocked_keyboard_shortcut":
-            // Fired when a protected keyboard shortcut is used
-            // detail: {
-            //   key: string,      // The key value of the key pressed
-            //   code: string,     // Physical key code
-            //   keyCode: number,  // Legacy key code
-            //   ctrlKey: boolean, // Whether Ctrl key was pressed
-            //   altKey: boolean,  // Whether Alt/Option key was pressed
-            //   shiftKey: boolean,// Whether Shift key was pressed
-            //   metaKey: boolean, // Whether Meta/Command key was pressed
-            //   type?: string,    // Custom type if specified in key combo
-            //   timestamp: number, // When the event occurred
-            //   targetFrameSrc: string
-            // }
-            const keys = [
-                detail.ctrlKey ? "Ctrl" : "",
-                detail.altKey ? "Alt" : "",
-                detail.shiftKey ? "Shift" : "",
-                detail.metaKey ? (navigator.platform.includes("Mac") ? "Cmd" : "Win") : "",
-                detail.key
-            ].filter(Boolean).join("+");
-            console.log("Blocked keyboard shortcut:", keys);
-            break;
-            
         // Print protection
         case "print":
             // Fired when print keyboard shortcuts are detected (e.g., Cmd+P/Ctrl+P)
@@ -385,9 +329,27 @@ navigator.listeners.contentProtection = (type: string, data: SuspiciousActivityE
             // }
             console.log("Save attempt detected", detail);
             break;
+
+        // Developer tools detection
+        case "developer_tools":
+            // Fired when developer tools are opened (F12, Cmd+Option+I, etc.)
+            // detail: {
+            //   key: string,      // The key value of the key pressed
+            //   code: string,     // Physical key code
+            //   keyCode: number,  // Legacy key code
+            //   ctrlKey: boolean, // Whether Ctrl key was pressed
+            //   altKey: boolean,  // Whether Alt/Option key was pressed
+            //   shiftKey: boolean,// Whether Shift key was pressed
+            //   metaKey: boolean, // Whether Meta/Command key was pressed
+            //   timestamp: number, // When the event occurred
+            //   targetFrameSrc: string
+            // }
+            console.log("Developer tools access detected", detail);
+            break;
     }
 };
 ```
+
 The idea is that you can add extra layers of protection to your content by responding to these events if you deem it necessary. 
 
 ```typescript

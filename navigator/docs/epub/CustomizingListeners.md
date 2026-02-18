@@ -15,6 +15,7 @@ The following events are exposed:
 - `textSelected`: fires when text was selected inside the iframe
 - `contentProtection`: fires when the content protection is triggered
 - `contextMenu`: fires when the context menu is triggered (must be disabled in the `contentProtection` configuration, see [Content Protection](./ContentProtection.md) for more information)
+- `peripheral`: fires when a configured keyboard shortcut is triggered – or it is implicitly set through `contentProtection` for the built-in types.
 
 Your listeners object should look like this if you do not customize them at all.
 
@@ -38,6 +39,7 @@ const listeners: EpubNavigatorListeners = {
   textSelected: function (_selection: BasicTextSelection): void {},
   contentProtection: function (_event: ContentProtectionEvent): void {},
   contextMenu: function (_event: ContextMenuEvent): void {},
+  peripheral: function (_event: KeyboardPeripheralEvent): void {},
 };
 ```
 
@@ -122,3 +124,33 @@ Fires when the context menu is triggered.
 
 > [!WARNING] 
 > Will not fire if the context menu is not disabled from the `contentProtection` configuration. See [Content Protection](./ContentProtection.md) for more information.
+
+### peripheral
+
+Fires when a configured keyboard shortcut is triggered within the EPUB content. This event allows you to intercept and handle custom keyboard combinations that you define through the keyboard peripherals system.
+
+The event provides detailed information about the keyboard interaction:
+
+```ts
+interface KeyboardPeripheralEvent {
+    type: string;           // The type of peripheral (e.g., "developer_tools", "select_all", "print", "save")
+    timestamp: number;      // When the event occurred
+    targetFrameSrc: string; // The source of the frame where the event originated
+    key: string;            // The key that was pressed
+    code: string;           // The physical key code
+    keyCode: number;        // The numeric key code
+    ctrlKey: boolean;       // Whether Ctrl key was pressed
+    altKey: boolean;        // Whether Alt key was pressed
+    shiftKey: boolean;      // Whether Shift key was pressed
+    metaKey: boolean;       // Whether Meta/Cmd key was pressed
+}
+```
+
+The following built-ins are implicitly/automatically set when their associated `contentProtection` option is enabled:
+
+- `"developer_tools"` - Developer tools shortcuts (F12, Cmd+Alt+I, etc.)
+- `"select_all"` - Select all shortcuts (Cmd+A, Ctrl+A)
+- `"print"` - Print shortcuts (Cmd+P, Ctrl+P)
+- `"save"` - Save shortcuts (Cmd+S, Ctrl+S)
+
+See [Content Protection](./ContentProtection.md#side-effects) for more information.

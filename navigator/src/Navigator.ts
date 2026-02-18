@@ -3,7 +3,9 @@ import { ContentProtectionConfig, PrintProtectionConfig, KeyboardPeripheral, DEV
 
 type cbb = (ok: boolean) => void;
 
-export type IKeyboardPeripheralsConfig = KeyboardPeripheral[];
+export type IKeyboardPeripheralsConfig = Array<Omit<KeyboardPeripheral, 'type'> & {
+    type: Exclude<string, 'developer_tools' | 'select_all' | 'print' | 'save'>;
+}>;
 
 export interface ProgressionRange {
     start: number;
