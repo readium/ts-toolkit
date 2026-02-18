@@ -3,6 +3,7 @@ import { DevToolsDetector } from "./DevToolsDetector";
 import { IframeEmbeddingDetector } from "./IframeEmbeddingDetector";
 import { PrintProtector } from "./PrintProtector";
 import { ContextMenuProtector } from "./ContextMenuProtector";
+import { ContextMenuEvent } from "@readium/navigator-html-injectables";
 import { IContentProtectionConfig } from "../Navigator";
 
 export const NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT = "readium:navigator:suspiciousActivity";
@@ -33,15 +34,14 @@ export class NavigatorProtector {
             this.devToolsDetector = new DevToolsDetector({
                 onDetected: () => {
                     this.dispatchSuspiciousActivity("developer_tools", {
-                        targetFrameSrc: window.location.href,
+                        targetFrameSrc: "",
                         key: "",
                         code: "",
                         keyCode: -1,
                         ctrlKey: false,
                         altKey: false,
                         shiftKey: false,
-                        metaKey: false,
-                        timestamp: Date.now()
+                        metaKey: false
                     });
                 }
             });
@@ -51,10 +51,7 @@ export class NavigatorProtector {
         if (config.checkAutomation) {
             this.automationDetector = new AutomationDetector({
                 onDetected: (tool: string) => {
-                    this.dispatchSuspiciousActivity("automation_detected", { 
-                        tool,
-                        timestamp: Date.now()
-                    });
+                    this.dispatchSuspiciousActivity("automation_detected", { tool });
                 }
             });
         }
@@ -63,10 +60,7 @@ export class NavigatorProtector {
         if (config.checkIFrameEmbedding) {
             this.iframeEmbeddingDetector = new IframeEmbeddingDetector({
                 onDetected: (isCrossOrigin: boolean) => {
-                    this.dispatchSuspiciousActivity("iframe_embedding_detected", {
-                        isCrossOrigin,
-                        timestamp: Date.now()
-                    });
+                    this.dispatchSuspiciousActivity("iframe_embedding_detected", { isCrossOrigin });
                 }
             });
         }
@@ -76,9 +70,7 @@ export class NavigatorProtector {
             this.printProtector = new PrintProtector({
                 ...config.protectPrinting,
                 onPrintAttempt: () => {
-                    this.dispatchSuspiciousActivity("print", {
-                        timestamp: Date.now()
-                    });
+                    this.dispatchSuspiciousActivity("print", {});
                 }
             });
         }
@@ -86,7 +78,7 @@ export class NavigatorProtector {
         // Enable context menu protection if configured
         if (config.disableContextMenu) {
             this.contextMenuProtector = new ContextMenuProtector({
-                onContextMenuBlocked: (event) => {
+                onContextMenuBlocked: (event: ContextMenuEvent) => {
                     this.dispatchSuspiciousActivity("context_menu", event as unknown as Record<string, unknown>);
                 }
             });

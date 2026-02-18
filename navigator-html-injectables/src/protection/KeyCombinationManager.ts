@@ -71,7 +71,7 @@ export class KeyCombinationManager {
     /**
      * Creates handlers for keyboard shortcuts with centralized activity event dispatch
      */
-    public createProtectionHandlers(
+    public createKeyboardHandlers(
         targetFrameSrc: string,
         shortcuts: KeyboardPeripheral[],
         dispatcher: ActivityEventDispatcher
@@ -101,7 +101,7 @@ export class KeyCombinationManager {
         shortcuts: KeyboardPeripheral[],
         dispatcher: ActivityEventDispatcher,
     ): (event: KeyboardEvent) => void {
-        const handlers = this.createProtectionHandlers(targetFrameSrc, shortcuts, dispatcher);
+        const handlers = this.createKeyboardHandlers(targetFrameSrc, shortcuts, dispatcher);
         
         return (event: KeyboardEvent) => {
             for (const handlerConfig of handlers) {
