@@ -19,7 +19,8 @@ export type CommsEventKey =
     "context_menu" |
     "media_play" |
     "media_pause" |
-    "content_protection";
+    "content_protection" |
+    "keyboard_peripherals";
 ;
 
 export type CommsCommandKey =
@@ -60,6 +61,4 @@ export type SuspiciousActivityType =
     // "suspicious_snapping" |
     "drag_detected" |
     "drop_detected" |
-    "print" |
-    "blocked_keyboard_shortcut" |
-    `custom:${string}`; // Allow custom event types with 'custom:' prefix
+    "print";

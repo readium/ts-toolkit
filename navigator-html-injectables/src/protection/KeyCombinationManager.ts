@@ -1,5 +1,4 @@
-import { KeyCombo, KeyboardShortcut } from "./KeyboardCombinations";
-import { DEV_TOOLS_COMBOS, SELECT_ALL_COMBOS, PRINT_COMBOS, SAVE_COMBOS } from "./KeyboardCombinations";
+import { KeyCombo, KeyboardPeripheral } from "./KeyboardCombinations";
 import { SuspiciousActivityType } from "../comms/keys";
 import { BaseSuspiciousActivityEvent, KeyboardEventData } from "../modules/Peripherals";
 
@@ -68,89 +67,29 @@ export class KeyCombinationManager {
         };
     }
 
-    /**
-     * Determines the activity event type based on the combo and shortcut type
-     */
-    private getActivityEventType(combo: KeyCombo, shortcutType?: string): SuspiciousActivityType {
-        if (shortcutType) {
-            switch (shortcutType) {
-                case "devTools": return "developer_tools";
-                case "selectAll": return "select_all";
-                case "print": return "print";
-                case "save": return "save";
-                default:
-                    return combo.type ? `custom:${combo.type}` as SuspiciousActivityType : "blocked_keyboard_shortcut";
-            }
-        }
-        
-        if (combo.type) {
-            return `custom:${combo.type}` as SuspiciousActivityType;
-        }
-        
-        return "blocked_keyboard_shortcut";
-    }
-
+    
+    
     /**
      * Creates handlers for keyboard shortcuts with centralized activity event dispatch
      */
     public createProtectionHandlers(
         targetFrameSrc: string,
-        shortcuts: KeyboardShortcut[],
+        shortcuts: KeyboardPeripheral[],
         dispatcher: ActivityEventDispatcher
     ): KeyComboWithHandler[] {
         const handlers: KeyComboWithHandler[] = [];
 
-        // Handle built-in shortcut types
-        if (shortcuts.includes("devTools")) {
-            handlers.push(...DEV_TOOLS_COMBOS.map(combo => ({
+        // Handle KeyboardPeripheral objects only
+        shortcuts.forEach(shortcut => {
+            handlers.push(...shortcut.keyCombos.map(combo => ({
                 ...combo,
                 handler: (event: KeyboardEvent) => {
-                    const activityEvent = this.createActivityEvent(event, "developer_tools", targetFrameSrc);
+                    const eventType = `custom:${shortcut.type}` as SuspiciousActivityType;
+                    const activityEvent = this.createActivityEvent(event, eventType, targetFrameSrc);
                     dispatcher(activityEvent);
                 }
             })));
-        }
-
-        if (shortcuts.includes("selectAll")) {
-            handlers.push(...SELECT_ALL_COMBOS.map(combo => ({
-                ...combo,
-                handler: (event: KeyboardEvent) => {
-                    const activityEvent = this.createActivityEvent(event, "select_all", targetFrameSrc);
-                    dispatcher(activityEvent);
-                }
-            })));
-        }
-
-        if (shortcuts.includes("print")) {
-            handlers.push(...PRINT_COMBOS.map(combo => ({
-                ...combo,
-                handler: (event: KeyboardEvent) => {
-                    const activityEvent = this.createActivityEvent(event, "print", targetFrameSrc);
-                    dispatcher(activityEvent);
-                }
-            })));
-        }
-
-        if (shortcuts.includes("save")) {
-            handlers.push(...SAVE_COMBOS.map(combo => ({
-                ...combo,
-                handler: (event: KeyboardEvent) => {
-                    const activityEvent = this.createActivityEvent(event, "save", targetFrameSrc);
-                    dispatcher(activityEvent);
-                }
-            })));
-        }
-
-        // Handle custom combos
-        const customCombos = shortcuts.filter((s): s is KeyCombo => typeof s !== "string");
-        handlers.push(...customCombos.map(combo => ({
-            ...combo,
-            handler: (event: KeyboardEvent) => {
-                const eventType = this.getActivityEventType(combo, targetFrameSrc);
-                const activityEvent = this.createActivityEvent(event, eventType, targetFrameSrc);
-                dispatcher(activityEvent);
-            }
-        })));
+        });
 
         return handlers;
     }
@@ -160,7 +99,7 @@ export class KeyCombinationManager {
      */
     public createUnifiedHandler(
         targetFrameSrc: string,
-        shortcuts: KeyboardShortcut[],
+        shortcuts: KeyboardPeripheral[],
         dispatcher: ActivityEventDispatcher,
     ): (event: KeyboardEvent) => void {
         const handlers = this.createProtectionHandlers(targetFrameSrc, shortcuts, dispatcher);

@@ -3,7 +3,7 @@ import { DevToolsDetector } from "./DevToolsDetector";
 import { IframeEmbeddingDetector } from "./IframeEmbeddingDetector";
 import { KeyboardProtector } from "./KeyboardProtector";
 import { PrintProtector } from "./PrintProtector";
-import { IContentProtectionConfig } from "../Navigator";
+import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator";
 
 export const NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT = "readium:navigator:suspiciousActivity";
 
@@ -25,7 +25,7 @@ export class NavigatorProtector {
         window.dispatchEvent(event);
     }
 
-    constructor(config: IContentProtectionConfig = {}) {
+    constructor(config: IContentProtectionConfig = {}, keyboardPeripherals: IKeyboardPeripheralsConfig = {}) {
         // Enable DevTools detection if explicitly enabled in config
         if (config.monitorDevTools) {
             this.devToolsDetector = new DevToolsDetector({
@@ -69,10 +69,10 @@ export class NavigatorProtector {
             });
         }
 
-        // Enable keyboard protection based on disableKeyboardShortcuts and disableContextMenu
-        if ((config.disableKeyboardShortcuts && config.disableKeyboardShortcuts.length > 0) || config.disableContextMenu) {
+        // Enable keyboard protection based on keyboardPeripherals and contentProtection
+        if ((keyboardPeripherals.disableKeyboardShortcuts && keyboardPeripherals.disableKeyboardShortcuts.length > 0) || config.disableContextMenu) {
             this.keyboardProtector = new KeyboardProtector({
-                disableKeyboardShortcuts: config.disableKeyboardShortcuts || [],
+                disableKeyboardShortcuts: keyboardPeripherals.disableKeyboardShortcuts || [],
                 blockContextMenu: config.disableContextMenu ?? false
             });
         }

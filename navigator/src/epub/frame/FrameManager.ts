@@ -2,7 +2,7 @@ import { Loader, ModuleName } from "@readium/navigator-html-injectables";
 import { FrameComms } from "./FrameComms";
 import { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
 import { sML } from "../../helpers";
-import type { IContentProtectionConfig } from "../../Navigator";
+import type { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator";
 
 
 export class FrameManager {
@@ -13,11 +13,13 @@ export class FrameManager {
     private hidden: boolean = true;
     private destroyed: boolean = false;
     private readonly contentProtectionConfig: IContentProtectionConfig;
+    private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
     private currModules: ModuleName[] = [];
 
     constructor(
         source: string,
-        contentProtectionConfig: IContentProtectionConfig = {}
+        contentProtectionConfig: IContentProtectionConfig = {},
+        keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = {}
     ) {
         this.frame = document.createElement("iframe");
         this.frame.sandbox.value = "allow-same-origin allow-scripts";
@@ -32,6 +34,7 @@ export class FrameManager {
 
         // Use the provided content protection config directly without overriding defaults
         this.contentProtectionConfig = { ...contentProtectionConfig };
+        this.keyboardPeripheralsConfig = { ...keyboardPeripheralsConfig };
 
     }
 
@@ -67,8 +70,13 @@ export class FrameManager {
 
     private applyContentProtection() {
         if (!this.comms) this.comms!.resume();
-        // Send peripherals protection config
-        this.comms!.send("peripherals_protection", this.contentProtectionConfig);
+        
+        // Send combined protection config: content protection + keyboard peripherals
+        const combinedConfig = {
+            ...this.contentProtectionConfig,
+            ...this.keyboardPeripheralsConfig
+        };
+        this.comms!.send("peripherals_protection", combinedConfig);
 
         // Apply scroll protection
         //    if (this.contentProtectionConfig.enableScrollProtection) {
