@@ -1,6 +1,5 @@
 import { resolve } from "path";
 import { defineConfig } from "vite";
-import libAssetsPlugin from "@laynezh/vite-plugin-lib-assets";
 import packageJson from "./package.json";
 
 export default defineConfig({
