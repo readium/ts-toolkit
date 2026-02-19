@@ -136,6 +136,13 @@ interface KeyboardPeripheralEvent {
     type: string;           // The type of peripheral (e.g., "developer_tools", "select_all", "print", "save")
     timestamp: number;      // When the event occurred
     targetFrameSrc: string; // The source of the frame where the event originated
+    selectedText?: {        // The selected text when the event occurred
+        text: string;
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
     key: string;            // The key that was pressed
     code: string;           // The physical key code
     keyCode: number;        // The numeric key code

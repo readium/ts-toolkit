@@ -1,5 +1,6 @@
 import { KeyCombo, KeyboardPeripheral } from "./KeyboardCombinations";
-import { BaseKeyboardPeripheralEvent, KeyboardEventData } from "../modules/Peripherals";
+import { BaseKeyboardPeripheralEvent, KeyboardEventData, BasicTextSelection } from "../modules/Peripherals";
+import { ReadiumWindow } from "../helpers/dom";
 
 export type KeyHandler = (event: KeyboardEvent) => void;
 export type ActivityEventDispatcher = (event: KeyboardPeripheralEvent) => void;
@@ -51,7 +52,27 @@ export class KeyCombinationManager {
         event: KeyboardEvent, 
         type: string,
         targetFrameSrc: string,
+        wnd?: ReadiumWindow,
     ): KeyboardPeripheralEvent {
+        // Capture selected text if window is available
+        let selectedText: Omit<BasicTextSelection, "targetFrameSrc"> | undefined;
+        if (wnd) {
+            const selection = wnd.getSelection();
+            const selectedTextStr = selection?.toString() || '';
+            const domRectList = (selectedTextStr && selection?.rangeCount) ? selection.getRangeAt(0)?.getClientRects() : null;
+            const rect = domRectList?.[0];
+            
+            if (rect && selectedTextStr) {
+                selectedText = {
+                    text: selectedTextStr,
+                    x: rect.x,
+                    y: rect.y,
+                    width: rect.width,
+                    height: rect.height
+                };
+            }
+        }
+
         return {
             type: type,
             timestamp: Date.now(),
@@ -62,7 +83,8 @@ export class KeyCombinationManager {
             altKey: event.altKey,
             shiftKey: event.shiftKey,
             metaKey: event.metaKey,
-            targetFrameSrc: targetFrameSrc
+            targetFrameSrc: targetFrameSrc,
+            selectedText
         };
     }
 
@@ -74,7 +96,8 @@ export class KeyCombinationManager {
     public createKeyboardHandlers(
         targetFrameSrc: string,
         shortcuts: KeyboardPeripheral[],
-        dispatcher: ActivityEventDispatcher
+        dispatcher: ActivityEventDispatcher,
+        wnd?: ReadiumWindow,
     ): KeyComboWithHandler[] {
         const handlers: KeyComboWithHandler[] = [];
 
@@ -84,7 +107,7 @@ export class KeyCombinationManager {
                 ...combo,
                 handler: (event: KeyboardEvent) => {
                     const eventType = shortcut.type;
-                    const activityEvent = this.createActivityEvent(event, eventType, targetFrameSrc);
+                    const activityEvent = this.createActivityEvent(event, eventType, targetFrameSrc, wnd);
                     dispatcher(activityEvent);
                 }
             })));
@@ -100,8 +123,9 @@ export class KeyCombinationManager {
         targetFrameSrc: string,
         shortcuts: KeyboardPeripheral[],
         dispatcher: ActivityEventDispatcher,
+        wnd?: ReadiumWindow,
     ): (event: KeyboardEvent) => void {
-        const handlers = this.createKeyboardHandlers(targetFrameSrc, shortcuts, dispatcher);
+        const handlers = this.createKeyboardHandlers(targetFrameSrc, shortcuts, dispatcher, wnd);
         
         return (event: KeyboardEvent) => {
             for (const handlerConfig of handlers) {

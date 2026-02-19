@@ -82,6 +82,31 @@ navigator.addEventListener('peripheral', (event) => {
 });
 ```
 
+## Keyboard Peripheral Event Data
+
+```ts
+interface KeyboardPeripheralEvent {
+    type: string;
+    timestamp: number;
+    targetFrameSrc: string;
+    selectedText?: {
+        text: string;
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
+    // Keyboard-specific data
+    key: string;
+    code: string;
+    keyCode: number;
+    ctrlKey: boolean;
+    altKey: boolean;
+    shiftKey: boolean;
+    metaKey: boolean;
+}
+```
+
 ## Built-in Keyboard Shortcuts
 
 `EpubNavigator` includes several built-in keyboard shortcuts that can be monitored or disabled through the `contentProtection` configuration. These shortcuts are handled by the `NavigatorProtector` and trigger specific events when activated.

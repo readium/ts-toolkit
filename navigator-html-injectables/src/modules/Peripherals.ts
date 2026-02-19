@@ -56,6 +56,7 @@ export interface BaseKeyboardPeripheralEvent {
     type: string;
     timestamp: number;
     targetFrameSrc: string;
+    selectedText?: Omit<BasicTextSelection, "targetFrameSrc">;
 }
 
 export interface DeveloperToolsEvent extends BaseSuspiciousActivityEvent, KeyboardEventData {
@@ -191,7 +192,7 @@ export class Peripherals extends Module {
         };
         
         // Create unified handler using centralized KeyCombinationManager
-        this.keyDownHandler = this.keyManager.createUnifiedHandler(this.wnd.location.href, shortcuts, dispatcher);
+        this.keyDownHandler = this.keyManager.createUnifiedHandler(this.wnd.location.href, shortcuts, dispatcher, this.wnd);
         
         // Add the event listener
         if (this.wnd) {
