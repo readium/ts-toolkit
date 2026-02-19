@@ -364,7 +364,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     return new Preference<number>({
       initialValue: this.preferences.pageGutter,
       effectiveValue: this.settings.pageGutter,
-      isEffective: this.layout !== Layout.fixed,
+      isEffective: this.layout !== Layout.fixed && !this.settings.scroll,
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("pageGutter", newValue || null);
       }
@@ -430,7 +430,6 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  /* 
   get scrollPaddingLeft(): Preference<number> {
     return new Preference<number>({
       initialValue: this.preferences.scrollPaddingLeft,
@@ -452,7 +451,6 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       }
     });
   } 
-  */
 
   get selectionBackgroundColor(): Preference<string> {
     return new Preference<string>({
