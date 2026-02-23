@@ -7,6 +7,7 @@ import {
   
   import { Publication } from "@readium/shared";
   import { Locator } from "@readium/shared";
+  import { PreservePitchWorklet } from "./PreservePitchWorklet";
   
   type EventCallback = (data: any) => void;
   
@@ -24,6 +25,8 @@ import {
     private isLoadingValue: boolean = false;
     private isLoadedValue: boolean = false;
     private isEndedValue: boolean = false;
+    private isStoppedValue: boolean = false;
+    private worklet: PreservePitchWorklet | null = null;
   
     constructor(values: { playback: Playback; audioContext: AudioContext }) {
       this.playback = values.playback;
@@ -46,6 +49,13 @@ import {
       );
       this.mediaElement.addEventListener("error", this.onError.bind(this));
       this.mediaElement.addEventListener("ended", this.onEnded.bind(this));
+      this.mediaElement.addEventListener("stalled", this.onStalled.bind(this));
+      this.mediaElement.addEventListener("emptied", this.onEmptied.bind(this));
+      this.mediaElement.addEventListener("suspend", this.onSuspend.bind(this));
+      this.mediaElement.addEventListener("waiting", this.onWaiting.bind(this));
+      this.mediaElement.addEventListener("loadedmetadata", this.onLoadedMetadata.bind(this));
+      this.mediaElement.addEventListener("seeking", this.onSeeking.bind(this));
+      this.mediaElement.addEventListener("seeked", this.onSeeked.bind(this));
   
       //Set the start time
       this.mediaElement.currentTime = this.playback.state.currentTime;
@@ -93,6 +103,62 @@ import {
         this.gainNode.connect(this.audioContext.destination);
       }
     }
+
+    /**
+     * Sets the media element for playback.
+     * @param element The HTML audio element to use.
+     */
+    public setMediaElement(element: HTMLAudioElement): void {
+      // Disconnect old source node if it exists
+      if (this.sourceNode) {
+        this.sourceNode.disconnect();
+        this.sourceNode = null;
+      }
+
+      // Remove old event listeners from current mediaElement
+      this.mediaElement.removeEventListener("canplaythrough", this.onCanPlayThrough.bind(this));
+      this.mediaElement.removeEventListener("timeupdate", this.onTimeUpdate.bind(this));
+      this.mediaElement.removeEventListener("error", this.onError.bind(this));
+      this.mediaElement.removeEventListener("ended", this.onEnded.bind(this));
+      this.mediaElement.removeEventListener("stalled", this.onStalled.bind(this));
+      this.mediaElement.removeEventListener("emptied", this.onEmptied.bind(this));
+      this.mediaElement.removeEventListener("suspend", this.onSuspend.bind(this));
+      this.mediaElement.removeEventListener("waiting", this.onWaiting.bind(this));
+      this.mediaElement.removeEventListener("loadedmetadata", this.onLoadedMetadata.bind(this));
+      this.mediaElement.removeEventListener("seeking", this.onSeeking.bind(this));
+      this.mediaElement.removeEventListener("seeked", this.onSeeked.bind(this));
+
+      // Set new media element
+      this.mediaElement = element;
+
+      // Add event listeners to new element
+      this.mediaElement.addEventListener("canplaythrough", this.onCanPlayThrough.bind(this));
+      this.mediaElement.addEventListener("timeupdate", this.onTimeUpdate.bind(this));
+      this.mediaElement.addEventListener("error", this.onError.bind(this));
+      this.mediaElement.addEventListener("ended", this.onEnded.bind(this));
+      this.mediaElement.addEventListener("stalled", this.onStalled.bind(this));
+      this.mediaElement.addEventListener("emptied", this.onEmptied.bind(this));
+      this.mediaElement.addEventListener("suspend", this.onSuspend.bind(this));
+      this.mediaElement.addEventListener("waiting", this.onWaiting.bind(this));
+      this.mediaElement.addEventListener("loadedmetadata", this.onLoadedMetadata.bind(this));
+      this.mediaElement.addEventListener("seeking", this.onSeeking.bind(this));
+      this.mediaElement.addEventListener("seeked", this.onSeeked.bind(this));
+
+      // Create new source node
+      this.sourceNode = new MediaElementAudioSourceNode(this.audioContext, {
+        mediaElement: this.mediaElement,
+      });
+      this.sourceNode.connect(this.gainNode);
+      this.gainNode.connect(this.audioContext.destination);
+
+      // Check if the element is already loaded
+      if (this.mediaElement.readyState >= 4) {
+        this.onCanPlayThrough();
+      } else {
+        this.isLoadingValue = true;
+        this.isLoadedValue = false;
+      }
+    }
   
     // Ensure AudioContext is running
     private async ensureAudioContextRunning() {
@@ -128,6 +194,34 @@ import {
       this.isEndedValue = true;
       this.emit("ended", null);
     }
+
+    private onStalled(event: Event) {
+      this.emit("stalled", event);
+    }
+
+    private onEmptied(event: Event) {
+      this.emit("emptied", event);
+    }
+
+    private onSuspend(event: Event) {
+      this.emit("suspend", event);
+    }
+
+    private onWaiting(event: Event) {
+      this.emit("waiting", event);
+    }
+
+    private onLoadedMetadata(event: Event) {
+      this.emit("loadedmetadata", event);
+    }
+
+    private onSeeking(event: Event) {
+      this.emit("seeking", event);
+    }
+
+    private onSeeked(event: Event) {
+      this.emit("seeked", event);
+    }
   
     // Used to emit some events like timeupdate or ended
     private emit(event: string, data: any) {
@@ -140,9 +234,15 @@ import {
      */
     public async playLocator(
       _publication: Publication,
-      _locator: Locator
+      locator: Locator
     ): Promise<void> {
-      // Implementation details.
+      const href = locator.href.split("#")[0];
+      this.loadAudio(href);
+      const time = locator.locations?.otherLocations?.get('time') || 0;
+      if (time > 0) {
+        this.mediaElement.currentTime = time;
+      }
+      await this.play();
     }
   
     /**
@@ -240,7 +340,7 @@ import {
     public isPlaying(): boolean {
       return this.isPlayingValue;
     }
-  
+
     /**
      * Returns whether the audio resource is currently paused.
      */
@@ -252,7 +352,7 @@ import {
      * Returns whether the audio resource is currently stopped.
      */
     public isStopped(): boolean {
-      return false;
+      return this.isStoppedValue;
     }
   
     /**
@@ -281,6 +381,58 @@ import {
      */
     public isMuted(): boolean {
       return this.isMutedValue;
+    }
+
+    /**
+     * Sets the playback rate of the audio resource with pitch preservation.
+     */
+    public setPlaybackRate(rate: number, preservePitch: boolean): void {
+      this.mediaElement.playbackRate = rate;
+      if (preservePitch) {
+        if ('preservesPitch' in this.mediaElement) {
+          (this.mediaElement as any).preservesPitch = true;
+        } else {
+          // Fallback to AudioWorklet for pitch preservation
+          if (!this.worklet) {
+            // Disconnect old source node
+            if (this.sourceNode) {
+              this.sourceNode.disconnect();
+              this.sourceNode = null;
+            }
+            // Create worklet for pitch preservation
+            PreservePitchWorklet.createWorklet({
+              ctx: this.audioContext,
+              mediaElement: this.mediaElement,
+              pitchFactor: 1.0
+            }).then(worklet => {
+              this.worklet = worklet;
+              this.worklet.workletNode!.connect(this.gainNode);
+              this.worklet.updatePitchFactor(1 / rate);
+            }).catch(err => {
+              console.warn("Failed to create preserve pitch worklet", err);
+            });
+          } else {
+            this.worklet.updatePitchFactor(1 / rate);
+          }
+        }
+      } else {
+        if (this.worklet) {
+          // Disconnect worklet
+          this.worklet.destroy();
+          this.worklet = null;
+          // Reconnect source node
+          this.sourceNode = new MediaElementAudioSourceNode(this.audioContext, { mediaElement: this.mediaElement });
+          this.sourceNode.connect(this.gainNode);
+        }
+        // playbackRate already set
+      }
+    }
+
+    /**
+     * Returns the HTML media element used for playback.
+     */
+    public getMediaElement(): HTMLMediaElement {
+      return this.mediaElement;
     }
   }
   

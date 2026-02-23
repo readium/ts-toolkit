@@ -74,6 +74,12 @@ export interface AudioEngine {
     loadAudio(url: string): void;
     
     /**
+     * Sets the media element for playback, enabling use of preloaded elements from the pool.
+     * @param element The HTML audio element to use for playback.
+     */
+    setMediaElement(element: HTMLAudioElement): void;
+    
+    /**
      * Plays the current audio resource.
      */
     play(): void;
@@ -97,6 +103,13 @@ export interface AudioEngine {
      * Returns the duration of the audio resource.
      */
     duration(): number;
+
+    /**
+     * Sets the playback rate of the audio resource.
+     * @param rate The playback rate to set.
+     * @param preservePitch Whether to preserve pitch when changing playback rate.
+     */
+    setPlaybackRate(rate: number, preservePitch: boolean): void;
     
     /**
      * Returns whether the audio resource is currently playing.
@@ -107,6 +120,11 @@ export interface AudioEngine {
      * Returns whether the audio resource is currently paused.
      */
     isPaused(): boolean;
+    
+    /**
+     * Returns the HTML media element used for playback.
+     */
+    getMediaElement(): HTMLMediaElement;
     
     /**
      * Returns whether the audio resource is currently stopped.
