@@ -224,6 +224,7 @@ export class MediaType {
   /** Returns whether this media type is of a bitmap image, so excluding vectorial formats. */
   public get isBitmap(): boolean {
     return this.matchesAny(
+      MediaType.AVIF,
       MediaType.BMP,
       MediaType.GIF,
       MediaType.JPEG,
@@ -291,6 +292,9 @@ export class MediaType {
       mediaType: 'video/x-msvideo',
       fileExtension: 'avi',
     });
+  }
+  public static get AVIF(): MediaType {
+    return MediaType.parse({ mediaType: 'image/avif', fileExtension: 'avif' });
   }
   public static get BINARY(): MediaType {
     return MediaType.parse({ mediaType: 'application/octet-stream' });

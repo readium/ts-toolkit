@@ -12,6 +12,7 @@ import { PublicationCollection } from './PublicationCollection';
 import { Resource } from '../fetcher/Resource';
 import { GuidedNavigationDocument } from "./GuidedNavigation";
 import { URITemplate } from "../util";
+import { MediaType } from "../util/mediatype/MediaType";
 
 export type ServiceFactory = () => null;
 
@@ -77,6 +78,36 @@ export class Publication {
    */
   public linkWithRel(rel: string): Link | undefined {
     return this.manifest.linkWithRel(rel);
+  }
+
+  /**
+   * Gets the cover image for the publication.
+   * First looks for rel='cover' in links/resources/readingOrder,
+   * then falls back to any image (JPEG, PNG, GIF, AVIF, SVG) as bitmap fallback.
+   */
+  public getCover(): Link | undefined {
+    const locations = [
+      this.links,
+      this.resources,
+      this.readingOrder
+    ].filter(Boolean) as Links[];
+
+    // First, look for explicit cover relationship
+    for (const location of locations) {
+      const cover = location.items.find(link => link.rels?.has('cover'));
+      if (cover) return cover;
+    }
+
+    // Fallback to any image (including SVG which is not bitmap)
+    for (const location of locations) {
+      const image = location.items.find(link => 
+        link.mediaType.isBitmap || 
+        link.mediaType.matches(MediaType.SVG)
+      );
+      if (image) return image;
+    }
+
+    return undefined;
   }
 
   public async positionsFromManifest(): Promise<Locator[]> {
