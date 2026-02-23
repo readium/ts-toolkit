@@ -120,6 +120,16 @@ export abstract class MediaNavigator extends Navigator {
     abstract jump(seconds: number): void;
 
     /**
+     * Skip forward by the configured interval
+     */
+    abstract skipForward(): void;
+
+    /**
+     * Skip backward by the configured interval
+     */
+    abstract skipBackward(): void;
+
+    /**
      * Go to next track/chapter
      */
     abstract nextTrack(): void;
