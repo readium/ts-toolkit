@@ -30,11 +30,11 @@ const navigator = new EpubNavigator(
 
 To create an instance of `EpubNavigator`, you only need a container element, a `Publication`, and listeners. All other arguments are optional.
 
-To create a `Publication` object, please refer to the [Handling Publications](./HandlingPublications.md) document.
+To create a `Publication` object, please refer to the [Handling Publications](../HandlingPublications.md) document.
 
 To customize listeners, please refer to the [Customizing Listeners](./CustomizingListeners.md) document.
 
-In the absence of a `positions` argument, `EpubNavigator` will attempt to fetch the `PositionsList` from the EPUB publication. If it does not exist, it will not operate. You can also provide it following the instructions in [Handling Publications > Fetching the Positions List](./HandlingPublications.md#Fetching-the-positions-list).
+In the absence of a `positions` argument, `EpubNavigator` will attempt to fetch the `PositionsList` from the EPUB publication. If it does not exist, it will not operate. You can also provide it following the instructions in [Handling Publications > Fetching the Positions List](../HandlingPublications.md#Fetching-the-positions-list).
 
 The `initialPosition` is the position at which the `EpubNavigator` will `load` the EPUB publication. It has to be a `Locator`.
 

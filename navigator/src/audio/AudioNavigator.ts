@@ -108,10 +108,10 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
     async submitPreferences(preferences: AudioPreferences) {
         this._preferences = this._preferences.merging(preferences) as AudioPreferences;
-        await this.applyPreferences();
+        this.applyPreferences();
     }
 
-    private async applyPreferences() {
+    private applyPreferences(): void {
         const oldSettings = this._settings;
         this._settings = new AudioSettings(this._preferences, this._defaults);
         
@@ -215,7 +215,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
             this.listeners.onEnded?.(this.currentLocator);
             if (this._settings.autoPlay) {
-                this.nextTrack();
+                this.goForward(false, () => {});
                 this.play();
             }
         });
@@ -252,8 +252,8 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
             navigator.mediaSession.setActionHandler("play", () => this.play());
             navigator.mediaSession.setActionHandler("pause", () => this.pause());
-            navigator.mediaSession.setActionHandler("previoustrack", () => this.previousTrack());
-            navigator.mediaSession.setActionHandler("nexttrack", () => this.nextTrack());
+            navigator.mediaSession.setActionHandler("previoustrack", () => this.goBackward(false, () => {}));
+            navigator.mediaSession.setActionHandler("nexttrack", () => this.goForward(false, () => {}));
             navigator.mediaSession.setActionHandler("seekbackward", (details) => {
                 const seekTime = details.seekOffset || 10;
                 this.jump(-seekTime);
@@ -291,6 +291,23 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     private handleSeeked(): void {
         // Trigger positionChanged immediately after seeking completes
         this.listeners.positionChanged?.(this.currentLocator);
+    }
+
+    private async waitForAudioReady(): Promise<void> {
+        // Wait for the audio to be loaded and ready to play
+        return new Promise((resolve) => {
+            if (this.pool.audioEngine.isLoaded()) {
+                resolve();
+                return;
+            }
+
+            const onCanPlayThrough = () => {
+                this.pool.audioEngine.off("canplaythrough", onCanPlayThrough);
+                resolve();
+            };
+
+            this.pool.audioEngine.on("canplaythrough", onCanPlayThrough);
+        });
     }
 
     private reloadCurrentTrack(): void {
@@ -333,6 +350,9 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                 this.seek(time as number);
             }
 
+            // Wait for audio to be ready before calling callback
+            await this.waitForAudioReady();
+
             // Emit position changed event with current locator for UI updates
             this.listeners.positionChanged?.(this.currentLocator);
 
@@ -355,12 +375,12 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     }
 
     async goForward(_animated: boolean, cb: (ok: boolean) => void): Promise<void> {
-        this.nextTrack();
+        await this.nextTrack();
         cb(true);
     }
 
     async goBackward(_animated: boolean, cb: (ok: boolean) => void): Promise<void> {
-        this.previousTrack();
+        await this.previousTrack();
         cb(true);
     }
 
@@ -377,19 +397,19 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         this.pool.audioEngine.stop();
     }
 
-    nextTrack(): void {
+    private async nextTrack(): Promise<void> {
         const nextIndex = (this.currentLocation.locations?.position || 0) + 1;
         if (nextIndex < this.pub.readingOrder.items.length) {
             const locator = this.createLocator(nextIndex, 0);
-            this.go(locator, false, () => {});
+            await this.go(locator, false, () => {});
         }
     }
 
-    previousTrack(): void {
+    private async previousTrack(): Promise<void> {
         const prevIndex = (this.currentLocation.locations?.position || 0) - 1;
         if (prevIndex >= 0) {
             const locator = this.createLocator(prevIndex, 0);
-            this.go(locator, false, () => {});
+            await this.go(locator, false, () => {});
         }
     }
 
