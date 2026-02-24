@@ -206,6 +206,13 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         });
 
         this.pool.audioEngine.on("ended", () => {
+            // Update location to mark progression as 1 at end
+            this.currentLocation = this.currentLocation.copyWithLocations(new LocatorLocations({
+                position: this.currentLocation.locations?.position,
+                progression: 1,
+                otherLocations: new Map([['time', this.duration]])
+            }));
+
             this.listeners.onEnded?.(this.currentLocator);
             if (this._settings.autoPlay) {
                 this.nextTrack();
@@ -401,6 +408,34 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
     skipBackward(): void {
         this.pool.audioEngine.skip(-this._settings.skipBackwardInterval);
+    }
+
+    get isTrackStart(): boolean {
+        const firstTrackIndex = 0;
+        const currentPosition = this.currentLocation.locations?.position || 0;
+        const currentProgression = this.currentLocation.locations?.progression || 0;
+        return currentPosition === firstTrackIndex && currentProgression === 0;
+    }
+
+    get isTrackEnd(): boolean {
+        const lastTrackIndex = this.pub.readingOrder.items.length - 1;
+        const currentPosition = this.currentLocation.locations?.position || 0;
+        const currentProgression = this.currentLocation.locations?.progression || 0;
+        return currentPosition === lastTrackIndex && currentProgression === 1;
+    }
+
+    get canGoBackward(): boolean {
+        const firstTrackIndex = 0;
+        const currentPosition = this.currentLocation.locations?.position || 0;
+        const currentProgression = this.currentLocation.locations?.progression || 0;
+        return !(currentPosition === firstTrackIndex && currentProgression === 0);
+    }
+
+    get canGoForward(): boolean {
+        const lastTrackIndex = this.pub.readingOrder.items.length - 1;
+        const currentPosition = this.currentLocation.locations?.position || 0;
+        const currentProgression = this.currentLocation.locations?.progression || 0;
+        return !(currentPosition === lastTrackIndex && currentProgression === 1);
     }
 
     private destroyMediaSession(): void {
