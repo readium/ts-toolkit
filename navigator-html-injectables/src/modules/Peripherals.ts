@@ -13,6 +13,8 @@ import {
     ActivityEventDispatcher,
     KeyboardPeripheralEvent
 } from "../protection/KeyCombinationManager";
+import { SuspiciousScrollingEvent } from "./snapper/ScrollSnapper";
+import { SuspiciousSnappingEvent } from "./snapper/ColumnSnapper";
 
 export interface FrameClickEvent {
     defaultPrevented: boolean;
@@ -115,6 +117,8 @@ export type SuspiciousActivityEvent =
     | DropDetectedEvent
     | PrintEvent
     | SaveEvent
+    | SuspiciousScrollingEvent
+    | SuspiciousSnappingEvent
     | KeyboardPeripheralEvent;
 
 export interface ContentProtectionConfig {
@@ -125,7 +129,7 @@ export interface ContentProtectionConfig {
     disableSelectAll?: boolean;
     disableSave?: boolean;
     monitorDevTools?: boolean;
-//    enableScrollProtection?: boolean;
+    monitorScrollingExperimental?: boolean;
 }
 
 export class Peripherals extends Module {

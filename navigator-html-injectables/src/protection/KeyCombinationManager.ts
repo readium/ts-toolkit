@@ -88,8 +88,6 @@ export class KeyCombinationManager {
         };
     }
 
-    
-    
     /**
      * Creates handlers for keyboard shortcuts with centralized activity event dispatch
      */

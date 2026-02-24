@@ -5,19 +5,27 @@ import { ModuleName } from "../ModuleLibrary";
 import { Snapper } from "./Snapper";
 import { rangeFromLocator } from "../../helpers/locator";
 import { forceWebkitRecalc } from "../../helpers/document";
-// import { PatternAnalyzer } from "../../protection/PatternAnalyzer";
-// import { SCROLL_PROTECTION_CONFIG } from "../../protection/config";
+import { PatternAnalyzer } from "../../protection/PatternAnalyzer";
+import { SCROLL_PROTECTION_CONFIG } from "../../protection/config";
+import { BaseSuspiciousActivityEvent } from "../Peripherals";
 
 const SCROLL_SNAPPER_STYLE_ID = "readium-scroll-snapper-style";
+
+export interface SuspiciousScrollingEvent extends BaseSuspiciousActivityEvent {
+    type: "suspicious_scrolling";
+    scrollDelta: number;
+    scrollDirection: "up" | "down";
+    targetElement: { tagName: string } | null;
+}
 
 export class ScrollSnapper extends Snapper {
     static readonly moduleName: ModuleName = "scroll_snapper";
     private wnd!: ReadiumWindow;
     private comms!: Comms;
     private resizeObserver!: ResizeObserver;
-    // private patternAnalyzer: PatternAnalyzer | null = null;
-    // private lastScrollTime: number = 0;
-    // private isScrollProtectionEnabled = false;
+    private patternAnalyzer: PatternAnalyzer | null = null;
+    private lastScrollTime: number = 0;
+    private isScrollProtectionEnabled = false;
 
     private initialScrollHandled = false;
     private isScrolling = false;
@@ -73,7 +81,6 @@ export class ScrollSnapper extends Snapper {
                 const deltaY = currentScrollTop - this.lastScrollTop;
                 this.lastScrollTop = currentScrollTop;
 
-                /* TODO: Enable when scroll protection is improved
                 if (this.isScrollProtectionEnabled && Math.abs(deltaY) > 5) { // Ignore tiny scrolls
                     const now = Date.now();
                     const timeDelta = now - (this.lastScrollTime || now);
@@ -93,12 +100,11 @@ export class ScrollSnapper extends Snapper {
                                 scrollDelta: deltaY,
                                 scrollDirection: deltaY > 0 ? "down" : "up",
                                 targetElement: target
-                            });
+                            } as SuspiciousScrollingEvent);
                         }
                     }
                     this.lastScrollTime = now;
                 }
-                */
 
                 this.comms.send("scroll", deltaY);
             
@@ -107,7 +113,6 @@ export class ScrollSnapper extends Snapper {
         }
     };
 
-    /* TODO: Enable when scroll protection is improved
     private enableScrollProtection() {
         if (!this.patternAnalyzer) {
             this.patternAnalyzer = new PatternAnalyzer(SCROLL_PROTECTION_CONFIG);
@@ -115,7 +120,6 @@ export class ScrollSnapper extends Snapper {
             this.comms?.log("Scroll protection enabled");
         }
     }
-    */
 
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
@@ -264,12 +268,10 @@ export class ScrollSnapper extends Snapper {
             ack(true);
         });
 
-        /* TODO: Enable scroll protection if requested
         comms.register("scroll_protection", ScrollSnapper.moduleName, (_, ack) => {
             this.enableScrollProtection();
             ack(true);
         });
-        */
 
         comms.register([
             "go_next",
@@ -297,13 +299,12 @@ export class ScrollSnapper extends Snapper {
         if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
         wnd.document.getElementById(SCROLL_SNAPPER_STYLE_ID)?.remove();
 
-         /* TODO: Enable when scroll protection is improved
         if (this.patternAnalyzer) {
             this.patternAnalyzer.clear();
             this.patternAnalyzer = null;
             this.isScrollProtectionEnabled = false;
         }
-        */
+
         comms.log("ScrollSnapper Unmounted");
         return true;
     }

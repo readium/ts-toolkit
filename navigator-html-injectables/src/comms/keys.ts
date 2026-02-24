@@ -48,7 +48,7 @@ export type CommsCommandKey =
     "force_webkit_recalc" |
     "peripherals_protection" |
     "keyboard_peripherals" |
-    // "scroll_protection" |
+    "scroll_protection" |
     "print_protection";
 ;
 
@@ -58,8 +58,8 @@ export type SuspiciousActivityType =
     "save" |
     "suspicious_selection" |
     "bulk_copy" |
-    // "suspicious_scrolling" |
-    // "suspicious_snapping" |
+    "suspicious_scrolling" |
+    "suspicious_snapping" |
     "drag_detected" |
     "drop_detected" |
     "print";

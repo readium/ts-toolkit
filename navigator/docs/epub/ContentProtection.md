@@ -94,6 +94,11 @@ interface ContentProtectionConfig {
     // Triggers "save" event when attempted
     // Default: false
     disableSave?: boolean;
+
+    // Monitor scrolling behavior (Experimental)
+    // Triggers "suspicious_scrolling" or "suspicious_snapping" event when scrolling is detected
+    // Default: false
+    monitorScrollingExperimental?: boolean;
 }
 ```
 
@@ -138,6 +143,12 @@ interface ContentProtectionConfig {
 - Triggers the `contentProtection` event with type `developer_tools` when detected
 - Enabled via `monitorDevTools`
 
+### 9. Scrolling Monitoring (Experimental)
+- This is experimental and should not be used as the only way to act on suspicious activity
+- Detects unusual scrolling patterns
+- Triggers `suspicious_scrolling` or `suspicious_snapping` events when detected
+- Enabled via `monitorScrollingExperimental`
+
 ## Layering
 
 Protection features should be thought as layers. If one feature fails, the next one comes into play. 
@@ -157,6 +168,8 @@ Content protection triggers events with the following types:
 - `bulk_copy`: When bulk copying is detected
 - `drag_detected`: When content is dragged
 - `drop_detected`: When content is dropped
+- `suspicious_scrolling`: When suspicious scrolling patterns are detected
+- `suspicious_snapping`: When suspicious snapping patterns are detected
 
 ### Example Configuration
 
@@ -191,7 +204,8 @@ const navigator = new EpubNavigator(container, publication, listeners, {
         checkIFrameEmbedding: true,
         monitorDevTools: true,
         disableSelectAll: true,
-        disableSave: true
+        disableSave: true,
+        monitorScrollingExperimental: true
     }
 });
 ```
@@ -345,6 +359,28 @@ navigator.listeners.contentProtection = (type: string, data: SuspiciousActivityE
             //   targetFrameSrc: string
             // }
             console.log("Developer tools access detected", detail);
+            break;
+
+        case "suspicious_scrolling":
+            // Fired when suspicious scrolling patterns are detected
+            // detail: {
+            //   scrollDelta: number,
+            //   scrollDirection: "up" | "down",
+            //   timestamp: number,
+            //   targetElement: { tagName: string } | null,
+            //   targetFrameSrc: string
+            // }
+            console.log("Suspicious scrolling detected", detail);
+            break;
+
+        case "suspicious_snapping":
+            // Fired when suspicious snapping patterns are detected
+            // detail: {
+            //   timestamp: number,
+            //   event: null,
+            //   targetFrameSrc: string
+            // }
+            console.log("Suspicious snapping detected", detail);
             break;
     }
 };

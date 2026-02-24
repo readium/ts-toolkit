@@ -80,9 +80,9 @@ export class FrameManager {
         }
 
         // Apply scroll protection
-        //    if (this.contentProtectionConfig.enableScrollProtection) {
-        //        this.comms.send("scroll_protection", {});
-        //    }
+        if (this.contentProtectionConfig.monitorScrollingExperimental) {
+            this.comms!.send("scroll_protection", {});
+        }
 
         // Apply print protection if configured
         if (this.contentProtectionConfig.protectPrinting) {
