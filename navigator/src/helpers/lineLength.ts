@@ -11,7 +11,7 @@ export interface ILineLengthsConfig {
   maxChars?: number | null;
   baseFontSize?: number | null;
   sample?: string | null;
-  pageGutter?: number | null;
+  padding?: number | null;
   fontFace?: string | ICustomFontFace | null;
   letterSpacing?: number | null;
   wordSpacing?: number | null;
@@ -51,13 +51,12 @@ export class LineLengths {
   private _baseFontSize: number;
   private _fontFace: string | ICustomFontFace;
   private _sample: string | null;
-  private _pageGutter: number;
+  private _padding: number;
   private _letterSpacing: number;
   private _wordSpacing: number;
   private _isCJK: boolean;
   private _getRelative: boolean;
   
-  private _padding: number;
   private _minDivider: number | null;
   private _maxMultiplier: number | null;
   private _approximatedWordSpaces: number;
@@ -72,7 +71,7 @@ export class LineLengths {
     this._baseFontSize = config.baseFontSize || DEFAULT_FONT_SIZE;
     this._fontFace = config.fontFace || DEFAULT_FONT_FACE;
     this._sample = config.sample || null;
-    this._pageGutter = config.pageGutter || 0;
+    this._padding = config.padding ?? 0;
     this._letterSpacing = config.letterSpacing 
       ? Math.round(config.letterSpacing * this._baseFontSize) 
       : 0;
@@ -81,7 +80,6 @@ export class LineLengths {
       : 0;
     this._isCJK = config.isCJK || false;
     this._getRelative = config.getRelative || false;
-    this._padding = this._pageGutter * 2;
     this._minDivider = this._minChars && this._minChars < this._optimalChars 
       ? this._optimalChars / this._minChars 
       : this._minChars === null 
@@ -121,7 +119,7 @@ export class LineLengths {
     if (props.letterSpacing) this._letterSpacing = props.letterSpacing;
     if (props.wordSpacing) this._wordSpacing = props.wordSpacing;
     if (props.isCJK != null) this._isCJK = props.isCJK;
-    if (props.pageGutter) this._pageGutter = props.pageGutter;
+    if (props.padding !== undefined) this._padding = props.padding ?? 0;
     if (props.getRelative) this._getRelative = props.getRelative;
 
     if (props.sample) {

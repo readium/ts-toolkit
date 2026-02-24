@@ -112,6 +112,7 @@ EPUB comes in two very different flavors: reflowable which allows a lot of custo
 | hyphens                  | ✅         |              |
 | invertFilter             | ✅         | WIP          |
 | invertGaijiFilter        | ✅         |              |
+| iOSPatch                 | ✅         |              |
 | iPadOSPatch              | ✅         |              |
 | letterSpacing            | ✅         |              |
 | ligatures                | ✅         |              |
@@ -125,6 +126,10 @@ EPUB comes in two very different flavors: reflowable which allows a lot of custo
 | paragraphIndent          | ✅         |              |
 | paragraphSpacing         | ✅         |              |
 | scroll                   | ✅         |              |
+| scrollPaddingTop         | ✅         |              |
+| scrollPaddingBottom      | ✅         |              |
+| scrollPaddingLeft        | ✅         |              |
+| scrollPaddingRight       | ✅         |              |
 | selectionBackgroundColor | ✅         |              |
 | selectionTextColor       | ✅         |              |
 | textAlign                | ✅         |              |
@@ -142,8 +147,20 @@ There is no `lineLength` preference because the effective line length is calcula
 
 The `columnCount` preference is available only when in paginated mode (`scroll = false`).
 
+Padding is applied differently depending on the mode:
+
+- In paginated mode, `pageGutter` is used.
+- In scroll mode, `scrollPaddingLeft` and `scrollPaddingRight` are used.
+
 ### Language specific preferences
 
 - `hyphens` is available only for Left-to-Right languages.
-- `ligature` is available only when the publication language is Arabic or Persian.
+- `ligatures` is disabled for Chinese, Japanese, Korean, and Traditional Mongolian languages.
 - `noRuby` is available only when the publication language is Japanese.
+
+### Patches
+
+- `iOSPatch` is designed to get around an issue with `zoom` on iOS.
+- `iPadOSPatch` is designed to get around an issue with `zoom` on iPadOS.
+
+Both are handled automatically by the Preferences API, but their values can be overridden if needed.

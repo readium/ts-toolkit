@@ -45,11 +45,11 @@ export class ReadiumCSS {
     if (settings.scrollPaddingBottom !== this.rsProperties.scrollPaddingBottom)
       this.rsProperties.scrollPaddingBottom = settings.scrollPaddingBottom;
 
-    // if (settings.scrollPaddingLeft !== this.rsProperties.scrollPaddingLeft)
-    //   this.rsProperties.scrollPaddingLeft = settings.scrollPaddingLeft;
+    if (settings.scrollPaddingLeft !== this.rsProperties.scrollPaddingLeft)
+      this.rsProperties.scrollPaddingLeft = settings.scrollPaddingLeft;
 
-    // if (settings.scrollPaddingRight !== this.rsProperties.scrollPaddingRight)
-    //   this.rsProperties.scrollPaddingRight = settings.scrollPaddingRight;
+    if (settings.scrollPaddingRight !== this.rsProperties.scrollPaddingRight)
+      this.rsProperties.scrollPaddingRight = settings.scrollPaddingRight;
 
     if (settings.scrollPaddingTop !== this.rsProperties.scrollPaddingTop)
       this.rsProperties.scrollPaddingTop = settings.scrollPaddingTop;
@@ -62,7 +62,9 @@ export class ReadiumCSS {
     this.lineLengths.update({
       fontFace: settings.fontFamily,
       letterSpacing: settings.letterSpacing,
-      pageGutter: settings.pageGutter,
+      padding: settings.scroll 
+        ? (settings.scrollPaddingLeft || 0) + (settings.scrollPaddingRight || 0)
+        : (settings.pageGutter || 0) * 2,
       wordSpacing: settings.wordSpacing,
       optimalChars: settings.optimalLineLength,
       minChars: settings.minimalLineLength,
