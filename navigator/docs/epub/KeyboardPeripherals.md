@@ -111,6 +111,9 @@ interface KeyboardPeripheralEvent {
 
 `EpubNavigator` includes several built-in keyboard shortcuts that can be monitored or disabled through the `contentProtection` configuration. These shortcuts are handled by the `NavigatorProtector` and trigger specific events when activated.
 
+> [!CAUTION]
+> If your custom keyboard peripherals conflict with these built-in shortcuts, they will be automatically filtered out to ensure content protection takes priority. You cannot override these protected shortcuts with custom peripherals – note that the `type` field is also checked to make sure it doesn't accidentally or forcefully match any built-in.
+
 ### Protected Shortcuts
 
 These shortcuts can be monitored or protected via the `contentProtection` configuration. When enabled, they will trigger their respective events in `peripheral` events and prevent the default browser behavior.
@@ -132,14 +135,13 @@ These shortcuts can be monitored or protected via the `contentProtection` config
   - Event type: `save`
   - Enable protection: `contentProtection.disableSave = true`
 
-### Developer Tools Detection
-
-The following shortcuts are protected when `contentProtection.monitorDevTools` is `true`. When triggered, they will dispatch a `developer_tools` event:
-
-- `F12` (Windows/Linux) / `Cmd+Option+I` (Mac)
-- `F12+Shift` / `F12+Ctrl+Shift`
-- `Cmd+Option+J` / `Cmd+Option+U` / `Cmd+Option+C` (Mac)
-- `Ctrl+Shift+C` / `Ctrl+Shift+J` / `Ctrl+Shift+I` (Windows/Linux)
+- **Developer Tools**
+  - `F12` (Windows/Linux) / `Cmd+Option+I` (Mac)
+  - `F12+Shift` / `F12+Ctrl+Shift`
+  - `Cmd+Option+J` / `Cmd+Option+U` / `Cmd+Option+C` (Mac)
+  - `Ctrl+Shift+C` / `Ctrl+Shift+J` / `Ctrl+Shift+I` (Windows/Linux)
+  - Event type: `developer_tools`
+  - Enable protection: `contentProtection.monitorDevTools = true`
 
 ### Important Notes
 

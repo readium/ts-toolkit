@@ -74,6 +74,11 @@ export abstract class Navigator {
     ): IKeyboardPeripheralsConfig {
         const peripherals: IKeyboardPeripheralsConfig = [];
         
+        // Filter out any peripherals with reserved content protection types
+        const filteredUserPeripherals = keyboardPeripherals.filter(
+            peripheral => !['developer_tools', 'select_all', 'print', 'save'].includes(peripheral.type)
+        );
+        
         // Add content protection peripherals first for priority
         if (config.disableSelectAll) {
             peripherals.push(SELECT_ALL);
@@ -88,10 +93,11 @@ export abstract class Navigator {
             peripherals.push(PRINT);
         }
         
-        // Add user peripherals that don't conflict with existing peripherals (content protection has priority)
-        for (const userPeripheral of keyboardPeripherals) {
-            const conflicts = userPeripheral.keyCombos.some((userCombo: KeyCombo) =>
-                peripherals.some(existingPeripheral =>
+        // Add user peripherals with conflicting combos removed
+        for (const userPeripheral of filteredUserPeripherals) {
+            // Filter out combos that conflict with existing peripherals
+            const filteredCombos = userPeripheral.keyCombos.filter((userCombo: KeyCombo) =>
+                !peripherals.some(existingPeripheral =>
                     existingPeripheral.keyCombos.some((existingCombo: KeyCombo) =>
                         userCombo.keyCode === existingCombo.keyCode &&
                         userCombo.ctrl === existingCombo.ctrl &&
@@ -101,8 +107,13 @@ export abstract class Navigator {
                     )
                 )
             );
-            if (!conflicts) {
-                peripherals.push(userPeripheral);
+            
+            // Add the peripheral with filtered combos if any remain
+            if (filteredCombos.length > 0) {
+                peripherals.push({
+                    ...userPeripheral,
+                    keyCombos: filteredCombos
+                });
             }
         }
         
