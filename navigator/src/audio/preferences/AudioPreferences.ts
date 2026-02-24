@@ -1,4 +1,14 @@
 import { ConfigurablePreferences } from "../../preferences/Configurable";
+import { 
+  ensureBoolean,
+  ensureValueInRange,
+  ensureNonNegative
+} from "../../preferences/guards";
+import { 
+  volumeRangeConfig,
+  playbackRateRangeConfig,
+  skipIntervalRangeConfig
+} from "../../preferences/Types";
 
 export interface IAudioPreferences {
   volume?: number | null;
@@ -22,14 +32,14 @@ export class AudioPreferences implements ConfigurablePreferences {
   public readonly enableMediaSession: boolean;
 
   constructor(preferences: IAudioPreferences = {}) {
-    this.volume = preferences.volume ?? 1.0;
-    this.playbackRate = preferences.playbackRate ?? 1.0;
-    this.preservePitch = preferences.preservePitch ?? true;
-    this.skipBackwardInterval = preferences.skipBackwardInterval ?? 30;
-    this.skipForwardInterval = preferences.skipForwardInterval ?? 30;
-    this.pollInterval = preferences.pollInterval ?? 1000;
-    this.autoPlay = preferences.autoPlay ?? true;
-    this.enableMediaSession = preferences.enableMediaSession ?? true;
+    this.volume = ensureValueInRange(preferences.volume, volumeRangeConfig.range) ?? 1.0;
+    this.playbackRate = ensureValueInRange(preferences.playbackRate, playbackRateRangeConfig.range) ?? 1.0;
+    this.preservePitch = ensureBoolean(preferences.preservePitch) ?? true;
+    this.skipBackwardInterval = ensureValueInRange(preferences.skipBackwardInterval, skipIntervalRangeConfig.range) ?? 30;
+    this.skipForwardInterval = ensureValueInRange(preferences.skipForwardInterval, skipIntervalRangeConfig.range) ?? 30;
+    this.pollInterval = ensureNonNegative(preferences.pollInterval) ?? 1000;
+    this.autoPlay = ensureBoolean(preferences.autoPlay) ?? true;
+    this.enableMediaSession = ensureBoolean(preferences.enableMediaSession) ?? true;
   }
 
   merging(other: ConfigurablePreferences): AudioPreferences {

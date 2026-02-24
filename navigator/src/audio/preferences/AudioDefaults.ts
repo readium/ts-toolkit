@@ -1,3 +1,14 @@
+import { 
+  ensureBoolean,
+  ensureValueInRange,
+  ensureNonNegative
+} from "../../preferences/guards";
+import { 
+  volumeRangeConfig,
+  playbackRateRangeConfig,
+  skipIntervalRangeConfig
+} from "../../preferences/Types";
+
 export interface IAudioDefaults {
   volume?: number | null;
   playbackRate?: number | null;
@@ -20,13 +31,13 @@ export class AudioDefaults {
   public readonly enableMediaSession: boolean;
 
   constructor(defaults: IAudioDefaults = {}) {
-    this.volume = defaults.volume ?? 1.0;
-    this.playbackRate = defaults.playbackRate ?? 1.0;
-    this.preservePitch = defaults.preservePitch ?? true;
-    this.skipBackwardInterval = defaults.skipBackwardInterval ?? 30;
-    this.skipForwardInterval = defaults.skipForwardInterval ?? 30;
-    this.pollInterval = defaults.pollInterval ?? 1000;
-    this.autoPlay = defaults.autoPlay ?? true;
-    this.enableMediaSession = defaults.enableMediaSession ?? true;
+    this.volume = ensureValueInRange(defaults.volume, volumeRangeConfig.range) ?? 1.0;
+    this.playbackRate = ensureValueInRange(defaults.playbackRate, playbackRateRangeConfig.range) ?? 1.0;
+    this.preservePitch = ensureBoolean(defaults.preservePitch) ?? true;
+    this.skipBackwardInterval = ensureValueInRange(defaults.skipBackwardInterval, skipIntervalRangeConfig.range) ?? 30;
+    this.skipForwardInterval = ensureValueInRange(defaults.skipForwardInterval, skipIntervalRangeConfig.range) ?? 30;
+    this.pollInterval = ensureNonNegative(defaults.pollInterval) ?? 1000;
+    this.autoPlay = ensureBoolean(defaults.autoPlay) ?? true;
+    this.enableMediaSession = ensureBoolean(defaults.enableMediaSession) ?? true;
   }
 }

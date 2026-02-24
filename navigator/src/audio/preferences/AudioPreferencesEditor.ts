@@ -1,7 +1,12 @@
 import { IPreferencesEditor } from "../../preferences/PreferencesEditor";
 import { AudioPreferences } from "./AudioPreferences";
 import { AudioSettings } from "./AudioSettings";
-import { Preference, BooleanPreference } from "../../preferences/Preference";
+import { Preference, BooleanPreference, RangePreference } from "../../preferences/Preference";
+import { 
+  volumeRangeConfig,
+  playbackRateRangeConfig,
+  skipIntervalRangeConfig
+} from "../../preferences/Types";
 
 export class AudioPreferencesEditor implements IPreferencesEditor {
   preferences: AudioPreferences;
@@ -20,25 +25,29 @@ export class AudioPreferencesEditor implements IPreferencesEditor {
     this.preferences[key] = value;
   }
 
-  get volume(): Preference<number> {
-    return new Preference<number>({
+  get volume(): RangePreference<number> {
+    return new RangePreference<number>({
       initialValue: this.preferences.volume,
       effectiveValue: this.settings.volume,
       isEffective: this.preferences.volume !== null,
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("volume", newValue ?? 1.0);
-      }
+      },
+      supportedRange: volumeRangeConfig.range,
+      step: volumeRangeConfig.step
     });
   }
 
-  get playbackRate(): Preference<number> {
-    return new Preference<number>({
+  get playbackRate(): RangePreference<number> {
+    return new RangePreference<number>({
       initialValue: this.preferences.playbackRate,
       effectiveValue: this.settings.playbackRate,
       isEffective: this.preferences.playbackRate !== null,
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("playbackRate", newValue ?? 1.0);
-      }
+      },
+      supportedRange: playbackRateRangeConfig.range,
+      step: playbackRateRangeConfig.step
     });
   }
 
@@ -53,25 +62,29 @@ export class AudioPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get skipBackwardInterval(): Preference<number> {
-    return new Preference<number>({
+  get skipBackwardInterval(): RangePreference<number> {
+    return new RangePreference<number>({
       initialValue: this.preferences.skipBackwardInterval,
       effectiveValue: this.settings.skipBackwardInterval,
       isEffective: this.preferences.skipBackwardInterval !== null,
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("skipBackwardInterval", newValue ?? 30);
-      }
+      },
+      supportedRange: skipIntervalRangeConfig.range,
+      step: skipIntervalRangeConfig.step
     });
   }
 
-  get skipForwardInterval(): Preference<number> {
-    return new Preference<number>({
+  get skipForwardInterval(): RangePreference<number> {
+    return new RangePreference<number>({
       initialValue: this.preferences.skipForwardInterval,
       effectiveValue: this.settings.skipForwardInterval,
       isEffective: this.preferences.skipForwardInterval !== null,
       onChange: (newValue: number | null | undefined) => {
         this.updatePreference("skipForwardInterval", newValue ?? 30);
-      }
+      },
+      supportedRange: skipIntervalRangeConfig.range,
+      step: skipIntervalRangeConfig.step
     });
   }
 
