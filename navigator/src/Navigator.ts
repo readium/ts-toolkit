@@ -1,5 +1,14 @@
 import { Link, Locator, Publication, ReadingProgression } from "@readium/shared";
-import { ContentProtectionConfig, PrintProtectionConfig, KeyboardPeripheral, DEV_TOOLS, SELECT_ALL, PRINT, SAVE } from "@readium/navigator-html-injectables";
+import { 
+    ContentProtectionConfig, 
+    PrintProtectionConfig, 
+    KeyboardPeripheral,
+    KeyCombo,
+    DEV_TOOLS, 
+    SELECT_ALL, 
+    PRINT, 
+    SAVE 
+} from "@readium/navigator-html-injectables";
 
 type cbb = (ok: boolean) => void;
 
@@ -57,13 +66,15 @@ export abstract class Navigator {
 
     /**
      * Merges keyboard peripherals from content protection config with user-provided peripherals
+     * Content protection peripherals are added first for priority, then user peripherals are added only if they don't conflict
      */
     protected mergeKeyboardPeripherals(
         config: IContentProtectionConfig,
         keyboardPeripherals: IKeyboardPeripheralsConfig = []
     ): IKeyboardPeripheralsConfig {
-        const peripherals = [...keyboardPeripherals];
+        const peripherals: IKeyboardPeripheralsConfig = [];
         
+        // Add content protection peripherals first for priority
         if (config.disableSelectAll) {
             peripherals.push(SELECT_ALL);
         }
@@ -75,6 +86,24 @@ export abstract class Navigator {
         }
         if (config.protectPrinting?.disable) {
             peripherals.push(PRINT);
+        }
+        
+        // Add user peripherals that don't conflict with existing peripherals (content protection has priority)
+        for (const userPeripheral of keyboardPeripherals) {
+            const conflicts = userPeripheral.keyCombos.some((userCombo: KeyCombo) =>
+                peripherals.some(existingPeripheral =>
+                    existingPeripheral.keyCombos.some((existingCombo: KeyCombo) =>
+                        userCombo.keyCode === existingCombo.keyCode &&
+                        userCombo.ctrl === existingCombo.ctrl &&
+                        userCombo.shift === existingCombo.shift &&
+                        userCombo.alt === existingCombo.alt &&
+                        userCombo.meta === existingCombo.meta
+                    )
+                )
+            );
+            if (!conflicts) {
+                peripherals.push(userPeripheral);
+            }
         }
         
         return peripherals;
