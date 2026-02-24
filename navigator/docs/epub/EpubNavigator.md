@@ -15,7 +15,7 @@ To use the `EpubNavigator`, you must first instantiate it by calling its constru
 - `listeners`: An object that contains event listeners for the EPUB publication.
 - `positions`: An array of `Locator` objects that represent the positions in the publication.
 - `initialPosition`: A `Locator` object that represents the initial position in the publication.
-- `configuration`: An object that contains configuration options for the EPUB publication. This is relying on the Preferences API.
+- `configuration`: An object that contains configuration options for the publications.
 
 ```js
 const navigator = new EpubNavigator(
@@ -38,7 +38,16 @@ In the absence of a `positions` argument, `EpubNavigator` will attempt to fetch 
 
 The `initialPosition` is the position at which the `EpubNavigator` will `load` the EPUB publication. It has to be a `Locator`.
 
-Finally, `EpubNavigator` implements a `Configurable` interface, so that it can be configured dynamically through the `configuration` argument. Please refer to [Configuring the EpubNavigator](./ConfiguringEpubNavigator.md) for more information.
+## Configuration
+
+`EpubNavigator` provides several configuration options that can be passed through the `configuration` parameter. These options are organized into different categories, each with its own documentation:
+
+1. **Preferences Configuration** - For settings and preferences, see [Configuring the EpubNavigator](./ConfiguringEpubNavigator.md)
+2. **Content Protection** - For security and protection features, see [Content Protection](./ContentProtection.md)
+3. **Resource Injection** - For injecting custom resources into publications, see [Resource Injection](./ResourceInjection.md)
+4. **Keyboard Peripherals** - For custom keyboard shortcuts, see [Keyboard Peripherals](./KeyboardPeripherals.md)
+
+Each of these configuration aspects can be combined in the `configuration` object when creating a new `EpubNavigator` instance.
 
 ### Load
 
@@ -78,6 +87,30 @@ The `EpubNavigator` class provides a Preferences API that allows you to apply st
 - `preferencesEditor`: Get the preferences editor for the publication.
 
 See [Configuring the EpubNavigator](./ConfiguringEpubNavigator.md) for more information.
+
+### Content Protection
+
+The `EpubNavigator` class provides a Content Protection API that allows you to protect the publication from unauthorized access.
+
+This can only be set during the creation of the `EpubNavigator` instance. It has its own dedicated listeners `contentProtection` and `contextMenu` to handle content protection events.
+
+See [Content Protection](./ContentProtection.md) for more information.
+
+### Resource Injection
+
+The `EpubNavigator` class provides a Resource Injection API that allows you to inject custom resources into the publication.
+
+The resources can only be set during the creation of the `EpubNavigator` instance.
+
+See [Resource Injection](./ResourceInjection.md) for more information.
+
+### Keyboard Peripherals
+
+The `EpubNavigator` class provides a Keyboard Peripherals API that allows you to configure custom keyboard shortcuts. The Keyboard Peripherals API includes the following:
+
+The keyboard shortcuts can only be set during the creation of the `EpubNavigator` instance and will prevent the default browser behavior. It has its own dedicated listener `peripheral` to handle keyboard events.
+
+See [Keyboard Peripherals](./KeyboardPeripherals.md) for more information.
 
 ## Navigation
 

@@ -5,6 +5,11 @@ import { ModuleName } from "../ModuleLibrary";
 import { Snapper } from "./Snapper";
 import { rangeFromLocator } from "../../helpers/locator";
 import { forceWebkitRecalc } from "../../helpers/document";
+import { PatternAnalyzer } from "../../protection/PatternAnalyzer";
+import { SCROLL_PROTECTION_CONFIG } from "../../protection/config";
+import { SuspiciousScrollingEvent } from "./ScrollSnapper";
+
+export type { SuspiciousScrollingEvent };
 
 export class WebPubSnapper extends Snapper {
     static readonly moduleName: ModuleName = "webpub_snapper";
@@ -12,6 +17,9 @@ export class WebPubSnapper extends Snapper {
     private wnd!: ReadiumWindow;
     private comms!: Comms;
     private resizeObserver!: ResizeObserver;
+    private patternAnalyzer: PatternAnalyzer | null = null;
+    private lastScrollTime: number = 0;
+    private isScrollProtectionEnabled = false;
 
     private initialScrollHandled = false;
     private isScrolling = false;
@@ -38,7 +46,7 @@ export class WebPubSnapper extends Snapper {
         });
     }
 
-    private handleScroll = () => {
+    private handleScroll = (_e: Event) => {
         if (!this.comms.ready) return;
 
         // Filter resize events
@@ -63,12 +71,46 @@ export class WebPubSnapper extends Snapper {
                 const deltaY = currentScrollTop - this.lastScrollTop;
                 this.lastScrollTop = currentScrollTop;
 
+                // Record scroll for pattern analysis if protection is enabled
+                if (this.isScrollProtectionEnabled && Math.abs(deltaY) > 5) { // Ignore tiny scrolls
+                    const now = Date.now();
+                    const timeDelta = now - (this.lastScrollTime || now);
+                    if (this.patternAnalyzer) {
+                        const isSuspicious = this.patternAnalyzer.analyze(
+                            deltaY > 0 ? "down" : "up",
+                            Math.abs(deltaY),
+                            timeDelta
+                        );
+                        if (isSuspicious) {
+                            const target = _e.target && "tagName" in _e.target ? 
+                                { tagName: (_e.target as Element).tagName } : null;
+                                
+                            this.comms?.send("content_protection", {
+                                type: "suspicious_scrolling",
+                                timestamp: Date.now(),
+                                scrollDelta: deltaY,
+                                scrollDirection: deltaY > 0 ? "down" : "up",
+                                targetElement: target
+                            } as SuspiciousScrollingEvent);
+                        }
+                    }
+                    this.lastScrollTime = now;
+                }
+
                 this.comms.send("scroll", deltaY);
 
                 this.isScrolling = false;
             });
         }
     };
+
+    private enableScrollProtection() {
+        if (!this.patternAnalyzer) {
+            this.patternAnalyzer = new PatternAnalyzer(SCROLL_PROTECTION_CONFIG);
+            this.isScrollProtectionEnabled = true;
+            this.comms?.log("Scroll protection enabled");
+        }
+    }
 
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
@@ -134,7 +176,7 @@ export class WebPubSnapper extends Snapper {
             });
         });
 
-        this.comms.register("go_id", WebPubSnapper.moduleName, (data, ack) => {
+        comms.register("go_id", WebPubSnapper.moduleName, (data, ack) => {
             const element = wnd.document.getElementById(data as string);
             if(!element) {
                 ack(false);
@@ -197,6 +239,11 @@ export class WebPubSnapper extends Snapper {
             ack(true);
         });
 
+        comms.register("scroll_protection", WebPubSnapper.moduleName, (_, ack) => {
+            this.enableScrollProtection();
+            ack(true);
+        });
+
         comms.register([
             "go_next",
             "go_prev",
@@ -220,6 +267,13 @@ export class WebPubSnapper extends Snapper {
         comms.unregisterAll(WebPubSnapper.moduleName);
         this.resizeObserver.disconnect();
         if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
+        
+        if (this.patternAnalyzer) {
+            this.patternAnalyzer.clear();
+            this.patternAnalyzer = null;
+            this.isScrollProtectionEnabled = false;
+        }
+
         comms.log("WebPubSnapper Unmounted");
         return true;
     }

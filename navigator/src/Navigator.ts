@@ -1,6 +1,20 @@
 import { Link, Locator, Publication, ReadingProgression } from "@readium/shared";
+import { 
+    ContentProtectionConfig, 
+    PrintProtectionConfig, 
+    KeyboardPeripheral,
+    KeyCombo,
+    DEV_TOOLS, 
+    SELECT_ALL, 
+    PRINT, 
+    SAVE 
+} from "@readium/navigator-html-injectables";
 
 type cbb = (ok: boolean) => void;
+
+export type IKeyboardPeripheralsConfig = Array<Omit<KeyboardPeripheral, 'type'> & {
+    type: Exclude<string, 'developer_tools' | 'select_all' | 'print' | 'save'>;
+}>;
 
 export interface ProgressionRange {
     start: number;
@@ -11,6 +25,12 @@ export interface VisualNavigatorViewport {
     readingOrder: string[];  // Array of href strings for visible resources
     progressions: Map<string, ProgressionRange>;  // Map from href to visible scroll progression range
     positions: number[] | null;  // Range of visible positions
+}
+
+export interface IContentProtectionConfig extends ContentProtectionConfig { 
+    protectPrinting?: PrintProtectionConfig;
+    checkAutomation?: boolean;
+    checkIFrameEmbedding?: boolean;
 }
 
 export abstract class Navigator {
@@ -43,6 +63,62 @@ export abstract class Navigator {
      * Destroy all resources associated with this navigator. Synonymous with "unmount"
      */
     abstract destroy(): void;
+
+    /**
+     * Merges keyboard peripherals from content protection config with user-provided peripherals
+     * Content protection peripherals are added first for priority, then user peripherals are added only if they don't conflict
+     */
+    protected mergeKeyboardPeripherals(
+        config: IContentProtectionConfig,
+        keyboardPeripherals: IKeyboardPeripheralsConfig = []
+    ): IKeyboardPeripheralsConfig {
+        const peripherals: IKeyboardPeripheralsConfig = [];
+        
+        // Filter out any peripherals with reserved content protection types
+        const filteredUserPeripherals = keyboardPeripherals.filter(
+            peripheral => !['developer_tools', 'select_all', 'print', 'save'].includes(peripheral.type)
+        );
+        
+        // Add content protection peripherals first for priority
+        if (config.disableSelectAll) {
+            peripherals.push(SELECT_ALL);
+        }
+        if (config.disableSave) {
+            peripherals.push(SAVE);
+        }
+        if (config.monitorDevTools) {
+            peripherals.push(DEV_TOOLS);
+        }
+        if (config.protectPrinting?.disable) {
+            peripherals.push(PRINT);
+        }
+        
+        // Add user peripherals with conflicting combos removed
+        for (const userPeripheral of filteredUserPeripherals) {
+            // Filter out combos that conflict with existing peripherals
+            const filteredCombos = userPeripheral.keyCombos.filter((userCombo: KeyCombo) =>
+                !peripherals.some(existingPeripheral =>
+                    existingPeripheral.keyCombos.some((existingCombo: KeyCombo) =>
+                        userCombo.keyCode === existingCombo.keyCode &&
+                        userCombo.ctrl === existingCombo.ctrl &&
+                        userCombo.shift === existingCombo.shift &&
+                        userCombo.alt === existingCombo.alt &&
+                        userCombo.meta === existingCombo.meta
+                    )
+                )
+            );
+            
+            // Add the peripheral with filtered combos if any remain
+            if (filteredCombos.length > 0) {
+                peripherals.push({
+                    ...userPeripheral,
+                    keyCombos: filteredCombos
+                });
+            }
+        }
+        
+        return peripherals;
+    }
 }
 
 export abstract class VisualNavigator extends Navigator {

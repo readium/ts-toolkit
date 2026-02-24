@@ -5,7 +5,7 @@ import FrameBlobBuider from "../frame/FrameBlobBuilder";
 import { FXLFrameManager } from "./FXLFrameManager";
 import { FXLPeripherals } from "./FXLPeripherals";
 import { FXLSpreader, Orientation, Spread } from "./FXLSpreader";
-import { VisualNavigatorViewport } from "../../Navigator";
+import { VisualNavigatorViewport, IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator";
 import { Injector } from "../../injection/Injector";
 
 const UPPER_BOUNDARY = 8;
@@ -28,6 +28,8 @@ export class FXLFramePoolManager {
     private currentBaseURL: string | undefined;
     private previousFrames: FXLFrameManager[] = [];
     private readonly injector: Injector | null = null;
+    private readonly contentProtectionConfig: IContentProtectionConfig;
+    private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
 
     // NEW
     private readonly bookElement: HTMLDivElement;
@@ -50,12 +52,16 @@ export class FXLFramePoolManager {
         container: HTMLElement, 
         positions: Locator[], 
         pub: Publication,
-        injector?: Injector | null
+        injector?: Injector | null,
+        contentProtectionConfig?: IContentProtectionConfig,
+        keyboardPeripheralsConfig?: IKeyboardPeripheralsConfig,
     ) {
         this.container = container;
         this.positions = positions;
         this.pub = pub;
         this.injector = injector ?? null;
+        this.contentProtectionConfig = contentProtectionConfig || {};
+        this.keyboardPeripheralsConfig = keyboardPeripheralsConfig || [];
         this.spreadPresentation = pub.metadata.otherMetadata?.spread || Spread.auto;
 
         if(this.pub.metadata.effectiveReadingProgression !== ReadingProgression.rtl && this.pub.metadata.effectiveReadingProgression !== ReadingProgression.ltr)
@@ -82,7 +88,7 @@ export class FXLFramePoolManager {
 
         this.pub.readingOrder.items.forEach((link) => {
             // Create <iframe>
-            const fm = new FXLFrameManager(this.peripherals, this.pub.metadata.effectiveReadingProgression, link.href);
+            const fm = new FXLFrameManager(this.peripherals, this.pub.metadata.effectiveReadingProgression, link.href, this.contentProtectionConfig, this.keyboardPeripheralsConfig);
             this.spineElement.appendChild(fm.element);
 
             // this.pages.push(fm);

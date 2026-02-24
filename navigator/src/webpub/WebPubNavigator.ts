@@ -2,7 +2,7 @@ import { Feature, Link, Locator, Publication, ReadingProgression, LocatorLocatio
 import { VisualNavigator, VisualNavigatorViewport, ProgressionRange } from "../Navigator";
 import { Configurable } from "../preferences/Configurable";
 import { WebPubFramePoolManager } from "./WebPubFramePoolManager";
-import { BasicTextSelection, CommsEventKey, FrameClickEvent, ModuleLibrary, ModuleName, WebPubModules } from "@readium/navigator-html-injectables";
+import { BasicTextSelection, CommsEventKey, ContextMenuEvent, FrameClickEvent, KeyboardEventData, ModuleLibrary, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
 import { WebPubFrameManager } from "./WebPubFrameManager";
 
@@ -17,11 +17,16 @@ import { WebPubPreferencesEditor } from "./preferences/WebPubPreferencesEditor";
 import { Injector } from "../injection/Injector";
 import { createReadiumWebPubRules } from "../injection/webpubInjectables";
 import { IInjectablesConfig } from "../injection/Injectable";
+import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator";
+import { NavigatorProtector, NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector";
+import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../peripherals/KeyboardPeripherals";
 
 export interface WebPubNavigatorConfiguration {
     preferences: IWebPubPreferences;
     defaults: IWebPubDefaults;
     injectables?: IInjectablesConfig;
+    contentProtection?: IContentProtectionConfig;
+    keyboardPeripherals?: IKeyboardPeripheralsConfig;
 }
 
 export interface WebPubNavigatorListeners {
@@ -34,6 +39,9 @@ export interface WebPubNavigatorListeners {
     customEvent: (key: string, data: unknown) => void;
     handleLocator: (locator: Locator) => boolean;
     textSelected: (selection: BasicTextSelection) => void;
+    contentProtection: (type: string, data: SuspiciousActivityEvent) => void;
+    contextMenu: (data: ContextMenuEvent) => void;
+    peripheral: (data: KeyboardEventData) => void;
 }
 
 const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorListeners => ({
@@ -45,7 +53,10 @@ const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorL
     scroll: listeners.scroll || (() => {}),
     customEvent: listeners.customEvent || (() => {}),
     handleLocator: listeners.handleLocator || (() => false),
-    textSelected: listeners.textSelected || (() => {})
+    textSelected: listeners.textSelected || (() => {}),
+    contentProtection: listeners.contentProtection || (() => {}),
+    contextMenu: listeners.contextMenu || (() => {}),
+    peripheral: listeners.peripheral || (() => {})
 })
 
 export class WebPubNavigator extends VisualNavigator implements Configurable<WebPubSettings, WebPubPreferences> {
@@ -62,6 +73,12 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private _css: WebPubCSS;
     private _preferencesEditor: WebPubPreferencesEditor | null = null;
     private readonly _injector: Injector | null = null;
+    private readonly _contentProtection: IContentProtectionConfig;
+    private readonly _keyboardPeripherals: IKeyboardPeripheralsConfig;
+    private readonly _navigatorProtector: NavigatorProtector | null = null;
+    private readonly _keyboardPeripheralsManager: KeyboardPeripherals | null = null;
+    private readonly _suspiciousActivityListener: ((event: Event) => void) | null = null;
+    private readonly _keyboardPeripheralListener: ((event: Event) => void) | null = null;
     
     private webViewport: VisualNavigatorViewport = {
         readingOrder: [],
@@ -85,7 +102,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         });
 
         // Combine WebPub rules with user-provided injectables
-        const webpubRules = createReadiumWebPubRules();
+        const webpubRules = createReadiumWebPubRules(pub.readingOrder.items);
         const userConfig = configuration.injectables || { rules: [], allowedDomains: [] };
         
         this._injector = new Injector({
@@ -93,8 +110,47 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             allowedDomains: userConfig.allowedDomains
         });
 
+        // Initialize content protection with provided config or default values
+        this._contentProtection = configuration.contentProtection || {};
+        
+        // Merge keyboard peripherals
+        this._keyboardPeripherals = this.mergeKeyboardPeripherals(
+            this._contentProtection,
+            configuration.keyboardPeripherals || []
+        );
+
+        // Initialize navigator protection if any protection is configured
+        if (this._contentProtection.disableContextMenu ||
+            this._contentProtection.checkAutomation ||
+            this._contentProtection.checkIFrameEmbedding ||
+            this._contentProtection.monitorDevTools ||
+            this._contentProtection.protectPrinting?.disable) {
+            this._navigatorProtector = new NavigatorProtector(this._contentProtection);
+            
+            // Listen for custom events from NavigatorProtector
+            this._suspiciousActivityListener = (event: Event) => {
+                const customEvent = event as CustomEvent;
+                this.listeners.contentProtection(customEvent.detail.type, customEvent.detail);
+            };
+            window.addEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
+        }
+        
+        // Initialize keyboard peripherals separately (works independently of protection)
+        if (this._keyboardPeripherals.length > 0) {
+            this._keyboardPeripheralsManager = new KeyboardPeripherals({
+                keyboardPeripherals: this._keyboardPeripherals
+            });
+            
+            // Listen for keyboard peripheral events from main window
+            this._keyboardPeripheralListener = (event: Event) => {
+                const activity = (event as CustomEvent).detail;
+                this.listeners.peripheral(activity);
+            };
+            window.addEventListener(NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT, this._keyboardPeripheralListener);
+        }
+
         // Initialize current location
-        if (initialPosition && typeof initialPosition.copyWithLocations === 'function') {
+        if (initialPosition && typeof initialPosition.copyWithLocations === "function") {
             this.currentLocation = initialPosition;
             // Update currentIndex to match the initial position
             const index = this.pub.readingOrder.findIndexWithHref(initialPosition.href);
@@ -109,7 +165,13 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     public async load() {
         await this.updateCSS(false);
         const cssProperties = this.compileCSSProperties(this._css);
-        this.framePool = new WebPubFramePoolManager(this.container, cssProperties, this._injector);
+        this.framePool = new WebPubFramePoolManager(
+            this.container, 
+            cssProperties, 
+            this._injector,
+            this._contentProtection,
+            this._keyboardPeripherals
+        );
 
         await this.apply();
     }
@@ -282,6 +344,16 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             case "progress":
                 this.syncLocation(data as ProgressionRange);
                 break;
+            case "content_protection":
+                const activity = data as SuspiciousActivityEvent;
+                this.listeners.contentProtection(activity.type, activity);
+                break;
+            case "context_menu":
+                this.listeners.contextMenu(data as ContextMenuEvent);
+                break;
+            case "keyboard_peripherals":
+                this.listeners.peripheral(data as KeyboardEventData);
+                break;
             case "log":
                 console.log(this.framePool.currentFrames[0]?.source?.split("/")[3], ...(data as any[]));
                 break;
@@ -317,6 +389,14 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     }
 
     public async destroy() {
+        if (this._suspiciousActivityListener) {
+            window.removeEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
+        }
+        if (this._keyboardPeripheralListener) {
+            window.removeEventListener(NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT, this._keyboardPeripheralListener);
+        }
+        this._navigatorProtector?.destroy();
+        this._keyboardPeripheralsManager?.destroy();
         await this.framePool?.destroy();
     }
 
@@ -419,7 +499,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
     private async loadLocator(locator: Locator, cb: (ok: boolean) => void) {
         let done = false;
-        let cssSelector = (typeof locator.locations.getCssSelector === 'function') && locator.locations.getCssSelector();
+        let cssSelector = (typeof locator.locations.getCssSelector === "function") && locator.locations.getCssSelector();
         if(locator.text?.highlight) {
             done = await new Promise<boolean>((res, _) => {
                 // Attempt to go to a highlighted piece of text in the resource
@@ -451,7 +531,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         // This sanity check has to be performed because we're still passing non-locator class
         // locator objects to this function. This is not good and should eventually be forbidden
         // or the locator should be deserialized sometime before this function.
-        const hid = (typeof locator.locations.htmlId === 'function') && locator.locations.htmlId();
+        const hid = (typeof locator.locations.htmlId === "function") && locator.locations.htmlId();
         if(hid)
             done = await new Promise<boolean>((res, _) => {
                 // Attempt to go to an HTML ID in the resource

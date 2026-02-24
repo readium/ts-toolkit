@@ -3,6 +3,7 @@ import { Page, ReadingProgression } from "@readium/shared";
 import { FrameComms } from "../frame/FrameComms";
 import { FXLPeripherals } from "./FXLPeripherals";
 import { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
+import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator";
 
 export class FXLFrameManager {
     private frame: HTMLIFrameElement;
@@ -10,7 +11,8 @@ export class FXLFrameManager {
     public source: string;
     private comms: FrameComms | undefined;
     private readonly peripherals: FXLPeripherals;
-
+    private readonly contentProtectionConfig: IContentProtectionConfig;
+    private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
     private currModules: ModuleName[] = [];
 
     // NEW
@@ -19,9 +21,18 @@ export class FXLFrameManager {
     private loadPromise: Promise<Window> | undefined;
     private showPromise: Promise<void> | undefined;
 
-    constructor(peripherals: FXLPeripherals, direction: ReadingProgression, debugHref: string) {
+    constructor(
+        peripherals: FXLPeripherals, 
+        direction: ReadingProgression, 
+        debugHref: string,
+        contentProtectionConfig: IContentProtectionConfig = {},
+        keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = []
+    ) {
         this.peripherals = peripherals;
         this.debugHref = debugHref;
+        // Use the provided content protection config directly without overriding defaults
+        this.contentProtectionConfig = { ...contentProtectionConfig };
+        this.keyboardPeripheralsConfig = [...keyboardPeripheralsConfig];
         this.frame = document.createElement("iframe");
         this.frame.sandbox.value = "allow-same-origin allow-scripts";
         this.frame.classList.add("readium-navigator-iframe");
@@ -196,6 +207,23 @@ export class FXLFrameManager {
             this.comms?.halt();
     }
 
+    private applyContentProtection() {
+        if (!this.comms) this.comms!.resume();
+
+        // Send content protection config
+        this.comms!.send("peripherals_protection", this.contentProtectionConfig);
+        
+        // Send keyboard peripherals separately
+        if (this.keyboardPeripheralsConfig && this.keyboardPeripheralsConfig.length > 0) {
+            this.comms!.send("keyboard_peripherals", this.keyboardPeripheralsConfig);
+        }
+
+        // Apply print protection if configured
+        if (this.contentProtectionConfig.protectPrinting) {
+            this.comms!.send("print_protection", this.contentProtectionConfig.protectPrinting);
+        }
+    }
+
     private cachedPage: Page | undefined = undefined;
     async show(page: Page): Promise<void> {
         if(!this.frame.parentElement) {
@@ -221,6 +249,7 @@ export class FXLFrameManager {
             this.comms!.send("focus", undefined, (_: boolean) => {
                 // this.showPromise = undefined; Don't do this
                 this.update(this.cachedPage);
+                this.applyContentProtection();
                 res();
             });
         });

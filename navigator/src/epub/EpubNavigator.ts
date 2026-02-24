@@ -2,8 +2,8 @@ import { Layout, Link, Locator, Profile, Publication, ReadingProgression } from 
 import { Configurable, ConfigurablePreferences, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../";
 import { FramePoolManager } from "./frame/FramePoolManager";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager";
-import { CommsEventKey, FXLModules, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables";
-import { BasicTextSelection, FrameClickEvent } from "@readium/navigator-html-injectables";
+import { CommsEventKey, ContextMenuEvent, FXLModules, KeyboardEventData, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables";
+import { BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
 import { FXLFrameManager } from "./fxl/FXLFrameManager";
 import { FrameManager } from "./frame/FrameManager";
@@ -17,6 +17,9 @@ import { getContentWidth } from "../helpers/dimensions";
 import { Injector } from "../injection/Injector";
 import { createReadiumEpubRules } from "../injection/epubInjectables";
 import { IInjectablesConfig } from "../injection/Injectable";
+import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator";
+import { NavigatorProtector, NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector";
+import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../peripherals/KeyboardPeripherals";
 
 export type ManagerEventKey = "zoom";
 
@@ -24,6 +27,8 @@ export interface EpubNavigatorConfiguration {
     preferences: IEpubPreferences;
     defaults: IEpubDefaults;
     injectables?: IInjectablesConfig;
+    contentProtection?: IContentProtectionConfig;
+    keyboardPeripherals?: IKeyboardPeripheralsConfig;
 }
 
 export interface EpubNavigatorListeners {
@@ -35,8 +40,11 @@ export interface EpubNavigatorListeners {
     miscPointer: (amount: number) => void;
     scroll: (delta: number) => void;
     customEvent: (key: string, data: unknown) => void;
-    handleLocator: (locator: Locator) => boolean; // Retrun true to prevent handling here
+    handleLocator: (locator: Locator) => boolean; // Return true to prevent handling here
     textSelected: (selection: BasicTextSelection) => void;
+    contentProtection: (type: string, data: SuspiciousActivityEvent) => void;
+    contextMenu: (data: ContextMenuEvent) => void;
+    peripheral: (data: KeyboardEventData) => void;
     // showToc: () => void;
 }
 
@@ -50,7 +58,10 @@ const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListe
     scroll: listeners.scroll || (() => {}),
     customEvent: listeners.customEvent || (() => {}),
     handleLocator: listeners.handleLocator || (() => false),
-    textSelected: listeners.textSelected || (() => {})
+    textSelected: listeners.textSelected || (() => {}),
+    contentProtection: listeners.contentProtection || (() => {}),
+    contextMenu: listeners.contextMenu || (() => {}),
+    peripheral: listeners.peripheral || (() => {}),
 })
 
 export class EpubNavigator extends VisualNavigator implements Configurable<ConfigurableSettings, ConfigurablePreferences> {
@@ -70,6 +81,12 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private _css: ReadiumCSS;
     private _preferencesEditor: EpubPreferencesEditor | null = null;
     private readonly _injector: Injector | null = null;
+    private readonly _contentProtection: IContentProtectionConfig;
+    private readonly _keyboardPeripherals: IKeyboardPeripheralsConfig;
+    private readonly _navigatorProtector: NavigatorProtector | null = null;
+    private readonly _keyboardPeripheralsManager: KeyboardPeripherals | null = null;
+    private readonly _suspiciousActivityListener: ((event: Event) => void) | null = null;
+    private readonly _keyboardPeripheralListener: ((event: Event) => void) | null = null;
 
     private resizeObserver: ResizeObserver;
 
@@ -112,13 +129,55 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this.currentProgression = pub.metadata.effectiveReadingProgression;
         
         // Combine Readium rules with user-provided injectables
-        const readiumRules = createReadiumEpubRules(pub.metadata);
+        const readiumRules = createReadiumEpubRules(pub.metadata, pub.readingOrder.items);
         const userConfig = configuration.injectables || { rules: [], allowedDomains: [] };
         
         this._injector = new Injector({
             rules: [...readiumRules, ...userConfig.rules],
             allowedDomains: userConfig.allowedDomains
         });
+
+        this._contentProtection = configuration.contentProtection || {};
+        
+        // Merge keyboard peripherals
+        this._keyboardPeripherals = this.mergeKeyboardPeripherals(
+            this._contentProtection,
+            configuration.keyboardPeripherals || []
+        );
+        
+        // Initialize navigator protection if any protection is configured
+        if (this._contentProtection.disableContextMenu ||
+            this._contentProtection.checkAutomation ||
+            this._contentProtection.checkIFrameEmbedding ||
+            this._contentProtection.monitorDevTools ||
+            this._contentProtection.protectPrinting?.disable) {
+            this._navigatorProtector = new NavigatorProtector(this._contentProtection);
+            
+            // Listen for custom events from NavigatorProtector
+            this._suspiciousActivityListener = (event: Event) => {
+                const { type, ...activity } = (event as CustomEvent).detail;
+                if (type === "context_menu") {
+                    this.listeners.contextMenu(activity as ContextMenuEvent);
+                } else {
+                    this.listeners.contentProtection(type, activity);
+                }
+            };
+            window.addEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
+        }
+        
+        // Initialize keyboard peripherals separately (works independently of protection)
+        if (this._keyboardPeripherals.length > 0) {
+            this._keyboardPeripheralsManager = new KeyboardPeripherals({
+                keyboardPeripherals: this._keyboardPeripherals
+            });
+            
+            // Listen for keyboard peripheral events from main window
+            this._keyboardPeripheralListener = (event: Event) => {
+                const activity = (event as CustomEvent).detail;
+                this.listeners.peripheral(activity);
+            };
+            window.addEventListener(NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT, this._keyboardPeripheralListener);
+        }
         
         // We use a resizeObserver cos’ the container parent may not be the width of 
         // the document/window e.g. app using a docking system with left and right panels.
@@ -154,7 +213,9 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 this.container, 
                 this.positions, 
                 this.pub,
-                this._injector
+                this._injector,
+                this._contentProtection,
+                this._keyboardPeripherals
             );
             this.framePool.listener = (key: CommsEventKey | ManagerEventKey, data: unknown) => {
                 this.eventListener(key, data);
@@ -166,7 +227,9 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 this.container, 
                 this.positions, 
                 cssProperties,
-                this._injector
+                this._injector,
+                this._contentProtection,
+                this._keyboardPeripherals
             );
         }
 
@@ -434,6 +497,16 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             case "progress":
                 this.syncLocation(data as ProgressionRange);
                 break;
+            case "content_protection":
+                const activity = data as SuspiciousActivityEvent;
+                this.listeners.contentProtection(activity.type, activity);
+                break;
+            case "context_menu":
+                this.listeners.contextMenu(data as ContextMenuEvent);
+                break;
+            case "keyboard_peripherals":
+                this.listeners.peripheral(data as KeyboardEventData);
+                break;
             case "log":
                 console.log(this._cframes[0]?.source?.split("/")[3], ...(data as any[]));
                 break;
@@ -482,6 +555,14 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     }
 
     public async destroy() {
+        if (this._suspiciousActivityListener) {
+            window.removeEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
+        }
+        if (this._keyboardPeripheralListener) {
+            window.removeEventListener(NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT, this._keyboardPeripheralListener);
+        }
+        this._navigatorProtector?.destroy();
+        this._keyboardPeripheralsManager?.destroy();
         await this.framePool?.destroy();
     }
 
@@ -711,7 +792,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
     private async loadLocator(locator: Locator, cb: (ok: boolean) => void) {
         let done = false;
-        let cssSelector = (typeof locator.locations.getCssSelector === 'function') && locator.locations.getCssSelector();
+        let cssSelector = (typeof locator.locations.getCssSelector === "function") && locator.locations.getCssSelector();
         if(locator.text?.highlight) {
             done = await new Promise<boolean>((res, _) => {
                 // Attempt to go to a highlighted piece of text in the resource
@@ -743,7 +824,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         // This sanity check has to be performed because we're still passing non-locator class
         // locator objects to this function. This is not good and should eventually be forbidden
         // or the locator should be deserialized sometime before this function.
-        const hid = (typeof locator.locations.htmlId === 'function') && locator.locations.htmlId();
+        const hid = (typeof locator.locations.htmlId === "function") && locator.locations.htmlId();
         if(hid)
             done = await new Promise<boolean>((res, _) => {
                 // Attempt to go to an HTML ID in the resource

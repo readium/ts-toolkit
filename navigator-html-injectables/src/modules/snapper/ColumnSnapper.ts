@@ -6,8 +6,16 @@ import { ModuleName } from "../ModuleLibrary";
 import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
 import { rangeFromLocator } from "../../helpers/locator";
 import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/dom";
+import { PatternAnalyzer } from "../../protection/PatternAnalyzer";
+import { BaseSuspiciousActivityEvent } from "../Peripherals";
 
 const COLUMN_SNAPPER_STYLE_ID = "readium-column-snapper-style";
+
+export interface SuspiciousSnappingEvent extends BaseSuspiciousActivityEvent {
+    type: "suspicious_snapping";
+    event: null;
+}
+
 const SNAP_DURATION = 200; // Milliseconds
 
 enum ScrollTouchState {
@@ -21,8 +29,11 @@ enum ScrollTouchState {
  */
 export class ColumnSnapper extends Snapper {
     static readonly moduleName: ModuleName = "column_snapper";
+    private isSnapProtectionEnabled = false;
     private resizeObserver!: ResizeObserver;
     private mutationObserver!: MutationObserver;
+    private patternAnalyzer: PatternAnalyzer | null = null;
+    private lastTurnTime: number = 0;
     private wnd!: ReadiumWindow;
     private comms!: Comms;
     private doc() { return this.wnd.document.scrollingElement as HTMLElement; }
@@ -72,6 +83,7 @@ export class ColumnSnapper extends Snapper {
     private alreadyScrollLeft = 0;
     private overscroll = 0;
     private cachedScrollWidth = 0; // We have to cache this because during overscroll (transform, or left) the width is incorrect due to browser
+    
     private takeOverSnap() {
         this.snappingCancelled = true;
         this.clearTouches();
@@ -80,7 +92,7 @@ export class ColumnSnapper extends Snapper {
         // translate3d(XXXpx, 0px, 0px) -> slice 12 -> XXXpx, 0px, 0px) -> split "px" [0] -> XXX
         this.overscroll = doc.style.transform?.length > 12 ? parseFloat(doc.style.transform.slice(12).split("px")[0]) : 0;
     }
-
+    
     // Snaps the current offset to the page width.
     snapCurrentOffset(smooth=false, noprogress=false) {
         const startX = this.wnd.scrollX > 0 ? this.wnd.scrollX : this.alreadyScrollLeft;
@@ -96,6 +108,11 @@ export class ColumnSnapper extends Snapper {
             ((factor * cdo) > 0 ? 2 : 1);
 
         const so = this.snapOffset(currentOffset + hurdle);
+        
+        const direction = so > this.scrollOffset() ? "right" : "left";
+
+        this.checkSuspiciousSnap(direction, Math.abs(so - this.scrollOffset()));
+        
         if(smooth && so !== this.scrollOffset()) { // Smooth snapping
             this.snappingCancelled = false;
             const position = (start: number, end: number, elapsed: number, period: number) => {
@@ -232,6 +249,37 @@ export class ColumnSnapper extends Snapper {
     }
     private readonly onTouchMover = this.onTouchMove.bind(this);
 
+    private enableSnapProtection() {
+        if (!this.patternAnalyzer) {
+            this.patternAnalyzer = new PatternAnalyzer({
+                maxVelocity: this.wnd.innerWidth,  // page width
+                minVariance: 0.1,   // Allow for some variation in swipe speed
+                historySize: 5,      // Fewer samples needed for swipe detection
+                maxConsistentScrolls: 3,  // Lower threshold for consistent scrolling
+                minDirectionChanges: 0.3  // Require more direction changes
+            });
+            this.isSnapProtectionEnabled = true;
+            this.comms?.log("Snap protection enabled");
+        }
+    }
+
+    private checkSuspiciousSnap(direction: "left" | "right", distance: number) {
+        if (!this.isSnapProtectionEnabled || !this.patternAnalyzer) return;
+
+        const now = Date.now();
+        const timeDelta = now - (this.lastTurnTime || now);
+        this.lastTurnTime = now;
+
+        const isSuspicious = this.patternAnalyzer.analyze(direction, distance, timeDelta);
+        if (isSuspicious) {
+            this.comms?.send("content_protection", {
+                type: "suspicious_snapping",
+                timestamp: Date.now(),
+                event: null
+            } as SuspiciousSnappingEvent);
+        }
+    }
+
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
@@ -317,6 +365,11 @@ export class ColumnSnapper extends Snapper {
         // For cases the resizeObserver is not able to detect cos body is not resizing despite colCount,
         // we need to check the syle attribute on the documentElement (ReadiumCSS props)
         this.mutationObserver.observe(wnd.document.documentElement, {attributes: true, attributeFilter: ["style"]});
+        
+        comms.register("scroll_protection", ColumnSnapper.moduleName, (_, ack) => {
+            this.enableSnapProtection();
+            ack(true);
+        });
 
         const scrollToOffset = (offset: number): boolean => {
             const oldScrollLeft = this.doc().scrollLeft;
@@ -427,6 +480,7 @@ export class ColumnSnapper extends Snapper {
                 if(change) {
                     this.reportProgress();
                     deselect(this.wnd);
+                    this.checkSuspiciousSnap("left", this.wnd.innerWidth);
                 }
                 ack(change);
             });
@@ -441,6 +495,7 @@ export class ColumnSnapper extends Snapper {
                 if(change) {
                     this.reportProgress();
                     deselect(this.wnd);
+                    this.checkSuspiciousSnap("right", this.wnd.innerWidth);
                 }
                 ack(change);
             });
@@ -478,7 +533,7 @@ export class ColumnSnapper extends Snapper {
         wnd.addEventListener("touchmove", this.onTouchMover, { passive: true });
 
         // Safari hack, otherwise other events won't register
-        wnd.document.addEventListener('touchstart', () => {});
+        wnd.document.addEventListener("touchstart", () => {});
 
         comms.log("ColumnSnapper Mounted");
         return true;
@@ -489,6 +544,12 @@ export class ColumnSnapper extends Snapper {
         comms.unregisterAll(ColumnSnapper.moduleName);
         this.resizeObserver.disconnect();
         this.mutationObserver.disconnect();
+
+        if (this.patternAnalyzer) {
+            this.patternAnalyzer.clear();
+            this.patternAnalyzer = null;
+            this.isSnapProtectionEnabled = false;
+        }
 
         wnd.removeEventListener("touchstart", this.onTouchStarter);
         wnd.removeEventListener("touchend", this.onTouchEnder);

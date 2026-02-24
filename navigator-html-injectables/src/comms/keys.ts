@@ -16,8 +16,11 @@ export type CommsEventKey =
     "progress" |
     "first_visible_locator" |
     "text_selected" |
+    "context_menu" |
     "media_play" |
-    "media_pause";
+    "media_pause" |
+    "content_protection" |
+    "keyboard_peripherals";
 ;
 
 export type CommsCommandKey =
@@ -42,5 +45,21 @@ export type CommsCommandKey =
     "focus" |
     "activate" |
     "shake" |
-    "force_webkit_recalc";
+    "force_webkit_recalc" |
+    "peripherals_protection" |
+    "keyboard_peripherals" |
+    "scroll_protection" |
+    "print_protection";
 ;
+
+export type SuspiciousActivityType = 
+    "developer_tools" |
+    "select_all" |
+    "save" |
+    "suspicious_selection" |
+    "bulk_copy" |
+    "suspicious_scrolling" |
+    "suspicious_snapping" |
+    "drag_detected" |
+    "drop_detected" |
+    "print";
