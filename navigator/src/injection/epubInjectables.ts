@@ -1,6 +1,6 @@
 import { IInjectableRule, IInjectable } from "../injection/Injectable";
 import { stripJS, stripCSS } from "../helpers/minify";
-import { Metadata, Layout } from "@readium/shared";
+import { Metadata, Layout, Link } from "@readium/shared";
 
 import readiumCSSAfter from "@readium/css/css/dist/ReadiumCSS-after.css?raw";
 import readiumCSSBefore from "@readium/css/css/dist/ReadiumCSS-before.css?raw";
@@ -13,8 +13,16 @@ import onloadProxyContent from "../dom/_readium_executionCleanup.js?raw";
 /**
  * Creates injectable rules for EPUB content documents
  */
-export function createReadiumEpubRules(metadata: Metadata): IInjectableRule[] {
+export function createReadiumEpubRules(metadata: Metadata, readingOrderItems: Link[]): IInjectableRule[] {
     const isFixedLayout = metadata.effectiveLayout === Layout.fixed;
+    
+    const htmlHrefs = readingOrderItems
+        .filter(item => item.mediaType.isHTML)
+        .map(item => item.href);
+    
+    const resources = htmlHrefs.length > 0 
+        ? htmlHrefs 
+        : [/\.xhtml$/, /\.html$/]; // fallback patterns
     
     // Core injectables that should be prepended
     const prependInjectables: IInjectable[] = [
@@ -82,7 +90,7 @@ export function createReadiumEpubRules(metadata: Metadata): IInjectableRule[] {
 
     return [
         {
-            resources: [/\.xhtml$/, /\.html$/],
+            resources: resources,
             prepend: prependInjectables,
             append: appendInjectables
         }

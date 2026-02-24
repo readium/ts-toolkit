@@ -1,5 +1,6 @@
 import { IInjectableRule, IInjectable } from "../injection/Injectable";
 import { stripJS, stripCSS } from "../helpers/minify";
+import { Link } from "@readium/shared";
 
 import readiumCSSWebPub from "@readium/css/css/dist/webPub/ReadiumCSS-webPub.css?raw";
 
@@ -10,10 +11,14 @@ import onloadProxyContent from "../dom/_readium_executionCleanup.js?raw";
 /**
  * Creates injectable rules for WebPub content documents
  */
-export function createReadiumWebPubRules(hrefs: string[] = []): IInjectableRule[] {
+export function createReadiumWebPubRules(readingOrderItems: Link[]): IInjectableRule[] {
     // Create exact match patterns for manifest hrefs
-    const resources = hrefs.length > 0 
-        ? hrefs 
+    const htmlHrefs = readingOrderItems
+        .filter(item => item.mediaType.isHTML)
+        .map(item => item.href);
+    
+    const resources = htmlHrefs.length > 0 
+        ? htmlHrefs 
         : [/\.html$/, /\.xhtml$/, /\/$/]; // fallback patterns
     
     // Core injectables that should be prepended
