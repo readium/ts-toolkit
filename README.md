@@ -40,7 +40,36 @@ Then workspaces should be all set up and you can build them from their directory
 - [Navigator](./navigator/): a navigator for web platforms based on the readium Navigator spec.
 - [Navigator-html-injectables](./navigator-html-injectables/): provides access and control over a resource from a navigator on any modern browser or embedded browser frame.
 
-## Local Development in a test app with pnpm link
+## Local Development in a test app
+
+If you want to develop locally, you have two simpler options:
+
+- Using the `file:` syntax
+- Using `pnpm link`
+
+### Using file: syntax
+
+You can use the `file:` syntax to link the packages to your project. This is useful for testing changes in a real application.
+
+```json
+{
+  "dependencies": {
+    "@readium/shared": "file:path/to/ts-toolkit/shared",
+    "@readium/navigator-html-injectables": "file:path/to/ts-toolkit/navigator-html-injectables",
+    "@readium/navigator": "file:path/to/ts-toolkit/navigator"
+  }
+}
+```
+
+Then run:
+
+```sh
+pnpm install
+```
+
+Your modifications to the packages will now be reflected in your project, although you may have to restart your development server to see the changes, or reload your IDE window to pick up the type changes.
+
+### Using pnpm link
 
 When developing locally, you can [link these packages to your project](https://pnpm.io/cli/link) for testing changes in a real application. Here's how to set it up:
 
@@ -62,7 +91,7 @@ cd navigator && pnpm link --global && cd ..
 
 Then proceed with either Method 1 or Method 2 below.
 
-### Method 1: Adding packages to package.json
+#### Method 1: Adding packages to package.json
 
 If you don't already have the packages in your project's dependencies, add the packages to your `package.json`:
 
@@ -85,7 +114,7 @@ pnpm install
 
 You can now modify the source code of the linked package, and the changes will be reflected in your project on re-build.
 
-### Method 2: Linking existing dependencies
+#### Method 2: Linking existing dependencies
 
 If you already have the packages in your project's dependencies (e.g., `"@readium/shared": "^2.0.0"`):
 
