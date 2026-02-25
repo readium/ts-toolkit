@@ -1,6 +1,6 @@
 import { KeyCombo, KeyboardPeripheral } from "./KeyboardCombinations";
 import { BaseKeyboardPeripheralEvent, KeyboardEventData, BasicTextSelection } from "../modules/Peripherals";
-import { ReadiumWindow } from "../helpers/dom";
+import { ReadiumWindow, nearestInteractiveElement } from "../helpers/dom";
 
 export type KeyHandler = (event: KeyboardEvent) => void;
 export type ActivityEventDispatcher = (event: KeyboardPeripheralEvent) => void;
@@ -56,6 +56,8 @@ export class KeyCombinationManager {
     ): KeyboardPeripheralEvent {
         // Capture selected text if window is available
         let selectedText: Omit<BasicTextSelection, "targetFrameSrc"> | undefined;
+        let interactiveElement: string | undefined;
+        
         if (wnd) {
             const selection = wnd.getSelection();
             const selectedTextStr = selection?.toString() || '';
@@ -71,6 +73,12 @@ export class KeyCombinationManager {
                     height: rect.height
                 };
             }
+
+            // Capture interactive element information following the same pattern as onPointUp
+            const activeElement = wnd.document.activeElement;
+            if (activeElement && activeElement !== wnd.document.body) {
+                interactiveElement = nearestInteractiveElement(activeElement)?.outerHTML;
+            }
         }
 
         return {
@@ -84,7 +92,8 @@ export class KeyCombinationManager {
             shiftKey: event.shiftKey,
             metaKey: event.metaKey,
             targetFrameSrc: targetFrameSrc,
-            selectedText
+            selectedText,
+            interactiveElement
         };
     }
 

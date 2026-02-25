@@ -59,6 +59,7 @@ export interface BaseKeyboardPeripheralEvent {
     timestamp: number;
     targetFrameSrc: string;
     selectedText?: Omit<BasicTextSelection, "targetFrameSrc">;
+    interactiveElement?: string;
 }
 
 export interface DeveloperToolsEvent extends BaseSuspiciousActivityEvent, KeyboardEventData {
