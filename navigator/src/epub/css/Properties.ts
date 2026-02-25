@@ -11,7 +11,6 @@ import {
 } from "../../css/Properties";
 
 export interface IUserProperties {
-  advancedSettings?: boolean | null;
   a11yNormalize?: boolean | null;
   backgroundColor?: string | null;
   blendFilter?: boolean | null;
