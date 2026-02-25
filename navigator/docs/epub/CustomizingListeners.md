@@ -143,6 +143,7 @@ interface KeyboardPeripheralEvent {
         width: number;
         height: number;
     };
+    interactiveElement?: string; // The interactive element (if any) that is currently focused
     key: string;            // The key that was pressed
     code: string;           // The physical key code
     keyCode: number;        // The numeric key code

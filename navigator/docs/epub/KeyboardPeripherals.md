@@ -96,6 +96,7 @@ interface KeyboardPeripheralEvent {
         width: number;
         height: number;
     };
+    interactiveElement?: string; // The interactive element (if any) that is currently focused
     // Keyboard-specific data
     key: string;
     code: string;
