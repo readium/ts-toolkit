@@ -132,7 +132,7 @@ Fires when a configured keyboard shortcut is triggered within the EPUB content. 
 The event provides detailed information about the keyboard interaction:
 
 ```ts
-interface KeyboardPeripheralEvent {
+interface KeyboardPeripheralEventData {
     type: string;           // The type of peripheral (e.g., "developer_tools", "select_all", "print", "save")
     timestamp: number;      // When the event occurred
     targetFrameSrc: string; // The source of the frame where the event originated
@@ -143,7 +143,7 @@ interface KeyboardPeripheralEvent {
         width: number;
         height: number;
     };
-    interactiveElement?: string; // The interactive element (if any) that is currently focused
+    interactiveElement?: Element; // The interactive element (if any) that is currently focused
     key: string;            // The key that was pressed
     code: string;           // The physical key code
     keyCode: number;        // The numeric key code

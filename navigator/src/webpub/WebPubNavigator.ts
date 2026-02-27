@@ -6,7 +6,7 @@ import { BasicTextSelection, CommsEventKey, ContextMenuEvent, FrameClickEvent, K
 import * as path from "path-browserify";
 import { WebPubFrameManager } from "./WebPubFrameManager";
 
-import { ManagerEventKey } from "../epub/EpubNavigator";
+import { KeyboardPeripheralEventData, ManagerEventKey } from "../epub/EpubNavigator";
 import { WebPubCSS } from "./css/WebPubCSS";
 import { WebUserProperties, WebRSProperties } from "./css/Properties";
 import { IWebPubPreferences, WebPubPreferences } from "./preferences/WebPubPreferences";
@@ -41,7 +41,7 @@ export interface WebPubNavigatorListeners {
     textSelected: (selection: BasicTextSelection) => void;
     contentProtection: (type: string, data: SuspiciousActivityEvent) => void;
     contextMenu: (data: ContextMenuEvent) => void;
-    peripheral: (data: KeyboardPeripheralEvent) => void;
+    peripheral: (data: KeyboardPeripheralEventData) => void;
 }
 
 const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorListeners => ({
@@ -352,7 +352,15 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
                 this.listeners.contextMenu(data as ContextMenuEvent);
                 break;
             case "keyboard_peripherals":
-                this.listeners.peripheral(data as KeyboardPeripheralEvent);
+                const event = data as KeyboardPeripheralEvent;
+                const parsedEvent: KeyboardPeripheralEventData = { ...event, interactiveElement: undefined };
+                if (event.interactiveElement) {
+                    parsedEvent.interactiveElement = new DOMParser().parseFromString(
+                        event.interactiveElement,
+                        "text/html"
+                    ).body.children[0] as Element;
+                }
+                this.listeners.peripheral(parsedEvent);
                 break;
             case "log":
                 console.log(this.framePool.currentFrames[0]?.source?.split("/")[3], ...(data as any[]));
