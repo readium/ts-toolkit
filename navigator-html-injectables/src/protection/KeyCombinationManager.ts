@@ -77,7 +77,7 @@ export class KeyCombinationManager {
             // Capture interactive element information following the same pattern as onPointUp
             const activeElement = wnd.document.activeElement;
             if (activeElement && activeElement !== wnd.document.body) {
-                interactiveElement = nearestInteractiveElement(activeElement)?.outerHTML;
+                interactiveElement = nearestInteractiveElement(activeElement, wnd)?.outerHTML;
             }
         }
 

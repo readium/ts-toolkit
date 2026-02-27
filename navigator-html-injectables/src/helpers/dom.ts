@@ -47,14 +47,14 @@ const interactiveTags = [
 const interactiveRoles = ["dialog", "radiogroup", "radio", "menu", "menuitem"];
 
 // See https://github.com/JayPanoz/architecture/tree/touch-handling/misc/touch-handling
-export function nearestInteractiveElement(element: Element): Element | null {
-    if (isInteractiveElement(element)) {
+export function nearestInteractiveElement(element: Element, wnd?: ReadiumWindow): Element | null {
+    if (isInteractiveElement(element) || (wnd && element === wnd.document.activeElement)) {
         return element;
     }
 
     // Checks parents recursively because the touch might be for example on an <em> inside a <a>.
     if (element.parentElement) {
-        return nearestInteractiveElement(element.parentElement);
+        return nearestInteractiveElement(element.parentElement, wnd);
     }
 
     return null;
