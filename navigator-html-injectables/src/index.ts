@@ -2,3 +2,4 @@ export * from './comms';
 export * from './modules';
 export * from './Loader';
 export * from './protection';
+export * from './keyboard';

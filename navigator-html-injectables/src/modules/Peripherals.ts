@@ -4,15 +4,13 @@ import { ReadiumWindow, nearestInteractiveElement } from "../helpers/dom";
 import { BulkCopyProtector, BulkCopyProtectionOptions } from "../protection/BulkCopyProtector";
 import { SelectionAnalyzer, SelectionAnalyzerOptions } from "../protection/SelectionAnalyzer";
 import { 
-    KeyboardPeripheral 
-} from "../protection";
-import { SuspiciousActivityType } from "../comms";
-import { BULK_COPY_CONFIG, SELECTION_ANALYZER_CONFIG } from "../protection/config";
-import { 
+    KeyboardPeripheral,
     KeyCombinationManager, 
     ActivityEventDispatcher,
     KeyboardPeripheralEvent
-} from "../protection/KeyCombinationManager";
+} from "../keyboard";
+import { SuspiciousActivityType } from "../comms";
+import { BULK_COPY_CONFIG, SELECTION_ANALYZER_CONFIG } from "../protection/config";
 import { SuspiciousScrollingEvent } from "./snapper/ScrollSnapper";
 import { SuspiciousSnappingEvent } from "./snapper/ColumnSnapper";
 
