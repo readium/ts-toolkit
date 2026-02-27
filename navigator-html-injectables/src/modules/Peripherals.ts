@@ -436,7 +436,7 @@ export class Peripherals extends Module {
             y: event.clientY * pixelRatio,
             targetFrameSrc: this.wnd.location.href,
             targetElement: (event.target as Element).outerHTML,
-            interactiveElement: nearestInteractiveElement(event.target as Element)?.outerHTML,
+            interactiveElement: nearestInteractiveElement(event.target as Element, this.wnd)?.outerHTML,
             cssSelector: this.wnd._readium_cssSelectorGenerator.getCssSelector(event.target as Element),
         } as FrameClickEvent);
 
