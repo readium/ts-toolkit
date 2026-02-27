@@ -49,7 +49,7 @@ const interactiveRoles = ["dialog", "radiogroup", "radio", "menu", "menuitem"];
 // See https://github.com/JayPanoz/architecture/tree/touch-handling/misc/touch-handling
 export function nearestInteractiveElement(element: Element, wnd?: ReadiumWindow): Element | null {
     // If the element or any ancestor is blocked, return null immediately
-   // if (isElementBlocked(element)) return null;
+    if (isElementBlocked(element)) return null;
     
     if (isInteractiveElement(element) || (wnd && element === wnd.document.activeElement)) {
         return element;
