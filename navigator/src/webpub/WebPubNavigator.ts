@@ -2,7 +2,7 @@ import { Feature, Link, Locator, Publication, ReadingProgression, LocatorLocatio
 import { VisualNavigator, VisualNavigatorViewport, ProgressionRange } from "../Navigator";
 import { Configurable } from "../preferences/Configurable";
 import { WebPubFramePoolManager } from "./WebPubFramePoolManager";
-import { BasicTextSelection, CommsEventKey, ContextMenuEvent, FrameClickEvent, KeyboardEventData, ModuleLibrary, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
+import { BasicTextSelection, CommsEventKey, ContextMenuEvent, FrameClickEvent, KeyboardPeripheralEvent, ModuleLibrary, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
 import { WebPubFrameManager } from "./WebPubFrameManager";
 
@@ -41,7 +41,7 @@ export interface WebPubNavigatorListeners {
     textSelected: (selection: BasicTextSelection) => void;
     contentProtection: (type: string, data: SuspiciousActivityEvent) => void;
     contextMenu: (data: ContextMenuEvent) => void;
-    peripheral: (data: KeyboardEventData) => void;
+    peripheral: (data: KeyboardPeripheralEvent) => void;
 }
 
 const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorListeners => ({
@@ -352,7 +352,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
                 this.listeners.contextMenu(data as ContextMenuEvent);
                 break;
             case "keyboard_peripherals":
-                this.listeners.peripheral(data as KeyboardEventData);
+                this.listeners.peripheral(data as KeyboardPeripheralEvent);
                 break;
             case "log":
                 console.log(this.framePool.currentFrames[0]?.source?.split("/")[3], ...(data as any[]));

@@ -2,7 +2,7 @@ import { Layout, Link, Locator, Profile, Publication, ReadingProgression } from 
 import { Configurable, ConfigurablePreferences, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../";
 import { FramePoolManager } from "./frame/FramePoolManager";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager";
-import { CommsEventKey, ContextMenuEvent, FXLModules, KeyboardEventData, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables";
+import { CommsEventKey, ContextMenuEvent, FXLModules, KeyboardPeripheralEvent, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables";
 import { BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
 import { FXLFrameManager } from "./fxl/FXLFrameManager";
@@ -44,7 +44,7 @@ export interface EpubNavigatorListeners {
     textSelected: (selection: BasicTextSelection) => void;
     contentProtection: (type: string, data: SuspiciousActivityEvent) => void;
     contextMenu: (data: ContextMenuEvent) => void;
-    peripheral: (data: KeyboardEventData) => void;
+    peripheral: (data: KeyboardPeripheralEvent) => void;
     // showToc: () => void;
 }
 
@@ -507,7 +507,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 this.listeners.contextMenu(data as ContextMenuEvent);
                 break;
             case "keyboard_peripherals":
-                this.listeners.peripheral(data as KeyboardEventData);
+                this.listeners.peripheral(data as KeyboardPeripheralEvent);
                 break;
             case "log":
                 console.log(this._cframes[0]?.source?.split("/")[3], ...(data as any[]));
