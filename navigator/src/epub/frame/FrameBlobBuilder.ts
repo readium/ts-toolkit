@@ -1,4 +1,4 @@
-import { Link, MediaType, Publication, ReadingProgression } from "@readium/shared";
+import { Link, MediaType, Publication, ReadingProgression, Resource } from "@readium/shared";
 import { Injector } from "../../injection/Injector.ts";
 import { getScriptMode } from "../../helpers/scriptMode.ts";
 
@@ -20,73 +20,127 @@ const csp = (domains: string[]) => {
     ].join("; ");
 };
 
-export default class FrameBlobBuider {
-    private readonly item: Link;
-    private readonly burl: string;
-    private readonly pub: Publication;
+export default class FrameBlobBuilder {
     private readonly cssProperties?: { [key: string]: string };
     private readonly injector: Injector | null = null;
 
+    private currentUrl?: string;
+    private currentResource?: Resource;
+
     constructor(
-        pub: Publication,
-        baseURL: string,
-        item: Link,
+        private readonly pub: Publication,
+        private readonly baseURL: string,
+        private readonly item: Link,
         options: {
             cssProperties?: { [key: string]: string };
             injector?: Injector | null;
         }
     ) {
-        this.pub = pub;
         this.item = item;
-        this.burl = item.toURL(baseURL) || "";
         this.cssProperties = options.cssProperties;
         this.injector = options.injector ?? null;
     }
 
+    public reset() {
+        this.currentUrl && URL.revokeObjectURL(this.currentUrl);
+        this.currentUrl = undefined;
+        this.currentResource?.close();
+        this.currentResource = undefined;
+    }
+
     public async build(fxl = false): Promise<string> {
-        if(!this.item.mediaType.isHTML) {
-            if(this.item.mediaType.isBitmap || this.item.mediaType.equals(MediaType.SVG)) {
-                return this.buildImageFrame();
+        if(this.currentUrl) return this.currentUrl;
+
+        this.currentResource = this.pub.get(this.item);
+        const link = await this.currentResource.link();
+        if(!this.currentResource) {
+            // Reset has occured in the meantime
+            return "about:blank";
+        }
+        if(!link.mediaType.isHTML) {
+            if(link.mediaType.isBitmap || link.mediaType.equals(MediaType.SVG)) {
+                const blobUrl = await this.buildImageFrame();
+                this.currentUrl = blobUrl;
+                return blobUrl;
             } else
-                throw Error("Unsupported frame mediatype " + this.item.mediaType.string);
+                throw Error("Unsupported frame mediatype " + link.mediaType.string);
         } else {
-            return await this.buildHtmlFrame(fxl);
+            const blobUrl = await this.buildHtmlFrame(fxl);
+            this.currentUrl = blobUrl;
+            return blobUrl;
         }
     }
 
     private async buildHtmlFrame(fxl = false): Promise<string> {
+        if(!this.currentResource) throw new Error("No resource loaded");
+
         // Load the HTML resource
-        const txt = await this.pub.get(this.item).readAsString();
-        if(!txt) throw new Error(`Failed reading item ${this.item.href}`);
+        const link = await this.currentResource.link();
+        const txt = await this.currentResource.readAsString();
+        if(!txt) throw new Error(`Failed reading item ${link.href}`);
+
 
         const doc = new DOMParser().parseFromString(
             txt,
-            this.item.mediaType.string as DOMParserSupportedType
+            link.mediaType.string as DOMParserSupportedType
         );
 
         const perror = doc.querySelector("parsererror");
         if (perror) {
             const details = perror.querySelector("div");
-            throw new Error(`Failed parsing item ${this.item.href}: ${details?.textContent || perror.textContent}`);
+            throw new Error(`Failed parsing item ${link.href}: ${details?.textContent || perror.textContent}`);
         }
 
         // Apply resource injections if injection service is provided
         if (this.injector) {
-            await this.injector.injectForDocument(doc, this.item);
+            await this.injector.injectForDocument(doc, link);
         }
 
-        return this.finalizeDOM(doc, this.pub.baseURL, this.burl, this.item.mediaType, fxl, this.cssProperties);
+        return this.finalizeDOM(doc, this.pub.baseURL, link.toURL(this.baseURL) || "", link.mediaType, fxl, this.cssProperties);
     }
 
-    private buildImageFrame(): string {
-        // Rudimentary image display
-        const doc = document.implementation.createHTMLDocument(this.item.title || this.item.href);
+    private async buildImageFrame(): Promise<string> {
+        if(!this.currentResource) throw new Error("No resource loaded");
+        const link = await this.currentResource.link();
+        const burl = link.toURL(this.baseURL) || ""
+
+        // Rudimentary image display in an HTML doc
+        const doc = document.implementation.createHTMLDocument(link.title || link.href);
+
+        // Add viewport if available
+        if((link?.height || 0) > 0 && (link?.width || 0) > 0) {
+            const viewportMeta = doc.createElement("meta");
+            viewportMeta.name = "viewport";
+            viewportMeta.content = `width=${link.width}, height=${link.height}`;
+            viewportMeta.dataset.readium = "true";
+            doc.head.appendChild(viewportMeta);
+        }
+
         const simg = document.createElement("img");
-        simg.src = this.burl || "";
-        simg.alt = this.item.title || "";
+        simg.src = burl || "";
+        simg.alt = link.title || "";
         simg.decoding = "async";
         doc.body.appendChild(simg);
-        return this.finalizeDOM(doc, this.pub.baseURL, this.burl, this.item.mediaType, true);
+
+        // Apply resource injections if injection service is provided
+        if (this.injector) {
+            await this.injector.injectForDocument(doc, new Link({
+                // Temporary solution to address injector only expecting (X)HTML
+                // documents for injection, which we are technically providing
+                href: "readium-image-frame.xhtml",
+                type: MediaType.XHTML.string
+            }));
+        }
+
+        // Add image style
+        const sstyle = doc.createElement("style");
+        sstyle.dataset.readium = "true";
+        sstyle.textContent = `
+        html, body { width: 100%; height: 100%; margin: 0; padding: 0; font-size: 0; }
+        img { margin: 0; padding: 0; border: 0; }`;
+        doc.head.appendChild(sstyle);
+
+        return this.finalizeDOM(doc, this.pub.baseURL, burl, link.mediaType, true);
     }
 
     private setProperties(cssProperties: { [key: string]: string }, doc: Document) {
@@ -101,6 +155,10 @@ export default class FrameBlobBuider {
 
         // Get allowed domains from injector if it exists
         const allowedDomains = this.injector?.getAllowedDomains?.() || [];
+
+        // Remove query from root if present, as CSP doesn't allow them
+        root = root?.split("?")[0];
+
 
         // Always include the root domain if provided
         const domains = [...new Set([
@@ -124,6 +182,7 @@ export default class FrameBlobBuider {
         // loaded in parallel, greatly increasing overall speed.
         doc.body.querySelectorAll("img").forEach((img) => {
             img.setAttribute("fetchpriority", "high");
+            img.setAttribute("referrerpolicy", "origin");
         });
 
         // We need to ensure that lang is set on the root element

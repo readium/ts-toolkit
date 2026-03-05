@@ -1,6 +1,6 @@
 import { ModuleName } from "@readium/navigator-html-injectables";
 import { Locator, Publication } from "@readium/shared";
-import FrameBlobBuider from "./FrameBlobBuilder.ts";
+import FrameBlobBuilder from "./FrameBlobBuilder.ts";
 import { FrameManager } from "./FrameManager.ts";
 import { Injector } from "../../injection/Injector.ts";
 import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator.ts";
@@ -14,7 +14,7 @@ export class FramePoolManager {
     private _currentFrame: FrameManager | undefined;
     private currentCssProperties: { [key: string]: string } | undefined;
     private readonly pool: Map<string, FrameManager> = new Map();
-    private readonly blobs: Map<string, string> = new Map();
+    private readonly blobs: Map<string, FrameBlobBuilder> = new Map();
     private readonly inprogress: Map<string, Promise<void>> = new Map();
     private pendingUpdates: Map<string, { inPool: boolean }> = new Map();
     private currentBaseURL: string | undefined;
@@ -62,10 +62,8 @@ export class FramePoolManager {
         this.pool.clear();
 
         // Revoke all blobs
-        this.blobs.forEach(v => {
-            this.injector?.releaseBlobUrl?.(v);
-            URL.revokeObjectURL(v);
-        });
+        this.blobs.forEach(v => v.reset());
+        this.blobs.clear();
 
         // Clean up injector if it exists
         this.injector?.dispose();
@@ -106,15 +104,18 @@ export class FramePoolManager {
                 this.pool.delete(href);
                 if(this.pendingUpdates.has(href))
                     this.pendingUpdates.set(href, { inPool: false });
+                // Note that we don't reset the blob here, unlike in the FXL pool.
+                // This is because FXL tends to have a ton more blobs. Maybe we'll adjust
+                // this at a later point with a much larger boundary for resets to deal
+                // with extremely long/large reflowable publications.
+                // Reflowable publication resources also tend to be much larger documents,
+                // so they're more expensive to preprocess with the FrameBlobBuilder.
             });
 
             // Check if base URL of publication has changed
             if(this.currentBaseURL !== undefined && pub.baseURL !== this.currentBaseURL) {
                 // Revoke all blobs
-                this.blobs.forEach(v => {
-                    this.injector?.releaseBlobUrl?.(v);
-                    URL.revokeObjectURL(v);
-                });
+                this.blobs.forEach(v => v.reset());
                 this.blobs.clear();
             }
             this.currentBaseURL = pub.baseURL;
@@ -127,18 +128,14 @@ export class FramePoolManager {
                     // when navigating backwards, where paginated will go the
                     // start of the resource instead of the end due to the
                     // corrupted width ColumnSnapper (injectables) gets on init
-                    this.blobs.forEach(v => {
-                        this.injector?.releaseBlobUrl?.(v);
-                        URL.revokeObjectURL(v);
-                    });
+                    this.blobs.forEach(v => v.reset());
                     this.blobs.clear();
                     this.pendingUpdates.clear();
                 }
                 if(this.pendingUpdates.has(href) && this.pendingUpdates.get(href)?.inPool === false) {
-                    const url = this.blobs.get(href);
-                    if(url) {
-                        this.injector?.releaseBlobUrl?.(url);
-                        URL.revokeObjectURL(url);
+                    const v = this.blobs.get(href);
+                    if(v) {
+                        v.reset();
                         this.blobs.delete(href);
                         this.pendingUpdates.delete(href);
                     }
@@ -157,7 +154,7 @@ export class FramePoolManager {
                 const itm = pub.readingOrder.findWithHref(href);
                 if(!itm) return; // TODO throw?
                 if(!this.blobs.has(href)) {
-                    const blobBuilder = new FrameBlobBuider(
+                    this.blobs.set(href, new FrameBlobBuilder(
                         pub,
                         this.currentBaseURL || "",
                         itm,
@@ -165,13 +162,11 @@ export class FramePoolManager {
                             cssProperties: this.currentCssProperties,
                             injector: this.injector
                         }
-                    );
-                    const blobURL = await blobBuilder.build();
-                    this.blobs.set(href, blobURL);
+                    ));
                 }
 
                 // Create <iframe>
-                const fm = new FrameManager(this.blobs.get(href)!, this.contentProtectionConfig, this.keyboardPeripheralsConfig);
+                const fm = new FrameManager(await this.blobs.get(href)!.build(), this.contentProtectionConfig, this.keyboardPeripheralsConfig);
                 if(href !== newHref) await fm.hide(); // Avoid unecessary hide
                 this.container.appendChild(fm.iframe);
                 await fm.load(modules);
