@@ -113,7 +113,7 @@ export default class FrameBlobBuilder {
         const simg = document.createElement("img");
         simg.src = burl || "";
         simg.alt = link.title || "";
-        simg.decoding = "async";
+        await simg.decode(); // Reduce repaints
         doc.body.appendChild(simg);
 
         // Apply resource injections if injection service is provided
