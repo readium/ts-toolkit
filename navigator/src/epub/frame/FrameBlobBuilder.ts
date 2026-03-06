@@ -76,14 +76,8 @@ export default class FrameBlobBuilder {
 
         // Load the HTML resource
         const link = await this.currentResource.link();
-        const txt = await this.currentResource.readAsString();
-        if(!txt) throw new Error(`Failed reading item ${link.href}`);
-
-
-        const doc = new DOMParser().parseFromString(
-            txt,
-            link.mediaType.string as DOMParserSupportedType
-        );
+        const doc = await this.currentResource.readAsXML() as HTMLDocument;
+        if(!doc) throw new Error(`Failed reading item ${link.href}`);
 
         const perror = doc.querySelector("parsererror");
         if (perror) {

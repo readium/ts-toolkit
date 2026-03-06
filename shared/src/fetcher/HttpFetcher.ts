@@ -108,7 +108,7 @@ export class HttpResource implements Resource {
     return await resp.text();
   }
 
-  async readAsXML(): Promise<XMLDocument> {
+  async readAsXML(): Promise<Document> {
     const resp = await this.client(this.url);
     if (!resp.ok)
       throw new Error(
@@ -116,7 +116,7 @@ export class HttpResource implements Resource {
       ); // TODO
     return new DOMParser().parseFromString(
       await resp.text(),
-      'application/xml'
+      this._link.mediaType.isHTML ? (this._link.mediaType.string as 'application/xhtml+xml' | 'text/html') : 'text/xml'
     );
   }
 }
