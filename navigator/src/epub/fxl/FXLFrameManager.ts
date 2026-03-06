@@ -1,7 +1,7 @@
 import { Loader, ModuleName } from "@readium/navigator-html-injectables";
 import { Page, ReadingProgression } from "@readium/shared";
 import { FrameComms } from "../frame/FrameComms.ts";
-import { FXLPeripherals } from "./FXLPeripherals.ts";
+import { FXLPeripherals, isTypedOMSupported } from "./FXLPeripherals.ts";
 import type { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
 import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator.ts";
 import { KeyboardConditionBridge } from "../../peripherals/KeyboardConditionBridge.ts";
@@ -54,9 +54,9 @@ export class FXLFrameManager {
         this.frame.dataset.originalHref = debugHref;
         this.source = "about:blank";
 
-        // NEW
         this.wrapper = document.createElement("div");
         this.wrapper.style.position = "relative";
+        this.wrapper.style.contain = "strict";
         this.wrapper.style.float = this.wrapper.style.cssFloat = direction === ReadingProgression.rtl ? "right" : "left";
     }
 
@@ -143,21 +143,43 @@ export class FXLFrameManager {
     update(page?: Page) {
         if(!this.loaded) return;
         const dimensions = this.loadPageSize();
-        this.frame.style.height = `${dimensions.height}px`;
-        this.frame.style.width = `${dimensions.width}px`;
         const ratio = Math.min(this.wrapper.clientWidth / dimensions.width, this.wrapper.clientHeight / dimensions.height);
-        this.frame.style.transform = `scale(${ratio})`;
+        if(isTypedOMSupported) {
+            this.frame.attributeStyleMap.set("width", CSS.px(dimensions.width));
+            this.frame.attributeStyleMap.set("height", CSS.px(dimensions.height));
+            this.frame.attributeStyleMap.set("transform", new CSSTransformValue([
+                new CSSScale(ratio, ratio),
+            ]));
+        } else {
+            this.frame.style.height = `${dimensions.height}px`;
+            this.frame.style.width = `${dimensions.width}px`;
+            this.frame.style.transform = `scale(${ratio})`;
+        }
         const bcr = this.frame.getBoundingClientRect();
         const hdiff = this.wrapper.clientHeight - bcr.height;
-        this.frame.style.top = `${hdiff / 2}px`;
-        if(page === Page.left) {
-            const wdiff = this.wrapper.clientWidth - bcr.width;
-            this.frame.style.left = `${wdiff}px`;
-        } else if(page === Page.center) {
-            const wdiff = this.wrapper.clientWidth - bcr.width;
-            this.frame.style.left = `${wdiff / 2}px`;
+
+        if(isTypedOMSupported) {
+            this.frame.attributeStyleMap.set("top", CSS.px(hdiff / 2));
+            if(page === Page.left) {
+                const wdiff = this.wrapper.clientWidth - bcr.width;
+                this.frame.attributeStyleMap.set("left", CSS.px(wdiff));
+            } else if(page === Page.center) {
+                const wdiff = this.wrapper.clientWidth - bcr.width;
+                this.frame.attributeStyleMap.set("left", CSS.px(wdiff / 2));
+            } else {
+                this.frame.attributeStyleMap.set("left", CSS.px(0));
+            }
         } else {
-            this.frame.style.left = "0px";
+            this.frame.style.top = `${hdiff / 2}px`;
+            if(page === Page.left) {
+                const wdiff = this.wrapper.clientWidth - bcr.width;
+                this.frame.style.left = `${wdiff}px`;
+            } else if(page === Page.center) {
+                const wdiff = this.wrapper.clientWidth - bcr.width;
+                this.frame.style.left = `${wdiff / 2}px`;
+            } else {
+                this.frame.style.left = "0px";
+            }
         }
 
         this.frame.style.removeProperty("visibility");
@@ -196,6 +218,8 @@ export class FXLFrameManager {
             this.source = "about:blank";
             this.frame.contentWindow!.location.replace("about:blank");
             this.frame.style.display = "none";
+            this.frame.style.width = "0px";
+            this.frame.style.height = "0px";
         });
     }
 

@@ -3,7 +3,7 @@ import { Locator, Publication, ReadingProgression, Page, Link } from "@readium/s
 import { FrameCommsListener } from "../frame/index.ts";
 import FrameBlobBuilder from "../frame/FrameBlobBuilder.ts";
 import { FXLFrameManager } from "./FXLFrameManager.ts";
-import { FXLPeripherals } from "./FXLPeripherals.ts";
+import { FXLPeripherals, isTypedOMSupported } from "./FXLPeripherals.ts";
 import { FXLSpreader, Orientation, Spread } from "./FXLSpreader.ts";
 import { VisualNavigatorViewport, IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator.ts";
 import { Injector } from "../../injection/Injector.ts";
@@ -37,7 +37,7 @@ export class FXLFramePoolManager {
     private readonly pub: Publication;
     public width: number = 0;
     public height: number = 0;
-    private transform: string = "";
+    private transform: number | undefined;
     public currentSlide: number = 0;
     private spreader: FXLSpreader;
     private spread = true; // TODO
@@ -186,23 +186,33 @@ export class FXLFramePoolManager {
     }
 
     public updateSpineStyle(animate: boolean, fast = true) {
-        let margin = "0";
+        let margin = 0;
         this.updateDimensions();
         if(this.perPage > 1 && true) // this.shift
-            margin = `${this.width / 2}px`;
+            margin = this.width / 2;
 
-        const spineStyle = {
-            transition: animate ? `all ${fast ? SLIDE_FAST : SLIDE_SLOW}ms ease-out` : "all 0ms ease-out",
-            marginRight: this.rtl ? margin : "0",
-            marginLeft: this.rtl ? "0" : margin,
-            width: `${(this.width / this.perPage) * this.length}px`,
-            transform: this.transform,
-
-            // Static (should be moved to CSS)
-            contain: "content"
-        } as CSSStyleDeclaration;
-
-        Object.assign(this.spineElement.style, spineStyle);
+        if(isTypedOMSupported) {
+            // TODO: don't use UnparsedValue, but rather the longhand of every transition property
+            this.spineElement.attributeStyleMap.set("transition", new CSSUnparsedValue([animate ? `all ${fast ? SLIDE_FAST : SLIDE_SLOW}ms ease-out` : "all 0ms ease-out"]));
+            this.spineElement.attributeStyleMap.set("margin-right", CSS.px(this.rtl ? margin : 0));
+            this.spineElement.attributeStyleMap.set("margin-left", CSS.px(this.rtl ? 0 : margin));
+            this.spineElement.attributeStyleMap.set("width", CSS.px((this.width / this.perPage) * this.length));
+            this.transform ? this.spineElement.attributeStyleMap.set("transform", new CSSTransformValue([
+                new CSSTranslate(CSS.px(this.transform || 0), CSS.px(0), CSS.px(0))
+            ])) : this.spineElement.attributeStyleMap.delete("transform");
+            this.spineElement.attributeStyleMap.set("contain", new CSSUnparsedValue(["content"]));
+        } else {
+            const spineStyle = {
+                transition: animate ? `all ${fast ? SLIDE_FAST : SLIDE_SLOW}ms ease-out` : "all 0ms ease-out",
+                marginRight: this.rtl ? `${this.width / 2}px` : "0",
+                marginLeft: this.rtl ? "0" : `${margin}px`,
+                width: `${(this.width / this.perPage) * this.length}px`,
+                transform: this.transform ? `translate3d(${this.transform}px, 0px, 0px)` : "",
+                // Static (should be moved to CSS)
+                contain: "content"
+            } as CSSStyleDeclaration;
+            Object.assign(this.spineElement.style, spineStyle);
+        }
     }
 
     public updateBookStyle(initial=false) {
@@ -223,7 +233,16 @@ export class FXLFramePoolManager {
             } as CSSStyleDeclaration;
             Object.assign(this.bookElement.style, bookStyle);
         }
-        this.bookElement.style.transform = `scale(${this.peripherals?.scale || 1})` + (this.peripherals ? ` translate3d(${this.peripherals.pan.translateX}px, ${this.peripherals.pan.translateY}px, 0px)` : "");
+        if(isTypedOMSupported) {
+            this.bookElement.attributeStyleMap.set("transform", new CSSTransformValue([
+                new CSSScale(this.peripherals?.scale || 1, this.peripherals?.scale || 1),
+                this.peripherals ? new CSSTranslate(
+                    CSS.px(this.peripherals.pan.translateX), CSS.px(this.peripherals.pan.translateY), CSS.px(0)
+                ) : new CSSTranslate(CSS.px(0), CSS.px(0), CSS.px(0))
+            ]));
+        } else {
+            this.bookElement.style.transform = `scale(${this.peripherals?.scale || 1})` + (this.peripherals ? ` translate3d(${this.peripherals.pan.translateX}px, ${this.peripherals.pan.translateY}px, 0px)` : "");
+        }
     }
 
     /**
@@ -294,7 +313,7 @@ export class FXLFramePoolManager {
                 requestAnimationFrame(() => {
                     const newTransform = `translate3d(${this.offset}px, 0, 0)`;
                     if(this.spineElement.style.transform === newTransform) return;
-                    this.transform = newTransform;
+                    this.transform = this.offset;
                     this.updateSpineStyle(true, fast);
                     this.deselect();
                 });
@@ -302,7 +321,7 @@ export class FXLFramePoolManager {
         } else {
             const newTransform = `translate3d(${this.offset}px, 0, 0)`;
             if(this.spineElement.style.transform === newTransform) return;
-            this.transform = newTransform;
+            this.transform = this.offset;
             this.updateSpineStyle(false);
             this.deselect();
         }
@@ -310,10 +329,10 @@ export class FXLFramePoolManager {
 
     bounce(rtl = false) {
         requestAnimationFrame(() => {
-            this.transform = `translate3d(${this.offset+(50 * (rtl ? 1 : -1))}px, 0, 0)`;
+            this.transform = this.offset + (50 * (rtl ? 1 : -1));
             this.updateSpineStyle(true, true);
             setTimeout(() => {
-                this.transform = `translate3d(${this.offset}px, 0, 0)`;
+                this.transform = this.offset;
                 this.updateSpineStyle(true, true);
             }, 100);
         });

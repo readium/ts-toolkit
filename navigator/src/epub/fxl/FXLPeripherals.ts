@@ -35,6 +35,8 @@ export interface Zoomer {
     };
 }
 
+export const isTypedOMSupported = typeof window.CSSTransformValue !== 'undefined';
+
 export class FXLPeripherals {
 
     private readonly manager: FXLFramePoolManager;
@@ -498,7 +500,17 @@ export class FXLPeripherals {
             cancelAnimationFrame(this.moveFrame);
             this.moveFrame = requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    this.manager.spineElement.style.transform = `translate3d(${(this.manager.rtl ? 1 : -1) * offset}px, 0, 0)`;
+                    if(isTypedOMSupported) {
+                        this.manager.spineElement.attributeStyleMap.set("transform", new CSSTransformValue([
+                            new CSSTranslate(
+                                CSS.px((this.manager.rtl ? 1 : -1) * offset), 
+                                CSS.px(0),
+                                CSS.px(0)
+                            )
+                        ]));
+                    } else {
+                        this.manager.spineElement.style.transform = `translate3d(${(this.manager.rtl ? 1 : -1) * offset}px, 0, 0)`;
+                    }
                 })
             });
         }
