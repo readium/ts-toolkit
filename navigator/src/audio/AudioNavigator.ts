@@ -6,7 +6,9 @@ import {
     AudioPreferences, 
     AudioDefaults, 
     AudioSettings,
-    AudioPreferencesEditor
+    AudioPreferencesEditor,
+    IAudioPreferences,
+    IAudioDefaults
 } from "./preferences";
 import { AudioPoolManager } from "./AudioPoolManager";
 
@@ -22,8 +24,8 @@ export interface AudioNavigatorListeners {
 }
 
 export interface AudioNavigatorConfiguration {
-    preferences: AudioPreferences;
-    defaults: AudioDefaults;
+    preferences: IAudioPreferences;
+    defaults: IAudioDefaults;
     audioContext?: AudioContext;
 }
 
@@ -40,8 +42,8 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     private pool: AudioPoolManager;
 
     constructor(publication: Publication, listeners: AudioNavigatorListeners, initialPosition?: Locator, configuration: AudioNavigatorConfiguration = { 
-        preferences: new AudioPreferences(), 
-        defaults: new AudioDefaults() 
+        preferences: {}, 
+        defaults: {} 
     }) {
         super();
         this.pub = publication;
