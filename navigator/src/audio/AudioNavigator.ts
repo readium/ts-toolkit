@@ -66,14 +66,15 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                 locations: new LocatorLocations({
                     position: 0,
                     progression: 0,
-                    otherLocations: new Map([['time', 0]])
+                    totalProgression: 0,
+                    fragments: ["t=0"]
                 })
             });
         }
 
         // Create playback state from currentLocation
         const trackIndex = this.currentLocation.locations?.position || 0;
-        const currentTime = this.currentLocation.locations?.otherLocations?.get('time') || 0;
+        const currentTime = this.currentLocation.locations?.time() || 0;
         
         const playback = {
             state: {
@@ -172,7 +173,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             locations: new LocatorLocations({
                 progression: duration && duration > 0 ? timestamp / duration : 0,
                 position: trackIndex,
-                otherLocations: new Map([['time', timestamp]])
+                fragments: [`t=${timestamp}`]
             })
         });
     }
@@ -192,7 +193,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             this.currentLocation = this.currentLocation.copyWithLocations(new LocatorLocations({
                 position: this.currentLocation.locations?.position,
                 progression,
-                otherLocations: new Map([['time', currentTime]])
+                fragments: [`t=${currentTime}`]
             }));
 
             // Throttle positionChanged emissions to pollInterval rate
@@ -212,7 +213,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             this.currentLocation = this.currentLocation.copyWithLocations(new LocatorLocations({
                 position: this.currentLocation.locations?.position,
                 progression: 1,
-                otherLocations: new Map([['time', this.duration]])
+                fragments: [`t=${this.duration}`]
             }));
 
             this.listeners.onEnded?.(this.currentLocator);
@@ -329,7 +330,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     async go(locator: Locator, _animated: boolean, cb: (ok: boolean) => void): Promise<void> {
         try {
             const trackIndex = locator.locations?.position || 0;
-            const time = locator.locations?.otherLocations?.get('time') || 0;
+            const time = locator.locations?.time() || 0;
 
             if (trackIndex < 0 || trackIndex >= this.pub.readingOrder.items.length) {
                 cb(false);
