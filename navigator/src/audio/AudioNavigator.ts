@@ -247,7 +247,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: currentTrack?.title || `Track ${currentTrackIndex + 1}`,
                 artist: this.pub.metadata.authors 
-                    ? (this.pub.metadata.authors as any).map((a: any) => a.name).join(", ")
+                    ? this.pub.metadata.authors.items.map((a) => a.name.getTranslation()).join(", ")
                     : undefined,
                 album: this.pub.metadata.title.getTranslation(),
             });
