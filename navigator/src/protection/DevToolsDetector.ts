@@ -282,6 +282,7 @@ export class DevToolsDetector {
         // Cleanup Web Worker
         if (this.workerConsole) {
             this.workerConsole.destroy();
+            this.workerConsole = undefined;
         }
         
         this.isOpen = false;
