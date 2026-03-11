@@ -35,7 +35,7 @@ export interface Zoomer {
     };
 }
 
-export const isTypedOMSupported = typeof window.CSSTransformValue !== 'undefined';
+export const isTypedOMSupported = () => typeof window.CSSTransformValue !== 'undefined';
 
 export class FXLPeripherals {
 
@@ -500,7 +500,7 @@ export class FXLPeripherals {
             cancelAnimationFrame(this.moveFrame);
             this.moveFrame = requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    if(isTypedOMSupported) {
+                    if(isTypedOMSupported()) {
                         this.manager.spineElement.attributeStyleMap.set("transform", new CSSTransformValue([
                             new CSSTranslate(
                                 CSS.px((this.manager.rtl ? 1 : -1) * offset), 

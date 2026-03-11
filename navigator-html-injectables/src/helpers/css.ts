@@ -1,6 +1,6 @@
 import { ReadiumWindow } from "./dom.ts";
 
-export const isTypedOMSupported = typeof window.CSSTransformValue !== 'undefined';
+export const isTypedOMSupported = () => typeof window.CSSTransformValue !== 'undefined';
 
 export function getProperties(wnd: ReadiumWindow) {
     const cssProperties: { [key: string]: string } = {};

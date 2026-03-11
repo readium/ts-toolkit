@@ -191,7 +191,7 @@ export class FXLFramePoolManager {
         if(this.perPage > 1 && true) // this.shift
             margin = this.width / 2;
 
-        if(isTypedOMSupported) {
+        if(isTypedOMSupported()) {
             // TODO: don't use UnparsedValue, but rather the longhand of every transition property
             this.spineElement.attributeStyleMap.set("transition", new CSSUnparsedValue([animate ? `all ${fast ? SLIDE_FAST : SLIDE_SLOW}ms ease-out` : "all 0ms ease-out"]));
             this.spineElement.attributeStyleMap.set("margin-right", CSS.px(this.rtl ? margin : 0));
@@ -233,7 +233,7 @@ export class FXLFramePoolManager {
             } as CSSStyleDeclaration;
             Object.assign(this.bookElement.style, bookStyle);
         }
-        if(isTypedOMSupported) {
+        if(isTypedOMSupported()) {
             this.bookElement.attributeStyleMap.set("transform", new CSSTransformValue([
                 new CSSScale(this.peripherals?.scale || 1, this.peripherals?.scale || 1),
                 this.peripherals ? new CSSTranslate(

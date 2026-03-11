@@ -167,7 +167,7 @@ export class ColumnSnapper extends Snapper {
                 const spos = position(currentScrollLeft, so, elapsed, period);
                 doc.scrollLeft = spos;
                 if(this.overscroll !== 0)
-                    if(isTypedOMSupported) {
+                    if(isTypedOMSupported()) {
                         doc.attributeStyleMap.set("transform", new CSSTransformValue([
                             new CSSTranslate(CSS.px(-lpos), CSS.px(0), CSS.px(0))
                         ]));
@@ -289,7 +289,7 @@ export class ColumnSnapper extends Snapper {
 
         if(newpos < minScrollLeft) {
             this.overscroll = newpos;
-            if(isTypedOMSupported) {
+            if(isTypedOMSupported()) {
                 this.doc().attributeStyleMap.set("transform", new CSSTransformValue([
                     new CSSTranslate(CSS.px(-newpos), CSS.px(0), CSS.px(0))
                 ]));
@@ -298,7 +298,7 @@ export class ColumnSnapper extends Snapper {
             }
         } else if(newpos > maxScrollLeft) {
             this.overscroll = newpos;
-            if(isTypedOMSupported) {
+            if(isTypedOMSupported()) {
                 this.doc().attributeStyleMap.set("transform", new CSSTransformValue([
                     new CSSTranslate(CSS.px(-newpos), CSS.px(0), CSS.px(0))
                 ]));

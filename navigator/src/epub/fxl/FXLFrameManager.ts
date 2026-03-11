@@ -144,7 +144,7 @@ export class FXLFrameManager {
         if(!this.loaded) return;
         const dimensions = this.loadPageSize();
         const ratio = Math.min(this.wrapper.clientWidth / dimensions.width, this.wrapper.clientHeight / dimensions.height);
-        if(isTypedOMSupported) {
+        if(isTypedOMSupported()) {
             this.frame.attributeStyleMap.set("width", CSS.px(dimensions.width));
             this.frame.attributeStyleMap.set("height", CSS.px(dimensions.height));
             this.frame.attributeStyleMap.set("transform", new CSSTransformValue([
@@ -158,7 +158,7 @@ export class FXLFrameManager {
         const bcr = this.frame.getBoundingClientRect();
         const hdiff = this.wrapper.clientHeight - bcr.height;
 
-        if(isTypedOMSupported) {
+        if(isTypedOMSupported()) {
             this.frame.attributeStyleMap.set("top", CSS.px(hdiff / 2));
             if(page === Page.left) {
                 const wdiff = this.wrapper.clientWidth - bcr.width;
