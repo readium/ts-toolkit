@@ -36,7 +36,7 @@ import {
   
       // Create an HTML audio element
       this.mediaElement = document.createElement("audio");
-      this.mediaElement.crossOrigin = "use-credentials"; // Optional: Handle cross-origin audio files
+      this.mediaElement.crossOrigin = "anonymous"; // Handle cross-origin audio files
   
       // Event listeners (to report the client app about some async events)
       this.mediaElement.addEventListener(

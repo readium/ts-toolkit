@@ -36,7 +36,7 @@ export class AudioPoolManager {
         }
 
         const audioElement = document.createElement("audio");
-        audioElement.crossOrigin = "use-credentials";
+        audioElement.crossOrigin = "anonymous";
         audioElement.preload = "auto";
         audioElement.src = href;
         audioElement.load(); // Start buffering

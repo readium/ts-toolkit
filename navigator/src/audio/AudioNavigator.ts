@@ -55,7 +55,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
         // Initialize currentLocation from initialPosition or default
         if (initialPosition) {
-            this.currentLocation = initialPosition;
+            this.currentLocation = this.ensureLocatorLocations(initialPosition);
         } else {
             // Default to first track at time 0
             const firstLink = this.pub.readingOrder.items[0];
@@ -137,6 +137,17 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
     get publication(): Publication {
         return this.pub;
+    }
+
+    private ensureLocatorLocations(locator: Locator): Locator {
+        return new Locator({
+            ...locator,
+            locations: locator.locations instanceof LocatorLocations
+                ? locator.locations
+                : locator.locations
+                    ? new LocatorLocations(locator.locations)
+                    : undefined
+        });
     }
 
     get currentLocator(): Locator {
@@ -329,6 +340,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
     async go(locator: Locator, _animated: boolean, cb: (ok: boolean) => void): Promise<void> {
         try {
+            locator = this.ensureLocatorLocations(locator);
             const trackIndex = locator.locations?.position || 0;
             const time = locator.locations?.time() || 0;
 
