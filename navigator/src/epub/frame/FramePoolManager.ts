@@ -5,8 +5,8 @@ import { FrameManager } from "./FrameManager.ts";
 import { Injector } from "../../injection/Injector.ts";
 import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator.ts";
 
-const UPPER_BOUNDARY = 5;
-const LOWER_BOUNDARY = 3;
+const UPPER_BOUNDARY = 10;
+const LOWER_BOUNDARY = 5;
 
 export class FramePoolManager {
     private readonly container: HTMLElement;
@@ -171,12 +171,18 @@ export class FramePoolManager {
                 this.container.appendChild(fm.iframe);
                 await fm.load(modules);
                 this.pool.set(href, fm);
+                return fm;
             }
+
+            // Target frame is awaited
             try {
-                await Promise.all(creation.map(href => creator(href)));
+                await Promise.all(creation.filter(href => href === newHref).map(href => creator(href)));
             } catch (error) {
                 reject(error);
             }
+
+            // Remaining frames can resolve later
+            Promise.all(creation.map(href => creator(href)));
 
             // Update current frame
             const newFrame = this.pool.get(newHref)!;
