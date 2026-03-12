@@ -35,7 +35,7 @@ export class Manifest {
   constructor(values: {
     context?: Array<string>;
     metadata: Metadata;
-    links: Links;
+    links?: Links;
     readingOrder: Links;
     resources?: Links;
     toc?: Links;
@@ -43,7 +43,7 @@ export class Manifest {
   }) {
     this.context = values.context;
     this.metadata = values.metadata;
-    this.links = values.links;
+    this.links = values.links || new Links([]);
     this.readingOrder = values.readingOrder;
     this.resources = values.resources;
     this.toc = values.toc;
@@ -63,10 +63,6 @@ export class Manifest {
 
     if (!metadata) return;
 
-    const links = Links.deserialize(json.links);
-
-    if (!links) return;
-
     const readingOrder = Links.deserialize(
       json.readingOrder ? json.readingOrder : json.spine
     );
@@ -76,7 +72,7 @@ export class Manifest {
     return new Manifest({
       context: arrayfromJSONorString(json['@context']),
       metadata,
-      links,
+      links: Links.deserialize(json.links),
       readingOrder,
       resources: Links.deserialize(json.resources),
       toc: Links.deserialize(json.toc),
@@ -93,7 +89,7 @@ export class Manifest {
     const json: any = {};
     if (this.context !== undefined) json['@context'] = this.context;
     json.metadata = this.metadata.serialize();
-    json.links = this.links.serialize();
+    if (this.links?.items.length > 0) json.links = this.links.serialize();
     json.readingOrder = this.readingOrder.serialize();
     if (this.resources) json.resources = this.resources.serialize();
     if (this.toc) json.toc = this.toc.serialize();
@@ -108,7 +104,9 @@ export class Manifest {
     if (this.resources) {
       links.push(this.resources);
     }
-    links.push(this.links);
+    if(this.links) {
+      links.push(this.links);
+    }
 
     let result: Link | undefined;
 
@@ -129,7 +127,9 @@ export class Manifest {
     if (this.resources) {
       result.push(this.resources.filterByRel(rel));
     }
-    result.push(this.links.filterByRel(rel));
+    if(this.links) {
+      result.push(this.links.filterByRel(rel));
+    }
 
     return result.reduce((acc, val) => acc.concat(val), []);
   }
@@ -197,7 +197,9 @@ export class Manifest {
     if (this.resources) {
       links.push(this.resources);
     }
-    links.push(this.links);
+    if(this.links) {
+      links.push(this.links);
+    }
 
     const link = find(links);
 
