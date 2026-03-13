@@ -885,7 +885,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             return;
         }
 
-        const progression = locator?.locations?.progression;
+        const progression = locator.locations?.progression;
         const hasProgression = progression && progression > 0;
         if(hasProgression)
             done = await new Promise<boolean>((res, _) => {
@@ -897,6 +897,36 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     }
 
     public go(locator: Locator, _: boolean, cb: (ok: boolean) => void): void {
+        if(!locator.href) {
+            let fellback = false;
+            if(typeof locator.locations.position === "number") {
+                const match = this.positions.find(p => p.locations.position === locator.locations.position);
+                if (match) {
+                    locator = match.copyWithLocations(locator.locations);
+                    fellback = true;
+                }
+            }
+            if(!fellback && typeof locator.locations?.totalProgression === "number") {
+                // If locator has no href, but it does have a totalProgression,
+                // we can attempt to find the right resource from the positions list.
+                // This is here to help with conversion from OPDS locators which only
+                // require the total progression in the publication.
+                const targetProgression = locator.locations.totalProgression;
+                let closestIdx = 0;
+                let closestDist = Infinity;
+                for (let i = 0; i < this.positions.length; i++) {
+                    const pos = this.positions[i];
+                    // Use totalProgression if available, otherwise estimate from index
+                    const posProg = pos.locations.totalProgression ?? (i / this.positions.length);
+                    const dist = Math.abs(posProg - targetProgression);
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        closestIdx = i;
+                    }
+                }
+                locator = this.positions[closestIdx].copyWithLocations(locator.locations);
+            }
+        }
         const href = locator.href.split("#")[0];
         let link = this.pub.readingOrder.findWithHref(href);
         if(!link) {
