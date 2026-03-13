@@ -15,7 +15,7 @@ export class FramePoolManager {
     private currentCssProperties: { [key: string]: string } | undefined;
     private readonly pool: Map<string, FrameManager> = new Map();
     private readonly blobs: Map<string, FrameBlobBuilder> = new Map();
-    private readonly inprogress: Map<string, Promise<void>> = new Map();
+    private readonly inprogress: Map<string, Promise<unknown>> = new Map();
     private pendingUpdates: Map<string, { inPool: boolean }> = new Map();
     private currentBaseURL: string | undefined;
     private readonly injector: Injector | null = null;
@@ -42,7 +42,7 @@ export class FramePoolManager {
         // Wait for all in-progress loads to complete
         let iit = this.inprogress.values();
         let inp = iit.next();
-        const inprogressPromises: Promise<void>[] = [];
+        const inprogressPromises: Promise<unknown>[] = [];
         while(inp.value) {
             inprogressPromises.push(inp.value);
             inp = iit.next();
@@ -182,7 +182,12 @@ export class FramePoolManager {
             }
 
             // Remaining frames can resolve later
-            Promise.all(creation.map(href => creator(href)));
+            Promise.all(creation.map(async href => {
+                const c = creator(href);
+                this.inprogress.set(href, c);
+                await c;
+                this.inprogress.delete(href);
+            }));
 
             // Update current frame
             const newFrame = this.pool.get(newHref)!;
