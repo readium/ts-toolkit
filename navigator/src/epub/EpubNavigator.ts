@@ -269,7 +269,11 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             this.currentLocation = this.completeLocator(this.currentLocation);
 
         await this.resizeHandler();
-        await this.apply();
+        return new Promise(async res => {
+            await this.go(this.currentLocation, false, (s) => {
+                res(s);
+            });
+        });
     }
 
     public get settings(): Readonly<EpubSettings> {
