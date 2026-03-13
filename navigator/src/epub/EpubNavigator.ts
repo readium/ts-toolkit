@@ -265,6 +265,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
         if(this.currentLocation === undefined)
             this.currentLocation = this.positions[0];
+        else
+            this.currentLocation = this.completeLocator(this.currentLocation);
 
         await this.resizeHandler();
         await this.apply();
@@ -896,7 +898,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         cb(done);
     }
 
-    public go(locator: Locator, _: boolean, cb: (ok: boolean) => void): void {
+    private completeLocator(locator: Locator): Locator {
         if(!locator.href) {
             let fellback = false;
             if(typeof locator.locations.position === "number") {
@@ -927,6 +929,11 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 locator = this.positions[closestIdx].copyWithLocations(locator.locations);
             }
         }
+        return locator;
+    }
+
+    public go(locator: Locator, _: boolean, cb: (ok: boolean) => void): void {
+        locator = this.completeLocator(locator);
         const href = locator.href.split("#")[0];
         let link = this.pub.readingOrder.findWithHref(href);
         if(!link) {
