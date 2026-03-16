@@ -1,5 +1,6 @@
 import { Publication } from "@readium/shared";
 import { WebAudioEngine } from "./engine/WebAudioEngine";
+
 export class AudioPoolManager {
     private preloadedElements: Map<string, HTMLAudioElement> = new Map();
     private _audioEngine: WebAudioEngine;
@@ -21,11 +22,14 @@ export class AudioPoolManager {
      * @param direction The navigation direction ('forward' or 'backward').
      */
     setCurrentAudio(href: string, publication: Publication, currentIndex: number, direction: 'forward' | 'backward'): void {
-        const preloadedElement = this.get(href);
+        // When Web Audio is active, preloaded elements lack crossOrigin="anonymous"
+        // and cannot be connected to MediaElementAudioSourceNode, so bypass the pool.
+        const preloadedElement = !this.audioEngine.isWebAudioActive ? this.get(href) : undefined;
         if (preloadedElement) {
             this.audioEngine.setMediaElement(preloadedElement);
             this.clear(href);
         } else {
+            this.clear(href);
             this.audioEngine.loadAudio(href);
         }
         this.preloadAdjacent(publication, currentIndex, direction);
@@ -36,7 +40,6 @@ export class AudioPoolManager {
         }
 
         const audioElement = document.createElement("audio");
-        audioElement.crossOrigin = "anonymous";
         audioElement.preload = "auto";
         audioElement.src = href;
         audioElement.load(); // Start buffering

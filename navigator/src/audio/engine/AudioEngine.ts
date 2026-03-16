@@ -1,6 +1,3 @@
-import { Locator } from '@readium/shared';
-import { Publication } from '@readium/shared';
-
 /**
  * Initial state of the audio engine playback.
  */
@@ -49,10 +46,11 @@ export interface AudioEngine {
     playback: Playback;
 
     /**
-     * Plays the audio resource at the given locator.
+     * Loads the audio resource at the given URL.
+     * @param url The URL of the audio resource.
      */
-    playLocator(publication: Publication, locator: Locator): Promise<void>;
-
+    loadAudio(url: string): void;
+    
     /**
      * Adds an event listener to the audio engine.
      * @param event The event name to listen.
@@ -66,12 +64,6 @@ export interface AudioEngine {
      * @param callback Callback function to be removed.
      */
     off(event: string, callback: (data: any) => void): void;
-
-    /**
-     * Loads the audio resource at the given URL.
-     * @param url The URL of the audio resource.
-     */
-    loadAudio(url: string): void;
     
     /**
      * Sets the media element for playback, enabling use of preloaded elements from the pool.

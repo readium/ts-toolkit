@@ -27,6 +27,7 @@ export class PreservePitchWorklet {
         await ctx.audioWorklet.addModule(worklet.url);
       }
     } catch (err) {
+      worklet.destroy();
       throw new Error(`Error adding module: ${err}`);
     }
 
@@ -44,6 +45,7 @@ export class PreservePitchWorklet {
         worklet.source = source;
       }
     } catch (err) {
+      worklet.destroy();
       throw new Error(`Error creating worklet node: ${err}`);
     }
 
