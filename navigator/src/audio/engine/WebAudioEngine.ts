@@ -27,35 +27,41 @@ import {
     private isEndedValue: boolean = false;
     private isStoppedValue: boolean = false;
     private worklet: PreservePitchWorklet | null = null;
-  
+
+  private readonly boundOnCanPlayThrough = this.onCanPlayThrough.bind(this);
+  private readonly boundOnTimeUpdate = this.onTimeUpdate.bind(this);
+  private readonly boundOnError = this.onError.bind(this);
+  private readonly boundOnEnded = this.onEnded.bind(this);
+  private readonly boundOnStalled = this.onStalled.bind(this);
+  private readonly boundOnEmptied = this.onEmptied.bind(this);
+  private readonly boundOnSuspend = this.onSuspend.bind(this);
+  private readonly boundOnWaiting = this.onWaiting.bind(this);
+  private readonly boundOnLoadedMetadata = this.onLoadedMetadata.bind(this);
+  private readonly boundOnSeeking = this.onSeeking.bind(this);
+  private readonly boundOnSeeked = this.onSeeked.bind(this);
+
     constructor(values: { playback: Playback; audioContext: AudioContext }) {
       this.playback = values.playback;
       this.audioContext = values.audioContext;
       this.gainNode = this.audioContext?.createGain();
       this.setVolume(this.playback.state.volume); // Default initial volume
-  
+
       // Create an HTML audio element
       this.mediaElement = document.createElement("audio");
       this.mediaElement.crossOrigin = "anonymous"; // Handle cross-origin audio files
-  
+
       // Event listeners (to report the client app about some async events)
-      this.mediaElement.addEventListener(
-        "canplaythrough",
-        this.onCanPlayThrough.bind(this)
-      );
-      this.mediaElement.addEventListener(
-        "timeupdate",
-        this.onTimeUpdate.bind(this)
-      );
-      this.mediaElement.addEventListener("error", this.onError.bind(this));
-      this.mediaElement.addEventListener("ended", this.onEnded.bind(this));
-      this.mediaElement.addEventListener("stalled", this.onStalled.bind(this));
-      this.mediaElement.addEventListener("emptied", this.onEmptied.bind(this));
-      this.mediaElement.addEventListener("suspend", this.onSuspend.bind(this));
-      this.mediaElement.addEventListener("waiting", this.onWaiting.bind(this));
-      this.mediaElement.addEventListener("loadedmetadata", this.onLoadedMetadata.bind(this));
-      this.mediaElement.addEventListener("seeking", this.onSeeking.bind(this));
-      this.mediaElement.addEventListener("seeked", this.onSeeked.bind(this));
+      this.mediaElement.addEventListener("canplaythrough", this.boundOnCanPlayThrough);
+      this.mediaElement.addEventListener("timeupdate", this.boundOnTimeUpdate);
+      this.mediaElement.addEventListener("error", this.boundOnError);
+      this.mediaElement.addEventListener("ended", this.boundOnEnded);
+      this.mediaElement.addEventListener("stalled", this.boundOnStalled);
+      this.mediaElement.addEventListener("emptied", this.boundOnEmptied);
+      this.mediaElement.addEventListener("suspend", this.boundOnSuspend);
+      this.mediaElement.addEventListener("waiting", this.boundOnWaiting);
+      this.mediaElement.addEventListener("loadedmetadata", this.boundOnLoadedMetadata);
+      this.mediaElement.addEventListener("seeking", this.boundOnSeeking);
+      this.mediaElement.addEventListener("seeked", this.boundOnSeeked);
   
       //Set the start time
       this.mediaElement.currentTime = this.playback.state.currentTime;
@@ -116,33 +122,33 @@ import {
       }
 
       // Remove old event listeners from current mediaElement
-      this.mediaElement.removeEventListener("canplaythrough", this.onCanPlayThrough.bind(this));
-      this.mediaElement.removeEventListener("timeupdate", this.onTimeUpdate.bind(this));
-      this.mediaElement.removeEventListener("error", this.onError.bind(this));
-      this.mediaElement.removeEventListener("ended", this.onEnded.bind(this));
-      this.mediaElement.removeEventListener("stalled", this.onStalled.bind(this));
-      this.mediaElement.removeEventListener("emptied", this.onEmptied.bind(this));
-      this.mediaElement.removeEventListener("suspend", this.onSuspend.bind(this));
-      this.mediaElement.removeEventListener("waiting", this.onWaiting.bind(this));
-      this.mediaElement.removeEventListener("loadedmetadata", this.onLoadedMetadata.bind(this));
-      this.mediaElement.removeEventListener("seeking", this.onSeeking.bind(this));
-      this.mediaElement.removeEventListener("seeked", this.onSeeked.bind(this));
+      this.mediaElement.removeEventListener("canplaythrough", this.boundOnCanPlayThrough);
+      this.mediaElement.removeEventListener("timeupdate", this.boundOnTimeUpdate);
+      this.mediaElement.removeEventListener("error", this.boundOnError);
+      this.mediaElement.removeEventListener("ended", this.boundOnEnded);
+      this.mediaElement.removeEventListener("stalled", this.boundOnStalled);
+      this.mediaElement.removeEventListener("emptied", this.boundOnEmptied);
+      this.mediaElement.removeEventListener("suspend", this.boundOnSuspend);
+      this.mediaElement.removeEventListener("waiting", this.boundOnWaiting);
+      this.mediaElement.removeEventListener("loadedmetadata", this.boundOnLoadedMetadata);
+      this.mediaElement.removeEventListener("seeking", this.boundOnSeeking);
+      this.mediaElement.removeEventListener("seeked", this.boundOnSeeked);
 
       // Set new media element
       this.mediaElement = element;
 
       // Add event listeners to new element
-      this.mediaElement.addEventListener("canplaythrough", this.onCanPlayThrough.bind(this));
-      this.mediaElement.addEventListener("timeupdate", this.onTimeUpdate.bind(this));
-      this.mediaElement.addEventListener("error", this.onError.bind(this));
-      this.mediaElement.addEventListener("ended", this.onEnded.bind(this));
-      this.mediaElement.addEventListener("stalled", this.onStalled.bind(this));
-      this.mediaElement.addEventListener("emptied", this.onEmptied.bind(this));
-      this.mediaElement.addEventListener("suspend", this.onSuspend.bind(this));
-      this.mediaElement.addEventListener("waiting", this.onWaiting.bind(this));
-      this.mediaElement.addEventListener("loadedmetadata", this.onLoadedMetadata.bind(this));
-      this.mediaElement.addEventListener("seeking", this.onSeeking.bind(this));
-      this.mediaElement.addEventListener("seeked", this.onSeeked.bind(this));
+      this.mediaElement.addEventListener("canplaythrough", this.boundOnCanPlayThrough);
+      this.mediaElement.addEventListener("timeupdate", this.boundOnTimeUpdate);
+      this.mediaElement.addEventListener("error", this.boundOnError);
+      this.mediaElement.addEventListener("ended", this.boundOnEnded);
+      this.mediaElement.addEventListener("stalled", this.boundOnStalled);
+      this.mediaElement.addEventListener("emptied", this.boundOnEmptied);
+      this.mediaElement.addEventListener("suspend", this.boundOnSuspend);
+      this.mediaElement.addEventListener("waiting", this.boundOnWaiting);
+      this.mediaElement.addEventListener("loadedmetadata", this.boundOnLoadedMetadata);
+      this.mediaElement.addEventListener("seeking", this.boundOnSeeking);
+      this.mediaElement.addEventListener("seeked", this.boundOnSeeked);
 
       // Create new source node
       this.sourceNode = new MediaElementAudioSourceNode(this.audioContext, {
