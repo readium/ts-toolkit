@@ -100,6 +100,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         this.waitForLoadedAndSeeked(initialTime)
             .then(() => {
                 this.listeners.trackLoaded?.(this.pool.audioEngine.getMediaElement());
+                this.listeners.positionChanged?.(this.currentLocator);
             })
             .catch(() => {
                 // Error already forwarded via the error event listener.
