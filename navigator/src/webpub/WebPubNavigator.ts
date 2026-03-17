@@ -12,7 +12,6 @@ import { WebUserProperties, WebRSProperties } from "./css/Properties";
 import { IWebPubPreferences, WebPubPreferences } from "./preferences/WebPubPreferences";
 import { IWebPubDefaults, WebPubDefaults } from "./preferences/WebPubDefaults";
 import { WebPubSettings } from "./preferences/WebPubSettings";
-import { IPreferencesEditor } from "../preferences/PreferencesEditor";
 import { WebPubPreferencesEditor } from "./preferences/WebPubPreferencesEditor";
 import { Injector } from "../injection/Injector";
 import { createReadiumWebPubRules } from "../injection/webpubInjectables";
