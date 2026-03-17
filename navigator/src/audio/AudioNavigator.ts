@@ -21,6 +21,7 @@ export interface AudioNavigatorListeners {
     onPause?: (locator: Locator) => void;
     onLoadedMetadata?: (duration: number) => void;
     onStalled?: (isStalled: boolean) => void;
+    onSeeking?: (isSeeking: boolean) => void;
 }
 
 export interface AudioNavigatorConfiguration {
@@ -283,6 +284,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         });
 
         this.pool.audioEngine.on("seeked", () => {
+            this.listeners.onSeeking?.(false);
             if (!this.isPlaying) {
                 const currentTime = this.currentTime;
                 const duration = this.duration;
@@ -296,6 +298,8 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             }
         });
 
+        this.pool.audioEngine.on("seeking", () => this.listeners.onSeeking?.(true));
+        this.pool.audioEngine.on("waiting", () => this.listeners.onSeeking?.(true));
         this.pool.audioEngine.on("stalled", () => this.listeners.onStalled?.(true));
         
         this.pool.audioEngine.on("loadedmetadata", () => {
