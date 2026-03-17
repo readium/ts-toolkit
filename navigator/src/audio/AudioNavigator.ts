@@ -20,6 +20,7 @@ export interface AudioNavigatorListeners {
     play: (locator: Locator) => void;
     pause: (locator: Locator) => void;
     metadataLoaded: (duration: number) => void;
+    buffering: (isBuffering: boolean) => void;
     stalled: (isStalled: boolean) => void;
     seeking: (isSeeking: boolean) => void;
 }
@@ -275,6 +276,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         });
 
         this.pool.audioEngine.on("playing", () => {
+            this.listeners.buffering(false);
             this.listeners.stalled(false);
         });
 
@@ -299,7 +301,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         });
 
         this.pool.audioEngine.on("seeking", () => this.listeners.seeking(true));
-        this.pool.audioEngine.on("waiting", () => this.listeners.seeking(true));
+        this.pool.audioEngine.on("waiting", () => this.listeners.buffering(true));
         this.pool.audioEngine.on("stalled", () => this.listeners.stalled(true));
         
         this.pool.audioEngine.on("loadedmetadata", () => {
