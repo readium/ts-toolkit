@@ -13,15 +13,15 @@ import {
 import { AudioPoolManager } from "./AudioPoolManager";
 
 export interface AudioNavigatorListeners {
-    trackLoaded?: (media: HTMLMediaElement) => void;
-    positionChanged?: (locator: Locator) => void;
-    onError?: (error: any, locator: Locator) => void;
-    onEnded?: (locator: Locator) => void;
-    onPlay?: (locator: Locator) => void;
-    onPause?: (locator: Locator) => void;
-    onLoadedMetadata?: (duration: number) => void;
-    onStalled?: (isStalled: boolean) => void;
-    onSeeking?: (isSeeking: boolean) => void;
+    trackLoaded: (media: HTMLMediaElement) => void;
+    positionChanged: (locator: Locator) => void;
+    error: (error: any, locator: Locator) => void;
+    trackEnded: (locator: Locator) => void;
+    play: (locator: Locator) => void;
+    pause: (locator: Locator) => void;
+    metadataLoaded: (duration: number) => void;
+    stalled: (isStalled: boolean) => void;
+    seeking: (isSeeking: boolean) => void;
 }
 
 export interface AudioNavigatorConfiguration {
@@ -100,8 +100,8 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         // No cancellation needed here — the constructor runs once.
         this.waitForLoadedAndSeeked(initialTime)
             .then(() => {
-                this.listeners.trackLoaded?.(this.pool.audioEngine.getMediaElement());
-                this.listeners.positionChanged?.(this.currentLocator);
+                this.listeners.trackLoaded(this.pool.audioEngine.getMediaElement());
+                this.listeners.positionChanged(this.currentLocator);
             })
             .catch(() => {
                 // Error already forwarded via the error event listener.
@@ -252,7 +252,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
     private setupEventListeners(): void {
         this.pool.audioEngine.on("error", (error: any) => {
-            this.listeners.onError?.(error, this.currentLocator);
+            this.listeners.error(error, this.currentLocator);
         });
 
         this.pool.audioEngine.on("ended", async () => {
@@ -262,7 +262,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                 progression: 1,
                 fragments: [`t=${this.duration}`]
             }));
-            this.listeners.onEnded?.(this.currentLocator);
+            this.listeners.trackEnded(this.currentLocator);
             if (this._settings.autoPlay && this.canGoForward) {
                 await this.goForward(false, () => {});
                 this.play();
@@ -271,20 +271,20 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
         this.pool.audioEngine.on("play", () => {
             this.startPositionPolling();
-            this.listeners.onPlay?.(this.currentLocator);
+            this.listeners.play(this.currentLocator);
         });
 
         this.pool.audioEngine.on("playing", () => {
-            this.listeners.onStalled?.(false);
+            this.listeners.stalled(false);
         });
 
         this.pool.audioEngine.on("pause", () => {
             this.stopPositionPolling();
-            this.listeners.onPause?.(this.currentLocator);
+            this.listeners.pause(this.currentLocator);
         });
 
         this.pool.audioEngine.on("seeked", () => {
-            this.listeners.onSeeking?.(false);
+            this.listeners.seeking(false);
             if (!this.isPlaying) {
                 const currentTime = this.currentTime;
                 const duration = this.duration;
@@ -294,16 +294,16 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                     progression,
                     fragments: [`t=${currentTime}`]
                 }));
-                this.listeners.positionChanged?.(this.currentLocation);
+                this.listeners.positionChanged(this.currentLocation);
             }
         });
 
-        this.pool.audioEngine.on("seeking", () => this.listeners.onSeeking?.(true));
-        this.pool.audioEngine.on("waiting", () => this.listeners.onSeeking?.(true));
-        this.pool.audioEngine.on("stalled", () => this.listeners.onStalled?.(true));
+        this.pool.audioEngine.on("seeking", () => this.listeners.seeking(true));
+        this.pool.audioEngine.on("waiting", () => this.listeners.seeking(true));
+        this.pool.audioEngine.on("stalled", () => this.listeners.stalled(true));
         
         this.pool.audioEngine.on("loadedmetadata", () => {
-            this.listeners.onLoadedMetadata?.(this.pool.audioEngine.duration());
+            this.listeners.metadataLoaded(this.pool.audioEngine.duration());
         });
     }
 
@@ -342,7 +342,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                 progression,
                 fragments: [`t=${currentTime}`]
             }));
-            this.listeners.positionChanged?.(this.currentLocation);
+            this.listeners.positionChanged(this.currentLocation);
         }, this._settings.pollInterval);
     }
 
@@ -377,8 +377,8 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
             if (id !== this.navigationId) return;
 
-            this.listeners.trackLoaded?.(this.pool.audioEngine.getMediaElement());
-            this.listeners.positionChanged?.(this.currentLocator);
+            this.listeners.trackLoaded(this.pool.audioEngine.getMediaElement());
+            this.listeners.positionChanged(this.currentLocator);
 
             if (this._settings.enableMediaSession) {
                 this.updateMediaSessionMetadata();

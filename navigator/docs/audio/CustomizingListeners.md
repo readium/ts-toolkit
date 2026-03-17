@@ -3,154 +3,150 @@
 `AudioNavigatorListeners` allows you to bind callbacks for events happening inside the `AudioNavigator`.
 
 The following events are exposed:
-- `trackLoaded`: fires when an audio track has finished loading
+- `trackLoaded`: fires when an audio track has finished loading and is ready to play
 - `positionChanged`: fires when the current playback position has changed
-- `onError`: fires when an error occurs during audio playback
-- `onEnded`: fires when an audio track finishes playing
-- `onPlay`: fires when audio playback starts or resumes
-- `onPause`: fires when audio playback is paused
-- `onLoadedMetadata`: fires when audio metadata (including duration) has loaded
-- `onBuffering`: fires when the audio player starts or stops buffering
+- `error`: fires when an error occurs during audio playback
+- `ended`: fires when an audio track finishes playing
+- `play`: fires when audio playback starts or resumes
+- `pause`: fires when audio playback is paused
+- `metadataLoaded`: fires when audio metadata (including duration) has loaded
+- `stalled`: fires when the audio player stalls (buffering stopped)
+- `seeking`: fires when the audio player starts or finishes seeking
 
-Your listeners object should look like this if you do not customize them at all.
+All listeners are required. Your listeners object must implement every callback:
 
 ```js
 const listeners: AudioNavigatorListeners = {
   trackLoaded: function (media: HTMLMediaElement): void {},
   positionChanged: function (locator: Locator): void {},
-  onError: function (error: any, locator: Locator): void {},
-  onEnded: function (locator: Locator): void {},
-  onPlay: function (locator: Locator): void {},
-  onPause: function (locator: Locator): void {},
-  onLoadedMetadata: function (duration: number): void {},
-  onBuffering: function (isBuffering: boolean): void {},
+  error: function (error: any, locator: Locator): void {},
+  ended: function (locator: Locator): void {},
+  play: function (locator: Locator): void {},
+  pause: function (locator: Locator): void {},
+  metadataLoaded: function (duration: number): void {},
+  stalled: function (isStalled: boolean): void {},
+  seeking: function (isSeeking: boolean): void {},
 };
 ```
 
 ## Listeners
 
-### Track Loaded
+### trackLoaded
 
-Fires when an audio track has finished loading and is ready to be played. This is useful for updating UI elements that depend on the media element being available.
+Fires when an audio track has finished loading and is ready to be played.
 
 ```js
 const listeners = {
   trackLoaded: function (media: HTMLMediaElement): void {
     console.log('Track loaded:', media.src);
-    // Update UI to show track is ready
     updatePlayButton(true);
   }
 };
 ```
 
-### Position Changed
+### positionChanged
 
-Fires when the current playback position changes. The frequency of this event is controlled by the `pollInterval` preference.
-
+Fires when the current playback position changes. The frequency is controlled by the `pollInterval` preference.
 ```js
 const listeners = {
   positionChanged: function (locator: Locator): void {
-    console.log('Position changed:', locator.locations?.otherLocations?.get('time'));
-    // Update progress bar
-    updateProgress(locator.locations?.progression || 0);
+    const currentTime = locator.locations?.time() ?? 0;
+    const progression = locator.locations?.progression ?? 0;
+    updateProgress(currentTime, progression);
   }
 };
 ```
 
-### On Error
+### error
 
 Fires when an error occurs during audio playback, such as network issues or unsupported formats.
 
 ```js
 const listeners = {
-  onError: function (error: any, locator: Locator): void {
+  error: function (error: any, locator: Locator): void {
     console.error('Audio error:', error, 'at:', locator.href);
-    // Show error message to user
     showErrorMessage('Failed to play audio track');
   }
 };
 ```
 
-### On Ended
+### ended
 
-Fires when an audio track finishes playing completely. This is different from `positionChanged` reaching the end - this event specifically indicates track completion.
+Fires when an audio track finishes playing completely.
 
 ```js
 const listeners = {
-  onEnded: function (locator: Locator): void {
+  ended: function (locator: Locator): void {
     console.log('Track ended:', locator.href);
-    // Handle track completion (e.g., auto-play next track is handled automatically)
     updateUIForTrackEnd();
   }
 };
 ```
 
-### On Play
+### play
 
-Fires when audio playback starts or resumes, either through user action or programmatic calls.
+Fires when audio playback starts or resumes.
 
 ```js
 const listeners = {
-  onPlay: function (locator: Locator): void {
-    console.log('Playback started:', locator.href);
-    // Update UI to show playing state
+  play: function (locator: Locator): void {
     updatePlayButton(false);
     updatePauseButton(true);
   }
 };
 ```
 
-### On Pause
+### pause
 
-Fires when audio playback is paused, either through user action or programmatic calls.
+Fires when audio playback is paused.
 
 ```js
 const listeners = {
-  onPause: function (locator: Locator): void {
-    console.log('Playback paused:', locator.href);
-    // Update UI to show paused state
+  pause: function (locator: Locator): void {
     updatePlayButton(true);
     updatePauseButton(false);
   }
 };
 ```
 
-### On Loaded Metadata
+### metadataLoaded
 
-Fires when audio metadata has been loaded, including the duration. This is useful for initializing progress bars and time displays.
+Fires when audio metadata has been loaded, including the duration.
 
 ```js
 const listeners = {
-  onLoadedMetadata: function (duration: number): void {
-    console.log('Metadata loaded, duration:', duration);
-    // Initialize UI with duration
+  metadataLoaded: function (duration: number): void {
     updateDurationDisplay(duration);
     setupProgressBar(duration);
   }
 };
 ```
 
-### On Buffering
+### stalled
 
-Fires when the audio player starts or stops buffering. This is useful for showing buffering indicators to users.
+Fires when the browser stops fetching audio data. Clears when playback resumes (`playing` event).
 
 ```js
 const listeners = {
-  onBuffering: function (isBuffering: boolean): void {
-    console.log('Buffering:', isBuffering);
-    // Show/hide buffering indicator
-    if (isBuffering) {
-      showBufferingIndicator();
-    } else {
-      hideBufferingIndicator();
-    }
+  stalled: function (isStalled: boolean): void {
+    showBufferingIndicator(isStalled);
+  }
+};
+```
+
+### seeking
+
+Fires `true` when a seek begins (or playback is waiting for data), and `false` when it completes.
+
+```js
+const listeners = {
+  seeking: function (isSeeking: boolean): void {
+    showSeekingIndicator(isSeeking);
   }
 };
 ```
 
 ## Usage Example
-
-Here's a complete example of setting up listeners for an audio player:
 
 ```js
 const listeners: AudioNavigatorListeners = {
@@ -158,47 +154,44 @@ const listeners: AudioNavigatorListeners = {
     console.log('Audio track ready:', media.src);
     document.getElementById('play-button').disabled = false;
   },
-  
+
   positionChanged: (locator) => {
-    const currentTime = locator.locations?.otherLocations?.get('time') || 0;
-    const progression = locator.locations?.progression || 0;
-    
-    // Update time display
+    const currentTime = locator.locations?.time() ?? 0;
+    const progression = locator.locations?.progression ?? 0;
     document.getElementById('current-time').textContent = formatTime(currentTime);
-    
-    // Update progress bar
-    const progressBar = document.getElementById('progress-bar') as HTMLInputElement;
-    progressBar.value = progression.toString();
+    (document.getElementById('progress-bar') as HTMLInputElement).value = progression.toString();
   },
-  
-  onLoadedMetadata: (duration) => {
+
+  metadataLoaded: (duration) => {
     document.getElementById('total-time').textContent = formatTime(duration);
   },
-  
-  onPlay: () => {
+
+  play: () => {
     document.getElementById('play-button').style.display = 'none';
     document.getElementById('pause-button').style.display = 'block';
   },
-  
-  onPause: () => {
+
+  pause: () => {
     document.getElementById('play-button').style.display = 'block';
     document.getElementById('pause-button').style.display = 'none';
   },
-  
-  onEnded: () => {
+
+  ended: () => {
     console.log('Track finished');
-    // UI will be updated by positionChanged event
   },
-  
-  onError: (error, locator) => {
+
+  error: (error, locator) => {
     console.error('Playback error:', error);
     alert(`Error playing ${locator.href}: ${error.message}`);
   },
-  
-  onBuffering: (isBuffering) => {
-    const indicator = document.getElementById('buffering-indicator');
-    indicator.style.display = isBuffering ? 'block' : 'none';
-  }
+
+  stalled: (isStalled) => {
+    document.getElementById('buffering-indicator').style.display = isStalled ? 'block' : 'none';
+  },
+
+  seeking: (isSeeking) => {
+    document.getElementById('seeking-indicator').style.display = isSeeking ? 'block' : 'none';
+  },
 };
 
 const navigator = new AudioNavigator(publication, listeners);
