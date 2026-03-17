@@ -101,12 +101,49 @@ export class WebAudioEngine implements AudioEngine {
     this.isLoadedValue = false;
     this.isPlayingValue = false;
     this.isPausedValue = false;
-    // If Web Audio is already active, the element must keep crossOrigin set
+
     if (this.webAudioActive) {
       this.mediaElement.crossOrigin = "anonymous";
+      this.mediaElement.src = url;
+      this.mediaElement.load();
+
+      // If the server doesn't honour the CORS preflight, fall back to a
+      // non-CORS load and tear down the Web Audio graph so the element
+      // is never passed to MediaElementAudioSourceNode in a tainted state.
+      const cleanup = () => {
+        this.mediaElement.removeEventListener("error", onCORSError);
+        this.mediaElement.removeEventListener("canplaythrough", onCORSSuccess);
+      };
+      const onCORSError = () => {
+        cleanup();
+        this.deactivateWebAudio();
+        this.mediaElement.removeAttribute("crossOrigin");
+        this.mediaElement.src = url;
+        this.mediaElement.load();
+      };
+      const onCORSSuccess = () => cleanup();
+      this.mediaElement.addEventListener("error", onCORSError);
+      this.mediaElement.addEventListener("canplaythrough", onCORSSuccess);
+    } else {
+      this.mediaElement.src = url;
+      this.mediaElement.load();
     }
-    this.mediaElement.src = url;
-    this.mediaElement.load();
+  }
+
+  private deactivateWebAudio(): void {
+    if (this.worklet) {
+      this.worklet.destroy();
+      this.worklet = null;
+    }
+    if (this.sourceNode) {
+      this.sourceNode.disconnect();
+      this.sourceNode = null;
+    }
+    if (this.gainNode) {
+      this.gainNode.disconnect();
+      this.gainNode = null;
+    }
+    this.webAudioActive = false;
   }
 
   /**
