@@ -282,7 +282,22 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             this.listeners.onPause?.(this.currentLocator);
         });
 
+        this.pool.audioEngine.on("seeked", () => {
+            if (!this.isPlaying) {
+                const currentTime = this.currentTime;
+                const duration = this.duration;
+                const progression = duration > 0 ? currentTime / duration : 0;
+                this.currentLocation = this.currentLocation.copyWithLocations(new LocatorLocations({
+                    position: this.currentTrackIndex(),
+                    progression,
+                    fragments: [`t=${currentTime}`]
+                }));
+                this.listeners.positionChanged?.(this.currentLocation);
+            }
+        });
+
         this.pool.audioEngine.on("stalled", () => this.listeners.onStalled?.(true));
+        
         this.pool.audioEngine.on("loadedmetadata", () => {
             this.listeners.onLoadedMetadata?.(this.pool.audioEngine.duration());
         });
