@@ -31,11 +31,11 @@ export class AudioDefaults {
   public readonly enableMediaSession: boolean;
 
   constructor(defaults: IAudioDefaults = {}) {
-    this.volume = ensureValueInRange(defaults.volume, volumeRangeConfig.range) ?? 1.0;
-    this.playbackRate = ensureValueInRange(defaults.playbackRate, playbackRateRangeConfig.range) ?? 1.0;
+    this.volume = ensureValueInRange(defaults.volume, volumeRangeConfig.range) ?? 1;
+    this.playbackRate = ensureValueInRange(defaults.playbackRate, playbackRateRangeConfig.range) ?? 1;
     this.preservePitch = ensureBoolean(defaults.preservePitch) ?? true;
-    this.skipBackwardInterval = ensureValueInRange(defaults.skipBackwardInterval, skipIntervalRangeConfig.range) ?? 30;
-    this.skipForwardInterval = ensureValueInRange(defaults.skipForwardInterval, skipIntervalRangeConfig.range) ?? 30;
+    this.skipBackwardInterval = ensureValueInRange(defaults.skipBackwardInterval, skipIntervalRangeConfig.range) ?? 10;
+    this.skipForwardInterval = ensureValueInRange(defaults.skipForwardInterval, skipIntervalRangeConfig.range) ?? 10;
     this.pollInterval = ensureNonNegative(defaults.pollInterval) ?? 1000;
     this.autoPlay = ensureBoolean(defaults.autoPlay) ?? true;
     this.enableMediaSession = ensureBoolean(defaults.enableMediaSession) ?? true;

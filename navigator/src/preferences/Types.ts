@@ -77,15 +77,15 @@ export const zoomRangeConfig: RangeConfig = {
 
 export const volumeRangeConfig: RangeConfig = {
   range: [0, 1],
-  step: 0.05
+  step: 0.1
 }
 
 export const playbackRateRangeConfig: RangeConfig = {
-  range: [0.25, 4],
+  range: [0.5, 2],
   step: 0.25
 }
 
 export const skipIntervalRangeConfig: RangeConfig = {
-  range: [5, 120],
+  range: [5, 60],
   step: 5
 }
