@@ -16,6 +16,7 @@ export class WebAudioEngine implements AudioEngine {
   private sourceNode: MediaElementAudioSourceNode | null = null;
   private gainNode: GainNode | null = null;
   private listeners: { [event: string]: EventCallback[] } = {};
+  private currentPlaybackRate: number = 1;
   private isMutedValue: boolean = false;
   private isPlayingValue: boolean = false;
   private isPausedValue: boolean = false;
@@ -197,6 +198,10 @@ export class WebAudioEngine implements AudioEngine {
     this.mediaElement.addEventListener("playing", this.boundOnPlaying);
     this.mediaElement.addEventListener("pause", this.boundOnPause);
 
+    // Re-apply current volume and playback rate to the new element
+    this.mediaElement.volume = this.isMutedValue ? 0 : this.playback.state.volume;
+    this.mediaElement.playbackRate = this.currentPlaybackRate;
+
     // Check if metadata is already loaded (common with preloaded elements)
     if (this.mediaElement.readyState >= 1) {
       this.onLoadedMetadata(new Event('loadedmetadata'));
@@ -355,6 +360,7 @@ export class WebAudioEngine implements AudioEngine {
         this.gainNode.gain.value = 0;
       }
       this.isMutedValue = true;
+      this.playback.state.volume = 0;
       return;
     }
     if (volume > 1) {
@@ -365,6 +371,7 @@ export class WebAudioEngine implements AudioEngine {
     if (this.gainNode) {
       this.gainNode.gain.value = volume;
     }
+    this.playback.state.volume = volume;
   }
 
   /**
@@ -448,6 +455,7 @@ export class WebAudioEngine implements AudioEngine {
    * Sets the playback rate of the audio resource with pitch preservation.
    */
   public setPlaybackRate(rate: number, preservePitch: boolean): void {
+    this.currentPlaybackRate = rate;
     this.mediaElement.playbackRate = rate;
     if (preservePitch) {
       if ('preservesPitch' in this.mediaElement) {

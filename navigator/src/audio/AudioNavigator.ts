@@ -132,7 +132,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             this._preferencesEditor = new AudioPreferencesEditor(this._preferences, this.settings);
         }
 
-        this.pool.audioEngine.playback.state.volume = this._settings.volume;
+        this.pool.audioEngine.setVolume(this._settings.volume);
         this.pool.audioEngine.setPlaybackRate(this._settings.playbackRate, this._settings.preservePitch);
 
         if (this._settings.enableMediaSession && !oldSettings.enableMediaSession) {

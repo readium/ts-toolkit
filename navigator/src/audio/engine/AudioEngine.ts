@@ -97,6 +97,12 @@ export interface AudioEngine {
     duration(): number;
 
     /**
+     * Sets the volume of the audio resource.
+     * @param volume The volume to set, in the range [0, 1].
+     */
+    setVolume(volume: number): void;
+
+    /**
      * Sets the playback rate of the audio resource.
      * @param rate The playback rate to set.
      * @param preservePitch Whether to preserve pitch when changing playback rate.
