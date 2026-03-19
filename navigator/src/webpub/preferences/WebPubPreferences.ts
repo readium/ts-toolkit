@@ -32,7 +32,7 @@ export interface IWebPubPreferences {
   zoom?: number | null
 }
 
-export class WebPubPreferences implements ConfigurablePreferences {
+export class WebPubPreferences implements ConfigurablePreferences<WebPubPreferences> {
   fontFamily?: string | null;
   fontWeight?: number | null;
   hyphens?: boolean | null;
@@ -82,11 +82,11 @@ export class WebPubPreferences implements ConfigurablePreferences {
     }
   }
 
-  merging(other: ConfigurablePreferences): ConfigurablePreferences {
+  merging(other: WebPubPreferences): WebPubPreferences {
     const merged: IWebPubPreferences = { ...this };
     for (const key of Object.keys(other) as (keyof IWebPubPreferences)[]) {
       if (other[key] !== undefined) {
-        merged[key] = other[key];
+        (merged as Record<string, unknown>)[key] = other[key];
       }
     }
     return new WebPubPreferences(merged);

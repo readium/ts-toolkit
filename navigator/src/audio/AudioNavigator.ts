@@ -1,6 +1,6 @@
 import { Link, Locator, LocatorLocations, Publication } from "@readium/shared";
 import { MediaNavigator } from "../Navigator";
-import { Configurable, ConfigurablePreferences } from "../preferences";
+import { Configurable } from "../preferences";
 import { WebAudioEngine, PlaybackState } from "./engine";
 import {
     AudioPreferences,
@@ -30,7 +30,7 @@ export interface AudioNavigatorConfiguration {
     defaults: IAudioDefaults;
 }
 
-export class AudioNavigator extends MediaNavigator implements Configurable<AudioSettings, ConfigurablePreferences> {
+export class AudioNavigator extends MediaNavigator implements Configurable<AudioSettings, AudioPreferences> {
     private readonly pub: Publication;
     private positionPollInterval: ReturnType<typeof setInterval> | null = null;
     private navigationId: number = 0;

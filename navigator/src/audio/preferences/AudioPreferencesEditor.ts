@@ -31,7 +31,7 @@ export class AudioPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.volume,
       isEffective: this.preferences.volume !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("volume", newValue ?? 1.0);
+        this.updatePreference("volume", newValue ?? 1);
       },
       supportedRange: volumeRangeConfig.range,
       step: volumeRangeConfig.step
@@ -44,7 +44,7 @@ export class AudioPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.playbackRate,
       isEffective: this.preferences.playbackRate !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("playbackRate", newValue ?? 1.0);
+        this.updatePreference("playbackRate", newValue ?? 1);
       },
       supportedRange: playbackRateRangeConfig.range,
       step: playbackRateRangeConfig.step
@@ -68,7 +68,7 @@ export class AudioPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.skipBackwardInterval,
       isEffective: this.preferences.skipBackwardInterval !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("skipBackwardInterval", newValue ?? 30);
+        this.updatePreference("skipBackwardInterval", newValue ?? 10);
       },
       supportedRange: skipIntervalRangeConfig.range,
       step: skipIntervalRangeConfig.step
@@ -81,7 +81,7 @@ export class AudioPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.skipForwardInterval,
       isEffective: this.preferences.skipForwardInterval !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("skipForwardInterval", newValue ?? 30);
+        this.updatePreference("skipForwardInterval", newValue ?? 10);
       },
       supportedRange: skipIntervalRangeConfig.range,
       step: skipIntervalRangeConfig.step

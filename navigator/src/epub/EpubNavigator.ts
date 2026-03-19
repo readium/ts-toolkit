@@ -1,5 +1,5 @@
 import { Layout, Link, Locator, Profile, Publication, ReadingProgression } from "@readium/shared";
-import { Configurable, ConfigurablePreferences, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../";
+import { Configurable, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../";
 import { FramePoolManager } from "./frame/FramePoolManager";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager";
 import { CommsEventKey, ContextMenuEvent, FXLModules, KeyboardEventData, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables";
@@ -64,7 +64,7 @@ const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListe
     peripheral: listeners.peripheral || (() => {}),
 })
 
-export class EpubNavigator extends VisualNavigator implements Configurable<ConfigurableSettings, ConfigurablePreferences> {
+export class EpubNavigator extends VisualNavigator implements Configurable<ConfigurableSettings, EpubPreferences> {
     private readonly pub: Publication;
     private readonly container: HTMLElement;
     private readonly listeners: EpubNavigatorListeners;
