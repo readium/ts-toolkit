@@ -264,10 +264,8 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                 fragments: [`t=${this.duration}`]
             }));
             this.listeners.trackEnded(this.currentLocator);
-            if (this._settings.autoPlay && this.canGoForward) {
-                await this.goForward(false, () => {});
-                this.play();
-            }
+            await this.nextTrack();
+            if (this._settings.autoPlay) this.play();
         });
 
         this.pool.audioEngine.on("play", () => {
@@ -430,19 +428,15 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     }
 
     private async nextTrack(): Promise<void> {
-        const nextIndex = this.currentTrackIndex() + 1;
-        if (nextIndex < this.pub.readingOrder.items.length) {
-            const locator = this.createLocator(nextIndex, 0);
-            await this.go(locator, false, () => {});
-        }
+        if (!this.canGoForward) return;
+        const locator = this.createLocator(this.currentTrackIndex() + 1, 0);
+        await this.go(locator, false, () => {});
     }
 
     private async previousTrack(): Promise<void> {
-        const prevIndex = this.currentTrackIndex() - 1;
-        if (prevIndex >= 0) {
-            const locator = this.createLocator(prevIndex, 0);
-            await this.go(locator, false, () => {});
-        }
+        if (!this.canGoBackward) return;
+        const locator = this.createLocator(this.currentTrackIndex() - 1, 0);
+        await this.go(locator, false, () => {});
     }
 
     seek(time: number): void {
