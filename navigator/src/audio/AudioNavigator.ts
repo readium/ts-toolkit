@@ -22,6 +22,7 @@ export interface AudioNavigatorListeners {
     metadataLoaded: (duration: number) => void;
     stalled: (isStalled: boolean) => void;
     seeking: (isSeeking: boolean) => void;
+    seekable: (seekable: TimeRanges) => void;
 }
 
 export interface AudioNavigatorConfiguration {
@@ -301,6 +302,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         this.pool.audioEngine.on("seeking", () => this.listeners.seeking(true));
         this.pool.audioEngine.on("waiting", () => this.listeners.seeking(true));
         this.pool.audioEngine.on("stalled", () => this.listeners.stalled(true));
+        this.pool.audioEngine.on("progress", (seekable: TimeRanges) => this.listeners.seekable(seekable));
         
         this.pool.audioEngine.on("loadedmetadata", () => {
             this.listeners.metadataLoaded(this.pool.audioEngine.duration());

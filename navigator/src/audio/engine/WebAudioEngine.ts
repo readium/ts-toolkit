@@ -41,6 +41,7 @@ export class WebAudioEngine implements AudioEngine {
   private readonly boundOnPlay = this.onPlay.bind(this);
   private readonly boundOnPlaying = this.onPlaying.bind(this);
   private readonly boundOnPause = this.onPause.bind(this);
+  private readonly boundOnProgress = this.onProgress.bind(this);
 
   constructor(values: { playback: Playback }) {
     this.playback = values.playback;
@@ -64,6 +65,7 @@ export class WebAudioEngine implements AudioEngine {
     this.mediaElement.addEventListener("play", this.boundOnPlay);
     this.mediaElement.addEventListener("playing", this.boundOnPlaying);
     this.mediaElement.addEventListener("pause", this.boundOnPause);
+    this.mediaElement.addEventListener("progress", this.boundOnProgress);
 
     //Set the start time
     this.mediaElement.currentTime = this.playback.state.currentTime;
@@ -178,6 +180,7 @@ export class WebAudioEngine implements AudioEngine {
     this.mediaElement.removeEventListener("play", this.boundOnPlay);
     this.mediaElement.removeEventListener("playing", this.boundOnPlaying);
     this.mediaElement.removeEventListener("pause", this.boundOnPause);
+    this.mediaElement.removeEventListener("progress", this.boundOnProgress);
 
     // Set new media element
     this.mediaElement = element;
@@ -197,6 +200,7 @@ export class WebAudioEngine implements AudioEngine {
     this.mediaElement.addEventListener("play", this.boundOnPlay);
     this.mediaElement.addEventListener("playing", this.boundOnPlaying);
     this.mediaElement.addEventListener("pause", this.boundOnPause);
+    this.mediaElement.addEventListener("progress", this.boundOnProgress);
 
     // Re-apply current volume and playback rate to the new element
     this.mediaElement.volume = this.isMutedValue ? 0 : this.playback.state.volume;
@@ -205,6 +209,13 @@ export class WebAudioEngine implements AudioEngine {
     // Check if metadata is already loaded (common with preloaded elements)
     if (this.mediaElement.readyState >= 1) {
       this.onLoadedMetadata(new Event('loadedmetadata'));
+    }
+
+    // Preloaded elements may have already buffered data before being swapped in,
+    // so progress events would have fired before we were listening. Emit now if
+    // seekable ranges are already available.
+    if (this.mediaElement.seekable.length > 0) {
+      this.onProgress();
     }
 
     // Check if the element is already loaded and trigger appropriate events
@@ -299,6 +310,10 @@ export class WebAudioEngine implements AudioEngine {
 
   private onPause() {
     this.emit("pause", null);
+  }
+
+  private onProgress() {
+    this.emit("progress", this.mediaElement.seekable);
   }
 
   // Used to emit some events like timeupdate or ended
