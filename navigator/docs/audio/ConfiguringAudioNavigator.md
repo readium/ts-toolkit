@@ -87,55 +87,33 @@ TBD.
 
 ## Appendix: Audio Preference Details
 
+Exact ranges, steps, and defaults are defined in [`src/preferences/Types.ts`](../../src/preferences/Types.ts) and [`src/audio/preferences/AudioPreferencesEditor.ts`](../../src/audio/preferences/AudioPreferencesEditor.ts). Refer to those files as the source of truth — the descriptions below are intentionally free of specific values.
+
 ### Playback Control Preferences
 
-| Preference | Type | Range | Step | Default | Description |
-| ---------- | ---- | ---- | ---- | ------- | ----------- |
-| volume | RangePreference<number> | [0.0, 1.0] | 0.05 | 1.0 | Audio volume level |
-| playbackRate | RangePreference<number> | [0.25, 4.0] | 0.25 | 1.0 | Playback speed multiplier |
-| preservePitch | BooleanPreference | - | - | true | Whether to preserve audio pitch when changing playback rate |
-| autoPlay | BooleanPreference | - | - | true | Whether to automatically play the next track when current track ends |
+| Preference | Type | Description |
+| ---------- | ---- | ----------- |
+| volume | RangePreference<number> | Audio volume level (`volumeRangeConfig`) |
+| playbackRate | RangePreference<number> | Playback speed multiplier (`playbackRateRangeConfig`) |
+| preservePitch | BooleanPreference | Best-effort pitch preservation when changing playback rate: uses native browser support if available, otherwise falls back to an audio worklet (requires CORS) |
+| autoPlay | BooleanPreference | Whether to automatically advance to the next track when the current one ends |
 
 ### Navigation Preferences
 
-| Preference | Type | Range | Step | Default | Description |
-| ---------- | ---- | ---- | ---- | ------- | ----------- |
-| skipForwardInterval | RangePreference<number> | [5, 120] | 5 | 30 | Seconds to skip forward when using skipForward() |
-| skipBackwardInterval | RangePreference<number> | [5, 120] | 5 | 30 | Seconds to skip backward when using skipBackward() |
+| Preference | Type | Description |
+| ---------- | ---- | ----------- |
+| skipForwardInterval | RangePreference<number> | Seconds to skip forward when using `skipForward()` (`skipIntervalRangeConfig`) |
+| skipBackwardInterval | RangePreference<number> | Seconds to skip backward when using `skipBackward()` (`skipIntervalRangeConfig`) |
 
 ### System Preferences
 
-| Preference | Type | Default | Description |
-| ---------- | ---- | ------- | ----------- |
-| pollInterval | Preference<number> | 1000 | Milliseconds between position change events |
-| enableMediaSession | BooleanPreference | true | Whether to integrate with browser's Media Session API |
+| Preference | Type | Description |
+| ---------- | ---- | ----------- |
+| pollInterval | Preference<number> | Milliseconds between position change events |
+| enableMediaSession | BooleanPreference | Whether to integrate with the browser's Media Session API |
 
-### Preference Constraints
+### Notes
 
-#### Volume
-- Range: 0.0 (muted) to 1.0 (maximum volume)
-- Step: 0.05
-- Values outside this range will be clamped by the browser
-
-#### Playback Rate
-- Range: 0.25 (quarter speed) to 4.0 (quadruple speed)
-- Step: 0.25
-- Browser support may vary for extreme values
-- When `preservePitch` is true, the audio pitch remains constant despite speed changes
-
-#### Skip Intervals
-- Range: 5 to 120 seconds
-- Step: 5 seconds
-- Should be balanced between user convenience and navigation precision
-
-#### Poll Interval
-- Measured in milliseconds
-- Direct value assignment only (not a range preference)
-- Lower values provide more frequent position updates but may impact performance
-- Recommended range: 500ms to 2000ms for most use cases
-
-#### Media Session Integration
-- When enabled, integrates with system media controls (notification center, lock screen, etc.)
-- Provides track metadata and playback controls to the operating system
-- Automatically handles media keys (play/pause, next/previous track)
-- Supported in most modern browsers
+- `pollInterval`: lower values give more frequent position updates but may impact performance.
+- `enableMediaSession`: when enabled, integrates with system media controls (lock screen, notification center, media keys).
+- `preservePitch` is best-effort: pitch preservation relies on native browser support when available, and falls back to an audio worklet otherwise. The worklet requires CORS headers from the server for the audio resource.

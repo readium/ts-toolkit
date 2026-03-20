@@ -74,13 +74,12 @@ The `AudioNavigator` class exposes several methods for navigating the audio publ
 - `goBackward(animated: boolean, cb: callback)`: Moves to the previous track in the reading progression.
 
 ```js
-const locator = new Locator({ 
-  href: 'audio/track-1.mp3', 
-  locations: { 
-    position: 0, 
+const locator = new Locator({
+  href: 'audio/track-1.mp3',
+  locations: new LocatorLocations({
     progression: 0.5,
-    otherLocations: new Map([['time', 30]])
-  } 
+    fragments: ['t=30']
+  })
 });
 navigator.go(locator, false, (success) => {
   if (success) {
