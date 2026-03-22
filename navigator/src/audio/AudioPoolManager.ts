@@ -1,12 +1,46 @@
-import { Publication } from "@readium/shared";
+import { Link, Publication } from "@readium/shared";
 import { WebAudioEngine } from "./engine/WebAudioEngine";
 
 export class AudioPoolManager {
     private preloadedElements: Map<string, HTMLAudioElement> = new Map();
     private _audioEngine: WebAudioEngine;
+    private readonly _publication: Publication;
+    private readonly _supportedAudioTypes: Map<string, "probably" | "maybe">;
 
-    constructor(audioEngine: WebAudioEngine) {
+    constructor(audioEngine: WebAudioEngine, publication: Publication) {
         this._audioEngine = audioEngine;
+        this._publication = publication;
+        this._supportedAudioTypes = this.detectSupportedAudioTypes();
+    }
+
+    private detectSupportedAudioTypes(): Map<string, "probably" | "maybe"> {
+        const audio = document.createElement("audio");
+        const unique = new Set<string>();
+        for (const link of this._publication.readingOrder.items) {
+            if (link.type) unique.add(link.type);
+            for (const alt of link.alternates?.items ?? []) {
+                if (alt.type) unique.add(alt.type);
+            }
+        }
+        const supported = new Map<string, "probably" | "maybe">();
+        for (const type of unique) {
+            const result = audio.canPlayType(type);
+            if (result !== "") supported.set(type, result as "probably" | "maybe");
+        }
+        return supported;
+    }
+
+    private pickPlayableHref(link: Link): string {
+        const candidates = [link, ...(link.alternates?.items ?? [])];
+        let best: { href: string; confidence: "probably" | "maybe" } | undefined;
+        for (const candidate of candidates) {
+            if (!candidate.type) continue;
+            const confidence = this._supportedAudioTypes.get(candidate.type);
+            if (!confidence) continue;
+            if (confidence === "probably") return candidate.href;
+            if (!best) best = { href: candidate.href, confidence };
+        }
+        return best?.href ?? link.href;
     }
 
     get audioEngine(): WebAudioEngine {
@@ -21,7 +55,8 @@ export class AudioPoolManager {
      * @param currentIndex The current track index.
      * @param direction The navigation direction ('forward' or 'backward').
      */
-    setCurrentAudio(href: string, publication: Publication, currentIndex: number, direction: 'forward' | 'backward'): void {
+    setCurrentAudio(currentIndex: number, direction: 'forward' | 'backward'): void {
+        const href = this.pickPlayableHref(this._publication.readingOrder.items[currentIndex]);
         // When Web Audio is active, preloaded elements lack crossOrigin="anonymous"
         // and cannot be connected to MediaElementAudioSourceNode, so bypass the pool.
         const preloadedElement = !this.audioEngine.isWebAudioActive ? this.get(href) : undefined;
@@ -32,7 +67,7 @@ export class AudioPoolManager {
             this.clear(href);
             this.audioEngine.loadAudio(href);
         }
-        this.preloadAdjacent(publication, currentIndex, direction);
+        this.preloadAdjacent(currentIndex, direction);
     }
     preload(href: string): void {
         if (this.preloadedElements.has(href)) {
@@ -69,44 +104,38 @@ export class AudioPoolManager {
      * @param publication The publication containing the reading order.
      * @param currentIndex The current track index.
      */
-    preloadNext(publication: Publication, currentIndex: number): void {
+    preloadNext(currentIndex: number): void {
         const nextIndex = currentIndex + 1;
-        if (nextIndex < publication.readingOrder.items.length) {
-            const nextLink = publication.readingOrder.items[nextIndex];
-            if (nextLink.href) {
-                this.preload(nextLink.href);
-            }
+        if (nextIndex < this._publication.readingOrder.items.length) {
+            const nextLink = this._publication.readingOrder.items[nextIndex];
+            this.preload(this.pickPlayableHref(nextLink));
         }
     }
 
     /**
      * Preloads the previous track in the reading order.
-     * @param publication The publication containing the reading order.
      * @param currentIndex The current track index.
      */
-    preloadPrevious(publication: Publication, currentIndex: number): void {
+    preloadPrevious(currentIndex: number): void {
         const prevIndex = currentIndex - 1;
         if (prevIndex >= 0) {
-            const prevLink = publication.readingOrder.items[prevIndex];
-            if (prevLink.href) {
-                this.preload(prevLink.href);
-            }
+            const prevLink = this._publication.readingOrder.items[prevIndex];
+            this.preload(this.pickPlayableHref(prevLink));
         }
     }
 
     /**
      * Preloads adjacent tracks (previous and next) for smoother navigation.
-     * @param publication The publication containing the reading order.
      * @param currentIndex The current track index.
      * @param direction The navigation direction ('forward' or 'backward').
      */
-    preloadAdjacent(publication: Publication, currentIndex: number, direction: 'forward' | 'backward' = 'forward'): void {
+    preloadAdjacent(currentIndex: number, direction: 'forward' | 'backward' = 'forward'): void {
         if (direction === 'forward') {
-            this.preloadNext(publication, currentIndex);
-            this.preloadPrevious(publication, currentIndex);
+            this.preloadNext(currentIndex);
+            this.preloadPrevious(currentIndex);
         } else {
-            this.preloadPrevious(publication, currentIndex);
-            this.preloadNext(publication, currentIndex);
+            this.preloadPrevious(currentIndex);
+            this.preloadNext(currentIndex);
         }
     }
 

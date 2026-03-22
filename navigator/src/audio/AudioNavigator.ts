@@ -117,7 +117,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             }
         });
 
-        this.pool = new AudioPoolManager(audioEngine);
+        this.pool = new AudioPoolManager(audioEngine, publication);
 
         // Initialize content protection
         const contentProtection = configuration.contentProtection || {};
@@ -159,7 +159,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             this.setupMediaSession();
         }
 
-        this.pool.setCurrentAudio(initialHref, this.pub, trackIndex, "forward");
+        this.pool.setCurrentAudio(trackIndex, "forward");
 
         // Load and seek to initial position, then notify consumer.
         // No cancellation needed here — the constructor runs once.
@@ -434,7 +434,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             const wasPlaying = this.isPlaying;
 
             this.stopPositionPolling();
-            this.pool.setCurrentAudio(href, this.pub, trackIndex, direction);
+            this.pool.setCurrentAudio(trackIndex, direction);
             this.currentLocation = locator.copyWithLocations(locator.locations);
 
             await this.waitForLoadedAndSeeked(time, id);
