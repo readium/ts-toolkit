@@ -463,7 +463,8 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             cb(false);
             return;
         }
-        const locator = this.createLocator(trackIndex, 0);
+        const time = link.locator.locations?.time() ?? 0;
+        const locator = this.createLocator(trackIndex, time);
         await this.go(locator, _animated, cb);
     }
 
