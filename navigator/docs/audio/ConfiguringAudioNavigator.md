@@ -81,6 +81,33 @@ const navigator = new AudioNavigator(
 
 The `defaults` are used as fallback values when the default Navigator settings are not suitable for your application.
 
+You can also provide `contentProtection` and `keyboardPeripherals` in the same configuration object:
+
+```js
+const navigator = new AudioNavigator(
+  publication,
+  listeners,
+  initialPosition,
+  {
+    preferences: { volume: 0.8 },
+    defaults: {},
+    contentProtection: {
+      disableContextMenu: true,
+      monitorDevTools: true,
+      protectPrinting: { disable: true },
+    },
+    keyboardPeripherals: [
+      {
+        type: 'toggle_playback',
+        keyCombos: [{ keyCode: 32 }] // Space
+      }
+    ]
+  }
+);
+```
+
+See [Content Protection](./ContentProtection.md) and [Keyboard Peripherals](./KeyboardPeripherals.md) for full details.
+
 ## Building a Settings Interface
 
 TBD.

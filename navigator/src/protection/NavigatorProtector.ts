@@ -15,7 +15,7 @@ export class NavigatorProtector {
     private printProtector?: PrintProtector;
     private contextMenuProtector?: ContextMenuProtector;
 
-    private dispatchSuspiciousActivity(type: string, detail: Record<string, unknown>) {
+    protected dispatchSuspiciousActivity(type: string, detail: Record<string, unknown>) {
         const event = new CustomEvent(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, {
             detail: {
                 type,
@@ -55,7 +55,7 @@ export class NavigatorProtector {
                 }
             });
         }
-        
+
         // Enable iframe embedding detection if explicitly enabled in config
         if (config.checkIFrameEmbedding) {
             this.iframeEmbeddingDetector = new IframeEmbeddingDetector({
@@ -74,7 +74,7 @@ export class NavigatorProtector {
                 }
             });
         }
-        
+
         // Enable context menu protection if configured
         if (config.disableContextMenu) {
             this.contextMenuProtector = new ContextMenuProtector({

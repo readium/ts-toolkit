@@ -1,5 +1,5 @@
 import { Link, Locator, LocatorLocations, Publication } from "@readium/shared";
-import { MediaNavigator } from "../Navigator";
+import { MediaNavigator, IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator";
 import { Configurable } from "../preferences";
 import { WebAudioEngine, PlaybackState } from "./engine";
 import {
@@ -11,6 +11,10 @@ import {
     IAudioDefaults
 } from "./preferences";
 import { AudioPoolManager } from "./AudioPoolManager";
+import { ContextMenuEvent, KeyboardEventData, SuspiciousActivityEvent } from "@readium/navigator-html-injectables";
+import { AudioNavigatorProtector } from "./protection/AudioNavigatorProtector";
+import { NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector";
+import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../peripherals/KeyboardPeripherals";
 
 export interface AudioNavigatorListeners {
     trackLoaded: (media: HTMLMediaElement) => void;
@@ -23,11 +27,32 @@ export interface AudioNavigatorListeners {
     stalled: (isStalled: boolean) => void;
     seeking: (isSeeking: boolean) => void;
     seekable: (seekable: TimeRanges) => void;
+    contentProtection: (type: string, data: SuspiciousActivityEvent) => void;
+    peripheral: (data: KeyboardEventData) => void;
+    contextMenu: (data: ContextMenuEvent) => void;
 }
+
+const defaultListeners = (listeners: Partial<AudioNavigatorListeners>): AudioNavigatorListeners => ({
+    trackLoaded: listeners.trackLoaded ?? (() => {}),
+    positionChanged: listeners.positionChanged ?? (() => {}),
+    error: listeners.error ?? (() => {}),
+    trackEnded: listeners.trackEnded ?? (() => {}),
+    play: listeners.play ?? (() => {}),
+    pause: listeners.pause ?? (() => {}),
+    metadataLoaded: listeners.metadataLoaded ?? (() => {}),
+    stalled: listeners.stalled ?? (() => {}),
+    seeking: listeners.seeking ?? (() => {}),
+    seekable: listeners.seekable ?? (() => {}),
+    contentProtection: listeners.contentProtection ?? (() => {}),
+    peripheral: listeners.peripheral ?? (() => {}),
+    contextMenu: listeners.contextMenu ?? (() => {}),
+});
 
 export interface AudioNavigatorConfiguration {
     preferences: IAudioPreferences;
     defaults: IAudioDefaults;
+    contentProtection?: IContentProtectionConfig;
+    keyboardPeripherals?: IKeyboardPeripheralsConfig;
 }
 
 export class AudioNavigator extends MediaNavigator implements Configurable<AudioSettings, AudioPreferences> {
@@ -42,6 +67,10 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     private _settings: AudioSettings;
     private _preferencesEditor: AudioPreferencesEditor | null = null;
     private pool: AudioPoolManager;
+    private readonly _navigatorProtector: AudioNavigatorProtector | null = null;
+    private readonly _keyboardPeripheralsManager: KeyboardPeripherals | null = null;
+    private readonly _suspiciousActivityListener: ((event: Event) => void) | null = null;
+    private readonly _keyboardPeripheralListener: ((event: Event) => void) | null = null;
 
     constructor(publication: Publication, listeners: AudioNavigatorListeners, initialPosition?: Locator, configuration: AudioNavigatorConfiguration = {
         preferences: {},
@@ -49,11 +78,11 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     }) {
         super();
         this.pub = publication;
+        this.listeners = defaultListeners(listeners);
 
         this._preferences = new AudioPreferences(configuration.preferences);
         this._defaults = new AudioDefaults(configuration.defaults);
         this._settings = new AudioSettings(this._preferences, this._defaults);
-        this.listeners = listeners;
 
         if (initialPosition) {
             this.currentLocation = this.ensureLocatorLocations(initialPosition);
@@ -89,6 +118,41 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         });
 
         this.pool = new AudioPoolManager(audioEngine);
+
+        // Initialize content protection
+        const contentProtection = configuration.contentProtection || {};
+        const keyboardPeripherals = this.mergeKeyboardPeripherals(
+            contentProtection,
+            configuration.keyboardPeripherals || []
+        );
+
+        if (contentProtection.disableContextMenu ||
+            contentProtection.checkAutomation ||
+            contentProtection.checkIFrameEmbedding ||
+            contentProtection.monitorDevTools ||
+            contentProtection.protectPrinting?.disable ||
+            contentProtection.disableDragAndDrop ||
+            contentProtection.protectCopy) {
+            this._navigatorProtector = new AudioNavigatorProtector(contentProtection);
+            this._suspiciousActivityListener = (event: Event) => {
+                const { type, ...detail } = (event as CustomEvent).detail;
+                if (type === "context_menu") {
+                    this.listeners.contextMenu(detail as ContextMenuEvent);
+                } else {
+                    this.listeners.contentProtection(type, detail as SuspiciousActivityEvent);
+                }
+            };
+            window.addEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
+        }
+
+        if (keyboardPeripherals.length > 0) {
+            this._keyboardPeripheralsManager = new KeyboardPeripherals({ keyboardPeripherals });
+            this._keyboardPeripheralListener = (event: Event) => {
+                this.listeners.peripheral((event as CustomEvent).detail);
+            };
+            window.addEventListener(NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT, this._keyboardPeripheralListener);
+        }
+
         this.setupEventListeners();
 
         if (this._settings.enableMediaSession) {
@@ -492,6 +556,14 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     destroy(): void {
         this.stopPositionPolling();
         this.destroyMediaSession();
+        if (this._suspiciousActivityListener) {
+            window.removeEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
+        }
+        if (this._keyboardPeripheralListener) {
+            window.removeEventListener(NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT, this._keyboardPeripheralListener);
+        }
+        this._navigatorProtector?.destroy();
+        this._keyboardPeripheralsManager?.destroy();
         this.pool.destroy();
     }
 }

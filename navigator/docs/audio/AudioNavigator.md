@@ -13,7 +13,7 @@ To use the `AudioNavigator`, you must first instantiate it by calling its constr
 - `publication`: The audio `Publication` object.
 - `listeners`: An object that contains event listeners for the audio publication.
 - `initialPosition`: A `Locator` object that represents the initial position in the publication (optional).
-- `configuration`: An object that contains configuration options for the audio publication. This is relying on the Preferences API (optional).
+- `configuration`: An object that contains configuration options for the audio publication. This is relying on the Preferences API (optional). It also supports `contentProtection` and `keyboardPeripherals` options.
 
 ```js
 const navigator = new AudioNavigator(
@@ -33,6 +33,11 @@ To customize listeners, please refer to the [Customizing Audio Listeners](./Cust
 The `initialPosition` is the position at which the `AudioNavigator` will start playback. It has to be a `Locator` with time-based locations.
 
 Finally, `AudioNavigator` implements a `Configurable` interface, so that it can be configured dynamically through the `configuration` argument. Please refer to [Configuring the AudioNavigator](./ConfiguringAudioNavigator.md) for more information.
+
+`AudioNavigator` also supports content protection and keyboard peripherals through the `configuration` argument:
+
+- `contentProtection`: Configures navigator-level protection features (automation detection, dev tools monitoring, print protection, etc.). See [Content Protection](./ContentProtection.md).
+- `keyboardPeripherals`: Configures custom keyboard shortcuts that are intercepted at the navigator level. See [Keyboard Peripherals](./KeyboardPeripherals.md).
 
 ### Destroy
 

@@ -13,6 +13,9 @@ The following events are exposed:
 - `stalled`: fires when the audio player stalls (buffering stopped)
 - `seeking`: fires when the audio player starts or finishes seeking
 - `seekable`: fires as media data is downloaded, with the current seekable `TimeRanges`
+- `contextMenu`: fires when a right-click context menu is blocked (requires `contentProtection.disableContextMenu`). See [Content Protection](./ContentProtection.md).
+- `contentProtection`: fires when a content protection event occurs (automation detected, dev tools opened, drag/drop blocked, etc.). See [Content Protection](./ContentProtection.md).
+- `peripheral`: fires when a configured keyboard peripheral shortcut is triggered. See [Keyboard Peripherals](./KeyboardPeripherals.md).
 
 All listeners are required. Your listeners object must implement every callback:
 
