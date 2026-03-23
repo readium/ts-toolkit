@@ -16,6 +16,7 @@ export class WebAudioEngine implements AudioEngine {
   private sourceNode: MediaElementAudioSourceNode | null = null;
   private gainNode: GainNode | null = null;
   private listeners: { [event: string]: EventCallback[] } = {};
+  private currentVolume: number = 1;
   private currentPlaybackRate: number = 1;
   private isMutedValue: boolean = false;
   private isPlayingValue: boolean = false;
@@ -48,7 +49,6 @@ export class WebAudioEngine implements AudioEngine {
 
     // crossOrigin is set lazily in activateWebAudio() only when the worklet is needed
     this.mediaElement = document.createElement("audio");
-    this.setVolume(this.playback.state.volume);
 
     // Event listeners (to report the client app about some async events)
     this.mediaElement.addEventListener("canplaythrough", this.boundOnCanPlayThrough);
@@ -109,6 +109,7 @@ export class WebAudioEngine implements AudioEngine {
       this.mediaElement.crossOrigin = "anonymous";
       this.mediaElement.src = url;
       this.mediaElement.load();
+      this.mediaElement.playbackRate = this.currentPlaybackRate;
 
       // If the server doesn't honour the CORS preflight, fall back to a
       // non-CORS load and tear down the Web Audio graph so the element
@@ -123,6 +124,7 @@ export class WebAudioEngine implements AudioEngine {
         this.mediaElement.removeAttribute("crossOrigin");
         this.mediaElement.src = url;
         this.mediaElement.load();
+        this.mediaElement.playbackRate = this.currentPlaybackRate;
       };
       const onCORSSuccess = () => cleanup();
       this.mediaElement.addEventListener("error", onCORSError);
@@ -130,6 +132,7 @@ export class WebAudioEngine implements AudioEngine {
     } else {
       this.mediaElement.src = url;
       this.mediaElement.load();
+      this.mediaElement.playbackRate = this.currentPlaybackRate;
     }
   }
 
@@ -203,7 +206,7 @@ export class WebAudioEngine implements AudioEngine {
     this.mediaElement.addEventListener("progress", this.boundOnProgress);
 
     // Re-apply current volume and playback rate to the new element
-    this.mediaElement.volume = this.isMutedValue ? 0 : this.playback.state.volume;
+    this.mediaElement.volume = this.isMutedValue ? 0 : this.currentVolume;
     this.mediaElement.playbackRate = this.currentPlaybackRate;
 
     // Check if metadata is already loaded (common with preloaded elements)
@@ -370,23 +373,23 @@ export class WebAudioEngine implements AudioEngine {
    */
   public setVolume(volume: number): void {
     if (volume < 0) {
+      this.currentVolume = 0;
       this.mediaElement.volume = 0;
       if (this.gainNode) {
         this.gainNode.gain.value = 0;
       }
       this.isMutedValue = true;
-      this.playback.state.volume = 0;
       return;
     }
     if (volume > 1) {
       this.setVolume(volume / 100);
       return;
     }
+    this.currentVolume = volume;
     this.mediaElement.volume = volume;
     if (this.gainNode) {
       this.gainNode.gain.value = volume;
     }
-    this.playback.state.volume = volume;
   }
 
   /**

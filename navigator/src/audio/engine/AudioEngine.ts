@@ -11,11 +11,6 @@ export interface PlaybackState {
      * The duration of the audio resource.
      */
     duration: number;
-
-    /**
-     * The volume of the audio resource.
-     */
-    volume: number;
 }
 
 /**

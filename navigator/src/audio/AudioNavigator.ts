@@ -66,6 +66,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     private _defaults: AudioDefaults;
     private _settings: AudioSettings;
     private _preferencesEditor: AudioPreferencesEditor | null = null;
+    private _mediaSessionEnabled: boolean = false;
     private pool: AudioPoolManager;
     private readonly _navigatorProtector: AudioNavigatorProtector | null = null;
     private readonly _keyboardPeripheralsManager: KeyboardPeripherals | null = null;
@@ -110,7 +111,6 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                 state: {
                     currentTime: initialTime,
                     duration: 0,
-                    volume: this._settings.volume
                 } as PlaybackState,
                 playWhenReady: false,
                 index: trackIndex
@@ -154,10 +154,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         }
 
         this.setupEventListeners();
-
-        if (this._settings.enableMediaSession) {
-            this.setupMediaSession();
-        }
+        this.applyPreferences();
 
         this.pool.setCurrentAudio(trackIndex, "forward");
 
@@ -190,7 +187,6 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     }
 
     private applyPreferences(): void {
-        const oldSettings = this._settings;
         this._settings = new AudioSettings(this._preferences, this._defaults);
 
         if (this._preferencesEditor !== null) {
@@ -200,9 +196,11 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         this.pool.audioEngine.setVolume(this._settings.volume);
         this.pool.audioEngine.setPlaybackRate(this._settings.playbackRate, this._settings.preservePitch);
 
-        if (this._settings.enableMediaSession && !oldSettings.enableMediaSession) {
+        if (this._settings.enableMediaSession && !this._mediaSessionEnabled) {
+            this._mediaSessionEnabled = true;
             this.setupMediaSession();
-        } else if (!this._settings.enableMediaSession && oldSettings.enableMediaSession) {
+        } else if (!this._settings.enableMediaSession && this._mediaSessionEnabled) {
+            this._mediaSessionEnabled = false;
             this.destroyMediaSession();
         }
     }
