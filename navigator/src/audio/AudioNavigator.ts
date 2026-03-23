@@ -386,12 +386,14 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         if (!("mediaSession" in navigator)) return;
         const trackIndex = this.currentTrackIndex();
         const track = this.pub.readingOrder.items[trackIndex];
+        const cover = this.pub.getCover();
         navigator.mediaSession.metadata = new MediaMetadata({
             title: track?.title || `Track ${trackIndex + 1}`,
             artist: this.pub.metadata.authors
                 ? this.pub.metadata.authors.items.map((a) => a.name.getTranslation()).join(", ")
                 : undefined,
             album: this.pub.metadata.title.getTranslation(),
+            artwork: cover ? [{ src: cover.href, type: cover.type }] : undefined,
         });
     }
 
