@@ -326,6 +326,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                 fragments: [`t=${this.duration}`]
             }));
             this.listeners.trackEnded(this.currentLocator);
+            if (!this.canGoForward) return;
             await this.nextTrack();
             if (this._settings.autoPlay) this.play();
         });
