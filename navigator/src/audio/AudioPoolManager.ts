@@ -59,6 +59,11 @@ export class AudioPoolManager {
         if (!element) {
             element = document.createElement("audio");
             element.preload = "auto";
+            // When Web Audio is active CORS already succeeded, so preload
+            // with crossOrigin to avoid a destructive reload at swap time.
+            if (this._audioEngine.isWebAudioActive) {
+                element.crossOrigin = "anonymous";
+            }
             element.src = href;
             element.load();
             this.pool.set(href, element);
@@ -105,16 +110,7 @@ export class AudioPoolManager {
         const href = this.pickPlayableHref(this._publication.readingOrder.items[currentIndex]);
         const element = this.ensure(href);
 
-        // Hand the element to the engine. When Web Audio is active, the pooled
-        // element doesn't have crossOrigin set (it would break non-CORS servers
-        // during preload), so we swap in the fresh element and let loadAudio
-        // handle CORS setup + fallback on the engine's own mediaElement.
-        if (this.audioEngine.isWebAudioActive) {
-            this.audioEngine.setMediaElement(element);
-            this.audioEngine.loadAudio(href);
-        } else {
-            this.audioEngine.setMediaElement(element);
-        }
+        this.audioEngine.setMediaElement(element);
 
         // Remove from pool so the engine fully owns it and we don't dispose it
         this.pool.delete(href);

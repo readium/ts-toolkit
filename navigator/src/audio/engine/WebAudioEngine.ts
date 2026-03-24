@@ -95,52 +95,6 @@ export class WebAudioEngine implements AudioEngine {
     );
   }
 
-  /**
-   * Load the audio resource at the given URL.
-   * @param url The URL of the audio resource.
-   * */
-  public loadAudio(url: string): void {
-    // Abort any in-progress load before starting a new one.
-    this.mediaElement.pause();
-    this.mediaElement.removeAttribute("src");
-    this.mediaElement.load();
-
-    this.isLoadingValue = true;
-    this.isLoadedValue = false;
-    this.isPlayingValue = false;
-    this.isPausedValue = false;
-
-    if (this.webAudioActive) {
-      this.mediaElement.crossOrigin = "anonymous";
-      this.mediaElement.src = url;
-      this.mediaElement.load();
-      this.mediaElement.playbackRate = this.currentPlaybackRate;
-
-      // If the server doesn't honour the CORS preflight, fall back to a
-      // non-CORS load and tear down the Web Audio graph so the element
-      // is never passed to MediaElementAudioSourceNode in a tainted state.
-      const cleanup = () => {
-        this.mediaElement.removeEventListener("error", onCORSError);
-        this.mediaElement.removeEventListener("canplaythrough", onCORSSuccess);
-      };
-      const onCORSError = () => {
-        cleanup();
-        this.deactivateWebAudio();
-        this.mediaElement.removeAttribute("crossOrigin");
-        this.mediaElement.src = url;
-        this.mediaElement.load();
-        this.mediaElement.playbackRate = this.currentPlaybackRate;
-      };
-      const onCORSSuccess = () => cleanup();
-      this.mediaElement.addEventListener("error", onCORSError);
-      this.mediaElement.addEventListener("canplaythrough", onCORSSuccess);
-    } else {
-      this.mediaElement.src = url;
-      this.mediaElement.load();
-      this.mediaElement.playbackRate = this.currentPlaybackRate;
-    }
-  }
-
   private deactivateWebAudio(): void {
     if (this.worklet) {
       this.worklet.destroy();
@@ -162,18 +116,7 @@ export class WebAudioEngine implements AudioEngine {
    * @param element The HTML audio element to use.
    */
   public setMediaElement(element: HTMLAudioElement): void {
-    // Pause the outgoing element before replacing it
-    this.mediaElement.pause();
-    this.isPlayingValue = false;
-    this.isPausedValue = false;
-
-    // Disconnect old source node if it exists
-    if (this.sourceNode) {
-      this.sourceNode.disconnect();
-      this.sourceNode = null;
-    }
-
-    // Remove old event listeners from current mediaElement
+    // Remove listeners BEFORE pausing so the pause doesn't leak through
     this.mediaElement.removeEventListener("canplaythrough", this.boundOnCanPlayThrough);
     this.mediaElement.removeEventListener("timeupdate", this.boundOnTimeUpdate);
     this.mediaElement.removeEventListener("error", this.boundOnError);
@@ -189,6 +132,17 @@ export class WebAudioEngine implements AudioEngine {
     this.mediaElement.removeEventListener("playing", this.boundOnPlaying);
     this.mediaElement.removeEventListener("pause", this.boundOnPause);
     this.mediaElement.removeEventListener("progress", this.boundOnProgress);
+
+    // Now safe to pause the outgoing element
+    this.mediaElement.pause();
+    this.isPlayingValue = false;
+    this.isPausedValue = false;
+
+    // Disconnect old source node if it exists
+    if (this.sourceNode) {
+      this.sourceNode.disconnect();
+      this.sourceNode = null;
+    }
 
     // Set new media element
     this.mediaElement = element;
@@ -213,6 +167,26 @@ export class WebAudioEngine implements AudioEngine {
     // Re-apply current volume and playback rate to the new element
     this.mediaElement.volume = this.isMutedValue ? 0 : this.currentVolume;
     this.mediaElement.playbackRate = this.currentPlaybackRate;
+
+    // Reconnect the Web Audio graph to the new element
+    if (this.webAudioActive) {
+      try {
+        const ctx = this.getOrCreateAudioContext();
+        this.sourceNode = new MediaElementAudioSourceNode(ctx, { mediaElement: this.mediaElement });
+        if (!this.gainNode) {
+          this.gainNode = ctx.createGain();
+          this.gainNode.connect(ctx.destination);
+        }
+        if (this.worklet?.workletNode) {
+          this.sourceNode.connect(this.worklet.workletNode);
+        } else {
+          this.sourceNode.connect(this.gainNode);
+        }
+      } catch {
+        // CORS failed on this element — deactivate Web Audio gracefully
+        this.deactivateWebAudio();
+      }
+    }
 
     // Check if metadata is already loaded (common with preloaded elements)
     if (this.mediaElement.readyState >= 1) {

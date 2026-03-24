@@ -41,12 +41,6 @@ export interface AudioEngine {
     playback: Playback;
 
     /**
-     * Loads the audio resource at the given URL.
-     * @param url The URL of the audio resource.
-     */
-    loadAudio(url: string): void;
-    
-    /**
      * Adds an event listener to the audio engine.
      * @param event The event name to listen.
      * @param callback Callback function to be called when the event is triggered.

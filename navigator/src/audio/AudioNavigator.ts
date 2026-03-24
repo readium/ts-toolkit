@@ -59,6 +59,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     private readonly pub: Publication;
     private positionPollInterval: ReturnType<typeof setInterval> | null = null;
     private navigationId: number = 0;
+    private _playIntent: boolean = false;
     private listeners: AudioNavigatorListeners;
     private currentLocation!: Locator;
 
@@ -432,7 +433,11 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
             const id = ++this.navigationId;
             const direction: "forward" | "backward" = trackIndex >= this.currentTrackIndex() ? "forward" : "backward";
-            const wasPlaying = this.isPlaying;
+            // Use _playIntent rather than isPlaying — setMediaElement resets the
+            // engine's playing flag, so a rapid second go() would see false and
+            // never resume playback.
+            const wasPlaying = this.isPlaying || this._playIntent;
+            this._playIntent = wasPlaying;
 
             this.stopPositionPolling();
             this.pool.setCurrentAudio(trackIndex, direction);
@@ -450,6 +455,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             }
 
             if (wasPlaying) this.play();
+            this._playIntent = false;
 
             cb(true);
         } catch (error) {
