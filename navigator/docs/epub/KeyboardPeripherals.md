@@ -57,29 +57,29 @@ const configuration = {
   ]
 };
 
-const navigator = new EpubNavigator(container, publication, listeners, positions, initialPosition, configuration);
-```
-
-## Listening to Keyboard Events
-
-To handle these custom keyboard events, you can listen for the `peripheral` event on the `EpubNavigator` instance:
-
-```javascript
-navigator.addEventListener('peripheral', (event) => {
-  const { type } = event.detail;
-  
-  switch (type) {
-    case 'navigate_forward':
-      // Handle forward navigation
-      break;
-    case 'navigate_backward':
-      // Handle backward navigation
-      break;
-    case 'toggle_sidebar':
-      // Toggle sidebar visibility
-      break;
+const listeners = {
+  // ... other listeners
+  peripheral: (data) => {
+    const { type, key, code, keyCode, ctrlKey, altKey, shiftKey, metaKey, timestamp, targetFrameSrc, selectedText } = data;
+    
+    switch (type) {
+      case 'navigate_forward':
+        // Handle forward navigation
+        console.log(`Forward navigation triggered by key: ${key} (${code})`);
+        break;
+      case 'navigate_backward':
+        // Handle backward navigation
+        console.log(`Backward navigation triggered by key: ${key} (${code})`);
+        break;
+      case 'toggle_sidebar':
+        // Toggle sidebar visibility
+        console.log(`Sidebar toggle triggered by key: ${key} (${code})`);
+        break;
+    }
   }
-});
+};
+
+const navigator = new EpubNavigator(container, publication, listeners, positions, initialPosition, configuration);
 ```
 
 ## Keyboard Peripheral Event Data
