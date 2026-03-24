@@ -11,6 +11,7 @@ import {
     IAudioDefaults
 } from "./preferences";
 import { AudioPoolManager } from "./AudioPoolManager";
+import { AudioTimeline } from "./AudioTimeline";
 import { ContextMenuEvent, KeyboardEventData, SuspiciousActivityEvent } from "@readium/navigator-html-injectables";
 import { AudioNavigatorProtector } from "./protection/AudioNavigatorProtector";
 import { NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector";
@@ -70,6 +71,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     private _mediaSessionEnabled: boolean = false;
     private pool: AudioPoolManager;
     private readonly _navigatorProtector: AudioNavigatorProtector | null = null;
+    private readonly _timeline: AudioTimeline;
     private readonly _keyboardPeripheralsManager: KeyboardPeripherals | null = null;
     private readonly _suspiciousActivityListener: ((event: Event) => void) | null = null;
     private readonly _keyboardPeripheralListener: ((event: Event) => void) | null = null;
@@ -80,6 +82,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     }) {
         super();
         this.pub = publication;
+        this._timeline = new AudioTimeline(publication);
         this.listeners = defaultListeners(listeners);
 
         this._preferences = new AudioPreferences(configuration.preferences);
@@ -164,6 +167,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         this.waitForLoadedAndSeeked(initialTime)
             .then(() => {
                 this.listeners.trackLoaded(this.pool.audioEngine.getMediaElement());
+                this._timeline.update(this.currentLocator);
                 this.listeners.positionChanged(this.currentLocator);
             })
             .catch(() => {
@@ -208,6 +212,10 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
     get publication(): Publication {
         return this.pub;
+    }
+
+    get timeline(): AudioTimeline {
+        return this._timeline;
     }
 
     private ensureLocatorLocations(locator: Locator): Locator {
@@ -357,6 +365,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                     progression,
                     fragments: [`t=${currentTime}`]
                 }));
+                this._timeline.update(this.currentLocation);
                 this.listeners.positionChanged(this.currentLocation);
             }
         });
@@ -408,6 +417,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                 progression,
                 fragments: [`t=${currentTime}`]
             }));
+            this._timeline.update(this.currentLocation);
             this.listeners.positionChanged(this.currentLocation);
         }, this._settings.pollInterval);
     }
@@ -448,6 +458,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             if (id !== this.navigationId) return;
 
             this.listeners.trackLoaded(this.pool.audioEngine.getMediaElement());
+            this._timeline.update(this.currentLocator);
             this.listeners.positionChanged(this.currentLocator);
 
             if (this._settings.enableMediaSession) {

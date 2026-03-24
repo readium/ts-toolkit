@@ -1,4 +1,5 @@
 export * from './Navigator';
+export * from './Timeline';
 export * from './webpub';
 export * from './epub';
 export * from './audio';
