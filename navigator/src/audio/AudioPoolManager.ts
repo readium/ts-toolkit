@@ -1,8 +1,11 @@
 import { Link, Publication } from "@readium/shared";
 import { WebAudioEngine } from "./engine/WebAudioEngine";
 
+const UPPER_BOUNDARY = 1;
+const LOWER_BOUNDARY = 1;
+
 export class AudioPoolManager {
-    private preloadedElements: Map<string, HTMLAudioElement> = new Map();
+    private readonly pool: Map<string, HTMLAudioElement> = new Map();
     private _audioEngine: WebAudioEngine;
     private readonly _publication: Publication;
     private readonly _supportedAudioTypes: Map<string, "probably" | "maybe">;
@@ -48,102 +51,84 @@ export class AudioPoolManager {
     }
 
     /**
-     * Sets the current audio by href, using preloaded element if available or loading otherwise,
-     * and preloads adjacent tracks.
-     * @param href The URL of the audio resource.
-     * @param publication The publication containing the reading order.
-     * @param currentIndex The current track index.
-     * @param direction The navigation direction ('forward' or 'backward').
+     * Ensures an audio element exists in the pool for the given href.
+     * If one already exists, it is left untouched (preserving its buffered data).
      */
-    setCurrentAudio(currentIndex: number, direction: 'forward' | 'backward'): void {
+    private ensure(href: string): HTMLAudioElement {
+        let element = this.pool.get(href);
+        if (!element) {
+            element = document.createElement("audio");
+            element.preload = "auto";
+            element.src = href;
+            element.load();
+            this.pool.set(href, element);
+        }
+        return element;
+    }
+
+    /**
+     * Updates the pool around the given index: ensures elements exist within
+     * the LOWER_BOUNDARY and disposes those beyond the UPPER_BOUNDARY.
+     */
+    private update(currentIndex: number): void {
+        const items = this._publication.readingOrder.items;
+        const keep = new Set<string>();
+
+        for (let j = 0; j < items.length; j++) {
+            const href = this.pickPlayableHref(items[j]);
+            if (j >= currentIndex - LOWER_BOUNDARY && j <= currentIndex + LOWER_BOUNDARY) {
+                this.ensure(href);
+                keep.add(href);
+            } else if (j >= currentIndex - UPPER_BOUNDARY && j <= currentIndex + UPPER_BOUNDARY) {
+                // Between lower and upper: keep if already loaded, don't create
+                if (this.pool.has(href)) {
+                    keep.add(href);
+                }
+            }
+        }
+
+        // Dispose elements beyond the upper boundary
+        for (const [href, element] of this.pool) {
+            if (!keep.has(href)) {
+                element.removeAttribute("src");
+                element.load(); // release network resources
+                this.pool.delete(href);
+            }
+        }
+    }
+
+    /**
+     * Sets the current audio for playback at the given track index.
+     * The element is always sourced from the pool — never loaded ad-hoc on the engine.
+     */
+    setCurrentAudio(currentIndex: number, _direction: 'forward' | 'backward'): void {
         const href = this.pickPlayableHref(this._publication.readingOrder.items[currentIndex]);
-        // When Web Audio is active, preloaded elements lack crossOrigin="anonymous"
-        // and cannot be connected to MediaElementAudioSourceNode, so bypass the pool.
-        const preloadedElement = !this.audioEngine.isWebAudioActive ? this.get(href) : undefined;
-        if (preloadedElement) {
-            this.audioEngine.setMediaElement(preloadedElement);
-            this.clear(href);
-        } else {
-            this.clear(href);
+        const element = this.ensure(href);
+
+        // Hand the element to the engine. When Web Audio is active, the pooled
+        // element doesn't have crossOrigin set (it would break non-CORS servers
+        // during preload), so we swap in the fresh element and let loadAudio
+        // handle CORS setup + fallback on the engine's own mediaElement.
+        if (this.audioEngine.isWebAudioActive) {
+            this.audioEngine.setMediaElement(element);
             this.audioEngine.loadAudio(href);
-        }
-        this.preloadAdjacent(currentIndex, direction);
-    }
-    preload(href: string): void {
-        if (this.preloadedElements.has(href)) {
-            return; // Already preloaded
-        }
-
-        const audioElement = document.createElement("audio");
-        audioElement.preload = "auto";
-        audioElement.src = href;
-        audioElement.load(); // Start buffering
-
-        this.preloadedElements.set(href, audioElement);
-    }
-
-    /**
-     * Retrieves a preloaded audio element by URL.
-     * @param href The URL of the audio resource.
-     * @returns The preloaded HTMLAudioElement, or undefined if not preloaded.
-     */
-    get(href: string): HTMLAudioElement | undefined {
-        return this.preloadedElements.get(href);
-    }
-
-    /**
-     * Removes a preloaded element from the pool.
-     * @param href The URL of the audio resource.
-     */
-    clear(href: string): void {
-        this.preloadedElements.delete(href);
-    }
-
-    /**
-     * Preloads the next track in the reading order.
-     * @param publication The publication containing the reading order.
-     * @param currentIndex The current track index.
-     */
-    preloadNext(currentIndex: number): void {
-        const nextIndex = currentIndex + 1;
-        if (nextIndex < this._publication.readingOrder.items.length) {
-            const nextLink = this._publication.readingOrder.items[nextIndex];
-            this.preload(this.pickPlayableHref(nextLink));
-        }
-    }
-
-    /**
-     * Preloads the previous track in the reading order.
-     * @param currentIndex The current track index.
-     */
-    preloadPrevious(currentIndex: number): void {
-        const prevIndex = currentIndex - 1;
-        if (prevIndex >= 0) {
-            const prevLink = this._publication.readingOrder.items[prevIndex];
-            this.preload(this.pickPlayableHref(prevLink));
-        }
-    }
-
-    /**
-     * Preloads adjacent tracks (previous and next) for smoother navigation.
-     * @param currentIndex The current track index.
-     * @param direction The navigation direction ('forward' or 'backward').
-     */
-    preloadAdjacent(currentIndex: number, direction: 'forward' | 'backward' = 'forward'): void {
-        if (direction === 'forward') {
-            this.preloadNext(currentIndex);
-            this.preloadPrevious(currentIndex);
         } else {
-            this.preloadPrevious(currentIndex);
-            this.preloadNext(currentIndex);
+            this.audioEngine.setMediaElement(element);
         }
+
+        // Remove from pool so the engine fully owns it and we don't dispose it
+        this.pool.delete(href);
+
+        // Manage the pool around the new position
+        this.update(currentIndex);
     }
 
-    /**
-     * Destroys the pool by stopping the engine and clearing all preloaded elements.
-     */
     destroy(): void {
         this.audioEngine.stop();
-        this.preloadedElements.clear();
+        for (const [, element] of this.pool) {
+            element.removeAttribute("src");
+            element.load();
+        }
+        this.pool.clear();
     }
 }

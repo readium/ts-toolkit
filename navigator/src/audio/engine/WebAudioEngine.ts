@@ -100,6 +100,11 @@ export class WebAudioEngine implements AudioEngine {
    * @param url The URL of the audio resource.
    * */
   public loadAudio(url: string): void {
+    // Abort any in-progress load before starting a new one.
+    this.mediaElement.pause();
+    this.mediaElement.removeAttribute("src");
+    this.mediaElement.load();
+
     this.isLoadingValue = true;
     this.isLoadedValue = false;
     this.isPlayingValue = false;
