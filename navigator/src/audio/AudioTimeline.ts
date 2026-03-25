@@ -39,30 +39,40 @@ export class AudioTimeline extends Timeline {
         const time = locator.locations?.time() ?? 0;
 
         const matched = this.findCurrent(this.items, href, time);
-        if (matched === this._current) return;
-
-        this._current = matched;
-        this._previous = matched ? this.findPrevious(matched) : undefined;
-        this._next = matched ? this.findNext(matched) : undefined;
-        this.changeCallback?.(this._current, this._previous, this._next);
+        
+        // Only fire callback when timeline values actually change
+        if (matched !== this._current) {
+            this._current = matched;
+            this._previous = matched ? this.findPrevious(matched) : undefined;
+            this._next = matched ? this.findNext(matched) : undefined;
+            this.changeCallback?.(this._current, this._previous, this._next);
+        }
     }
 
     /**
      * Finds the deepest timeline item whose reference matches the given
      * href and whose time offset is at or before the current time.
      */
-    private findCurrent(items: TimelineItem[], href: string, time: number): TimelineItem | undefined {
+    private findCurrent(_items: TimelineItem[], href: string, time: number): TimelineItem | undefined {
+        // Search for time-based match first
         let match: TimelineItem | undefined;
-
-        for (const item of items) {
-            if (!this.itemMatchesPosition(item, href, time)) continue;
-            match = item;
-            if (item.children) {
-                const childMatch = this.findCurrent(item.children, href, time);
-                if (childMatch) match = childMatch;
+        
+        for (const item of this.flat) {
+            if (this.itemMatchesPosition(item, href, time)) {
+                match = item;
             }
         }
-
+        
+        // If no time-based match, fallback to base href match
+        if (!match) {
+            for (const item of this.flat) {
+                if (this.bareHref(item) === href) {
+                    match = item;
+                    break;
+                }
+            }
+        }
+        
         return match;
     }
 
