@@ -76,27 +76,21 @@ export class AudioTimeline extends Timeline {
         return match;
     }
 
-    /** First preceding entry in the flat list whose bare href differs from current. */
+    /** First preceding entry in the flat list */
     private findPrevious(target: TimelineItem): TimelineItem | undefined {
-        const targetHref = this.bareHref(target);
         const index = this.flat.indexOf(target);
-
-        for (let i = index - 1; i >= 0; i--) {
-            if (this.bareHref(this.flat[i]) !== targetHref) return this.flat[i];
+        if (index > 0) {
+            return this.flat[index - 1];
         }
-
         return undefined;
     }
 
-    /** First following entry in the flat list whose bare href differs from current. */
+    /** First following entry in the flat list */
     private findNext(target: TimelineItem): TimelineItem | undefined {
-        const targetHref = this.bareHref(target);
         const index = this.flat.indexOf(target);
-
-        for (let i = index + 1; i < this.flat.length; i++) {
-            if (this.bareHref(this.flat[i]) !== targetHref) return this.flat[i];
+        if (index < this.flat.length - 1) {
+            return this.flat[index + 1];
         }
-
         return undefined;
     }
 
