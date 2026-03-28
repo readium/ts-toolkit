@@ -85,7 +85,7 @@ export class FrameManager {
         }
 
         // Apply print protection if configured
-        if (this.contentProtectionConfig.protectPrinting) {
+        if (this.contentProtectionConfig.protectPrinting?.disable) {
             this.comms!.send("print_protection", this.contentProtectionConfig.protectPrinting);
         }
     }
