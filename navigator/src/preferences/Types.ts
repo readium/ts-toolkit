@@ -81,7 +81,7 @@ export const volumeRangeConfig: RangeConfig = {
 }
 
 export const playbackRateRangeConfig: RangeConfig = {
-  range: [0.5, 2],
+  range: [0.5, 4],
   step: 0.1
 }
 
