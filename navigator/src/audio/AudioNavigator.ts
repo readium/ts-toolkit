@@ -1,4 +1,4 @@
-import { Link, Locator, LocatorLocations, Publication } from "@readium/shared";
+import { Link, Locator, LocatorLocations, Publication, Timeline, TimelineItem } from "@readium/shared";
 import { MediaNavigator, IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator";
 import { Configurable } from "../preferences";
 import { WebAudioEngine, PlaybackState } from "./engine";
@@ -11,7 +11,6 @@ import {
     IAudioDefaults
 } from "./preferences";
 import { AudioPoolManager } from "./AudioPoolManager";
-import { AudioTimeline } from "./AudioTimeline";
 import { ContextMenuEvent, KeyboardEventData, SuspiciousActivityEvent } from "@readium/navigator-html-injectables";
 import { AudioNavigatorProtector } from "./protection/AudioNavigatorProtector";
 import { NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector";
@@ -20,6 +19,7 @@ import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../per
 export interface AudioNavigatorListeners {
     trackLoaded: (media: HTMLMediaElement) => void;
     positionChanged: (locator: Locator) => void;
+    timelineItemChanged: (item: TimelineItem | undefined) => void;
     error: (error: any, locator: Locator) => void;
     trackEnded: (locator: Locator) => void;
     play: (locator: Locator) => void;
@@ -36,6 +36,7 @@ export interface AudioNavigatorListeners {
 const defaultListeners = (listeners: Partial<AudioNavigatorListeners>): AudioNavigatorListeners => ({
     trackLoaded: listeners.trackLoaded ?? (() => {}),
     positionChanged: listeners.positionChanged ?? (() => {}),
+    timelineItemChanged: listeners.timelineItemChanged ?? (() => {}),
     error: listeners.error ?? (() => {}),
     trackEnded: listeners.trackEnded ?? (() => {}),
     play: listeners.play ?? (() => {}),
@@ -71,7 +72,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     private _mediaSessionEnabled: boolean = false;
     private pool: AudioPoolManager;
     private readonly _navigatorProtector: AudioNavigatorProtector | null = null;
-    private readonly _timeline: AudioTimeline;
+    private _currentTimelineItem: TimelineItem | undefined;
     private readonly _keyboardPeripheralsManager: KeyboardPeripherals | null = null;
     private readonly _suspiciousActivityListener: ((event: Event) => void) | null = null;
     private readonly _keyboardPeripheralListener: ((event: Event) => void) | null = null;
@@ -82,7 +83,6 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     }) {
         super();
         this.pub = publication;
-        this._timeline = new AudioTimeline(publication);
         this.listeners = defaultListeners(listeners);
 
         this._preferences = new AudioPreferences(configuration.preferences);
@@ -167,7 +167,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         this.waitForLoadedAndSeeked(initialTime)
             .then(() => {
                 this.listeners.trackLoaded(this.pool.audioEngine.getMediaElement());
-                this._timeline.update(this.currentLocator);
+                this._notifyTimelineChange(this.currentLocator);
                 this.listeners.positionChanged(this.currentLocator);
             })
             .catch(() => {
@@ -214,8 +214,16 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         return this.pub;
     }
 
-    get timeline(): AudioTimeline {
-        return this._timeline;
+    get timeline(): Timeline {
+        return this.pub.timeline;
+    }
+
+    private _notifyTimelineChange(locator: Locator): void {
+        const item = this.pub.timeline.locate(locator);
+        if (item !== this._currentTimelineItem) {
+            this._currentTimelineItem = item;
+            this.listeners.timelineItemChanged(item);
+        }
     }
 
     private ensureLocatorLocations(locator: Locator): Locator {
@@ -365,7 +373,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                     progression,
                     fragments: [`t=${currentTime}`]
                 }));
-                this._timeline.update(this.currentLocation);
+                this._notifyTimelineChange(this.currentLocation);
                 this.listeners.positionChanged(this.currentLocation);
             }
         });
@@ -417,7 +425,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                 progression,
                 fragments: [`t=${currentTime}`]
             }));
-            this._timeline.update(this.currentLocation);
+            this._notifyTimelineChange(this.currentLocation);
             this.listeners.positionChanged(this.currentLocation);
         }, this._settings.pollInterval);
     }
@@ -458,7 +466,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             if (id !== this.navigationId) return;
 
             this.listeners.trackLoaded(this.pool.audioEngine.getMediaElement());
-            this._timeline.update(this.currentLocator);
+            this._notifyTimelineChange(this.currentLocator);
             this.listeners.positionChanged(this.currentLocator);
 
             if (this._settings.enableMediaSession) {

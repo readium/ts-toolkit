@@ -143,40 +143,7 @@ navigator.skipBackward(); // Skip backward by skipBackwardInterval
 
 ## Timeline
 
-The `AudioNavigator` exposes a `timeline` property that contextualizes the publication's table of contents and reading order. It is built from the TOC when available, falling back to the reading order.
-
-### Properties
-
-- `items`: The full list of top-level `TimelineItem` entries.
-- `current`: The deepest timeline item matching the navigator's current position.
-- `previous`: The previous entry relative to current, based on resource boundaries.
-- `next`: The next entry relative to current, based on resource boundaries.
-- `adjacent`: Returns `{ previous, next }` for convenience.
-
-### Observing Changes
-
-Use `onChange` to register a callback that fires when the current timeline item changes:
-
-```js
-navigator.timeline.onChange((current, previous, next) => {
-  // Update chapter title
-  chapterTitle.textContent = current?.title ?? '';
-
-  // Update previous/next buttons
-  prevButton.textContent = previous?.title ?? '';
-  prevButton.disabled = !previous;
-
-  nextButton.textContent = next?.title ?? '';
-  nextButton.disabled = !next;
-});
-```
-
-### Previous and Next Logic
-
-Previous and next are determined by resource boundaries in the TOC tree. Both walk a flattened list of timeline items from the current position:
-
-- `previous` is the first preceding entry whose bare href (without fragment) differs from the current item.
-- `next` is the first following entry whose bare href (without fragment) differs from the current item.
+The `AudioNavigator` exposes a `timeline` property that contextualizes the publication's reading order and table of contents. See [Timeline](./Timeline.md) for full documentation.
 
 ## Helpers
 

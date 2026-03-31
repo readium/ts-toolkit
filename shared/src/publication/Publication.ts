@@ -13,6 +13,7 @@ import { Resource } from '../fetcher/Resource';
 import { GuidedNavigationDocument } from "./GuidedNavigation";
 import { URITemplate } from "../util";
 import { MediaType } from "../util/mediatype/MediaType";
+import { Timeline } from './services/timeline/Timeline';
 
 export type ServiceFactory = () => null;
 
@@ -21,6 +22,7 @@ export class Publication {
   /** The manifest holding the publication metadata extracted from the publication file */
   public manifest: Manifest;
   private readonly fetcher: Fetcher = new EmptyFetcher();
+  private _timeline: Timeline | undefined;
 
   // Shortcuts to manifest properties
   public readonly context?: Array<string>;
@@ -45,6 +47,16 @@ export class Publication {
     this.resources = values.manifest.resources;
     this.toc = values.manifest.toc;
     this.subcollections = values.manifest.subcollections;
+  }
+
+  /**
+   * Returns the publication's timeline, built from its reading order and table of contents.
+   * Called with no arguments, the result is cached. Pass options to build a fresh timeline
+   * with a specific configuration (e.g. a depth limit).
+   */
+  public get timeline(): Timeline {
+    if (!this._timeline) this._timeline = Timeline.build(this);
+    return this._timeline;
   }
 
   /** The URL where this publication is served, computed from the `Link` with `self` relation.
