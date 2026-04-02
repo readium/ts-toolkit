@@ -381,6 +381,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         this.pool.audioEngine.on("seeking", () => this.listeners.seeking(true));
         this.pool.audioEngine.on("waiting", () => this.listeners.seeking(true));
         this.pool.audioEngine.on("stalled", () => this.listeners.stalled(true));
+        this.pool.audioEngine.on("canplaythrough", () => this.listeners.stalled(false));
         this.pool.audioEngine.on("progress", (seekable: TimeRanges) => this.listeners.seekable(seekable));
         
         this.pool.audioEngine.on("loadedmetadata", () => {
@@ -463,7 +464,10 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
             await this.waitForLoadedAndSeeked(time, id);
 
-            if (id !== this.navigationId) return;
+            if (id !== this.navigationId) {
+                cb(false);
+                return;
+            }
 
             this.listeners.trackLoaded(this.pool.audioEngine.getMediaElement());
             this._notifyTimelineChange(this.currentLocator);
@@ -474,12 +478,13 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             }
 
             if (wasPlaying) this.play();
-            this._playIntent = false;
 
             cb(true);
         } catch (error) {
             console.error("Failed to go to locator:", error);
             cb(false);
+        } finally {
+            this._playIntent = false;
         }
     }
 
