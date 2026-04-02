@@ -51,20 +51,7 @@ Setting the same depth again is a no-op. Setting a different depth invalidates t
 
 ## Observing changes
 
-Register a `timelineItemChanged` listener when creating the navigator. It fires only when the current `TimelineItem` actually changes — not on every position tick:
-
-```js
-const navigator = new AudioNavigator(publication, {
-    timelineItemChanged: (item) => {
-        chapterTitle.textContent = item?.title ?? '';
-
-        const { previous, next } = publication.timeline.adjacentTo(item);
-        prevButton.disabled = !previous;
-        nextButton.disabled = !next;
-    },
-    // ...
-});
-```
+The optional `timelineItemChanged` listener fires whenever the active `TimelineItem` changes — not on every position tick. See [Customizing Listeners](./CustomizingListeners.md#timelineitemchanged) for details and an example.
 
 ## Methods
 

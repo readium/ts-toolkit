@@ -10,12 +10,19 @@ interface PublicationLike {
 /**
  * A publication's timeline, built once from its reading order and table of contents.
  *
- * The reading order is the source of truth: every item in the reading order
- * becomes exactly one top-level timeline item.  The TOC is consulted only to
- * derive a display title when the reading order item carries none.
+ * **Source of truth**: the reading order.  Every reading order item becomes
+ * exactly one top-level `TimelineItem`.  The TOC is consulted to:
+ *   1. Derive a display title when the reading order item has none.
+ *   2. Populate flat children — all TOC fragment entries that reference the
+ *      resource, collected depth-first in TOC declaration order.
  *
- * The `depth` build option limits how many levels deep into the TOC hierarchy
- * title resolution may look.  Entries nested beyond that depth are ignored.
+ * No TOC hierarchy is reconstructed; that requires role context and is not yet
+ * implemented.  TOC entries whose href does not match any reading order item
+ * are ignored.
+ *
+ * The `depth` build option limits how many levels deep into the TOC tree both
+ * title resolution and child collection may look.  Level 1 = top-level TOC
+ * entries; level 2 = their children; etc.  `undefined` means no limit.
  */
 export class Timeline {
     private readonly _allItems: TimelineItem[];
@@ -61,7 +68,11 @@ export class Timeline {
         return new Timeline(items, linkMap);
     }
 
-    /** The active depth limit for TOC traversal. */
+    /**
+     * The active depth limit for TOC traversal (title resolution and child
+     * collection).  `undefined` means unlimited.  Setting the same value again
+     * is a no-op; a new value invalidates the cached items and flat list.
+     */
     get depth(): number | undefined {
         return this._depth;
     }
@@ -73,7 +84,7 @@ export class Timeline {
         this._flat = undefined;
     }
 
-    /** Top-level items, trimmed to the active depth if set. */
+    /** Top-level timeline items.  Cached; invalidated when `depth` changes. */
     get items(): TimelineItem[] {
         if (!this._items) {
             this._items = this._depth !== undefined
@@ -157,10 +168,10 @@ export class Timeline {
 
     /**
      * Resolve a display title for `bare` from the TOC, looking no deeper than
-     * `maxDepth` levels.  Priority:
-     *   1. A TOC entry at the start of the resource (no fragment, or #t=0).
-     *   2. Exactly one fragment-based TOC entry — use its title.
-     *   3. Multiple fragment entries — ambiguous, return undefined.
+     * `maxDepth` levels (1 = top-level entries only).  Priority:
+     *   1. A start-of-resource entry: bare href or `#t=0` (audio).
+     *   2. Exactly one fragment entry referencing this resource — unambiguous.
+     *   3. Multiple fragment entries — ambiguous, returns `undefined`.
      */
     private static findTitleInToc(
         tocLinks: Link[],

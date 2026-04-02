@@ -5,6 +5,7 @@
 The following events are exposed:
 - `trackLoaded`: fires when an audio track has finished loading and is ready to play
 - `positionChanged`: fires when the current playback position has changed
+- `timelineItemChanged`: fires when the active `TimelineItem` changes (optional)
 - `error`: fires when an error occurs during audio playback
 - `ended`: fires when an audio track finishes playing
 - `play`: fires when audio playback starts or resumes
@@ -17,7 +18,7 @@ The following events are exposed:
 - `contentProtection`: fires when a content protection event occurs (automation detected, dev tools opened, drag/drop blocked, etc.). See [Content Protection](./ContentProtection.md).
 - `peripheral`: fires when a configured keyboard peripheral shortcut is triggered. See [Keyboard Peripherals](./KeyboardPeripherals.md).
 
-All listeners are required. Your listeners object must implement every callback:
+All listeners except `timelineItemChanged` are required. Your listeners object must implement every required callback:
 
 ```js
 const listeners: AudioNavigatorListeners = {
@@ -31,6 +32,8 @@ const listeners: AudioNavigatorListeners = {
   stalled: function (isStalled: boolean): void {},
   seeking: function (isSeeking: boolean): void {},
   seekable: function (seekable: TimeRanges): void {},
+  // optional:
+  timelineItemChanged: function (item: TimelineItem | undefined): void {},
 };
 ```
 
@@ -52,6 +55,26 @@ const listeners = {
 ### positionChanged
 
 Fires when the current playback position changes. The frequency is controlled by the `pollInterval` preference.
+
+### timelineItemChanged
+
+Fires when the active `TimelineItem` changes — not on every position tick, only when the item actually changes. Receives `undefined` when no item is active. This listener is optional; omitting it is equivalent to a no-op.
+
+Use this to keep chapter titles, breadcrumbs, or previous/next navigation in sync without polling. See [Timeline](./Timeline.md) for the full API.
+
+```js
+const listeners = {
+  timelineItemChanged: function (item: TimelineItem | undefined): void {
+    chapterTitle.textContent = item?.title ?? '';
+
+    if (item) {
+      const { previous, next } = publication.timeline.adjacentTo(item);
+      prevButton.disabled = !previous;
+      nextButton.disabled = !next;
+    }
+  }
+};
+```
 ```js
 const listeners = {
   positionChanged: function (locator: Locator): void {
