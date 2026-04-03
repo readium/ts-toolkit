@@ -16,6 +16,13 @@ import { AudioNavigatorProtector } from "./protection/AudioNavigatorProtector";
 import { NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector";
 import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../peripherals/KeyboardPeripherals";
 
+export interface AudioMetadata {
+    duration: number;
+    textTracks: TextTrackList;
+    readyState: number;
+    networkState: number;
+}
+
 export interface AudioNavigatorListeners {
     trackLoaded: (media: HTMLMediaElement) => void;
     positionChanged: (locator: Locator) => void;
@@ -24,13 +31,14 @@ export interface AudioNavigatorListeners {
     trackEnded: (locator: Locator) => void;
     play: (locator: Locator) => void;
     pause: (locator: Locator) => void;
-    metadataLoaded: (duration: number) => void;
+    metadataLoaded: (metadata: AudioMetadata) => void;
     stalled: (isStalled: boolean) => void;
     seeking: (isSeeking: boolean) => void;
     seekable: (seekable: TimeRanges) => void;
     contentProtection: (type: string, data: SuspiciousActivityEvent) => void;
     peripheral: (data: KeyboardEventData) => void;
     contextMenu: (data: ContextMenuEvent) => void;
+    remotePlaybackStateChanged?: (state: RemotePlaybackState) => void;
 }
 
 const defaultListeners = (listeners: Partial<AudioNavigatorListeners>): AudioNavigatorListeners => ({
@@ -50,10 +58,15 @@ const defaultListeners = (listeners: Partial<AudioNavigatorListeners>): AudioNav
     contextMenu: listeners.contextMenu ?? (() => {}),
 });
 
+export interface IAudioContentProtectionConfig extends IContentProtectionConfig {
+    /** Prevents the media element from being cast to remote devices via the Remote Playback API. */
+    disableRemotePlayback?: boolean;
+}
+
 export interface AudioNavigatorConfiguration {
     preferences: IAudioPreferences;
     defaults: IAudioDefaults;
-    contentProtection?: IContentProtectionConfig;
+    contentProtection?: IAudioContentProtectionConfig;
     keyboardPeripherals?: IKeyboardPeripheralsConfig;
 }
 
@@ -76,6 +89,9 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     private readonly _keyboardPeripheralsManager: KeyboardPeripherals | null = null;
     private readonly _suspiciousActivityListener: ((event: Event) => void) | null = null;
     private readonly _keyboardPeripheralListener: ((event: Event) => void) | null = null;
+    private readonly _contentProtection: IAudioContentProtectionConfig;
+    /** True while a track transition is in progress; suppresses spurious mid-navigation events. */
+    private _isNavigating: boolean = false;
 
     constructor(publication: Publication, listeners: AudioNavigatorListeners, initialPosition?: Locator, configuration: AudioNavigatorConfiguration = {
         preferences: {},
@@ -121,10 +137,11 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             }
         });
 
-        this.pool = new AudioPoolManager(audioEngine, publication);
+        this.pool = new AudioPoolManager(audioEngine, publication, configuration.contentProtection);
 
         // Initialize content protection
         const contentProtection = configuration.contentProtection || {};
+        this._contentProtection = contentProtection;
         const keyboardPeripherals = this.mergeKeyboardPeripherals(
             contentProtection,
             configuration.keyboardPeripherals || []
@@ -160,17 +177,21 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         this.setupEventListeners();
         this.applyPreferences();
 
+        this._isNavigating = true;
         this.pool.setCurrentAudio(trackIndex, "forward");
 
         // Load and seek to initial position, then notify consumer.
         // No cancellation needed here — the constructor runs once.
         this.waitForLoadedAndSeeked(initialTime)
             .then(() => {
+                this._isNavigating = false;
                 this.listeners.trackLoaded(this.pool.audioEngine.getMediaElement());
                 this._notifyTimelineChange(this.currentLocator);
                 this.listeners.positionChanged(this.currentLocator);
+                this._setupRemotePlayback();
             })
             .catch(() => {
+                this._isNavigating = false;
                 // Error already forwarded via the error event listener.
             });
     }
@@ -349,20 +370,24 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         });
 
         this.pool.audioEngine.on("play", () => {
+            if (this._isNavigating) return;
             this.startPositionPolling();
             this.listeners.play(this.currentLocator);
         });
 
         this.pool.audioEngine.on("playing", () => {
+            if (this._isNavigating) return;
             this.listeners.stalled(false);
         });
 
         this.pool.audioEngine.on("pause", () => {
+            if (this._isNavigating) return;
             this.stopPositionPolling();
             this.listeners.pause(this.currentLocator);
         });
 
         this.pool.audioEngine.on("seeked", () => {
+            if (this._isNavigating) return;
             this.listeners.seeking(false);
             if (!this.isPlaying) {
                 const currentTime = this.currentTime;
@@ -378,14 +403,21 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             }
         });
 
-        this.pool.audioEngine.on("seeking", () => this.listeners.seeking(true));
-        this.pool.audioEngine.on("waiting", () => this.listeners.seeking(true));
-        this.pool.audioEngine.on("stalled", () => this.listeners.stalled(true));
-        this.pool.audioEngine.on("canplaythrough", () => this.listeners.stalled(false));
-        this.pool.audioEngine.on("progress", (seekable: TimeRanges) => this.listeners.seekable(seekable));
-        
+        this.pool.audioEngine.on("seeking", () => { if (!this._isNavigating) this.listeners.seeking(true); });
+        this.pool.audioEngine.on("waiting", () => { if (!this._isNavigating) this.listeners.seeking(true); });
+        this.pool.audioEngine.on("stalled", () => { if (!this._isNavigating) this.listeners.stalled(true); });
+        this.pool.audioEngine.on("canplaythrough", () => { if (!this._isNavigating) this.listeners.stalled(false); });
+        this.pool.audioEngine.on("progress", (seekable: TimeRanges) => { if (!this._isNavigating) this.listeners.seekable(seekable); });
+
         this.pool.audioEngine.on("loadedmetadata", () => {
-            this.listeners.metadataLoaded(this.pool.audioEngine.duration());
+            const mediaElement = this.pool.audioEngine.getMediaElement();
+            const metadata: AudioMetadata = {
+                duration: this.pool.audioEngine.duration(),
+                textTracks: mediaElement.textTracks,
+                readyState: mediaElement.readyState,
+                networkState: mediaElement.networkState
+            };
+            this.listeners.metadataLoaded(metadata);
         });
     }
 
@@ -452,17 +484,16 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
             const id = ++this.navigationId;
             const direction: "forward" | "backward" = trackIndex >= this.currentTrackIndex() ? "forward" : "backward";
-            // Use _playIntent rather than isPlaying — setMediaElement resets the
-            // engine's playing flag, so a rapid second go() would see false and
-            // never resume playback.
             const wasPlaying = this.isPlaying || this._playIntent;
             this._playIntent = wasPlaying;
 
+            this._isNavigating = true;
             this.stopPositionPolling();
             this.pool.setCurrentAudio(trackIndex, direction);
             this.currentLocation = locator.copyWithLocations(locator.locations);
 
             await this.waitForLoadedAndSeeked(time, id);
+            this._isNavigating = false;
 
             if (id !== this.navigationId) {
                 cb(false);
@@ -481,6 +512,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
             cb(true);
         } catch (error) {
+            this._isNavigating = false;
             console.error("Failed to go to locator:", error);
             cb(false);
         } finally {
@@ -572,6 +604,28 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
     get canGoForward(): boolean {
         return this.currentTrackIndex() < this.pub.readingOrder.items.length - 1;
+    }
+
+    /**
+     * The RemotePlayback object for the primary media element.
+     * Because the element is never swapped, this reference is stable for the
+     * lifetime of the navigator — host apps can store it and call `.prompt()`,
+     * `.watchAvailability()`, etc. directly.
+     */
+    get remotePlayback(): RemotePlayback {
+        return this.pool.audioEngine.getMediaElement().remote;
+    }
+
+    /** Wires up the optional remotePlaybackStateChanged listener. Called once after initial load. */
+    private _setupRemotePlayback(): void {
+        if (this._contentProtection.disableRemotePlayback) {
+            return;
+        }
+        const remote = this.remotePlayback;
+        if (!remote) return;
+        remote.onconnecting = () => this.listeners.remotePlaybackStateChanged?.("connecting");
+        remote.onconnect    = () => this.listeners.remotePlaybackStateChanged?.("connected");
+        remote.ondisconnect = () => this.listeners.remotePlaybackStateChanged?.("disconnected");
     }
 
     private destroyMediaSession(): void {

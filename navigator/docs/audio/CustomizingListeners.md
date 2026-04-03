@@ -10,15 +10,16 @@ The following events are exposed:
 - `ended`: fires when an audio track finishes playing
 - `play`: fires when audio playback starts or resumes
 - `pause`: fires when audio playback is paused
-- `metadataLoaded`: fires when audio metadata (including duration) has loaded
+- `metadataLoaded`: fires when audio metadata has loaded, including duration, text tracks, and loading state
 - `stalled`: fires when the audio player stalls (buffering stopped)
 - `seeking`: fires when the audio player starts or finishes seeking
 - `seekable`: fires as media data is downloaded, with the current seekable `TimeRanges`
 - `contextMenu`: fires when a right-click context menu is blocked (requires `contentProtection.disableContextMenu`). See [Content Protection](./ContentProtection.md).
 - `contentProtection`: fires when a content protection event occurs (automation detected, dev tools opened, drag/drop blocked, etc.). See [Content Protection](./ContentProtection.md).
 - `peripheral`: fires when a configured keyboard peripheral shortcut is triggered. See [Keyboard Peripherals](./KeyboardPeripherals.md).
+- `remotePlaybackStateChanged`: fires when the Remote Playback connection state changes (optional). See [Remote Playback](./RemotePlayback.md).
 
-All listeners except `timelineItemChanged` are required. Your listeners object must implement every required callback:
+All listeners except `timelineItemChanged` and `remotePlaybackStateChanged` are required. Your listeners object must implement every required callback:
 
 ```js
 const listeners: AudioNavigatorListeners = {
@@ -28,12 +29,13 @@ const listeners: AudioNavigatorListeners = {
   ended: function (locator: Locator): void {},
   play: function (locator: Locator): void {},
   pause: function (locator: Locator): void {},
-  metadataLoaded: function (duration: number): void {},
+  metadataLoaded: function (metadata: AudioMetadata): void {},
   stalled: function (isStalled: boolean): void {},
   seeking: function (isSeeking: boolean): void {},
   seekable: function (seekable: TimeRanges): void {},
   // optional:
   timelineItemChanged: function (item: TimelineItem | undefined): void {},
+  remotePlaybackStateChanged: function (state: RemotePlaybackState): void {},
 };
 ```
 
@@ -139,13 +141,28 @@ const listeners = {
 
 ### metadataLoaded
 
-Fires when audio metadata has been loaded, including the duration.
+Fires when audio metadata has been loaded. Provides an `AudioMetadata` object containing:
+
+- `duration`: Audio length in seconds
+- `textTracks`: Available subtitle/caption tracks (`TextTrackList`)
+- `readyState`: Current loading state (0-4)
+- `networkState`: Network loading state (0-3)
 
 ```js
 const listeners = {
-  metadataLoaded: function (duration: number): void {
-    updateDurationDisplay(duration);
-    setupProgressBar(duration);
+  metadataLoaded: function (metadata: AudioMetadata): void {
+    updateDurationDisplay(metadata.duration);
+    
+    // Setup subtitle/caption UI
+    for (let i = 0; i < metadata.textTracks.length; i++) {
+      const track = metadata.textTracks[i];
+      if (track.kind === 'subtitles' || track.kind === 'captions') {
+        addSubtitleOption(track.label, track.language);
+      }
+    }
+    
+    // Show loading state
+    showLoadingIndicator(metadata.readyState < 3);
   }
 };
 ```
@@ -188,6 +205,22 @@ const listeners = {
 };
 ```
 
+### remotePlaybackStateChanged
+
+Optional. Fires when the Remote Playback connection state changes. The state is `'connecting'`, `'connected'`, or `'disconnected'`. Use it to update a cast button or display a status indicator. See [Remote Playback](./RemotePlayback.md) for the full API including device availability and prompting.
+
+```js
+const listeners = {
+  remotePlaybackStateChanged: function (state: RemotePlaybackState): void {
+    const castButton = document.getElementById('cast-button');
+    castButton.textContent =
+      state === 'connected'  ? 'Casting'     :
+      state === 'connecting' ? 'Connecting…' :
+                               'Cast';
+  }
+};
+```
+
 ## Usage Example
 
 ```js
@@ -204,8 +237,16 @@ const listeners: AudioNavigatorListeners = {
     (document.getElementById('progress-bar') as HTMLInputElement).value = progression.toString();
   },
 
-  metadataLoaded: (duration) => {
-    document.getElementById('total-time').textContent = formatTime(duration);
+  metadataLoaded: (metadata) => {
+    document.getElementById('total-time').textContent = formatTime(metadata.duration);
+    
+    // Setup subtitle options
+    for (let i = 0; i < metadata.textTracks.length; i++) {
+      const track = metadata.textTracks[i];
+      if (track.kind === 'subtitles' || track.kind === 'captions') {
+        addSubtitleOption(track.label, track.language);
+      }
+    }
   },
 
   play: () => {
@@ -239,6 +280,11 @@ const listeners: AudioNavigatorListeners = {
     for (let i = 0; i < seekable.length; i++) {
       console.log(`Seekable range ${i}: ${seekable.start(i)}s – ${seekable.end(i)}s`);
     }
+  },
+
+  // optional:
+  remotePlaybackStateChanged: (state) => {
+    document.getElementById('cast-button').dataset.state = state;
   },
 };
 

@@ -78,6 +78,11 @@ interface AudioContentProtectionConfig {
     // Triggers "developer_tools" event when dev tools are opened
     // Default: false
     monitorDevTools?: boolean;
+
+    // Prevent the audio from being cast to remote devices (AirPlay, Chromecast, etc.)
+    // via the Remote Playback API. Use for DRM-protected content.
+    // Default: false
+    disableRemotePlayback?: boolean;
 }
 ```
 
@@ -124,6 +129,12 @@ interface AudioContentProtectionConfig {
 - Detects when browser developer tools are opened
 - Triggers `contentProtection` with type `developer_tools`
 - Enabled via `monitorDevTools`
+
+### 9. Remote Playback
+- Prevents the audio from being cast to AirPlay or Chromecast-enabled devices via the [Remote Playback API](https://developer.mozilla.org/en-US/docs/Web/API/Remote_Playback_API)
+- No event is fired; the cast affordance is simply hidden by the browser
+- Enabled via `disableRemotePlayback`
+- See [Remote Playback](./RemotePlayback.md) for the full API
 
 ## Side effects
 

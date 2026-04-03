@@ -55,10 +55,11 @@ export interface AudioEngine {
     off(event: string, callback: (data: any) => void): void;
     
     /**
-     * Sets the media element for playback, enabling use of preloaded elements from the pool.
-     * @param element The HTML audio element to use for playback.
+     * Changes the src of the primary media element without swapping it,
+     * preserving the RemotePlayback session and all attached event listeners.
+     * @param href The URL of the new audio resource.
      */
-    setMediaElement(element: HTMLAudioElement): void;
+    changeSrc(href: string): void;
     
     /**
      * Plays the current audio resource.

@@ -59,6 +59,7 @@ Additionally, the `AudioNavigator` class provides the following properties:
 - `isPaused`: Returns `true` if audio is currently paused.
 - `duration`: Returns the duration of the current audio track in seconds.
 - `currentTime`: Returns the current playback time in seconds.
+- `remotePlayback`: The [`RemotePlayback`](https://developer.mozilla.org/en-US/docs/Web/API/RemotePlayback) object for the primary media element. Use it to prompt the device picker, watch device availability, and read the current connection state. See [Remote Playback](./RemotePlayback.md).
 
 ### Preferences API
 
@@ -144,6 +145,10 @@ navigator.skipBackward(); // Skip backward by skipBackwardInterval
 ## Timeline
 
 The `AudioNavigator` exposes a `timeline` property that contextualizes the publication's reading order and table of contents. See [Timeline](./Timeline.md) for full documentation.
+
+## Remote Playback
+
+The `AudioNavigator` exposes a `remotePlayback` property that gives access to the browser's [Remote Playback API](https://developer.mozilla.org/en-US/docs/Web/API/Remote_Playback_API), enabling users to cast audio to AirPlay or Chromecast devices. See [Remote Playback](./RemotePlayback.md) for full documentation.
 
 ## Helpers
 

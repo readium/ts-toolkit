@@ -1,5 +1,6 @@
 import { Link, Publication } from "@readium/shared";
 import { WebAudioEngine } from "./engine/WebAudioEngine";
+import type { IAudioContentProtectionConfig } from "./AudioNavigator";
 
 const UPPER_BOUNDARY = 1;
 const LOWER_BOUNDARY = 1;
@@ -10,10 +11,14 @@ export class AudioPoolManager {
     private readonly _publication: Publication;
     private readonly _supportedAudioTypes: Map<string, "probably" | "maybe">;
 
-    constructor(audioEngine: WebAudioEngine, publication: Publication) {
+    constructor(audioEngine: WebAudioEngine, publication: Publication, contentProtection: IAudioContentProtectionConfig = {}) {
         this._audioEngine = audioEngine;
         this._publication = publication;
         this._supportedAudioTypes = this.detectSupportedAudioTypes();
+
+        if (contentProtection.disableRemotePlayback) {
+            this._audioEngine.getMediaElement().disableRemotePlayback = true;
+        }
     }
 
     private detectSupportedAudioTypes(): Map<string, "probably" | "maybe"> {
@@ -59,8 +64,8 @@ export class AudioPoolManager {
         if (!element) {
             element = document.createElement("audio");
             element.preload = "auto";
-            // When Web Audio is active CORS already succeeded, so preload
-            // with crossOrigin to avoid a destructive reload at swap time.
+            // Match the primary element's CORS mode so cached responses
+            // are reusable when changeSrc() loads this href on it.
             if (this._audioEngine.isWebAudioActive) {
                 element.crossOrigin = "anonymous";
             }
@@ -74,12 +79,14 @@ export class AudioPoolManager {
     /**
      * Updates the pool around the given index: ensures elements exist within
      * the LOWER_BOUNDARY and disposes those beyond the UPPER_BOUNDARY.
+     * The current track is excluded — the primary engine element represents it.
      */
     private update(currentIndex: number): void {
         const items = this._publication.readingOrder.items;
         const keep = new Set<string>();
 
         for (let j = 0; j < items.length; j++) {
+            if (j === currentIndex) continue; // primary element handles the current track
             const href = this.pickPlayableHref(items[j]);
             if (j >= currentIndex - LOWER_BOUNDARY && j <= currentIndex + LOWER_BOUNDARY) {
                 this.ensure(href);
@@ -103,17 +110,21 @@ export class AudioPoolManager {
     }
 
     /**
-     * Sets the current audio for playback at the given track index.
-     * The element is always sourced from the pool — never loaded ad-hoc on the engine.
+     * Sets the current audio for playback at the given track index by changing
+     * the src on the persistent primary element. This preserves the RemotePlayback
+     * session and any Web Audio graph connections across track changes.
      */
     setCurrentAudio(currentIndex: number, _direction: 'forward' | 'backward'): void {
         const href = this.pickPlayableHref(this._publication.readingOrder.items[currentIndex]);
-        const element = this.ensure(href);
+        this.audioEngine.changeSrc(href);
 
-        this.audioEngine.setMediaElement(element);
-
-        // Remove from pool so the engine fully owns it and we don't dispose it
-        this.pool.delete(href);
+        // Discard any pool entry for this href — the primary element owns it now
+        if (this.pool.has(href)) {
+            const existing = this.pool.get(href)!;
+            existing.removeAttribute("src");
+            existing.load();
+            this.pool.delete(href);
+        }
 
         // Manage the pool around the new position
         this.update(currentIndex);

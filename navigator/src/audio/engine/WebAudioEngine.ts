@@ -16,8 +16,6 @@ export class WebAudioEngine implements AudioEngine {
   private sourceNode: MediaElementAudioSourceNode | null = null;
   private gainNode: GainNode | null = null;
   private listeners: { [event: string]: EventCallback[] } = {};
-  private currentVolume: number = 1;
-  private currentPlaybackRate: number = 1;
   private isMutedValue: boolean = false;
   private isPlayingValue: boolean = false;
   private isPausedValue: boolean = false;
@@ -93,120 +91,6 @@ export class WebAudioEngine implements AudioEngine {
     this.listeners[event] = this.listeners[event].filter(
       (cb) => cb !== callback
     );
-  }
-
-  private deactivateWebAudio(): void {
-    if (this.worklet) {
-      this.worklet.destroy();
-      this.worklet = null;
-    }
-    if (this.sourceNode) {
-      this.sourceNode.disconnect();
-      this.sourceNode = null;
-    }
-    if (this.gainNode) {
-      this.gainNode.disconnect();
-      this.gainNode = null;
-    }
-    this.webAudioActive = false;
-  }
-
-  /**
-   * Sets the media element for playback.
-   * @param element The HTML audio element to use.
-   */
-  public setMediaElement(element: HTMLAudioElement): void {
-    // Remove listeners BEFORE pausing so the pause doesn't leak through
-    this.mediaElement.removeEventListener("canplaythrough", this.boundOnCanPlayThrough);
-    this.mediaElement.removeEventListener("timeupdate", this.boundOnTimeUpdate);
-    this.mediaElement.removeEventListener("error", this.boundOnError);
-    this.mediaElement.removeEventListener("ended", this.boundOnEnded);
-    this.mediaElement.removeEventListener("stalled", this.boundOnStalled);
-    this.mediaElement.removeEventListener("emptied", this.boundOnEmptied);
-    this.mediaElement.removeEventListener("suspend", this.boundOnSuspend);
-    this.mediaElement.removeEventListener("waiting", this.boundOnWaiting);
-    this.mediaElement.removeEventListener("loadedmetadata", this.boundOnLoadedMetadata);
-    this.mediaElement.removeEventListener("seeking", this.boundOnSeeking);
-    this.mediaElement.removeEventListener("seeked", this.boundOnSeeked);
-    this.mediaElement.removeEventListener("play", this.boundOnPlay);
-    this.mediaElement.removeEventListener("playing", this.boundOnPlaying);
-    this.mediaElement.removeEventListener("pause", this.boundOnPause);
-    this.mediaElement.removeEventListener("progress", this.boundOnProgress);
-
-    // Now safe to pause the outgoing element
-    this.mediaElement.pause();
-    this.isPlayingValue = false;
-    this.isPausedValue = false;
-
-    // Disconnect old source node if it exists
-    if (this.sourceNode) {
-      this.sourceNode.disconnect();
-      this.sourceNode = null;
-    }
-
-    // Set new media element
-    this.mediaElement = element;
-
-    // Add event listeners to new element
-    this.mediaElement.addEventListener("canplaythrough", this.boundOnCanPlayThrough);
-    this.mediaElement.addEventListener("timeupdate", this.boundOnTimeUpdate);
-    this.mediaElement.addEventListener("error", this.boundOnError);
-    this.mediaElement.addEventListener("ended", this.boundOnEnded);
-    this.mediaElement.addEventListener("stalled", this.boundOnStalled);
-    this.mediaElement.addEventListener("emptied", this.boundOnEmptied);
-    this.mediaElement.addEventListener("suspend", this.boundOnSuspend);
-    this.mediaElement.addEventListener("waiting", this.boundOnWaiting);
-    this.mediaElement.addEventListener("loadedmetadata", this.boundOnLoadedMetadata);
-    this.mediaElement.addEventListener("seeking", this.boundOnSeeking);
-    this.mediaElement.addEventListener("seeked", this.boundOnSeeked);
-    this.mediaElement.addEventListener("play", this.boundOnPlay);
-    this.mediaElement.addEventListener("playing", this.boundOnPlaying);
-    this.mediaElement.addEventListener("pause", this.boundOnPause);
-    this.mediaElement.addEventListener("progress", this.boundOnProgress);
-
-    // Re-apply current volume and playback rate to the new element
-    this.mediaElement.volume = this.isMutedValue ? 0 : this.currentVolume;
-    this.mediaElement.playbackRate = this.currentPlaybackRate;
-
-    // Reconnect the Web Audio graph to the new element
-    if (this.webAudioActive) {
-      try {
-        const ctx = this.getOrCreateAudioContext();
-        this.sourceNode = new MediaElementAudioSourceNode(ctx, { mediaElement: this.mediaElement });
-        if (!this.gainNode) {
-          this.gainNode = ctx.createGain();
-          this.gainNode.connect(ctx.destination);
-        }
-        if (this.worklet?.workletNode) {
-          this.sourceNode.connect(this.worklet.workletNode);
-        } else {
-          this.sourceNode.connect(this.gainNode);
-        }
-      } catch {
-        // CORS failed on this element — deactivate Web Audio gracefully
-        this.deactivateWebAudio();
-      }
-    }
-
-    // Check if metadata is already loaded (common with preloaded elements)
-    if (this.mediaElement.readyState >= 1) {
-      this.onLoadedMetadata(new Event('loadedmetadata'));
-    }
-
-    // Preloaded elements may have already buffered data before being swapped in,
-    // so progress events would have fired before we were listening. Emit now if
-    // seekable ranges are already available.
-    if (this.mediaElement.seekable.length > 0) {
-      this.onProgress();
-    }
-
-    // Check if the element is already loaded and trigger appropriate events
-    if (this.mediaElement.readyState >= 4) {
-      this.onCanPlayThrough();
-    } else {
-      this.isLoadingValue = true;
-      this.isLoadedValue = false;
-    }
   }
 
   // Ensure AudioContext is running
@@ -352,7 +236,6 @@ export class WebAudioEngine implements AudioEngine {
    */
   public setVolume(volume: number): void {
     if (volume < 0) {
-      this.currentVolume = 0;
       this.mediaElement.volume = 0;
       if (this.gainNode) {
         this.gainNode.gain.value = 0;
@@ -364,7 +247,6 @@ export class WebAudioEngine implements AudioEngine {
       this.setVolume(volume / 100);
       return;
     }
-    this.currentVolume = volume;
     this.mediaElement.volume = volume;
     if (this.gainNode) {
       this.gainNode.gain.value = volume;
@@ -452,7 +334,6 @@ export class WebAudioEngine implements AudioEngine {
    * Sets the playback rate of the audio resource with pitch preservation.
    */
   public setPlaybackRate(rate: number, preservePitch: boolean): void {
-    this.currentPlaybackRate = rate;
     this.mediaElement.playbackRate = rate;
     if (preservePitch) {
       if ('preservesPitch' in this.mediaElement) {
@@ -556,6 +437,27 @@ export class WebAudioEngine implements AudioEngine {
 
   public get isWebAudioActive(): boolean {
     return this.webAudioActive;
+  }
+
+  /**
+   * Changes the src of the primary media element without swapping the element.
+   * Preserves the RemotePlayback session and all attached event listeners.
+   */
+  public changeSrc(href: string): void {
+    if (this.mediaElement.src === href) {
+      return;
+    }
+    this.mediaElement.pause();
+    this.isPlayingValue = false;
+    this.isPausedValue = false;
+    this.isLoadedValue = false;
+    this.isLoadingValue = true;
+    this.isEndedValue = false;
+    if (this.webAudioActive) {
+      this.mediaElement.crossOrigin = "anonymous";
+    }
+    this.mediaElement.src = href;
+    this.mediaElement.load();
   }
 
   /**
