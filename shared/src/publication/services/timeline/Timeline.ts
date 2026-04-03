@@ -60,8 +60,7 @@ export class Timeline {
                 children: tocChildren.length > 0 ? tocChildren : undefined,
             };
 
-            const tocLink = Timeline.findTocLink(tocLinks, bare, depth);
-            linkMap.set(item, tocLink ?? ro);
+            linkMap.set(item, ro);
             items.push(item);
         }
 
@@ -182,19 +181,6 @@ export class Timeline {
         if (atStart.length > 0) return atStart[0].title!;
         if (fragments.length === 1) return fragments[0].title!;
         return undefined;
-    }
-
-    /**
-     * Return the most relevant TOC Link for `bare` (used for `linkFor`).
-     * Prefers a start-of-resource entry; falls back to the first fragment entry.
-     */
-    private static findTocLink(
-        tocLinks: Link[],
-        bare: string,
-        maxDepth: number | undefined,
-    ): Link | undefined {
-        const { atStart, fragments } = Timeline.collectTocCandidates(tocLinks, bare, maxDepth, 1);
-        return atStart[0] ?? fragments[0];
     }
 
     /**
