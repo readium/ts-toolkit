@@ -56,6 +56,7 @@ const defaultListeners = (listeners: Partial<AudioNavigatorListeners>): AudioNav
     contentProtection: listeners.contentProtection ?? (() => {}),
     peripheral: listeners.peripheral ?? (() => {}),
     contextMenu: listeners.contextMenu ?? (() => {}),
+    remotePlaybackStateChanged: listeners.remotePlaybackStateChanged,
 });
 
 export interface IAudioContentProtectionConfig extends IContentProtectionConfig {
@@ -92,6 +93,9 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     private readonly _contentProtection: IAudioContentProtectionConfig;
     /** True while a track transition is in progress; suppresses spurious mid-navigation events. */
     private _isNavigating: boolean = false;
+    private _isStalled: boolean = false;
+    private _stalledWatchdog: ReturnType<typeof setInterval> | null = null;
+    private _stalledCheckTime: number = 0;
 
     constructor(publication: Publication, listeners: AudioNavigatorListeners, initialPosition?: Locator, configuration: AudioNavigatorConfiguration = {
         preferences: {},
@@ -377,7 +381,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
         this.pool.audioEngine.on("playing", () => {
             if (this._isNavigating) return;
-            this.listeners.stalled(false);
+            this._setStalled(false);
         });
 
         this.pool.audioEngine.on("pause", () => {
@@ -405,8 +409,8 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
         this.pool.audioEngine.on("seeking", () => { if (!this._isNavigating) this.listeners.seeking(true); });
         this.pool.audioEngine.on("waiting", () => { if (!this._isNavigating) this.listeners.seeking(true); });
-        this.pool.audioEngine.on("stalled", () => { if (!this._isNavigating) this.listeners.stalled(true); });
-        this.pool.audioEngine.on("canplaythrough", () => { if (!this._isNavigating) this.listeners.stalled(false); });
+        this.pool.audioEngine.on("stalled", () => { if (!this._isNavigating) this._setStalled(true); });
+        this.pool.audioEngine.on("canplaythrough", () => { if (!this._isNavigating) this._setStalled(false); });
         this.pool.audioEngine.on("progress", (seekable: TimeRanges) => { if (!this._isNavigating) this.listeners.seekable(seekable); });
 
         this.pool.audioEngine.on("loadedmetadata", () => {
@@ -419,6 +423,39 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             };
             this.listeners.metadataLoaded(metadata);
         });
+    }
+
+    private _setStalled(isStalled: boolean): void {
+        if (this._isStalled === isStalled) return;
+        this._isStalled = isStalled;
+        this.listeners.stalled(isStalled);
+        if (isStalled) {
+            this._stalledCheckTime = this.currentTime;
+            this._startStalledWatchdog();
+        } else {
+            this._stopStalledWatchdog();
+        }
+    }
+
+    private _startStalledWatchdog(): void {
+        this._stalledWatchdog = setInterval(() => {
+            if (!this.isPlaying) {
+                this._setStalled(false);
+                return;
+            }
+            const t = this.currentTime;
+            if (t !== this._stalledCheckTime) {
+                this._setStalled(false);
+            }
+            this._stalledCheckTime = t;
+        }, 500);
+    }
+
+    private _stopStalledWatchdog(): void {
+        if (this._stalledWatchdog !== null) {
+            clearInterval(this._stalledWatchdog);
+            this._stalledWatchdog = null;
+        }
     }
 
     private setupMediaSession(): void {
