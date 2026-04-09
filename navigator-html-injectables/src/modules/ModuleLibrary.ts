@@ -1,6 +1,7 @@
 import { ModuleDerived } from "./Module";
 import { ColumnSnapper } from "./snapper/ColumnSnapper";
 import { ScrollSnapper } from "./snapper/ScrollSnapper";
+import { CJKVerticalSnapper } from "./snapper/CJKVerticalSnapper";
 import { WebPubSnapper } from "./snapper/WebPubSnapper";
 import { Peripherals } from "./Peripherals";
 import { ReflowableSetup } from "./setup/ReflowableSetup";
@@ -15,6 +16,7 @@ export type ModuleName =
     "snapper" |
     "column_snapper" |
     "scroll_snapper" |
+    "cjk_vertical_snapper" |
     "webpub_snapper" |
     "fixed_setup" |
     "decorator" |
@@ -38,6 +40,7 @@ export const ReflowableModules: ModuleName[] = [
     "peripherals",
     "column_snapper",
     "scroll_snapper",
+    "cjk_vertical_snapper",
     "print_protection"
 ];
 
@@ -60,5 +63,6 @@ export const ModuleLibrary = new Map<string, ModuleDerived>([
     Decorator,
     ColumnSnapper,
     ScrollSnapper,
+    CJKVerticalSnapper,
     PrintProtector
 ].map(m => [m.moduleName, m])); // Turn module list into K/V list for quick access by name

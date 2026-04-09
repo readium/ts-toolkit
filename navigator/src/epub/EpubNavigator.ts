@@ -551,11 +551,17 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             return modules.filter((m) => FXLModules.includes(m));
         } else modules = modules.filter((m) => ReflowableModules.includes(m));
         
+        // CJK vertical: uses its own X-axis snapper, never column or scroll snappers
+        if (getScriptMode(this.pub.metadata) === 'cjk-vertical') {
+            return modules.filter((m) => m !== "column_snapper" && m !== "scroll_snapper");
+        }
+
         // Horizontal vs. Vertical reading
+        const all = modules as ModuleName[];
         if (this._layout === Layout.scrolled)
-            modules = modules.filter((m) => m !== "column_snapper");
+            modules = all.filter((m) => m !== "column_snapper" && m !== "cjk_vertical_snapper");
         else
-            modules = modules.filter((m) => m !== "scroll_snapper");
+            modules = all.filter((m) => m !== "scroll_snapper" && m !== "cjk_vertical_snapper");
 
         return modules;
     }
