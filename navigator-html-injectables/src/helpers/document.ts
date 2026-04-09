@@ -1,7 +1,10 @@
 import { ReadiumWindow } from "./dom";
 
 export function isRTL(wnd: ReadiumWindow): boolean {
-    return wnd.document.body.dir.toLowerCase() === "rtl";
+    // Check body first (author-declared direction), then fall back to the
+    // root element where we inject dir="rtl" for RTL publications.
+    const dir = wnd.document.body.dir || wnd.document.documentElement.dir;
+    return dir.toLowerCase() === "rtl";
 }
 
 export function getColumnCountPerScreen(wnd: ReadiumWindow): number {
