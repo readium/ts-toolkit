@@ -633,7 +633,11 @@ export class FXLFramePoolManager {
             progressions: new Map(),
             positions: null
         };
-        const currentSpread = this.spreader.currentSpread(this.currentSlide, this.perPage);
+        // Mirror currentFrames: for single-page mode use currentSlide directly,
+        // otherwise use the spreader (which indexes by spread, not by item).
+        const currentSpread = this.perPage < 2
+            ? [this.pub.readingOrder.items[this.currentSlide]]
+            : this.spreader.currentSpread(this.currentSlide, this.perPage);
         currentSpread.forEach(link => {
             viewport.readingOrder.push(link.href);
             viewport.progressions.set(link.href, { start: 0, end: 1 }); // FXL always uses [0,1] progression
