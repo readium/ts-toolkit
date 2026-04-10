@@ -63,12 +63,12 @@ export class ColumnSnapper extends Snapper {
     /**
      * Normalized scroll position: distance from document start, always in
      * [0, scrollWidth - innerWidth] regardless of reading direction.
-     * For LTR: scrollLeft (positive). For RTL: -scrollLeft (negated).
+     * scrollLeft may be negative depending on the browser — Math.abs() normalizes it.
      */
     private normScroll(): number {
         const rtl = isRTL(this.wnd);
         const raw = this.doc().scrollLeft || this.alreadyScrollLeft;
-        return rtl ? -raw : Math.max(0, this.wnd.scrollX > 0 ? this.wnd.scrollX : raw);
+        return rtl ? Math.abs(raw) : Math.max(0, this.wnd.scrollX > 0 ? this.wnd.scrollX : raw);
     }
 
     reportProgress() {
