@@ -397,7 +397,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
      * TODO remove when settings management is incorporated
      */
     public get _cframes(): (FXLFrameManager | FrameManager | undefined)[] {
-        return this.framePool?.currentFrames ?? [];
+        return (this.framePool?.currentFrames ?? []).filter(f => !(f instanceof FrameManager && f.isDestroyed));
     }
 
     /**
