@@ -94,11 +94,17 @@ export class ColumnSnapper extends Snapper {
         if(this.overscroll !== 0 || this.shakeTimeout !== 0) return;
         const doc = this.doc();
 
-        doc.classList.add((isRTL(this.wnd) ? "readium-bounce-l" : "readium-bounce-r"));
+        // Bounce toward the boundary that was hit.
+        // LTR: end is on the right → bounce-r. RTL: start is on the right (norm≈0),
+        // end is on the left → bounce direction flips based on which boundary we're at.
+        const atStart = this.normScroll() < 5;
+        const bounceClass = isRTL(this.wnd)
+            ? (atStart ? "readium-bounce-r" : "readium-bounce-l")
+            : "readium-bounce-r";
+        doc.classList.add(bounceClass);
         const curScrollLeft = this.scrollOffset();
         this.shakeTimeout = this.wnd.setTimeout(() => {
-            doc.classList.remove("readium-bounce-l");
-            doc.classList.remove("readium-bounce-r");
+            doc.classList.remove(bounceClass);
             this.shakeTimeout = 0;
             this.doc().scrollLeft = curScrollLeft;
         }, 150);
