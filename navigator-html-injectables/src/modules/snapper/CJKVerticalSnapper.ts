@@ -184,7 +184,6 @@ export class CJKVerticalSnapper extends Snapper {
         this.resizeObserver.observe(wnd.document.body);
 
         wnd.addEventListener("scroll", this.handleScroll, { passive: true });
-        wnd.document.addEventListener("scroll", this.handleScroll, { passive: true });
 
         comms.register("force_webkit_recalc", CJKVerticalSnapper.moduleName, () => {
             forceWebkitRecalc(this.wnd);
@@ -303,10 +302,7 @@ export class CJKVerticalSnapper extends Snapper {
     unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         comms.unregisterAll(CJKVerticalSnapper.moduleName);
         this.resizeObserver.disconnect();
-        if (this.handleScroll) {
-            wnd.removeEventListener("scroll", this.handleScroll);
-            wnd.document.removeEventListener("scroll", this.handleScroll);
-        }
+        if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
         wnd.document.getElementById(CJK_VERTICAL_SNAPPER_STYLE_ID)?.remove();
 
         if (this.patternAnalyzer) {
