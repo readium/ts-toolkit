@@ -27,8 +27,10 @@ export interface SuspiciousCJKScrollingEvent extends BaseSuspiciousActivityEvent
  * accordingly.
  *
  * Progress convention:
- *   scrollLeft = scrollWidth − clientWidth  →  progress 0 (document start, right edge)
- *   scrollLeft = 0                          →  progress 1 (document end,   left edge)
+ *   scrollLeft = 0 (right edge, document start)  →  progress 0
+ *   scrollLeft = ±(scrollWidth − clientWidth)    →  progress 1 (document end, left edge)
+ *
+ * scrollLeft sign varies by browser — always use Math.abs() when reading it.
  *
  * go_next / go_prev always return false so that the navigator advances to the
  * next or previous spine item — this snapper intentionally provides free
@@ -53,21 +55,22 @@ export class CJKVerticalSnapper extends Snapper {
         return this.wnd.document.scrollingElement as HTMLElement;
     }
 
-    /** Total horizontally scrollable distance. */
+    /** Total horizontally scrollable distance (magnitude). */
     private scrollable() {
         return Math.max(0, this.doc().scrollWidth - this.wnd.innerWidth);
     }
 
     private reportProgress() {
         if (!this.comms.ready) return;
-        const scrollLeft = this.doc().scrollLeft;
         const scrollWidth = this.doc().scrollWidth;
         const viewportWidth = this.wnd.innerWidth;
         const scrollable = Math.max(1, scrollWidth - viewportWidth);
 
-        // vertical-rl: start is at the right (high scrollLeft), end at the left (0).
-        const progress    = Math.max(0, Math.min(1, 1 - scrollLeft / scrollable));
-        const viewportEnd = Math.max(0, Math.min(1, 1 - (scrollLeft - viewportWidth) / scrollable));
+        // scrollLeft may be negative depending on the browser — normalize to a
+        // non-negative distance from the document start.
+        const norm = Math.abs(this.doc().scrollLeft);
+        const progress    = Math.max(0, Math.min(1, norm / scrollable));
+        const viewportEnd = Math.max(0, Math.min(1, (norm + viewportWidth) / scrollWidth));
 
         this.comms.send("progress", {
             start: progress,
@@ -80,7 +83,7 @@ export class CJKVerticalSnapper extends Snapper {
         if (this.isResizing) return;
 
         if (!this.initialScrollHandled) {
-            this.lastScrollLeft = this.doc().scrollLeft;
+            this.lastScrollLeft = Math.abs(this.doc().scrollLeft);
             this.initialScrollHandled = true;
             this.reportProgress();
             return;
@@ -91,7 +94,7 @@ export class CJKVerticalSnapper extends Snapper {
             this.wnd.requestAnimationFrame(() => {
                 this.reportProgress();
 
-                const currentScrollLeft = this.doc().scrollLeft;
+                const currentScrollLeft = Math.abs(this.doc().scrollLeft);
                 const deltaX = currentScrollLeft - this.lastScrollLeft;
                 this.lastScrollLeft = currentScrollLeft;
 
@@ -160,6 +163,10 @@ export class CJKVerticalSnapper extends Snapper {
         body::-webkit-scrollbar {
             display: none;
         }
+        html {
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+        }
         `;
         wnd.document.head.appendChild(style);
 
@@ -177,14 +184,15 @@ export class CJKVerticalSnapper extends Snapper {
         this.resizeObserver.observe(wnd.document.body);
 
         wnd.addEventListener("scroll", this.handleScroll, { passive: true });
+        wnd.document.addEventListener("scroll", this.handleScroll, { passive: true });
 
         comms.register("force_webkit_recalc", CJKVerticalSnapper.moduleName, () => {
             forceWebkitRecalc(this.wnd);
             const current = this.doc().scrollLeft;
-            if (current > 1) {
-                this.doc().scrollLeft = current - 1;
+            if (Math.abs(current) > 1) {
+                this.doc().scrollLeft = current < 0 ? current + 1 : current - 1;
             } else {
-                this.doc().scrollLeft = current + 1;
+                this.doc().scrollLeft = current < 0 ? current - 1 : current + 1;
             }
             this.doc().scrollLeft = current;
         });
@@ -199,8 +207,8 @@ export class CJKVerticalSnapper extends Snapper {
                 return;
             }
             this.wnd.requestAnimationFrame(() => {
-                // position 0 = right (start), position 1 = left (end)
-                this.doc().scrollLeft = this.scrollable() * (1 - position);
+                // position 0 = start (scrollLeft=0), position 1 = end (scrollLeft=-scrollable)
+                this.doc().scrollLeft = -(this.scrollable() * position);
                 this.reportProgress();
                 deselect(this.wnd);
                 ack(true);
@@ -243,19 +251,19 @@ export class CJKVerticalSnapper extends Snapper {
             });
         });
 
-        // go_start = document start = right edge (max scrollLeft)
+        // go_start = document start = right edge (scrollLeft = 0)
         comms.register("go_start", CJKVerticalSnapper.moduleName, (_, ack) => {
-            const max = this.scrollable();
-            if (this.doc().scrollLeft === max) return ack(false);
-            this.doc().scrollLeft = max;
+            if (this.doc().scrollLeft === 0) return ack(false);
+            this.doc().scrollLeft = 0;
             this.reportProgress();
             ack(true);
         });
 
-        // go_end = document end = left edge (scrollLeft = 0)
+        // go_end = document end = left edge. Write -scrollable; browsers normalize
+        // the sign internally so this works regardless of their scrollLeft convention.
         comms.register("go_end", CJKVerticalSnapper.moduleName, (_, ack) => {
-            if (this.doc().scrollLeft === 0) return ack(false);
-            this.doc().scrollLeft = 0;
+            if (Math.abs(this.doc().scrollLeft) === this.scrollable()) return ack(false);
+            this.doc().scrollLeft = -this.scrollable();
             this.reportProgress();
             ack(true);
         });
@@ -295,7 +303,10 @@ export class CJKVerticalSnapper extends Snapper {
     unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         comms.unregisterAll(CJKVerticalSnapper.moduleName);
         this.resizeObserver.disconnect();
-        if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
+        if (this.handleScroll) {
+            wnd.removeEventListener("scroll", this.handleScroll);
+            wnd.document.removeEventListener("scroll", this.handleScroll);
+        }
         wnd.document.getElementById(CJK_VERTICAL_SNAPPER_STYLE_ID)?.remove();
 
         if (this.patternAnalyzer) {
