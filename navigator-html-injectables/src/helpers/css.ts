@@ -1,4 +1,4 @@
-import { ReadiumWindow } from "./dom";
+import { ReadiumWindow } from "./dom.ts";
 
 export function getProperties(wnd: ReadiumWindow) {
     const cssProperties: { [key: string]: string } = {};

@@ -1,2 +1,2 @@
-export * from "./Properties";
-export * from "./ReadiumCSS";
+export * from "./Properties.ts";
+export * from "./ReadiumCSS.ts";

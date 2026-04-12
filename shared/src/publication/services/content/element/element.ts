@@ -1,7 +1,7 @@
-import { Link } from "../../../Link";
-import { Locator } from "../../../Locator";
-import { AttributesHolder, Attribute } from "./attributes";
-import { TextRole } from "./text_role";
+import { Link } from "../../../Link.ts";
+import { Locator } from "../../../Locator.ts";
+import { AttributesHolder, Attribute } from "./attributes.ts";
+import { TextRole } from "./text_role.ts";
 
 /**
  * Represents a single semantic content element part of a publication.

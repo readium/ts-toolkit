@@ -1,20 +1,20 @@
-import { Comms } from "../comms/comms";
-import { Module } from "./Module";
-import { ReadiumWindow, nearestInteractiveElement } from "../helpers/dom";
-import { BulkCopyProtector, BulkCopyProtectionOptions } from "../protection/BulkCopyProtector";
-import { SelectionAnalyzer, SelectionAnalyzerOptions } from "../protection/SelectionAnalyzer";
-import { 
-    KeyboardPeripheral 
-} from "../protection";
-import { SuspiciousActivityType } from "../comms";
-import { BULK_COPY_CONFIG, SELECTION_ANALYZER_CONFIG } from "../protection/config";
-import { 
-    KeyCombinationManager, 
+import { Comms } from "../comms/comms.ts";
+import { Module } from "./Module.ts";
+import { ReadiumWindow, nearestInteractiveElement } from "../helpers/dom.ts";
+import { BulkCopyProtector, BulkCopyProtectionOptions } from "../protection/BulkCopyProtector.ts";
+import { SelectionAnalyzer, SelectionAnalyzerOptions } from "../protection/SelectionAnalyzer.ts";
+import {
+    KeyboardPeripheral
+} from "../protection/index.ts";
+import { SuspiciousActivityType } from "../comms/index.ts";
+import { BULK_COPY_CONFIG, SELECTION_ANALYZER_CONFIG } from "../protection/config.ts";
+import {
+    KeyCombinationManager,
     ActivityEventDispatcher,
     KeyboardPeripheralEvent
-} from "../protection/KeyCombinationManager";
-import { SuspiciousScrollingEvent } from "./snapper/ScrollSnapper";
-import { SuspiciousSnappingEvent } from "./snapper/ColumnSnapper";
+} from "../protection/KeyCombinationManager.ts";
+import { SuspiciousScrollingEvent } from "./snapper/ScrollSnapper.ts";
+import { SuspiciousSnappingEvent } from "./snapper/ColumnSnapper.ts";
 
 export interface FrameClickEvent {
     defaultPrevented: boolean;
@@ -108,7 +108,7 @@ export interface ContextMenuEvent extends Omit<BaseSuspiciousActivityEvent, "typ
     selectedText?: Omit<BasicTextSelection, "targetFrameSrc">;
 }
 
-export type SuspiciousActivityEvent = 
+export type SuspiciousActivityEvent =
     | DeveloperToolsEvent
     | SelectAllEvent
     | BulkCopyEvent
@@ -141,20 +141,20 @@ export class Peripherals extends Module {
     // State management
     private cleanupCallbacks: (() => void)[] = [];
     private pointerMoved = false;
-    
+
     // Feature flags
     private isContextMenuEnabled = false;
     private isDragAndDropEnabled = false;
     private isSelectionMonitoringEnabled = false;
     private isBulkCopyProtectionEnabled = false;
-    
+
     // Selection analysis
     private selectionAnalyzer: SelectionAnalyzer | null = null;
     private currentSelection: string | null = null;
-    
+
     // Bulk copy protection
     private bulkCopyProtector: BulkCopyProtector | null = null;
-    
+
     // Key combination manager
     private keyManager = new KeyCombinationManager();
 
@@ -189,15 +189,15 @@ export class Peripherals extends Module {
     private enableKeyboardPeripherals(shortcuts: KeyboardPeripheral[] = []): void {
         // Clear any existing state
         this.disableKeyboardPeripherals();
-        
+
         // Create activity event dispatcher
         const dispatcher: ActivityEventDispatcher = (activityEvent) => {
             this.comms?.send("keyboard_peripherals", activityEvent);
         };
-        
+
         // Create unified handler using centralized KeyCombinationManager
         this.keyDownHandler = this.keyManager.createUnifiedHandler(this.wnd.location.href, shortcuts, dispatcher, this.wnd);
-        
+
         // Add the event listener
         if (this.wnd) {
             this.wnd.document.addEventListener("keydown", this.keyDownHandler, {
@@ -205,7 +205,7 @@ export class Peripherals extends Module {
             });
         }
     }
-    
+
     private disableKeyboardPeripherals(): void {
         if (this.wnd && this.keyDownHandler) {
             this.wnd.document.removeEventListener("keydown", this.keyDownHandler, {
@@ -217,11 +217,11 @@ export class Peripherals extends Module {
 
     private addBulkCopyProtection(options: Partial<BulkCopyProtectionOptions> = {}): void {
         if (this.isBulkCopyProtectionEnabled || !this.wnd) return;
-        
+
         const defaultOptions = BULK_COPY_CONFIG;
-        
+
         const finalOptions = options ? { ...defaultOptions, ...options } : defaultOptions;
-        
+
         this.bulkCopyProtector = new BulkCopyProtector(this.wnd, finalOptions);
         this.wnd.document.addEventListener("copy", this.preventBulkCopy, true);
         this.wnd.document.addEventListener("cut", this.preventBulkCopy, true);
@@ -230,7 +230,7 @@ export class Peripherals extends Module {
 
     private removeBulkCopyProtection(): void {
         if (!this.isBulkCopyProtectionEnabled || !this.wnd) return;
-        
+
         this.wnd.document.removeEventListener("copy", this.preventBulkCopy, true);
         this.wnd.document.removeEventListener("cut", this.preventBulkCopy, true);
         this.bulkCopyProtector?.destroy();
@@ -242,15 +242,15 @@ export class Peripherals extends Module {
         if (!this.isBulkCopyProtectionEnabled || !this.bulkCopyProtector) {
             return true;
         }
-        
+
         if (!this.bulkCopyProtector.shouldAllowCopy(event)) {
             event.preventDefault();
-            
+
             const selection = this.wnd.getSelection();
             const selectedText = selection?.toString() || '';
             const domRectList = selectedText ? selection?.getRangeAt(0)?.getClientRects() : null;
             const rect = domRectList?.[0];
-            
+
             const activityEvent: BulkCopyEvent = {
                 type: "bulk_copy",
                 timestamp: Date.now(),
@@ -276,18 +276,18 @@ export class Peripherals extends Module {
         if (!this.isSelectionMonitoringEnabled || !this.wnd || !this.selectionAnalyzer) {
             return;
         }
-        
+
         const selection = this.wnd.getSelection();
         if (selection) {
             this.currentSelection = selection.toString();
             const isSuspicious = this.selectionAnalyzer.analyze(selection);
-            
+
             if (isSuspicious && this.currentSelection) {
                 const selection = this.wnd.getSelection();
                 const selectedText = selection?.toString() || '';
                 const domRectList = (selectedText && selection?.rangeCount) ? selection.getRangeAt(0)?.getClientRects() : null;
                 const rect = domRectList?.[0];
-                
+
                 const activityEvent: SuspiciousSelectionEvent = {
                     type: "suspicious_selection",
                     timestamp: Date.now(),
@@ -311,19 +311,19 @@ export class Peripherals extends Module {
 
     private addSelectionMonitoring(options?: SelectionAnalyzerOptions): void {
         if (this.isSelectionMonitoringEnabled || !this.wnd) return;
-        
+
         // Use provided options or fall back to default config
         const analyzerOptions = options || SELECTION_ANALYZER_CONFIG;
         this.selectionAnalyzer = new SelectionAnalyzer(analyzerOptions);
         this.wnd.document.addEventListener("selectionchange", this.handleSelection);
         this.isSelectionMonitoringEnabled = true;
     }
-    
+
     private removeSelectionMonitoring(): void {
         if (!this.isSelectionMonitoringEnabled || !this.wnd) {
             return;
         }
-        
+
         this.wnd.document.removeEventListener("selectionchange", this.handleSelection);
         this.selectionAnalyzer?.clear();
         this.selectionAnalyzer = null;
@@ -374,7 +374,7 @@ export class Peripherals extends Module {
             const selectedText = selection?.toString() || '';
             const domRectList = (selectedText && selection?.rangeCount) ? selection.getRangeAt(0)?.getClientRects() : null;
             const rect = domRectList?.[0];
-            
+
             const activityEvent: ContextMenuEvent = {
                 timestamp: Date.now(),
                 clientX: event.clientX,
@@ -484,20 +484,20 @@ export class Peripherals extends Module {
         // Single handler for all content protection features
         this.comms?.register("peripherals_protection", Peripherals.moduleName, (data: unknown, ack) => {
             const config = data as ContentProtectionConfig;
-            
+
             // Apply config only on first call, then ignore subsequent calls (immutable)
             if (!this.configApplied) {
                 this.configApplied = true;
-                
+
                 // Selection monitoring with optional configuration
                 if (config.monitorSelection) {
-                    const options = typeof config.monitorSelection === "boolean" 
-                        ? undefined 
+                    const options = typeof config.monitorSelection === "boolean"
+                        ? undefined
                         : config.monitorSelection;
                     this.addSelectionMonitoring(options);
                     this.comms?.log("Selection monitoring enabled");
                 }
-                
+
                 // Copy
                 if (typeof config.protectCopy === "object") {
                     // Limited copying with custom thresholds
@@ -508,40 +508,40 @@ export class Peripherals extends Module {
                     this.comms?.log("Copy protection enabled (limited)");
                 } else if (config.protectCopy === true) {
                     // Block all copying
-                    this.addBulkCopyProtection({ 
-                        enabled: true, 
-                        maxSelectionPercent: 0, 
-                        minThreshold: 0, 
-                        absoluteMaxChars: 0 
+                    this.addBulkCopyProtection({
+                        enabled: true,
+                        maxSelectionPercent: 0,
+                        minThreshold: 0,
+                        absoluteMaxChars: 0
                     });
                     this.comms?.log("Copy protection enabled");
                 }
-                
+
                 // Context menu
                 if (config.disableContextMenu) {
                     this.addContextMenuPrevention();
                     this.comms?.log("Context menu protection enabled");
                 }
-                
+
                 // Drag and drop
                 if (config.disableDragAndDrop) {
                     this.addDragAndDropPrevention();
                     this.comms?.log("Drag and drop protection enabled");
                 }
             }
-            
+
             ack(true);
         });
 
         // Separate handler for keyboard peripherals
         this.comms?.register("keyboard_peripherals", Peripherals.moduleName, (data: unknown, ack) => {
             const keyboardPeripherals = data as KeyboardPeripheral[];
-            
+
             if (keyboardPeripherals && keyboardPeripherals.length > 0) {
                 this.enableKeyboardPeripherals(keyboardPeripherals);
                 this.comms?.log(`Keyboard peripherals enabled: ${keyboardPeripherals.map(p => p.type).join(", ")}`);
             }
-            
+
             ack(true);
         });
     }
@@ -549,10 +549,10 @@ export class Peripherals extends Module {
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
-        
+
         // Register protection handlers
         this.registerProtectionHandlers();
-        
+
         // Core event listeners (always active)
         wnd.document.addEventListener("pointerdown", this.onPointerDown);
         wnd.document.addEventListener("pointerup", this.onPointerUp);
@@ -570,23 +570,23 @@ export class Peripherals extends Module {
         this.removeContextMenuPrevention();
         this.removeDragAndDropPrevention();
         this.disableKeyboardPeripherals();
-        
+
         // Clean up event listeners
         this.cleanupCallbacks.forEach(cleanup => cleanup());
         this.cleanupCallbacks = [];
-        
+
         // Remove core event listeners
         wnd.document.removeEventListener("pointerdown", this.onPointerDown);
         wnd.document.removeEventListener("pointerup", this.onPointerUp);
         wnd.document.removeEventListener("pointermove", this.onPointerMove);
         wnd.document.removeEventListener("click", this.onClicker);
-        
+
         // Unregister all handlers
         comms.unregisterAll(Peripherals.moduleName);
-        
+
         // Reset config applied flag for fresh instances
         this.configApplied = false;
-        
+
         comms.log("Peripherals Unmounted");
         return true;
     }

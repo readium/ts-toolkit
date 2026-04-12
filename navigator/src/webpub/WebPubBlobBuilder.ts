@@ -1,5 +1,5 @@
 import { Link, Publication } from "@readium/shared";
-import { Injector } from "../injection/Injector";
+import { Injector } from "../injection/Injector.ts";
 
 export class WebPubBlobBuilder {
     private readonly item: Link;

@@ -1,2 +1,2 @@
-export * from './Encryption';
-export * from './Properties';
+export * from './Encryption.ts';
+export * from './Properties.ts';

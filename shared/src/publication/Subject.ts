@@ -3,8 +3,8 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { Links } from './Link';
-import { LocalizedString } from './LocalizedString';
+import { Links } from './Link.ts';
+import { LocalizedString } from './LocalizedString.ts';
 
 /**
  * https://github.com/readium/webpub-manifest/tree/master/contexts/default#subjects

@@ -1,5 +1,5 @@
-import { Links } from '../Link';
-import { Publication } from '../Publication';
+import { Links } from '../Link.ts';
+import { Publication } from '../Publication.ts';
 
 // OPDS extensions for [Publication]
 

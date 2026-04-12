@@ -1,25 +1,25 @@
 import { Layout, Link, Locator, Profile, Publication, ReadingProgression } from "@readium/shared";
-import { Configurable, ConfigurablePreferences, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../";
-import { FramePoolManager } from "./frame/FramePoolManager";
-import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager";
+import { Configurable, ConfigurablePreferences, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../index.ts";
+import { FramePoolManager } from "./frame/FramePoolManager.ts";
+import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager.ts";
 import { CommsEventKey, ContextMenuEvent, FXLModules, KeyboardEventData, ModuleLibrary, ModuleName, ReflowableModules } from "@readium/navigator-html-injectables";
 import { BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
-import { FXLFrameManager } from "./fxl/FXLFrameManager";
-import { FrameManager } from "./frame/FrameManager";
-import { IEpubPreferences, EpubPreferences } from "./preferences/EpubPreferences";
-import { IEpubDefaults, EpubDefaults } from "./preferences/EpubDefaults";
-import { EpubSettings } from "./preferences";
-import { EpubPreferencesEditor } from "./preferences/EpubPreferencesEditor";
-import { ReadiumCSS } from "./css/ReadiumCSS";
-import { RSProperties, UserProperties } from "./css/Properties";
-import { getContentWidth } from "../helpers/dimensions";
-import { Injector } from "../injection/Injector";
-import { createReadiumEpubRules } from "../injection/epubInjectables";
-import { IInjectablesConfig } from "../injection/Injectable";
-import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator";
-import { NavigatorProtector, NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector";
-import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../peripherals/KeyboardPeripherals";
+import { FXLFrameManager } from "./fxl/FXLFrameManager.ts";
+import { FrameManager } from "./frame/FrameManager.ts";
+import { IEpubPreferences, EpubPreferences } from "./preferences/EpubPreferences.ts";
+import { IEpubDefaults, EpubDefaults } from "./preferences/EpubDefaults.ts";
+import { EpubSettings } from "./preferences/index.ts";
+import { EpubPreferencesEditor } from "./preferences/EpubPreferencesEditor.ts";
+import { ReadiumCSS } from "./css/ReadiumCSS.ts";
+import { RSProperties, UserProperties } from "./css/Properties.ts";
+import { getContentWidth } from "../helpers/dimensions.ts";
+import { Injector } from "../injection/Injector.ts";
+import { createReadiumEpubRules } from "../injection/epubInjectables.ts";
+import { IInjectablesConfig } from "../injection/Injectable.ts";
+import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator.ts";
+import { NavigatorProtector, NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector.ts";
+import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../peripherals/KeyboardPeripherals.ts";
 
 export type ManagerEventKey = "zoom";
 
@@ -108,14 +108,14 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this._preferences = new EpubPreferences(configuration.preferences);
         this._defaults = new EpubDefaults(configuration.defaults);
         this._settings = new EpubSettings(this._preferences, this._defaults);
-        this._css = new ReadiumCSS({ 
+        this._css = new ReadiumCSS({
             rsProperties: new RSProperties({}),
             userProperties: new UserProperties({}),
             lineLengths: new LineLengths({
                 optimalChars: this._settings.optimalLineLength,
                 minChars: this._settings.minimalLineLength,
                 maxChars: this._settings.maximalLineLength,
-                padding: this._settings.scroll 
+                padding: this._settings.scroll
                     ? (this._settings.scrollPaddingLeft || 0) + (this._settings.scrollPaddingRight || 0)
                     : (this._settings.pageGutter || 0) * 2,
                 fontFace: this._settings.fontFamily,
@@ -129,24 +129,24 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
         this._layout = EpubNavigator.determineLayout(pub, !!this._settings.scroll);
         this.currentProgression = pub.metadata.effectiveReadingProgression;
-        
+
         // Combine Readium rules with user-provided injectables
         const readiumRules = createReadiumEpubRules(pub.metadata, pub.readingOrder.items);
         const userConfig = configuration.injectables || { rules: [], allowedDomains: [] };
-        
+
         this._injector = new Injector({
             rules: [...readiumRules, ...userConfig.rules],
             allowedDomains: userConfig.allowedDomains
         });
 
         this._contentProtection = configuration.contentProtection || {};
-        
+
         // Merge keyboard peripherals
         this._keyboardPeripherals = this.mergeKeyboardPeripherals(
             this._contentProtection,
             configuration.keyboardPeripherals || []
         );
-        
+
         // Initialize navigator protection if any protection is configured
         if (this._contentProtection.disableContextMenu ||
             this._contentProtection.checkAutomation ||
@@ -154,7 +154,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             this._contentProtection.monitorDevTools ||
             this._contentProtection.protectPrinting?.disable) {
             this._navigatorProtector = new NavigatorProtector(this._contentProtection);
-            
+
             // Listen for custom events from NavigatorProtector
             this._suspiciousActivityListener = (event: Event) => {
                 const { type, ...activity } = (event as CustomEvent).detail;
@@ -166,13 +166,13 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             };
             window.addEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
         }
-        
+
         // Initialize keyboard peripherals separately (works independently of protection)
         if (this._keyboardPeripherals.length > 0) {
             this._keyboardPeripheralsManager = new KeyboardPeripherals({
                 keyboardPeripherals: this._keyboardPeripherals
             });
-            
+
             // Listen for keyboard peripheral events from main window
             this._keyboardPeripheralListener = (event: Event) => {
                 const activity = (event as CustomEvent).detail;
@@ -180,8 +180,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             };
             window.addEventListener(NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT, this._keyboardPeripheralListener);
         }
-        
-        // We use a resizeObserver cos’ the container parent may not be the width of 
+
+        // We use a resizeObserver cos’ the container parent may not be the width of
         // the document/window e.g. app using a docking system with left and right panels.
         // If we observe this.container, that won’t obviously work since we set its width.
         this.resizeObserver = new ResizeObserver(() => this.ownerWindow.requestAnimationFrame(async () => await this.resizeHandler()));
@@ -212,8 +212,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             this.positions = await this.pub.positionsFromManifest();
         if(this._layout === Layout.fixed) {
             this.framePool = new FXLFramePoolManager(
-                this.container, 
-                this.positions, 
+                this.container,
+                this.positions,
                 this.pub,
                 this._injector,
                 this._contentProtection,
@@ -226,8 +226,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             await this.updateCSS(false);
             const cssProperties = this.compileCSSProperties(this._css);
             this.framePool = new FramePoolManager(
-                this.container, 
-                this.positions, 
+                this.container,
+                this.positions,
                 cssProperties,
                 this._injector,
                 this._contentProtection,
@@ -247,7 +247,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             return Object.freeze({ ...this._settings });
         } else {
             // Given all the nasty issues moving auto-pagination to EpubSettings creates
-            // Especially as it’s tied to ReadiumCSS in the first place and could be 
+            // Especially as it’s tied to ReadiumCSS in the first place and could be
             // problematic if you intend to use something else,
             // we return the properties with columnCount overridden
             const columnCount = this._css.userProperties.colCount || this._css.rsProperties.colCount || this._settings.columnCount;
@@ -271,7 +271,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private async applyPreferences() {
         const oldSettings = this._settings;
         this._settings = new EpubSettings(this._preferences, this._defaults);
-        
+
         if (this._preferencesEditor !== null) {
             // Note: we pass this.settings instead of this._settings to ensure the columnCount is correct
             this._preferencesEditor = new EpubPreferencesEditor(this._preferences, this.settings, this.pub.metadata);
@@ -313,19 +313,19 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
     private async commitCSS(css: ReadiumCSS) {
         // Since we’re updating the CSS properties in injectables by removing
-        // the existing properties that are not inside this object first, 
+        // the existing properties that are not inside this object first,
         // then adding all from it, we don’t compare the previous properties here
         const properties = this.compileCSSProperties(css);
 
         (this.framePool as FramePoolManager).setCSSProperties(properties);
 
         if (
-            this._css.userProperties.view === "paged" && 
+            this._css.userProperties.view === "paged" &&
             this._layout === Layout.scrolled
         ) {
-            await this.setLayout(Layout.reflowable); 
+            await this.setLayout(Layout.reflowable);
         } else if (
-            this._css.userProperties.view === "scroll" && 
+            this._css.userProperties.view === "scroll" &&
             (this._layout === Layout.reflowable)
         ) {
             await this.setLayout(Layout.scrolled);
@@ -343,7 +343,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             this.container.style.width = `${ getContentWidth(parentEl) - this._settings.constraint }px`;
             (this.framePool as FXLFramePoolManager).resizeHandler();
         } else {
-            // for reflow ReadiumCSS gets the width from columns + line-lengths 
+            // for reflow ReadiumCSS gets the width from columns + line-lengths
             // but we need to check whether colCount has changed to commit new CSS
             const oldColCount = this._css.userProperties.colCount;
             const oldLineLength = this._css.userProperties.lineLength;
@@ -524,7 +524,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         if(this._layout === Layout.fixed) {
             return modules.filter((m) => FXLModules.includes(m));
         } else modules = modules.filter((m) => ReflowableModules.includes(m));
-        
+
         // Horizontal vs. Vertical reading
         if (this._layout === Layout.scrolled)
             modules = modules.filter((m) => m !== "column_snapper");
@@ -543,7 +543,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 this.eventListener(key, value);
             }
         })
-        
+
     }
 
     private async apply() {
@@ -677,7 +677,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this.reflowViewport.readingOrder = [];
         this.reflowViewport.progressions.clear();
         this.reflowViewport.positions = null;
-    
+
         // Use the current position's href
         if (this.currentLocation) {
             this.reflowViewport.readingOrder.push(this.currentLocation.href);
@@ -694,13 +694,13 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
     private async syncLocation(iframeProgress: ProgressionRange) {
         const progression = iframeProgress;
-        
+
         const nearestPositions = this.findNearestPositions(progression);
-        
+
         this.currentLocation = nearestPositions.first.copyWithLocations({
             progression: progression.start
         });
-        
+
         this.lastLocationInView = nearestPositions.last;
         this.updateViewport(progression);
         this.listeners.positionChanged(this.currentLocation);
@@ -749,8 +749,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     }
 
     get viewport(): VisualNavigatorViewport {
-        return this._layout === Layout.fixed 
-            ? (this.framePool as FXLFramePoolManager).viewport 
+        return this._layout === Layout.fixed
+            ? (this.framePool as FXLFramePoolManager).viewport
             : this.reflowViewport;
     }
 
@@ -759,18 +759,18 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         const progression = this.viewport.progressions.get(firstHref);
         return progression?.start === 0;
     }
-    
+
     get isScrollEnd(): boolean {
         const lastHref = this.viewport.readingOrder[this.viewport.readingOrder.length - 1];
         const progression = this.viewport.progressions.get(lastHref);
         return progression?.end === 1;
     }
-    
+
     get canGoBackward(): boolean {
         const firstResource = this.pub.readingOrder.items[0]?.href;
         return !(this.viewport.progressions.has(firstResource) && this.viewport.progressions.get(firstResource)?.start === 0);
     }
-    
+
     get canGoForward(): boolean {
         const lastResource = this.pub.readingOrder.items[this.pub.readingOrder.items.length - 1]?.href;
         return !(this.viewport.progressions.has(lastResource) && this.viewport.progressions.get(lastResource)?.end === 1);

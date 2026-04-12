@@ -1,9 +1,9 @@
-import { Resource } from "../../../../fetcher/Resource";
-import { Link, Links } from "../../../Link";
-import { Locator, LocatorLocations } from "../../../Locator";
-import { IllegalStateError, Iterator } from "../Iterator";
-import { Attribute, AttributeKeys, AudioElement, Body, ContentElement, Footnote, Heading, ImageElement, TextElement, TextQuote, TextRole, TextSegment, VideoElement } from "../element";
-import { appendNormalizedWhitespace, elementLanguage, isBlank, isInlineTag, srcRelativeToHref, trimUnicodeSpace, trimUnicodeSpaceEnd, trimUnicodeSpaceStart, trimmingTextLocator } from "./helpers";
+import { Resource } from "../../../../fetcher/Resource.ts";
+import { Link, Links } from "../../../Link.ts";
+import { Locator, LocatorLocations } from "../../../Locator.ts";
+import { IllegalStateError, Iterator } from "../Iterator.ts";
+import { Attribute, AttributeKeys, AudioElement, Body, ContentElement, Footnote, Heading, ImageElement, TextElement, TextQuote, TextRole, TextSegment, VideoElement } from "../element/index.ts";
+import { appendNormalizedWhitespace, elementLanguage, isBlank, isInlineTag, srcRelativeToHref, trimUnicodeSpace, trimUnicodeSpaceEnd, trimUnicodeSpaceStart, trimmingTextLocator } from "./helpers.ts";
 import { getCssSelector } from "css-selector-generator";
 
 interface ElementWithDelta {
@@ -297,7 +297,7 @@ class ContentParser implements NodeVisitor {
                     sr.attributes
                 );
             });
-    
+
             return new TextElement(
                 new Locator({
                     href: this.baseLocator.href,

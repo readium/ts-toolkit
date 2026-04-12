@@ -1,2 +1,2 @@
-export * from './Tokenizer';
-export * from './TextTokenizer';
+export * from './Tokenizer.ts';
+export * from './TextTokenizer.ts';

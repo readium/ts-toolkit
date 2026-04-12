@@ -1,5 +1,5 @@
-import { IInjectableRule, IInjectable } from "../injection/Injectable";
-import { stripJS, stripCSS } from "../helpers/minify";
+import { IInjectableRule, IInjectable } from "../injection/Injectable.ts";
+import { stripJS, stripCSS } from "../helpers/minify.ts";
 import { Metadata, Layout, Link } from "@readium/shared";
 
 import readiumCSSAfter from "@readium/css/css/dist/ReadiumCSS-after.css?raw";
@@ -15,15 +15,15 @@ import onloadProxyContent from "../dom/_readium_executionCleanup.js?raw";
  */
 export function createReadiumEpubRules(metadata: Metadata, readingOrderItems: Link[]): IInjectableRule[] {
     const isFixedLayout = metadata.effectiveLayout === Layout.fixed;
-    
+
     const htmlHrefs = readingOrderItems
         .filter(item => item.mediaType.isHTML)
         .map(item => item.href);
-    
-    const resources = htmlHrefs.length > 0 
-        ? htmlHrefs 
+
+    const resources = htmlHrefs.length > 0
+        ? htmlHrefs
         : [/\.xhtml$/, /\.html$/]; // fallback patterns
-    
+
     // Core injectables that should be prepended
     const prependInjectables: IInjectable[] = [
         // CSS Selector Generator - always injected
@@ -65,7 +65,7 @@ export function createReadiumEpubRules(metadata: Metadata, readingOrderItems: Li
             blob: new Blob([stripCSS(readiumCSSBefore)], { type: "text/css" }),
             rel: "stylesheet"
         });
-        
+
         // Readium CSS Default and After - appended for reflowable
         appendInjectables.unshift(
             // Readium CSS Default - only for reflowable AND no existing styles

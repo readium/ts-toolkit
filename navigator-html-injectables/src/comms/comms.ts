@@ -1,6 +1,6 @@
-import { ReadiumWindow } from "../helpers/dom";
-import { CommsEventKey, CommsCommandKey } from "./keys";
-import { mid } from "./mid";
+import { ReadiumWindow } from "../helpers/dom.ts";
+import { CommsEventKey, CommsCommandKey } from "./keys.ts";
+import { mid } from "./mid.ts";
 
 export const COMMS_VERSION = 1;
 
@@ -21,7 +21,7 @@ export type CommsAck = (ok: boolean) => void;
 export type CommsCallback = (data: unknown, ack: CommsAck) => void; // TODO: maybe more than void?
 
 /**
- * Comms is basically a wrapper around window.postMessage that 
+ * Comms is basically a wrapper around window.postMessage that
  * adds structure to the messages and lets modules register callbacks.
  */
 export class Comms {

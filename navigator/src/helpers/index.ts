@@ -1,2 +1,2 @@
-export * from "./lineLength";
-export * from './sML';
+export * from "./lineLength.ts";
+export * from './sML.ts';

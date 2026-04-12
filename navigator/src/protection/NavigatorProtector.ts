@@ -1,10 +1,10 @@
-import { AutomationDetector } from "./AutomationDetector";
-import { DevToolsDetector } from "./DevToolsDetector";
-import { IframeEmbeddingDetector } from "./IframeEmbeddingDetector";
-import { PrintProtector } from "./PrintProtector";
-import { ContextMenuProtector } from "./ContextMenuProtector";
+import { AutomationDetector } from "./AutomationDetector.ts";
+import { DevToolsDetector } from "./DevToolsDetector.ts";
+import { IframeEmbeddingDetector } from "./IframeEmbeddingDetector.ts";
+import { PrintProtector } from "./PrintProtector.ts";
+import { ContextMenuProtector } from "./ContextMenuProtector.ts";
 import { ContextMenuEvent } from "@readium/navigator-html-injectables";
-import { IContentProtectionConfig } from "../Navigator";
+import { IContentProtectionConfig } from "../Navigator.ts";
 
 export const NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT = "readium:navigator:suspiciousActivity";
 
@@ -55,7 +55,7 @@ export class NavigatorProtector {
                 }
             });
         }
-        
+
         // Enable iframe embedding detection if explicitly enabled in config
         if (config.checkIFrameEmbedding) {
             this.iframeEmbeddingDetector = new IframeEmbeddingDetector({
@@ -74,7 +74,7 @@ export class NavigatorProtector {
                 }
             });
         }
-        
+
         // Enable context menu protection if configured
         if (config.disableContextMenu) {
             this.contextMenuProtector = new ContextMenuProtector({

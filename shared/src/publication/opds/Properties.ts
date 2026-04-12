@@ -1,7 +1,7 @@
-import { Copies, Acquisition, Holds, Price, Availability } from '../../opds';
-import { positiveNumberfromJSON } from '../../util/JSONParse';
-import { Link } from '../Link';
-import { Properties } from '../Properties';
+import { Copies, Acquisition, Holds, Price, Availability } from '../../opds/index.ts';
+import { positiveNumberfromJSON } from '../../util/JSONParse.ts';
+import { Link } from '../Link.ts';
+import { Properties } from '../Properties.ts';
 
 // OPDS extensions for link [Properties].
 // https://drafts.opds.io/schema/properties.schema.json

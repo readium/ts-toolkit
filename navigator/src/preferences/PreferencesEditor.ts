@@ -1,4 +1,4 @@
-import { ConfigurablePreferences } from "./Configurable";
+import { ConfigurablePreferences } from "./Configurable.ts";
 
 export interface IPreferencesEditor {
   preferences: ConfigurablePreferences;

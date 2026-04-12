@@ -1,2 +1,2 @@
-export * from './Properties';
-export * from './Publication';
+export * from './Properties.ts';
+export * from './Publication.ts';

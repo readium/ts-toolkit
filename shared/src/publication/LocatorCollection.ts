@@ -3,10 +3,10 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { numberfromJSON } from '../util/JSONParse';
-import { Links } from './Link';
-import { LocalizedString } from './LocalizedString';
-import { Locator } from './Locator';
+import { numberfromJSON } from '../util/JSONParse.ts';
+import { Links } from './Link.ts';
+import { LocalizedString } from './LocalizedString.ts';
+import { Locator } from './Locator.ts';
 
 /**
  * Holds the metadata of a `LocatorCollection`.

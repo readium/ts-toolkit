@@ -1,4 +1,4 @@
-import { sML } from "../../helpers/sML";
+import { sML } from "../../helpers/sML.ts";
 
 export interface Point {
     X: number;
@@ -108,7 +108,7 @@ export class FXLCoordinator {
         const y2 = Eve.touches[1].screenY - this.outerHeight - subT;
         return { X: (x1 + x2) / 2, Y: (y1 + y2) / 2 };
     }
-    
+
     getBibiEvent(Eve: Event): BibiEvent {
         if(!Eve) return {
             Coord: null,

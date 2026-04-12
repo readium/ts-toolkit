@@ -1,8 +1,8 @@
-import { sML } from "../helpers/sML";
-import { WorkerConsole } from "./utils/WorkerConsole";
-import { log, table, clear } from "./utils/console";
-import { isBrave } from "./utils/platform";
-import { match } from "./utils/match";
+import { sML } from "../helpers/sML.ts";
+import { WorkerConsole } from "./utils/WorkerConsole.ts";
+import { log, table, clear } from "./utils/console.ts";
+import { isBrave } from "./utils/platform.ts";
+import { match } from "./utils/match.ts";
 
 export interface DevToolsDetectorOptions {
     /** Callback when Developer Tools are detected as open */
@@ -57,12 +57,12 @@ export class DevToolsDetector {
         for (let i = 0; i < 500; i++) {
             largeObject[`${i}`] = `${i}`;
         }
-        
+
         const largeObjectArray: Record<string, string>[] = [];
         for (let i = 0; i < 50; i++) {
             largeObjectArray.push(largeObject);
         }
-        
+
         return largeObjectArray;
     }
 
@@ -81,7 +81,7 @@ export class DevToolsDetector {
      */
     private async calcTablePrintTime(): Promise<number> {
         const largeObjectArray = this.getLargeObjectArray();
-        
+
         if (this.workerConsole) {
             try {
                 const result = await this.workerConsole.table(largeObjectArray);
@@ -105,7 +105,7 @@ export class DevToolsDetector {
      */
     private async calcLogPrintTime(): Promise<number> {
         const largeObjectArray = this.getLargeObjectArray();
-        
+
         if (this.workerConsole) {
             const result = await this.workerConsole.log(largeObjectArray);
             return result.time;
@@ -124,7 +124,7 @@ export class DevToolsDetector {
         return match({
             includes: [
                 () => !!sML.UA.Chrome,
-                () => !!sML.UA.Chromium, 
+                () => !!sML.UA.Chromium,
                 () => !!sML.UA.Safari,
                 () => !!sML.UA.Firefox
             ],
@@ -203,7 +203,7 @@ export class DevToolsDetector {
     private async detectDevTools(): Promise<boolean> {
         // Primary method: Performance-based detection (from original library)
         const performanceResult = await this.checkPerformanceBased();
-        
+
         if (performanceResult) {
             return true;
         }
@@ -227,7 +227,7 @@ export class DevToolsDetector {
 
             if (currentlyOpen !== this.isOpen) {
                 this.isOpen = currentlyOpen;
-                
+
                 if (currentlyOpen) {
                     this.options.onDetected();
                 } else {
@@ -258,7 +258,7 @@ export class DevToolsDetector {
     public async checkNow(): Promise<boolean> {
         const wasOpen = this.isOpen;
         this.isOpen = await this.detectDevTools();
-        
+
         if (this.isOpen !== wasOpen) {
             if (this.isOpen) {
                 this.options.onDetected();
@@ -266,7 +266,7 @@ export class DevToolsDetector {
                 this.options.onClosed();
             }
         }
-        
+
         return this.isOpen;
     }
 
@@ -278,13 +278,13 @@ export class DevToolsDetector {
             clearInterval(this.intervalId);
             this.intervalId = undefined;
         }
-        
+
         // Cleanup Web Worker
         if (this.workerConsole) {
             this.workerConsole.destroy();
             this.workerConsole = undefined;
         }
-        
+
         this.isOpen = false;
         this.checkCount = 0;
     }

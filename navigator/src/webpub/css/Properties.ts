@@ -1,5 +1,5 @@
-import { ExperimentKey, experiments, TextAlignment } from "../../preferences/Types";
-import { BodyHyphens, Ligatures, Properties } from "../../css/Properties";
+import { ExperimentKey, experiments, TextAlignment } from "../../preferences/Types.ts";
+import { BodyHyphens, Ligatures, Properties } from "../../css/Properties.ts";
 
 export interface IWebUserProperties {
   a11yNormalize?: boolean | null;

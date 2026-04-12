@@ -1,4 +1,4 @@
-export * from './comms';
-export * from './modules';
+export * from './comms/index.ts';
+export * from './modules/index.ts';
 export * from './Loader';
 export * from './protection';

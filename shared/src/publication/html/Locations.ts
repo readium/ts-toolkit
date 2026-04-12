@@ -1,5 +1,5 @@
-import { LocatorLocations } from '../Locator';
-import { DomRange } from './DomRange';
+import { LocatorLocations } from '../Locator.ts';
+import { DomRange } from './DomRange.ts';
 
 // HTML extensions for [Locations].
 // https://github.com/readium/architecture/blob/master/models/locators/extensions/html.md

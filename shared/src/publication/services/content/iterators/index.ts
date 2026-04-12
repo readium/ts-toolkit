@@ -1,3 +1,3 @@
-export * from './PublicationContentIterator';
-export * from './PDFTextContentIterator';
-export * from './HTMLResourceContentIterator';
+export * from './PublicationContentIterator.ts';
+export * from './PDFTextContentIterator.ts';
+export * from './HTMLResourceContentIterator.ts';

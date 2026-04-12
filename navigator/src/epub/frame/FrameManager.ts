@@ -1,8 +1,8 @@
 import { Loader, ModuleName } from "@readium/navigator-html-injectables";
-import { FrameComms } from "./FrameComms";
-import { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
-import { sML } from "../../helpers";
-import type { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator";
+import { FrameComms } from "./FrameComms.ts";
+import type { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
+import { sML } from "../../helpers/index.ts";
+import type { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator.ts";
 
 
 export class FrameManager {
@@ -70,10 +70,10 @@ export class FrameManager {
 
     private applyContentProtection() {
         if (!this.comms) this.comms!.resume();
-        
+
         // Send content protection config
         this.comms!.send("peripherals_protection", this.contentProtectionConfig);
-        
+
         // Send keyboard peripherals separately
         if (this.keyboardPeripheralsConfig && this.keyboardPeripheralsConfig.length > 0) {
             this.comms!.send("keyboard_peripherals", this.keyboardPeripheralsConfig);
@@ -126,7 +126,7 @@ export class FrameManager {
                 this.comms?.send("focus", undefined, () => {
                     // Apply content protection synchronously
                     this.applyContentProtection();
-                    
+
                     const remove = () => {
                         this.frame.style.removeProperty("visibility");
                         this.frame.style.removeProperty("aria-hidden");
@@ -152,7 +152,7 @@ export class FrameManager {
 
     setCSSProperties(properties: { [key: string]: string }) {
         if(this.destroyed || !this.frame.contentWindow) return;
-        
+
         // We need to resume and halt postMessage to update the properties
         // if the frame is hidden since it’s been halted in hide()
         if (this.hidden) {
