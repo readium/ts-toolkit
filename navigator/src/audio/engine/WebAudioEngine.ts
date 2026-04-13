@@ -355,6 +355,11 @@ export class WebAudioEngine implements AudioEngine {
         });
       }
     } else {
+      // Disable native pitch preservation (mirrors the check in the true branch)
+      if ('preservesPitch' in this.mediaElement) {
+        (this.mediaElement as any).preservesPitch = false;
+      }
+
       if (this.worklet) {
         this.worklet.destroy();
         this.worklet = null;
