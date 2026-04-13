@@ -7,7 +7,7 @@ The following events are exposed:
 - `positionChanged`: fires when the current playback position has changed
 - `timelineItemChanged`: fires when the active `TimelineItem` changes (optional)
 - `error`: fires when an error occurs during audio playback
-- `ended`: fires when an audio track finishes playing
+- `trackEnded`: fires when an audio track finishes playing
 - `play`: fires when audio playback starts or resumes
 - `pause`: fires when audio playback is paused
 - `metadataLoaded`: fires when audio metadata has loaded, including duration, text tracks, and loading state
@@ -26,7 +26,7 @@ const listeners: AudioNavigatorListeners = {
   trackLoaded: function (media: HTMLMediaElement): void {},
   positionChanged: function (locator: Locator): void {},
   error: function (error: any, locator: Locator): void {},
-  ended: function (locator: Locator): void {},
+  trackEnded: function (locator: Locator): void {},
   play: function (locator: Locator): void {},
   pause: function (locator: Locator): void {},
   metadataLoaded: function (metadata: AudioMetadata): void {},
@@ -100,13 +100,13 @@ const listeners = {
 };
 ```
 
-### ended
+### trackEnded
 
 Fires when an audio track finishes playing completely.
 
 ```js
 const listeners = {
-  ended: function (locator: Locator): void {
+  trackEnded: function (locator: Locator): void {
     console.log('Track ended:', locator.href);
     updateUIForTrackEnd();
   }
@@ -259,7 +259,7 @@ const listeners: AudioNavigatorListeners = {
     document.getElementById('pause-button').style.display = 'none';
   },
 
-  ended: () => {
+  trackEnded: () => {
     console.log('Track finished');
   },
 
