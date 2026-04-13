@@ -1,4 +1,4 @@
-import { ConfigurablePreferences } from "../../preferences/Configurable";
+import { ConfigurablePreferences } from "../../preferences/Configurable.ts";
 import {
   ensureBoolean,
   ensureValueInRange,

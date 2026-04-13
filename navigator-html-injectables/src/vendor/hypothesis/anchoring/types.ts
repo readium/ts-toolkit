@@ -12,7 +12,7 @@ import type {
   RangeSelector,
   TextPositionSelector,
   TextQuoteSelector,
-} from './api-types';
+} from './api-types.ts';
 import { matchQuote } from './match-quote';
 import { TextRange, TextPosition } from './text-range';
 import { nodeFromXPath, xpathFromNode } from './xpath';

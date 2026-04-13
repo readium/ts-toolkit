@@ -1,7 +1,7 @@
-import { IPreferencesEditor } from "../../preferences/PreferencesEditor";
-import { AudioPreferences } from "./AudioPreferences";
-import { AudioSettings } from "./AudioSettings";
-import { Preference, BooleanPreference, RangePreference } from "../../preferences/Preference";
+import { IPreferencesEditor } from "../../preferences/PreferencesEditor.ts";
+import { AudioPreferences } from "./AudioPreferences.ts";
+import { AudioSettings } from "./AudioSettings.ts";
+import { Preference, BooleanPreference, RangePreference } from "../../preferences/Preference.ts";
 import { 
   volumeRangeConfig,
   playbackRateRangeConfig,

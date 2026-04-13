@@ -1,7 +1,7 @@
-import { NavigatorProtector } from "../../protection/NavigatorProtector";
-import { DragAndDropProtector } from "../../protection/DragAndDropProtector";
-import { CopyProtector } from "../../protection/CopyProtector";
-import { IContentProtectionConfig } from "../../Navigator";
+import { NavigatorProtector } from "../../protection/NavigatorProtector.ts";
+import { DragAndDropProtector } from "../../protection/DragAndDropProtector.ts";
+import { CopyProtector } from "../../protection/CopyProtector.ts";
+import { IContentProtectionConfig } from "../../Navigator.ts";
 
 export class AudioNavigatorProtector extends NavigatorProtector {
     private dragAndDropProtector?: DragAndDropProtector;

@@ -1,5 +1,4 @@
-import { MediaType } from "@readium/shared";
-import { Link, Publication } from "@readium/shared";
+import { Link, MediaType, Publication } from "@readium/shared";
 import { Injector } from "../../injection/Injector.ts";
 
 const csp = (domains: string[]) => {

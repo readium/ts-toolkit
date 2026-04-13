@@ -1,6 +1,6 @@
-import { Link, Links } from "../../Link";
-import { Locator } from "../../Locator";
-import { TimelineItem } from "./TimelineItem";
+import { Link, Links } from "../../Link.ts";
+import { Locator } from "../../Locator.ts";
+import { TimelineItem } from "./TimelineItem.ts";
 
 interface PublicationLike {
     toc?: Links;

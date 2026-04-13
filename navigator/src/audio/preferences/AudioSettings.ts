@@ -1,6 +1,6 @@
-import { AudioPreferences } from "./AudioPreferences";
-import { AudioDefaults } from "./AudioDefaults";
-import { ConfigurableSettings } from "../../preferences/Configurable";
+import { AudioPreferences } from "./AudioPreferences.ts";
+import { AudioDefaults } from "./AudioDefaults.ts";
+import { ConfigurableSettings } from "../../preferences/Configurable.ts";
 
 export interface IAudioSettings extends ConfigurableSettings {
   volume: number;

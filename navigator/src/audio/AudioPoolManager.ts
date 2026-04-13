@@ -1,6 +1,6 @@
 import { Link, Publication } from "@readium/shared";
-import { WebAudioEngine } from "./engine/WebAudioEngine";
-import type { IAudioContentProtectionConfig } from "./AudioNavigator";
+import { WebAudioEngine } from "./engine/WebAudioEngine.ts";
+import type { IAudioContentProtectionConfig } from "./AudioNavigator.ts";
 
 const UPPER_BOUNDARY = 1;
 const LOWER_BOUNDARY = 1;

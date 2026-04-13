@@ -4,7 +4,7 @@ import {
   AudioEngine,
   Playback,
 } from "./AudioEngine";
-import { PreservePitchWorklet } from "./PreservePitchWorklet";
+import { PreservePitchWorklet } from "./PreservePitchWorklet.ts";
 
 type EventCallback = (data: any) => void;
 

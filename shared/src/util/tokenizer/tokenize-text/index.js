@@ -1,4 +1,4 @@
-import tokenUtils from './tokens';
+import tokenUtils from './tokens.ts';
 
 var WORD_BOUNDARY_CHARS = '\t\r\n\u00A0 !\"#$%&()*+,\-.\\/:;<=>?@\[\\\]^_`{|}~';
 var WORD_BOUNDARY_REGEX = new RegExp('[' + WORD_BOUNDARY_CHARS + ']');

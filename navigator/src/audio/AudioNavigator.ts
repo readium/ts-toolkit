@@ -1,6 +1,6 @@
 import { Link, Locator, LocatorLocations, Publication, Timeline, TimelineItem } from "@readium/shared";
-import { MediaNavigator, IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator";
-import { Configurable } from "../preferences";
+import { MediaNavigator, IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator.ts";
+import { Configurable } from "../preferences/Configurable.ts";
 import { WebAudioEngine, PlaybackState } from "./engine";
 import {
     AudioPreferences,
@@ -10,11 +10,11 @@ import {
     IAudioPreferences,
     IAudioDefaults
 } from "./preferences";
-import { AudioPoolManager } from "./AudioPoolManager";
+import { AudioPoolManager } from "./AudioPoolManager.ts";
 import { ContextMenuEvent, KeyboardEventData, SuspiciousActivityEvent } from "@readium/navigator-html-injectables";
-import { AudioNavigatorProtector } from "./protection/AudioNavigatorProtector";
-import { NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector";
-import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../peripherals/KeyboardPeripherals";
+import { AudioNavigatorProtector } from "./protection/AudioNavigatorProtector.ts";
+import { NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector.ts";
+import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../peripherals/KeyboardPeripherals.ts";
 
 export interface AudioMetadata {
     duration: number;

@@ -1,5 +1,5 @@
 import { IInjectableRule, IInjectable } from "../injection/Injectable";
-import { stripJS, stripCSS } from "../helpers/minify";
+import { stripJS, stripCSS } from "../helpers/minify.ts";
 import { Link } from "@readium/shared";
 
 import readiumCSSWebPub from "@readium/css/css/dist/webPub/ReadiumCSS-webPub.css?raw";
