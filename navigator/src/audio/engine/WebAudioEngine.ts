@@ -334,14 +334,12 @@ export class WebAudioEngine implements AudioEngine {
           if (!this.worklet) {
             PreservePitchWorklet.createWorklet({
               ctx: this.getOrCreateAudioContext(),
-              mediaElement: this.mediaElement,
               pitchFactor: 1.0
             }).then(worklet => {
-              if (this.sourceNode) {
-                this.sourceNode.disconnect();
-                this.sourceNode = null;
-              }
+              // Rewire: sourceNode → workletNode → gainNode
+              if (this.sourceNode) this.sourceNode.disconnect();
               this.worklet = worklet;
+              this.sourceNode?.connect(this.worklet.workletNode!);
               this.worklet.workletNode!.connect(this.gainNode!);
               this.worklet.updatePitchFactor(1 / rate);
             }).catch(err => {
@@ -363,9 +361,9 @@ export class WebAudioEngine implements AudioEngine {
       if (this.worklet) {
         this.worklet.destroy();
         this.worklet = null;
-        // Worklet is gone; restore the direct source → gain path
-        if (this.webAudioActive) {
-          this.sourceNode = new MediaElementAudioSourceNode(this.getOrCreateAudioContext(), { mediaElement: this.mediaElement });
+        // Restore: sourceNode → gainNode
+        if (this.webAudioActive && this.sourceNode) {
+          this.sourceNode.disconnect();
           this.sourceNode.connect(this.gainNode!);
         }
       }
