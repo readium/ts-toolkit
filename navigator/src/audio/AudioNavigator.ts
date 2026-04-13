@@ -38,7 +38,7 @@ export interface AudioNavigatorListeners {
     contentProtection: (type: string, data: SuspiciousActivityEvent) => void;
     peripheral: (data: KeyboardEventData) => void;
     contextMenu: (data: ContextMenuEvent) => void;
-    remotePlaybackStateChanged?: (state: RemotePlaybackState) => void;
+    remotePlaybackStateChanged: (state: RemotePlaybackState) => void;
 }
 
 const defaultListeners = (listeners: Partial<AudioNavigatorListeners>): AudioNavigatorListeners => ({
@@ -56,7 +56,7 @@ const defaultListeners = (listeners: Partial<AudioNavigatorListeners>): AudioNav
     contentProtection: listeners.contentProtection ?? (() => {}),
     peripheral: listeners.peripheral ?? (() => {}),
     contextMenu: listeners.contextMenu ?? (() => {}),
-    remotePlaybackStateChanged: listeners.remotePlaybackStateChanged,
+    remotePlaybackStateChanged: listeners.remotePlaybackStateChanged ?? (() => {}),
 });
 
 export interface IAudioContentProtectionConfig extends IContentProtectionConfig {
@@ -665,9 +665,9 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         }
         const remote = this.remotePlayback;
         if (!remote) return;
-        remote.onconnecting = () => this.listeners.remotePlaybackStateChanged?.("connecting");
-        remote.onconnect    = () => this.listeners.remotePlaybackStateChanged?.("connected");
-        remote.ondisconnect = () => this.listeners.remotePlaybackStateChanged?.("disconnected");
+        remote.onconnecting = () => this.listeners.remotePlaybackStateChanged("connecting");
+        remote.onconnect    = () => this.listeners.remotePlaybackStateChanged("connected");
+        remote.ondisconnect = () => this.listeners.remotePlaybackStateChanged("disconnected");
     }
 
     private destroyMediaSession(): void {

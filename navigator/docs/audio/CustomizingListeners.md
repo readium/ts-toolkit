@@ -17,9 +17,9 @@ The following events are exposed:
 - `contextMenu`: fires when a right-click context menu is blocked (requires `contentProtection.disableContextMenu`). See [Content Protection](./ContentProtection.md).
 - `contentProtection`: fires when a content protection event occurs (automation detected, dev tools opened, drag/drop blocked, etc.). See [Content Protection](./ContentProtection.md).
 - `peripheral`: fires when a configured keyboard peripheral shortcut is triggered. See [Keyboard Peripherals](./KeyboardPeripherals.md).
-- `remotePlaybackStateChanged`: fires when the Remote Playback connection state changes (optional). See [Remote Playback](./RemotePlayback.md).
+- `remotePlaybackStateChanged`: fires when the Remote Playback connection state changes. See [Remote Playback](./RemotePlayback.md).
 
-All listeners except `timelineItemChanged` and `remotePlaybackStateChanged` are required. Your listeners object must implement every required callback:
+All listeners are required. Your listeners object must implement every callback:
 
 ```js
 const listeners: AudioNavigatorListeners = {
@@ -33,7 +33,6 @@ const listeners: AudioNavigatorListeners = {
   stalled: function (isStalled: boolean): void {},
   seeking: function (isSeeking: boolean): void {},
   seekable: function (seekable: TimeRanges): void {},
-  // optional:
   timelineItemChanged: function (item: TimelineItem | undefined): void {},
   remotePlaybackStateChanged: function (state: RemotePlaybackState): void {},
 };
@@ -207,7 +206,7 @@ const listeners = {
 
 ### remotePlaybackStateChanged
 
-Optional. Fires when the Remote Playback connection state changes. The state is `'connecting'`, `'connected'`, or `'disconnected'`. Use it to update a cast button or display a status indicator. See [Remote Playback](./RemotePlayback.md) for the full API including device availability and prompting.
+Fires when the Remote Playback connection state changes. The state is `'connecting'`, `'connected'`, or `'disconnected'`. Use it to update a cast button or display a status indicator. See [Remote Playback](./RemotePlayback.md) for the full API including device availability and prompting.
 
 ```js
 const listeners = {
@@ -282,7 +281,6 @@ const listeners: AudioNavigatorListeners = {
     }
   },
 
-  // optional:
   remotePlaybackStateChanged: (state) => {
     document.getElementById('cast-button').dataset.state = state;
   },
