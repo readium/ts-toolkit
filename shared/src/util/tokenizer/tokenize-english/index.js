@@ -9,8 +9,8 @@ Skips urls, websites, email addresses, phone nr.
 Counts ellipsis and ?! as single punctuation
 */
 
-import utils from "./utils.ts";
-import abbreviations from "./abbreviations.ts";
+import utils from "./utils";
+import abbreviations from "./abbreviations";
 
 function isCapitalized(str) {
     return /^[A-Z][a-z].*/.test(str) || isNumber(str);
