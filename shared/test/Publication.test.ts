@@ -3,6 +3,7 @@ import {
   Links,
   LocalizedString,
   Manifest,
+  MediaType,
   Metadata,
   Publication,
   ReadingProgression,
@@ -164,5 +165,88 @@ describe('Publication Tests', () => {
 
   it('find the first {Link} with the given {href} when missing', () => {
     expect(createPublication().linkWithHref('foobar')).toBeUndefined();
+  });
+
+  describe('getCover', () => {
+    it('returns undefined when there are no images and no cover rel', () => {
+      expect(createPublication().getCover()).toBeUndefined();
+    });
+
+    it('returns the link with rel=cover from links', () => {
+      const cover = new Link({ href: 'cover.jpg', rels: new Set(['cover']), type: 'image/jpeg' });
+      const pub = createPublication({
+        links: new Links([new Link({ href: 'other.jpg', type: 'image/jpeg' }), cover]),
+      });
+      expect(pub.getCover()).toEqual(cover);
+    });
+
+    it('returns the link with rel=cover from resources', () => {
+      const cover = new Link({ href: 'cover.png', rels: new Set(['cover']), type: 'image/png' });
+      const pub = createPublication({
+        resources: new Links([cover]),
+      });
+      expect(pub.getCover()).toEqual(cover);
+    });
+
+    it('returns the link with rel=cover from readingOrder', () => {
+      const cover = new Link({ href: 'cover.png', rels: new Set(['cover']), type: 'image/png' });
+      const pub = createPublication({
+        readingOrder: new Links([cover]),
+      });
+      expect(pub.getCover()).toEqual(cover);
+    });
+
+    it('prefers rel=cover in links over an image in resources', () => {
+      const coverRel = new Link({ href: 'cover-rel.jpg', rels: new Set(['cover']), type: 'image/jpeg' });
+      const imageResource = new Link({ href: 'image.jpg', type: 'image/jpeg' });
+      const pub = createPublication({
+        links: new Links([coverRel]),
+        resources: new Links([imageResource]),
+      });
+      expect(pub.getCover()).toEqual(coverRel);
+    });
+
+    it('falls back to a JPEG image when no cover rel is present', () => {
+      const jpeg = new Link({ href: 'photo.jpg', type: 'image/jpeg' });
+      const pub = createPublication({ resources: new Links([jpeg]) });
+      expect(pub.getCover()).toEqual(jpeg);
+    });
+
+    it('falls back to a PNG image when no cover rel is present', () => {
+      const png = new Link({ href: 'image.png', type: 'image/png' });
+      const pub = createPublication({ resources: new Links([png]) });
+      expect(pub.getCover()).toEqual(png);
+    });
+
+    it('falls back to an AVIF image when no cover rel is present', () => {
+      const avif = new Link({ href: 'image.avif', type: MediaType.AVIF.string });
+      const pub = createPublication({ resources: new Links([avif]) });
+      expect(pub.getCover()).toEqual(avif);
+    });
+
+    it('falls back to an SVG image when no cover rel is present', () => {
+      const svg = new Link({ href: 'cover.svg', type: MediaType.SVG.string });
+      const pub = createPublication({ resources: new Links([svg]) });
+      expect(pub.getCover()).toEqual(svg);
+    });
+
+    it('searches links before resources before readingOrder in image fallback', () => {
+      const inLinks = new Link({ href: 'links.jpg', type: 'image/jpeg' });
+      const inResources = new Link({ href: 'resources.jpg', type: 'image/jpeg' });
+      const inReadingOrder = new Link({ href: 'ro.jpg', type: 'image/jpeg' });
+      const pub = createPublication({
+        links: new Links([inLinks]),
+        resources: new Links([inResources]),
+        readingOrder: new Links([inReadingOrder]),
+      });
+      expect(pub.getCover()).toEqual(inLinks);
+    });
+
+    it('returns undefined when only non-image resources are present', () => {
+      const pub = createPublication({
+        resources: new Links([new Link({ href: 'chapter.html', type: 'text/html' })]),
+      });
+      expect(pub.getCover()).toBeUndefined();
+    });
   });
 });

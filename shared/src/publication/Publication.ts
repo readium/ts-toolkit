@@ -93,7 +93,7 @@ export class Publication {
   /**
    * Gets the cover image for the publication.
    * First looks for rel='cover' in links/resources/readingOrder,
-   * then falls back to any image (JPEG, PNG, GIF, AVIF, SVG) as bitmap fallback.
+   * then falls back to any image (JPEG, PNG, GIF, AVIF, SVG).
    */
   public getCover(): Link | undefined {
     const locations = [
