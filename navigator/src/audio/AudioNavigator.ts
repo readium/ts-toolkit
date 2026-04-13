@@ -226,6 +226,8 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         this.pool.audioEngine.setVolume(this._settings.volume);
         this.pool.audioEngine.setPlaybackRate(this._settings.playbackRate, this._settings.preservePitch);
 
+        if (this.positionPollInterval !== null) this.startPositionPolling();
+
         if (this._settings.enableMediaSession && !this._mediaSessionEnabled) {
             this._mediaSessionEnabled = true;
             this.setupMediaSession();
@@ -681,6 +683,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
     destroy(): void {
         this.stopPositionPolling();
+        this._stopStalledWatchdog();
         this.destroyMediaSession();
         if (this._suspiciousActivityListener) {
             window.removeEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
