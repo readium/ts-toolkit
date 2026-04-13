@@ -248,6 +248,9 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         if (item !== this._currentTimelineItem) {
             this._currentTimelineItem = item;
             this.listeners.timelineItemChanged(item);
+            if (this._settings.enableMediaSession) {
+                this.updateMediaSessionMetadata();
+            }
         }
     }
 
