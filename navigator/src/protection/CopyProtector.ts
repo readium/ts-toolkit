@@ -4,6 +4,7 @@ export interface CopyProtectionOptions {
 
 export class CopyProtector {
     private copyHandler: (event: ClipboardEvent) => void;
+    private unloadHandler: () => void;
 
     constructor(options: CopyProtectionOptions = {}) {
         this.copyHandler = (event: ClipboardEvent) => {
@@ -12,11 +13,14 @@ export class CopyProtector {
             options.onCopyBlocked?.();
         };
 
+        this.unloadHandler = () => this.destroy();
+
         document.addEventListener("copy", this.copyHandler, true);
-        window.addEventListener("unload", () => this.destroy());
+        window.addEventListener("unload", this.unloadHandler);
     }
 
     public destroy() {
         document.removeEventListener("copy", this.copyHandler, true);
+        window.removeEventListener("unload", this.unloadHandler);
     }
 }

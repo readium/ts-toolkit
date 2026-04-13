@@ -6,6 +6,7 @@ export interface DragAndDropProtectionOptions {
 export class DragAndDropProtector {
     private dragstartHandler: (event: DragEvent) => void;
     private dropHandler: (event: DragEvent) => void;
+    private unloadHandler: () => void;
 
     constructor(options: DragAndDropProtectionOptions = {}) {
         this.dragstartHandler = (event: DragEvent) => {
@@ -22,13 +23,16 @@ export class DragAndDropProtector {
             options.onDropDetected?.(types, fileCount);
         };
 
+        this.unloadHandler = () => this.destroy();
+
         document.addEventListener("dragstart", this.dragstartHandler, true);
         document.addEventListener("drop", this.dropHandler, true);
-        window.addEventListener("unload", () => this.destroy());
+        window.addEventListener("unload", this.unloadHandler);
     }
 
     public destroy() {
         document.removeEventListener("dragstart", this.dragstartHandler, true);
         document.removeEventListener("drop", this.dropHandler, true);
+        window.removeEventListener("unload", this.unloadHandler);
     }
 }
