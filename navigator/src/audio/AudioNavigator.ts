@@ -118,7 +118,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                 type: firstLink.type || "audio/mpeg",
                 title: firstLink.title,
                 locations: new LocatorLocations({
-                    position: 0,
+                    position: 1,
                     progression: 0,
                     totalProgression: 0,
                     fragments: ["t=0"]
@@ -309,7 +309,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             title: link.title,
             locations: new LocatorLocations({
                 progression: duration > 0 ? timestamp / duration : 0,
-                position: trackIndex,
+                position: trackIndex + 1,
                 fragments: [`t=${timestamp}`]
             })
         });
@@ -368,7 +368,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         this.pool.audioEngine.on("ended", async () => {
             this.stopPositionPolling();
             this.currentLocation = this.currentLocation.copyWithLocations(new LocatorLocations({
-                position: this.currentTrackIndex(),
+                position: this.currentTrackIndex() + 1,
                 progression: 1,
                 fragments: [`t=${this.duration}`]
             }));
@@ -403,7 +403,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                 const duration = this.duration;
                 const progression = duration > 0 ? currentTime / duration : 0;
                 this.currentLocation = this.currentLocation.copyWithLocations(new LocatorLocations({
-                    position: this.currentTrackIndex(),
+                    position: this.currentTrackIndex() + 1,
                     progression,
                     fragments: [`t=${currentTime}`]
                 }));
@@ -496,7 +496,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             const duration = this.duration;
             const progression = duration > 0 ? currentTime / duration : 0;
             this.currentLocation = this.currentLocation.copyWithLocations(new LocatorLocations({
-                position: this.currentTrackIndex(),
+                position: this.currentTrackIndex() + 1,
                 progression,
                 fragments: [`t=${currentTime}`]
             }));
