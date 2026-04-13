@@ -50,8 +50,7 @@ export class Publication {
 
   /**
    * Returns the publication's timeline, built from its reading order and table of contents.
-   * Called with no arguments, the result is cached. Pass options to build a fresh timeline
-   * with a specific configuration (e.g. a depth limit).
+   * The result is cached after the first call.
    */
   public get timeline(): Timeline {
     if (!this._timeline) this._timeline = Timeline.build(this);
