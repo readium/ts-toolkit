@@ -332,15 +332,15 @@ export class WebAudioEngine implements AudioEngine {
         // Activate Web Audio graph first, then attach the worklet
         this.activateWebAudio().then(() => {
           if (!this.worklet) {
-            if (this.sourceNode) {
-              this.sourceNode.disconnect();
-              this.sourceNode = null;
-            }
             PreservePitchWorklet.createWorklet({
               ctx: this.getOrCreateAudioContext(),
               mediaElement: this.mediaElement,
               pitchFactor: 1.0
             }).then(worklet => {
+              if (this.sourceNode) {
+                this.sourceNode.disconnect();
+                this.sourceNode = null;
+              }
               this.worklet = worklet;
               this.worklet.workletNode!.connect(this.gainNode!);
               this.worklet.updatePitchFactor(1 / rate);
@@ -390,25 +390,48 @@ export class WebAudioEngine implements AudioEngine {
     this.mediaElement.src = src;
     this.mediaElement.load();
 
-    await new Promise<void>((resolve, reject) => {
-      const onReady = () => {
-        this.mediaElement.removeEventListener("canplaythrough", onReady);
-        this.mediaElement.removeEventListener("error", onFail);
-        resolve();
-      };
-      const onFail = () => {
-        this.mediaElement.removeEventListener("canplaythrough", onReady);
-        this.mediaElement.removeEventListener("error", onFail);
-        reject(new Error("Audio reload with CORS failed — server may not send Access-Control-Allow-Origin"));
-      };
-      this.mediaElement.addEventListener("canplaythrough", onReady);
-      this.mediaElement.addEventListener("error", onFail);
-    });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const onReady = () => {
+          this.mediaElement.removeEventListener("canplaythrough", onReady);
+          this.mediaElement.removeEventListener("error", onFail);
+          resolve();
+        };
+        const onFail = () => {
+          this.mediaElement.removeEventListener("canplaythrough", onReady);
+          this.mediaElement.removeEventListener("error", onFail);
+          reject(new Error("Audio reload with CORS failed — server may not send Access-Control-Allow-Origin"));
+        };
+        this.mediaElement.addEventListener("canplaythrough", onReady);
+        this.mediaElement.addEventListener("error", onFail);
+      });
+    } catch (err) {
+      // Roll back to non-CORS mode so the element remains playable.
+      this.mediaElement.crossOrigin = "";
+      this.mediaElement.src = src;
+      this.mediaElement.load();
+      if (wasPlaying) {
+        await new Promise<void>(resolve => {
+          const onReady = () => {
+            this.mediaElement.removeEventListener("canplaythrough", onReady);
+            resolve();
+          };
+          this.mediaElement.addEventListener("canplaythrough", onReady);
+        });
+        this.mediaElement.currentTime = currentTime;
+        await this.mediaElement.play();
+        this.isPlayingValue = true;
+        this.isPausedValue = false;
+      } else {
+        this.mediaElement.currentTime = currentTime;
+      }
+      throw err;
+    }
 
     this.mediaElement.currentTime = currentTime;
 
     this.sourceNode = new MediaElementAudioSourceNode(this.getOrCreateAudioContext(), { mediaElement: this.mediaElement });
-    
+
     // Create gainNode lazily when Web Audio is activated
     const audioContext = this.getOrCreateAudioContext();
     this.gainNode = audioContext.createGain();
