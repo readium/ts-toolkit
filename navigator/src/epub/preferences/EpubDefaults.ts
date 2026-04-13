@@ -1,25 +1,25 @@
-import { 
+import {
   ExperimentKey,
-  fontSizeRangeConfig, 
-  fontWeightRangeConfig, 
-  fontWidthRangeConfig, 
+  fontSizeRangeConfig,
+  fontWeightRangeConfig,
+  fontWidthRangeConfig,
   TextAlignment
-} from "../../preferences/Types";
+} from "../../preferences/Types.ts";
 
-import { 
-  ensureBoolean, 
-  ensureEnumValue, 
-  ensureExperiment, 
-  ensureFilter, 
-  ensureLessThanOrEqual, 
-  ensureMoreThanOrEqual, 
-  ensureNonNegative, 
-  ensureString, 
-  ensureValueInRange, 
-  withFallback 
-} from "../../preferences/guards";
+import {
+  ensureBoolean,
+  ensureEnumValue,
+  ensureExperiment,
+  ensureFilter,
+  ensureLessThanOrEqual,
+  ensureMoreThanOrEqual,
+  ensureNonNegative,
+  ensureString,
+  ensureValueInRange,
+  withFallback
+} from "../../preferences/guards.ts";
 
-import { sMLWithRequest } from "../../helpers";
+import { sMLWithRequest } from "../../helpers/index.ts";
 
 export interface IEpubDefaults {
   backgroundColor?: string | null,
@@ -127,11 +127,11 @@ export class EpubDefaults {
     this.hyphens = ensureBoolean(defaults.hyphens) ?? null;
     this.invertFilter = ensureFilter(defaults.invertFilter) ?? false;
     this.invertGaijiFilter = ensureFilter(defaults.invertGaijiFilter) ?? false;
-    this.iOSPatch = defaults.iOSPatch === false 
-        ? false 
+    this.iOSPatch = defaults.iOSPatch === false
+        ? false
         : ((sMLWithRequest.OS.iOS || sMLWithRequest.OS.iPadOS) && sMLWithRequest.iOSRequest === "mobile");
-    this.iPadOSPatch = defaults.iPadOSPatch === false 
-        ? false 
+    this.iPadOSPatch = defaults.iPadOSPatch === false
+        ? false
         : (sMLWithRequest.OS.iPadOS && sMLWithRequest.iOSRequest === "desktop");
     this.letterSpacing = ensureNonNegative(defaults.letterSpacing) || null;
     this.ligatures = ensureBoolean(defaults.ligatures) ?? null;

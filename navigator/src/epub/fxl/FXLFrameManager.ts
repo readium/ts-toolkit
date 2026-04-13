@@ -1,9 +1,9 @@
 import { Loader, ModuleName } from "@readium/navigator-html-injectables";
 import { Page, ReadingProgression } from "@readium/shared";
-import { FrameComms } from "../frame/FrameComms";
-import { FXLPeripherals } from "./FXLPeripherals";
-import { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
-import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator";
+import { FrameComms } from "../frame/FrameComms.ts";
+import { FXLPeripherals } from "./FXLPeripherals.ts";
+import type { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
+import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator.ts";
 
 export class FXLFrameManager {
     private frame: HTMLIFrameElement;
@@ -22,8 +22,8 @@ export class FXLFrameManager {
     private showPromise: Promise<void> | undefined;
 
     constructor(
-        peripherals: FXLPeripherals, 
-        direction: ReadingProgression, 
+        peripherals: FXLPeripherals,
+        direction: ReadingProgression,
         debugHref: string,
         contentProtectionConfig: IContentProtectionConfig = {},
         keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = []
@@ -212,7 +212,7 @@ export class FXLFrameManager {
 
         // Send content protection config
         this.comms!.send("peripherals_protection", this.contentProtectionConfig);
-        
+
         // Send keyboard peripherals separately
         if (this.keyboardPeripheralsConfig && this.keyboardPeripheralsConfig.length > 0) {
             this.comms!.send("keyboard_peripherals", this.keyboardPeripheralsConfig);

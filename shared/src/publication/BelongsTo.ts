@@ -3,7 +3,7 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { Contributors as Collection } from './Contributor';
+import { Contributors as Collection } from './Contributor.ts';
 
 /**
  * BelongsTo Object for the Readium Web Publication Manifest.

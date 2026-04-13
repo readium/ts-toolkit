@@ -3,7 +3,7 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { Page } from "./Properties";
+import { Page } from "./Properties.ts";
 
 export enum ReadingProgression {
   ltr = 'ltr',

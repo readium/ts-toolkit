@@ -1,4 +1,4 @@
-import { Language } from "../../../../util/Language";
+import { Language } from "../../../../util/Language.ts";
 
 export class Attribute<V> {
     constructor(

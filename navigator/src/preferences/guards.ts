@@ -1,4 +1,4 @@
-import { ExperimentKey, experiments } from './Types';
+import { ExperimentKey, experiments } from './Types.ts';
 
 export function ensureLessThanOrEqual<T extends number | null | undefined>(value: T, compareTo: T): T | undefined {
   if (value === undefined || value === null) {

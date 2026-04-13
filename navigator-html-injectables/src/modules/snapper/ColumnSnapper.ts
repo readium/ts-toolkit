@@ -1,13 +1,13 @@
-import { Comms } from "../../comms";
-import { Snapper } from "./Snapper";
-import { getColumnCountPerScreen, isRTL, appendVirtualColumnIfNeeded } from "../../helpers/document";
-import { easeInOutQuad } from "../../helpers/animation";
-import { ModuleName } from "../ModuleLibrary";
+import { Comms } from "../../comms/index.ts";
+import { Snapper } from "./Snapper.ts";
+import { getColumnCountPerScreen, isRTL, appendVirtualColumnIfNeeded } from "../../helpers/document.ts";
+import { easeInOutQuad } from "../../helpers/animation.ts";
+import { ModuleName } from "../ModuleLibrary.ts";
 import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
-import { rangeFromLocator } from "../../helpers/locator";
-import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/dom";
-import { PatternAnalyzer } from "../../protection/PatternAnalyzer";
-import { BaseSuspiciousActivityEvent } from "../Peripherals";
+import { rangeFromLocator } from "../../helpers/locator.ts";
+import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/dom.ts";
+import { PatternAnalyzer } from "../../protection/PatternAnalyzer.ts";
+import { BaseSuspiciousActivityEvent } from "../Peripherals.ts";
 
 const COLUMN_SNAPPER_STYLE_ID = "readium-column-snapper-style";
 
@@ -83,7 +83,7 @@ export class ColumnSnapper extends Snapper {
     private alreadyScrollLeft = 0;
     private overscroll = 0;
     private cachedScrollWidth = 0; // We have to cache this because during overscroll (transform, or left) the width is incorrect due to browser
-    
+
     private takeOverSnap() {
         this.snappingCancelled = true;
         this.clearTouches();
@@ -92,7 +92,7 @@ export class ColumnSnapper extends Snapper {
         // translate3d(XXXpx, 0px, 0px) -> slice 12 -> XXXpx, 0px, 0px) -> split "px" [0] -> XXX
         this.overscroll = doc.style.transform?.length > 12 ? parseFloat(doc.style.transform.slice(12).split("px")[0]) : 0;
     }
-    
+
     // Snaps the current offset to the page width.
     snapCurrentOffset(smooth=false, noprogress=false) {
         const startX = this.wnd.scrollX > 0 ? this.wnd.scrollX : this.alreadyScrollLeft;
@@ -108,11 +108,11 @@ export class ColumnSnapper extends Snapper {
             ((factor * cdo) > 0 ? 2 : 1);
 
         const so = this.snapOffset(currentOffset + hurdle);
-        
+
         const direction = so > this.scrollOffset() ? "right" : "left";
 
         this.checkSuspiciousSnap(direction, Math.abs(so - this.scrollOffset()));
-        
+
         if(smooth && so !== this.scrollOffset()) { // Smooth snapping
             this.snappingCancelled = false;
             const position = (start: number, end: number, elapsed: number, period: number) => {
@@ -321,7 +321,7 @@ export class ColumnSnapper extends Snapper {
         * {
             scrollbar-width: none; /* for Firefox */
         }
-        
+
         body::-webkit-scrollbar {
             display: none; /* for Chrome, Safari, and Opera */
         }
@@ -346,7 +346,7 @@ export class ColumnSnapper extends Snapper {
                     const oldValueTransform = oldValue?.match(transformRegex);
                     const newValueTransform = newValue?.match(transformRegex);
                     if (
-                        (!oldValueTransform && !newValueTransform) || 
+                        (!oldValueTransform && !newValueTransform) ||
                         (oldValueTransform && !newValueTransform) ||
                         (oldValueTransform && newValueTransform && oldValueTransform[1] !== newValueTransform[1])
                     ) {
@@ -365,7 +365,7 @@ export class ColumnSnapper extends Snapper {
         // For cases the resizeObserver is not able to detect cos body is not resizing despite colCount,
         // we need to check the syle attribute on the documentElement (ReadiumCSS props)
         this.mutationObserver.observe(wnd.document.documentElement, {attributes: true, attributeFilter: ["style"]});
-        
+
         comms.register("scroll_protection", ColumnSnapper.moduleName, (_, ack) => {
             this.enableSnapProtection();
             ack(true);

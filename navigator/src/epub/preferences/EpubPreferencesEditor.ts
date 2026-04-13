@@ -1,21 +1,21 @@
 import { Layout, Metadata, ReadingProgression } from "@readium/shared";
-import { IPreferencesEditor } from "../../preferences/PreferencesEditor";
-import { EpubPreferences } from "./EpubPreferences";
-import { EpubSettings } from "./EpubSettings";
-import { BooleanPreference, EnumPreference, Preference, RangePreference } from "../../preferences/Preference";
-import { 
-  TextAlignment, 
-  filterRangeConfig, 
-  fontSizeRangeConfig, 
-  fontWeightRangeConfig, 
-  fontWidthRangeConfig, 
+import { IPreferencesEditor } from "../../preferences/PreferencesEditor.ts";
+import { EpubPreferences } from "./EpubPreferences.ts";
+import { EpubSettings } from "./EpubSettings.ts";
+import { BooleanPreference, EnumPreference, Preference, RangePreference } from "../../preferences/Preference.ts";
+import {
+  TextAlignment,
+  filterRangeConfig,
+  fontSizeRangeConfig,
+  fontWeightRangeConfig,
+  fontWidthRangeConfig,
   letterSpacingRangeConfig,
   lineHeightRangeConfig,
   lineLengthRangeConfig,
   paragraphIndentRangeConfig,
   paragraphSpacingRangeConfig,
   wordSpacingRangeConfig
-} from "../../preferences/Types";
+} from "../../preferences/Types.ts";
 
 import defaultColors from "@readium/css/css/vars/colors.json";
 
@@ -261,12 +261,12 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
         if (this.preferences.ligatures === null) {
           return false;
         }
-        
+
         // Disable for fixed layout
         if (this.layout === Layout.fixed) {
           return false;
         }
-        
+
         // Check for languages/scripts that should disable ligatures
         // ReadiumCSS does not apply in CJK
         const primaryLang = this.metadata?.languages?.[0]?.toLowerCase();
@@ -276,7 +276,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
             return false;
           }
         }
-        
+
         // Enable by default
         return true;
       })(),
@@ -450,7 +450,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
         this.updatePreference("scrollPaddingRight", newValue || null);
       }
     });
-  } 
+  }
 
   get selectionBackgroundColor(): Preference<string> {
     return new Preference<string>({

@@ -3,14 +3,14 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { Links } from './Link';
+import { Links } from './Link.ts';
 import {
   arrayfromJSONorString,
   numberfromJSON,
   setToArray,
-} from '../util/JSONParse';
-import { LocalizedString } from './LocalizedString';
-import { AltIdentifier } from './AltIdentifier';
+} from '../util/JSONParse.ts';
+import { LocalizedString } from './LocalizedString.ts';
+import { AltIdentifier } from './AltIdentifier.ts';
 
 /**
  * Contributor Object for the Readium Web Publication Manifest.

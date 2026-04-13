@@ -1,19 +1,19 @@
 import { Feature, Metadata } from "@readium/shared";
 
-import { IPreferencesEditor } from "../../preferences/PreferencesEditor";
-import { WebPubPreferences } from "./WebPubPreferences";
-import { WebPubSettings } from "./WebPubSettings";
-import { BooleanPreference, EnumPreference, Preference, RangePreference } from "../../preferences/Preference";
-import { 
-  fontWeightRangeConfig, 
-  letterSpacingRangeConfig, 
-  lineHeightRangeConfig, 
-  paragraphIndentRangeConfig, 
-  paragraphSpacingRangeConfig, 
-  TextAlignment, 
-  wordSpacingRangeConfig, 
-  zoomRangeConfig 
-} from "../../preferences/Types";
+import { IPreferencesEditor } from "../../preferences/PreferencesEditor.ts";
+import { WebPubPreferences } from "./WebPubPreferences.ts";
+import { WebPubSettings } from "./WebPubSettings.ts";
+import { BooleanPreference, EnumPreference, Preference, RangePreference } from "../../preferences/Preference.ts";
+import {
+  fontWeightRangeConfig,
+  letterSpacingRangeConfig,
+  lineHeightRangeConfig,
+  paragraphIndentRangeConfig,
+  paragraphSpacingRangeConfig,
+  TextAlignment,
+  wordSpacingRangeConfig,
+  zoomRangeConfig
+} from "../../preferences/Types.ts";
 export class WebPubPreferencesEditor implements IPreferencesEditor {
   preferences: WebPubPreferences;
   private settings: WebPubSettings;
@@ -84,7 +84,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
         }
       });
     }
-  
+
     get iPadOSPatch(): BooleanPreference {
       return new BooleanPreference({
         initialValue: this.preferences.iPadOSPatch,

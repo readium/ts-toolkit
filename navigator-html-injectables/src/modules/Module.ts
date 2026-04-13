@@ -1,6 +1,6 @@
-import { Comms } from "../comms";
-import { ReadiumWindow } from "../helpers/dom";
-import { ModuleName } from "./ModuleLibrary";
+import { Comms } from "../comms/index.ts";
+import { ReadiumWindow } from "../helpers/dom.ts";
+import { ModuleName } from "./ModuleLibrary.ts";
 
 export abstract class Module {
     static readonly moduleName: ModuleName; // snake_case name of the module, must be unique.

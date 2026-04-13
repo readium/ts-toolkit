@@ -6,7 +6,7 @@ import {
     mid,
     CommsEventKey,
 } from "@readium/navigator-html-injectables";
-import { ManagerEventKey } from "../EpubNavigator";
+import { ManagerEventKey } from "../EpubNavigator.ts";
 
 interface RegistryValue {
     time: number;

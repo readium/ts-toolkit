@@ -1,10 +1,10 @@
-import { ConfigurablePreferences } from "../../preferences/Configurable";
+import { ConfigurablePreferences } from "../../preferences/Configurable.ts";
 
-import { 
-  fontWeightRangeConfig, 
-  TextAlignment, 
-  zoomRangeConfig 
-} from "../../preferences/Types";
+import {
+  fontWeightRangeConfig,
+  TextAlignment,
+  zoomRangeConfig
+} from "../../preferences/Types.ts";
 
 import {
   ensureBoolean,
@@ -12,7 +12,7 @@ import {
   ensureNonNegative,
   ensureString,
   ensureValueInRange
-} from "../../preferences/guards";
+} from "../../preferences/guards.ts";
 
 export interface IWebPubPreferences {
   fontFamily?: string | null,

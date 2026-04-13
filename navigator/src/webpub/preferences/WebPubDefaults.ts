@@ -1,9 +1,9 @@
-import { 
+import {
   ExperimentKey,
-  fontWeightRangeConfig, 
-  TextAlignment, 
-  zoomRangeConfig 
-} from "../../preferences/Types";
+  fontWeightRangeConfig,
+  TextAlignment,
+  zoomRangeConfig
+} from "../../preferences/Types.ts";
 
 import {
   ensureBoolean,
@@ -12,9 +12,9 @@ import {
   ensureValueInRange,
   ensureString,
   ensureExperiment
-} from "../../preferences/guards";
+} from "../../preferences/guards.ts";
 
-import { sMLWithRequest } from "../../helpers";
+import { sMLWithRequest } from "../../helpers/index.ts";
 
 export interface IWebPubDefaults {
   fontFamily?: string | null,
@@ -57,11 +57,11 @@ export class WebPubDefaults {
     this.fontFamily = ensureString(defaults.fontFamily) || null;
     this.fontWeight = ensureValueInRange(defaults.fontWeight, fontWeightRangeConfig.range) || null;
     this.hyphens = ensureBoolean(defaults.hyphens) ?? null;
-    this.iOSPatch = defaults.iOSPatch === false 
-        ? false 
+    this.iOSPatch = defaults.iOSPatch === false
+        ? false
         : ((sMLWithRequest.OS.iOS || sMLWithRequest.OS.iPadOS) && sMLWithRequest.iOSRequest === "mobile");
-    this.iPadOSPatch = defaults.iPadOSPatch === false 
-        ? false 
+    this.iPadOSPatch = defaults.iPadOSPatch === false
+        ? false
         : (sMLWithRequest.OS.iPadOS && sMLWithRequest.iOSRequest === "desktop");
     this.letterSpacing = ensureNonNegative(defaults.letterSpacing) || null;
     this.ligatures = ensureBoolean(defaults.ligatures) ?? null;

@@ -1,6 +1,6 @@
 import { MediaType } from "@readium/shared";
 import { Link, Publication } from "@readium/shared";
-import { Injector } from "../../injection/Injector";
+import { Injector } from "../../injection/Injector.ts";
 
 const csp = (domains: string[]) => {
     const d = domains.join(" ");
@@ -58,12 +58,12 @@ export default class FrameBlobBuider {
         // Load the HTML resource
         const txt = await this.pub.get(this.item).readAsString();
         if(!txt) throw new Error(`Failed reading item ${this.item.href}`);
-        
+
         const doc = new DOMParser().parseFromString(
             txt,
             this.item.mediaType.string as DOMParserSupportedType
         );
-        
+
         const perror = doc.querySelector("parsererror");
         if (perror) {
             const details = perror.querySelector("div");
@@ -101,7 +101,7 @@ export default class FrameBlobBuider {
 
         // Get allowed domains from injector if it exists
         const allowedDomains = this.injector?.getAllowedDomains?.() || [];
-        
+
         // Always include the root domain if provided
         const domains = [...new Set([
             ...(root ? [root] : []),
@@ -126,10 +126,10 @@ export default class FrameBlobBuider {
             img.setAttribute("fetchpriority", "high");
         });
 
-        // We need to ensure that lang is set on the root element 
+        // We need to ensure that lang is set on the root element
         // since it is used for settings such as font-family, hyphens, ligatures, etc.
         // but also screen readers, etc.
-        // Metadata’s effectiveReadingProgression uses first item in array as primary language 
+        // Metadata’s effectiveReadingProgression uses first item in array as primary language
         // so we keep it consistent.
         if (mediaType.isHTML && this.pub.metadata.languages?.[0]) {
             const primaryLanguage = this.pub.metadata.languages[0];
@@ -149,7 +149,7 @@ export default class FrameBlobBuider {
                     document.documentElement.setAttribute("xml:lang", primaryLanguage);
                 }
             } else if (
-                mediaType === MediaType.HTML && 
+                mediaType === MediaType.HTML &&
                 !document.documentElement.lang
             ) {
                 document.documentElement.lang = primaryLanguage;
@@ -163,7 +163,7 @@ export default class FrameBlobBuider {
         // TODO: ReadiumCSS stylesheets are injected as LTR/default no matter what so disabled ATM
         /* if (
             !document.documentElement.dir &&
-            !document.body.dir && 
+            !document.body.dir &&
             this.pub.metadata.effectiveReadingProgression === ReadingProgression.rtl
         ) {
             document.documentElement.dir = this.pub.metadata.effectiveReadingProgression;

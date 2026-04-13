@@ -1,3 +1,3 @@
-export * from './Accessibility';
-export * from './AccessibilityMetadataDisplayGuide';
-export * from './Localization';
+export * from './Accessibility.ts';
+export * from './AccessibilityMetadataDisplayGuide.ts';
+export * from './Localization.ts';

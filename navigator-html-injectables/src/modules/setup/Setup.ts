@@ -1,7 +1,7 @@
-import { Comms } from "../../comms/comms";
-import { ReadiumWindow, EPUBReadingSystem } from "../../helpers/dom";
-import { Module } from "../Module";
-import { ModuleName } from "../ModuleLibrary";
+import { Comms } from "../../comms/comms.ts";
+import { ReadiumWindow, EPUBReadingSystem } from "../../helpers/dom.ts";
+import { Module } from "../Module.ts";
+import { ModuleName } from "../ModuleLibrary.ts";
 
 export abstract class Setup extends Module {
     static readonly moduleName: ModuleName = "setup";

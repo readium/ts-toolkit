@@ -1,7 +1,7 @@
-import { Comms } from "../../comms";
-import { ReadiumWindow } from "../../helpers/dom";
-import { Module } from "../Module";
-import { ModuleName } from "../ModuleLibrary";
+import { Comms } from "../../comms/index.ts";
+import { ReadiumWindow } from "../../helpers/dom.ts";
+import { Module } from "../Module.ts";
+import { ModuleName } from "../ModuleLibrary.ts";
 
 const SNAPPER_STYLE_ID = "readium-snapper-style";
 

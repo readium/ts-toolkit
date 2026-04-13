@@ -1,7 +1,7 @@
-import { Comms } from "../comms";
-import { ReadiumWindow } from "../helpers/dom";
-import { Module } from "../modules/Module";
-import { ModuleName } from "../modules/ModuleLibrary";
+import { Comms } from "../comms/index.ts";
+import { ReadiumWindow } from "../helpers/dom.ts";
+import { Module } from "../modules/Module.ts";
+import { ModuleName } from "../modules/ModuleLibrary.ts";
 
 export interface PrintProtectionConfig {
     disable?: boolean;
@@ -10,7 +10,7 @@ export interface PrintProtectionConfig {
 
 export class PrintProtector extends Module {
     static readonly moduleName: ModuleName = "print_protection";
-    
+
     private comms!: Comms;
     private wnd!: ReadiumWindow;
     private styleElement: HTMLStyleElement | null = null;
@@ -46,16 +46,16 @@ export class PrintProtector extends Module {
         wnd.addEventListener("beforeprint", this.beforePrintHandler);
     }
 
-    private registerPrintHandlers() {        
+    private registerPrintHandlers() {
         this.comms?.register("print_protection", PrintProtector.moduleName, (data: unknown) => {
             const config = data as PrintProtectionConfig;
-            
+
             if (!this.configApplied) {
                 this.configApplied = true;
                 this.setupPrintProtection(this.wnd, config);
                 this.comms?.log("Print protection configuration applied");
             }
-            
+
             return true;
         });
     }
@@ -72,15 +72,15 @@ export class PrintProtector extends Module {
             wnd.removeEventListener("beforeprint", this.beforePrintHandler);
             this.beforePrintHandler = null;
         }
-        
+
         if (this.styleElement?.parentNode) {
             this.styleElement.parentNode.removeChild(this.styleElement);
             this.styleElement = null;
         }
-        
+
         // Unregister all print protection handlers
         this.comms?.unregisterAll(PrintProtector.moduleName);
-        
+
         this.configApplied = false;
         return true;
     }

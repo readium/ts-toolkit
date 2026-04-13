@@ -1,7 +1,7 @@
-import { Comms } from "../../comms/comms";
-import { ReadiumWindow } from "../../helpers/dom";
-import { Module } from "../Module";
-import { getProperties, removeProperty, setProperty, updateProperties } from "../../helpers/css";
+import { Comms } from "../../comms/comms.ts";
+import { ReadiumWindow } from "../../helpers/dom.ts";
+import { Module } from "../Module.ts";
+import { getProperties, removeProperty, setProperty, updateProperties } from "../../helpers/css.ts";
 
 export class WebPubSetup extends Module {
     static readonly moduleName = "webpub_setup";

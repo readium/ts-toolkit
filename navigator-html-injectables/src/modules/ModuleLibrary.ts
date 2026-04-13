@@ -1,13 +1,13 @@
-import { ModuleDerived } from "./Module";
-import { ColumnSnapper } from "./snapper/ColumnSnapper";
-import { ScrollSnapper } from "./snapper/ScrollSnapper";
-import { WebPubSnapper } from "./snapper/WebPubSnapper";
-import { Peripherals } from "./Peripherals";
-import { ReflowableSetup } from "./setup/ReflowableSetup";
-import { FixedSetup } from "./setup/FixedSetup";
-import { Decorator } from "./Decorator";
-import { WebPubSetup } from "./setup/WebPubSetup";
-import { PrintProtector } from "../protection/PrintProtector";
+import { ModuleDerived } from "./Module.ts";
+import { ColumnSnapper } from "./snapper/ColumnSnapper.ts";
+import { ScrollSnapper } from "./snapper/ScrollSnapper.ts";
+import { WebPubSnapper } from "./snapper/WebPubSnapper.ts";
+import { Peripherals } from "./Peripherals.ts";
+import { ReflowableSetup } from "./setup/ReflowableSetup.ts";
+import { FixedSetup } from "./setup/FixedSetup.ts";
+import { Decorator } from "./Decorator.ts";
+import { WebPubSetup } from "./setup/WebPubSetup.ts";
+import { PrintProtector } from "../protection/PrintProtector.ts";
 
 // All the module names. TODO: Come up with a better way of collecting these in a way TS will recognize
 export type ModuleName =

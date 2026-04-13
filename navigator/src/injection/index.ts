@@ -1,2 +1,2 @@
-export * from "./Injectable";
-export * from "./Injector";
+export * from "./Injectable.ts";
+export * from "./Injector.ts";

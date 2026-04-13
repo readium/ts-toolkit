@@ -1,20 +1,20 @@
-import { ConfigurablePreferences } from "../../preferences/Configurable";
+import { ConfigurablePreferences } from "../../preferences/Configurable.ts";
 
-import { 
-  TextAlignment, 
-  fontSizeRangeConfig, 
-  fontWeightRangeConfig, 
-  fontWidthRangeConfig 
-} from "../../preferences/Types";
+import {
+  TextAlignment,
+  fontSizeRangeConfig,
+  fontWeightRangeConfig,
+  fontWidthRangeConfig
+} from "../../preferences/Types.ts";
 
-import { 
-  ensureBoolean, 
-  ensureEnumValue, 
-  ensureFilter, 
-  ensureNonNegative, 
-  ensureString, 
-  ensureValueInRange 
-} from "../../preferences/guards";
+import {
+  ensureBoolean,
+  ensureEnumValue,
+  ensureFilter,
+  ensureNonNegative,
+  ensureString,
+  ensureValueInRange
+} from "../../preferences/guards.ts";
 
 export interface IEpubPreferences {
   backgroundColor?: string | null,

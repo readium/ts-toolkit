@@ -1,3 +1,3 @@
-export * from './engine';
-export * from './preferences';
-export * from './AudioNavigator';
+export * from './engine/index.ts';
+export * from './preferences/index.ts';
+export * from './AudioNavigator.ts';

@@ -1,12 +1,12 @@
 import { Locator } from "@readium/shared";
-import { Comms } from "../comms/comms";
-import { Module } from "./Module";
-import { rangeFromLocator } from "../helpers/locator";
-import { ModuleName } from "./ModuleLibrary";
-import { Rect, getClientRectsNoOverlap } from "../helpers/rect";
-import { getProperty } from "../helpers/css";
-import { ReadiumWindow } from "../helpers/dom";
-import { isDarkColor, getContrastingTextColor } from "../helpers/color";
+import { Comms } from "../comms/comms.ts";
+import { Module } from "./Module.ts";
+import { rangeFromLocator } from "../helpers/locator.ts";
+import { ModuleName } from "./ModuleLibrary.ts";
+import { Rect, getClientRectsNoOverlap } from "../helpers/rect.ts";
+import { getProperty } from "../helpers/css.ts";
+import { ReadiumWindow } from "../helpers/dom.ts";
+import { isDarkColor, getContrastingTextColor } from "../helpers/color.ts";
 
 const DEFAULT_HIGHLIGHT_COLOR = "#FFFF00"; // Yellow in HEX
 
@@ -184,7 +184,7 @@ class DecorationGroup {
         const [stylesheet, highlighter]: [HTMLStyleElement, any] = this.requireContainer(true) as [HTMLStyleElement, unknown];
         highlighter.add(item.range);
 
-        const backgroundColor = getProperty(this.wnd, "--USER__backgroundColor") || 
+        const backgroundColor = getProperty(this.wnd, "--USER__backgroundColor") ||
                               this.wnd.getComputedStyle(this.wnd.document.documentElement).getPropertyValue("background-color");
         const tint = item.decoration?.style?.tint ?? DEFAULT_HIGHLIGHT_COLOR;
 
@@ -198,7 +198,7 @@ class DecorationGroup {
 
     /**
      * Layouts a single DecorationItem.
-     * @param item 
+     * @param item
      */
     private layout(item: DecorationItem) {
         if (this.experimentalHighlights && !this.notTextFlag?.has(item.id)) {
@@ -264,7 +264,7 @@ class DecorationGroup {
 
         template.innerHTML = `
         <div
-            data-readium="true" 
+            data-readium="true"
             class="readium-highlight"
             style="${[
                 `background-color: ${item.decoration?.style?.tint ?? DEFAULT_HIGHLIGHT_COLOR} !important`,
@@ -416,7 +416,7 @@ export class Decorator extends Module {
 
     private extractCustomProperty(style: string | null, propertyName: string): string | null {
         if (!style) return null;
-        
+
         const match = style.match(new RegExp(`${propertyName}:\\s*([^;]+)`));
         return match ? match[1].trim() : null;
     }
@@ -478,24 +478,24 @@ export class Decorator extends Module {
                     const element = mutation.target as Element;
                     const oldStyle = mutation.oldValue;
                     const newStyle = element.getAttribute("style");
-                    
+
                     // Check if the relevant CSS custom properties actually changed
                     const oldAppearance = this.extractCustomProperty(oldStyle, "--USER__appearance");
                     const newAppearance = this.extractCustomProperty(newStyle, "--USER__appearance");
                     const oldBgColor = this.extractCustomProperty(oldStyle, "--USER__backgroundColor");
                     const newBgColor = this.extractCustomProperty(newStyle, "--USER__backgroundColor");
-                    
-                    return oldAppearance !== newAppearance || 
+
+                    return oldAppearance !== newAppearance ||
                            oldBgColor !== newBgColor;
                 }
                 return false;
             });
-            
+
             if (shouldUpdate) {
                 this.updateHighlightStyles();
             }
         });
-        
+
         this.backgroundObserver.observe(wnd.document.documentElement, {
             attributes: true,
             attributeFilter: ["style"],

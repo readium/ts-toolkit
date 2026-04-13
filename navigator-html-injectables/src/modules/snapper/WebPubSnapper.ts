@@ -1,13 +1,13 @@
 import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
-import { Comms } from "../../comms/comms";
-import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/dom";
-import { ModuleName } from "../ModuleLibrary";
-import { Snapper } from "./Snapper";
-import { rangeFromLocator } from "../../helpers/locator";
-import { forceWebkitRecalc } from "../../helpers/document";
-import { PatternAnalyzer } from "../../protection/PatternAnalyzer";
-import { SCROLL_PROTECTION_CONFIG } from "../../protection/config";
-import { SuspiciousScrollingEvent } from "./ScrollSnapper";
+import { Comms } from "../../comms/comms.ts";
+import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/dom.ts";
+import { ModuleName } from "../ModuleLibrary.ts";
+import { Snapper } from "./Snapper.ts";
+import { rangeFromLocator } from "../../helpers/locator.ts";
+import { forceWebkitRecalc } from "../../helpers/document.ts";
+import { PatternAnalyzer } from "../../protection/PatternAnalyzer.ts";
+import { SCROLL_PROTECTION_CONFIG } from "../../protection/config.ts";
+import { SuspiciousScrollingEvent } from "./ScrollSnapper.ts";
 
 export type { SuspiciousScrollingEvent };
 
@@ -82,9 +82,9 @@ export class WebPubSnapper extends Snapper {
                             timeDelta
                         );
                         if (isSuspicious) {
-                            const target = _e.target && "tagName" in _e.target ? 
+                            const target = _e.target && "tagName" in _e.target ?
                                 { tagName: (_e.target as Element).tagName } : null;
-                                
+
                             this.comms?.send("content_protection", {
                                 type: "suspicious_scrolling",
                                 timestamp: Date.now(),
@@ -145,8 +145,8 @@ export class WebPubSnapper extends Snapper {
             forceWebkitRecalc(this.wnd);
 
             // We absolutely must do this because overflown content
-            // won’t be rendered if we do not trigger scroll… 
-            // Only the content at the start of the document, 
+            // won’t be rendered if we do not trigger scroll…
+            // Only the content at the start of the document,
             // whose height is the viewport height, will be rendered.
             const currentScroll = this.doc().scrollTop;
             if (currentScroll > 1) {
@@ -267,7 +267,7 @@ export class WebPubSnapper extends Snapper {
         comms.unregisterAll(WebPubSnapper.moduleName);
         this.resizeObserver.disconnect();
         if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
-        
+
         if (this.patternAnalyzer) {
             this.patternAnalyzer.clear();
             this.patternAnalyzer = null;

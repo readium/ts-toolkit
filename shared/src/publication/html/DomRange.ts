@@ -3,7 +3,7 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { DomRangePoint } from './DomRangePoint';
+import { DomRangePoint } from './DomRangePoint.ts';
 
 /**
  * This construct enables a serializable representation of a DOM Range.

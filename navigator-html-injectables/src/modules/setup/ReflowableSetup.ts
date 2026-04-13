@@ -1,7 +1,7 @@
-import { Comms } from "../../comms/comms";
-import { Setup } from "./Setup";
-import { getProperties, removeProperty, setProperty, updateProperties } from "../../helpers/css";
-import { ReadiumWindow } from "../../helpers/dom";
+import { Comms } from "../../comms/comms.ts";
+import { Setup } from "./Setup.ts";
+import { getProperties, removeProperty, setProperty, updateProperties } from "../../helpers/css.ts";
+import { ReadiumWindow } from "../../helpers/dom.ts";
 
 const VIEWPORT_META_TAG_ID = "readium-viewport";
 
@@ -40,7 +40,7 @@ export class ReflowableSetup extends Setup {
             ack(true);
         });
         comms.register("update_properties", ReflowableSetup.moduleName, (data, ack) => {
-            // In order to keep the viewport width that is added in the setup itself, 
+            // In order to keep the viewport width that is added in the setup itself,
             // and don’t have EpubNavigator concerned with this, we need to add it there
             (data as { [key: string]: string })["--RS__viewportWidth"] = `${ wnd.innerWidth }px`;
             updateProperties(wnd, data as { [key: string]: string });

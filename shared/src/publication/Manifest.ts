@@ -3,12 +3,12 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { Metadata } from './Metadata';
-import { Link, Links } from './Link';
-import { arrayfromJSONorString } from '../util/JSONParse';
-import { PublicationCollection } from './PublicationCollection';
-import { MediaType } from '../util/mediatype/MediaType';
-import { Locator, LocatorLocations } from "./Locator";
+import { Metadata } from './Metadata.ts';
+import { Link, Links } from './Link.ts';
+import { arrayfromJSONorString } from '../util/JSONParse.ts';
+import { PublicationCollection } from './PublicationCollection.ts';
+import { MediaType } from '../util/mediatype/MediaType.ts';
+import { Locator, LocatorLocations } from "./Locator.ts";
 
 /** Holds the metadata of a Readium publication, as described in
  *  the Readium Web Publication Manifest.
