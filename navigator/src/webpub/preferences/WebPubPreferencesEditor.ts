@@ -45,7 +45,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.fontFamily || null,
       isEffective: this.isDisplayTransformable,
       onChange: (newValue: string | null | undefined) => {
-        this.updatePreference("fontFamily", newValue || null);
+        this.updatePreference("fontFamily", newValue ?? null);
       }
     });
   }
@@ -56,7 +56,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.fontWeight || 400,
       isEffective: this.isDisplayTransformable,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("fontWeight", newValue || null);
+        this.updatePreference("fontWeight", newValue ?? null);
       },
       supportedRange: fontWeightRangeConfig.range,
       step: fontWeightRangeConfig.step
@@ -69,7 +69,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.hyphens || false,
       isEffective: this.isDisplayTransformable,
       onChange: (newValue: boolean | null | undefined) => {
-        this.updatePreference("hyphens", newValue || null);
+        this.updatePreference("hyphens", newValue ?? null);
       }
     });
   }
@@ -80,7 +80,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
         effectiveValue: this.settings.iOSPatch || false,
         isEffective: true,
         onChange: (newValue: boolean | null | undefined) => {
-          this.updatePreference("iOSPatch", newValue || null);
+          this.updatePreference("iOSPatch", newValue ?? null);
         }
       });
     }
@@ -91,7 +91,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
         effectiveValue: this.settings.iPadOSPatch || false,
         isEffective: true,
         onChange: (newValue: boolean | null | undefined) => {
-          this.updatePreference("iPadOSPatch", newValue || null);
+          this.updatePreference("iPadOSPatch", newValue ?? null);
         }
       });
     }
@@ -102,7 +102,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.letterSpacing || 0,
       isEffective: this.isDisplayTransformable,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("letterSpacing", newValue || null);
+        this.updatePreference("letterSpacing", newValue ?? null);
       },
       supportedRange: letterSpacingRangeConfig.range,
       step: letterSpacingRangeConfig.step
@@ -115,7 +115,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.ligatures || true,
       isEffective: this.isDisplayTransformable,
       onChange: (newValue: boolean | null | undefined) => {
-        this.updatePreference("ligatures", newValue || null);
+        this.updatePreference("ligatures", newValue ?? null);
       }
     });
   }
@@ -126,7 +126,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.lineHeight,
       isEffective: this.isDisplayTransformable,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("lineHeight", newValue || null);
+        this.updatePreference("lineHeight", newValue ?? null);
       },
       supportedRange: lineHeightRangeConfig.range,
       step: lineHeightRangeConfig.step
@@ -139,7 +139,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.noRuby || false,
       isEffective: this.isDisplayTransformable,
       onChange: (newValue: boolean | null | undefined) => {
-        this.updatePreference("noRuby", newValue || null);
+        this.updatePreference("noRuby", newValue ?? null);
       }
     });
   }
@@ -150,7 +150,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.paragraphIndent || 0,
       isEffective: this.isDisplayTransformable,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("paragraphIndent", newValue || null);
+        this.updatePreference("paragraphIndent", newValue ?? null);
       },
       supportedRange: paragraphIndentRangeConfig.range,
       step: paragraphIndentRangeConfig.step
@@ -163,7 +163,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.paragraphSpacing || 0,
       isEffective: this.isDisplayTransformable,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("paragraphSpacing", newValue || null);
+        this.updatePreference("paragraphSpacing", newValue ?? null);
       },
       supportedRange: paragraphSpacingRangeConfig.range,
       step: paragraphSpacingRangeConfig.step
@@ -176,7 +176,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.textAlign || TextAlignment.start,
       isEffective: this.isDisplayTransformable,
       onChange: (newValue: TextAlignment | null | undefined) => {
-        this.updatePreference("textAlign", newValue || null);
+        this.updatePreference("textAlign", newValue ?? null);
       },
       supportedValues: Object.values(TextAlignment)
     });
@@ -188,7 +188,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.textNormalization || false,
       isEffective: this.isDisplayTransformable,
       onChange: (newValue: boolean | null | undefined) => {
-        this.updatePreference("textNormalization", newValue || null);
+        this.updatePreference("textNormalization", newValue ?? null);
       }
     });
   }
@@ -199,7 +199,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.wordSpacing || 0,
       isEffective: this.isDisplayTransformable,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("wordSpacing", newValue || null);
+        this.updatePreference("wordSpacing", newValue ?? null);
       },
       supportedRange: wordSpacingRangeConfig.range,
       step: wordSpacingRangeConfig.step
@@ -212,7 +212,7 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.zoom || 1,
       isEffective: CSS.supports("zoom", "1") ?? false,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("zoom", newValue || null);
+        this.updatePreference("zoom", newValue ?? null);
       },
       supportedRange: zoomRangeConfig.range,
       step: zoomRangeConfig.step

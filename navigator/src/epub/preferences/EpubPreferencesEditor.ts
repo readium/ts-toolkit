@@ -47,7 +47,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.backgroundColor || defaultColors.RS__backgroundColor,
       isEffective: this.preferences.backgroundColor !== null,
       onChange: (newValue: string | null | undefined) => {
-        this.updatePreference("backgroundColor", newValue || null);
+        this.updatePreference("backgroundColor", newValue ?? null);
       }
     });
   }
@@ -57,7 +57,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.blendFilter || false,
       isEffective: this.preferences.blendFilter !== null,
       onChange: (newValue: boolean | null | undefined) => {
-        this.updatePreference("blendFilter", newValue || null);
+        this.updatePreference("blendFilter", newValue ?? null);
       }
     });
   }
@@ -68,7 +68,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.columnCount || null,
       isEffective: this.layout !== Layout.fixed && !this.settings.scroll,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("columnCount", newValue || null);
+        this.updatePreference("columnCount", newValue ?? null);
       }
     });
   }
@@ -79,7 +79,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.preferences.constraint || 0,
       isEffective: true,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("constraint", newValue || null);
+        this.updatePreference("constraint", newValue ?? null);
       }
     })
   }
@@ -90,7 +90,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: typeof this.settings.darkenFilter === "boolean" ? 100 : this.settings.darkenFilter || 0,
       isEffective: this.settings.darkenFilter !== null,
       onChange: (newValue: number | boolean | null | undefined) => {
-        this.updatePreference("darkenFilter", newValue || null);
+        this.updatePreference("darkenFilter", newValue ?? null);
       },
       supportedRange: filterRangeConfig.range,
       step: filterRangeConfig.step
@@ -103,7 +103,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: CSS.supports("zoom", "1") ? this.settings.deprecatedFontSize || false : true,
       isEffective: this.layout !== Layout.fixed,
       onChange: (newValue: boolean | null | undefined) => {
-        this.updatePreference("deprecatedFontSize", newValue || null);
+        this.updatePreference("deprecatedFontSize", newValue ?? null);
       }
     });
   }
@@ -114,7 +114,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.fontFamily || null,
       isEffective: this.layout !== Layout.fixed,
       onChange: (newValue: string | null | undefined) => {
-        this.updatePreference("fontFamily", newValue || null);
+        this.updatePreference("fontFamily", newValue ?? null);
       }
     });
   }
@@ -125,7 +125,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.fontSize || 1,
       isEffective: this.layout !== Layout.fixed,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("fontSize", newValue || null);
+        this.updatePreference("fontSize", newValue ?? null);
       },
       supportedRange: fontSizeRangeConfig.range,
       step: fontSizeRangeConfig.step
@@ -138,7 +138,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.fontSizeNormalize || false,
       isEffective: this.layout !== Layout.fixed && this.preferences.fontSizeNormalize !== null,
       onChange: (newValue: boolean | null | undefined) => {
-        this.updatePreference("fontSizeNormalize", newValue || null);
+        this.updatePreference("fontSizeNormalize", newValue ?? null);
       }
     });
   }
@@ -149,7 +149,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.fontOpticalSizing || true,
       isEffective: this.layout !== Layout.fixed && this.preferences.fontOpticalSizing !== null,
       onChange: (newValue: boolean | null | undefined) => {
-        this.updatePreference("fontOpticalSizing", newValue || null);
+        this.updatePreference("fontOpticalSizing", newValue ?? null);
       }
     });
   }
@@ -160,7 +160,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.fontWeight || 400,
       isEffective: this.layout !== Layout.fixed && this.preferences.fontWeight !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("fontWeight", newValue || null);
+        this.updatePreference("fontWeight", newValue ?? null);
       },
       supportedRange: fontWeightRangeConfig.range,
       step: fontWeightRangeConfig.step
@@ -173,7 +173,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.fontWidth || 100,
       isEffective: this.layout !== Layout.fixed && this.preferences.fontWidth !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("fontWidth", newValue || null);
+        this.updatePreference("fontWidth", newValue ?? null);
       },
       supportedRange: fontWidthRangeConfig.range,
       step: fontWidthRangeConfig.step
@@ -186,7 +186,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.hyphens || false,
       isEffective: this.layout !== Layout.fixed && this.metadata?.effectiveReadingProgression === ReadingProgression.ltr && this.preferences.hyphens !== null,
       onChange: (newValue: boolean | null | undefined) => {
-        this.updatePreference("hyphens", newValue || null);
+        this.updatePreference("hyphens", newValue ?? null);
       }
     });
   }
@@ -197,7 +197,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: typeof this.settings.invertFilter === "boolean" ? 100 : this.settings.invertFilter || 0,
       isEffective: this.settings.invertFilter !== null,
       onChange: (newValue: number | boolean | null | undefined) => {
-        this.updatePreference("invertFilter", newValue || null);
+        this.updatePreference("invertFilter", newValue ?? null);
       },
       supportedRange: filterRangeConfig.range,
       step: filterRangeConfig.step
@@ -210,7 +210,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: typeof this.settings.invertGaijiFilter === "boolean" ? 100 : this.settings.invertGaijiFilter || 0,
       isEffective: this.preferences.invertGaijiFilter !== null,
       onChange: (newValue: number | boolean | null | undefined) => {
-        this.updatePreference("invertGaijiFilter", newValue || null);
+        this.updatePreference("invertGaijiFilter", newValue ?? null);
       },
       supportedRange: filterRangeConfig.range,
       step: filterRangeConfig.step
@@ -223,7 +223,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.iOSPatch || false,
       isEffective: this.layout !== Layout.fixed,
       onChange: (newValue: boolean | null | undefined) => {
-        this.updatePreference("iOSPatch", newValue || null);
+        this.updatePreference("iOSPatch", newValue ?? null);
       }
     });
   }
@@ -234,7 +234,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.iPadOSPatch || false,
       isEffective: this.layout !== Layout.fixed,
       onChange: (newValue: boolean | null | undefined) => {
-        this.updatePreference("iPadOSPatch", newValue || null);
+        this.updatePreference("iPadOSPatch", newValue ?? null);
       }
     });
   }
@@ -245,7 +245,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.letterSpacing || 0,
       isEffective: this.layout !== Layout.fixed && this.preferences.letterSpacing !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("letterSpacing", newValue || null);
+        this.updatePreference("letterSpacing", newValue ?? null);
       },
       supportedRange: letterSpacingRangeConfig.range,
       step: letterSpacingRangeConfig.step
@@ -281,7 +281,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
         return true;
       })(),
       onChange: (newValue: boolean | null | undefined) => {
-        this.updatePreference("ligatures", newValue || null);
+        this.updatePreference("ligatures", newValue ?? null);
       }
     });
   }
@@ -292,7 +292,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.lineHeight,
       isEffective: this.layout !== Layout.fixed && this.preferences.lineHeight !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("lineHeight", newValue || null);
+        this.updatePreference("lineHeight", newValue ?? null);
       },
       supportedRange: lineHeightRangeConfig.range,
       step: lineHeightRangeConfig.step
@@ -305,7 +305,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.linkColor || defaultColors.RS__linkColor,
       isEffective: this.layout !== Layout.fixed && this.preferences.linkColor !== null,
       onChange: (newValue: string | null | undefined) => {
-        this.updatePreference("linkColor", newValue || null);
+        this.updatePreference("linkColor", newValue ?? null);
       }
     });
   }
@@ -342,7 +342,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.noRuby || false,
       isEffective: this.layout !== Layout.fixed && this.metadata?.languages?.includes("ja") || false,
       onChange: (newValue: boolean | null | undefined) => {
-        this.updatePreference("noRuby", newValue || null);
+        this.updatePreference("noRuby", newValue ?? null);
       }
     });
   }
@@ -366,7 +366,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.pageGutter,
       isEffective: this.layout !== Layout.fixed && !this.settings.scroll,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("pageGutter", newValue || null);
+        this.updatePreference("pageGutter", newValue ?? null);
       }
     });
   }
@@ -377,7 +377,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.paragraphIndent || 0,
       isEffective: this.layout !== Layout.fixed && this.preferences.paragraphIndent !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("paragraphIndent", newValue || null);
+        this.updatePreference("paragraphIndent", newValue ?? null);
       },
       supportedRange: paragraphIndentRangeConfig.range,
       step: paragraphIndentRangeConfig.step
@@ -390,7 +390,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.paragraphSpacing || 0,
       isEffective: this.layout !== Layout.fixed && this.preferences.paragraphSpacing !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("paragraphSpacing", newValue || null);
+        this.updatePreference("paragraphSpacing", newValue ?? null);
       },
       supportedRange: paragraphSpacingRangeConfig.range,
       step: paragraphSpacingRangeConfig.step
@@ -403,7 +403,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.scroll || false,
       isEffective: this.layout !== Layout.fixed,
       onChange: (newValue: boolean | null | undefined) => {
-        this.updatePreference("scroll", newValue || null);
+        this.updatePreference("scroll", newValue ?? null);
       }
     });
   }
@@ -414,7 +414,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.scrollPaddingTop || 0,
       isEffective: this.layout !== Layout.fixed && !!this.settings.scroll && this.preferences.scrollPaddingTop !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("scrollPaddingTop", newValue || null);
+        this.updatePreference("scrollPaddingTop", newValue ?? null);
       }
     });
   }
@@ -425,7 +425,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.scrollPaddingBottom || 0,
       isEffective: this.layout !== Layout.fixed && !!this.settings.scroll && this.preferences.scrollPaddingBottom !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("scrollPaddingBottom", newValue || null);
+        this.updatePreference("scrollPaddingBottom", newValue ?? null);
       }
     });
   }
@@ -436,7 +436,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.scrollPaddingLeft || 0,
       isEffective: this.layout !== Layout.fixed && !!this.settings.scroll && this.preferences.scrollPaddingLeft !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("scrollPaddingLeft", newValue || null);
+        this.updatePreference("scrollPaddingLeft", newValue ?? null);
       }
     });
   }
@@ -447,7 +447,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.scrollPaddingRight || 0,
       isEffective: this.layout !== Layout.fixed && !!this.settings.scroll && this.preferences.scrollPaddingRight !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("scrollPaddingRight", newValue || null);
+        this.updatePreference("scrollPaddingRight", newValue ?? null);
       }
     });
   }
@@ -458,7 +458,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.selectionBackgroundColor || defaultColors.RS__selectionBackgroundColor,
       isEffective: this.layout !== Layout.fixed && this.preferences.selectionBackgroundColor !== null,
       onChange: (newValue: string | null | undefined) => {
-        this.updatePreference("selectionBackgroundColor", newValue || null);
+        this.updatePreference("selectionBackgroundColor", newValue ?? null);
       }
     });
   }
@@ -469,7 +469,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.selectionTextColor || defaultColors.RS__selectionTextColor,
       isEffective: this.layout !== Layout.fixed && this.preferences.selectionTextColor !== null,
       onChange: (newValue: string | null | undefined) => {
-        this.updatePreference("selectionTextColor", newValue || null);
+        this.updatePreference("selectionTextColor", newValue ?? null);
       }
     });
   }
@@ -480,7 +480,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.textAlign || TextAlignment.start,
       isEffective: this.layout !== Layout.fixed && this.preferences.textAlign !== null,
       onChange: (newValue: TextAlignment | null | undefined) => {
-        this.updatePreference("textAlign", newValue || null);
+        this.updatePreference("textAlign", newValue ?? null);
       },
       supportedValues: Object.values(TextAlignment)
     });
@@ -492,7 +492,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.textColor || defaultColors.RS__textColor,
       isEffective: this.layout !== Layout.fixed && this.preferences.textColor !== null,
       onChange: (newValue: string | null | undefined) => {
-        this.updatePreference("textColor", newValue || null);
+        this.updatePreference("textColor", newValue ?? null);
       }
     });
   }
@@ -503,7 +503,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.textNormalization || false,
       isEffective: this.layout !== Layout.fixed,
       onChange: (newValue: boolean | null | undefined) => {
-        this.updatePreference("textNormalization", newValue || null);
+        this.updatePreference("textNormalization", newValue ?? null);
       }
     });
   }
@@ -514,7 +514,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.visitedColor || defaultColors.RS__visitedColor,
       isEffective: this.layout !== Layout.fixed && this.preferences.visitedColor !== null,
       onChange: (newValue: string | null | undefined) => {
-        this.updatePreference("visitedColor", newValue || null);
+        this.updatePreference("visitedColor", newValue ?? null);
       }
     });
   }
@@ -525,7 +525,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.wordSpacing || 0,
       isEffective: this.layout !== Layout.fixed && this.preferences.wordSpacing !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("wordSpacing", newValue || null);
+        this.updatePreference("wordSpacing", newValue ?? null);
       },
       supportedRange: wordSpacingRangeConfig.range,
       step: wordSpacingRangeConfig.step
