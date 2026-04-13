@@ -3,12 +3,12 @@ import {
   ensureBoolean,
   ensureValueInRange,
   ensureNonNegative
-} from "../../preferences/guards";
+} from "../../preferences/guards.ts";
 import {
   volumeRangeConfig,
   playbackRateRangeConfig,
   skipIntervalRangeConfig
-} from "../../preferences/Types";
+} from "../../preferences/Types.ts";
 
 export interface IAudioPreferences {
   volume?: number | null;

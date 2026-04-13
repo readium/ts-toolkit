@@ -6,7 +6,7 @@ import {
   volumeRangeConfig,
   playbackRateRangeConfig,
   skipIntervalRangeConfig
-} from "../../preferences/Types";
+} from "../../preferences/Types.ts";
 
 export class AudioPreferencesEditor implements IPreferencesEditor {
   preferences: AudioPreferences;

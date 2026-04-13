@@ -1,7 +1,7 @@
 import { Link, Locator, LocatorLocations, Publication, Timeline, TimelineItem } from "@readium/shared";
 import { MediaNavigator, IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator.ts";
 import { Configurable } from "../preferences/Configurable.ts";
-import { WebAudioEngine, PlaybackState } from "./engine";
+import { WebAudioEngine, PlaybackState } from "./engine/index.ts";
 import {
     AudioPreferences,
     AudioDefaults,
@@ -9,7 +9,7 @@ import {
     AudioPreferencesEditor,
     IAudioPreferences,
     IAudioDefaults
-} from "./preferences";
+} from "./preferences/index.ts";
 import { AudioPoolManager } from "./AudioPoolManager.ts";
 import { ContextMenuEvent, KeyboardEventData, SuspiciousActivityEvent } from "@readium/navigator-html-injectables";
 import { AudioNavigatorProtector } from "./protection/AudioNavigatorProtector.ts";
