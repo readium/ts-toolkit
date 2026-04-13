@@ -235,22 +235,12 @@ export class WebAudioEngine implements AudioEngine {
    * @volume The volume to set, in the range [0, 1].
    */
   public setVolume(volume: number): void {
-    if (volume < 0) {
-      this.mediaElement.volume = 0;
-      if (this.gainNode) {
-        this.gainNode.gain.value = 0;
-      }
-      this.isMutedValue = true;
-      return;
-    }
-    if (volume > 1) {
-      this.setVolume(volume / 100);
-      return;
-    }
-    this.mediaElement.volume = volume;
+    const clamped = Math.max(0, Math.min(1, volume));
+    this.mediaElement.volume = clamped;
     if (this.gainNode) {
-      this.gainNode.gain.value = volume;
+      this.gainNode.gain.value = clamped;
     }
+    this.isMutedValue = clamped === 0;
   }
 
   /**
