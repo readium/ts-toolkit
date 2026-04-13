@@ -30,6 +30,8 @@ export class Timeline {
     private _depth: number | undefined;
     private _items: TimelineItem[] | undefined;
     private _flat: TimelineItem[] | undefined;
+    /** Populated when depth is set; maps cloned items from trimToDepth back to their Links. */
+    private _trimmedLinkMap: Map<TimelineItem, Link> = new Map();
 
     constructor(items: TimelineItem[], linkMap: Map<TimelineItem, Link>) {
         this._allItems = items;
@@ -86,9 +88,12 @@ export class Timeline {
     /** Top-level timeline items.  Cached; invalidated when `depth` changes. */
     get items(): TimelineItem[] {
         if (!this._items) {
-            this._items = this._depth !== undefined
-                ? Timeline.trimToDepth(this._allItems, this._depth)
-                : this._allItems;
+            if (this._depth !== undefined) {
+                this._trimmedLinkMap = new Map();
+                this._items = Timeline.trimToDepth(this._allItems, this._depth, this.linkMap, this._trimmedLinkMap);
+            } else {
+                this._items = this._allItems;
+            }
         }
         return this._items;
     }
@@ -161,7 +166,7 @@ export class Timeline {
     }
 
     linkFor(item: TimelineItem): Link | undefined {
-        return this.linkMap.get(item);
+        return this.linkMap.get(item) ?? this._trimmedLinkMap.get(item);
     }
 
     private get flat(): TimelineItem[] {
@@ -281,13 +286,23 @@ export class Timeline {
     // Shared utilities
     // -------------------------------------------------------------------------
 
-    private static trimToDepth(items: TimelineItem[], remaining: number): TimelineItem[] {
-        return items.map(item => ({
-            ...item,
-            children: remaining > 1 && item.children?.length
-                ? Timeline.trimToDepth(item.children, remaining - 1)
-                : undefined,
-        }));
+    private static trimToDepth(
+        items: TimelineItem[],
+        remaining: number,
+        sourceMap: Map<TimelineItem, Link>,
+        targetMap: Map<TimelineItem, Link>,
+    ): TimelineItem[] {
+        return items.map(item => {
+            const clone: TimelineItem = {
+                ...item,
+                children: remaining > 1 && item.children?.length
+                    ? Timeline.trimToDepth(item.children, remaining - 1, sourceMap, targetMap)
+                    : undefined,
+            };
+            const link = sourceMap.get(item);
+            if (link) targetMap.set(clone, link);
+            return clone;
+        });
     }
 
     private flattenItems(items: TimelineItem[]): TimelineItem[] {
