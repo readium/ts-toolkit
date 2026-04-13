@@ -100,8 +100,13 @@ export class Timeline {
         let match: TimelineItem | undefined;
 
         if (time !== undefined) {
+            let bestTime = -Infinity;
             for (const item of this.flat) {
-                if (this.itemMatchesTime(item, href, time)) match = item;
+                const t = this.itemStartTime(item, href);
+                if (t !== undefined && t <= time && t > bestTime) {
+                    bestTime = t;
+                    match = item;
+                }
             }
         }
 
@@ -136,10 +141,13 @@ export class Timeline {
         if (duration !== undefined) {
             const time = progression * duration;
             let match: TimelineItem = item;
+            let bestTime = -Infinity;
             for (const child of item.children) {
                 const t = this.timeFromItem(child);
-                if (t === undefined || t > time) break;
-                match = child;
+                if (t !== undefined && t <= time && t > bestTime) {
+                    bestTime = t;
+                    match = child;
+                }
             }
             return match;
         }
@@ -258,12 +266,15 @@ export class Timeline {
 
     /**
      * A TOC href points to the start of its resource when it has no fragment,
-     * or when the fragment is `t=0` (audio: explicit beginning of the file).
+     * or when the fragment contains a parsable `t=` value of 0 (audio: explicit
+     * beginning of the file).  Accepts decimals and extra params, e.g. `t=0.0`
+     * or `foo=bar&t=0`.
      */
     private static isStartOfResource(href: string): boolean {
         const fragment = href.split("#")[1];
         if (!fragment) return true;
-        return fragment === "t=0";
+        const match = fragment.match(/(?:^|&)t=(\d+(?:\.\d+)?)/);
+        return match !== null && parseFloat(match[1]) === 0;
     }
 
     // -------------------------------------------------------------------------
@@ -288,21 +299,17 @@ export class Timeline {
         return result;
     }
 
-    private itemMatchesTime(item: TimelineItem, href: string, time: number): boolean {
+    private itemStartTime(item: TimelineItem, href: string): number | undefined {
         for (const ref of item.references) {
             const hashIndex = ref.indexOf("#");
             const refHref = hashIndex >= 0 ? ref.slice(0, hashIndex) : ref;
             const refFragment = hashIndex >= 0 ? ref.slice(hashIndex + 1) : undefined;
             if ((refHref || href) !== href) continue;
-            if (time >= Timeline.parseTimeFragment(refFragment)) return true;
+            if (!refFragment) return undefined;
+            const match = refFragment.match(/(?:^|&)t=(\d+(?:\.\d+)?)/);
+            return match ? parseFloat(match[1]) : undefined;
         }
-        return false;
-    }
-
-    private static parseTimeFragment(fragment: string | undefined): number {
-        if (!fragment) return 0;
-        const match = fragment.match(/(?:^|&)t=(\d+(?:\.\d+)?)/);
-        return match ? parseFloat(match[1]) : 0;
+        return undefined;
     }
 
     private bareHrefFromItem(item: TimelineItem): string {
