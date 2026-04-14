@@ -197,6 +197,9 @@ export class WebAudioEngine implements AudioEngine {
     }
 
     try {
+      if (this.audioContext) {
+        await this.ensureAudioContextRunning();
+      }
       await this.mediaElement.play();
       this.isPlayingValue = true;
       this.isPausedValue = false;
@@ -465,8 +468,34 @@ export class WebAudioEngine implements AudioEngine {
   }
 
   /**
+   * Tears down the Web Audio graph and restores the media element to standalone
+   * playback. Safe to call even if Web Audio was never activated.
+   */
+  private tearDownWebAudio(): void {
+    if (this.worklet) {
+      this.worklet.destroy();
+      this.worklet = null;
+    }
+    if (this.sourceNode) {
+      this.sourceNode.disconnect();
+      this.sourceNode = null;
+    }
+    if (this.gainNode) {
+      // Restore the volume that was previously managed by the GainNode.
+      this.mediaElement.volume = this.gainNode.gain.value;
+      this.gainNode.disconnect();
+      this.gainNode = null;
+    }
+    this.webAudioActive = false;
+  }
+
+  /**
    * Changes the src of the primary media element without swapping the element.
    * Preserves the RemotePlayback session and all attached event listeners.
+   * When the Web Audio graph is active, the new src is loaded with
+   * crossOrigin="anonymous". If the CORS request fails (server does not send
+   * the required headers), the graph is torn down and the src is reloaded
+   * without CORS so playback continues — just without pitch correction.
    */
   public changeSrc(href: string): void {
     if (this.mediaElement.src === href) {
@@ -478,11 +507,31 @@ export class WebAudioEngine implements AudioEngine {
     this.isLoadedValue = false;
     this.isLoadingValue = true;
     this.isEndedValue = false;
+
     if (this.webAudioActive) {
       this.mediaElement.crossOrigin = "anonymous";
+      this.mediaElement.src = href;
+      this.mediaElement.load();
+
+      const onReady = () => { cleanup(); };
+      const onFail = () => {
+        cleanup();
+        console.warn("CORS reload failed for new track — disabling Web Audio graph:", href);
+        this.tearDownWebAudio();
+        this.mediaElement.crossOrigin = "";
+        this.mediaElement.src = href;
+        this.mediaElement.load();
+      };
+      const cleanup = () => {
+        this.mediaElement.removeEventListener("canplaythrough", onReady);
+        this.mediaElement.removeEventListener("error", onFail);
+      };
+      this.mediaElement.addEventListener("canplaythrough", onReady);
+      this.mediaElement.addEventListener("error", onFail);
+    } else {
+      this.mediaElement.src = href;
+      this.mediaElement.load();
     }
-    this.mediaElement.src = href;
-    this.mediaElement.load();
   }
 
   /**
