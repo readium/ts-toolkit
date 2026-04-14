@@ -8,6 +8,7 @@ import { FixedSetup } from "./setup/FixedSetup.ts";
 import { Decorator } from "./Decorator.ts";
 import { WebPubSetup } from "./setup/WebPubSetup.ts";
 import { PrintProtector } from "../protection/PrintProtector.ts";
+import { CJKVerticalSnapper } from "./snapper/CJKVerticalSnapper.ts";
 
 // All the module names. TODO: Come up with a better way of collecting these in a way TS will recognize
 export type ModuleName =

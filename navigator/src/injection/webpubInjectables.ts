@@ -1,4 +1,4 @@
-import { IInjectableRule, IInjectable } from "../injection/Injectable";
+import { IInjectableRule, IInjectable } from "../injection/Injectable.ts";
 import { stripJS, stripCSS } from "../helpers/minify.ts";
 import { Link } from "@readium/shared";
 

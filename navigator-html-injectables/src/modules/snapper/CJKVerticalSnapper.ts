@@ -1,13 +1,13 @@
 import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
-import { Comms } from "../../comms";
-import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/dom";
-import { ModuleName } from "../ModuleLibrary";
-import { Snapper } from "./Snapper";
-import { rangeFromLocator } from "../../helpers/locator";
-import { forceWebkitRecalc } from "../../helpers/document";
-import { PatternAnalyzer } from "../../protection/PatternAnalyzer";
-import { SCROLL_PROTECTION_CONFIG } from "../../protection/config";
-import { BaseSuspiciousActivityEvent } from "../Peripherals";
+import { Comms } from "../../comms/comms.ts";
+import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/dom.ts";
+import { ModuleName } from "../ModuleLibrary.ts";
+import { Snapper } from "./Snapper.ts";
+import { rangeFromLocator } from "../../helpers/locator.ts";
+import { forceWebkitRecalc } from "../../helpers/document.ts";
+import { PatternAnalyzer } from "../../protection/PatternAnalyzer.ts";
+import { SCROLL_PROTECTION_CONFIG } from "../../protection/config.ts";
+import { BaseSuspiciousActivityEvent } from "../Peripherals.ts";
 
 const CJK_VERTICAL_SNAPPER_STYLE_ID = "readium-cjk-vertical-snapper-style";
 
