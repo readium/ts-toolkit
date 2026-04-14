@@ -418,7 +418,9 @@ export class WebAudioEngine implements AudioEngine {
       });
     } catch (err) {
       // Roll back to non-CORS mode so the element remains playable.
-      this.mediaElement.crossOrigin = "";
+      // crossOrigin = "" still maps to "anonymous"; remove the attribute entirely
+      // to disable CORS on the reload.
+      this.mediaElement.removeAttribute("crossorigin");
       this.mediaElement.src = src;
       this.mediaElement.load();
       if (wasPlaying) {
@@ -518,7 +520,7 @@ export class WebAudioEngine implements AudioEngine {
         cleanup();
         console.warn("CORS reload failed for new track — disabling Web Audio graph:", href);
         this.tearDownWebAudio();
-        this.mediaElement.crossOrigin = "";
+        this.mediaElement.removeAttribute("crossorigin");
         this.mediaElement.src = href;
         this.mediaElement.load();
       };
