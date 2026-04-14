@@ -162,9 +162,9 @@ navigator.goRight(true, () => {
 
 Finally, `EpubNavigator` provides a few helpers to help derive information about navigation:
 
-- `canGoForward()`: Returns `true` if the navigator can go forward in the publication.
-- `canGoBackward()`: Returns `true` if the navigator can go backward in the publication.
-- `isScrollStart()`: Returns `true` if the navigator is at the start of the resources in the viewport.
-- `isScrollEnd()`: Returns `true` if the navigator is at the end of the resources in the viewport.
+- `canGoForward`: Returns `true` if the navigator can go forward in the publication.
+- `canGoBackward`: Returns `true` if the navigator can go backward in the publication.
+- `isScrollStart`: Returns `true` if the navigator is at the start of the resources in the viewport.
+- `isScrollEnd`: Returns `true` if the navigator is at the end of the resources in the viewport.
 
 These can come in handy if you want to disable navigation buttons when the user is at the start or end of the publication, or show the UI if the user is scrolling to the end of the resources in the viewport.

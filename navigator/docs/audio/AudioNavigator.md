@@ -54,7 +54,7 @@ Additionally, the `AudioNavigator` class provides the following properties:
 
 - `publication`: The publication (`Publication`) rendered by this navigator.
 - `currentLocator`: The current position (`Locator`) in the publication. Can be used to save a bookmark to the current position.
-- `timeline`: The `AudioTimeline` for the publication. See [Timeline](#timeline).
+- `timeline`: The `Timeline` for the publication. See [Timeline](#timeline).
 - `isPlaying`: Returns `true` if audio is currently playing.
 - `isPaused`: Returns `true` if audio is currently paused.
 - `duration`: Returns the duration of the current audio track in seconds.
@@ -154,27 +154,27 @@ The `AudioNavigator` exposes a `remotePlayback` property that gives access to th
 
 Finally, `AudioNavigator` provides helpers to help derive information about navigation and playback state:
 
-- `canGoForward()`: Returns `true` if the navigator can go to the next track.
-- `canGoBackward()`: Returns `true` if the navigator can go to the previous track.
-- `isTrackStart()`: Returns `true` if at the beginning of the current track.
-- `isTrackEnd()`: Returns `true` if at the end of the current track.
+- `canGoForward`: Returns `true` if the navigator can go to the next track.
+- `canGoBackward`: Returns `true` if the navigator can go to the previous track.
+- `isTrackStart`: Returns `true` if at the beginning of the current track.
+- `isTrackEnd`: Returns `true` if at the end of the current track.
 
 These can come in handy if you want to disable navigation buttons when the user is at the start or end of a track, or show different UI controls based on the current playback state.
 
 ```js
 // Update UI based on navigation state
 const nextButton = document.getElementById('next-button');
-nextButton.disabled = !navigator.canGoForward();
+nextButton.disabled = !navigator.canGoForward;
 
 const prevButton = document.getElementById('prev-button');
-prevButton.disabled = !navigator.canGoBackward();
+prevButton.disabled = !navigator.canGoBackward;
 
 // Update UI based on track position
-if (navigator.isTrackStart()) {
+if (navigator.isTrackStart) {
   console.log('At the beginning of the track');
 }
 
-if (navigator.isTrackEnd()) {
+if (navigator.isTrackEnd) {
   console.log('At the end of the track');
 }
 ```
