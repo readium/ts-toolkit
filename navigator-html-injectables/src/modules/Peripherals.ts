@@ -173,6 +173,7 @@ export class Peripherals extends Module {
     private addDragAndDropPrevention(): void {
         if (this.isDragAndDropEnabled || !this.wnd) return;
         this.wnd.document.addEventListener("dragstart", this.onDragStart);
+        this.wnd.document.addEventListener("dragover", this.onDragOver);
         this.wnd.document.addEventListener("drop", this.onDrop);
         this.isDragAndDropEnabled = true;
     }
@@ -180,6 +181,7 @@ export class Peripherals extends Module {
     private removeDragAndDropPrevention(): void {
         if (!this.isDragAndDropEnabled || !this.wnd) return;
         this.wnd.document.removeEventListener("dragstart", this.onDragStart);
+        this.wnd.document.removeEventListener("dragover", this.onDragOver);
         this.wnd.document.removeEventListener("drop", this.onDrop);
         this.isDragAndDropEnabled = false;
     }
@@ -329,6 +331,13 @@ export class Peripherals extends Module {
         this.selectionAnalyzer = null;
         this.isSelectionMonitoringEnabled = false;
     }
+
+    private onDragOver = (event: DragEvent) => {
+        if (this.isDragAndDropEnabled) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    };
 
     private onDragStart = (event: DragEvent) => {
         if (this.isDragAndDropEnabled) {
