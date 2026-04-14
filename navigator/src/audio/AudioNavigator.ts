@@ -109,6 +109,10 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         this._defaults = new AudioDefaults(configuration.defaults);
         this._settings = new AudioSettings(this._preferences, this._defaults);
 
+        if (publication.readingOrder.items.length === 0) {
+            throw new Error("AudioNavigator: publication has an empty reading order");
+        }
+
         if (initialPosition) {
             this.currentLocation = this.ensureLocatorLocations(initialPosition);
         } else {
@@ -128,6 +132,9 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
         const initialHref = this.currentLocation.href.split("#")[0];
         const trackIndex = this.hrefToTrackIndex(initialHref);
+        if (trackIndex === -1) {
+            throw new Error(`AudioNavigator: initial href "${ initialHref }" not found in reading order`);
+        }
         const initialTime = this.currentLocation.locations?.time() || 0;
 
         const audioEngine = new WebAudioEngine({
@@ -179,10 +186,14 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         }
 
         this.setupEventListeners();
-        this.applyPreferences();
 
         this._isNavigating = true;
         this.pool.setCurrentAudio(trackIndex, "forward");
+
+        // applyPreferences() must come after setCurrentAudio() so that the src
+        // is already set on the media element when setPlaybackRate() tries to
+        // activate the Web Audio graph for the preservePitch polyfill path.
+        this.applyPreferences();
 
         // Load and seek to initial position, then notify consumer.
         // No cancellation needed here — the constructor runs once.
@@ -398,18 +409,19 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         this.pool.audioEngine.on("seeked", () => {
             if (this._isNavigating) return;
             this.listeners.seeking(false);
-            if (!this.isPlaying) {
-                const currentTime = this.currentTime;
-                const duration = this.duration;
-                const progression = duration > 0 ? currentTime / duration : 0;
-                this.currentLocation = this.currentLocation.copyWithLocations(new LocatorLocations({
-                    position: this.currentTrackIndex() + 1,
-                    progression,
-                    fragments: [`t=${currentTime}`]
-                }));
-                this._notifyTimelineChange(this.currentLocation);
-                this.listeners.positionChanged(this.currentLocation);
-            }
+            const currentTime = this.currentTime;
+            const duration = this.duration;
+            const progression = duration > 0 ? currentTime / duration : 0;
+            this.currentLocation = this.currentLocation.copyWithLocations(new LocatorLocations({
+                position: this.currentTrackIndex() + 1,
+                progression,
+                fragments: [`t=${currentTime}`]
+            }));
+            // Always notify on seeked — don't defer to polling — so that a skip
+            // crossing a timeline item boundary fires timelineItemChanged immediately
+            // regardless of play state. _notifyTimelineChange deduplicates internally.
+            this._notifyTimelineChange(this.currentLocation);
+            this.listeners.positionChanged(this.currentLocation);
         });
 
         this.pool.audioEngine.on("seeking", () => { if (!this._isNavigating) this.listeners.seeking(true); });
