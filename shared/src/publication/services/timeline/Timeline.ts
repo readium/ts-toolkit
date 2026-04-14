@@ -319,7 +319,8 @@ export class Timeline {
             const hashIndex = ref.indexOf("#");
             const refHref = hashIndex >= 0 ? ref.slice(0, hashIndex) : ref;
             const refFragment = hashIndex >= 0 ? ref.slice(hashIndex + 1) : undefined;
-            if ((refHref || href) !== href) continue;
+            const effectiveHref = refHref || this.bareHrefFromItem(item);
+            if (effectiveHref !== href) continue;
             if (!refFragment) return undefined;
             const match = refFragment.match(/(?:^|&)t=(\d+(?:\.\d+)?)/);
             return match ? parseFloat(match[1]) : undefined;
