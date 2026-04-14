@@ -497,7 +497,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                 ? this.pub.metadata.authors.items.map((a) => a.name.getTranslation()).join(", ")
                 : undefined,
             album: this.pub.metadata.title.getTranslation(),
-            artwork: cover ? [{ src: cover.href, type: cover.type }] : undefined,
+            artwork: cover ? [{ src: cover.toURL(this.pub.baseURL) ?? cover.href, type: cover.type }] : undefined,
         });
     }
 
