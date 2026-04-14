@@ -123,7 +123,7 @@ Exact ranges, steps, and defaults are defined in [`src/preferences/Types.ts`](..
 | volume | RangePreference<number> | Audio volume level (`volumeRangeConfig`) |
 | playbackRate | RangePreference<number> | Playback speed multiplier (`playbackRateRangeConfig`) |
 | preservePitch | BooleanPreference | Best-effort pitch preservation when changing playback rate: uses native browser support if available, otherwise falls back to an audio worklet (requires CORS) |
-| autoPlay | BooleanPreference | Whether to automatically advance to the next track when the current one ends |
+| autoPlay | BooleanPreference | Whether to automatically play the next track when the current one ends |
 
 ### Navigation Preferences
 
