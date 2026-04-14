@@ -669,8 +669,9 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
      * lifetime of the navigator — host apps can store it and call `.prompt()`,
      * `.watchAvailability()`, etc. directly.
      */
-    get remotePlayback(): RemotePlayback {
-        return this.pool.audioEngine.getMediaElement().remote;
+    get remotePlayback(): RemotePlayback | undefined {
+        const el = this.pool.audioEngine.getMediaElement();
+        return "remote" in el ? el.remote : undefined;
     }
 
     /** Wires up the optional remotePlaybackStateChanged listener. Called once after initial load. */
