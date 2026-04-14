@@ -525,7 +525,8 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             }
 
             const id = ++this.navigationId;
-            const direction: "forward" | "backward" = trackIndex >= this.currentTrackIndex() ? "forward" : "backward";
+            const previousTrackIndex = this.currentTrackIndex();
+            const direction: "forward" | "backward" = trackIndex >= previousTrackIndex ? "forward" : "backward";
             const wasPlaying = this.isPlaying || this._playIntent;
             this._playIntent = wasPlaying;
 
@@ -542,7 +543,9 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                 return;
             }
 
-            this.listeners.trackLoaded(this.pool.audioEngine.getMediaElement());
+            if (trackIndex !== previousTrackIndex) {
+                this.listeners.trackLoaded(this.pool.audioEngine.getMediaElement());
+            }
             this._notifyTimelineChange(this.currentLocator);
             this.listeners.positionChanged(this.currentLocator);
 
