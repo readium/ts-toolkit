@@ -3,15 +3,15 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { MediaType } from '../util/mediatype/MediaType';
-import { Properties } from './Properties';
-import { URITemplate } from '../util/URITemplate';
+import { MediaType } from '../util/mediatype/MediaType.ts';
+import { Properties } from './Properties.ts';
+import { URITemplate } from '../util/URITemplate.ts';
 import {
   arrayfromJSONorString,
   positiveNumberfromJSON,
   setToArray,
-} from '../util/JSONParse';
-import { LocatorLocations, Locator } from './Locator';
+} from '../util/JSONParse.ts';
+import { LocatorLocations, Locator } from './Locator.ts';
 
 /**
  * Link Object for the Readium Web Publication Manifest.
@@ -100,7 +100,7 @@ export class Link {
    */
   public static deserialize(json: any): Link | undefined {
     if (!json || typeof json.href !== 'string') return;
-    
+
     return new Link({
       href: json.href,
       templated: json.templated,

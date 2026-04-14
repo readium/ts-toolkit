@@ -1,2 +1,2 @@
-export * from './content';
-export * from './timeline';
+export * from './timeline/index.ts';
+export * from './content/index.ts';

@@ -1,12 +1,12 @@
-import { IPreferencesEditor } from "../../preferences/PreferencesEditor";
-import { AudioPreferences } from "./AudioPreferences";
-import { AudioSettings } from "./AudioSettings";
-import { Preference, BooleanPreference, RangePreference } from "../../preferences/Preference";
+import { IPreferencesEditor } from "../../preferences/PreferencesEditor.ts";
+import { AudioPreferences } from "./AudioPreferences.ts";
+import { AudioSettings } from "./AudioSettings.ts";
+import { Preference, BooleanPreference, RangePreference } from "../../preferences/Preference.ts";
 import { 
   volumeRangeConfig,
   playbackRateRangeConfig,
   skipIntervalRangeConfig
-} from "../../preferences/Types";
+} from "../../preferences/Types.ts";
 
 export class AudioPreferencesEditor implements IPreferencesEditor {
   preferences: AudioPreferences;
@@ -31,7 +31,7 @@ export class AudioPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.volume,
       isEffective: this.preferences.volume !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("volume", newValue ?? 1);
+        this.updatePreference("volume", newValue ?? null);
       },
       supportedRange: volumeRangeConfig.range,
       step: volumeRangeConfig.step
@@ -44,7 +44,7 @@ export class AudioPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.playbackRate,
       isEffective: this.preferences.playbackRate !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("playbackRate", newValue ?? 1);
+        this.updatePreference("playbackRate", newValue ?? null);
       },
       supportedRange: playbackRateRangeConfig.range,
       step: playbackRateRangeConfig.step
@@ -57,7 +57,7 @@ export class AudioPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.preservePitch,
       isEffective: this.preferences.preservePitch !== null,
       onChange: (newValue: boolean | null | undefined) => {
-        this.updatePreference("preservePitch", newValue ?? true);
+        this.updatePreference("preservePitch", newValue ?? null);
       }
     });
   }
@@ -68,7 +68,7 @@ export class AudioPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.skipBackwardInterval,
       isEffective: this.preferences.skipBackwardInterval !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("skipBackwardInterval", newValue ?? 10);
+        this.updatePreference("skipBackwardInterval", newValue ?? null);
       },
       supportedRange: skipIntervalRangeConfig.range,
       step: skipIntervalRangeConfig.step
@@ -81,7 +81,7 @@ export class AudioPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.skipForwardInterval,
       isEffective: this.preferences.skipForwardInterval !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("skipForwardInterval", newValue ?? 10);
+        this.updatePreference("skipForwardInterval", newValue ?? null);
       },
       supportedRange: skipIntervalRangeConfig.range,
       step: skipIntervalRangeConfig.step
@@ -94,7 +94,7 @@ export class AudioPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.pollInterval,
       isEffective: this.preferences.pollInterval !== null,
       onChange: (newValue: number | null | undefined) => {
-        this.updatePreference("pollInterval", newValue ?? 1000);
+        this.updatePreference("pollInterval", newValue ?? null);
       }
     });
   }
@@ -105,7 +105,7 @@ export class AudioPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.autoPlay,
       isEffective: this.preferences.autoPlay !== null,
       onChange: (newValue: boolean | null | undefined) => {
-        this.updatePreference("autoPlay", newValue ?? true);
+        this.updatePreference("autoPlay", newValue ?? null);
       }
     });
   }
@@ -116,7 +116,7 @@ export class AudioPreferencesEditor implements IPreferencesEditor {
       effectiveValue: this.settings.enableMediaSession,
       isEffective: this.preferences.enableMediaSession !== null,
       onChange: (newValue: boolean | null | undefined) => {
-        this.updatePreference("enableMediaSession", newValue ?? true);
+        this.updatePreference("enableMediaSession", newValue ?? null);
       }
     });
   }

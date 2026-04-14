@@ -1,8 +1,8 @@
 import { Loader, ModuleName } from "@readium/navigator-html-injectables";
-import { FrameComms } from "../epub/frame/FrameComms";
-import { ReadiumWindow } from "../../../navigator-html-injectables/types/src/helpers/dom";
-import { sML } from "../helpers";
-import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator";
+import { FrameComms } from "../epub/frame/FrameComms.ts";
+import type { ReadiumWindow } from "../../../navigator-html-injectables/types/src/helpers/dom";
+import { sML } from "../helpers/index.ts";
+import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator.ts";
 
 export class WebPubFrameManager {
     private frame: HTMLIFrameElement;
@@ -31,7 +31,7 @@ export class WebPubFrameManager {
         // Protect against background color bleeding
         this.frame.style.backgroundColor = "#FFFFFF";
         this.source = source;
-        
+
         // Use the provided content protection config directly without overriding defaults
         this.contentProtectionConfig = { ...contentProtectionConfig };
         this.keyboardPeripheralsConfig = [...keyboardPeripheralsConfig];
@@ -68,10 +68,10 @@ export class WebPubFrameManager {
 
     private applyContentProtection() {
         if (!this.comms) this.comms!.resume();
-        
+
         // Send content protection config
         this.comms!.send("peripherals_protection", this.contentProtectionConfig);
-        
+
         // Send keyboard peripherals separately
         if (this.keyboardPeripheralsConfig && this.keyboardPeripheralsConfig.length > 0) {
             this.comms!.send("keyboard_peripherals", this.keyboardPeripheralsConfig);

@@ -1,9 +1,9 @@
 import { ModuleName } from "@readium/navigator-html-injectables";
 import { Locator, Publication } from "@readium/shared";
-import FrameBlobBuider from "./FrameBlobBuilder";
-import { FrameManager } from "./FrameManager";
-import { Injector } from "../../injection/Injector";
-import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator";
+import FrameBlobBuider from "./FrameBlobBuilder.ts";
+import { FrameManager } from "./FrameManager.ts";
+import { Injector } from "../../injection/Injector.ts";
+import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator.ts";
 
 const UPPER_BOUNDARY = 5;
 const LOWER_BOUNDARY = 3;
@@ -23,8 +23,8 @@ export class FramePoolManager {
     private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
 
     constructor(
-        container: HTMLElement, 
-        positions: Locator[], 
+        container: HTMLElement,
+        positions: Locator[],
         cssProperties?: { [key: string]: string },
         injector?: Injector | null,
         contentProtectionConfig?: IContentProtectionConfig,
@@ -158,9 +158,9 @@ export class FramePoolManager {
                 if(!itm) return; // TODO throw?
                 if(!this.blobs.has(href)) {
                     const blobBuilder = new FrameBlobBuider(
-                        pub, 
-                        this.currentBaseURL || "", 
-                        itm, 
+                        pub,
+                        this.currentBaseURL || "",
+                        itm,
                         {
                             cssProperties: this.currentCssProperties,
                             injector: this.injector
@@ -208,17 +208,17 @@ export class FramePoolManager {
         const deepCompare = (obj1: { [key: string]: string }, obj2: { [key: string]: string }) => {
             const keys1 = Object.keys(obj1);
             const keys2 = Object.keys(obj2);
-          
+
             if (keys1.length !== keys2.length) {
               return false;
             }
-          
+
             for (const key of keys1) {
               if (obj1[key] !== obj2[key]) {
                 return false;
               }
             }
-          
+
             return true;
         };
 

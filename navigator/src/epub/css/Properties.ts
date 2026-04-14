@@ -1,14 +1,14 @@
-import { ExperimentKey, experiments, TextAlignment } from "../../preferences/Types";
-import { 
-  BodyHyphens, 
-  BoxSizing, 
-  FontOpticalSizing, 
-  FontWidth, 
-  Ligatures, 
-  Properties, 
-  TypeScale, 
-  View 
-} from "../../css/Properties";
+import { ExperimentKey, experiments, TextAlignment } from "../../preferences/Types.ts";
+import {
+  BodyHyphens,
+  BoxSizing,
+  FontOpticalSizing,
+  FontWidth,
+  Ligatures,
+  Properties,
+  TypeScale,
+  View
+} from "../../css/Properties.ts";
 
 export interface IUserProperties {
   advancedSettings?: boolean | null;
@@ -136,10 +136,10 @@ export class UserProperties extends Properties {
     if (this.fontSizeNormalize) cssProperties["--USER__fontSizeNormalize"] = this.toFlag("normalize");
     if (this.fontWeight != null) cssProperties["--USER__fontWeight"] = this.toUnitless(this.fontWeight);
     if (this.fontWidth != null) {
-      cssProperties["--USER__fontWidth"] = typeof this.fontWidth === "string" 
-      ? this.fontWidth 
+      cssProperties["--USER__fontWidth"] = typeof this.fontWidth === "string"
+      ? this.fontWidth
       : this.toUnitless(this.fontWidth);
-    } 
+    }
     if (this.invertFilter === true) {
       cssProperties["--USER__invertFilter"] = this.toFlag("invert");
     } else if (typeof this.invertFilter === "number") {

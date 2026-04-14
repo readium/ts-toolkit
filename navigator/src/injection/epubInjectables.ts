@@ -1,5 +1,5 @@
-import { IInjectableRule, IInjectable } from "../injection/Injectable";
-import { stripJS, stripCSS } from "../helpers/minify";
+import { IInjectableRule, IInjectable } from "../injection/Injectable.ts";
+import { stripJS, stripCSS } from "../helpers/minify.ts";
 import { Metadata, Layout, Link } from "@readium/shared";
 import { getScriptMode } from "../epub/helpers/scriptMode";
 

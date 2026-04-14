@@ -1,4 +1,4 @@
-import { IInjectableRule, IInjectable, IInjector, IInjectablesConfig } from "./Injectable";
+import { IInjectableRule, IInjectable, IInjector, IInjectablesConfig } from "./Injectable.ts";
 import { Link } from "@readium/shared";
 
 const inferTypeFromResource = (resource: IInjectable): string | undefined => {
@@ -6,19 +6,19 @@ const inferTypeFromResource = (resource: IInjectable): string | undefined => {
     if ("blob" in resource && resource.blob.type) {
         return resource.blob.type;
     }
-    
+
     // For scripts, default to text/javascript
     if (resource.as === "script") {
         return "text/javascript";
     }
-    
+
     // For links, try to infer from URL extension
     if (resource.as === "link" && "url" in resource) {
         const url = resource.url.toLowerCase();
         if (url.endsWith(".css")) return "text/css";
         if ([".js", ".mjs", ".cjs"].some(ext => url.endsWith(ext))) return "text/javascript";
     }
-    
+
     return undefined;
 };
 
@@ -30,7 +30,7 @@ const applyAttributes = (element: HTMLElement, resource: IInjectable): void => {
             if (key === "type" || key === "rel" || key === "href" || key === "src") {
                 return;
             }
-            
+
             if (value !== undefined && value !== null) {
                 // Convert boolean attributes to proper HTML format
                 if (typeof value === "boolean") {
@@ -48,52 +48,52 @@ const applyAttributes = (element: HTMLElement, resource: IInjectable): void => {
 const scriptify = (doc: Document, resource: IInjectable, source: string): HTMLScriptElement => {
     const s = doc.createElement("script");
     s.dataset.readium = "true";
-    
+
     // Set the injectable ID if provided
     if (resource.id) {
         s.id = resource.id;
     }
-    
+
     // Apply root-level type if provided
     const finalType = resource.type || inferTypeFromResource(resource);
     if (finalType) {
         s.type = finalType;
     }
-    
+
     // Apply extra attributes
     applyAttributes(s, resource);
-    
+
     // Always set src from the processed URL
     s.src = source;
-    
+
     return s;
 };
 
 const linkify = (doc: Document, resource: IInjectable, source: string): HTMLLinkElement => {
     const s = doc.createElement("link");
     s.dataset.readium = "true";
-    
+
     // Set the injectable ID if provided
     if (resource.id) {
         s.id = resource.id;
     }
-    
+
     // Apply root-level rel if provided
     if (resource.rel) {
         s.rel = resource.rel;
     }
-    
+
     const finalType = resource.type || inferTypeFromResource(resource);
     if (finalType) {
         s.type = finalType;
     }
-    
+
     // Apply extra attributes
     applyAttributes(s, resource);
-    
+
     // Always set href from the processed URL
     s.href = source;
-    
+
     return s;
 };
 
@@ -103,7 +103,7 @@ export class Injector implements IInjector {
     private readonly rules: IInjectableRule[];
     private readonly allowedDomains: string[] = [];
     private injectableIdCounter = 0;
-    
+
     constructor(config: IInjectablesConfig) {
         // Validate allowed domains - they should be proper URLs for external resources
         this.allowedDomains = (config.allowedDomains || []).map(domain => {
@@ -114,11 +114,11 @@ export class Injector implements IInjector {
                 throw new Error(`Invalid allowed domain: "${domain}". Must be a valid URL (e.g., "https://fonts.googleapis.com").`);
             }
         });
-        
+
         // Assign IDs to injectables that don't have them
         this.rules = config.rules.map(rule => {
             const processedRule: IInjectableRule = { ...rule };
-            
+
             // Process prepend injectables (reverse to preserve order when prepending)
             if (rule.prepend) {
                 processedRule.prepend = rule.prepend.map(injectable => ({
@@ -126,7 +126,7 @@ export class Injector implements IInjector {
                     id: injectable.id || `injectable-${this.injectableIdCounter++}`
                 })).reverse(); // Reverse here so we can process normally later
             }
-            
+
             // Process append injectables (keep original order)
             if (rule.append) {
                 processedRule.append = rule.append.map(injectable => ({
@@ -134,11 +134,11 @@ export class Injector implements IInjector {
                     id: injectable.id || `injectable-${this.injectableIdCounter++}`
                 }));
             }
-            
+
             return processedRule;
         });
     }
-    
+
     public dispose(): void {
         // Cleanup any created blob URLs
         for (const url of this.createdBlobUrls) {
@@ -155,7 +155,7 @@ export class Injector implements IInjector {
         return [...this.allowedDomains]; // Return a copy to prevent external modification
     }
 
-    public async injectForDocument(doc: Document, link: Link): Promise<void> {        
+    public async injectForDocument(doc: Document, link: Link): Promise<void> {
         for (const rule of this.rules) {
             if (this.matchesRule(rule, link)) {
                 await this.applyRule(doc, rule);
@@ -166,7 +166,7 @@ export class Injector implements IInjector {
     private matchesRule(rule: IInjectableRule, link: Link): boolean {
         // Use the original href from the publication, not the resolved blob URL
         const originalHref = link.href;
-        
+
         return rule.resources.some(pattern => {
             if (pattern instanceof RegExp) {
                 return pattern.test(originalHref);
@@ -178,7 +178,7 @@ export class Injector implements IInjector {
     private async getOrCreateBlobUrl(resource: IInjectable): Promise<string> {
         // Use the injectable ID as the cache key
         const cacheKey = resource.id!; // ID is guaranteed to exist after constructor
-        
+
         if (this.blobStore.has(cacheKey)) {
             const entry = this.blobStore.get(cacheKey)!;
             entry.refCount++;
@@ -191,7 +191,7 @@ export class Injector implements IInjector {
             this.createdBlobUrls.add(url);
             return url;
         }
-        
+
         throw new Error("Resource must have a blob property");
     }
 
@@ -231,7 +231,7 @@ export class Injector implements IInjector {
 
     private createPreloadLink(doc: Document, resource: IInjectable, url: string): void {
         if (resource.as !== "link" || resource.rel !== "preload") return;
-        
+
         // Create a new resource object with preload attributes
         const preloadResource: IInjectable = {
             ...resource,
@@ -241,7 +241,7 @@ export class Injector implements IInjector {
                 as: resource.as
             }
         };
-        
+
         const preloadLink = linkify(doc, preloadResource, url);
         doc.head.appendChild(preloadLink);
     }
@@ -258,22 +258,22 @@ export class Injector implements IInjector {
 
     private async applyRule(doc: Document, rule: IInjectableRule): Promise<void> {
         const createdElements: { element: HTMLElement; url: string }[] = [];
-        
+
         // Collect all injectables that pass their conditions before modifying the document
-        const prependInjectables = rule.prepend ? rule.prepend.filter(resource => 
+        const prependInjectables = rule.prepend ? rule.prepend.filter(resource =>
             !resource.condition || resource.condition(doc)
         ) : [];
-        
-        const appendInjectables = rule.append ? rule.append.filter(resource => 
+
+        const appendInjectables = rule.append ? rule.append.filter(resource =>
             !resource.condition || resource.condition(doc)
         ) : [];
-        
+
         try {
             // Process prepend injectables first (already reversed in constructor)
             for (const resource of prependInjectables) {
                 await this.processInjectable(resource, doc, createdElements, "prepend");
             }
-            
+
             // Process append injectables next (in order)
             for (const resource of appendInjectables) {
                 await this.processInjectable(resource, doc, createdElements, "append");
@@ -291,11 +291,11 @@ export class Injector implements IInjector {
             throw error;
         }
     }
-    
+
     private async processInjectable(
-        resource: IInjectable, 
-        doc: Document, 
-        createdElements: { element: HTMLElement; url: string }[], 
+        resource: IInjectable,
+        doc: Document,
+        createdElements: { element: HTMLElement; url: string }[],
         position: "prepend" | "append"
     ): Promise<void> {
         const target = resource.target === "body" ? doc.body : doc.head;
@@ -304,13 +304,13 @@ export class Injector implements IInjector {
         let url: string | null = null;
         try {
             url = await this.getResourceUrl(resource, doc);
-            
+
             if (resource.rel === "preload" && "url" in resource) {
                 this.createPreloadLink(doc, resource, url);
             } else {
                 const element = this.createElement(doc, resource, url);
                 createdElements.push({ element, url });
-                
+
                 if (position === "prepend") {
                     target.prepend(element);
                 } else {
@@ -329,10 +329,10 @@ export class Injector implements IInjector {
     private isValidUrl(url: string, doc: Document): boolean {
         try {
             const parsed = new URL(url, doc.baseURI);
-            
+
             // Allow data URLs
             if (parsed.protocol === "data:") return true;
-            
+
             // Allow blob URLs that we created
             if (parsed.protocol === "blob:" && this.createdBlobUrls.has(url)) {
                 return true;

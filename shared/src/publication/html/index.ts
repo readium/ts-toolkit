@@ -1,3 +1,3 @@
-export * from './DomRange';
-export * from './DomRangePoint';
-export * from './Locations';
+export * from './DomRange.ts';
+export * from './DomRangePoint.ts';
+export * from './Locations.ts';

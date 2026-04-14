@@ -1,8 +1,8 @@
-import { Resource } from "../../../../fetcher/Resource";
-import { Locator } from "../../../Locator";
-import { Publication } from "../../../Publication";
-import { IllegalStateError, Iterator } from "../Iterator";
-import { ContentElement } from "../element";
+import { Resource } from "../../../../fetcher/Resource.ts";
+import { Locator } from "../../../Locator.ts";
+import { Publication } from "../../../Publication.ts";
+import { IllegalStateError, Iterator } from "../Iterator.ts";
+import { ContentElement } from "../element/index.ts";
 
 // Creates a [Content.Iterator] instance for the [Resource], starting from the given [Locator].
 // Returns null if the resource media type is not supported.

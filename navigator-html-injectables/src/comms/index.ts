@@ -1,3 +1,3 @@
-export * from './comms';
-export * from './keys';
-export * from './mid';
+export * from './comms.ts';
+export * from './keys.ts';
+export * from './mid.ts';

@@ -1,3 +1,3 @@
-export * from './Fetcher';
-export * from './HttpFetcher';
-export * from './Resource';
+export * from './Fetcher.ts';
+export * from './HttpFetcher.ts';
+export * from './Resource.ts';

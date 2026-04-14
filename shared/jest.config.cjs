@@ -8,7 +8,7 @@ module.exports = {
     },
     extensionsToTreatAsEsm: [".ts"],
     transform: {
-        "^.+\\.(mt|t|cj|j)s$": ["ts-jest"]
+        "^.+\\.(mt|t|cj|j)s$": ["ts-jest", { tsconfig: "tsconfig.test.json" }]
     },
     testMatch: ["**/*.test.ts"],
     testEnvironment: "node",

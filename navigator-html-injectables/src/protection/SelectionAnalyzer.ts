@@ -10,7 +10,7 @@ export interface SelectionAnalyzerOptions {
     historySize: number;
 }
 
-import { SELECTION_ANALYZER_CONFIG } from './config';
+import { SELECTION_ANALYZER_CONFIG } from './config.ts';
 
 export class SelectionAnalyzer {
     private events: SelectionEvent[] = [];

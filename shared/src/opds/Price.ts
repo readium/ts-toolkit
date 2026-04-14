@@ -3,7 +3,7 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { positiveNumberfromJSON } from '../util/JSONParse';
+import { positiveNumberfromJSON } from '../util/JSONParse.ts';
 
 /**
  * The price of a publication in an OPDS link.

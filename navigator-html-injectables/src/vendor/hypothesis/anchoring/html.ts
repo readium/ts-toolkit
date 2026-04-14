@@ -4,7 +4,7 @@ import type {
   Selector,
   TextPositionSelector,
   TextQuoteSelector,
-} from './api-types';
+} from './api-types.ts';
 import {
   MediaTimeAnchor,
   RangeAnchor,

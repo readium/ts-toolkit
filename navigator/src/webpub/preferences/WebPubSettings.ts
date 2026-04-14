@@ -1,9 +1,9 @@
-import { ConfigurableSettings } from "../../preferences/Configurable";
-import { ExperimentKey, TextAlignment } from "../../preferences/Types";
-import { WebPubDefaults } from "./WebPubDefaults";
-import { WebPubPreferences } from "./WebPubPreferences";
+import { ConfigurableSettings } from "../../preferences/Configurable.ts";
+import { ExperimentKey, TextAlignment } from "../../preferences/Types.ts";
+import { WebPubDefaults } from "./WebPubDefaults.ts";
+import { WebPubPreferences } from "./WebPubPreferences.ts";
 
-import { sMLWithRequest } from "../../helpers";
+import { sMLWithRequest } from "../../helpers/index.ts";
 
 export interface IWebPubSettings {
   fontFamily?: string | null,
@@ -45,61 +45,61 @@ export class WebPubSettings implements ConfigurableSettings {
   constructor(preferences: WebPubPreferences, defaults: WebPubDefaults, hasDisplayTransformability: boolean) {
     if (hasDisplayTransformability) {
       this.fontFamily = preferences.fontFamily || defaults.fontFamily || null;
-      this.fontWeight = preferences.fontWeight !== undefined 
-        ? preferences.fontWeight 
-        : defaults.fontWeight !== undefined 
-          ? defaults.fontWeight 
+      this.fontWeight = preferences.fontWeight !== undefined
+        ? preferences.fontWeight
+        : defaults.fontWeight !== undefined
+          ? defaults.fontWeight
           : null;
-      this.hyphens = typeof preferences.hyphens === "boolean" 
-        ? preferences.hyphens 
+      this.hyphens = typeof preferences.hyphens === "boolean"
+        ? preferences.hyphens
         : defaults.hyphens ?? null;
-      this.iOSPatch = preferences.iOSPatch === false 
-        ? false 
-        : preferences.iOSPatch === true 
+      this.iOSPatch = preferences.iOSPatch === false
+        ? false
+        : preferences.iOSPatch === true
           ? ((sMLWithRequest.OS.iOS || sMLWithRequest.OS.iPadOS) && sMLWithRequest.iOSRequest === "mobile")
           : defaults.iOSPatch;
-      this.iPadOSPatch = preferences.iPadOSPatch === false 
-        ? false 
-        : preferences.iPadOSPatch === true 
-          ? (sMLWithRequest.OS.iPadOS && sMLWithRequest.iOSRequest === "desktop") 
+      this.iPadOSPatch = preferences.iPadOSPatch === false
+        ? false
+        : preferences.iPadOSPatch === true
+          ? (sMLWithRequest.OS.iPadOS && sMLWithRequest.iOSRequest === "desktop")
           : defaults.iPadOSPatch;
-      this.letterSpacing = preferences.letterSpacing !== undefined 
-        ? preferences.letterSpacing 
-        : defaults.letterSpacing !== undefined 
-          ? defaults.letterSpacing 
+      this.letterSpacing = preferences.letterSpacing !== undefined
+        ? preferences.letterSpacing
+        : defaults.letterSpacing !== undefined
+          ? defaults.letterSpacing
           : null;
       this.ligatures = typeof preferences.ligatures === "boolean"
-        ? preferences.ligatures 
+        ? preferences.ligatures
         : defaults.ligatures ?? null;
-      this.lineHeight = preferences.lineHeight !== undefined 
-        ? preferences.lineHeight 
-        : defaults.lineHeight !== undefined 
-          ? defaults.lineHeight 
+      this.lineHeight = preferences.lineHeight !== undefined
+        ? preferences.lineHeight
+        : defaults.lineHeight !== undefined
+          ? defaults.lineHeight
           : null;
-      this.noRuby = typeof preferences.noRuby === "boolean" 
-        ? preferences.noRuby 
+      this.noRuby = typeof preferences.noRuby === "boolean"
+        ? preferences.noRuby
         : defaults.noRuby ?? null;
-      this.paragraphIndent = preferences.paragraphIndent !== undefined 
-        ? preferences.paragraphIndent 
-        : defaults.paragraphIndent !== undefined 
-          ? defaults.paragraphIndent 
+      this.paragraphIndent = preferences.paragraphIndent !== undefined
+        ? preferences.paragraphIndent
+        : defaults.paragraphIndent !== undefined
+          ? defaults.paragraphIndent
           : null;
-      this.paragraphSpacing = preferences.paragraphSpacing !== undefined 
-        ? preferences.paragraphSpacing 
-        : defaults.paragraphSpacing !== undefined 
-          ? defaults.paragraphSpacing 
+      this.paragraphSpacing = preferences.paragraphSpacing !== undefined
+        ? preferences.paragraphSpacing
+        : defaults.paragraphSpacing !== undefined
+          ? defaults.paragraphSpacing
           : null;
       this.textAlign = preferences.textAlign || defaults.textAlign || null;
-      this.textNormalization = typeof preferences.textNormalization === "boolean" 
-        ? preferences.textNormalization 
+      this.textNormalization = typeof preferences.textNormalization === "boolean"
+        ? preferences.textNormalization
         : defaults.textNormalization ?? null;
-      this.wordSpacing = preferences.wordSpacing !== undefined 
-        ? preferences.wordSpacing 
-        : defaults.wordSpacing !== undefined 
-          ? defaults.wordSpacing 
+      this.wordSpacing = preferences.wordSpacing !== undefined
+        ? preferences.wordSpacing
+        : defaults.wordSpacing !== undefined
+          ? defaults.wordSpacing
           : null;
     }
-    
+
     this.zoom = preferences.zoom !== undefined
       ? preferences.zoom
       : defaults.zoom !== undefined

@@ -1,5 +1,5 @@
 import { Locator } from "@readium/shared";
-import { TextQuoteAnchor } from "../vendor/hypothesis/anchoring/types";
+import { TextQuoteAnchor } from "../vendor/hypothesis/anchoring/types.ts";
 
 function isReplacedLikeElement(element: Element): boolean {
     const tagName = element.tagName.toUpperCase();

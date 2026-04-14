@@ -1,6 +1,6 @@
-import { KeyCombo, KeyboardPeripheral } from "./KeyboardCombinations";
-import { BaseKeyboardPeripheralEvent, KeyboardEventData, BasicTextSelection } from "../modules/Peripherals";
-import { ReadiumWindow } from "../helpers/dom";
+import { KeyCombo, KeyboardPeripheral } from "./KeyboardCombinations.ts";
+import { BaseKeyboardPeripheralEvent, KeyboardEventData, BasicTextSelection } from "../modules/Peripherals.ts";
+import { ReadiumWindow } from "../helpers/dom.ts";
 
 export type KeyHandler = (event: KeyboardEvent) => void;
 export type ActivityEventDispatcher = (event: KeyboardPeripheralEvent) => void;
@@ -24,7 +24,7 @@ export class KeyCombinationManager {
             const shiftMatch = combo.shift === undefined || event.shiftKey === combo.shift;
             const altMatch = combo.alt === undefined || event.altKey === combo.alt;
             const metaMatch = combo.meta === undefined || event.metaKey === combo.meta;
-            
+
             if (keyMatch && ctrlMatch && shiftMatch && altMatch && metaMatch) {
                 return true;
             }
@@ -49,7 +49,7 @@ export class KeyCombinationManager {
      * Creates a standardized activity event for keyboard shortcuts
      */
     private createActivityEvent(
-        event: KeyboardEvent, 
+        event: KeyboardEvent,
         type: string,
         targetFrameSrc: string,
         wnd?: ReadiumWindow,
@@ -61,7 +61,7 @@ export class KeyCombinationManager {
             const selectedTextStr = selection?.toString() || '';
             const domRectList = (selectedTextStr && selection?.rangeCount) ? selection.getRangeAt(0)?.getClientRects() : null;
             const rect = domRectList?.[0];
-            
+
             if (rect && selectedTextStr) {
                 selectedText = {
                     text: selectedTextStr,
@@ -124,7 +124,7 @@ export class KeyCombinationManager {
         wnd?: ReadiumWindow,
     ): (event: KeyboardEvent) => void {
         const handlers = this.createKeyboardHandlers(targetFrameSrc, shortcuts, dispatcher, wnd);
-        
+
         return (event: KeyboardEvent) => {
             for (const handlerConfig of handlers) {
                 if (this.match(event, [handlerConfig])) {

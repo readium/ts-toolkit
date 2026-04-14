@@ -1,8 +1,8 @@
 import {
   arrayfromJSONorString,
   setToArray,
-} from '../util/JSONParse';
-import { Links } from "./Link";
+} from '../util/JSONParse.ts';
+import { Links } from "./Link.ts";
 
 export interface Clip {
     audioResource: string;
@@ -49,11 +49,11 @@ export class GuidedNavigationDocument {
 export class GuidedNavigationText {
     /** Plain text content */
     public readonly plain?: string;
-    
+
     /** SSML (Speech Synthesis Markup Language) content */
     public readonly ssml?: string;
-    
-    /** 
+
+    /**
      * BCP 47 language tag
      * @pattern ^((?<grandfathered>(en-GB-oed|i-ami|i-bnn|i-default|i-enochian|i-hak|i-klingon|i-lux|i-mingo|i-navajo|i-pwn|i-tao|i-tay|i-tsu|sgn-BE-FR|sgn-BE-NL|sgn-CH-DE)|(art-lojban|cel-gaulish|no-bok|no-nyn|zh-guoyu|zh-hakka|zh-min|zh-min-nan|zh-xiang))|((?<language>([A-Za-z]{2,3}(-(?<extlang>[A-Za-z]{3}(-[A-Za-z]{3}){0,2}))?)|[A-Za-z]{4}|[A-Za-z]{5,8})(-(?<script>[A-Za-z]{4}))?(-(?<region>[A-Za-z]{2}|[0-9]{3}))?(-(?<variant>[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(-(?<extension>[0-9A-WY-Za-wy-z](-[A-Za-z0-9]{2,8})+))*(-(?<privateUse>x(-[A-Za-z0-9]{1,8})+))?)|(?<privateUse2>x(-[A-Za-z0-9]{1,8})+))$
      */
@@ -74,11 +74,11 @@ export class GuidedNavigationText {
      */
     public static deserialize(json: any): GuidedNavigationText | undefined {
         if (json === undefined || json === null) return undefined;
-        
+
         if (typeof json === 'string') {
             return new GuidedNavigationText({ plain: json });
         }
-        
+
         // Only create if there are actual values
         if (json.plain || json.ssml || json.language) {
             return new GuidedNavigationText({
@@ -87,7 +87,7 @@ export class GuidedNavigationText {
                 language: json.language
             });
         }
-        
+
         return undefined;
     }
 
@@ -111,32 +111,32 @@ export class GuidedNavigationText {
 export class GuidedNavigationObject {
   /** References an audio resource or a fragment of it. */
   public readonly audioref?: string;
-    
+
   /** Items that are children of the containing Guided Navigation Object. */
   public readonly children?: GuidedNavigationObject[];
-  
+
   /** References an image or a fragment of it. */
   public readonly imgref?: string;
-  
+
   /** Convey the structural semantics of a publication. */
   public readonly role?: Set<string>;
-  
-  /** 
+
+  /**
    * Indicates the heading level (1-6) for the navigation object.
    * @minimum 1
    * @maximum 6
    */
   public readonly level?: number;
-  
-  /** 
+
+  /**
    * Textual equivalent of the resources or fragment of the resources referenced by the current Guided Navigation Object.
    */
   public readonly text?: GuidedNavigationText;
-  
+
   /** References a textual resource or a fragment of it. */
   public readonly textref?: string;
 
-  /** 
+  /**
    * Describes the image referenced by the current Guided Navigation Object.
    * This is a GuidedNavigationObject that should not contain 'level' or 'children' properties.
    */
@@ -192,7 +192,7 @@ export class GuidedNavigationObject {
      */
     public static deserialize(json: any): GuidedNavigationObject | undefined {
         if (!json) return undefined;
-        
+
         return new GuidedNavigationObject({
             audioref: json.audioref,
             children: GuidedNavigationObject.deserializeArray(json.children),
@@ -207,7 +207,7 @@ export class GuidedNavigationObject {
         });
     }
 
-    /** 
+    /**
      * Parses a [GuidedNavigationObject] array from its RWPM JSON representation.
      */
     public static deserializeArray(json: any): GuidedNavigationObject[] | undefined {

@@ -1,7 +1,7 @@
-import { Language } from "../Language";
-import { Tokenizer } from "./Tokenizer";
-import BasicEnglishTokenizer from "./tokenize-english";
-import BasicTokenizer, { TextlintSegment } from "./tokenize-text";
+import { Language } from "../Language.ts";
+import { Tokenizer } from "./Tokenizer.ts";
+import BasicEnglishTokenizer from "./tokenize-english/index.js";
+import BasicTokenizer, { TextlintSegment } from "./tokenize-text/index.js";
 
 // Start / End
 export type Range = [number, number];

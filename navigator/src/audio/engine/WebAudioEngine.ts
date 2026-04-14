@@ -3,8 +3,8 @@
 import {
   AudioEngine,
   Playback,
-} from "./AudioEngine";
-import { PreservePitchWorklet } from "./PreservePitchWorklet";
+} from "./AudioEngine.ts";
+import { PreservePitchWorklet } from "./PreservePitchWorklet.ts";
 
 type EventCallback = (data: any) => void;
 
@@ -197,6 +197,9 @@ export class WebAudioEngine implements AudioEngine {
     }
 
     try {
+      if (this.audioContext) {
+        await this.ensureAudioContextRunning();
+      }
       await this.mediaElement.play();
       this.isPlayingValue = true;
       this.isPausedValue = false;
@@ -235,22 +238,17 @@ export class WebAudioEngine implements AudioEngine {
    * @volume The volume to set, in the range [0, 1].
    */
   public setVolume(volume: number): void {
-    if (volume < 0) {
-      this.mediaElement.volume = 0;
-      if (this.gainNode) {
-        this.gainNode.gain.value = 0;
-      }
-      this.isMutedValue = true;
-      return;
-    }
-    if (volume > 1) {
-      this.setVolume(volume / 100);
-      return;
-    }
-    this.mediaElement.volume = volume;
+    const clamped = Math.max(0, Math.min(1, volume));
     if (this.gainNode) {
-      this.gainNode.gain.value = volume;
+      // When the Web Audio graph is active, keep the media element at full
+      // volume and control level exclusively through the GainNode to avoid
+      // double-attenuation (e.g. 0.5 × 0.5 = 0.25).
+      this.mediaElement.volume = 1;
+      this.gainNode.gain.value = clamped;
+    } else {
+      this.mediaElement.volume = clamped;
     }
+    this.isMutedValue = clamped === 0;
   }
 
   /**
@@ -342,16 +340,14 @@ export class WebAudioEngine implements AudioEngine {
         // Activate Web Audio graph first, then attach the worklet
         this.activateWebAudio().then(() => {
           if (!this.worklet) {
-            if (this.sourceNode) {
-              this.sourceNode.disconnect();
-              this.sourceNode = null;
-            }
             PreservePitchWorklet.createWorklet({
               ctx: this.getOrCreateAudioContext(),
-              mediaElement: this.mediaElement,
               pitchFactor: 1.0
             }).then(worklet => {
+              // Rewire: sourceNode → workletNode → gainNode
+              if (this.sourceNode) this.sourceNode.disconnect();
               this.worklet = worklet;
+              this.sourceNode?.connect(this.worklet.workletNode!);
               this.worklet.workletNode!.connect(this.gainNode!);
               this.worklet.updatePitchFactor(1 / rate);
             }).catch(err => {
@@ -365,12 +361,17 @@ export class WebAudioEngine implements AudioEngine {
         });
       }
     } else {
+      // Disable native pitch preservation (mirrors the check in the true branch)
+      if ('preservesPitch' in this.mediaElement) {
+        (this.mediaElement as any).preservesPitch = false;
+      }
+
       if (this.worklet) {
         this.worklet.destroy();
         this.worklet = null;
-        // Worklet is gone; restore the direct source → gain path
-        if (this.webAudioActive) {
-          this.sourceNode = new MediaElementAudioSourceNode(this.getOrCreateAudioContext(), { mediaElement: this.mediaElement });
+        // Restore: sourceNode → gainNode
+        if (this.webAudioActive && this.sourceNode) {
+          this.sourceNode.disconnect();
           this.sourceNode.connect(this.gainNode!);
         }
       }
@@ -400,28 +401,57 @@ export class WebAudioEngine implements AudioEngine {
     this.mediaElement.src = src;
     this.mediaElement.load();
 
-    await new Promise<void>((resolve, reject) => {
-      const onReady = () => {
-        this.mediaElement.removeEventListener("canplaythrough", onReady);
-        this.mediaElement.removeEventListener("error", onFail);
-        resolve();
-      };
-      const onFail = () => {
-        this.mediaElement.removeEventListener("canplaythrough", onReady);
-        this.mediaElement.removeEventListener("error", onFail);
-        reject(new Error("Audio reload with CORS failed — server may not send Access-Control-Allow-Origin"));
-      };
-      this.mediaElement.addEventListener("canplaythrough", onReady);
-      this.mediaElement.addEventListener("error", onFail);
-    });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const onReady = () => {
+          this.mediaElement.removeEventListener("canplaythrough", onReady);
+          this.mediaElement.removeEventListener("error", onFail);
+          resolve();
+        };
+        const onFail = () => {
+          this.mediaElement.removeEventListener("canplaythrough", onReady);
+          this.mediaElement.removeEventListener("error", onFail);
+          reject(new Error("Audio reload with CORS failed — server may not send Access-Control-Allow-Origin"));
+        };
+        this.mediaElement.addEventListener("canplaythrough", onReady);
+        this.mediaElement.addEventListener("error", onFail);
+      });
+    } catch (err) {
+      // Roll back to non-CORS mode so the element remains playable.
+      // crossOrigin = "" still maps to "anonymous"; remove the attribute entirely
+      // to disable CORS on the reload.
+      this.mediaElement.removeAttribute("crossorigin");
+      this.mediaElement.src = src;
+      this.mediaElement.load();
+      if (wasPlaying) {
+        await new Promise<void>(resolve => {
+          const onReady = () => {
+            this.mediaElement.removeEventListener("canplaythrough", onReady);
+            resolve();
+          };
+          this.mediaElement.addEventListener("canplaythrough", onReady);
+        });
+        this.mediaElement.currentTime = currentTime;
+        await this.mediaElement.play();
+        this.isPlayingValue = true;
+        this.isPausedValue = false;
+      } else {
+        this.mediaElement.currentTime = currentTime;
+      }
+      throw err;
+    }
 
     this.mediaElement.currentTime = currentTime;
 
     this.sourceNode = new MediaElementAudioSourceNode(this.getOrCreateAudioContext(), { mediaElement: this.mediaElement });
-    
-    // Create gainNode lazily when Web Audio is activated
+
+    // Create gainNode lazily when Web Audio is activated.
+    // Seed its gain from the current element volume, then reset the element to
+    // 1.0 so volume isn't applied twice once setVolume routes through the node.
     const audioContext = this.getOrCreateAudioContext();
     this.gainNode = audioContext.createGain();
+    this.gainNode.gain.value = this.mediaElement.volume;
+    this.mediaElement.volume = 1;
     this.sourceNode.connect(this.gainNode);
     this.gainNode.connect(audioContext.destination);
 
@@ -440,8 +470,34 @@ export class WebAudioEngine implements AudioEngine {
   }
 
   /**
+   * Tears down the Web Audio graph and restores the media element to standalone
+   * playback. Safe to call even if Web Audio was never activated.
+   */
+  private tearDownWebAudio(): void {
+    if (this.worklet) {
+      this.worklet.destroy();
+      this.worklet = null;
+    }
+    if (this.sourceNode) {
+      this.sourceNode.disconnect();
+      this.sourceNode = null;
+    }
+    if (this.gainNode) {
+      // Restore the volume that was previously managed by the GainNode.
+      this.mediaElement.volume = this.gainNode.gain.value;
+      this.gainNode.disconnect();
+      this.gainNode = null;
+    }
+    this.webAudioActive = false;
+  }
+
+  /**
    * Changes the src of the primary media element without swapping the element.
    * Preserves the RemotePlayback session and all attached event listeners.
+   * When the Web Audio graph is active, the new src is loaded with
+   * crossOrigin="anonymous". If the CORS request fails (server does not send
+   * the required headers), the graph is torn down and the src is reloaded
+   * without CORS so playback continues — just without pitch correction.
    */
   public changeSrc(href: string): void {
     if (this.mediaElement.src === href) {
@@ -453,11 +509,31 @@ export class WebAudioEngine implements AudioEngine {
     this.isLoadedValue = false;
     this.isLoadingValue = true;
     this.isEndedValue = false;
+
     if (this.webAudioActive) {
       this.mediaElement.crossOrigin = "anonymous";
+      this.mediaElement.src = href;
+      this.mediaElement.load();
+
+      const onReady = () => { cleanup(); };
+      const onFail = () => {
+        cleanup();
+        console.warn("CORS reload failed for new track — disabling Web Audio graph:", href);
+        this.tearDownWebAudio();
+        this.mediaElement.removeAttribute("crossorigin");
+        this.mediaElement.src = href;
+        this.mediaElement.load();
+      };
+      const cleanup = () => {
+        this.mediaElement.removeEventListener("canplaythrough", onReady);
+        this.mediaElement.removeEventListener("error", onFail);
+      };
+      this.mediaElement.addEventListener("canplaythrough", onReady);
+      this.mediaElement.addEventListener("error", onFail);
+    } else {
+      this.mediaElement.src = href;
+      this.mediaElement.load();
     }
-    this.mediaElement.src = href;
-    this.mediaElement.load();
   }
 
   /**

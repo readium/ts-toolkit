@@ -1,6 +1,6 @@
 import { Link, Publication } from "@readium/shared";
-import { WebAudioEngine } from "./engine/WebAudioEngine";
-import type { IAudioContentProtectionConfig } from "./AudioNavigator";
+import { WebAudioEngine } from "./engine/WebAudioEngine.ts";
+import type { IAudioContentProtectionConfig } from "./AudioNavigator.ts";
 
 const UPPER_BOUNDARY = 1;
 const LOWER_BOUNDARY = 1;
@@ -39,16 +39,18 @@ export class AudioPoolManager {
     }
 
     private pickPlayableHref(link: Link): string {
+        const base = this._publication.baseURL;
         const candidates = [link, ...(link.alternates?.items ?? [])];
         let best: { href: string; confidence: "probably" | "maybe" } | undefined;
         for (const candidate of candidates) {
             if (!candidate.type) continue;
             const confidence = this._supportedAudioTypes.get(candidate.type);
             if (!confidence) continue;
-            if (confidence === "probably") return candidate.href;
-            if (!best) best = { href: candidate.href, confidence };
+            const href = candidate.toURL(base) ?? candidate.href;
+            if (confidence === "probably") return href;
+            if (!best) best = { href, confidence };
         }
-        return best?.href ?? link.href;
+        return best?.href ?? (link.toURL(base) ?? link.href);
     }
 
     get audioEngine(): WebAudioEngine {

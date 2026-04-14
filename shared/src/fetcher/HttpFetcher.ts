@@ -1,6 +1,6 @@
-import { Link } from '../publication/Link';
-import { Fetcher } from './Fetcher';
-import { NumberRange, Resource } from './Resource';
+import { Link } from '../publication/Link.ts';
+import { Fetcher } from './Fetcher.ts';
+import { NumberRange, Resource } from './Resource.ts';
 
 export type FetchImplementation = (
   input: RequestInfo | URL,

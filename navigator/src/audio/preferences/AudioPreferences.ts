@@ -1,14 +1,14 @@
-import { ConfigurablePreferences } from "../../preferences/Configurable";
+import { ConfigurablePreferences } from "../../preferences/Configurable.ts";
 import {
   ensureBoolean,
   ensureValueInRange,
   ensureNonNegative
-} from "../../preferences/guards";
+} from "../../preferences/guards.ts";
 import {
   volumeRangeConfig,
   playbackRateRangeConfig,
   skipIntervalRangeConfig
-} from "../../preferences/Types";
+} from "../../preferences/Types.ts";
 
 export interface IAudioPreferences {
   volume?: number | null;
@@ -22,14 +22,14 @@ export interface IAudioPreferences {
 }
 
 export class AudioPreferences implements ConfigurablePreferences<AudioPreferences> {
-  public readonly volume: number | null | undefined;
-  public readonly playbackRate: number | null | undefined;
-  public readonly preservePitch: boolean | null | undefined;
-  public readonly skipBackwardInterval: number | null | undefined;
-  public readonly skipForwardInterval: number | null | undefined;
-  public readonly pollInterval: number | null | undefined;
-  public readonly autoPlay: boolean | null | undefined;
-  public readonly enableMediaSession: boolean | null | undefined;
+  public volume: number | null | undefined;
+  public playbackRate: number | null | undefined;
+  public preservePitch: boolean | null | undefined;
+  public skipBackwardInterval: number | null | undefined;
+  public skipForwardInterval: number | null | undefined;
+  public pollInterval: number | null | undefined;
+  public autoPlay: boolean | null | undefined;
+  public enableMediaSession: boolean | null | undefined;
 
   constructor(preferences: IAudioPreferences = {}) {
     this.volume = ensureValueInRange(preferences.volume, volumeRangeConfig.range);

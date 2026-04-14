@@ -1,2 +1,2 @@
-export * from './Timeline';
-export * from './TimelineItem';
+export * from './Timeline.ts';
+export * from './TimelineItem.ts';

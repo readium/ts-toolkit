@@ -1,4 +1,4 @@
-import { IPreferencesEditor } from "./PreferencesEditor";
+import { IPreferencesEditor } from "./PreferencesEditor.ts";
 
 export interface ConfigurableSettings {
   [key: string]: any;

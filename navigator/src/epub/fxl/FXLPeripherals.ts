@@ -1,6 +1,6 @@
-import { FXLCoordinator, Point } from "./FXLCoordinator";
-import { FXLFramePoolManager } from "./FXLFramePoolManager";
-import { FXLPeripheralsDebug } from "./FXLPeripheralsDebug";
+import { FXLCoordinator, Point } from "./FXLCoordinator.ts";
+import { FXLFramePoolManager } from "./FXLFramePoolManager.ts";
+import { FXLPeripheralsDebug } from "./FXLPeripheralsDebug.ts";
 
 const MAX_SCALE = 6; // 6x zoom
 const MIN_SCALE = 1.02;

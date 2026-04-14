@@ -31,8 +31,8 @@ To assist you in building a preferences user interface or modifying existing pre
 const editor = navigator.preferencesEditor;
     
 // 2. Modify the preferences through the editor.
-editor.volume.decrement(); // Decrease volume by 0.05
-editor.playbackRate.increment(); // Increase playback rate by 0.25
+editor.volume.decrement(); // Decrease volume by 0.1
+editor.playbackRate.increment(); // Increase playback rate by 0.1
 editor.preservePitch.toggle();
 editor.skipForwardInterval.increment(); // Increase skip interval by 5 seconds
 
@@ -55,7 +55,7 @@ const navigator = new AudioNavigator(
   publication,
   listeners,
   initialPosition,
-  configuration: {
+  {
     preferences: {
       volume: 0.8,
       playbackRate: 1.25,
@@ -123,7 +123,7 @@ Exact ranges, steps, and defaults are defined in [`src/preferences/Types.ts`](..
 | volume | RangePreference<number> | Audio volume level (`volumeRangeConfig`) |
 | playbackRate | RangePreference<number> | Playback speed multiplier (`playbackRateRangeConfig`) |
 | preservePitch | BooleanPreference | Best-effort pitch preservation when changing playback rate: uses native browser support if available, otherwise falls back to an audio worklet (requires CORS) |
-| autoPlay | BooleanPreference | Whether to automatically advance to the next track when the current one ends |
+| autoPlay | BooleanPreference | Whether to automatically play the next track when the current one ends |
 
 ### Navigation Preferences
 

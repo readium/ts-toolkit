@@ -1,5 +1,5 @@
-import { Iterator } from "./Iterator";
-import { ContentElement, TextualElement } from "./element";
+import { Iterator } from "./Iterator.ts";
+import { ContentElement, TextualElement } from "./element/index.ts";
 
 /**
  * Provides an iterable list of content [Element]s.

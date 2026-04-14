@@ -3,17 +3,16 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { Link, Links } from './Link';
-import { Locator } from './Locator';
-import { Manifest } from './Manifest';
-import { Metadata } from './Metadata';
-import { EmptyFetcher, Fetcher } from '../fetcher/Fetcher';
-import { PublicationCollection } from './PublicationCollection';
-import { Resource } from '../fetcher/Resource';
-import { GuidedNavigationDocument } from "./GuidedNavigation";
-import { URITemplate } from "../util";
-import { MediaType } from "../util/mediatype/MediaType";
-import { Timeline } from './services/timeline/Timeline';
+import { Link, Links } from './Link.ts';
+import { Locator } from './Locator.ts';
+import { Manifest } from './Manifest.ts';
+import { Metadata } from './Metadata.ts';
+import { EmptyFetcher, Fetcher } from '../fetcher/Fetcher.ts';
+import { PublicationCollection } from './PublicationCollection.ts';
+import { Resource } from '../fetcher/Resource.ts';
+import { GuidedNavigationDocument } from "./GuidedNavigation.ts";
+import { MediaType, URITemplate } from "../util/index.ts";
+import { Timeline } from './services/timeline/Timeline.ts';
 
 export type ServiceFactory = () => null;
 
@@ -51,8 +50,7 @@ export class Publication {
 
   /**
    * Returns the publication's timeline, built from its reading order and table of contents.
-   * Called with no arguments, the result is cached. Pass options to build a fresh timeline
-   * with a specific configuration (e.g. a depth limit).
+   * The result is cached after the first call.
    */
   public get timeline(): Timeline {
     if (!this._timeline) this._timeline = Timeline.build(this);
@@ -95,7 +93,7 @@ export class Publication {
   /**
    * Gets the cover image for the publication.
    * First looks for rel='cover' in links/resources/readingOrder,
-   * then falls back to any image (JPEG, PNG, GIF, AVIF, SVG) as bitmap fallback.
+   * then falls back to any image (JPEG, PNG, GIF, AVIF, SVG).
    */
   public getCover(): Link | undefined {
     const locations = [

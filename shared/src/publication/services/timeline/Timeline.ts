@@ -1,6 +1,6 @@
-import { Link, Links } from "../../Link";
-import { Locator } from "../../Locator";
-import { TimelineItem } from "./TimelineItem";
+import { Link, Links } from "../../Link.ts";
+import { Locator } from "../../Locator.ts";
+import { TimelineItem } from "./TimelineItem.ts";
 
 interface PublicationLike {
     toc?: Links;
@@ -30,6 +30,8 @@ export class Timeline {
     private _depth: number | undefined;
     private _items: TimelineItem[] | undefined;
     private _flat: TimelineItem[] | undefined;
+    /** Populated when depth is set; maps cloned items from trimToDepth back to their Links. */
+    private _trimmedLinkMap: Map<TimelineItem, Link> = new Map();
 
     constructor(items: TimelineItem[], linkMap: Map<TimelineItem, Link>) {
         this._allItems = items;
@@ -86,9 +88,12 @@ export class Timeline {
     /** Top-level timeline items.  Cached; invalidated when `depth` changes. */
     get items(): TimelineItem[] {
         if (!this._items) {
-            this._items = this._depth !== undefined
-                ? Timeline.trimToDepth(this._allItems, this._depth)
-                : this._allItems;
+            if (this._depth !== undefined) {
+                this._trimmedLinkMap = new Map();
+                this._items = Timeline.trimToDepth(this._allItems, this._depth, this.linkMap, this._trimmedLinkMap);
+            } else {
+                this._items = this._allItems;
+            }
         }
         return this._items;
     }
@@ -100,8 +105,13 @@ export class Timeline {
         let match: TimelineItem | undefined;
 
         if (time !== undefined) {
+            let bestTime = -Infinity;
             for (const item of this.flat) {
-                if (this.itemMatchesTime(item, href, time)) match = item;
+                const t = this.itemStartTime(item, href);
+                if (t !== undefined && t <= time && t > bestTime) {
+                    bestTime = t;
+                    match = item;
+                }
             }
         }
 
@@ -136,10 +146,13 @@ export class Timeline {
         if (duration !== undefined) {
             const time = progression * duration;
             let match: TimelineItem = item;
+            let bestTime = -Infinity;
             for (const child of item.children) {
                 const t = this.timeFromItem(child);
-                if (t === undefined || t > time) break;
-                match = child;
+                if (t !== undefined && t <= time && t > bestTime) {
+                    bestTime = t;
+                    match = child;
+                }
             }
             return match;
         }
@@ -153,7 +166,7 @@ export class Timeline {
     }
 
     linkFor(item: TimelineItem): Link | undefined {
-        return this.linkMap.get(item);
+        return this.linkMap.get(item) ?? this._trimmedLinkMap.get(item);
     }
 
     private get flat(): TimelineItem[] {
@@ -258,25 +271,38 @@ export class Timeline {
 
     /**
      * A TOC href points to the start of its resource when it has no fragment,
-     * or when the fragment is `t=0` (audio: explicit beginning of the file).
+     * or when the fragment contains a parsable `t=` value of 0 (audio: explicit
+     * beginning of the file).  Accepts decimals and extra params, e.g. `t=0.0`
+     * or `foo=bar&t=0`.
      */
     private static isStartOfResource(href: string): boolean {
         const fragment = href.split("#")[1];
         if (!fragment) return true;
-        return fragment === "t=0";
+        const match = fragment.match(/(?:^|&)t=(\d+(?:\.\d+)?)/);
+        return match !== null && parseFloat(match[1]) === 0;
     }
 
     // -------------------------------------------------------------------------
     // Shared utilities
     // -------------------------------------------------------------------------
 
-    private static trimToDepth(items: TimelineItem[], remaining: number): TimelineItem[] {
-        return items.map(item => ({
-            ...item,
-            children: remaining > 1 && item.children?.length
-                ? Timeline.trimToDepth(item.children, remaining - 1)
-                : undefined,
-        }));
+    private static trimToDepth(
+        items: TimelineItem[],
+        remaining: number,
+        sourceMap: Map<TimelineItem, Link>,
+        targetMap: Map<TimelineItem, Link>,
+    ): TimelineItem[] {
+        return items.map(item => {
+            const clone: TimelineItem = {
+                ...item,
+                children: remaining > 1 && item.children?.length
+                    ? Timeline.trimToDepth(item.children, remaining - 1, sourceMap, targetMap)
+                    : undefined,
+            };
+            const link = sourceMap.get(item);
+            if (link) targetMap.set(clone, link);
+            return clone;
+        });
     }
 
     private flattenItems(items: TimelineItem[]): TimelineItem[] {
@@ -288,21 +314,18 @@ export class Timeline {
         return result;
     }
 
-    private itemMatchesTime(item: TimelineItem, href: string, time: number): boolean {
+    private itemStartTime(item: TimelineItem, href: string): number | undefined {
         for (const ref of item.references) {
             const hashIndex = ref.indexOf("#");
             const refHref = hashIndex >= 0 ? ref.slice(0, hashIndex) : ref;
             const refFragment = hashIndex >= 0 ? ref.slice(hashIndex + 1) : undefined;
-            if ((refHref || href) !== href) continue;
-            if (time >= Timeline.parseTimeFragment(refFragment)) return true;
+            const effectiveHref = refHref || this.bareHrefFromItem(item);
+            if (effectiveHref !== href) continue;
+            if (!refFragment) return undefined;
+            const match = refFragment.match(/(?:^|&)t=(\d+(?:\.\d+)?)/);
+            return match ? parseFloat(match[1]) : undefined;
         }
-        return false;
-    }
-
-    private static parseTimeFragment(fragment: string | undefined): number {
-        if (!fragment) return 0;
-        const match = fragment.match(/(?:^|&)t=(\d+(?:\.\d+)?)/);
-        return match ? parseFloat(match[1]) : 0;
+        return undefined;
     }
 
     private bareHrefFromItem(item: TimelineItem): string {

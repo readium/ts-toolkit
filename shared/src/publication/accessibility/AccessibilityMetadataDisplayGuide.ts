@@ -1,9 +1,9 @@
-import { Accessibility, Feature, AccessMode, PrimaryAccessMode, Hazard } from './Accessibility';
-import { Publication } from '../Publication';
-import { AccessibilityProfile } from './Accessibility';
+import { Accessibility, Feature, AccessMode, PrimaryAccessMode, Hazard } from './Accessibility.ts';
+import { Publication } from '../Publication.ts';
+import { AccessibilityProfile } from './Accessibility.ts';
 
-import { Localization } from './Localization';
-import { Layout } from '../Layout';
+import { Localization } from './Localization.ts';
+import { Layout } from '../Layout.ts';
 
 /**
  * Represents a single accessibility claim
@@ -90,19 +90,19 @@ export class WaysOfReading implements AccessibilityDisplayField {
 
     // This should be displayed even if there is no metadata
     this.shouldDisplay = true;
-    
+
     const titleLocale = Localization.getString(this.id);
     this.title = titleLocale.compact;
 
     this.statements = [];
-    
+
     // Visual Adjustments
     const visualAdjustmentsKey = visualAdjustments === VisualAdjustments.Modifiable
       ? "ways-of-reading.visual-adjustments.modifiable"
       : visualAdjustments === VisualAdjustments.Unmodifiable
         ? "ways-of-reading.visual-adjustments.unmodifiable"
         : "ways-of-reading.visual-adjustments.unknown";
-    
+
     const visualAdjustmentsLocale = Localization.getString(visualAdjustmentsKey);
     this.statements.push({
       id: visualAdjustmentsKey,
@@ -121,7 +121,7 @@ export class WaysOfReading implements AccessibilityDisplayField {
     } else if (nonvisualReading === NonvisualReading.NoMetadata) {
       nonvisualReadingKey = "ways-of-reading.nonvisual-reading.no-metadata";
     }
-    
+
     const nonvisualReadingLocale = Localization.getString(nonvisualReadingKey);
     this.statements.push({
       id: nonvisualReadingKey,
@@ -150,7 +150,7 @@ export class WaysOfReading implements AccessibilityDisplayField {
     } else if (prerecordedAudio === PrerecordedAudio.NoMetadata) {
       prerecordedAudioKey = "ways-of-reading.prerecorded-audio.no-metadata";
     }
-    
+
     const prerecordedAudioLocale = Localization.getString(prerecordedAudioKey);
     this.statements.push({
       id: prerecordedAudioKey,
@@ -389,7 +389,7 @@ export class RichContent implements AccessibilityDisplayField {
       !closedCaptions && !openCaptions && !transcript;
 
     this.shouldDisplay = !this.noMetadata;
-    
+
     const titleLocale = Localization.getString(this.id);
     this.title = titleLocale.compact;
 
@@ -553,7 +553,7 @@ export class AdditionalInformation implements AccessibilityDisplayField {
       !signLanguage && !tactileGraphics && !tactileObjects && !textToSpeechHinting;
 
     this.shouldDisplay = !this.noMetadata;
-    
+
     const titleLocale = Localization.getString(this.id);
     this.title = titleLocale.compact;
 
@@ -716,7 +716,7 @@ export class Hazards implements AccessibilityDisplayField {
     this.flashing = flashing;
     this.motion = motion;
     this.sound = sound;
-    
+
     const titleLocale = Localization.getString(this.id);
     this.title = titleLocale.compact;
 
@@ -879,10 +879,10 @@ export class Conformance implements AccessibilityDisplayField {
 
   private constructor(profiles: AccessibilityProfile[] = []) {
     this.profiles = profiles;
-    
+
     // This should be displayed even if there is no metadata
     this.shouldDisplay = true;
-    
+
     const titleLocale = Localization.getString(this.id);
     this.title = titleLocale.compact;
 
@@ -948,7 +948,7 @@ export class Legal implements AccessibilityDisplayField {
   ) {
     this.exemption = exemption;
     this.shouldDisplay = this.exemption;
-    
+
     const titleLocale = Localization.getString(this.id);
     this.title = titleLocale.compact;
 
@@ -989,13 +989,13 @@ export class AccessibilitySummary implements AccessibilityDisplayField {
 
   private constructor(publication: Publication) {
     this.shouldDisplay = true;
-    
+
     const titleLocale = Localization.getString(this.id);
     this.title = titleLocale.compact;
-    
+
     const summary = publication.metadata.accessibility?.summary;
     this.statements = [];
-    
+
     if (this.shouldDisplay && summary) {
       this.statements.push({
         id: "accessibility-summary.summary",

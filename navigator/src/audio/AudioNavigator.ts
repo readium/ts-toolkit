@@ -1,7 +1,7 @@
 import { Link, Locator, LocatorLocations, Publication, Timeline, TimelineItem } from "@readium/shared";
-import { MediaNavigator, IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator";
-import { Configurable } from "../preferences";
-import { WebAudioEngine, PlaybackState } from "./engine";
+import { MediaNavigator, IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator.ts";
+import { Configurable } from "../preferences/Configurable.ts";
+import { WebAudioEngine, PlaybackState } from "./engine/index.ts";
 import {
     AudioPreferences,
     AudioDefaults,
@@ -9,12 +9,12 @@ import {
     AudioPreferencesEditor,
     IAudioPreferences,
     IAudioDefaults
-} from "./preferences";
-import { AudioPoolManager } from "./AudioPoolManager";
+} from "./preferences/index.ts";
+import { AudioPoolManager } from "./AudioPoolManager.ts";
 import { ContextMenuEvent, KeyboardEventData, SuspiciousActivityEvent } from "@readium/navigator-html-injectables";
-import { AudioNavigatorProtector } from "./protection/AudioNavigatorProtector";
-import { NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector";
-import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../peripherals/KeyboardPeripherals";
+import { AudioNavigatorProtector } from "./protection/AudioNavigatorProtector.ts";
+import { NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector.ts";
+import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../peripherals/KeyboardPeripherals.ts";
 
 export interface AudioMetadata {
     duration: number;
@@ -38,7 +38,7 @@ export interface AudioNavigatorListeners {
     contentProtection: (type: string, data: SuspiciousActivityEvent) => void;
     peripheral: (data: KeyboardEventData) => void;
     contextMenu: (data: ContextMenuEvent) => void;
-    remotePlaybackStateChanged?: (state: RemotePlaybackState) => void;
+    remotePlaybackStateChanged: (state: RemotePlaybackState) => void;
 }
 
 const defaultListeners = (listeners: Partial<AudioNavigatorListeners>): AudioNavigatorListeners => ({
@@ -56,7 +56,7 @@ const defaultListeners = (listeners: Partial<AudioNavigatorListeners>): AudioNav
     contentProtection: listeners.contentProtection ?? (() => {}),
     peripheral: listeners.peripheral ?? (() => {}),
     contextMenu: listeners.contextMenu ?? (() => {}),
-    remotePlaybackStateChanged: listeners.remotePlaybackStateChanged,
+    remotePlaybackStateChanged: listeners.remotePlaybackStateChanged ?? (() => {}),
 });
 
 export interface IAudioContentProtectionConfig extends IContentProtectionConfig {
@@ -109,6 +109,10 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         this._defaults = new AudioDefaults(configuration.defaults);
         this._settings = new AudioSettings(this._preferences, this._defaults);
 
+        if (publication.readingOrder.items.length === 0) {
+            throw new Error("AudioNavigator: publication has an empty reading order");
+        }
+
         if (initialPosition) {
             this.currentLocation = this.ensureLocatorLocations(initialPosition);
         } else {
@@ -118,7 +122,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                 type: firstLink.type || "audio/mpeg",
                 title: firstLink.title,
                 locations: new LocatorLocations({
-                    position: 0,
+                    position: 1,
                     progression: 0,
                     totalProgression: 0,
                     fragments: ["t=0"]
@@ -128,6 +132,9 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
         const initialHref = this.currentLocation.href.split("#")[0];
         const trackIndex = this.hrefToTrackIndex(initialHref);
+        if (trackIndex === -1) {
+            throw new Error(`AudioNavigator: initial href "${ initialHref }" not found in reading order`);
+        }
         const initialTime = this.currentLocation.locations?.time() || 0;
 
         const audioEngine = new WebAudioEngine({
@@ -179,10 +186,14 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         }
 
         this.setupEventListeners();
-        this.applyPreferences();
 
         this._isNavigating = true;
         this.pool.setCurrentAudio(trackIndex, "forward");
+
+        // applyPreferences() must come after setCurrentAudio() so that the src
+        // is already set on the media element when setPlaybackRate() tries to
+        // activate the Web Audio graph for the preservePitch polyfill path.
+        this.applyPreferences();
 
         // Load and seek to initial position, then notify consumer.
         // No cancellation needed here — the constructor runs once.
@@ -226,6 +237,8 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         this.pool.audioEngine.setVolume(this._settings.volume);
         this.pool.audioEngine.setPlaybackRate(this._settings.playbackRate, this._settings.preservePitch);
 
+        if (this.positionPollInterval !== null) this.startPositionPolling();
+
         if (this._settings.enableMediaSession && !this._mediaSessionEnabled) {
             this._mediaSessionEnabled = true;
             this.setupMediaSession();
@@ -248,6 +261,9 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         if (item !== this._currentTimelineItem) {
             this._currentTimelineItem = item;
             this.listeners.timelineItemChanged(item);
+            if (this._settings.enableMediaSession) {
+                this.updateMediaSessionMetadata();
+            }
         }
     }
 
@@ -304,7 +320,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             title: link.title,
             locations: new LocatorLocations({
                 progression: duration > 0 ? timestamp / duration : 0,
-                position: trackIndex,
+                position: trackIndex + 1,
                 fragments: [`t=${timestamp}`]
             })
         });
@@ -363,7 +379,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         this.pool.audioEngine.on("ended", async () => {
             this.stopPositionPolling();
             this.currentLocation = this.currentLocation.copyWithLocations(new LocatorLocations({
-                position: this.currentTrackIndex(),
+                position: this.currentTrackIndex() + 1,
                 progression: 1,
                 fragments: [`t=${this.duration}`]
             }));
@@ -393,18 +409,19 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         this.pool.audioEngine.on("seeked", () => {
             if (this._isNavigating) return;
             this.listeners.seeking(false);
-            if (!this.isPlaying) {
-                const currentTime = this.currentTime;
-                const duration = this.duration;
-                const progression = duration > 0 ? currentTime / duration : 0;
-                this.currentLocation = this.currentLocation.copyWithLocations(new LocatorLocations({
-                    position: this.currentTrackIndex(),
-                    progression,
-                    fragments: [`t=${currentTime}`]
-                }));
-                this._notifyTimelineChange(this.currentLocation);
-                this.listeners.positionChanged(this.currentLocation);
-            }
+            const currentTime = this.currentTime;
+            const duration = this.duration;
+            const progression = duration > 0 ? currentTime / duration : 0;
+            this.currentLocation = this.currentLocation.copyWithLocations(new LocatorLocations({
+                position: this.currentTrackIndex() + 1,
+                progression,
+                fragments: [`t=${currentTime}`]
+            }));
+            // Always notify on seeked — don't defer to polling — so that a skip
+            // crossing a timeline item boundary fires timelineItemChanged immediately
+            // regardless of play state. _notifyTimelineChange deduplicates internally.
+            this._notifyTimelineChange(this.currentLocation);
+            this.listeners.positionChanged(this.currentLocation);
         });
 
         this.pool.audioEngine.on("seeking", () => { if (!this._isNavigating) this.listeners.seeking(true); });
@@ -480,7 +497,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                 ? this.pub.metadata.authors.items.map((a) => a.name.getTranslation()).join(", ")
                 : undefined,
             album: this.pub.metadata.title.getTranslation(),
-            artwork: cover ? [{ src: cover.href, type: cover.type }] : undefined,
+            artwork: cover ? [{ src: cover.toURL(this.pub.baseURL) ?? cover.href, type: cover.type }] : undefined,
         });
     }
 
@@ -491,7 +508,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             const duration = this.duration;
             const progression = duration > 0 ? currentTime / duration : 0;
             this.currentLocation = this.currentLocation.copyWithLocations(new LocatorLocations({
-                position: this.currentTrackIndex(),
+                position: this.currentTrackIndex() + 1,
                 progression,
                 fragments: [`t=${currentTime}`]
             }));
@@ -520,7 +537,8 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             }
 
             const id = ++this.navigationId;
-            const direction: "forward" | "backward" = trackIndex >= this.currentTrackIndex() ? "forward" : "backward";
+            const previousTrackIndex = this.currentTrackIndex();
+            const direction: "forward" | "backward" = trackIndex >= previousTrackIndex ? "forward" : "backward";
             const wasPlaying = this.isPlaying || this._playIntent;
             this._playIntent = wasPlaying;
 
@@ -537,7 +555,9 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                 return;
             }
 
-            this.listeners.trackLoaded(this.pool.audioEngine.getMediaElement());
+            if (trackIndex !== previousTrackIndex) {
+                this.listeners.trackLoaded(this.pool.audioEngine.getMediaElement());
+            }
             this._notifyTimelineChange(this.currentLocator);
             this.listeners.positionChanged(this.currentLocator);
 
@@ -649,8 +669,9 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
      * lifetime of the navigator — host apps can store it and call `.prompt()`,
      * `.watchAvailability()`, etc. directly.
      */
-    get remotePlayback(): RemotePlayback {
-        return this.pool.audioEngine.getMediaElement().remote;
+    get remotePlayback(): RemotePlayback | undefined {
+        const el = this.pool.audioEngine.getMediaElement();
+        return "remote" in el ? el.remote : undefined;
     }
 
     /** Wires up the optional remotePlaybackStateChanged listener. Called once after initial load. */
@@ -660,9 +681,9 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         }
         const remote = this.remotePlayback;
         if (!remote) return;
-        remote.onconnecting = () => this.listeners.remotePlaybackStateChanged?.("connecting");
-        remote.onconnect    = () => this.listeners.remotePlaybackStateChanged?.("connected");
-        remote.ondisconnect = () => this.listeners.remotePlaybackStateChanged?.("disconnected");
+        remote.onconnecting = () => this.listeners.remotePlaybackStateChanged("connecting");
+        remote.onconnect    = () => this.listeners.remotePlaybackStateChanged("connected");
+        remote.ondisconnect = () => this.listeners.remotePlaybackStateChanged("disconnected");
     }
 
     private destroyMediaSession(): void {
@@ -678,6 +699,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
     destroy(): void {
         this.stopPositionPolling();
+        this._stopStalledWatchdog();
         this.destroyMediaSession();
         if (this._suspiciousActivityListener) {
             window.removeEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
