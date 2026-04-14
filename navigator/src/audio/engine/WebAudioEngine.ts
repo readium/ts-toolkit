@@ -236,9 +236,14 @@ export class WebAudioEngine implements AudioEngine {
    */
   public setVolume(volume: number): void {
     const clamped = Math.max(0, Math.min(1, volume));
-    this.mediaElement.volume = clamped;
     if (this.gainNode) {
+      // When the Web Audio graph is active, keep the media element at full
+      // volume and control level exclusively through the GainNode to avoid
+      // double-attenuation (e.g. 0.5 × 0.5 = 0.25).
+      this.mediaElement.volume = 1;
       this.gainNode.gain.value = clamped;
+    } else {
+      this.mediaElement.volume = clamped;
     }
     this.isMutedValue = clamped === 0;
   }
@@ -435,9 +440,13 @@ export class WebAudioEngine implements AudioEngine {
 
     this.sourceNode = new MediaElementAudioSourceNode(this.getOrCreateAudioContext(), { mediaElement: this.mediaElement });
 
-    // Create gainNode lazily when Web Audio is activated
+    // Create gainNode lazily when Web Audio is activated.
+    // Seed its gain from the current element volume, then reset the element to
+    // 1.0 so volume isn't applied twice once setVolume routes through the node.
     const audioContext = this.getOrCreateAudioContext();
     this.gainNode = audioContext.createGain();
+    this.gainNode.gain.value = this.mediaElement.volume;
+    this.mediaElement.volume = 1;
     this.sourceNode.connect(this.gainNode);
     this.gainNode.connect(audioContext.destination);
 
