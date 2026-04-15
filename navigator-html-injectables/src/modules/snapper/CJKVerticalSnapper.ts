@@ -30,7 +30,11 @@ export interface SuspiciousCJKScrollingEvent extends BaseSuspiciousActivityEvent
  *   scrollLeft = 0 (right edge, document start)  →  progress 0
  *   scrollLeft = ±(scrollWidth − clientWidth)    →  progress 1 (document end, left edge)
  *
- * scrollLeft sign varies by browser — always use Math.abs() when reading it.
+ * All modern browsers use negative scrollLeft for vertical-rl (range: [−scrollable, 0]).
+ * Read it with Math.abs() to get a non-negative offset from document start.
+ * Write absolute positions as negative values (go_progression, go_end).
+ * Write relative adjustments as viewport-coordinate deltas (go_id, go_text) — this
+ * is sign-agnostic and works regardless of browser convention.
  *
  * go_next / go_prev always return false so that the navigator advances to the
  * next or previous spine item — this snapper intentionally provides free
@@ -219,7 +223,7 @@ export class CJKVerticalSnapper extends Snapper {
             if (!element) { ack(false); return; }
             this.wnd.requestAnimationFrame(() => {
                 // getBoundingClientRect().left is in viewport coords; translate to scroll coords
-                this.doc().scrollLeft = element.getBoundingClientRect().left + wnd.scrollX - wnd.innerWidth / 2;
+                this.doc().scrollLeft += element.getBoundingClientRect().left - wnd.innerWidth / 2;
                 this.reportProgress();
                 deselect(this.wnd);
                 ack(true);
@@ -243,7 +247,7 @@ export class CJKVerticalSnapper extends Snapper {
             }));
             if (!r) { ack(false); return; }
             this.wnd.requestAnimationFrame(() => {
-                this.doc().scrollLeft = r.getBoundingClientRect().left + wnd.scrollX - wnd.innerWidth / 2;
+                this.doc().scrollLeft += r.getBoundingClientRect().left - wnd.innerWidth / 2;
                 this.reportProgress();
                 deselect(this.wnd);
                 ack(true);
