@@ -2,11 +2,12 @@ import { Feature, Link, Locator, Publication, ReadingProgression, LocatorLocatio
 import { VisualNavigator, VisualNavigatorViewport, ProgressionRange } from "../Navigator.ts";
 import { Configurable } from "../preferences/Configurable.ts";
 import { WebPubFramePoolManager } from "./WebPubFramePoolManager.ts";
-import { BasicTextSelection, CommsEventKey, ContextMenuEvent, FrameClickEvent, KeyboardEventData, ModuleLibrary, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
+import { BasicTextSelection, CommsEventKey, ContextMenuEvent, FrameClickEvent, KeyboardEventData, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
 import { WebPubFrameManager } from "./WebPubFrameManager.ts";
 
 import { ManagerEventKey } from "../epub/EpubNavigator.ts";
+import { getScriptMode } from "../epub/helpers/scriptMode.ts";
 import { WebPubCSS } from "./css/WebPubCSS.ts";
 import { WebUserProperties, WebRSProperties } from "./css/Properties.ts";
 import { IWebPubPreferences, WebPubPreferences } from "./preferences/WebPubPreferences.ts";
@@ -367,10 +368,13 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     }
 
     private determineModules(): ModuleName[] {
-        let modules = Array.from(ModuleLibrary.keys()) as ModuleName[];
+        const modules = WebPubModules.slice();
 
-        // For WebPub, use the predefined WebPubModules array and filter
-        return modules.filter((m) => WebPubModules.includes(m));
+        if (getScriptMode(this.pub.metadata) === 'cjk-vertical') {
+            return modules.map((m) => m === "webpub_snapper" ? "cjk_vertical_snapper" : m);
+        }
+
+        return modules;
     }
 
     private attachListener() {
