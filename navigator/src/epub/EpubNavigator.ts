@@ -112,7 +112,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this._settings = new EpubSettings(this._preferences, this._defaults);
         // For CJK vertical, force --RS__disablePagination for the entire session.
         // ReadiumCSS.update() never sets noVerticalPagination, so this persists.
-        const isCJKVertical = getScriptMode(pub.metadata) === 'cjk-vertical';
+        const scriptMode = getScriptMode(pub.metadata);
+        const isCJKHorizontal = scriptMode === 'cjk-horizontal';
+        const isCJKVertical = scriptMode === 'cjk-vertical';
+        const isCJK = isCJKHorizontal || isCJKVertical;
         this._css = new ReadiumCSS({
             rsProperties: new RSProperties({ noVerticalPagination: isCJKVertical || undefined }),
             userProperties: new UserProperties({}),
@@ -126,6 +129,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 fontFace: this._settings.fontFamily,
                 letterSpacing: this._settings.letterSpacing,
                 wordSpacing: this._settings.wordSpacing,
+                isCJK: isCJK,
             //    sample: this.pub.metadata.description
             }),
             container: container,
