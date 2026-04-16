@@ -107,8 +107,9 @@ export class CJKVerticalSnapper extends Snapper {
                     const timeDelta = now - (this.lastScrollTime || now);
                     if (this.patternAnalyzer) {
                         const isSuspicious = this.patternAnalyzer.analyze(
-                            // In vertical-rl, scrolling left (negative delta) = going forward
-                            deltaX < 0 ? "down" : "up",
+                            // In vertical-rl, norm increases when scrolling forward (toward left/end),
+                            // so deltaX > 0 = going forward.
+                            deltaX > 0 ? "down" : "up",
                             Math.abs(deltaX),
                             timeDelta
                         );
@@ -120,7 +121,7 @@ export class CJKVerticalSnapper extends Snapper {
                                 type: "suspicious_scrolling",
                                 timestamp: Date.now(),
                                 scrollDelta: deltaX,
-                                scrollDirection: deltaX < 0 ? "left" : "right",
+                                scrollDirection: deltaX > 0 ? "left" : "right",
                                 targetElement: target
                             } as SuspiciousCJKScrollingEvent);
                         }
