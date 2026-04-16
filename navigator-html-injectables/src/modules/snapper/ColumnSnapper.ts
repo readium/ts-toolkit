@@ -518,13 +518,16 @@ export class ColumnSnapper extends Snapper {
         comms.register("go_end", ColumnSnapper.moduleName, (_, ack) => {
             this.wnd.requestAnimationFrame(() => {
                 this.cachedScrollWidth = this.doc().scrollWidth!;
-                // RTL: end is the leftmost position, scrollLeft = -(scrollWidth - innerWidth)
-                // LTR: end is scrollWidth (browser clamps to scrollWidth - innerWidth)
-                const final = isRTL(wnd)
-                    ? -(this.cachedScrollWidth - wnd.innerWidth)
-                    : this.cachedScrollWidth;
-                if(this.doc().scrollLeft === final) return ack(false);
-                this.doc().scrollLeft = this.snapOffset(final);
+                let snappedFinal: number;
+                if (isRTL(wnd)) {
+                    // RTL: end is the leftmost position, using normalized snapping first
+                    snappedFinal = -this.snapNormOffset(this.cachedScrollWidth - wnd.innerWidth);
+                } else {
+                    // LTR: end is scrollWidth (browser clamps to scrollWidth - innerWidth)
+                    snappedFinal = this.snapOffset(this.cachedScrollWidth);
+                }
+                if(this.doc().scrollLeft === snappedFinal) return ack(false);
+                this.doc().scrollLeft = snappedFinal;
                 this.reportProgress();
                 deselect(this.wnd);
                 ack(true);
