@@ -1,6 +1,6 @@
 import { Metadata, ReadingProgression } from "@readium/shared";
 
-export type ScriptMode = 'ltr' | 'rtl' | 'cjk-horizontal' | 'cjk-vertical';
+export type ScriptMode = 'ltr' | 'rtl' | 'cjk-horizontal' | 'cjk-vertical' | 'mongolian-vertical';
 
 /**
  * Derives the script mode from publication metadata.
@@ -14,6 +14,9 @@ export type ScriptMode = 'ltr' | 'rtl' | 'cjk-horizontal' | 'cjk-vertical';
  * - For RTL (ar/fa/he): language wins. If the primary language is a RTL
  *   script, RTL mode is applied regardless of the explicit progression
  *   direction declared in the OPF.
+ * - For Mongolian (mn): Traditional Mongolian script (mn-Mong) uses
+ *   writing-mode: vertical-lr. Cyrillic Mongolian (mn-Cyrl) is standard LTR.
+ *   An explicit script subtag is required; bare `mn` defaults to LTR.
  */
 export function getScriptMode(metadata: Metadata): ScriptMode {
     const primaryLang = metadata.languages?.[0]?.toLowerCase();
@@ -32,6 +35,10 @@ export function getScriptMode(metadata: Metadata): ScriptMode {
                 ? 'cjk-vertical'
                 : 'cjk-horizontal';
         }
+
+        // Traditional Mongolian script (mn-Mong): writing-mode vertical-lr.
+        // Requires an explicit Mong script subtag; mn-Cyrl and bare mn stay LTR.
+        if (primaryLang.startsWith('mn-mong')) return 'mongolian-vertical';
 
         // RTL: language is authoritative. ar/fa/he → rtl regardless of
         // what the OPF says about page-progression-direction.

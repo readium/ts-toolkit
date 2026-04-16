@@ -115,9 +115,11 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         const scriptMode = getScriptMode(pub.metadata);
         const isCJKHorizontal = scriptMode === 'cjk-horizontal';
         const isCJKVertical = scriptMode === 'cjk-vertical';
+        const isMongolianVertical = scriptMode === 'mongolian-vertical';
+        const isVertical = isCJKVertical || isMongolianVertical;
         const isCJK = isCJKHorizontal || isCJKVertical;
         this._css = new ReadiumCSS({
-            rsProperties: new RSProperties({ noVerticalPagination: isCJKVertical || undefined }),
+            rsProperties: new RSProperties({ noVerticalPagination: isVertical || undefined }),
             userProperties: new UserProperties({}),
             lineLengths: new LineLengths({
                 optimalChars: this._settings.optimalLineLength,
@@ -134,7 +136,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             }),
             container: container,
             constraint: this._settings.constraint,
-            isCJKVertical: isCJKVertical
+            isCJKVertical: isVertical
         });
 
         this._layout = EpubNavigator.determineLayout(pub, !!this._settings.scroll);
@@ -210,9 +212,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         if (layout === Layout.scrolled)
             return Layout.scrolled;
 
-        // CJK vertical writing: force scroll mode so the ScrollSnapper is
-        // used and column-based pagination doesn't interfere.
-        if (getScriptMode(pub.metadata) === 'cjk-vertical')
+        // CJK/Mongolian vertical writing: force scroll mode so the
+        // CJKVerticalSnapper is used and column-based pagination doesn't interfere.
+        const sm = getScriptMode(pub.metadata);
+        if (sm === 'cjk-vertical' || sm === 'mongolian-vertical')
             return Layout.scrolled;
 
         if (layout === Layout.reflowable && scroll)
@@ -555,8 +558,9 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             return modules.filter((m) => FXLModules.includes(m));
         } else modules = modules.filter((m) => ReflowableModules.includes(m));
         
-        // CJK vertical: uses its own X-axis snapper, never column or scroll snappers
-        if (getScriptMode(this.pub.metadata) === 'cjk-vertical') {
+        // CJK/Mongolian vertical: uses the X-axis snapper, never column or scroll snappers
+        const mode = getScriptMode(this.pub.metadata);
+        if (mode === 'cjk-vertical' || mode === 'mongolian-vertical') {
             return modules.filter((m) => m !== "column_snapper" && m !== "scroll_snapper");
         }
 

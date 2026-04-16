@@ -370,7 +370,8 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private determineModules(): ModuleName[] {
         const modules = WebPubModules.slice();
 
-        if (getScriptMode(this.pub.metadata) === 'cjk-vertical') {
+        const mode = getScriptMode(this.pub.metadata);
+        if (mode === 'cjk-vertical' || mode === 'mongolian-vertical') {
             return modules.map((m) => m === "webpub_snapper" ? "cjk_vertical_snapper" : m);
         }
 

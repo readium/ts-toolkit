@@ -86,7 +86,11 @@ export async function createReadiumEpubRules(metadata: Metadata, readingOrderIte
                 cssAfterRaw = after.default;
                 break;
             }
-            case 'cjk-vertical': {
+            case 'cjk-vertical':
+            // Traditional Mongolian (vertical-lr) uses the same Readium CSS
+            // layout as CJK vertical-rl — it is an outlier handled by the
+            // same stylesheet set per the Readium CSS spec.
+            case 'mongolian-vertical': {
                 const [before, def, after] = await Promise.all([
                     import("@readium/css/css/dist/cjk-vertical/ReadiumCSS-before.css?raw"),
                     import("@readium/css/css/dist/cjk-vertical/ReadiumCSS-default.css?raw"),

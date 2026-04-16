@@ -54,6 +54,10 @@ export class CJKVerticalSnapper extends Snapper {
     private lastScrollLeft = 0;
     private isResizing = false;
     private resizeDebounce: number | null = null;
+    // true for writing-mode: vertical-lr (Traditional Mongolian).
+    // vertical-lr uses non-negative scrollLeft like LTR horizontal, so
+    // absolute position writes must be positive, not negative.
+    private verticalLR = false;
 
     private doc() {
         return this.wnd.document.scrollingElement as HTMLElement;
@@ -150,6 +154,7 @@ export class CJKVerticalSnapper extends Snapper {
         this.initialScrollHandled = false;
         this.lastScrollLeft = 0;
         this.isResizing = false;
+        this.verticalLR = wnd.getComputedStyle(wnd.document.documentElement).writingMode === 'vertical-lr';
         if (this.resizeDebounce) {
             this.wnd.clearTimeout(this.resizeDebounce);
             this.resizeDebounce = null;
@@ -193,10 +198,13 @@ export class CJKVerticalSnapper extends Snapper {
         comms.register("force_webkit_recalc", CJKVerticalSnapper.moduleName, () => {
             forceWebkitRecalc(this.wnd);
             const current = this.doc().scrollLeft;
-            if (Math.abs(current) > 1) {
-                this.doc().scrollLeft = current < 0 ? current + 1 : current - 1;
+            // Nudge by ±1 then restore to force a style recalculation.
+            // vertical-lr: scrollLeft ≥ 0, nudge toward 0 when possible.
+            // vertical-rl: scrollLeft ≤ 0, nudge toward 0 when possible.
+            if (this.verticalLR) {
+                this.doc().scrollLeft = current > 1 ? current - 1 : current + 1;
             } else {
-                this.doc().scrollLeft = current < 0 ? current - 1 : current + 1;
+                this.doc().scrollLeft = current < -1 ? current + 1 : current - 1;
             }
             this.doc().scrollLeft = current;
         });
@@ -211,8 +219,10 @@ export class CJKVerticalSnapper extends Snapper {
                 return;
             }
             this.wnd.requestAnimationFrame(() => {
-                // position 0 = start (scrollLeft=0), position 1 = end (scrollLeft=-scrollable)
-                this.doc().scrollLeft = -(this.scrollable() * position);
+                // position 0 = start (scrollLeft=0), position 1 = end.
+                // vertical-lr: scrollLeft is positive; vertical-rl: negative.
+                const target = this.scrollable() * position;
+                this.doc().scrollLeft = this.verticalLR ? target : -target;
                 this.reportProgress();
                 deselect(this.wnd);
                 ack(true);
@@ -263,11 +273,12 @@ export class CJKVerticalSnapper extends Snapper {
             ack(true);
         });
 
-        // go_end = document end = left edge. Write -scrollable; browsers normalize
-        // the sign internally so this works regardless of their scrollLeft convention.
+        // go_end = document end.
+        // vertical-lr: scrollLeft = +scrollable (rightmost column).
+        // vertical-rl: scrollLeft = -scrollable (leftmost column).
         comms.register("go_end", CJKVerticalSnapper.moduleName, (_, ack) => {
             if (Math.abs(this.doc().scrollLeft) === this.scrollable()) return ack(false);
-            this.doc().scrollLeft = -this.scrollable();
+            this.doc().scrollLeft = this.verticalLR ? this.scrollable() : -this.scrollable();
             this.reportProgress();
             ack(true);
         });
