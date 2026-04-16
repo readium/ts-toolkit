@@ -133,7 +133,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             //    sample: this.pub.metadata.description
             }),
             container: container,
-            constraint: this._settings.constraint
+            constraint: this._settings.constraint,
+            isCJKVertical: isCJKVertical
         });
 
         this._layout = EpubNavigator.determineLayout(pub, !!this._settings.scroll);
