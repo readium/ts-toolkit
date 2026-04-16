@@ -1,10 +1,16 @@
 import { ReadiumWindow } from "./dom.ts";
 
 export function isRTL(wnd: ReadiumWindow): boolean {
-    // Check body first (author-declared direction), then fall back to the
-    // root element where we inject dir="rtl" for RTL publications.
-    const dir = wnd.document.body.dir || wnd.document.documentElement.dir;
+    // Check documentElement first, then fall back to body.
+    const dir = wnd.document.documentElement.dir || wnd.document.body.dir;
     return dir.toLowerCase() === "rtl";
+}
+
+export function isVerticalLR(wnd: ReadiumWindow): boolean {
+    // Check documentElement first, then fall back to body.
+    const writingMode = wnd.getComputedStyle(wnd.document.documentElement).writingMode
+        || wnd.getComputedStyle(wnd.document.body).writingMode;
+    return writingMode === 'vertical-lr';
 }
 
 export function getColumnCountPerScreen(wnd: ReadiumWindow): number {

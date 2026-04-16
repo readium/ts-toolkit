@@ -4,7 +4,7 @@ import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/
 import { ModuleName } from "../ModuleLibrary.ts";
 import { Snapper } from "./Snapper.ts";
 import { rangeFromLocator } from "../../helpers/locator.ts";
-import { forceWebkitRecalc } from "../../helpers/document.ts";
+import { forceWebkitRecalc, isVerticalLR } from "../../helpers/document.ts";
 import { PatternAnalyzer } from "../../protection/PatternAnalyzer.ts";
 import { SCROLL_PROTECTION_CONFIG } from "../../protection/config.ts";
 import { BaseSuspiciousActivityEvent } from "../Peripherals.ts";
@@ -154,7 +154,7 @@ export class CJKVerticalSnapper extends Snapper {
         this.initialScrollHandled = false;
         this.lastScrollLeft = 0;
         this.isResizing = false;
-        this.verticalLR = wnd.getComputedStyle(wnd.document.documentElement).writingMode === 'vertical-lr';
+        this.verticalLR = isVerticalLR(wnd);
         if (this.resizeDebounce) {
             this.wnd.clearTimeout(this.resizeDebounce);
             this.resizeDebounce = null;

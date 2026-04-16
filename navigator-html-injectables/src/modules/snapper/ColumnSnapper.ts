@@ -36,6 +36,7 @@ export class ColumnSnapper extends Snapper {
     private lastTurnTime: number = 0;
     private wnd!: ReadiumWindow;
     private comms!: Comms;
+    private rtl = false;
     private doc() { return this.wnd.document.scrollingElement as HTMLElement; }
     private scrollOffset() {
         // The reason we do this is because when the document is transformed (translate3d),
@@ -47,7 +48,7 @@ export class ColumnSnapper extends Snapper {
     }
 
     snapOffset(offset: number) {
-        const value = offset + (isRTL(this.wnd) ? -1 : 1);
+        const value = offset + (this.rtl ? -1 : 1);
         return value - (value % this.wnd.innerWidth);
     }
 
@@ -66,9 +67,8 @@ export class ColumnSnapper extends Snapper {
      * scrollLeft may be negative depending on the browser — Math.abs() normalizes it.
      */
     private normScroll(): number {
-        const rtl = isRTL(this.wnd);
         const raw = this.doc().scrollLeft || this.alreadyScrollLeft;
-        return rtl ? Math.abs(raw) : Math.max(0, this.wnd.scrollX > 0 ? this.wnd.scrollX : raw);
+        return this.rtl ? Math.abs(raw) : Math.max(0, this.wnd.scrollX > 0 ? this.wnd.scrollX : raw);
     }
 
     reportProgress() {
@@ -97,7 +97,7 @@ export class ColumnSnapper extends Snapper {
         // LTR: end is on the right → bounce-r. RTL: start is on the right (norm≈0),
         // end is on the left → bounce direction flips based on which boundary we're at.
         const atStart = this.normScroll() < 5;
-        const bounceClass = isRTL(this.wnd)
+        const bounceClass = this.rtl
             ? (atStart ? "readium-bounce-r" : "readium-bounce-l")
             : "readium-bounce-r";
         doc.classList.add(bounceClass);
@@ -125,7 +125,6 @@ export class ColumnSnapper extends Snapper {
 
     // Snaps the current offset to the page width.
     snapCurrentOffset(smooth=false, noprogress=false) {
-        const rtl = isRTL(this.wnd);
         const doc = this.doc();
         const columnCount = getColumnCountPerScreen(this.wnd);
         const maxScroll = this.cachedScrollWidth - this.wnd.innerWidth;
@@ -137,14 +136,14 @@ export class ColumnSnapper extends Snapper {
         // Forward drag: LTR = drag left (cdo > 0), RTL = drag right (cdo < 0).
         // Normalize so that positive = moving forward in reading order.
         const cdo = this.dragOffset();
-        const normalizedCdo = rtl ? -cdo : cdo;
+        const normalizedCdo = this.rtl ? -cdo : cdo;
         const hurdle = (this.wnd.innerWidth / 3) * (normalizedCdo > 0 ? 2 : 1);
 
         const snappedNorm = Math.min(maxScroll, Math.max(0, this.snapNormOffset(currentNorm + hurdle)));
 
         // Convert back to signed scrollLeft for the actual DOM write.
-        const so = rtl ? -snappedNorm : snappedNorm;
-        const currentScrollLeft = rtl ? -currentNorm : currentNorm;
+        const so = this.rtl ? -snappedNorm : snappedNorm;
+        const currentScrollLeft = this.rtl ? -currentNorm : currentNorm;
 
         const direction = so > currentScrollLeft ? "right" : "left";
         this.checkSuspiciousSnap(direction, Math.abs(so - currentScrollLeft));
@@ -227,12 +226,11 @@ export class ColumnSnapper extends Snapper {
         if(this.touchState === ScrollTouchState.MOVE) {
             // Get the horizontal drag distance
             const dragOffset = this.dragOffset();
-            const rtl = isRTL(this.wnd);
 
             // Normalize: distance from document start, forward drag is positive.
             const norm = this.normScroll();
             const maxScroll = this.cachedScrollWidth - this.wnd.innerWidth;
-            const normalizedDrag = rtl ? -dragOffset : dragOffset;
+            const normalizedDrag = this.rtl ? -dragOffset : dragOffset;
 
             if(this.cachedScrollWidth <= this.wnd.innerWidth) {
                 // Only a single page, meaning any swipe triggers next/prev
@@ -245,7 +243,7 @@ export class ColumnSnapper extends Snapper {
                 this.comms.send("no_less", undefined);
             } else if((maxScroll - norm) < 5 && normalizedDrag > 5) {
                 // At document end, tried to go forward
-                this.alreadyScrollLeft = rtl ? -maxScroll : maxScroll;
+                this.alreadyScrollLeft = this.rtl ? -maxScroll : maxScroll;
                 this.comms.send("no_more", undefined);
             }
 
@@ -279,8 +277,8 @@ export class ColumnSnapper extends Snapper {
 
         // For RTL, scrollLeft is in [-(scrollWidth - innerWidth), 0].
         // For LTR, scrollLeft is in [0, scrollWidth - innerWidth].
-        const minScrollLeft = isRTL(this.wnd) ? -(this.cachedScrollWidth - this.wnd.innerWidth) : 0;
-        const maxScrollLeft = isRTL(this.wnd) ? 0 : (this.cachedScrollWidth - this.wnd.innerWidth);
+        const minScrollLeft = this.rtl ? -(this.cachedScrollWidth - this.wnd.innerWidth) : 0;
+        const maxScrollLeft = this.rtl ? 0 : (this.cachedScrollWidth - this.wnd.innerWidth);
 
         if(newpos < minScrollLeft) {
             this.overscroll = newpos;
@@ -330,6 +328,7 @@ export class ColumnSnapper extends Snapper {
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
+        this.rtl = isRTL(wnd);
         if(!super.mount(wnd, comms)) return false;
 
         wnd.navigator.epubReadingSystem && (wnd.navigator.epubReadingSystem.layoutStyle = "paginated");
@@ -451,7 +450,7 @@ export class ColumnSnapper extends Snapper {
                 this.cachedScrollWidth = this.doc().scrollWidth!;
                 const scrollable = this.cachedScrollWidth - wnd.innerWidth;
                 const norm = scrollable * position;
-                if (isRTL(wnd)) {
+                if (this.rtl) {
                     this.doc().scrollLeft = -this.snapNormOffset(norm);
                 } else {
                     this.doc().scrollLeft = this.snapOffset(norm);
@@ -469,7 +468,7 @@ export class ColumnSnapper extends Snapper {
                 return;
             }
             this.wnd.requestAnimationFrame(() => {
-                if (isRTL(wnd)) {
+                if (this.rtl) {
                     this.doc().scrollLeft = -this.snapNormOffset(element.getBoundingClientRect().left + wnd.scrollX);
                 } else {
                     this.doc().scrollLeft = this.snapOffset(element.getBoundingClientRect().left + wnd.scrollX);
@@ -504,7 +503,7 @@ export class ColumnSnapper extends Snapper {
                 return;
             }
             this.wnd.requestAnimationFrame(() => {
-                if (isRTL(wnd)) {
+                if (this.rtl) {
                     this.doc().scrollLeft = -this.snapNormOffset(r.getBoundingClientRect().left + wnd.scrollX);
                 } else {
                     this.doc().scrollLeft = this.snapOffset(r.getBoundingClientRect().left + wnd.scrollX);
@@ -519,7 +518,7 @@ export class ColumnSnapper extends Snapper {
             this.wnd.requestAnimationFrame(() => {
                 this.cachedScrollWidth = this.doc().scrollWidth!;
                 let snappedFinal: number;
-                if (isRTL(wnd)) {
+                if (this.rtl) {
                     // RTL: end is the leftmost position, using normalized snapping first
                     snappedFinal = -this.snapNormOffset(this.cachedScrollWidth - wnd.innerWidth);
                 } else {
@@ -548,7 +547,7 @@ export class ColumnSnapper extends Snapper {
             this.wnd.requestAnimationFrame(() => {
                 this.cachedScrollWidth = this.doc().scrollWidth!;
                 let change: boolean;
-                if (isRTL(wnd)) {
+                if (this.rtl) {
                     // RTL: go_prev = toward document start = decreasing norm = scrollLeft toward 0
                     change = rtlScrollToNorm(this.normScroll() - wnd.innerWidth);
                 } else {
@@ -567,7 +566,7 @@ export class ColumnSnapper extends Snapper {
             this.wnd.requestAnimationFrame(() => {
                 this.cachedScrollWidth = this.doc().scrollWidth!;
                 let change: boolean;
-                if (isRTL(wnd)) {
+                if (this.rtl) {
                     // RTL: go_next = toward document end = increasing norm = scrollLeft more negative
                     change = rtlScrollToNorm(this.normScroll() + wnd.innerWidth);
                 } else {
