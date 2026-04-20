@@ -7,7 +7,7 @@ import * as path from "path-browserify";
 import { WebPubFrameManager } from "./WebPubFrameManager.ts";
 
 import { ManagerEventKey } from "../epub/EpubNavigator.ts";
-import { getScriptMode } from "../epub/helpers/scriptMode.ts";
+import { getScriptMode } from "../helpers/scriptMode.ts";
 import { WebPubCSS } from "./css/WebPubCSS.ts";
 import { WebUserProperties, WebRSProperties } from "./css/Properties.ts";
 import { IWebPubPreferences, WebPubPreferences } from "./preferences/WebPubPreferences.ts";

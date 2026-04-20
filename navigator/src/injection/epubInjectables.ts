@@ -1,7 +1,7 @@
 import { IInjectableRule, IInjectable } from "../injection/Injectable.ts";
 import { stripJS, stripCSS } from "../helpers/minify.ts";
 import { Metadata, Layout, Link } from "@readium/shared";
-import { getScriptMode } from "../epub/helpers/scriptMode.ts";
+import { getScriptMode } from "../helpers/scriptMode.ts";
 
 import cssSelectorGeneratorContent from "../dom/_readium_cssSelectorGenerator.js?raw";
 import executionPreventionContent from "../dom/_readium_executionPrevention.js?raw";

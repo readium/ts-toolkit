@@ -1,6 +1,6 @@
 import { Link, MediaType, Publication, ReadingProgression } from "@readium/shared";
 import { Injector } from "../../injection/Injector.ts";
-import { getScriptMode } from "../helpers/scriptMode.ts";
+import { getScriptMode } from "../../helpers/scriptMode.ts";
 
 const csp = (domains: string[]) => {
     const d = domains.join(" ");
