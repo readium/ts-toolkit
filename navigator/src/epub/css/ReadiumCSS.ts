@@ -1,5 +1,5 @@
 import { LineLengths } from "../../helpers/index.ts";
-import { getContentWidth } from "../../helpers/dimensions.ts";
+import { getContentWidth, getContentHeight } from "../../helpers/dimensions.ts";
 import { EpubSettings } from "../preferences/EpubSettings.ts";
 import { IUserProperties, RSProperties, UserProperties } from "./Properties.ts";
 
@@ -138,8 +138,7 @@ export class ReadiumCSS {
     // (width) must not be constrained by line-length at all — use the full
     // parent width minus the known constraint.
     if (this.isCJKVertical) {
-      const w = Math.round(getContentWidth(this.containerParent) - this.constraint);
-      return { colCount: undefined, effectiveContainerWidth: w, effectiveLineLength: w };
+      return this.computeCJKVerticalLength(scale, ignoreCompensation);
     }
 
     const isScroll = scroll ?? this.userProperties.view === "scroll";
@@ -244,6 +243,16 @@ export class ReadiumCSS {
       effectiveContainerWidth: effectiveContainerWidth,
       effectiveLineLength: Math.round(((effectiveContainerWidth / RCSSColCount) / (scale && scale >= 1 ? scale : 1)) * zoomCompensation)
     };
+  }
+
+  private computeCJKVerticalLength(scale: number | null, ignoreCompensation: boolean | null) {
+    const w = Math.round(getContentWidth(this.containerParent) - this.constraint);
+    const h = Math.round(getContentHeight(this.containerParent));
+    const metrics = this.getCompensatedMetrics(scale, ignoreCompensation);
+    const effectiveLineLength = metrics.maximal !== null
+      ? Math.min(Math.round(metrics.maximal * metrics.zoomCompensation), h)
+      : h;
+    return { colCount: undefined, effectiveContainerWidth: w, effectiveLineLength };
   }
 
   // This behaves as paginate where colCount = 1

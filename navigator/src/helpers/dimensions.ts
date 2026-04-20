@@ -11,3 +11,10 @@ export function getContentWidth(el: Element) {
   return el.clientWidth - paddingLeft - paddingRight;
 }
 
+export function getContentHeight(el: Element) {
+  const cStyle = getComputedStyle(el);
+  const paddingTop = parseFloat(cStyle.paddingTop || "0");
+  const paddingBottom = parseFloat(cStyle.paddingBottom || "0");
+  return el.clientHeight - paddingTop - paddingBottom;
+}
+
