@@ -21,8 +21,8 @@ importers:
   navigator:
     devDependencies:
       '@readium/css':
-        specifier: ^2.0.1
-        version: 2.0.1
+        specifier: ^2.0.2
+        version: 2.0.2
       '@readium/navigator-html-injectables':
         specifier: workspace:*
         version: link:../navigator-html-injectables
@@ -1105,8 +1105,8 @@ packages:
     resolution: {integrity: sha512-QNqXyfVS2wm9hweSYD2O7F0G06uurj9kZ96TRQE5Y9hU7+tgdZwIkbAKc5Ocy1HxEY2kuDQa6cQ1WRs/O5LFKA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@readium/css@2.0.1':
-    resolution: {integrity: sha512-u5S8Q41ISWRXGyAmDh+R0YBdEULwOIyRvDO8HhmnBbP8pvbEZm/NaSf7Iu079iBd5BWGiAnAo6f2tSavoRzO4w==}
+  '@readium/css@2.0.2':
+    resolution: {integrity: sha512-2cLkU3NPzLlVxVWPlyxoFTCFE2y5521cQ+sgHnPBAKnOdCh3SltQwd7XodvB+xTGgS4TdVbQmxfr3x1Ke6nZWA==}
 
   '@rollup/rollup-android-arm-eabi@4.55.2':
     resolution: {integrity: sha512-21J6xzayjy3O6NdnlO6aXi/urvSRjm6nCI6+nF6ra2YofKruGixN9kfT+dt55HVNwfDmpDHJcaS3JuP/boNnlA==}
@@ -3843,7 +3843,7 @@ snapshots:
 
   '@pkgr/core@0.2.9': {}
 
-  '@readium/css@2.0.1': {}
+  '@readium/css@2.0.2': {}
 
   '@rollup/rollup-android-arm-eabi@4.55.2':
     optional: true
