@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] – 2026–04–23
+
+### Added
+
+- Support for Right-to-left Scripts and vertical writing 
+
+### Fixed
+
+- `canGoBackward` and `canGoForward` helpers now return correctly for Fixed-Layout when displayed in single page ([#203](https://github.com/readium/css/issues/203))
+
 ## [2.4.0] – 2026-04-14
 
 ### Added
