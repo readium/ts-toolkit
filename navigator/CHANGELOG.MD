@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Added missing keyboard combinations for dev tools in Content Security API
+- Added missing keyboard combinations for dev tools in Content Protection API
 
 ## [2.5.0] – 2026–04–23
 
