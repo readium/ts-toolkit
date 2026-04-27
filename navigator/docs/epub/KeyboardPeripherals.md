@@ -136,10 +136,10 @@ These shortcuts can be monitored or protected via the `contentProtection` config
   - Enable protection: `contentProtection.disableSave = true`
 
 - **Developer Tools**
-  - `F12` (Windows/Linux) / `Cmd+Option+I` (Mac)
-  - `F12+Shift` / `F12+Ctrl+Shift`
-  - `Cmd+Option+J` / `Cmd+Option+U` / `Cmd+Option+C` (Mac)
-  - `Ctrl+Shift+C` / `Ctrl+Shift+J` / `Ctrl+Shift+I` (Windows/Linux)
+  - `F12` / `Shift+F12` / `Ctrl+Shift+F12` / `Cmd+Option+F12`
+  - `Cmd+Option+I` / `Cmd+Option+J` / `Cmd+Option+U` / `Cmd+Option+C` (Mac)
+  - `Cmd+Shift+C` (Mac) / `Ctrl+Shift+C` / `Ctrl+Shift+I` / `Ctrl+Shift+J` (Windows/Linux)
+  - `Cmd+Option+A` / `Cmd+Shift+Option+T` / `Shift+Option+C` (Safari)
   - Event type: `developer_tools`
   - Enable protection: `contentProtection.monitorDevTools = true`
 

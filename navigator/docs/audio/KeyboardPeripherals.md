@@ -129,7 +129,7 @@ interface KeyboardPeripheralEvent {
 
 - **Print** — `Ctrl+P` / `Cmd+P` — enabled via `contentProtection.protectPrinting.disable`
 - **Save** — `Ctrl+S` / `Cmd+S` — enabled via `contentProtection.disableSave`
-- **Developer Tools** — `F12`, `Ctrl+Shift+I`, `Cmd+Option+I`, etc. — enabled via `contentProtection.monitorDevTools`
+- **Developer Tools** — `F12`, `Ctrl+Shift+I`, `Cmd+Option+I`, `Cmd+Option+A`, `Shift+Option+C`, etc. — enabled via `contentProtection.monitorDevTools`
 
 See [Content Protection](./ContentProtection.md) for details.
 
