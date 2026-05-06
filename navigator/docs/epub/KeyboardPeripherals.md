@@ -21,11 +21,16 @@ The `keyboardPeripherals` configuration is an array of objects, where each objec
     alt?: boolean;                  // Whether the Alt/Option key must be pressed
     shift?: boolean;                // Whether the Shift key must be pressed
     meta?: boolean;                 // Whether the Cmd/Windows key must be pressed
+    triggerOnInteractiveElement?: boolean; // Whether to fire when focus is on an interactive element (default: true)
   }>;
 }
 ```
 
 **Note:** Use `keyCode` (number) instead of `key` (string) as it provides more consistent behavior across different keyboard layouts. You can find key codes at [keycode.info](https://keycode.info/).
+
+### `triggerOnInteractiveElement`
+
+By default, shortcuts fire even when focus is on an interactive element (input, button, select, etc.). Set `triggerOnInteractiveElement: false` on combos that would interfere with native browser behavior in those contexts — for example, arrow keys that would otherwise block cursor movement inside an `<input>`, or space that would block a `<button>` activation.
 
 ## Example
 
@@ -36,15 +41,15 @@ const configuration = {
     {
       type: 'navigate_forward',
       keyCombos: [
-        { keyCode: 39 }, // ArrowRight
-        { keyCode: 76 }  // l
+        { keyCode: 39, triggerOnInteractiveElement: false }, // ArrowRight
+        { keyCode: 76, triggerOnInteractiveElement: false }  // l
       ]
     },
     {
       type: 'navigate_backward',
       keyCombos: [
-        { keyCode: 37 }, // ArrowLeft
-        { keyCode: 72 }  // h
+        { keyCode: 37, triggerOnInteractiveElement: false }, // ArrowLeft
+        { keyCode: 72, triggerOnInteractiveElement: false }  // h
       ]
     },
     {

@@ -1,6 +1,6 @@
 import { KeyCombo, KeyboardPeripheral } from "./KeyboardCombinations";
 import { BaseKeyboardPeripheralEvent, KeyboardEventData, BasicTextSelection } from "../modules/Peripherals";
-import { ReadiumWindow, nearestInteractiveElement } from "../helpers/dom";
+import { ReadiumWindow, nearestInteractiveElement, isInteractiveElement } from "../helpers/dom";
 
 export type KeyHandler = (event: KeyboardEvent) => void;
 export type ActivityEventDispatcher = (event: KeyboardPeripheralEvent) => void;
@@ -137,10 +137,11 @@ export class KeyCombinationManager {
         return (event: KeyboardEvent) => {
             for (const handlerConfig of handlers) {
                 if (this.match(event, [handlerConfig])) {
+                    if (handlerConfig.triggerOnInteractiveElement === false && isInteractiveElement(document.activeElement)) return;
                     event.preventDefault();
                     event.stopPropagation();
                     handlerConfig.handler!(event);
-                    return; // Stop after first match
+                    return;
                 }
             }
         };

@@ -79,7 +79,7 @@ export function isInteractiveElement(element: Element | null): boolean {
     // Check for interactive roles
     if (element.role && interactiveRoles.includes(element.role)) return true;
 
-    if ((element as HTMLElement).tabIndex && (element as HTMLElement).tabIndex >= 0) return true;
+    if ((element as HTMLElement).tabIndex >= 0) return true;
     
     // Use existing interactive tags logic
     return interactiveTags.includes(element.nodeName.toLowerCase()) ||

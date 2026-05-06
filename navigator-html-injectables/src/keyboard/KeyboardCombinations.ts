@@ -4,6 +4,7 @@ export interface KeyCombo {
     shift?: boolean;
     alt?: boolean;
     meta?: boolean;
+    triggerOnInteractiveElement?: boolean;
 }
 
 export interface KeyboardPeripheral {
