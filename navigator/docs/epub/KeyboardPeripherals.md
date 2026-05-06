@@ -17,11 +17,12 @@ The `keyboardPeripherals` configuration is an array of objects, where each objec
   type: string;                     // Custom event type (e.g., 'custom_navigation')
   keyCombos: Array<{                // Array of key combinations that trigger this event
     keyCode: number;                // Key code number (e.g., 37 for ArrowLeft, 39 for ArrowRight)
-    ctrl?: boolean;                 // Whether the Ctrl key must be pressed
-    alt?: boolean;                  // Whether the Alt/Option key must be pressed
-    shift?: boolean;                // Whether the Shift key must be pressed
-    meta?: boolean;                 // Whether the Cmd/Windows key must be pressed
+    ctrl?: boolean;                 // Whether Ctrl key must be pressed
+    alt?: boolean;                  // Whether Alt/Option key must be pressed
+    shift?: boolean;                // Whether Shift key must be pressed
+    meta?: boolean;                 // Whether Cmd/Windows key must be pressed
     suppressOnInteractiveElement?: boolean | string[]; // Whether to suppress when focus is on an interactive element (default: false)
+    condition?: ObservableCondition; // Reactive condition — combo is only active while condition emits true
   }>;
 }
 ```
@@ -37,31 +38,118 @@ By default, shortcuts fire regardless of where focus is. Use `suppressOnInteract
 
 For example, bare arrow keys or space should set `true` so cursor movement and button activation work natively. A combo that only conflicts with text inputs could use `["input", "textarea", "[contenteditable]"]` instead.
 
+### `condition`
+
+The `condition` property takes an `ObservableCondition` — a reactive value that the navigator subscribes to. When the condition emits `false`, the combo is removed from the iframe's active set and the browser handles the key natively. When it emits `true` again, the combo is re-registered automatically.
+
+```typescript
+interface ObservableCondition {
+  // Must fire immediately with the current value, then again on each change.
+  subscribe(cb: (value: boolean) => void): () => void;
+}
+```
+
+Because keyboard events are handled inside an iframe and `preventDefault()` must be called synchronously there, conditions cannot be plain functions evaluated after the fact — the navigator needs to know about state changes ahead of time and keep the iframe in sync.
+
+#### Creating a condition
+
+A condition can be wired to any reactive primitive in your app. Here is a minimal helper that implements the interface:
+
+```typescript
+function createCondition(initial: boolean) {
+  let value = initial;
+  const listeners = new Set<(v: boolean) => void>();
+  return {
+    subscribe(cb: (v: boolean) => void) {
+      listeners.add(cb);
+      cb(value); // fire immediately with current value
+      return () => listeners.delete(cb);
+    },
+    set(next: boolean) {
+      if (next === value) return;
+      value = next;
+      listeners.forEach(cb => cb(value));
+    },
+  };
+}
+
+// Create once, outside of any render/update cycle
+const scrollCondition = createCondition(false); // starts active (not in scroll mode)
+
+// Call set() whenever your app state changes
+scrollCondition.set(isScrollMode);
+
+// Pass to the combo
+{
+  keyCode: 37, // ArrowLeft
+  condition: scrollCondition,
+  suppressOnInteractiveElement: true
+}
+```
+
 ## Example
 
 ```javascript
+// Reactive conditions
+const scrollCondition = createCondition(false);   // true = in scroll mode
+const sidebarCondition = createCondition(false);  // true = sidebar visible
+
+// Update them when app state changes
+function setScrollMode(enabled) {
+  isScrollMode = enabled;
+  scrollCondition.set(!enabled); // combo active when NOT in scroll mode
+}
+function setSidebarVisible(visible) {
+  sidebarVisible = visible;
+  sidebarCondition.set(!visible); // combo active when sidebar is hidden
+}
+
 const configuration = {
   // ... other configuration options
   keyboardPeripherals: [
     {
       type: 'navigate_forward',
       keyCombos: [
-        { keyCode: 39, suppressOnInteractiveElement: true }, // ArrowRight
-        { keyCode: 76, suppressOnInteractiveElement: true }  // l
+        { 
+          keyCode: 39, // ArrowRight
+          suppressOnInteractiveElement: true,
+          condition: scrollCondition
+        },
+        { 
+          keyCode: 76, // l
+          suppressOnInteractiveElement: true,
+          condition: scrollCondition
+        }
       ]
     },
     {
       type: 'navigate_backward',
       keyCombos: [
-        { keyCode: 37, suppressOnInteractiveElement: true }, // ArrowLeft
-        { keyCode: 72, suppressOnInteractiveElement: true }  // h
+        { 
+          keyCode: 37, // ArrowLeft
+          suppressOnInteractiveElement: true,
+          condition: scrollCondition
+        },
+        { 
+          keyCode: 72, // h
+          suppressOnInteractiveElement: true,
+          condition: scrollCondition
+        }
       ]
     },
     {
       type: 'toggle_sidebar',
       keyCombos: [
-        { keyCode: 66, ctrl: true },  // Ctrl+B
-        { keyCode: 66, meta: true }   // Cmd+B on Mac
+        { 
+          keyCode: 66, // Ctrl+B / Cmd+B
+          ctrl: true,
+          condition: sidebarCondition
+        },
+        { 
+          keyCode: 66, // Ctrl+B / Cmd+B
+          meta: true,
+          condition: sidebarCondition
+        }
       ]
     }
   ]
@@ -167,3 +255,5 @@ These shortcuts can be monitored or protected via the `contentProtection` config
 3. **Document shortcuts**: Make sure to document the available keyboard shortcuts in your application's help section.
 4. **Consider accessibility**: Ensure that all functionality is accessible via keyboard and consider users who may be using screen readers or other assistive technologies.
 5. **Avoid conflicts**: Be mindful of browser and operating system shortcuts that might conflict with your custom shortcuts.
+6. **Use conditions wisely**: Leverage conditions to allow browser fallback behavior when appropriate (e.g., don't handle arrow keys in scroll mode, let browser handle scrolling natively).
+7. **Share condition objects**: A single `ObservableCondition` can be referenced by multiple key combos. Calling `.set()` once updates all of them simultaneously.

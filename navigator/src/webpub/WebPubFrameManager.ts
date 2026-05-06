@@ -3,6 +3,7 @@ import { FrameComms } from "../epub/frame/FrameComms.ts";
 import type { ReadiumWindow } from "../../../navigator-html-injectables/types/src/helpers/dom";
 import { sML } from "../helpers/index.ts";
 import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator.ts";
+import { KeyboardConditionBridge } from "../peripherals/KeyboardConditionBridge.ts";
 
 export class WebPubFrameManager {
     private frame: HTMLIFrameElement;
@@ -13,6 +14,7 @@ export class WebPubFrameManager {
     private destroyed: boolean = false;
     private readonly contentProtectionConfig: IContentProtectionConfig;
     private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
+    private conditionBridge?: KeyboardConditionBridge;
     private currModules: ModuleName[] = [];
 
     constructor(
@@ -72,9 +74,17 @@ export class WebPubFrameManager {
         // Send content protection config
         this.comms!.send("peripherals_protection", this.contentProtectionConfig);
 
-        // Send keyboard peripherals separately
+        // Send keyboard peripherals, filtered through condition bridge
         if (this.keyboardPeripheralsConfig && this.keyboardPeripheralsConfig.length > 0) {
-            this.comms!.send("keyboard_peripherals", this.keyboardPeripheralsConfig);
+            this.conditionBridge?.destroy();
+            this.conditionBridge = new KeyboardConditionBridge(
+                this.keyboardPeripheralsConfig,
+                (serializable) => {
+                    if (serializable.length > 0)
+                        this.comms!.send("keyboard_peripherals", serializable);
+                }
+            );
+            this.conditionBridge.setup();
         }
 
         // Apply scroll protection if enabled
@@ -89,6 +99,7 @@ export class WebPubFrameManager {
     }
 
     async destroy() {
+        this.conditionBridge?.destroy();
         await this.hide();
         this.loader?.destroy();
         this.frame.remove();
