@@ -1,4 +1,4 @@
-import { positiveNumberfromJSON } from '../../util/JSONParse';
+import { positiveNumberfromJSON } from '../../util/JSONParse.ts';
 
 /**
  * A serializable representation of a boundary point in a DOM Range.

@@ -1,5 +1,5 @@
-import { Metadata } from "../Metadata";
-import { MediaOverlay } from "./MediaOverlay";
+import { Metadata } from "../Metadata.ts";
+import { MediaOverlay } from "./MediaOverlay.ts";
 
 declare module '../Metadata' {
   export interface Metadata {

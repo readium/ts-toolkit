@@ -1,6 +1,6 @@
 // Localization.ts
 
-import { SUPPORTED_LANGUAGES } from './SupportedLanguages';
+import { SUPPORTED_LANGUAGES } from './SupportedLanguages.ts';
 // Static import for English (default locale)
 import enLocale from '@edrlab/thorium-locales/publication-metadata/en.json';
 
@@ -65,20 +65,20 @@ class LocalizationImpl {
     if (localeCode in this.loadedLocales) {
       return true;
     }
-    
+
     try {
       // Check if we have a loader for this locale
       if (!(localeCode in jsonLoaders)) {
         console.warn(`Locale file not found for: ${localeCode}`);
         return false;
       }
-      
+
       const localeModule = await jsonLoaders[localeCode]();
       const data = localeModule.default;
-      
+
       // Extract the accessibility.display-guide part
       const accessibilityData = data?.publication?.metadata?.accessibility?.['display-guide'];
-      
+
       if (accessibilityData) {
         this.loadedLocales[localeCode] = accessibilityData;
         return true;
@@ -113,12 +113,12 @@ class LocalizationImpl {
     if (!(localeCode in this.loadedLocales)) {
       await this.loadLocale(localeCode);
     }
-    
+
     if (!(localeCode in this.loadedLocales)) {
       console.warn(`Locale '${localeCode}' is not available`);
       return false;
     }
-    
+
     this.locale = this.loadedLocales[localeCode];
     this.currentLocaleCode = localeCode;
     return true;
@@ -141,14 +141,14 @@ class LocalizationImpl {
   private getNestedValue(obj: any, path: string): string | L10nString | undefined {
     const parts = path.split('.');
     let current = obj;
-    
+
     for (const part of parts) {
       if (current === null || current === undefined) {
         return undefined;
       }
       current = current[part];
     }
-    
+
     return current;
   }
 
@@ -160,19 +160,19 @@ class LocalizationImpl {
   public getString(key: string): L10nString {
     // First try the current locale
     let value = this.getNestedValue(this.locale, key);
-    
+
     // If not found and current locale is not English, try falling back to English
     if (value === undefined && this.currentLocaleCode !== 'en') {
       value = this.getNestedValue(this.loadedLocales['en'], key);
     }
-    
+
     // If we have a value, return it with proper formatting
     if (value !== undefined) {
-      return typeof value === 'string' 
-        ? { compact: value, descriptive: value } 
+      return typeof value === 'string'
+        ? { compact: value, descriptive: value }
         : value;
     }
-    
+
     // If we get here, the key wasn't found in either locale
     console.warn(`Missing localization for key: ${key}`);
     return { compact: '', descriptive: '' };

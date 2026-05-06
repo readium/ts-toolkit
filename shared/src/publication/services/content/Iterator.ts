@@ -1,4 +1,4 @@
-import { ContentElement } from "./element";
+import { ContentElement } from "./element/index.ts";
 
 export class IllegalStateError extends Error {
     constructor(message: string) {

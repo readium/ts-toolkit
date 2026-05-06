@@ -1,6 +1,6 @@
-import { Comms } from "./comms/comms";
-import { ReadiumWindow } from "./helpers/dom";
-import { Module, ModuleDerived, ModuleLibrary, ModuleName } from "./modules";
+import { Comms } from "./comms/comms.ts";
+import { ReadiumWindow } from "./helpers/dom.ts";
+import { Module, ModuleDerived, ModuleLibrary, ModuleName } from "./modules/index.ts";
 
 /**
  * The Module loader. Handles initialization of the HTML injectables

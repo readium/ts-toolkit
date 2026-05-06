@@ -1,7 +1,16 @@
-import { ReadiumWindow } from "./dom";
+import { ReadiumWindow } from "./dom.ts";
 
 export function isRTL(wnd: ReadiumWindow): boolean {
-    return wnd.document.body.dir.toLowerCase() === "rtl";
+    // Check documentElement first, then fall back to body.
+    const dir = wnd.document.documentElement.dir || wnd.document.body.dir;
+    return dir.toLowerCase() === "rtl";
+}
+
+export function isVerticalLR(wnd: ReadiumWindow): boolean {
+    // Check documentElement first, then fall back to body.
+    const writingMode = wnd.getComputedStyle(wnd.document.documentElement).writingMode
+        || wnd.getComputedStyle(wnd.document.body).writingMode;
+    return writingMode === 'vertical-lr';
 }
 
 export function getColumnCountPerScreen(wnd: ReadiumWindow): number {
@@ -12,7 +21,7 @@ export function getColumnCountPerScreen(wnd: ReadiumWindow): number {
     );
 }
 
-/** 
+/**
 * Returns the "content height" of an element, which is its clientHeight
 * minus any vertical padding.
 *
@@ -26,9 +35,9 @@ export function getContentHeight(el: Element): number {
 }
 
 /**
- * We have to make sure that the total number of columns is a multiple 
- * of the number of columns per screen. 
- * Otherwise it causes snapping and page turning issues. 
+ * We have to make sure that the total number of columns is a multiple
+ * of the number of columns per screen.
+ * Otherwise it causes snapping and page turning issues.
  * To fix this, we insert and remove blank virtual columns at the end of the resource.
  */
 export function appendVirtualColumnIfNeeded(wnd: ReadiumWindow): boolean {
@@ -56,7 +65,7 @@ export function appendVirtualColumnIfNeeded(wnd: ReadiumWindow): boolean {
     const lonelyColCount = totalColCount % colCountPerScreen;
 
     const needed = colCountPerScreen === 1 || lonelyColCount === 0
-        ? 0 
+        ? 0
         : colCountPerScreen - lonelyColCount;
 
     if (needed > 0) {
@@ -84,12 +93,12 @@ export function appendVirtualColumnIfNeeded(wnd: ReadiumWindow): boolean {
  * This forces a recalculation in WebKit browsers.
  * It is needed in scroll mode to ensure that the content is scrollable.
  * Webkit seems to find itself in some kind of limbo if we do not do that.
- * It has everything correct but the scroll listener is non-functional, 
+ * It has everything correct but the scroll listener is non-functional,
  * unless you force a recalc or reflow.
  * It is not needed in paginated mode.
  */
 export function forceWebkitRecalc(wnd: ReadiumWindow) {
-    // Borrowed from APB themselves… 
+    // Borrowed from APB themselves…
     const styleElement = wnd.document.createElement("style");
     styleElement.appendChild(wnd.document.createTextNode("*{}"));
     wnd.document.body.appendChild(styleElement);

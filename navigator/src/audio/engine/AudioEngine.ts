@@ -1,6 +1,3 @@
-import { Locator } from '@readium/shared';
-import { Publication } from '@readium/shared';
-
 /**
  * Initial state of the audio engine playback.
  */
@@ -14,11 +11,6 @@ export interface PlaybackState {
      * The duration of the audio resource.
      */
     duration: number;
-
-    /**
-     * The volume of the audio resource.
-     */
-    volume: number;
 }
 
 /**
@@ -49,11 +41,6 @@ export interface AudioEngine {
     playback: Playback;
 
     /**
-     * Plays the audio resource at the given locator.
-     */
-    playLocator(publication: Publication, locator: Locator): Promise<void>;
-
-    /**
      * Adds an event listener to the audio engine.
      * @param event The event name to listen.
      * @param callback Callback function to be called when the event is triggered.
@@ -66,12 +53,13 @@ export interface AudioEngine {
      * @param callback Callback function to be removed.
      */
     off(event: string, callback: (data: any) => void): void;
-
+    
     /**
-     * Loads the audio resource at the given URL.
-     * @param url The URL of the audio resource.
+     * Changes the src of the primary media element without swapping it,
+     * preserving the RemotePlayback session and all attached event listeners.
+     * @param href The URL of the new audio resource.
      */
-    loadAudio(url: string): void;
+    changeSrc(href: string): void;
     
     /**
      * Plays the current audio resource.
@@ -97,6 +85,19 @@ export interface AudioEngine {
      * Returns the duration of the audio resource.
      */
     duration(): number;
+
+    /**
+     * Sets the volume of the audio resource.
+     * @param volume The volume to set, in the range [0, 1].
+     */
+    setVolume(volume: number): void;
+
+    /**
+     * Sets the playback rate of the audio resource.
+     * @param rate The playback rate to set.
+     * @param preservePitch Whether to preserve pitch when changing playback rate.
+     */
+    setPlaybackRate(rate: number, preservePitch: boolean): void;
     
     /**
      * Returns whether the audio resource is currently playing.
@@ -107,6 +108,11 @@ export interface AudioEngine {
      * Returns whether the audio resource is currently paused.
      */
     isPaused(): boolean;
+    
+    /**
+     * Returns the HTML media element used for playback.
+     */
+    getMediaElement(): HTMLMediaElement;
     
     /**
      * Returns whether the audio resource is currently stopped.

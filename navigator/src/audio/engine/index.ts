@@ -1,2 +1,2 @@
-export * from './AudioEngine';
-export * from './WebAudioEngine';
+export * from './AudioEngine.ts';
+export * from './WebAudioEngine.ts';

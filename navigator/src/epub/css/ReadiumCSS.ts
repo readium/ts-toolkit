@@ -1,7 +1,7 @@
-import { LineLengths } from "../../helpers";
-import { getContentWidth } from "../../helpers/dimensions";
-import { EpubSettings } from "../preferences/EpubSettings";
-import { IUserProperties, RSProperties, UserProperties } from "./Properties";
+import { LineLengths } from "../../helpers/index.ts";
+import { getContentWidth, getContentHeight } from "../../helpers/dimensions.ts";
+import { EpubSettings } from "../preferences/EpubSettings.ts";
+import { IUserProperties, RSProperties, UserProperties } from "./Properties.ts";
 
 export interface IReadiumCSS {
   rsProperties: RSProperties;
@@ -9,6 +9,7 @@ export interface IReadiumCSS {
   lineLengths: LineLengths;
   container: HTMLElement;
   constraint: number;
+  isCJKVertical?: boolean;
 }
 
 export class ReadiumCSS {
@@ -18,6 +19,7 @@ export class ReadiumCSS {
   container: HTMLElement;
   containerParent: HTMLElement;
   constraint: number;
+  private readonly isCJKVertical: boolean;
   private cachedColCount: number | null | undefined;
   private effectiveContainerWidth: number;
 
@@ -28,6 +30,7 @@ export class ReadiumCSS {
     this.container = props.container;
     this.containerParent = props.container.parentElement || document.documentElement;
     this.constraint = props.constraint;
+    this.isCJKVertical = props.isCJKVertical ?? false;
     this.cachedColCount = props.userProperties.colCount;
     this.effectiveContainerWidth = getContentWidth(this.containerParent);
   }
@@ -36,7 +39,7 @@ export class ReadiumCSS {
     // We need to keep the column count reference for resizeHandler
     this.cachedColCount = settings.columnCount;
 
-    if (settings.constraint !== this.constraint) 
+    if (settings.constraint !== this.constraint)
       this.constraint = settings.constraint;
 
     if (settings.pageGutter !== this.rsProperties.pageGutter)
@@ -62,7 +65,7 @@ export class ReadiumCSS {
     this.lineLengths.update({
       fontFace: settings.fontFamily,
       letterSpacing: settings.letterSpacing,
-      padding: settings.scroll 
+      padding: settings.scroll
         ? (settings.scrollPaddingLeft || 0) + (settings.scrollPaddingRight || 0)
         : (settings.pageGutter || 0) * 2,
       wordSpacing: settings.wordSpacing,
@@ -75,24 +78,24 @@ export class ReadiumCSS {
 
     if (layout?.effectiveContainerWidth)
       this.effectiveContainerWidth = layout?.effectiveContainerWidth;
-    
+
     const updated: IUserProperties = {
       a11yNormalize: settings.textNormalization,
       backgroundColor: settings.backgroundColor,
       blendFilter: settings.blendFilter,
-      bodyHyphens: typeof settings.hyphens !== "boolean" 
-        ? null 
-        : settings.hyphens 
-          ? "auto" 
+      bodyHyphens: typeof settings.hyphens !== "boolean"
+        ? null
+        : settings.hyphens
+          ? "auto"
           : "none",
       colCount: layout?.colCount,
       darkenFilter: settings.darkenFilter,
       deprecatedFontSize: settings.deprecatedFontSize,
       fontFamily: settings.fontFamily,
-      fontOpticalSizing: typeof settings.fontOpticalSizing !== "boolean" 
-        ? null 
-        : settings.fontOpticalSizing 
-          ? "auto" 
+      fontOpticalSizing: typeof settings.fontOpticalSizing !== "boolean"
+        ? null
+        : settings.fontOpticalSizing
+          ? "auto"
           : "none",
       fontSize: settings.fontSize,
       fontSizeNormalize: settings.fontSizeNormalize,
@@ -103,10 +106,10 @@ export class ReadiumCSS {
       iOSPatch: settings.iOSPatch,
       iPadOSPatch: settings.iPadOSPatch,
       letterSpacing: settings.letterSpacing,
-      ligatures: typeof settings.ligatures !== "boolean" 
-        ? null 
-        : settings.ligatures 
-          ? "common-ligatures" 
+      ligatures: typeof settings.ligatures !== "boolean"
+        ? null
+        : settings.ligatures
+          ? "common-ligatures"
           : "none",
       lineHeight: settings.lineHeight,
       lineLength: layout?.effectiveLineLength,
@@ -118,10 +121,10 @@ export class ReadiumCSS {
       selectionTextColor: settings.selectionTextColor,
       textAlign: settings.textAlign,
       textColor: settings.textColor,
-      view: typeof settings.scroll !== "boolean" 
-        ? null 
-        : settings.scroll 
-          ? "scroll" 
+      view: typeof settings.scroll !== "boolean"
+        ? null
+        : settings.scroll
+          ? "scroll"
           : "paged",
       visitedColor: settings.visitedColor,
       wordSpacing: settings.wordSpacing
@@ -131,6 +134,13 @@ export class ReadiumCSS {
   }
 
   private updateLayout(scale: number | null, ignoreCompensation: boolean | null, scroll: boolean | null, colCount?: number | null) {
+    // CJK vertical text flows along the block axis (height); the inline axis
+    // (width) must not be constrained by line-length at all — use the full
+    // parent width minus the known constraint.
+    if (this.isCJKVertical) {
+      return this.computeCJKVerticalLength(scale, ignoreCompensation);
+    }
+
     const isScroll = scroll ?? this.userProperties.view === "scroll";
 
     if (isScroll) {
@@ -142,21 +152,21 @@ export class ReadiumCSS {
 
   private getCompensatedMetrics(scale: number | null, ignoreCompensation: boolean | null) {
     const zoomFactor = scale || this.userProperties.fontSize || 1;
-    const zoomCompensation = zoomFactor < 1 
+    const zoomCompensation = zoomFactor < 1
       ? 1 / zoomFactor
-      : ignoreCompensation 
-        ? zoomFactor 
+      : ignoreCompensation
+        ? zoomFactor
         : 1;
 
     return {
       zoomFactor: zoomFactor,
       zoomCompensation: zoomCompensation,
       optimal: Math.round(this.lineLengths.optimalLineLength) * zoomFactor,
-      minimal: this.lineLengths.minimalLineLength !== null 
-        ? Math.round(this.lineLengths.minimalLineLength * zoomFactor) 
+      minimal: this.lineLengths.minimalLineLength !== null
+        ? Math.round(this.lineLengths.minimalLineLength * zoomFactor)
         : null,
-      maximal: this.lineLengths.maximalLineLength !== null 
-        ? Math.round(this.lineLengths.maximalLineLength * zoomFactor) 
+      maximal: this.lineLengths.maximalLineLength !== null
+        ? Math.round(this.lineLengths.maximalLineLength * zoomFactor)
         : null
     }
   }
@@ -181,13 +191,13 @@ export class ReadiumCSS {
     let effectiveContainerWidth = constrainedWidth;
 
     if (colCount === undefined) {
-      return { 
-        colCount: undefined, 
-        effectiveContainerWidth: effectiveContainerWidth, 
-        effectiveLineLength: Math.round((effectiveContainerWidth / RCSSColCount) * zoomCompensation) 
+      return {
+        colCount: undefined,
+        effectiveContainerWidth: effectiveContainerWidth,
+        effectiveLineLength: Math.round((effectiveContainerWidth / RCSSColCount) * zoomCompensation)
       };
     }
-    
+
     if (colCount === null) {
       if (constrainedWidth >= optimal && maximal !== null) {
         RCSSColCount = Math.floor(constrainedWidth / optimal);
@@ -198,7 +208,7 @@ export class ReadiumCSS {
       }
     } else if (colCount > 1) {
       const minRequiredWidth = Math.round(colCount * (minimal !== null ? minimal : optimal));
-    
+
       if (constrainedWidth >= minRequiredWidth) {
         RCSSColCount = colCount;
         if (maximal === null) {
@@ -228,11 +238,21 @@ export class ReadiumCSS {
       effectiveContainerWidth = getSingleColWidth();
     }
 
-    return { 
-      colCount: RCSSColCount, 
-      effectiveContainerWidth: effectiveContainerWidth, 
+    return {
+      colCount: RCSSColCount,
+      effectiveContainerWidth: effectiveContainerWidth,
       effectiveLineLength: Math.round(((effectiveContainerWidth / RCSSColCount) / (scale && scale >= 1 ? scale : 1)) * zoomCompensation)
     };
+  }
+
+  private computeCJKVerticalLength(scale: number | null, ignoreCompensation: boolean | null) {
+    const w = Math.round(getContentWidth(this.containerParent) - this.constraint);
+    const h = Math.round(getContentHeight(this.containerParent));
+    const metrics = this.getCompensatedMetrics(scale, ignoreCompensation);
+    const effectiveLineLength = metrics.maximal !== null
+      ? Math.min(Math.round(metrics.maximal * metrics.zoomCompensation), h)
+      : h;
+    return { colCount: undefined, effectiveContainerWidth: w, effectiveLineLength };
   }
 
   // This behaves as paginate where colCount = 1
@@ -254,9 +274,9 @@ export class ReadiumCSS {
       effectiveLineLength = ignoreCompensation ? computedWidth : Math.round(computedWidth * zoomCompensation);
     }
 
-    return { 
-      colCount: RCSSColCount, 
-      effectiveContainerWidth: effectiveContainerWidth, 
+    return {
+      colCount: RCSSColCount,
+      effectiveContainerWidth: effectiveContainerWidth,
       effectiveLineLength: effectiveLineLength
     }
   }

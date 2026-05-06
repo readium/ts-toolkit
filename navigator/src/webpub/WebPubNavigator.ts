@@ -1,25 +1,25 @@
 import { Feature, Link, Locator, Publication, ReadingProgression, LocatorLocations } from "@readium/shared";
-import { VisualNavigator, VisualNavigatorViewport, ProgressionRange } from "../Navigator";
-import { Configurable } from "../preferences/Configurable";
-import { WebPubFramePoolManager } from "./WebPubFramePoolManager";
-import { BasicTextSelection, CommsEventKey, ContextMenuEvent, FrameClickEvent, KeyboardPeripheralEvent, ModuleLibrary, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
+import { VisualNavigator, VisualNavigatorViewport, ProgressionRange } from "../Navigator.ts";
+import { Configurable } from "../preferences/Configurable.ts";
+import { WebPubFramePoolManager } from "./WebPubFramePoolManager.ts";
+import { BasicTextSelection, CommsEventKey, ContextMenuEvent, FrameClickEvent, KeyboardPeripheralEvent, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
-import { WebPubFrameManager } from "./WebPubFrameManager";
+import { WebPubFrameManager } from "./WebPubFrameManager.ts";
 
-import { KeyboardPeripheralEventData, ManagerEventKey } from "../epub/EpubNavigator";
-import { WebPubCSS } from "./css/WebPubCSS";
-import { WebUserProperties, WebRSProperties } from "./css/Properties";
-import { IWebPubPreferences, WebPubPreferences } from "./preferences/WebPubPreferences";
-import { IWebPubDefaults, WebPubDefaults } from "./preferences/WebPubDefaults";
-import { WebPubSettings } from "./preferences/WebPubSettings";
-import { IPreferencesEditor } from "../preferences/PreferencesEditor";
-import { WebPubPreferencesEditor } from "./preferences/WebPubPreferencesEditor";
-import { Injector } from "../injection/Injector";
-import { createReadiumWebPubRules } from "../injection/webpubInjectables";
-import { IInjectablesConfig } from "../injection/Injectable";
-import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator";
-import { NavigatorProtector, NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector";
-import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../peripherals/KeyboardPeripherals";
+import { KeyboardPeripheralEventData, ManagerEventKey } from "../epub/EpubNavigator.ts";
+import { getScriptMode } from "../helpers/scriptMode.ts";
+import { WebPubCSS } from "./css/WebPubCSS.ts";
+import { WebUserProperties, WebRSProperties } from "./css/Properties.ts";
+import { IWebPubPreferences, WebPubPreferences } from "./preferences/WebPubPreferences.ts";
+import { IWebPubDefaults, WebPubDefaults } from "./preferences/WebPubDefaults.ts";
+import { WebPubSettings } from "./preferences/WebPubSettings.ts";
+import { WebPubPreferencesEditor } from "./preferences/WebPubPreferencesEditor.ts";
+import { Injector } from "../injection/Injector.ts";
+import { createReadiumWebPubRules } from "../injection/webpubInjectables.ts";
+import { IInjectablesConfig } from "../injection/Injectable.ts";
+import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator.ts";
+import { NavigatorProtector, NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector.ts";
+import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../peripherals/KeyboardPeripherals.ts";
 
 export interface WebPubNavigatorConfiguration {
     preferences: IWebPubPreferences;
@@ -79,7 +79,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private readonly _keyboardPeripheralsManager: KeyboardPeripherals | null = null;
     private readonly _suspiciousActivityListener: ((event: Event) => void) | null = null;
     private readonly _keyboardPeripheralListener: ((event: Event) => void) | null = null;
-    
+
     private webViewport: VisualNavigatorViewport = {
         readingOrder: [],
         progressions: new Map(),
@@ -104,7 +104,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         // Combine WebPub rules with user-provided injectables
         const webpubRules = createReadiumWebPubRules(pub.readingOrder.items);
         const userConfig = configuration.injectables || { rules: [], allowedDomains: [] };
-        
+
         this._injector = new Injector({
             rules: [...webpubRules, ...userConfig.rules],
             allowedDomains: userConfig.allowedDomains
@@ -112,7 +112,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
         // Initialize content protection with provided config or default values
         this._contentProtection = configuration.contentProtection || {};
-        
+
         // Merge keyboard peripherals
         this._keyboardPeripherals = this.mergeKeyboardPeripherals(
             this._contentProtection,
@@ -126,21 +126,25 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             this._contentProtection.monitorDevTools ||
             this._contentProtection.protectPrinting?.disable) {
             this._navigatorProtector = new NavigatorProtector(this._contentProtection);
-            
+
             // Listen for custom events from NavigatorProtector
             this._suspiciousActivityListener = (event: Event) => {
-                const customEvent = event as CustomEvent;
-                this.listeners.contentProtection(customEvent.detail.type, customEvent.detail);
+                const { type, ...activity } = (event as CustomEvent).detail;
+                if (type === "context_menu") {
+                    this.listeners.contextMenu(activity as ContextMenuEvent);
+                } else {
+                    this.listeners.contentProtection(type, activity);
+                }
             };
             window.addEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
         }
-        
+
         // Initialize keyboard peripherals separately (works independently of protection)
         if (this._keyboardPeripherals.length > 0) {
             this._keyboardPeripheralsManager = new KeyboardPeripherals({
                 keyboardPeripherals: this._keyboardPeripherals
             });
-            
+
             // Listen for keyboard peripheral events from main window
             this._keyboardPeripheralListener = (event: Event) => {
                 const activity = (event as CustomEvent).detail;
@@ -166,8 +170,8 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         await this.updateCSS(false);
         const cssProperties = this.compileCSSProperties(this._css);
         this.framePool = new WebPubFramePoolManager(
-            this.container, 
-            cssProperties, 
+            this.container,
+            cssProperties,
             this._injector,
             this._contentProtection,
             this._keyboardPeripherals
@@ -181,7 +185,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         return Object.freeze({ ...this._settings });
     }
 
-    public get preferencesEditor(): IPreferencesEditor {
+    public get preferencesEditor(): WebPubPreferencesEditor {
         if (this._preferencesEditor === null) {
             this._preferencesEditor = new WebPubPreferencesEditor(this._preferences, this.settings, this.pub.metadata);
         }
@@ -372,10 +376,14 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     }
 
     private determineModules(): ModuleName[] {
-        let modules = Array.from(ModuleLibrary.keys()) as ModuleName[];
+        const modules = WebPubModules.slice();
 
-        // For WebPub, use the predefined WebPubModules array and filter
-        return modules.filter((m) => WebPubModules.includes(m));
+        const mode = getScriptMode(this.pub.metadata);
+        if (mode === 'cjk-vertical' || mode === 'mongolian-vertical') {
+            return modules.map((m) => m === "webpub_snapper" ? "cjk_vertical_snapper" : m);
+        }
+
+        return modules;
     }
 
     private attachListener() {

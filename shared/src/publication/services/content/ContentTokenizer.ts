@@ -1,13 +1,13 @@
-import { DefaultTextContentTokenizer, Range, TextTokenizer, TextUnit, Tokenizer } from "../../../util";
-import { Locator, LocatorText } from "../../Locator";
-import { ContentElement, TextElement, TextSegment } from "./element";
+import { DefaultTextContentTokenizer, Range, TextTokenizer, TextUnit, Tokenizer } from "../../../util/index.ts";
+import { Locator, LocatorText } from "../../Locator.ts";
+import { ContentElement, TextElement, TextSegment } from "./element/index.ts";
 
 // A tokenizer splitting a [Content.Element] into smaller pieces.
 export type ContentTokenizer  = Tokenizer<ContentElement, ContentElement>;
 
 export class TextContentTokenizer implements ContentTokenizer {
     /**
-     * 
+     *
      * @param defaultLanguage The default assumed language
      * @param unit The unit of the produced [Locator]s.
      * @param contextSnippetLength Length of `before` and `after` snippets in the produced [Locator]s.
@@ -27,7 +27,7 @@ export class TextContentTokenizer implements ContentTokenizer {
                 new TextElement(
                     data.locator,
                     data.role,
-                    data.segments.map(s => this.tokenizeSegment(s)).flat(), 
+                    data.segments.map(s => this.tokenizeSegment(s)).flat(),
                 )
             ];
         }

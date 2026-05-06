@@ -1,1 +1,1 @@
-export * from './MediaType';
+export * from './MediaType.ts';

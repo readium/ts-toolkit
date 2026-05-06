@@ -149,5 +149,59 @@ export abstract class VisualNavigator extends Navigator {
      }
 }
 
+export abstract class MediaNavigator extends Navigator {
+    /**
+     * Current playback state - is media currently playing?
+     */
+    abstract get isPlaying(): boolean;
 
-// TODO MediaNavigator
+    /**
+     * Current playback state - is media currently paused?
+     */
+    abstract get isPaused(): boolean;
+
+    /**
+     * Duration of current media resource in seconds
+     */
+    abstract get duration(): number;
+
+    /**
+     * Current time in seconds within the media resource
+     */
+    abstract get currentTime(): number;
+
+    /**
+     * Play the current media resource
+     */
+    abstract play(): void;
+
+    /**
+     * Pause the currently playing media
+     */
+    abstract pause(): void;
+
+    /**
+     * Stop playback and reset to beginning
+     */
+    abstract stop(): void;
+
+    /**
+     * Seek to specific time in seconds
+     */
+    abstract seek(time: number): void;
+
+    /**
+     * Jump forward or backward by specified seconds
+     */
+    abstract jump(seconds: number): void;
+
+    /**
+     * Skip forward by the configured interval
+     */
+    abstract skipForward(): void;
+
+    /**
+     * Skip backward by the configured interval
+     */
+    abstract skipBackward(): void;
+}

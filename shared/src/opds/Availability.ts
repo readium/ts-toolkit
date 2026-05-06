@@ -3,7 +3,7 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { datefromJSON } from '../util/JSONParse';
+import { datefromJSON } from '../util/JSONParse.ts';
 
 export enum AvailabilityStatus {
   available = 'available',

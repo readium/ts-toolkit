@@ -7,17 +7,17 @@ import {
   arrayfromJSONorString,
   datefromJSON,
   positiveNumberfromJSON,
-} from '../util/JSONParse';
-import { AltIdentifier } from './AltIdentifier';
-import { BelongsTo } from './BelongsTo';
-import { Contributors } from './Contributor';
-import { Layout } from './Layout';
-import { LocalizedString } from './LocalizedString';
-import { Profile } from './Profiles';
-import { ReadingProgression } from './ReadingProgression';
-import { Subjects } from './Subject';
-import { Accessibility } from './accessibility/Accessibility';
-import { TDM } from './TDM';
+} from '../util/JSONParse.ts';
+import { AltIdentifier } from './AltIdentifier.ts';
+import { BelongsTo } from './BelongsTo.ts';
+import { Contributors } from './Contributor.ts';
+import { Layout } from './Layout.ts';
+import { LocalizedString } from './LocalizedString.ts';
+import { Profile } from './Profiles.ts';
+import { ReadingProgression } from './ReadingProgression.ts';
+import { Subjects } from './Subject.ts';
+import { Accessibility } from './accessibility/Accessibility.ts';
+import { TDM } from './TDM.ts';
 
 /**
  * https://readium.org/webpub-manifest/schema/metadata.schema.json
@@ -328,13 +328,13 @@ export class Metadata {
 
   /**
    * Computes a [Layout] using the [conformsTo] profile and layout property.
-   * 
+   *
    * Special cases:
    * - EPUB profile defaults to reflowable if layout is not present
    * - Divina profile defaults to fixed if layout is not present
    * - Layout is ignored for audiobook and PDF profiles
    * - Layout is ignored if set to reflowable on a Divina profile
-   * 
+   *
    * Note: Stops at the first matching profile.
    */
   public get effectiveLayout(): Layout | null {

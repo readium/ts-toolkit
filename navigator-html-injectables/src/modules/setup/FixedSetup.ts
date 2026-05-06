@@ -1,8 +1,8 @@
-import { Comms } from "../../comms/comms";
-import { Setup } from "./Setup";
-import { removeProperty, setProperty } from "../../helpers/css";
-import { ModuleName } from "../ModuleLibrary";
-import { ReadiumWindow, deselect } from "../../helpers/dom";
+import { Comms } from "../../comms/comms.ts";
+import { Setup } from "./Setup.ts";
+import { removeProperty, setProperty } from "../../helpers/css.ts";
+import { ModuleName } from "../ModuleLibrary.ts";
+import { ReadiumWindow, deselect } from "../../helpers/dom.ts";
 
 const FIXED_STYLE_ID = "readium-fixed-style";
 

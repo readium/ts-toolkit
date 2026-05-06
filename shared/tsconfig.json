@@ -37,6 +37,7 @@
     // emit only .d.ts
     "noEmit": false,
     "emitDeclarationOnly": true,
+    "allowImportingTsExtensions": true,
     "types": ["vite/client", "jest"]
-  },
+  }
 }

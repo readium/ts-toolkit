@@ -1,4 +1,4 @@
-import { ReadiumWindow } from "../helpers/dom";
+import { ReadiumWindow } from "../helpers/dom.ts";
 
 interface CopyAttempt {
     timestamp: number;
@@ -33,7 +33,7 @@ export class BulkCopyProtector {
         this.copyHistory = this.copyHistory.filter(
             attempt => now - attempt.timestamp < historyWindow
         );
-        
+
         // Trim to max history size
         if (this.copyHistory.length > this.options.historySize) {
             this.copyHistory = this.copyHistory.slice(-this.options.historySize);
@@ -42,17 +42,17 @@ export class BulkCopyProtector {
 
     private isSuspiciousPattern(now: number): boolean {
         if (this.copyHistory.length < 3) return false;
-        
+
         // Check for rapid successive copy attempts
         const recentAttempts = this.copyHistory.filter(
             attempt => now - attempt.timestamp < 2000 // Last 2 seconds
         );
-        
+
         if (recentAttempts.length >= 3) {
             // If multiple rapid copy attempts, it's suspicious
             return true;
         }
-        
+
         // Check for increasing selection sizes (bulk copy pattern)
         const increasingSelections = this.copyHistory
             .slice()
@@ -61,7 +61,7 @@ export class BulkCopyProtector {
                 if (i === 0) return true;
                 return attempt.length > arr[i - 1].length * 1.5; // Each selection is significantly larger
             });
-            
+
         return increasingSelections;
     }
 
@@ -70,7 +70,7 @@ export class BulkCopyProtector {
 
         const selection = this.window.getSelection();
         if (!selection) return true;
-        
+
         const selectedText = selection.toString();
         const selectedLength = selectedText.length;
         const docLength = this.window.document.body.innerText.length;
@@ -90,12 +90,12 @@ export class BulkCopyProtector {
         }
 
         const timeSinceLastSelection = now - this.lastSelectionTime;
-        
+
         // Check for rapid successive selections
-        const isRapidSelection = 
-            timeSinceLastSelection < 100 && 
+        const isRapidSelection =
+            timeSinceLastSelection < 100 &&
             selectedLength > this.lastSelectionLength * 1.5;
-            
+
         const maxAllowedSelection = Math.min(
             docLength * this.options.maxSelectionPercent,
             this.options.absoluteMaxChars
@@ -103,9 +103,9 @@ export class BulkCopyProtector {
 
         // Check if this matches a suspicious pattern
         const isSuspicious = this.isSuspiciousPattern(now);
-        
-        const shouldBlock = selectedLength > maxAllowedSelection || 
-                          isRapidSelection || 
+
+        const shouldBlock = selectedLength > maxAllowedSelection ||
+                          isRapidSelection ||
                           isSuspicious;
 
         // Record this attempt in history
@@ -119,7 +119,7 @@ export class BulkCopyProtector {
             event?.preventDefault();
             return false;
         }
-        
+
         this.lastSelectionLength = selectedLength;
         this.lastSelectionTime = now;
         return true;

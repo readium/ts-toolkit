@@ -3,7 +3,7 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { arrayfromJSONorString, numberfromJSON } from '../util/JSONParse';
+import { arrayfromJSONorString, numberfromJSON } from '../util/JSONParse.ts';
 
 /**
  * One or more alternative expressions of the location.

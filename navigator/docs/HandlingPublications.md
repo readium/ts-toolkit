@@ -1,6 +1,6 @@
 # Handling Publications
 
-To create an instance of `EpubNavigator`, we need a `Publication` that requires a [Readium Web Publication Manifest](https://readium.org/webpub-manifest/).
+To create an instance of `Navigator`, we need a `Publication` that requires a [Readium Web Publication Manifest](https://readium.org/webpub-manifest/).
 
 We are using Readium Shared Models to handle all of the following.
 

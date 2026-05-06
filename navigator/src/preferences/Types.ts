@@ -16,6 +16,8 @@ export type RangeConfig = {
   step: number
 }
 
+// ReadiumCSS preferences
+
 export const filterRangeConfig: RangeConfig = {
   range: [0, 100],
   step: 1
@@ -69,4 +71,21 @@ export const wordSpacingRangeConfig: RangeConfig = {
 export const zoomRangeConfig: RangeConfig = {
   range: [0.7, 4],
   step: 0.05
+}
+
+// Audio preferences
+
+export const volumeRangeConfig: RangeConfig = {
+  range: [0, 1],
+  step: 0.1
+}
+
+export const playbackRateRangeConfig: RangeConfig = {
+  range: [0.5, 4],
+  step: 0.1
+}
+
+export const skipIntervalRangeConfig: RangeConfig = {
+  range: [5, 60],
+  step: 5
 }

@@ -3,7 +3,7 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { Links } from './Link';
+import { Links } from './Link.ts';
 
 /**
  * Core Collection Model

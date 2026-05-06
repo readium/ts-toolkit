@@ -1,4 +1,4 @@
-import { LocatorText } from "../../../Locator";
+import { LocatorText } from "../../../Locator.ts";
 
 
 // https://github.com/jhy/jsoup/blob/0b10d516ed8f907f8fb4acb9a0806137a8988d45/src/main/java/org/jsoup/parser/Tag.java#L243

@@ -3,15 +3,16 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
-import { Link, Links } from './Link';
-import { Locator } from './Locator';
-import { Manifest } from './Manifest';
-import { Metadata } from './Metadata';
-import { EmptyFetcher, Fetcher } from '../fetcher/Fetcher';
-import { PublicationCollection } from './PublicationCollection';
-import { Resource } from '../fetcher/Resource';
-import { GuidedNavigationDocument } from "./GuidedNavigation";
-import { URITemplate } from "../util";
+import { Link, Links } from './Link.ts';
+import { Locator } from './Locator.ts';
+import { Manifest } from './Manifest.ts';
+import { Metadata } from './Metadata.ts';
+import { EmptyFetcher, Fetcher } from '../fetcher/Fetcher.ts';
+import { PublicationCollection } from './PublicationCollection.ts';
+import { Resource } from '../fetcher/Resource.ts';
+import { GuidedNavigationDocument } from "./GuidedNavigation.ts";
+import { MediaType, URITemplate } from "../util/index.ts";
+import { Timeline } from './services/timeline/Timeline.ts';
 
 export type ServiceFactory = () => null;
 
@@ -20,6 +21,7 @@ export class Publication {
   /** The manifest holding the publication metadata extracted from the publication file */
   public manifest: Manifest;
   private readonly fetcher: Fetcher = new EmptyFetcher();
+  private _timeline: Timeline | undefined;
 
   // Shortcuts to manifest properties
   public readonly context?: Array<string>;
@@ -44,6 +46,15 @@ export class Publication {
     this.resources = values.manifest.resources;
     this.toc = values.manifest.toc;
     this.subcollections = values.manifest.subcollections;
+  }
+
+  /**
+   * Returns the publication's timeline, built from its reading order and table of contents.
+   * The result is cached after the first call.
+   */
+  public get timeline(): Timeline {
+    if (!this._timeline) this._timeline = Timeline.build(this);
+    return this._timeline;
   }
 
   /** The URL where this publication is served, computed from the `Link` with `self` relation.
@@ -77,6 +88,36 @@ export class Publication {
    */
   public linkWithRel(rel: string): Link | undefined {
     return this.manifest.linkWithRel(rel);
+  }
+
+  /**
+   * Gets the cover image for the publication.
+   * First looks for rel='cover' in links/resources/readingOrder,
+   * then falls back to any image (JPEG, PNG, GIF, AVIF, SVG).
+   */
+  public getCover(): Link | undefined {
+    const locations = [
+      this.links,
+      this.resources,
+      this.readingOrder
+    ].filter(Boolean) as Links[];
+
+    // First, look for explicit cover relationship
+    for (const location of locations) {
+      const cover = location.items.find(link => link.rels?.has('cover'));
+      if (cover) return cover;
+    }
+
+    // Fallback to any image (including SVG which is not bitmap)
+    for (const location of locations) {
+      const image = location.items.find(link => 
+        link.mediaType.isBitmap || 
+        link.mediaType.matches(MediaType.SVG)
+      );
+      if (image) return image;
+    }
+
+    return undefined;
   }
 
   public async positionsFromManifest(): Promise<Locator[]> {

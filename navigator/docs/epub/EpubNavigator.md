@@ -30,11 +30,11 @@ const navigator = new EpubNavigator(
 
 To create an instance of `EpubNavigator`, you only need a container element, a `Publication`, and listeners. All other arguments are optional.
 
-To create a `Publication` object, please refer to the [Handling Publications](./HandlingPublications.md) document.
+To create a `Publication` object, please refer to the [Handling Publications](../HandlingPublications.md) document.
 
 To customize listeners, please refer to the [Customizing Listeners](./CustomizingListeners.md) document.
 
-In the absence of a `positions` argument, `EpubNavigator` will attempt to fetch the `PositionsList` from the EPUB publication. If it does not exist, it will not operate. You can also provide it following the instructions in [Handling Publications > Fetching the Positions List](./HandlingPublications.md#Fetching-the-positions-list).
+In the absence of a `positions` argument, `EpubNavigator` will attempt to fetch the `PositionsList` from the EPUB publication. If it does not exist, it will not operate. You can also provide it following the instructions in [Handling Publications > Fetching the Positions List](../HandlingPublications.md#Fetching-the-positions-list).
 
 The `initialPosition` is the position at which the `EpubNavigator` will `load` the EPUB publication. It has to be a `Locator`.
 
@@ -162,9 +162,9 @@ navigator.goRight(true, () => {
 
 Finally, `EpubNavigator` provides a few helpers to help derive information about navigation:
 
-- `canGoForward()`: Returns `true` if the navigator can go forward in the publication.
-- `canGoBackward()`: Returns `true` if the navigator can go backward in the publication.
-- `isScrollStart()`: Returns `true` if the navigator is at the start of the resources in the viewport.
-- `isScrollEnd()`: Returns `true` if the navigator is at the end of the resources in the viewport.
+- `canGoForward`: Returns `true` if the navigator can go forward in the publication.
+- `canGoBackward`: Returns `true` if the navigator can go backward in the publication.
+- `isScrollStart`: Returns `true` if the navigator is at the start of the resources in the viewport.
+- `isScrollEnd`: Returns `true` if the navigator is at the end of the resources in the viewport.
 
 These can come in handy if you want to disable navigation buttons when the user is at the start or end of the publication, or show the UI if the user is scrolling to the end of the resources in the viewport.

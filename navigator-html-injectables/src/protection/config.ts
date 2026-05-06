@@ -1,6 +1,6 @@
-import { BulkCopyProtectionOptions } from "./BulkCopyProtector";
-import { PatternAnalyzerOptions } from "./PatternAnalyzer";
-import { SelectionAnalyzerOptions } from "./SelectionAnalyzer";
+import { BulkCopyProtectionOptions } from "./BulkCopyProtector.ts";
+import { PatternAnalyzerOptions } from "./PatternAnalyzer.ts";
+import { SelectionAnalyzerOptions } from "./SelectionAnalyzer.ts";
 
 export const DEFAULT_PATTERN_ANALYZER_CONFIG: PatternAnalyzerOptions = {
     maxVelocity: 200,         // Reasonable default for human-like scrolling (pixels/ms)

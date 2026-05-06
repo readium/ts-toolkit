@@ -1,4 +1,4 @@
-import { Link } from '../publication/Link';
+import { Link } from '../publication/Link.ts';
 
 export class NumberRange {
   // TODO move to utils

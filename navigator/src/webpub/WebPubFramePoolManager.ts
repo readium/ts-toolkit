@@ -1,9 +1,9 @@
 import { ModuleName } from "@readium/navigator-html-injectables";
 import { Locator, Publication } from "@readium/shared";
-import { WebPubBlobBuilder } from "./WebPubBlobBuilder";
-import { WebPubFrameManager } from "./WebPubFrameManager";
-import { Injector } from "../injection/Injector";
-import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator";
+import { WebPubBlobBuilder } from "./WebPubBlobBuilder.ts";
+import { WebPubFrameManager } from "./WebPubFrameManager.ts";
+import { Injector } from "../injection/Injector.ts";
+import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator.ts";
 
 export class WebPubFramePoolManager {
     private readonly container: HTMLElement;
@@ -19,7 +19,7 @@ export class WebPubFramePoolManager {
     private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
 
     constructor(
-        container: HTMLElement, 
+        container: HTMLElement,
         cssProperties?: { [key: string]: string },
         injector?: Injector | null,
         contentProtectionConfig: IContentProtectionConfig = {},
@@ -142,7 +142,7 @@ export class WebPubFramePoolManager {
                 if(!itm) return;
                 if(!this.blobs.has(href)) {
                     const blobBuilder = new WebPubBlobBuilder(
-                        pub, 
+                        pub,
                         this.currentBaseURL || "",
                         itm,
                         {

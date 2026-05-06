@@ -1,4 +1,4 @@
-import { EPUBLayout, Properties } from '../../src';
+import { Properties } from '../../src';
 
 describe('Epub Properties Tests', () => {
   it('get Properties {contains} when available', () => {

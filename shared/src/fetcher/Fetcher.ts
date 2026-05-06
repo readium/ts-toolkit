@@ -1,5 +1,5 @@
-import { Link } from '../publication/Link';
-import { Resource } from './Resource';
+import { Link } from '../publication/Link.ts';
+import { Resource } from './Resource.ts';
 
 /** Provides access to a [Resource] from a [Link]. */
 export interface Fetcher {

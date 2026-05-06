@@ -1,6 +1,6 @@
-import { MediaType } from "@readium/shared";
-import { Link, Publication } from "@readium/shared";
-import { Injector } from "../../injection/Injector";
+import { Link, MediaType, Publication, ReadingProgression } from "@readium/shared";
+import { Injector } from "../../injection/Injector.ts";
+import { getScriptMode } from "../../helpers/scriptMode.ts";
 
 const csp = (domains: string[]) => {
     const d = domains.join(" ");
@@ -58,12 +58,12 @@ export default class FrameBlobBuider {
         // Load the HTML resource
         const txt = await this.pub.get(this.item).readAsString();
         if(!txt) throw new Error(`Failed reading item ${this.item.href}`);
-        
+
         const doc = new DOMParser().parseFromString(
             txt,
             this.item.mediaType.string as DOMParserSupportedType
         );
-        
+
         const perror = doc.querySelector("parsererror");
         if (perror) {
             const details = perror.querySelector("div");
@@ -101,7 +101,7 @@ export default class FrameBlobBuider {
 
         // Get allowed domains from injector if it exists
         const allowedDomains = this.injector?.getAllowedDomains?.() || [];
-        
+
         // Always include the root domain if provided
         const domains = [...new Set([
             ...(root ? [root] : []),
@@ -126,10 +126,10 @@ export default class FrameBlobBuider {
             img.setAttribute("fetchpriority", "high");
         });
 
-        // We need to ensure that lang is set on the root element 
+        // We need to ensure that lang is set on the root element
         // since it is used for settings such as font-family, hyphens, ligatures, etc.
         // but also screen readers, etc.
-        // Metadata’s effectiveReadingProgression uses first item in array as primary language 
+        // Metadata’s effectiveReadingProgression uses first item in array as primary language
         // so we keep it consistent.
         if (mediaType.isHTML && this.pub.metadata.languages?.[0]) {
             const primaryLanguage = this.pub.metadata.languages[0];
@@ -137,37 +137,37 @@ export default class FrameBlobBuider {
             if (mediaType === MediaType.XHTML) {
                 // InDesign is infamous for setting xml:lang on the body instead of the root element
                 // So we have to check whether lang is set on the body and move it to the root element
-                const rootLang = document.documentElement.lang || document.documentElement.getAttribute("xml:lang");
-                const bodyLang = document.body.lang || document.body.getAttribute("xml:lang");
+                const rootLang = doc.documentElement.lang || doc.documentElement.getAttribute("xml:lang");
+                const bodyLang = doc.body.lang || doc.body.getAttribute("xml:lang");
                 if (bodyLang && !rootLang) {
-                    document.documentElement.lang = bodyLang;
-                    document.documentElement.setAttribute("xml:lang", bodyLang);
-                    document.body.removeAttribute("xml:lang");
-                    document.body.removeAttribute("lang");
+                    doc.documentElement.lang = bodyLang;
+                    doc.documentElement.setAttribute("xml:lang", bodyLang);
+                    doc.body.removeAttribute("xml:lang");
+                    doc.body.removeAttribute("lang");
                 } else if (!rootLang) {
-                    document.documentElement.lang = primaryLanguage;
-                    document.documentElement.setAttribute("xml:lang", primaryLanguage);
+                    doc.documentElement.lang = primaryLanguage;
+                    doc.documentElement.setAttribute("xml:lang", primaryLanguage);
                 }
             } else if (
-                mediaType === MediaType.HTML && 
-                !document.documentElement.lang
+                mediaType === MediaType.HTML &&
+                !doc.documentElement.lang
             ) {
-                document.documentElement.lang = primaryLanguage;
+                doc.documentElement.lang = primaryLanguage;
             }
         }
 
-        // We need to ensure that dir is set on the root element if rtl
-        // Since body can bubble up, we also need to check it’s not here.
-        // https://github.com/readium/readium-css/blob/develop/docs/CSS03-injection_and_pagination.md#be-cautious-the-direction-propagates
-
-        // TODO: ReadiumCSS stylesheets are injected as LTR/default no matter what so disabled ATM
-        /* if (
-            !document.documentElement.dir &&
-            !document.body.dir && 
-            this.pub.metadata.effectiveReadingProgression === ReadingProgression.rtl
+        // Set dir="rtl" on the root element for RTL publications if the author
+        // has not already declared a direction on html or body.
+        // See: https://github.com/readium/readium-css/blob/develop/docs/CSS03-injection_and_pagination.md#be-cautious-the-direction-propagates
+        // CJK modes must NEVER receive a dir attribute — writing-mode handles
+        // directionality visually, and dir="rtl" would break vertical layout.
+        const scriptMode = getScriptMode(this.pub.metadata);
+        if (scriptMode === "rtl" &&
+            !doc.documentElement.dir &&
+            !doc.body.dir
         ) {
-            document.documentElement.dir = this.pub.metadata.effectiveReadingProgression;
-        } */
+            doc.documentElement.dir = ReadingProgression.rtl;
+        }
 
         if (base !== undefined) {
             // Set all URL bases. Very convenient!

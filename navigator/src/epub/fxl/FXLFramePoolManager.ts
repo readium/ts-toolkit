@@ -1,12 +1,12 @@
 import { ModuleName } from "@readium/navigator-html-injectables";
 import { Locator, Publication, ReadingProgression, Page, Link } from "@readium/shared";
-import { FrameCommsListener } from "../frame";
-import FrameBlobBuider from "../frame/FrameBlobBuilder";
-import { FXLFrameManager } from "./FXLFrameManager";
-import { FXLPeripherals } from "./FXLPeripherals";
-import { FXLSpreader, Orientation, Spread } from "./FXLSpreader";
-import { VisualNavigatorViewport, IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator";
-import { Injector } from "../../injection/Injector";
+import { FrameCommsListener } from "../frame/index.ts";
+import FrameBlobBuider from "../frame/FrameBlobBuilder.ts";
+import { FXLFrameManager } from "./FXLFrameManager.ts";
+import { FXLPeripherals } from "./FXLPeripherals.ts";
+import { FXLSpreader, Orientation, Spread } from "./FXLSpreader.ts";
+import { VisualNavigatorViewport, IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator.ts";
+import { Injector } from "../../injection/Injector.ts";
 
 const UPPER_BOUNDARY = 8;
 const LOWER_BOUNDARY = 5;
@@ -49,8 +49,8 @@ export class FXLFramePoolManager {
     public readonly peripherals: FXLPeripherals;
 
     constructor(
-        container: HTMLElement, 
-        positions: Locator[], 
+        container: HTMLElement,
+        positions: Locator[],
         pub: Publication,
         injector?: Injector | null,
         contentProtectionConfig?: IContentProtectionConfig,
@@ -134,7 +134,7 @@ export class FXLFramePoolManager {
 
         clearTimeout(this.resizeTimeout);
         this.resizeTimeout = window.setTimeout(() => {
-            // TODO optimize this expensive set of loops and operations 
+            // TODO optimize this expensive set of loops and operations
             this.pool.forEach((frm, linkHref) => {
                 let i = this.pub.readingOrder.items.findIndex(l => l.href === linkHref);
                 const link = this.pub.readingOrder.items[i];
@@ -513,8 +513,8 @@ export class FXLFramePoolManager {
                 if(!itm) return; // TODO throw?
                 if(!this.blobs.has(href)) {
                     const blobBuilder = new FrameBlobBuider(
-                        pub, 
-                        this.currentBaseURL || "", 
+                        pub,
+                        this.currentBaseURL || "",
                         itm,
                         {
                             injector: this.injector
@@ -633,7 +633,11 @@ export class FXLFramePoolManager {
             progressions: new Map(),
             positions: null
         };
-        const currentSpread = this.spreader.currentSpread(this.currentSlide, this.perPage);
+        // Mirror currentFrames: for single-page mode use currentSlide directly,
+        // otherwise use the spreader (which indexes by spread, not by item).
+        const currentSpread = this.perPage < 2
+            ? [this.pub.readingOrder.items[this.currentSlide]]
+            : this.spreader.currentSpread(this.currentSlide, this.perPage);
         currentSpread.forEach(link => {
             viewport.readingOrder.push(link.href);
             viewport.progressions.set(link.href, { start: 0, end: 1 }); // FXL always uses [0,1] progression
@@ -641,7 +645,7 @@ export class FXLFramePoolManager {
 
         // Set positions using currentNumbers
         viewport.positions = this.getCurrentNumbers();
-    
+
         return viewport;
     }
 

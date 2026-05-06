@@ -1,5 +1,5 @@
-import { Properties } from '../Properties';
-import { Encryption } from './Encryption';
+import { Properties } from '../Properties.ts';
+import { Encryption } from './Encryption.ts';
 
 // Encryption extensions for link [Properties].
 

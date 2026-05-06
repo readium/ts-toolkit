@@ -1,13 +1,13 @@
 import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
-import { Comms } from "../../comms";
-import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/dom";
-import { ModuleName } from "../ModuleLibrary";
-import { Snapper } from "./Snapper";
-import { rangeFromLocator } from "../../helpers/locator";
-import { forceWebkitRecalc } from "../../helpers/document";
-import { PatternAnalyzer } from "../../protection/PatternAnalyzer";
-import { SCROLL_PROTECTION_CONFIG } from "../../protection/config";
-import { BaseSuspiciousActivityEvent } from "../Peripherals";
+import { Comms } from "../../comms/index.ts";
+import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/dom.ts";
+import { ModuleName } from "../ModuleLibrary.ts";
+import { Snapper } from "./Snapper.ts";
+import { rangeFromLocator } from "../../helpers/locator.ts";
+import { forceWebkitRecalc } from "../../helpers/document.ts";
+import { PatternAnalyzer } from "../../protection/PatternAnalyzer.ts";
+import { SCROLL_PROTECTION_CONFIG } from "../../protection/config.ts";
+import { BaseSuspiciousActivityEvent } from "../Peripherals.ts";
 
 const SCROLL_SNAPPER_STYLE_ID = "readium-scroll-snapper-style";
 
@@ -56,7 +56,7 @@ export class ScrollSnapper extends Snapper {
 
     private handleScroll = (_e: Event) => {
         if (!this.comms.ready) return;
-        
+
         // We have to filter scroll from resize events
         if (this.isResizing) {
             return;
@@ -91,9 +91,9 @@ export class ScrollSnapper extends Snapper {
                             timeDelta
                         );
                         if (isSuspicious) {
-                            const target = _e.target && "tagName" in _e.target ? 
+                            const target = _e.target && "tagName" in _e.target ?
                                 { tagName: (_e.target as Element).tagName } : null;
-                                
+
                             this.comms?.send("content_protection", {
                                 type: "suspicious_scrolling",
                                 timestamp: Date.now(),
@@ -107,7 +107,7 @@ export class ScrollSnapper extends Snapper {
                 }
 
                 this.comms.send("scroll", deltaY);
-            
+
                 this.isScrolling = false;
             });
         }
@@ -143,7 +143,7 @@ export class ScrollSnapper extends Snapper {
         * {
             scrollbar-width: none; /* for Firefox */
         }
-        
+
         body::-webkit-scrollbar {
             display: none; /* for Chrome, Safari, and Opera */
         }
@@ -157,7 +157,7 @@ export class ScrollSnapper extends Snapper {
             if (this.resizeDebounce) {
                 this.wnd.clearTimeout(this.resizeDebounce);
             }
-            
+
             this.isResizing = true;
             this.resizeDebounce = this.wnd.setTimeout(() => {
                 this.isResizing = false;
@@ -173,8 +173,8 @@ export class ScrollSnapper extends Snapper {
             forceWebkitRecalc(this.wnd);
 
             // We absolutely must do this because overflown content
-            // won’t be rendered if we do not trigger scroll… 
-            // Only the content at the start of the document, 
+            // won’t be rendered if we do not trigger scroll…
+            // Only the content at the start of the document,
             // whose height is the viewport height, will be rendered.
             const currentScroll = this.doc().scrollTop;
             if (currentScroll > 1) {
