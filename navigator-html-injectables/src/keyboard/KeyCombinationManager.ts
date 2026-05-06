@@ -139,7 +139,7 @@ export class KeyCombinationManager {
                 if (this.match(event, [handlerConfig])) {
                     const suppress = handlerConfig.suppressOnInteractiveElement;
                     if (suppress) {
-                        const active = document.activeElement;
+                        const active = (wnd?.document ?? document).activeElement;
                         if (Array.isArray(suppress) ? suppress.some(sel => active?.matches(sel)) : isInteractiveElement(active)) return;
                     }
                     event.preventDefault();
