@@ -137,7 +137,11 @@ export class KeyCombinationManager {
         return (event: KeyboardEvent) => {
             for (const handlerConfig of handlers) {
                 if (this.match(event, [handlerConfig])) {
-                    if (handlerConfig.triggerOnInteractiveElement === false && isInteractiveElement(document.activeElement)) return;
+                    const suppress = handlerConfig.suppressOnInteractiveElement;
+                    if (suppress) {
+                        const active = document.activeElement;
+                        if (Array.isArray(suppress) ? suppress.some(sel => active?.matches(sel)) : isInteractiveElement(active)) return;
+                    }
                     event.preventDefault();
                     event.stopPropagation();
                     handlerConfig.handler!(event);

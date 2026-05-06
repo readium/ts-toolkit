@@ -4,7 +4,7 @@ export interface KeyCombo {
     shift?: boolean;
     alt?: boolean;
     meta?: boolean;
-    triggerOnInteractiveElement?: boolean;
+    suppressOnInteractiveElement?: boolean | string[];
 }
 
 export interface KeyboardPeripheral {

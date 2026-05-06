@@ -21,16 +21,21 @@ The `keyboardPeripherals` configuration is an array of objects, where each objec
     alt?: boolean;                  // Whether the Alt/Option key must be pressed
     shift?: boolean;                // Whether the Shift key must be pressed
     meta?: boolean;                 // Whether the Cmd/Windows key must be pressed
-    triggerOnInteractiveElement?: boolean; // Whether to fire when focus is on an interactive element (default: true)
+    suppressOnInteractiveElement?: boolean | string[]; // Whether to suppress when focus is on an interactive element (default: false)
   }>;
 }
 ```
 
 **Note:** Use `keyCode` (number) instead of `key` (string) as it provides more consistent behavior across different keyboard layouts. You can find key codes at [keycode.info](https://keycode.info/).
 
-### `triggerOnInteractiveElement`
+### `suppressOnInteractiveElement`
 
-By default, shortcuts fire even when focus is on an interactive element (input, button, select, etc.). Set `triggerOnInteractiveElement: false` on combos that would interfere with native browser behavior in those contexts — for example, arrow keys that would otherwise block cursor movement inside an `<input>`, or space that would block a `<button>` activation.
+By default, shortcuts fire regardless of where focus is. Use `suppressOnInteractiveElement` on combos that would interfere with native browser behavior when an interactive element is focused:
+
+- `true` — suppress using the full interactive element check (tag name, ARIA role, `tabindex`, `contenteditable`)
+- `string[]` — suppress only when `document.activeElement` matches one of the provided CSS selectors, for more targeted control
+
+For example, bare arrow keys or space should set `true` so cursor movement and button activation work natively. A combo that only conflicts with text inputs could use `["input", "textarea", "[contenteditable]"]` instead.
 
 ## Example
 
@@ -41,15 +46,15 @@ const configuration = {
     {
       type: 'navigate_forward',
       keyCombos: [
-        { keyCode: 39, triggerOnInteractiveElement: false }, // ArrowRight
-        { keyCode: 76, triggerOnInteractiveElement: false }  // l
+        { keyCode: 39, suppressOnInteractiveElement: true }, // ArrowRight
+        { keyCode: 76, suppressOnInteractiveElement: true }  // l
       ]
     },
     {
       type: 'navigate_backward',
       keyCombos: [
-        { keyCode: 37, triggerOnInteractiveElement: false }, // ArrowLeft
-        { keyCode: 72, triggerOnInteractiveElement: false }  // h
+        { keyCode: 37, suppressOnInteractiveElement: true }, // ArrowLeft
+        { keyCode: 72, suppressOnInteractiveElement: true }  // h
       ]
     },
     {
