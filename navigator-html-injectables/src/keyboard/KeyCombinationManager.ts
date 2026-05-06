@@ -19,17 +19,28 @@ export class KeyCombinationManager {
      */
     public match(event: KeyboardEvent, combos: KeyCombo[]): boolean {
         for (const combo of combos) {
-            const keyMatch = event.keyCode === combo.keyCode;
-            const ctrlMatch = combo.ctrl === undefined || event.ctrlKey === combo.ctrl;
-            const shiftMatch = combo.shift === undefined || event.shiftKey === combo.shift;
-            const altMatch = combo.alt === undefined || event.altKey === combo.alt;
-            const metaMatch = combo.meta === undefined || event.metaKey === combo.meta;
-
-            if (keyMatch && ctrlMatch && shiftMatch && altMatch && metaMatch) {
+            if (this.matchesCombo(event, combo)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private matchesCombo(event: KeyboardEvent, combo: KeyCombo): boolean {
+        return event.keyCode === combo.keyCode &&
+               this.matchesModifier(event.ctrlKey, combo.ctrl) &&
+               this.matchesModifier(event.shiftKey, combo.shift) &&
+               this.matchesModifier(event.altKey, combo.alt) &&
+               this.matchesModifier(event.metaKey, combo.meta);
+    }
+
+    private matchesModifier(eventModifier: boolean, comboModifier?: boolean): boolean {
+        if (comboModifier === undefined) {
+            // Modifier not specified: must NOT be pressed
+            return !eventModifier;
+        }
+        // Modifier specified: must match exactly
+        return eventModifier === comboModifier;
     }
 
     /**
