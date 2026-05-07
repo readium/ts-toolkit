@@ -4,6 +4,7 @@ import { FrameComms } from "../frame/FrameComms.ts";
 import { FXLPeripherals } from "./FXLPeripherals.ts";
 import type { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
 import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator.ts";
+import { KeyboardConditionBridge } from "../../peripherals/KeyboardConditionBridge.ts";
 
 export class FXLFrameManager {
     private frame: HTMLIFrameElement;
@@ -13,6 +14,7 @@ export class FXLFrameManager {
     private readonly peripherals: FXLPeripherals;
     private readonly contentProtectionConfig: IContentProtectionConfig;
     private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
+    private conditionBridge?: KeyboardConditionBridge;
     private currModules: ModuleName[] = [];
 
     // NEW
@@ -159,6 +161,7 @@ export class FXLFrameManager {
     }
 
     async destroy() {
+        this.conditionBridge?.destroy();
         await this.unfocus();
         this.loader?.destroy();
         this.wrapper.remove();
@@ -213,9 +216,17 @@ export class FXLFrameManager {
         // Send content protection config
         this.comms!.send("peripherals_protection", this.contentProtectionConfig);
 
-        // Send keyboard peripherals separately
+        // Send keyboard peripherals, filtered through condition bridge
         if (this.keyboardPeripheralsConfig && this.keyboardPeripheralsConfig.length > 0) {
-            this.comms!.send("keyboard_peripherals", this.keyboardPeripheralsConfig);
+            this.conditionBridge?.destroy();
+            this.conditionBridge = new KeyboardConditionBridge(
+                this.keyboardPeripheralsConfig,
+                (serializable) => {
+                    if (serializable.length > 0)
+                        this.comms!.send("keyboard_peripherals", serializable);
+                }
+            );
+            this.conditionBridge.setup();
         }
 
         // Apply print protection if configured
