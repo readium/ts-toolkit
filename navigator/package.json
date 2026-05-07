@@ -50,7 +50,7 @@
     "generate:css-selector": "node scripts/generate-css-selector.js"
   },
   "devDependencies": {
-    "@readium/css": "^2.0.2",
+    "@readium/css": "^2.0.4",
     "@readium/navigator-html-injectables": "workspace:*",
     "@readium/shared": "workspace:*",
     "@types/path-browserify": "^1.0.3",

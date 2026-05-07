@@ -1,8 +1,28 @@
 import RCSSExperiments from "@readium/css/css/vars/experiments.json";
+import RCSSSettings from "@readium/css/css/vars/settings.json";
+import RCSSI18n from "@readium/css/css/vars/i18n.json";
 
 export type ExperimentKey = keyof typeof RCSSExperiments;
+export type SettingsKey = keyof typeof RCSSSettings;
+export type I18nKey = keyof typeof RCSSI18n;
+
+export type RCSSSettingsProperty =
+  | (typeof RCSSSettings)[SettingsKey]["disabled"][number]
+  | (typeof RCSSSettings)[SettingsKey]["added"][number];
+
+export type RCSSSettingsEntry = {
+  disabled: readonly RCSSSettingsProperty[];
+  added: readonly RCSSSettingsProperty[];
+}
+
+export type RCSSI18nEntry = {
+  baseFontFamily: string;
+  lineHeightCompensation?: number;
+}
 
 export const experiments = RCSSExperiments;
+export const settings: Record<SettingsKey, RCSSSettingsEntry> = RCSSSettings;
+export const i18n: Record<I18nKey, RCSSI18nEntry> = RCSSI18n;
 
 export enum TextAlignment {
   start = "start",
@@ -44,7 +64,7 @@ export const letterSpacingRangeConfig: RangeConfig = {
 }
 
 export const lineHeightRangeConfig: RangeConfig = {
-  range: [1, 2],
+  range: [1, 2.5],
   step: .1
 }
 
