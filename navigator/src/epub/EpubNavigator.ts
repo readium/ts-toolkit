@@ -16,16 +16,12 @@ import { getContentWidth } from "../helpers/dimensions.ts";
 import { Injector } from "../injection/Injector.ts";
 import { createReadiumEpubRules } from "../injection/epubInjectables.ts";
 import { IInjectableRule, IInjectablesConfig } from "../injection/Injectable.ts";
-import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator.ts";
+import { IContentProtectionConfig, IKeyboardPeripheralsConfig, KeyboardPeripheralEventData } from "../Navigator.ts";
 import { NavigatorProtector, NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector.ts";
 import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../peripherals/KeyboardPeripherals.ts";
 import { getScriptMode } from "../helpers/scriptMode.ts";
 
 export type ManagerEventKey = "zoom";
-
-export interface KeyboardPeripheralEventData extends Omit<KeyboardPeripheralEvent, 'interactiveElement'> {
-    interactiveElement?: Element;
-}
 
 export interface EpubNavigatorConfiguration {
     preferences: IEpubPreferences;

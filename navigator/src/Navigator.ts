@@ -3,6 +3,7 @@ import {
     ContentProtectionConfig, 
     PrintProtectionConfig, 
     KeyboardPeripheral,
+    KeyboardPeripheralEvent,
     KeyCombo,
     DEV_TOOLS, 
     SELECT_ALL, 
@@ -11,6 +12,10 @@ import {
 } from "@readium/navigator-html-injectables";
 
 type cbb = (ok: boolean) => void;
+
+export interface KeyboardPeripheralEventData extends Omit<KeyboardPeripheralEvent, 'interactiveElement'> {
+    interactiveElement?: Element;
+}
 
 export type IKeyboardPeripheralsConfig = Array<Omit<KeyboardPeripheral, 'type'> & {
     type: Exclude<string, 'developer_tools' | 'select_all' | 'print' | 'save'>;

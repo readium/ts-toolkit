@@ -1,5 +1,5 @@
 import { Link, Locator, LocatorLocations, Publication, Timeline, TimelineItem } from "@readium/shared";
-import { MediaNavigator, IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator.ts";
+import { MediaNavigator, IContentProtectionConfig, IKeyboardPeripheralsConfig, KeyboardPeripheralEventData } from "../Navigator.ts";
 import { Configurable } from "../preferences/Configurable.ts";
 import { WebAudioEngine, PlaybackState } from "./engine/index.ts";
 import {
@@ -11,7 +11,7 @@ import {
     IAudioDefaults
 } from "./preferences/index.ts";
 import { AudioPoolManager } from "./AudioPoolManager.ts";
-import { ContextMenuEvent, KeyboardEventData, SuspiciousActivityEvent } from "@readium/navigator-html-injectables";
+import { ContextMenuEvent, SuspiciousActivityEvent } from "@readium/navigator-html-injectables";
 import { AudioNavigatorProtector } from "./protection/AudioNavigatorProtector.ts";
 import { NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector.ts";
 import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../peripherals/KeyboardPeripherals.ts";
@@ -36,7 +36,7 @@ export interface AudioNavigatorListeners {
     seeking: (isSeeking: boolean) => void;
     seekable: (seekable: TimeRanges) => void;
     contentProtection: (type: string, data: SuspiciousActivityEvent) => void;
-    peripheral: (data: KeyboardEventData) => void;
+    peripheral: (data: KeyboardPeripheralEventData) => void;
     contextMenu: (data: ContextMenuEvent) => void;
     remotePlaybackStateChanged: (state: RemotePlaybackState) => void;
 }
