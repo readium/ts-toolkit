@@ -238,11 +238,12 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             });
         }
 
-        if(this._layout === Layout.fixed) {
+        if(this._layout === Layout.fixed || this._layout === Layout.scrolled) {
             this.framePool = new FXLFramePoolManager(
                 this.container,
                 this.positions,
                 this.pub,
+                this._layout,
                 this._injector,
                 this._contentProtection,
                 this._keyboardPeripherals

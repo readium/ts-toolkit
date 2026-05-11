@@ -1,5 +1,5 @@
 import { ModuleName } from "@readium/navigator-html-injectables";
-import { Locator, Publication, ReadingProgression, Page, Link } from "@readium/shared";
+import { Locator, Publication, ReadingProgression, Page, Link, Layout } from "@readium/shared";
 import { FrameCommsListener } from "../frame/index.ts";
 import FrameBlobBuilder from "../frame/FrameBlobBuilder.ts";
 import { FXLFrameManager } from "./FXLFrameManager.ts";
@@ -52,6 +52,7 @@ export class FXLFramePoolManager {
         container: HTMLElement,
         positions: Locator[],
         pub: Publication,
+        layout: Layout,
         injector?: Injector | null,
         contentProtectionConfig?: IContentProtectionConfig,
         keyboardPeripheralsConfig?: IKeyboardPeripheralsConfig,
@@ -63,10 +64,6 @@ export class FXLFramePoolManager {
         this.contentProtectionConfig = contentProtectionConfig || {};
         this.keyboardPeripheralsConfig = keyboardPeripheralsConfig || [];
         this.spreadPresentation = pub.metadata.otherMetadata?.spread || Spread.auto;
-
-        if(this.pub.metadata.effectiveReadingProgression !== ReadingProgression.rtl && this.pub.metadata.effectiveReadingProgression !== ReadingProgression.ltr)
-            // TODO support TTB and BTT
-            throw Error("Unsupported reading progression for EPUB");
 
         // NEW
         this.spreader = new FXLSpreader(this.pub);
