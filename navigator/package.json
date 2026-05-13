@@ -1,6 +1,6 @@
 {
   "name": "@readium/navigator",
-  "version": "2.5.3",
+  "version": "2.5.4",
   "type": "module",
   "description": "Next generation SDK for publications in Web Apps",
   "author": "readium",
@@ -50,7 +50,7 @@
     "generate:css-selector": "node scripts/generate-css-selector.js"
   },
   "devDependencies": {
-    "@readium/css": "^2.0.4",
+    "@readium/css": "^2.0.5",
     "@readium/navigator-html-injectables": "workspace:*",
     "@readium/shared": "workspace:*",
     "@types/path-browserify": "^1.0.3",
