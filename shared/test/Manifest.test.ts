@@ -137,7 +137,6 @@ describe('Manifest Tests', () => {
       }).serialize()
     ).toEqual({
       metadata: { title: { und: 'Title' } },
-      links: [],
       readingOrder: [],
     });
   });
