@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.5] – 2026–05–21
+
+### Fixed
+
+- `positionChanged` event now fires reliably for FXL in EPUBNavigator (([#218](https://github.com/readium/ts-toolkit/pull/218)))
+
+## [2.5.4] – 2026–05–13
+
+### Changed
+
+- Readium CSS update – it no longer uses `default` as JSON property
+
 ## [2.5.3] – 2026-05-11
 
 ### Fixed

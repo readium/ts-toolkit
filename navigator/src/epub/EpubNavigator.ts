@@ -824,6 +824,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                     }
                 }
             await this.apply();
+            // On the initial forward walk each fresh iframe load fires
+            // positionChanged via _pong; on back-then-forward to an
+            // already-loaded frame no _pong fires, so dispatch explicitly here.
+            this.listeners.positionChanged(this.currentLocation);
             return true;
         }
 
