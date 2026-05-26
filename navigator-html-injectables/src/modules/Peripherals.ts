@@ -537,6 +537,15 @@ export class Peripherals extends Module {
             ack(true);
         });
 
+        // Disable keyboard handler when frame is unfocused so that stale focus
+        // inside a hidden/off-screen iframe doesn't silently swallow key events
+        // through a halted comms channel. The handler is re-established on the
+        // next show() cycle via the keyboard_peripherals message below.
+        this.comms?.register("unfocus", Peripherals.moduleName, (_, ack) => {
+            this.disableKeyboardPeripherals();
+            ack(true);
+        });
+
         // Separate handler for keyboard peripherals
         this.comms?.register("keyboard_peripherals", Peripherals.moduleName, (data: unknown, ack) => {
             const keyboardPeripherals = data as KeyboardPeripheral[];
