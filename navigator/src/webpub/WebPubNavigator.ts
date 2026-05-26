@@ -588,8 +588,14 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             this.currentIndex = index;
         }
 
+        if(this._isNavigating) { cb(false); return; }
+        this._isNavigating = true;
+
         this.currentLocation = this.createCurrentLocator();
-        this.apply().then(() => this.loadLocator(locator, (ok) => cb(ok))).then(() => {
+        this.apply().then(() => this.loadLocator(locator, (ok) => {
+            this._isNavigating = false;
+            cb(ok);
+        })).then(() => {
             // Now that we've gone to the right locator, we can attach the listeners.
             // Doing this only at this stage reduces janky UI with multiple locator updates.
             this.attachListener();

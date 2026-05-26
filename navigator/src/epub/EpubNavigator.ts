@@ -920,8 +920,14 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             return cb(this.listeners.handleLocator(locator));
         }
 
+        if(this._navigating) { cb(false); return; }
+        this._navigating = true;
+
         this.currentLocation = this.positions.find(p => p.href === link!.href)!;
-        this.apply().then(() => this.loadLocator(locator, (ok) => cb(ok))).then(() => {
+        this.apply().then(() => this.loadLocator(locator, (ok) => {
+            this._navigating = false;
+            cb(ok);
+        })).then(() => {
             // Now that we've gone to the right locator, we can attach the listeners.
             // Doing this only at this stage reduces janky UI with multiple locator updates.
             this.attachListener();
