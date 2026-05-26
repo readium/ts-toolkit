@@ -81,7 +81,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private _css: ReadiumCSS;
     private _preferencesEditor: EpubPreferencesEditor | null = null;
     private _injector: Injector | null = null;
-    private _navigating = false;
+    private _isNavigating = false;
     private readonly _readiumRulesPromise: Promise<IInjectableRule[]>;
     private readonly _injectablesConfig: IInjectablesConfig;
     private readonly _contentProtection: IContentProtectionConfig;
@@ -759,21 +759,21 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     }
 
     public goBackward(_: boolean, cb: (ok: boolean) => void): void {
-        if(this._navigating) { cb(false); return; }
-        this._navigating = true;
+        if(this._isNavigating) { cb(false); return; }
+        this._isNavigating = true;
         if(this._layout === Layout.fixed) {
             this.changeResource(-1).then((ok) => {
-                this._navigating = false;
+                this._isNavigating = false;
                 cb(ok);
             });
         } else {
             this._cframes[0]?.msg?.send("go_prev", undefined, async (ack) => {
                 if(ack) {
-                    this._navigating = false;
+                    this._isNavigating = false;
                     cb(true);
                 } else {
                     const ok = await this.changeResource(-1);
-                    this._navigating = false;
+                    this._isNavigating = false;
                     cb(ok);
                 }
             });
@@ -781,21 +781,21 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     }
 
     public goForward(_: boolean, cb: (ok: boolean) => void): void {
-        if(this._navigating) { cb(false); return; }
-        this._navigating = true;
+        if(this._isNavigating) { cb(false); return; }
+        this._isNavigating = true;
         if(this._layout === Layout.fixed) {
             this.changeResource(1).then((ok) => {
-                this._navigating = false;
+                this._isNavigating = false;
                 cb(ok);
             });
         } else {
             this._cframes[0]?.msg?.send("go_next", undefined, async (ack) => {
                 if(ack) {
-                    this._navigating = false;
+                    this._isNavigating = false;
                     cb(true);
                 } else {
                     const ok = await this.changeResource(1);
-                    this._navigating = false;
+                    this._isNavigating = false;
                     cb(ok);
                 }
             });

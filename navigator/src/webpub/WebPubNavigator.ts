@@ -72,6 +72,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private _css: WebPubCSS;
     private _preferencesEditor: WebPubPreferencesEditor | null = null;
     private readonly _injector: Injector | null = null;
+    private _isNavigating = false;
     private readonly _contentProtection: IContentProtectionConfig;
     private readonly _keyboardPeripherals: IKeyboardPeripheralsConfig;
     private readonly _navigatorProtector: NavigatorProtector | null = null;
@@ -463,14 +464,20 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     }
 
     goBackward(_animated: boolean, cb: (ok: boolean) => void): void {
-        this.changeResource(-1).then((success) => {
-            cb(success);
+        if(this._isNavigating) { cb(false); return; }
+        this._isNavigating = true;
+        this.changeResource(-1).then((ok) => {
+            this._isNavigating = false;
+            cb(ok);
         });
     }
 
     goForward(_animated: boolean, cb: (ok: boolean) => void): void {
-        this.changeResource(1).then((success) => {
-            cb(success);
+        if(this._isNavigating) { cb(false); return; }
+        this._isNavigating = true;
+        this.changeResource(1).then((ok) => {
+            this._isNavigating = false;
+            cb(ok);
         });
     }
 
