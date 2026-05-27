@@ -136,7 +136,7 @@ export class PublicationContentIterator extends Iterator {
 
         for (const factory of this.resourceContentIteratorFactories) {
             const res = factory(resource, locator);
-            if(res) new IndexedIterator(index, res);
+            if(res) return new IndexedIterator(index, res);
         }
 
         return null;

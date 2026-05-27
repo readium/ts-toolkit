@@ -1,105 +1,92 @@
-import {
-  Link,
-  Links,
-  LocalizedString,
-  Manifest,
-  Metadata,
-  Publication,
-  PublicationCollection,
-} from '../../src';
+import '../../src/publication/epub/Publication.ts';
+import { Manifest, Publication } from '../../src';
+
+const manifestJSON = {
+  '@context': 'https://readium.org/webpub-manifest/context.jsonld',
+  metadata: {
+    author: 'Various',
+    conformsTo: 'https://readium.org/webpub-manifest/profiles/epub',
+    identifier: 'code.google.com.epub-samples.georgia-pls-ssml',
+    language: 'en-US',
+    modified: '2012-02-07T16:38:35Z',
+    title: 'Georgia',
+  },
+  readingOrder: [{ href: 'EPUB/georgia.xhtml', type: 'application/xhtml+xml' }],
+  resources: [
+    { href: 'EPUB/cover.xhtml', type: 'application/xhtml+xml' },
+    { href: 'EPUB/nav.xhtml', rel: 'contents', type: 'application/xhtml+xml' },
+    { href: 'EPUB/css/epub.css', type: 'text/css' },
+    { href: 'EPUB/images/cover.png', rel: 'cover', type: 'image/png' },
+    { href: 'EPUB/toc.ncx', type: 'application/x-dtbncx+xml' },
+  ],
+  toc: [{ href: 'EPUB/georgia.xhtml#d10e42', title: 'GEORGIA' }],
+  landmarks: [{ href: 'EPUB/cover.xhtml', title: 'cover' }],
+  pageList: [
+    { href: 'EPUB/georgia.xhtml#page752', title: '752' },
+    { href: 'EPUB/georgia.xhtml#page753', title: '753' },
+    { href: 'EPUB/georgia.xhtml#page754', title: '754' },
+    { href: 'EPUB/georgia.xhtml#page755', title: '755' },
+    { href: 'EPUB/georgia.xhtml#page756', title: '756' },
+    { href: 'EPUB/georgia.xhtml#page757', title: '757' },
+    { href: 'EPUB/georgia.xhtml#page758', title: '758' },
+  ],
+  loa: [{ href: 'EPUB/audio.mp3', title: 'Audio clip' }],
+  loi: [{ href: 'EPUB/images/figure1.png', title: 'Figure 1' }],
+  lot: [{ href: 'EPUB/table1.xhtml', title: 'Table 1' }],
+  lov: [{ href: 'EPUB/video.mp4', title: 'Video clip' }],
+};
 
 describe('Epub Publication Tests', () => {
-  function createPublication(
-    subcollections: Map<string, Array<PublicationCollection>> = new Map<
-      string,
-      Array<PublicationCollection>
-    >()
-  ): Publication {
-    return new Publication({
-      manifest: new Manifest({
-        metadata: new Metadata({ title: new LocalizedString('Title') }),
-        links: new Links([]),
-        readingOrder: new Links([]),
-        subcollections,
-      }),
-    });
-  }
+  let publication: Publication;
 
-  it('get {pageList}', () => {
-    const links = new Links([new Link({ href: '/page1.html' })]);
-    expect(
-      createPublication(
-        new Map([['pageList', [new PublicationCollection({ links })]]])
-      ).getPageList()
-    ).toEqual(links);
+  beforeEach(() => {
+    const manifest = Manifest.deserialize(manifestJSON);
+    expect(manifest).toBeDefined();
+    publication = new Publication({ manifest: manifest! });
   });
 
-  it('get {pageList} when missing', () => {
-    expect(createPublication().getPageList()).toBeUndefined();
+  it('get {pageList}', () => {
+    const pageList = publication.getPageList();
+    expect(pageList?.items).toHaveLength(7);
+    expect(pageList?.items[0].href).toBe('EPUB/georgia.xhtml#page752');
+    expect(pageList?.items[6].href).toBe('EPUB/georgia.xhtml#page758');
   });
 
   it('get {landmarks}', () => {
-    const links = new Links([new Link({ href: '/landmark.html' })]);
-    expect(
-      createPublication(
-        new Map([['landmarks', [new PublicationCollection({ links })]]])
-      ).getLandmarks()
-    ).toEqual(links);
-  });
-
-  it('get {landmarks} when missing', () => {
-    expect(createPublication().getLandmarks()).toBeUndefined();
+    const landmarks = publication.getLandmarks();
+    expect(landmarks?.items).toHaveLength(1);
+    expect(landmarks?.items[0].href).toBe('EPUB/cover.xhtml');
+    expect(landmarks?.items[0].title).toBe('cover');
   });
 
   it('get {listOfAudioClips}', () => {
-    const links = new Links([new Link({ href: '/audio.mp3' })]);
-    expect(
-      createPublication(
-        new Map([['loa', [new PublicationCollection({ links })]]])
-      ).getListOfAudioClips()
-    ).toEqual(links);
-  });
-
-  it('get {listOfAudioClips} when missing', () => {
-    expect(createPublication().getListOfAudioClips()).toBeUndefined();
+    const loa = publication.getListOfAudioClips();
+    expect(loa?.items).toHaveLength(1);
+    expect(loa?.items[0].href).toBe('EPUB/audio.mp3');
   });
 
   it('get {listOfIllustrations}', () => {
-    const links = new Links([new Link({ href: '/image.jpg' })]);
-    expect(
-      createPublication(
-        new Map([['loi', [new PublicationCollection({ links })]]])
-      ).getListOfIllustrations()
-    ).toEqual(links);
-  });
-
-  it('get {listOfIllustrations} when missing', () => {
-    expect(createPublication().getListOfIllustrations()).toBeUndefined();
+    const loi = publication.getListOfIllustrations();
+    expect(loi?.items).toHaveLength(1);
+    expect(loi?.items[0].href).toBe('EPUB/images/figure1.png');
   });
 
   it('get {listOfTables}', () => {
-    const links = new Links([new Link({ href: '/table.html' })]);
-    expect(
-      createPublication(
-        new Map([['lot', [new PublicationCollection({ links })]]])
-      ).getListOfTables()
-    ).toEqual(links);
-  });
-
-  it('get {listOfTables} when missing', () => {
-    expect(createPublication().getListOfTables()).toBeUndefined();
+    const lot = publication.getListOfTables();
+    expect(lot?.items).toHaveLength(1);
+    expect(lot?.items[0].href).toBe('EPUB/table1.xhtml');
   });
 
   it('get {listOfVideoClips}', () => {
-    const links = new Links([new Link({ href: '/video.mov' })]);
-    expect(
-      createPublication(
-        new Map([['lov', [new PublicationCollection({ links })]]])
-      ).getListOfVideoClips()
-    ).toEqual(links);
+    const lov = publication.getListOfVideoClips();
+    expect(lov?.items).toHaveLength(1);
+    expect(lov?.items[0].href).toBe('EPUB/video.mp4');
   });
 
-  it('get {listOfVideoClips} when missing', () => {
-    expect(createPublication().getListOfVideoClips()).toBeUndefined();
+  it('subcollections contains only the expected roles', () => {
+    expect(Array.from(publication.subcollections?.keys() ?? [])).toEqual(
+      expect.arrayContaining(['pageList', 'landmarks', 'loa', 'loi', 'lot', 'lov'])
+    );
+    expect(publication.subcollections?.size).toBe(6);
   });
 });

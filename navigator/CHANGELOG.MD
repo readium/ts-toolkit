@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.6] – 2026–04–27
+
+### Fixed
+
+- Fixed an issue where keyboard peripheral input would be hijacked by a previously focused `iframe` after navigation ([#221](https://github.com/readium/ts-toolkit/issues/221))
+- Added a navigation lock so that FramePool Managers do not become overwhelmed with quick-fire navigation ([#190](https://github.com/readium/ts-toolkit/issues/190))
+
 ## [2.5.5] – 2026–05–21
 
 ### Fixed

@@ -83,6 +83,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private _css: ReadiumCSS;
     private _preferencesEditor: EpubPreferencesEditor | null = null;
     private _injector: Injector | null = null;
+    private _isNavigating = false;
     private readonly _readiumRulesPromise: Promise<IInjectableRule[]>;
     private readonly _injectablesConfig: IInjectablesConfig;
     private readonly _contentProtection: IContentProtectionConfig;
@@ -934,33 +935,45 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     }
 
     public goBackward(_: boolean, cb: (ok: boolean) => void): void {
+        if(this._isNavigating) { cb(false); return; }
+        this._isNavigating = true;
         if(this._layout === Layout.fixed) {
-            this.changeResource(-1);
-            cb(true);
+            this.changeResource(-1).then((ok) => {
+                this._isNavigating = false;
+                cb(ok);
+            });
         } else {
             this._cframes[0]?.msg?.send("go_prev", undefined, async (ack) => {
-                if(ack)
-                    // OK
+                if(ack) {
+                    this._isNavigating = false;
                     cb(true);
-                else
-                    // Need to change resources because we're at the beginning of the current one
-                    cb(await this.changeResource(-1));
+                } else {
+                    const ok = await this.changeResource(-1);
+                    this._isNavigating = false;
+                    cb(ok);
+                }
             });
         }
     }
 
     public goForward(_: boolean, cb: (ok: boolean) => void): void {
+        if(this._isNavigating) { cb(false); return; }
+        this._isNavigating = true;
         if(this._layout === Layout.fixed) {
-            this.changeResource(1);
-            cb(true);
+            this.changeResource(1).then((ok) => {
+                this._isNavigating = false;
+                cb(ok);
+            });
         } else {
             this._cframes[0]?.msg?.send("go_next", undefined, async (ack) => {
-                if(ack)
-                    // OK
+                if(ack) {
+                    this._isNavigating = false;
                     cb(true);
-                else
-                    // Need to change resources because we're at the end of the current one
-                    cb(await this.changeResource(1));
+                } else {
+                    const ok = await this.changeResource(1);
+                    this._isNavigating = false;
+                    cb(ok);
+                }
             });
         }
     }
@@ -1083,8 +1096,14 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             return cb(this.listeners.handleLocator(locator));
         }
 
+        if(this._isNavigating) { cb(false); return; }
+        this._isNavigating = true;
+
         this.currentLocation = this.positions.find(p => p.href === link!.href)!;
-        this.apply().then(() => this.loadLocator(locator, (ok) => cb(ok))).then(() => {
+        this.apply().then(() => this.loadLocator(locator, (ok) => {
+            this._isNavigating = false;
+            cb(ok);
+        })).then(() => {
             // Now that we've gone to the right locator, we can attach the listeners.
             // Doing this only at this stage reduces janky UI with multiple locator updates.
             this.attachListener();
