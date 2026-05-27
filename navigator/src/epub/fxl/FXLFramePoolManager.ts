@@ -577,6 +577,12 @@ export class FXLFramePoolManager {
             }
             this.previousFrames = newFrames;
 
+            // Safari retains focus on the unfocused iframe; transfer it to the first
+            // new frame only if no meaningful element in the parent document owns focus.
+            const active = this.container.ownerDocument.activeElement;
+            if (active && active.tagName === "IFRAME" && !newFrames.some(f => f.iframe === active))
+                newFrames[0]?.iframe.focus({ preventScroll: true });
+
             resolve();
         });
 
