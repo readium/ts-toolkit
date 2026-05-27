@@ -26,7 +26,7 @@ export class Publication {
   // Shortcuts to manifest properties
   public readonly context?: Array<string>;
   public readonly metadata: Metadata;
-  public readonly links: Links;
+  public readonly links?: Links;
   /** Identifies a list of resources in reading order for the publication. */
   public readonly readingOrder: Links;
   /** Identifies resources that are necessary for rendering the publication. */
@@ -121,7 +121,7 @@ export class Publication {
   }
 
   public async positionsFromManifest(): Promise<Locator[]> {
-    const positionListLink = this.manifest.links.findWithMediaType(
+    const positionListLink = this.manifest.links?.findWithMediaType(
       'application/vnd.readium.position-list+json'
     );
     if (positionListLink === undefined) return [];
@@ -152,7 +152,7 @@ export class Publication {
 
     if(!guidedNavigationLink) {
       // Still unable to find a guided navigation link, try to use the manifest's global document
-      guidedNavigationLink = this.manifest.links.findWithMediaType(
+      guidedNavigationLink = this.manifest.links?.findWithMediaType(
         'application/guided-navigation+json'
       );
     }

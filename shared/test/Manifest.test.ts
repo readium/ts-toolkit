@@ -36,9 +36,7 @@ describe('Manifest Tests', () => {
           href: '',
           children: [{ href: '/chap2.html' }, { href: '/chap3.html' }],
         }],
-        sub: {
-          links: [{ href: '/sublink' }],
-        },
+        pageList: [{ href: '/page1.html' }],
       })
     ).toEqual(
       new Manifest({
@@ -64,13 +62,29 @@ describe('Manifest Tests', () => {
         ]),
         subcollections: new Map([
           [
-            'sub',
+            'pageList',
             [
               new PublicationCollection({
-                links: new Links([new Link({ href: '/sublink' })]),
+                links: new Links([new Link({ href: '/page1.html' })]),
               }),
             ],
           ],
+        ]),
+      })
+    );
+  });
+
+  it('parse JSON without {links}', () => {
+    expect(
+      Manifest.deserialize({
+        metadata: { title: 'Title' },
+        readingOrder: [{ href: '/chap1.html', type: 'text/html' }],
+      })
+    ).toEqual(
+      new Manifest({
+        metadata: new Metadata({ title: new LocalizedString('Title') }),
+        readingOrder: new Links([
+          new Link({ href: '/chap1.html', type: 'text/html' }),
         ]),
       })
     );
@@ -166,10 +180,10 @@ describe('Manifest Tests', () => {
         ]),
         subcollections: new Map([
           [
-            'sub',
+            'pageList',
             [
               new PublicationCollection({
-                links: new Links([new Link({ href: '/sublink' })]),
+                links: new Links([new Link({ href: '/page1.html' })]),
               }),
             ],
           ],
@@ -182,12 +196,12 @@ describe('Manifest Tests', () => {
       readingOrder: [{ href: '/chap1.html', type: 'text/html' }],
       resources: [{ href: '/image.png', type: 'image/png' }],
       toc: [
-        { href: '/cover.html' }, 
-        { href: '/chap1.html' }, 
+        { href: '/cover.html' },
+        { href: '/chap1.html' },
         { href: '', children: [{ href: '/chap2.html' }, { href: '/chap3.html' }] },
       ],
-      sub: {
-        links: [{ href: '/sublink' }],
+      pageList: {
+        links: [{ href: '/page1.html' }],
       },
     });
   });
