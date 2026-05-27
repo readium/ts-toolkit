@@ -145,10 +145,6 @@ export class WebPubFrameManager {
                         this.frame.style.removeProperty("pointer-events");
                         this.hidden = false;
 
-                        const active = this.frame.ownerDocument.activeElement as HTMLElement | null;
-                        if (!active || (active.tagName === "IFRAME" && active.style.visibility === "hidden"))
-                            this.frame.focus({ preventScroll: true });
-
                         if (sML.UA.WebKit) {
                             this.comms?.send("force_webkit_recalc", undefined);
                         }

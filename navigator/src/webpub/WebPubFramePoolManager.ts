@@ -176,6 +176,14 @@ export class WebPubFramePoolManager {
                     await newFrame.show(locator.locations.progression);
 
                 this._currentFrame = newFrame;
+
+                // Safari retains focus on the hidden iframe; transfer it to the new
+                // frame only if no meaningful element in the parent document owns focus.
+                if (newFrame) {
+                    const active = this.container.ownerDocument.activeElement;
+                    if (active && active.tagName === "IFRAME" && active !== newFrame.iframe)
+                        newFrame.iframe.focus({ preventScroll: true });
+                }
             }
             resolve();
         });
