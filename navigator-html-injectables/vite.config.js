@@ -4,15 +4,16 @@ import packageJson from "./package.json";
 
 export default defineConfig({
   build: {
-    lib: {
-      entry: resolve(__dirname, "src/index.ts"),
-      formats: ["es"],
-    },
     rollupOptions: {
+      input: resolve(__dirname, "src/index.ts"),
       external: ["@readium/shared"],
+      preserveEntrySignatures: "strict",
       output: {
+        format: "es",
         preserveModules: true,
-        preserveModulesRoot: "src",
+        preserveModulesRoot: resolve(__dirname, "src"),
+        dir: "dist",
+        entryFileNames: "[name].js",
       }
     }
   },
