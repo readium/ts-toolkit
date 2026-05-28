@@ -12,11 +12,7 @@
       "dom",
       "dom.iterable"
     ],
-    "plugins": [
-      {
-        "name": "typescript-plugin-css-modules"
-      }
-    ],
+
     "importHelpers": true,
     // output .d.ts declaration files for consumers
     "declaration": true,

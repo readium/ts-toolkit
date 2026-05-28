@@ -6,18 +6,18 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, "src/index.ts"),
-      name: "navigator-html-injectables",
-      fileName: "index"
+      formats: ["es"],
+    },
+    rollupOptions: {
+      external: ["@readium/shared"],
+      output: {
+        preserveModules: true,
+        preserveModulesRoot: "src",
+      }
     }
   },
   define: {
     "import.meta.env.PACKAGE_NAME": JSON.stringify(packageJson.name),
     "import.meta.env.PACKAGE_VERSION": JSON.stringify(packageJson.version),
-  },
-  resolve: {
-    alias: {
-      // Treat shared as internal source code when building standalone
-      "@readium/shared": resolve(__dirname, "../shared/src")
-    }
   }
 });
