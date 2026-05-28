@@ -199,6 +199,9 @@ export class FXLFrameManager {
     async unfocus(): Promise<void> {
         if(this.frame.parentElement) {
             if(this.comms === undefined) return;
+            // Return focus to the parent document so keyboard events aren't silently
+            // swallowed by an off-screen iframe whose comms channel has been halted.
+            this.frame.blur();
             return new Promise((res, _) => {
                 this.comms?.send("unfocus", undefined, (_: boolean) => {
                     this.comms?.halt();
