@@ -11,12 +11,11 @@
         "navigator-html-injectables",
         "shared"
     ],
-    "packageManager": "pnpm@11.1.1",
     "devEngines": {
         "packageManager": {
-        "name": "pnpm",
-        "version": "11.1.0",
-        "onFail": "warn"
+            "name": "pnpm",
+            "version": "11.1.0",
+            "onFail": "warn"
         }
     }
 }
