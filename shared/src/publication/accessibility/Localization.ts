@@ -1,8 +1,5 @@
-// Localization.ts
-
 import { SUPPORTED_LANGUAGES } from './SupportedLanguages.ts';
-// Static import for English (default locale)
-import enLocale from '@edrlab/thorium-locales/publication-metadata/en.json';
+import enLocale from '../../locales/publication-metadata/en.json';
 
 export interface L10nString {
   compact: string;
@@ -16,16 +13,16 @@ interface LocaleData {
 
 // Dynamic imports for non-English locales
 const jsonLoaders: Record<string, () => Promise<{ default: any }>> = {
-  'fr': () => import('@edrlab/thorium-locales/publication-metadata/fr.json'),
-  'ar': () => import('@edrlab/thorium-locales/publication-metadata/ar.json'),
-  'da': () => import('@edrlab/thorium-locales/publication-metadata/da.json'),
-//  'el': () => import('@edrlab/thorium-locales/publication-metadata/el.json'),
-//  'et': () => import('@edrlab/thorium-locales/publication-metadata/et.json'),
-  'it': () => import('@edrlab/thorium-locales/publication-metadata/it.json'),
-  'pt_PT': () => import('@edrlab/thorium-locales/publication-metadata/pt_PT.json'),
-  'sv': () => import('@edrlab/thorium-locales/publication-metadata/sv.json'),
-//  'tr': () => import('@edrlab/thorium-locales/publication-metadata/tr.json'),
-//  'uk': () => import('@edrlab/thorium-locales/publication-metadata/uk.json')
+  'ar': () => import('../../locales/publication-metadata/ar.json'),
+  'da': () => import('../../locales/publication-metadata/da.json'),
+  'es': () => import('../../locales/publication-metadata/es.json'),
+  'et': () => import('../../locales/publication-metadata/et.json'),
+  'fi': () => import('../../locales/publication-metadata/fi.json'),
+  'fr': () => import('../../locales/publication-metadata/fr.json'),
+  'it': () => import('../../locales/publication-metadata/it.json'),
+  'pl': () => import('../../locales/publication-metadata/pl.json'),
+  'pt_PT': () => import('../../locales/publication-metadata/pt_PT.json'),
+  'sv': () => import('../../locales/publication-metadata/sv.json')
 };
 
 // Extract English accessibility data

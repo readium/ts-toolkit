@@ -1,0 +1,310 @@
+{
+    "publication": {
+        "format": {
+            "audiobook": "Heliraamat",
+            "audiobookJSON": "Heliraamatu manifest",
+            "cbz": "Comic Booki arhiiv",
+            "divina": "Divina väljaanne",
+            "divinaJSON": "Divina väljaande manifest",
+            "epub": "EPUB",
+            "lcpa": "LCP-kaitsega heliraamat",
+            "lcpdf": "LCP-kaitsega PDF-fail",
+            "lcpl": "LCP-litsentsiga dokument",
+            "pdf": "PDF-fail",
+            "rwp": "Readiumi veebiväljaanne",
+            "rwpm": "Readiumi veebiväljaande manifest",
+            "zab": "Heliraamatu arhiiv",
+            "zip": "ZIP-arhiiv"
+        },
+        "kind": {
+            "audiobook_one": "heliraamat",
+            "audiobook_other": "heliraamatud",
+            "book_one": "raamat",
+            "book_other": "raamatud",
+            "comic_one": "koomiks",
+            "comic_other": "koomiksid",
+            "document_one": "dokument",
+            "document_other": "dokumendid"
+        },
+        "metadata": {
+            "accessibility": {
+                "display-guide": {
+                    "accessibility-summary": {
+                        "no-metadata": "Teave pole saadaval",
+                        "publisher-contact": "Selle toote saadavause osas palun küsi lisateavet kirjastusest: ",
+                        "title": "Saadavuse kokkuvõte"
+                    },
+                    "additional-accessibility-information": {
+                        "aria": {
+                            "compact": "ARIA rollid on lisatud",
+                            "descriptive": "Sisu on täiendatud ARIA-rollidega, et optimeerida selle ülesehitust ja hõlbustada väljaandes liikumist"
+                        },
+                        "audio-descriptions": "Helikirjeldus",
+                        "braille": "Punktkiri (Braille'i kiri)",
+                        "color-not-sole-means-of-conveying-information": "Värv pole ainus viis teabe edastamiseks",
+                        "dyslexia-readability": "Kohandatud lugemisraskustega inimestele",
+                        "full-ruby-annotations": "Täismahus märkused Ruby-vormingus (Aasia keeled)",
+                        "high-contrast-between-foreground-and-background-audio": "Suur kontrast esiplaani ja taustahelide vahel",
+                        "high-contrast-between-text-and-background": "Suur kontrast esiplaani teksti ja tausta vahel",
+                        "large-print": "Suurte tähemärkidega kiri",
+                        "page-breaks": {
+                            "compact": "Lehevahetused on olemas",
+                            "descriptive": "Lehevahetused on pärit algsest trükivariandist"
+                        },
+                        "ruby-annotations": "Mõned märkused Ruby-vormingus (Aasia keeled)",
+                        "sign-language": "Viipekeel",
+                        "tactile-graphics": {
+                            "compact": "Puutegraafika on olemas",
+                            "descriptive": "Pimedatele inimestele visuaalsete elementide kättesaadavuse hõlbustamiseks on lisatud reljeefgraafika (puutegraafika)"
+                        },
+                        "tactile-objects": "Puudutustundlikud kolmemõõtmelised objektid",
+                        "text-to-speech-hinting": "Kõnesünteesi vihjed on lisatud",
+                        "title": "Täiendav hõlbustusteave",
+                        "ultra-high-contrast-between-text-and-background": "Teksti ja tausta vahel on äärmiselt suur kontrast",
+                        "visible-page-numbering": "Nähtav lehtede nummerdus",
+                        "without-background-sounds": "Ilma taustahelideta"
+                    },
+                    "conformance": {
+                        "a": {
+                            "compact": "Käesolev väljaanne vastab hõlbustuse ja ligipääsetavuse miinimumnõuetele",
+                            "descriptive": "Väljaanne sisaldab vastavusdeklaratsiooni, mille kohaselt vastab see EPUB-i hõlbustusstandardile ja WCAG 2. taseme A-nõuetele"
+                        },
+                        "aa": {
+                            "compact": "Käesolev väljaanne vastab kehtivatele hõlbustuse ja ligipääsetavuse standarditele",
+                            "descriptive": "Väljaanne sisaldab vastavusdeklaratsiooni, mille kohaselt vastab see EPUB-i hõlbustusstandardile ja WCAG 2. taseme AA-nõuetele"
+                        },
+                        "aaa": {
+                            "compact": "Käesolev väljaanne ületab kehtivaid hõlbustuse ja ligipääsetavuse standardeid",
+                            "descriptive": "Väljaanne sisaldab vastavusdeklaratsiooni, mille kohaselt vastab see EPUB-i hõlbustusstandardile ja WCAG 2. taseme AAA-nõuetele"
+                        },
+                        "certifier": "Selle väljaande on sertifitseerinud ",
+                        "certifier-credentials": "Sertifitseerija tunnus on ",
+                        "details": {
+                            "certification-info": "Sertifitseerimise ajatempel on ",
+                            "certifier-report": "Lisateavet leiad sertifitseerija aruandest",
+                            "claim": "Käesolev väljaanne väidab, et olemas on vastavus standardiga",
+                            "epub-accessibility-1-0": "EPUB-i hõlbustusstandardi versioon 1.0",
+                            "epub-accessibility-1-1": "EPUB-i hõlbustusstandardi versioon 1.1",
+                            "level-a": "A-tase",
+                            "level-aa": "AA-tase",
+                            "level-aaa": "AAA-tase",
+                            "wcag-2-0": {
+                                "compact": "WCAG 2.0",
+                                "descriptive": "Veebisisu hõlbustuse juhised (WCAG) 2.0"
+                            },
+                            "wcag-2-1": {
+                                "compact": "WCAG 2.1",
+                                "descriptive": "Veebisisu hõlbustuse juhised (WCAG) 2.1"
+                            },
+                            "wcag-2-2": {
+                                "compact": "WCAG 2.2",
+                                "descriptive": "Veebisisu hõlbustuse juhised (WCAG) 2.2"
+                            }
+                        },
+                        "details-title": "Üksikasjalik teave vastavuse kohta",
+                        "no": "Teave pole saadaval",
+                        "title": "Vastavus",
+                        "unknown-standard": "Selle väljaande vastavust kehtivatele hõlbustuse ja ligipääsetavuse standarditele ei ole võimalik kindlaks teha"
+                    },
+                    "hazards": {
+                        "flashing": {
+                            "compact": "Vilkuv sisu",
+                            "descriptive": "See väljaanne sisaldab vilkuvat sisu, mis võib põhjustada valgustundlikusest johtuvaid krampe"
+                        },
+                        "flashing-none": {
+                            "compact": "Vilkumisega seotud ohte pole",
+                            "descriptive": "See väljaanne ei sisalda vilkuvat sisu, mis võib põhjustada valgustundlikusest johtuvaid krampe"
+                        },
+                        "flashing-unknown": {
+                            "compact": "Vilkumisega seotud ohud pole teada",
+                            "descriptive": "Pole võimalik kindlaks teha, kas selles väljaandes leidub vilkuvat sisu, mis võib põhjustada valgustundlikusest johtuvaid krampe"
+                        },
+                        "motion": {
+                            "compact": "Simuleeritud liikumine",
+                            "descriptive": "Väljaanne sisaldab liikumissimulatsioone, mis võivad põhjustada liikumistõbe"
+                        },
+                        "motion-none": {
+                            "compact": "Simuleeritud liikumisega seotud ohte pole",
+                            "descriptive": "Väljaanne ei sisalda liikumissimulatsioone, mis võivad põhjustada liikumistõbe"
+                        },
+                        "motion-unknown": {
+                            "compact": "Simuleeritud liikumisega seotud ohud pole teada",
+                            "descriptive": "Ei õnnestu tuvastada, kas väljaanne sisaldab liikumissimulatsioone, mis võivad põhjustada liikumistõbe"
+                        },
+                        "no-metadata": "Teave pole saadaval",
+                        "none": {
+                            "compact": "Ohte pole",
+                            "descriptive": "Selles väljaandes ei leidu ohte"
+                        },
+                        "sound": {
+                            "compact": "Helid",
+                            "descriptive": "Väljaanne sisaldab helisid, mis võivad põhjustada tundlikkusega seotud probleeme"
+                        },
+                        "sound-none": {
+                            "compact": "Helidega seotud ohte pole",
+                            "descriptive": "Väljaanne ei sisalda helisid, mis võivad põhjustada tundlikkusega seotud probleeme"
+                        },
+                        "sound-unknown": {
+                            "compact": "Helidega seotud ohud pole teada",
+                            "descriptive": "Ei õnnestu tuvastada, kas väljaanne sisaldab helisid, mis võivad põhjustada tundlikkusega seotud probleeme"
+                        },
+                        "title": "Ohud",
+                        "unknown": "Ohtude olemasolu pole teada"
+                    },
+                    "legal-considerations": {
+                        "exempt": {
+                            "compact": "Taotleb hõlbustus- ja juurdepääsupiirangute erandit teatud jurisdiktsioonides",
+                            "descriptive": "See väljaanne taotleb hõlbustus- ja juurdepääsupiirangute erandit teatud jurisdiktsioonides"
+                        },
+                        "no-metadata": "Teave pole saadaval",
+                        "title": "Õiguslikud kaalutlused"
+                    },
+                    "navigation": {
+                        "index": {
+                            "compact": "Indeks",
+                            "descriptive": "Sisukord koos viidetega loetletud kirjetele"
+                        },
+                        "no-metadata": "Teave pole saadaval",
+                        "page-navigation": {
+                            "compact": "Lehe avamine",
+                            "descriptive": "Lehekülgede loend, mille kaudu saab minna trükiversiooni lehekülgedele"
+                        },
+                        "structural": {
+                            "compact": "Pealkirjad",
+                            "descriptive": "Struktureeritud liikumise elemendid, nagu pealkirjad, tabelid jne"
+                        },
+                        "title": "Väljaandes liikumine",
+                        "toc": {
+                            "compact": "Sisukord",
+                            "descriptive": "Sisukord kõigi peatükkide juurde linkide kaudu"
+                        }
+                    },
+                    "rich-content": {
+                        "accessible-chemistry-as-latex": {
+                            "compact": "Keemiavalemid LaTeX-is",
+                            "descriptive": "Keemiavalemid loetavas ja hõlbustatud vormingus (LaTeX)"
+                        },
+                        "accessible-chemistry-as-mathml": {
+                            "compact": "Keemiavalemid MathML-is",
+                            "descriptive": "Keemiavalemid loetavas ja hõlbustatud vormingus (MathML)"
+                        },
+                        "accessible-math-as-latex": {
+                            "compact": "Matemaatika LaTeX-is",
+                            "descriptive": "Matemaatika valemid loetavas ja hõlbustatud vormingus (LaTeX)"
+                        },
+                        "accessible-math-described": "Matemaatilisel sisu on tekstilised kirjeldused",
+                        "closed-captions": {
+                            "compact": "Videotel on olemas väljalülitatavad subtiitrid",
+                            "descriptive": "Väljaandes leiduvatel videotel on olemas väljalülitatavad subtiitrid"
+                        },
+                        "extended-descriptions": "Inforikastel piltidel on täiendavad kirjeldused",
+                        "math-as-mathml": {
+                            "compact": "Matemaatika MathML-is",
+                            "descriptive": "Matemaatilised valemid hõlbustusele ja ligipääsetavusele vastavas vormingus (MathML)"
+                        },
+                        "open-captions": {
+                            "compact": "Videotel on olemas pidevalt nähtavad subtiitrid",
+                            "descriptive": "Väljaandes leiduvatel videotel on olemas pidevalt nähtavad subtiitrid"
+                        },
+                        "title": "Mitmekülgses vormis sisu",
+                        "transcript": "Heli- ja videosisul on olemas tekstiline vaste",
+                        "unknown": "Teave pole saadaval"
+                    },
+                    "ways-of-reading": {
+                        "nonvisual-reading": {
+                            "alt-text": {
+                                "compact": "Selgitustekstid on olemas",
+                                "descriptive": "Piltidel on olemas selgitustekst (alt-tekst)"
+                            },
+                            "no-metadata": "Puudub teave mittevisuaalse lugemise võimaluste kohta",
+                            "none": {
+                                "compact": "Ei ole loetav ettelugemise või dünaamilise punktkirja abil",
+                                "descriptive": "Sisu ei ole loetav etteloetavana ega dünaamilise punktkirjana"
+                            },
+                            "not-fully": {
+                                "compact": "Ei ole täies mahus loetav ettelugemise või dünaamilise punktkirja abil",
+                                "descriptive": "Kogu sisu ei ole loetav ettelugemise või dünaamilise punktkirja abil"
+                            },
+                            "readable": {
+                                "compact": "On loetav ettelugemise või dünaamilise punktkirja abil",
+                                "descriptive": "Kogu sisu on loetav ettelugemise või dünaamilise punktkirja abil"
+                            }
+                        },
+                        "prerecorded-audio": {
+                            "complementary": {
+                                "compact": "Eelsalvestatud heliklipid",
+                                "descriptive": "Sisusse on lõimitud eelsalvestatud heliklipid"
+                            },
+                            "no-metadata": "Puudub teave eelsalvestatud helilise sisu kohta",
+                            "only": {
+                                "compact": "Sisu koosneb ainult lõimitud eelsalvestatud heliklippidest",
+                                "descriptive": "Heliraamat ilma tekstilise alternatiivita"
+                            },
+                            "synchronized": {
+                                "compact": "Eelsalvestatud heli, mis on sünkroonis tekstilise sisuga",
+                                "descriptive": "Kogu sisu on saadaval eelsalvestatud helifailina, mis on sünkroonis tekstilise sisuga"
+                            }
+                        },
+                        "title": "Lugemise viisid ja võimalused",
+                        "visual-adjustments": {
+                            "modifiable": {
+                                "compact": "Välimus on muudetav",
+                                "descriptive": "Teksti välimust ja lehekülje paigutust saab kohandada vastavalt lugemissüsteemi võimalustele (kirjatüüp ja selle suurus, vahed lõikude, lausete, sõnade ja tähtede vahel ning tausta ja teksti värv)"
+                            },
+                            "unknown": "Puudub teave välimuse muudetavuse kohta",
+                            "unmodifiable": {
+                                "compact": "Välimust ei saa muuta",
+                                "descriptive": "Teksti ja lehekülje paigutust ei saa muuta ja lugemiskogemus on sarnane või sarnane trükiversiooniga, kuid lugemisvaated võimaldavad siiski suumimist"
+                            }
+                        }
+                    }
+                }
+            },
+            "altIdentifier_one": "alternatiivne tunnus",
+            "altIdentifier_other": "alternatiivset tunnust",
+            "artist_one": "kunstnik",
+            "artist_other": "kunstnikud",
+            "author_one": "kirjanik",
+            "author_other": "kirjanikud",
+            "collection_one": "toimetatud kogumik",
+            "collection_other": "toimetatud kogumikud",
+            "colorist_one": "värvija",
+            "colorist_other": "värvijad",
+            "contributor_one": "kaasautor",
+            "contributor_other": "kaasautorid",
+            "description": "kirjeldus",
+            "duration": "kestus",
+            "editor_one": "toimetaja",
+            "editor_other": "toimetajad",
+            "identifier_one": "tunnus",
+            "identifier_other": "tunnused",
+            "illustrator_one": "illustraator",
+            "illustrator_other": "illustraatorid",
+            "imprint_one": "kirjastaja kaubamärk",
+            "imprint_other": "kirjastaja kaubamärgid",
+            "inker_one": "(koomiksi) värvija",
+            "inker_other": "(koomiksi) värvijad",
+            "language_one": "keel",
+            "language_other": "keeled",
+            "letterer_one": "(koomiksi) tekstikirjutaja",
+            "letterer_other": "(koomiksi) tekstikirjutajad",
+            "modified": "muutmise kuupäev",
+            "narrator_one": "ettelugeja",
+            "narrator_other": "ettelugejad",
+            "numberOfPages": "trükise lehtede arv",
+            "penciler_one": "joonistaja",
+            "penciler_other": "joonistajad",
+            "published": "avaldamise kuupäev",
+            "publisher_one": "väljaandja",
+            "publisher_other": "väljaandjad",
+            "series_one": "sari",
+            "series_other": "sarjad",
+            "subject_one": "teema",
+            "subject_other": "teemad",
+            "subtitle": "alapealkiri",
+            "title": "pealkiri",
+            "translator_one": "tõlkija",
+            "translator_other": "tõlkijad"
+        }
+    }
+}

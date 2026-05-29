@@ -1,0 +1,333 @@
+{
+    "publication": {
+        "format": {
+            "audiobook": "Audiolibro",
+            "audiobookJSON": "Manifiesto de Audiolibro",
+            "cbz": "Tira cómica",
+            "divina": "Publicación Divina",
+            "divinaJSON": "Manifiesto de Publicación Divina",
+            "epub": "EPUB",
+            "lcpa": "Audiolibro Protegido con LCP",
+            "lcpdf": "PDF Protegido con LCP",
+            "lcpl": "Documento de Licencia LCP",
+            "pdf": "PDF",
+            "rwp": "Publicación Web Readium",
+            "rwpm": "Manifiesto de Publicación Web Readium",
+            "zab": "Archivo de Audiolibro",
+            "zip": "Archivo ZIP"
+        },
+        "kind": {
+            "audiobook_many": "audio‐libros",
+            "audiobook_one": "audio‐libro",
+            "audiobook_other": "audio‐libros",
+            "book_many": "libros",
+            "book_one": "libro",
+            "book_other": "libros",
+            "comic_many": "cómics",
+            "comic_one": "cómic",
+            "comic_other": "cómics",
+            "document_many": "documentos",
+            "document_one": "documento",
+            "document_other": "documentos"
+        },
+        "metadata": {
+            "accessibility": {
+                "display-guide": {
+                    "accessibility-summary": {
+                        "no-metadata": "No hay información disponible",
+                        "publisher-contact": "Para más información sobre la accesibilidad de este producto, póngase en contacto con la editorial: ",
+                        "title": "Información adicional sobre accesibilidad proporcionada por la editorial"
+                    },
+                    "additional-accessibility-information": {
+                        "aria": {
+                            "compact": "Información enriquecida para tecnologías de asistencia",
+                            "descriptive": "El contenido se ha enriquecido con roles ARIA para optimizar la organización y facilitar la navegación"
+                        },
+                        "audio-descriptions": "Audiodescripciones",
+                        "braille": "Braille",
+                        "color-not-sole-means-of-conveying-information": "El color no es el único medio para transmitir información",
+                        "dyslexia-readability": "Legibilidad para dislexia",
+                        "full-ruby-annotations": "Anotaciones ruby completas",
+                        "high-contrast-between-foreground-and-background-audio": "Alto contraste entre audio principal y de fondo",
+                        "high-contrast-between-text-and-background": "Alto contraste entre texto principal y fondo",
+                        "large-print": "Impresión grande",
+                        "page-breaks": {
+                            "compact": "Se incluyen saltos de página",
+                            "descriptive": "Se incluyen saltos de página procedentes de la fuente original"
+                        },
+                        "ruby-annotations": "Algunas anotaciones ruby",
+                        "sign-language": "Lengua de signos",
+                        "tactile-graphics": {
+                            "compact": "Se incluyen gráficos táctiles",
+                            "descriptive": "Se han incorporado gráficos táctiles para facilitar a personas ciegas el acceso a elementos visuales"
+                        },
+                        "tactile-objects": "Objetos 3D táctiles",
+                        "text-to-speech-hinting": "Se ofrecen indicaciones de texto a voz",
+                        "title": "Información adicional sobre accesibilidad",
+                        "ultra-high-contrast-between-text-and-background": "Contraste ultra alto entre texto principal y fondo",
+                        "visible-page-numbering": "Numeración de página visible",
+                        "without-background-sounds": "Sin sonidos de fondo"
+                    },
+                    "conformance": {
+                        "a": {
+                            "compact": "Esta publicación cumple con estándares mínimos de accesibilidad",
+                            "descriptive": "La publicación contiene una declaración de conformidad de cumplimiento del estándar de accesibilidad EPUB y WCAG 2 nivel A"
+                        },
+                        "aa": {
+                            "compact": "Esta publicación cumple con estándares aceptados de accesibilidad",
+                            "descriptive": "La publicación contiene una declaración de conformidad de cumplimiento del estándar de accesibilidad EPUB y WCAG 2 nivel AA"
+                        },
+                        "aaa": {
+                            "compact": "Esta publicación sobrepasa los estándares aceptados de accesibilidad",
+                            "descriptive": "La publicación contiene una declaración de conformidad de cumplimiento del estándar de accesibilidad EPUB y WCAG 2 nivel AAA"
+                        },
+                        "certifier": "La publicación fue evaluada por ",
+                        "certifier-credentials": "La credencial del evaluador es ",
+                        "details": {
+                            "certification-info": "La publicación fue evaluada en ",
+                            "certifier-report": "Para más información, consulte el informe del evaluador",
+                            "claim": "Esta publicación declara que cumple",
+                            "epub-accessibility-1-0": "Accesibilidad EPUB 1.0",
+                            "epub-accessibility-1-1": "Accesibilidad EPUB 1.1",
+                            "level-a": "Nivel A",
+                            "level-aa": "Nivel AA",
+                            "level-aaa": "Nivel AAA",
+                            "wcag-2-0": {
+                                "compact": "WCAG 2.0",
+                                "descriptive": "Reglas para la accesibilidad del contenido web (WCAG) 2.0"
+                            },
+                            "wcag-2-1": {
+                                "compact": "WCAG 2.1",
+                                "descriptive": "Reglas para la accesibilidad del contenido web (WCAG) 2.1"
+                            },
+                            "wcag-2-2": {
+                                "compact": "WCAG 2.2",
+                                "descriptive": "Reglas para la accesibilidad del contenido web (WCAG) 2.2"
+                            }
+                        },
+                        "details-title": "Información de conformidad detallada",
+                        "no": "No hay información disponible",
+                        "title": "Conformidad",
+                        "unknown-standard": "No es posible determinar la conformidad con estándares para la accesibilidad de esta publicación"
+                    },
+                    "hazards": {
+                        "flashing": {
+                            "compact": "Contenido con destellos",
+                            "descriptive": "La publicación incluye contenido con destellos que puede causar convulsiones fotosensibles"
+                        },
+                        "flashing-none": {
+                            "compact": "No hay contenido con destellos",
+                            "descriptive": "La publicación no incluye contenido con destellos"
+                        },
+                        "flashing-unknown": {
+                            "compact": "Se desconoce la presencia de contenido con destellos",
+                            "descriptive": "Se desconoce la presencia de contenido con destellos que pueda causar convulsiones fotosensibles"
+                        },
+                        "motion": {
+                            "compact": "Simulación de movimiento",
+                            "descriptive": "La publicación contiene simulaciones de movimiento que pueden causar mareo"
+                        },
+                        "motion-none": {
+                            "compact": "No hay simulación de movimiento",
+                            "descriptive": "La publicación no incluye simulación de movimiento"
+                        },
+                        "motion-unknown": {
+                            "compact": "Se desconoce la presencia de simulación de movimiento",
+                            "descriptive": "Se desconoce la presencia de simulaciones de movimiento que pueden causar mareo"
+                        },
+                        "no-metadata": "No hay información disponible",
+                        "none": {
+                            "compact": "No hay incidencias",
+                            "descriptive": "La publicación no incluye contenido con incidencias"
+                        },
+                        "sound": {
+                            "compact": "Sonidos",
+                            "descriptive": "La publicación contiene sonidos que pueden ser incómodos"
+                        },
+                        "sound-none": {
+                            "compact": "No hay sonidos",
+                            "descriptive": "La publicación no contiene sonidos"
+                        },
+                        "sound-unknown": {
+                            "compact": "No hay información sobre la presencia de sonidos",
+                            "descriptive": "Se desconoce la presencia de sonidos que puedan causar problemas de sensibilidad"
+                        },
+                        "title": "Incidencias",
+                        "unknown": "Se desconoce si existen incidencias"
+                    },
+                    "legal-considerations": {
+                        "exempt": {
+                            "compact": "Reclama una exención de accesibilidad en algunas jurisdicciones",
+                            "descriptive": "Esta publicación reclama una exención de accesibilidad en algunas jurisdicciones"
+                        },
+                        "no-metadata": "No hay información disponible",
+                        "title": "Consideraciones legales"
+                    },
+                    "navigation": {
+                        "index": {
+                            "compact": "Índice",
+                            "descriptive": "Índice con enlaces a entradas referenciadas"
+                        },
+                        "no-metadata": "No hay información disponible",
+                        "page-navigation": {
+                            "compact": "Ir a página",
+                            "descriptive": "Lista de páginas para ir a páginas tomando como fuente la versión impresa"
+                        },
+                        "structural": {
+                            "compact": "Encabezados",
+                            "descriptive": "Elementos como encabezados, tablas, etc. para una navegación estructurada"
+                        },
+                        "title": "Navegación",
+                        "toc": {
+                            "compact": "Tabla de contenido",
+                            "descriptive": "Tabla de contenido con enlaces a todos los capítulos del texto"
+                        }
+                    },
+                    "rich-content": {
+                        "accessible-chemistry-as-latex": {
+                            "compact": "Fórmulas químicas en LaTeX",
+                            "descriptive": "Fórmulas químicas en formato accesible (LaTeX)"
+                        },
+                        "accessible-chemistry-as-mathml": {
+                            "compact": "Fórmulas químicas en MathML",
+                            "descriptive": "Fórmulas químicas en formato accesible (MathML)"
+                        },
+                        "accessible-math-as-latex": {
+                            "compact": "Matemáticas como LaTeX",
+                            "descriptive": "Matemáticas en formato accesible (LaTeX)"
+                        },
+                        "accessible-math-described": "Se proporcionan descripciones de texto para matemáticas",
+                        "closed-captions": {
+                            "compact": "Los vídeos tienen subtítulos opcionales",
+                            "descriptive": "Los vídeos incluidos en las publicaciones tienen subtítulos opcionales"
+                        },
+                        "extended-descriptions": "Las imágenes con información abundante disponen de descripciones extensas",
+                        "math-as-mathml": {
+                            "compact": "Matemáticas como MathML",
+                            "descriptive": "Fórmulas matemáticas en formato accesible (MathML)"
+                        },
+                        "open-captions": {
+                            "compact": "Los vídeos tienen subtítulos incrustados",
+                            "descriptive": "Los vídeos incluidos en las publicaciones tienen subtítulos incrustados"
+                        },
+                        "title": "Contenido enriquecido",
+                        "transcript": "Se proporcionan transcripciones",
+                        "unknown": "No hay información disponible"
+                    },
+                    "ways-of-reading": {
+                        "nonvisual-reading": {
+                            "alt-text": {
+                                "compact": "Tiene texto alternativo",
+                                "descriptive": "Tiene descripciones para imágenes mediante texto alternativo"
+                            },
+                            "no-metadata": "No hay información disponible sobre lectura con síntesis de voz o en braille",
+                            "none": {
+                                "compact": "No se puede leer con síntesis de voz ni en braille",
+                                "descriptive": "El contenido no se puede leer con síntesis de voz ni en braille"
+                            },
+                            "not-fully": {
+                                "compact": "No se puede leer completamente con síntesis de voz ni en braille",
+                                "descriptive": "No todo el contenido podrá leerse con síntesis de voz ni en braille"
+                            },
+                            "readable": {
+                                "compact": "Se puede leer con síntesis de voz y en braille",
+                                "descriptive": "Todo el contenido se puede leer con síntesis de voz y en braille"
+                            }
+                        },
+                        "prerecorded-audio": {
+                            "complementary": {
+                                "compact": "Clips de audio pregrabados",
+                                "descriptive": "En el contenido se integran clips de audio pregrabados"
+                            },
+                            "no-metadata": "No hay información disponible sobre audio pregrabado",
+                            "only": {
+                                "compact": "Solo audio pregrabado",
+                                "descriptive": "Audiolibro sin texto alternativo"
+                            },
+                            "synchronized": {
+                                "compact": "Audio pregrabado sincronizado con texto",
+                                "descriptive": "Todo el contenido está disponible como audio pregrabado sincronizado con texto"
+                            }
+                        },
+                        "title": "Legibilidad",
+                        "visual-adjustments": {
+                            "modifiable": {
+                                "compact": "Es posible modificar el aspecto visual",
+                                "descriptive": "El aspecto visual del texto y el diseño de página se pueden modificar en función de las posibilidades del sistema de lectura (familia y tamaño de fuente, espacios entre párrafos, frases, palabras y letras, así como el color de fondo y texto)"
+                            },
+                            "unknown": "No hay información disponible sobre la posibilidad de modificar el aspecto visual",
+                            "unmodifiable": {
+                                "compact": "No es posible modificar el aspecto visual",
+                                "descriptive": "El texto y el diseño de página no se pueden modificar porque la experiencia de lectura es similar a la de la versión impresa, pero los sistemas de lectura pueden seguir ofreciendo opciones de ampliación"
+                            }
+                        }
+                    }
+                }
+            },
+            "altIdentifier_many": "identificador alternativo/s",
+            "altIdentifier_one": "identificador alternativo",
+            "altIdentifier_other": "identificadores alternativos",
+            "artist_many": "artista(s)",
+            "artist_one": "artista",
+            "artist_other": "artistas",
+            "author_many": "autor/es",
+            "author_one": "autor",
+            "author_other": "autores",
+            "collection_many": "colecciones editoriales",
+            "collection_one": "colección editorial",
+            "collection_other": "colecciones editoriales",
+            "colorist_many": "colorista(s)",
+            "colorist_one": "colorista",
+            "colorist_other": "coloristas",
+            "contributor_many": "colaborador(es)",
+            "contributor_one": "colaborador",
+            "contributor_other": "colaboradores",
+            "description": "descripción",
+            "duration": "duración",
+            "editor_many": "editor(es)",
+            "editor_one": "editor",
+            "editor_other": "editores",
+            "identifier_many": "identificador(es)",
+            "identifier_one": "identificador",
+            "identifier_other": "identificadores",
+            "illustrator_many": "ilustrador(es)",
+            "illustrator_one": "ilustrador",
+            "illustrator_other": "ilustradores",
+            "imprint_many": "marca(s) editorial(es)",
+            "imprint_one": "marca editorial",
+            "imprint_other": "marcas editoriales",
+            "inker_many": "entintador(es)",
+            "inker_one": "entintador",
+            "inker_other": "entintadores",
+            "language_many": "idioma(s)",
+            "language_one": "idioma",
+            "language_other": "idiomas",
+            "letterer_many": "rotulista(s)",
+            "letterer_one": "rotulista",
+            "letterer_other": "rotulistas",
+            "modified": "fecha de modificación",
+            "narrator_many": "narrador(es)",
+            "narrator_one": "narrador",
+            "narrator_other": "narradores",
+            "numberOfPages": "número de páginas",
+            "penciler_many": "dibujante(s)",
+            "penciler_one": "dibujante",
+            "penciler_other": "dibujantes",
+            "published": "fecha de publicación",
+            "publisher_many": "editorial(es)",
+            "publisher_one": "editorial",
+            "publisher_other": "editoriales",
+            "series_many": "serie(s)",
+            "series_one": "serie",
+            "series_other": "series",
+            "subject_many": "tema(s)",
+            "subject_one": "tema",
+            "subject_other": "temas",
+            "subtitle": "subtítulo",
+            "title": "título",
+            "translator_many": "traductor(es)",
+            "translator_one": "traductor",
+            "translator_other": "traductores"
+        }
+    }
+}

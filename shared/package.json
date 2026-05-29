@@ -53,10 +53,7 @@
     "build": "pnpm clean && tsc && vite build",
     "test": "jest",
     "check-locales": "node scripts/check-locales.mjs",
-    "update-locales": "pnpm remove @edrlab/thorium-locales && pnpm add @edrlab/thorium-locales@github:edrlab/thorium-locales && pnpm check-locales"
-  },
-  "dependencies": {
-    "@edrlab/thorium-locales": "github:edrlab/thorium-locales"
+    "update-locales": "node scripts/update-locales.mjs && node scripts/check-locales.mjs"
   },
   "devDependencies": {
     "@babel/core": "^7.28.6",
