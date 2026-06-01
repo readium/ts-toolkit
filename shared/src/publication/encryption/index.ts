@@ -1,2 +1,2 @@
 export * from './Encryption.ts';
-export * from './Properties.ts';
+export { __encryptionProperties } from './Properties.ts';

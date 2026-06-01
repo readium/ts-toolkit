@@ -13,8 +13,12 @@ declare module '../Properties' {
   }
 }
 
-Object.defineProperty(Properties.prototype, 'encryption', {
-  get: function(): Encryption | undefined {
-    return Encryption.deserialize(this.otherProperties.encrypted);
-  },
-});
+export const __encryptionProperties = ((): true => {
+  Object.defineProperty(Properties.prototype, 'encryption', {
+    get: function(): Encryption | undefined {
+      return Encryption.deserialize(this.otherProperties.encrypted);
+    },
+  });
+
+  return true;
+})();

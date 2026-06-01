@@ -13,6 +13,10 @@ declare module '../Properties' {
   }
 }
 
-Properties.prototype.getContains = function(): Set<string> | undefined {
-  return new Set<string>(this.otherProperties['contains'] || []);
-};
+export const __epubProperties = ((): true => {
+  Properties.prototype.getContains = function(): Set<string> | undefined {
+    return new Set<string>(this.otherProperties['contains'] || []);
+  };
+
+  return true;
+})();

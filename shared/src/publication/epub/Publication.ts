@@ -26,26 +26,30 @@ declare module '../Publication' {
   }
 }
 
-Publication.prototype.getPageList = function(): Links | undefined {
-  return this.linksWithRole('pageList');
-};
+export const __epubPublication = ((): true => {
+  Publication.prototype.getPageList = function(): Links | undefined {
+    return this.linksWithRole('pageList');
+  };
 
-Publication.prototype.getLandmarks = function(): Links | undefined {
-  return this.linksWithRole('landmarks');
-};
+  Publication.prototype.getLandmarks = function(): Links | undefined {
+    return this.linksWithRole('landmarks');
+  };
 
-Publication.prototype.getListOfAudioClips = function(): Links | undefined {
-  return this.linksWithRole('loa');
-};
+  Publication.prototype.getListOfAudioClips = function(): Links | undefined {
+    return this.linksWithRole('loa');
+  };
 
-Publication.prototype.getListOfIllustrations = function(): Links | undefined {
-  return this.linksWithRole('loi');
-};
+  Publication.prototype.getListOfIllustrations = function(): Links | undefined {
+    return this.linksWithRole('loi');
+  };
 
-Publication.prototype.getListOfTables = function(): Links | undefined {
-  return this.linksWithRole('lot');
-};
+  Publication.prototype.getListOfTables = function(): Links | undefined {
+    return this.linksWithRole('lot');
+  };
 
-Publication.prototype.getListOfVideoClips = function(): Links | undefined {
-  return this.linksWithRole('lov');
-};
+  Publication.prototype.getListOfVideoClips = function(): Links | undefined {
+    return this.linksWithRole('lov');
+  };
+
+  return true;
+})();

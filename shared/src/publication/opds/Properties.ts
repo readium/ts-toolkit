@@ -49,36 +49,40 @@ declare module '../Properties' {
   }
 }
 
-Properties.prototype.getNumberOfItems = function(): number | undefined {
-  return positiveNumberfromJSON(this.otherProperties['numberOfItems']);
-};
+export const __opdsProperties = ((): true => {
+  Properties.prototype.getNumberOfItems = function(): number | undefined {
+    return positiveNumberfromJSON(this.otherProperties['numberOfItems']);
+  };
 
-Properties.prototype.getPrice = function(): Price | undefined {
-  return Price.deserialize(this.otherProperties['price']);
-};
+  Properties.prototype.getPrice = function(): Price | undefined {
+    return Price.deserialize(this.otherProperties['price']);
+  };
 
-Properties.prototype.getIndirectAcquisitions = function():
-  | Array<Acquisition>
-  | undefined {
-  const json = this.otherProperties['indirectAcquisition'];
-  if (!(json && Array.isArray(json))) return;
-  return json
-    .map<Acquisition>(item => Acquisition.deserialize(item) as Acquisition)
-    .filter(x => x !== undefined);
-};
+  Properties.prototype.getIndirectAcquisitions = function():
+    | Array<Acquisition>
+    | undefined {
+    const json = this.otherProperties['indirectAcquisition'];
+    if (!(json && Array.isArray(json))) return;
+    return json
+      .map<Acquisition>(item => Acquisition.deserialize(item) as Acquisition)
+      .filter(x => x !== undefined);
+  };
 
-Properties.prototype.getHolds = function(): Holds | undefined {
-  return Holds.deserialize(this.otherProperties['holds']);
-};
+  Properties.prototype.getHolds = function(): Holds | undefined {
+    return Holds.deserialize(this.otherProperties['holds']);
+  };
 
-Properties.prototype.getCopies = function(): Copies | undefined {
-  return Copies.deserialize(this.otherProperties['copies']);
-};
+  Properties.prototype.getCopies = function(): Copies | undefined {
+    return Copies.deserialize(this.otherProperties['copies']);
+  };
 
-Properties.prototype.getAvailability = function(): Availability | undefined {
-  return Availability.deserialize(this.otherProperties['availability']);
-};
+  Properties.prototype.getAvailability = function(): Availability | undefined {
+    return Availability.deserialize(this.otherProperties['availability']);
+  };
 
-Properties.prototype.getAuthenticate = function(): Link | undefined {
-  return Link.deserialize(this.otherProperties['authenticate']);
-};
+  Properties.prototype.getAuthenticate = function(): Link | undefined {
+    return Link.deserialize(this.otherProperties['authenticate']);
+  };
+
+  return true;
+})();

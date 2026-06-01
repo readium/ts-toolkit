@@ -31,14 +31,25 @@
     ".": {
       "types": "./types/src/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./html": {
+      "types": "./types/src/publication/html/index.d.ts",
+      "import": "./dist/publication/html/index.js"
+    },
+    "./epub": {
+      "types": "./types/src/publication/epub/index.d.ts",
+      "import": "./dist/publication/epub/index.js"
+    },
+    "./opds": {
+      "types": "./types/src/publication/opds/index.d.ts",
+      "import": "./dist/publication/opds/index.js"
+    },
+    "./encryption": {
+      "types": "./types/src/publication/encryption/index.d.ts",
+      "import": "./dist/publication/encryption/index.js"
     }
   },
-  "sideEffects": [
-    "dist/publication/epub/**/*.js",
-    "dist/publication/opds/**/*.js",
-    "dist/publication/html/**/*.js",
-    "dist/publication/encryption/**/*.js"
-  ],
+  "sideEffects": false,
   "files": [
     "dist",
     "src",
