@@ -16,8 +16,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@readium/shared": resolve(__dirname, "../shared/src"),
-      "@readium/navigator-html-injectables": resolve(__dirname, "../navigator-html-injectables/src")
+      "@readium/navigator-html-injectables": resolve(__dirname, "../navigator-html-injectables/src"),
+      "@readium/shared": resolve(__dirname, "../shared/src")
     }
   }
 });
