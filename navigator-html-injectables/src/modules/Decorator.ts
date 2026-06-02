@@ -1,11 +1,10 @@
 import { Locator } from "@readium/shared";
-import { Comms } from "../comms/comms.ts";
+import { IComms } from "../comms/comms.ts";
 import { Module } from "./Module.ts";
 import { rangeFromLocator } from "../helpers/locator.ts";
 import { ModuleName } from "./ModuleLibrary.ts";
 import { Rect, getClientRectsNoOverlap, rectContainsPoint } from "../helpers/rect.ts";
 import { getProperty } from "../helpers/css.ts";
-import { ReadiumWindow } from "../helpers/dom.ts";
 import { isDarkColor, getContrastingTextColor, adjustColorForContrast } from "../helpers/color.ts";
 import { makeWritingContext } from "../helpers/document.ts";
 import { sML } from "../helpers/sML.ts";
@@ -120,8 +119,8 @@ class DecorationGroup {
      * @param name Human-readable name of the group
      */
     constructor(
-        private readonly wnd: ReadiumWindow,
-        private readonly comms: Comms,
+        private readonly wnd: Window,
+        private readonly comms: IComms,
         private readonly id: string,
         private readonly name: string
     ) {
@@ -853,7 +852,7 @@ export class Decorator extends Module {
     static readonly moduleName: ModuleName = "decorator";
     private resizeObserver!: ResizeObserver;
     private styleObserver!: MutationObserver;
-    private wnd!: ReadiumWindow;
+    private wnd!: Window;
     /*private readonly lastSize = {
         width: 0,
         height: 0
@@ -884,7 +883,7 @@ export class Decorator extends Module {
     }
     private readonly handleResizer = this.handleResize.bind(this);
 
-    mount(wnd: ReadiumWindow, comms: Comms): boolean {
+    mount(wnd: Window, comms: IComms): boolean {
         this.wnd = wnd;
 
         comms.register("decorate", Decorator.moduleName, (data, ack) => {
@@ -956,7 +955,7 @@ export class Decorator extends Module {
         return true;
     }
 
-    unmount(wnd: ReadiumWindow, comms: Comms): boolean {
+    unmount(wnd: Window, comms: IComms): boolean {
         wnd.removeEventListener("orientationchange", this.handleResizer);
         wnd.removeEventListener("resize", this.handleResizer);
 

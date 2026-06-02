@@ -9,7 +9,8 @@
     "workspaces": [
         "navigator",
         "navigator-html-injectables",
-        "shared"
+        "shared",
+        "decorator"
     ],
     "packageManager": "pnpm@10.28.2"
 }
