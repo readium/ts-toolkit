@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] – 2026–06–04
+
+### Added
+
+- Implemented Decorator API ([#209](https://github.com/readium/ts-toolkit/pull/209))
+
+### Changed
+
+- Snappers and Decorator modules will avoid running callbacks on mutation when not necessary
+- `BasicTextSelection` now returns a ready-to-use `Locator`
+- Decorations appended into the DOM are now appended into the Shadow DOM
+
 ## [2.4.4] – 2026–06–04
 
 ### Added
