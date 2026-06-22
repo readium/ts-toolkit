@@ -14,7 +14,7 @@ export enum AvailabilityStatus {
 /**
  * Indicated the availability of a given resource.
  *
- * https://drafts.opds.io/schema/properties.schema.json
+ * https://specs.opds.io/schema/properties.schema.json
  *
  */
 export class Availability {
