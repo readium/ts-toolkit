@@ -5,7 +5,7 @@ import { rangeFromLocator } from "../helpers/locator.ts";
 import { ModuleName } from "./ModuleLibrary.ts";
 import { Rect, getClientRectsNoOverlap, rectContainsPoint } from "../helpers/rect.ts";
 import { getProperty } from "../helpers/css.ts";
-import { isDarkColor, getContrastingTextColor, adjustColorForContrast } from "../helpers/color.ts";
+import { isDarkColor, getContrastingTextColor, adjustColorForContrast } from "@readium/helpers";
 import { makeWritingContext } from "../helpers/document.ts";
 import { sML } from "../helpers/sML.ts";
 import { sanitizeHTML } from "../helpers/sanitize.ts";

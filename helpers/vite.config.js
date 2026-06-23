@@ -6,18 +6,12 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, "src/index.ts"),
-      name: "navigator-html-injectables",
+      name: "helpers",
       fileName: "index"
     }
   },
   define: {
     "import.meta.env.PACKAGE_NAME": JSON.stringify(packageJson.name),
     "import.meta.env.PACKAGE_VERSION": JSON.stringify(packageJson.version),
-  },
-  resolve: {
-    alias: {
-      "@readium/helpers": resolve(__dirname, "../helpers/src"),
-      "@readium/shared": resolve(__dirname, "../shared/src")
-    }
   }
 });

@@ -37,6 +37,7 @@
     "build": "pnpm clean && tsc && vite build"
   },
   "devDependencies": {
+    "@readium/helpers": "workspace:*",
     "@readium/navigator-html-injectables": "workspace:*",
     "@readium/shared": "workspace:*",
     "rimraf": "^6.1.2",

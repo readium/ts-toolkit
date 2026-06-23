@@ -16,6 +16,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      "@readium/helpers": resolve(__dirname, "../helpers/src"),
       "@readium/navigator-html-injectables": resolve(__dirname, "../navigator-html-injectables/src"),
       "@readium/shared": resolve(__dirname, "../shared/src")
     }

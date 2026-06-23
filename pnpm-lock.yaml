@@ -20,12 +20,30 @@ importers:
 
   decorator:
     devDependencies:
+      '@readium/helpers':
+        specifier: workspace:*
+        version: link:../helpers
       '@readium/navigator-html-injectables':
         specifier: workspace:*
         version: link:../navigator-html-injectables
       '@readium/shared':
         specifier: workspace:*
         version: link:../shared
+      rimraf:
+        specifier: ^6.1.2
+        version: 6.1.2
+      tslib:
+        specifier: ^2.8.1
+        version: 2.8.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vite:
+        specifier: ^7.3.1
+        version: 7.3.1(@types/node@25.0.9)(jiti@2.6.1)(less@4.5.1)(sass@1.97.2)(stylus@0.62.0)
+
+  helpers:
+    devDependencies:
       rimraf:
         specifier: ^6.1.2
         version: 6.1.2
@@ -77,6 +95,9 @@ importers:
 
   navigator-html-injectables:
     devDependencies:
+      '@readium/helpers':
+        specifier: workspace:*
+        version: link:../helpers
       '@readium/shared':
         specifier: workspace:*
         version: link:../shared

@@ -16,9 +16,9 @@ const getCanvasContext = (): CanvasRenderingContext2D | OffscreenCanvasRendering
     // Try to use OffscreenCanvas if available
     if (typeof OffscreenCanvas !== "undefined") {
       canvas = new OffscreenCanvas(5, 5);
-      ctx = canvas.getContext("2d", { 
+      ctx = canvas.getContext("2d", {
         willReadFrequently: true,
-        desynchronized: true 
+        desynchronized: true
       });
     } else {
       // Fall back to regular canvas
@@ -26,9 +26,9 @@ const getCanvasContext = (): CanvasRenderingContext2D | OffscreenCanvasRendering
       htmlCanvas.width = 5;
       htmlCanvas.height = 5;
       canvas = htmlCanvas;
-      ctx = htmlCanvas.getContext("2d", { 
+      ctx = htmlCanvas.getContext("2d", {
         willReadFrequently: true,
-        desynchronized: true 
+        desynchronized: true
       });
     }
   }
@@ -37,14 +37,14 @@ const getCanvasContext = (): CanvasRenderingContext2D | OffscreenCanvasRendering
 
 const isSpecialColorValue = (color: string): boolean => {
   if (!color) return true;
-  
+
   const normalizedColor = color.trim().toLowerCase();
-  
+
   // Check for CSS variables
   if (normalizedColor.startsWith("var(")) {
     return true;
   }
-  
+
   // Check for CSS color keywords
   const cssKeywords = [
     "transparent",
@@ -55,11 +55,11 @@ const isSpecialColorValue = (color: string): boolean => {
     "unset",
     "revert-layer"
   ];
-  
+
   if (cssKeywords.includes(normalizedColor)) {
     return true;
   }
-  
+
   // Check for gradients
   const gradientTypes = [
     "linear-gradient",
@@ -69,7 +69,7 @@ const isSpecialColorValue = (color: string): boolean => {
     "repeating-radial-gradient",
     "repeating-conic-gradient"
   ];
-  
+
   return gradientTypes.some(grad => normalizedColor.includes(grad));
 };
 
@@ -80,7 +80,7 @@ const warnAboutInvalidColor = (color: string, reason: string): void => {
 };
 
 export const colorToRgba = (
-  color: string, 
+  color: string,
   backgroundColor: string | null = null
 ): { r: number; g: number; b: number; a: number } => {
   // Check cache with background key if provided
@@ -109,7 +109,7 @@ export const colorToRgba = (
     if (currentPixelIndex === 0) {
       context.clearRect(0, 0, 5, 5);
     }
-    
+
     // Calculate which pixel to use for this operation
     const x = currentPixelIndex % 5;
     const y = Math.floor(currentPixelIndex / 5);
@@ -122,27 +122,27 @@ export const colorToRgba = (
       context.fillStyle = backgroundColor;
       context.fillRect(x, y, 1, 1);
     }
-    
+
     // Draw the color at the current pixel
     context.fillStyle = color;
     context.fillRect(x, y, 1, 1);
-    
+
     // Get the pixel data for this specific pixel
     const imageData = context.getImageData(x, y, 1, 1);
-    
+
     // Move to next pixel for next call
     currentPixelIndex = (currentPixelIndex + 1) % 25;
 
     // Get the pixel data for the pixel we just sampled
     const [r, g, b, a] = imageData.data;
-    
+
     // If the color is completely transparent, return default
     if (a === 0) {
       warnAboutInvalidColor(color, "Fully transparent color.");
       colorCache.set(cacheKey, null);
       return DEFAULT_COLOR;
     }
-    
+
     const result = { r, g, b, a: a / 255 };
     colorCache.set(cacheKey, result);
     return result;
@@ -155,8 +155,8 @@ export const colorToRgba = (
 
 const toLinear = (c: number): number => {
   const normalized = c / 255;
-  return normalized <= 0.03928 
-    ? normalized / 12.92 
+  return normalized <= 0.03928
+    ? normalized / 12.92
     : Math.pow((normalized + 0.055) / 1.055, 2.4);
 };
 
@@ -180,10 +180,10 @@ export const checkContrast = (
 ): number => {
   const rgba1 = typeof color1 === "string" ? colorToRgba(color1) : color1;
   const rgba2 = typeof color2 === "string" ? colorToRgba(color2) : color2;
-  
+
   const l1 = getLuminance(rgba1);
   const l2 = getLuminance(rgba2);
-  
+
   const lighter = Math.max(l1, l2);
   const darker = Math.min(l1, l2);
   return (lighter + 0.05) / (darker + 0.05);
@@ -234,21 +234,21 @@ export const adjustColorForContrast = (
 ): string => {
   const baseRgba = colorToRgba(baseColor);
   const bgRgba = backgroundColor ? colorToRgba(backgroundColor) : { r: 255, g: 255, b: 255, a: 1 };
-  
+
   let currentContrast = checkContrast(baseRgba, bgRgba);
-  
+
   // If already meets target, return as-is
   if (currentContrast >= targetContrast) {
     return baseColor;
   }
-  
+
   const bgLuminance = getLuminance(bgRgba);
   const isBgDark = bgLuminance < 0.5;
-  
+
   let adjustedRgba = { ...baseRgba, a: baseRgba.a ?? 1 };
   const maxIterations = 20;
   const step = 0.1;
-  
+
   for (let i = 0; i < maxIterations; i++) {
     if (isBgDark) {
       // Dark background: lighten the base color
@@ -257,12 +257,12 @@ export const adjustColorForContrast = (
       // Light background: darken the base color
       adjustedRgba = darkenColor(adjustedRgba, step);
     }
-    
+
     currentContrast = checkContrast(adjustedRgba, bgRgba);
     if (currentContrast >= targetContrast) {
       break;
     }
   }
-  
+
   return rgbaToCss(adjustedRgba);
 };
