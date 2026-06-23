@@ -169,6 +169,20 @@ class DecorationGroup {
                 this.notTextFlag?.set(id, true);
             }
         }
+        // Walk up from both ends of the range to detect inline SVG ancestry (namespace check
+        // catches <text> inside <svg> which tag-name checks above would miss).
+        if(this.experimentalHighlights && !this.notTextFlag?.has(id)) {
+            const hasSvgAncestor = (node: Node | null): boolean => {
+                while (node && node.nodeType === Node.ELEMENT_NODE) {
+                    if ((node as Element).namespaceURI?.includes("svg")) return true;
+                    node = node.parentNode;
+                }
+                return false;
+            };
+            if (hasSvgAncestor(range.startContainer) || hasSvgAncestor(range.endContainer)) {
+                this.notTextFlag?.set(id, true);
+            }
+        }
         if (this.experimentalHighlights) {
             const { type } = decoration.style;
             const { layout, width } = decoration.style as BuiltinDecorationStyle;
