@@ -113,7 +113,7 @@ LocatorLocations.prototype.page = function(): number | undefined {
 
 LocatorLocations.prototype.time = function(): number | undefined {
   // TODO more sophiticated parsing
-  const i = parseInt(this.fragmentParameters().get("t")!);
+  const i = parseFloat(this.fragmentParameters().get("t")!);
   if(!isNaN(i)) return i;
   return undefined;
 }
