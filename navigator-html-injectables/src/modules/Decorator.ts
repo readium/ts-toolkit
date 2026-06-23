@@ -220,7 +220,8 @@ class DecorationGroup {
             }
         }
         if (this.experimentalHighlights) {
-            const { type, layout, width, expand } = decoration.style as BuiltinDecorationStyle;
+            const { type } = decoration.style;
+            const { layout, width, expand } = decoration.style as BuiltinDecorationStyle;
             // CSS Highlight API only handles text-level highlight styling (boxes + wrap).
             // Everything else must go through the DOM overlay path.
             const needsDomOverlay =
