@@ -49,11 +49,11 @@ declare module '../Locator' {
     time(): number | undefined;
 
     /**
-     * Spatial Dimension media fragment, used for example in audiobooks.
+     * Spatial Dimension media fragment, used for example in video/images.
      *
-     * https://www.w3.org/TR/media-frags/
+     * https://www.w3.org/TR/media-frags/#naming-space
      */
-    space(): [number, number, number, number] | undefined;
+    space(): { unit: "pixel" | "percent"; x: number; y: number; w: number; h: number } | undefined;
   }
 }
 
@@ -118,12 +118,26 @@ LocatorLocations.prototype.time = function(): number | undefined {
   return parseNptTime(raw);
 }
 
-LocatorLocations.prototype.space = function(): [number, number, number, number] | undefined {
+LocatorLocations.prototype.space = function(): { unit: "pixel" | "percent"; x: number; y: number; w: number; h: number } | undefined {
   const fp = this.fragmentParameters();
-  if(!fp.has("xywh")) return;
-  // TODO more sophiticated parsing to handle the format
-  const xywh = fp.get("xywh")!.split(",").map(s => parseInt(s));
-  if(xywh.length !== 4) return; // Must have four parts
-  if(xywh.some(isNaN)) return; // All parts must be numbers
-  return xywh as [number, number, number, number];
+  if (!fp.has("xywh")) return;
+
+  const raw = fp.get("xywh")!;
+  let unit: "pixel" | "percent" = "pixel";
+  let coords = raw;
+
+  const normalizedRaw = raw.toLowerCase();
+  if (normalizedRaw.startsWith("pixel:")) {
+    coords = raw.slice(6);
+  } else if (normalizedRaw.startsWith("percent:")) {
+    unit = "percent";
+    coords = raw.slice(8);
+  }
+
+  const parse = unit === "percent" ? parseFloat : (s: string) => parseInt(s, 10);
+  const parts = coords.split(",").map(parse);
+  if (parts.length !== 4 || parts.some(isNaN)) return;
+
+  const [x, y, w, h] = parts;
+  return { unit, x, y, w, h };
 }
