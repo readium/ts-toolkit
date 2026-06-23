@@ -6,7 +6,7 @@
 /**
  * OPDS Acquisition Object.
  *
- * https://drafts.opds.io/schema/acquisition-object.schema.json
+ * https://specs.opds.io/schema/acquisition-object.schema.json
  */
 export class Acquisition {
   /** Currency for the price, eg. EUR. */

@@ -1,5 +1,6 @@
 import { LocatorLocations } from '../Locator.ts';
 import { DomRange } from './DomRange.ts';
+import { parseNptTime } from '../../util/npt.ts';
 
 // HTML extensions for [Locations].
 // https://github.com/readium/architecture/blob/master/models/locators/extensions/html.md
@@ -112,10 +113,9 @@ LocatorLocations.prototype.page = function(): number | undefined {
 }
 
 LocatorLocations.prototype.time = function(): number | undefined {
-  // TODO more sophiticated parsing
-  const i = parseInt(this.fragmentParameters().get("t")!);
-  if(!isNaN(i)) return i;
-  return undefined;
+  const raw = this.fragmentParameters().get("t");
+  if (!raw) return undefined;
+  return parseNptTime(raw);
 }
 
 LocatorLocations.prototype.space = function(): [number, number, number, number] | undefined {
