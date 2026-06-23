@@ -3,7 +3,7 @@ import { IComms } from "../comms/comms.ts";
 import { Module } from "./Module.ts";
 import { rangeFromLocator } from "../helpers/locator.ts";
 import { ModuleName } from "./ModuleLibrary.ts";
-import { Rect, getClientRectsNoOverlap, rectContainsPoint } from "../helpers/rect.ts";
+import { Rect, getClientRectsNoOverlap, getTextClientRects, rectContainsPoint } from "../helpers/rect.ts";
 import { getProperty } from "../helpers/css.ts";
 import { isDarkColor, getContrastingTextColor, adjustColorForContrast } from "@readium/helpers";
 import { makeWritingContext } from "../helpers/document.ts";
@@ -588,9 +588,15 @@ class DecorationGroup {
             positionElement(bounds, boundingRect, boundingRect, outlineInset);
             itemContainer.append(bounds);
         } else {
-            // Fall back to "boxes" value for layout
+            // Fall back to "boxes" value for layout.
+            // For underline, pre-filter to text-node rects only so Ruby (rt/rp) glyphs
+            // don't produce a separate underline segment above the base text.
+            const isUnderline = (decoStyle as BuiltinDecorationStyle).type === DecorationStyleType.Underline;
+            const rectSource = isUnderline
+                ? getTextClientRects(item.range, ["rt", "rp"])
+                : item.range;
             let clientRects = getClientRectsNoOverlap(
-              item.range,
+              rectSource,
               true,              // doNotMergeHorizontallyAlignedRects
               ctx.isVertical     // doNotMergeVerticallyAlignedRects
             );
