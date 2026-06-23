@@ -3,7 +3,7 @@ import { Configurable, ConfigurableSettings, LineLengths, ProgressionRange, Visu
 import { FramePoolManager } from "./frame/FramePoolManager.ts";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager.ts";
 import { CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationHoveredEvent, DecorationUnhoveredEvent, FXLModules, ModuleLibrary, ModuleName, ReflowableModules, BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent, KeyboardPeripheralEvent } from "@readium/navigator-html-injectables";
-import { Decoration, DecorationActivationEvent, DecorationHoverEvent, DecorationObserver, DecorableNavigator, DecoratorConfig, decorationsEqual, resolveDecorationForWire, BUILTIN_DECORATION_TYPES } from "../decorations/index.ts";
+import { Decoration, DecorationActivationEvent, DecorationHoverEvent, DecorationObserver, DecorableNavigator, DecoratorConfig, decorationsEqual, resolveDecorationForWire, BUILTIN_DECORATION_TYPES, DecorationStyleType } from "../decorations/index.ts";
 import * as path from "path-browserify";
 import { FXLFrameManager } from "./fxl/FXLFrameManager.ts";
 import { FrameManager } from "./frame/FrameManager.ts";
@@ -653,6 +653,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     // DecorableNavigator
 
     public supportsDecorationStyle(styleTypeId: string): boolean {
+        if (styleTypeId === DecorationStyleType.TextColor && !("Highlight" in window)) return false;
         return BUILTIN_DECORATION_TYPES.has(styleTypeId) ||
             !!this._decoratorConfig.decorationTemplates?.[styleTypeId];
     }
