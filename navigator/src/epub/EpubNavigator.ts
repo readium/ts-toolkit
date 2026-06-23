@@ -1,4 +1,4 @@
-import { Layout, Link, Locator, LocatorText, Profile, Publication, ReadingProgression } from "@readium/shared";
+import { Layout, Link, Locator, LocatorText, Profile, Publication, ReadingProgression, Timeline, TimelineItem } from "@readium/shared";
 import { Configurable, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../index.ts";
 import { FramePoolManager } from "./frame/FramePoolManager.ts";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager.ts";
@@ -36,6 +36,7 @@ export interface EpubNavigatorConfiguration {
 export interface EpubNavigatorListeners {
     frameLoaded: (wnd: Window) => void;
     positionChanged: (locator: Locator) => void;
+    timelineItemChanged: (item: TimelineItem | undefined) => void;
     tap: (e: FrameClickEvent) => boolean; // Return true to prevent handling here
     click: (e: FrameClickEvent) => boolean;  // Return true to prevent handling here
     zoom: (scale: number) => void;
@@ -53,6 +54,7 @@ export interface EpubNavigatorListeners {
 const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListeners => ({
     frameLoaded: listeners.frameLoaded || (() => {}),
     positionChanged: listeners.positionChanged || (() => {}),
+    timelineItemChanged: listeners.timelineItemChanged || (() => {}),
     tap: listeners.tap || (() => false),
     click: listeners.click || (() => false),
     zoom: listeners.zoom || (() => {}),
@@ -73,6 +75,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private framePool!: FramePoolManager | FXLFramePoolManager;
     private positions!: Locator[];
     private currentLocation!: Locator;
+    private _currentTimelineItem: TimelineItem | undefined;
     private lastLocationInView: Locator | undefined;
     private currentProgression: ReadingProgression;
     private _layout: Layout;
@@ -436,6 +439,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             case "_pong":
                 this.listeners.frameLoaded(this._cframes[0]!.iframe.contentWindow!);
                 this.listeners.positionChanged(this.currentLocation);
+                this._notifyTimelineChange(this.currentLocation);
                 if (sourceFrame) {
                     const frames = this._cframes.filter(f => !!f) as (FrameManager | FXLFrameManager)[];
                     const i = frames.indexOf(sourceFrame);
@@ -456,6 +460,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                     text: loc?.text
                 });
                 this.listeners.positionChanged(this.currentLocation);
+                this._notifyTimelineChange(this.currentLocation);
                 break;
             case "text_selected": {
                 const selection = data as BasicTextSelection;
@@ -829,6 +834,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             // positionChanged via _pong; on back-then-forward to an
             // already-loaded frame no _pong fires, so dispatch explicitly here.
             this.listeners.positionChanged(this.currentLocation);
+            this._notifyTimelineChange(this.currentLocation);
             return true;
         }
 
@@ -931,6 +937,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this.lastLocationInView = nearestPositions.last;
         this.updateViewport(progression);
         this.listeners.positionChanged(this.currentLocation);
+        this._notifyTimelineChange(this.currentLocation);
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
     }
 
@@ -1112,5 +1119,13 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
     public goLink(link: Link, animated: boolean, cb: (ok: boolean) => void): void {
         return this.go(link.locator, animated, cb);
+    }
+
+    private _notifyTimelineChange(locator: Locator): void {
+        const item = this.timeline.locate(locator);
+        if (item !== this._currentTimelineItem) {
+            this._currentTimelineItem = item;
+            this.listeners.timelineItemChanged(item);
+        }
     }
 }
