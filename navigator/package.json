@@ -51,6 +51,7 @@
   },
   "devDependencies": {
     "@readium/css": "^2.0.5",
+    "@readium/decorator": "workspace:*",
     "@readium/navigator-html-injectables": "workspace:*",
     "@readium/shared": "workspace:*",
     "@types/path-browserify": "^1.0.3",

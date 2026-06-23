@@ -55,37 +55,15 @@ export function resolveDecorationForWire(
     return decoration;
 }
 
-export interface DecorationActivationEvent {
-    decoration: Decoration;
-    group: string;
-    /** Bounding rect of the activated decoration in navigator container coordinates (CSS pixels). */
-    rect?: { top: number; left: number; width: number; height: number };
-    /** Tap/click point in navigator container coordinates (CSS pixels). */
-    point?: { x: number; y: number };
-}
+import type {
+    DecorationActivatedEvent as _DecorationActivatedEvent,
+    DecorationHoverEvent as _DecorationHoverEvent,
+    DecorationObserver as _DecorationObserver,
+} from "@readium/decorator";
 
-export interface DecorationHoverEvent {
-    decoration: Decoration;
-    group: string;
-    /** Bounding rect of the hovered decoration in navigator container coordinates (CSS pixels). */
-    rect?: { top: number; left: number; width: number; height: number };
-    /** Pointer position in navigator container coordinates (CSS pixels). */
-    point?: { x: number; y: number };
-}
-
-export interface DecorationObserver {
-    /**
-     * Called when a user activates a decoration (click or tap).
-     * Return true to indicate the event was handled — this suppresses normal tap/click navigation.
-     */
-    onDecorationActivated(event: DecorationActivationEvent): boolean;
-
-    /** Called when the pointer enters a hoverable decoration. */
-    onDecorationHovered?(event: DecorationHoverEvent): void;
-
-    /** Called when the pointer leaves a hoverable decoration. */
-    onDecorationUnhovered?(event: { decoration: Decoration; group: string }): void;
-}
+export type DecorationActivationEvent = _DecorationActivatedEvent<Decoration>;
+export type DecorationHoverEvent = _DecorationHoverEvent<Decoration>;
+export type DecorationObserver = _DecorationObserver<Decoration>;
 
 function stylesEqual(a: DecorationStyle, b: DecorationStyle): boolean {
     if (a.type !== b.type) return false;

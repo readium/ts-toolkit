@@ -15,4 +15,5 @@ export {
 } from "@readium/navigator-html-injectables";
 
 export * from "./comms/direct.ts";
+export * from "./Decoration.ts";
 export * from "./controller/DecorationController.ts";

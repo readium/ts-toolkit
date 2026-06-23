@@ -1,21 +1,11 @@
 import type { Decoration } from "@readium/navigator-html-injectables";
 import type { DirectCommsHost } from "../comms/direct.ts";
-
-export interface DecorationObserver {
-    onDecorationActivated(event: DecorationActivatedEvent): boolean;
-}
-
-export interface DecorationActivatedEvent {
-    decorationId: string;
-    group: string;
-    decoration: Decoration;
-    rect?: { top: number; left: number; width: number; height: number };
-    point?: { x: number; y: number };
-}
+import type { DecorationActivatedEvent, DecorationHoverEvent, DecorationObserver } from "../Decoration.ts";
 
 export class DecorationController {
     private _decorations = new Map<string, Decoration[]>();
     private _activationState = new Map<string, boolean>();
+    private _hoverState = new Map<string, boolean>();
     private _observers = new Map<string, Set<DecorationObserver>>();
 
     constructor(private readonly host: DirectCommsHost) {
@@ -25,12 +15,34 @@ export class DecorationController {
             if (!decoration) return;
             this._observers.get(ev.group)?.forEach(obs =>
                 obs.onDecorationActivated({
-                    decorationId: ev.decorationId,
                     group: ev.group,
                     decoration,
                     rect: ev.rect as DecorationActivatedEvent["rect"],
                     point: ev.point as DecorationActivatedEvent["point"],
                 })
+            );
+        });
+
+        host.on("decoration_hovered", (raw) => {
+            const ev = raw as { decorationId: string; group: string; rect?: unknown; point?: unknown };
+            const decoration = this._decorations.get(ev.group)?.find(d => d.id === ev.decorationId);
+            if (!decoration) return;
+            this._observers.get(ev.group)?.forEach(obs =>
+                obs.onDecorationHovered?.({
+                    group: ev.group,
+                    decoration,
+                    rect: ev.rect as DecorationHoverEvent["rect"],
+                    point: ev.point as DecorationHoverEvent["point"],
+                })
+            );
+        });
+
+        host.on("decoration_unhovered", (raw) => {
+            const ev = raw as { decorationId: string; group: string };
+            const decoration = this._decorations.get(ev.group)?.find(d => d.id === ev.decorationId);
+            if (!decoration) return;
+            this._observers.get(ev.group)?.forEach(obs =>
+                obs.onDecorationUnhovered?.({ decoration, group: ev.group })
             );
         });
     }
@@ -58,6 +70,10 @@ export class DecorationController {
         if (activatable !== undefined) {
             this.host.send("decoration_activatable", { group, activatable });
         }
+        const hoverable = this._hoverState.get(group);
+        if (hoverable !== undefined) {
+            this.host.send("decoration_hoverable", { group, hoverable });
+        }
     }
 
     registerDecorationObserver(group: string, observer: DecorationObserver): void {
@@ -65,6 +81,10 @@ export class DecorationController {
         this._observers.get(group)!.add(observer);
         this._activationState.set(group, true);
         this.host.send("decoration_activatable", { group, activatable: true });
+        if (observer.onDecorationHovered || observer.onDecorationUnhovered) {
+            this._hoverState.set(group, true);
+            this.host.send("decoration_hoverable", { group, hoverable: true });
+        }
     }
 
     unregisterDecorationObserver(observer: DecorationObserver): void {
@@ -74,6 +94,8 @@ export class DecorationController {
             if (set.size === 0) {
                 this._activationState.delete(group);
                 this.host.send("decoration_activatable", { group, activatable: false });
+                this._hoverState.delete(group);
+                this.host.send("decoration_hoverable", { group, hoverable: false });
             }
         });
     }
@@ -81,6 +103,7 @@ export class DecorationController {
     destroy(): void {
         this._decorations.clear();
         this._activationState.clear();
+        this._hoverState.clear();
         this._observers.clear();
     }
 }
@@ -104,6 +127,8 @@ function _decorationsEqual(a: Decoration, b: Decoration): boolean {
     const sb = b.style as any;
     if (sa.tint !== sb.tint || sa.layout !== sb.layout || sa.width !== sb.width) return false;
     if ((sa.enforceContrast ?? true) !== (sb.enforceContrast ?? true)) return false;
+    if ((sa.expand ?? 0) !== (sb.expand ?? 0)) return false;
+    if ((sa.isHoverable ?? false) !== (sb.isHoverable ?? false)) return false;
     if (sa.element !== sb.element || sa.stylesheet !== sb.stylesheet) return false;
     return JSON.stringify(a.extras ?? null) === JSON.stringify(b.extras ?? null);
 }
