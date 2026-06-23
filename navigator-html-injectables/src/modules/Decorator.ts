@@ -50,6 +50,7 @@ export interface BuiltinDecorationStyle {
     layout?: DecorationLayout;
     width?: DecorationWidth;
     isActive?: boolean;
+    isHoverable?: boolean;
     enforceContrast?: boolean; // When true (default), tint is adjusted for contrast against the background.
 }
 
@@ -66,6 +67,7 @@ export interface HTMLDecorationTemplate {
     element: string;
     stylesheet?: string;
     isActive?: boolean;
+    isHoverable?: boolean;
 }
 
 export type DecorationStyle = BuiltinDecorationStyle | HTMLDecorationTemplate;
@@ -82,6 +84,18 @@ export interface DecorationActivatedEvent {
     group: string; // Human-readable group name (matches DecoratorRequest.group).
     rect: { top: number; left: number; width: number; height: number }; // Bounding rect in iframe client coords.
     point: { x: number; y: number }; // Click point in iframe client coords.
+}
+
+export interface DecorationHoveredEvent {
+    decorationId: string;
+    group: string;
+    rect: { top: number; left: number; width: number; height: number }; // Bounding rect in iframe client coords.
+    point: { x: number; y: number }; // Pointer position in iframe client coords.
+}
+
+export interface DecorationUnhoveredEvent {
+    decorationId: string;
+    group: string;
 }
 
 export type DecoratorRequest =
@@ -106,9 +120,12 @@ class DecorationGroup {
     private lastItemId = 0;
     private container: HTMLDivElement | undefined = undefined;
     private _activatable = false;
+    private _hoverable = false;
+    private hoveredItem: DecorationItem | undefined = undefined;
     public readonly experimentalHighlights: boolean = false;
     private readonly notTextFlag: Map<string, boolean> | undefined;
     private readonly activationHandler: (e: PointerEvent) => void;
+    private readonly hoverHandler: (e: PointerEvent) => void;
     private maskSvg: SVGSVGElement | undefined = undefined;
     private shadowHost: HTMLDivElement | undefined = undefined;
     private shadowRoot: ShadowRoot | undefined = undefined;
@@ -130,6 +147,8 @@ class DecorationGroup {
         }
         this.activationHandler = this.handleActivation.bind(this);
         this.wnd.document.addEventListener("pointerup", this.activationHandler);
+        this.hoverHandler = this.handleHover.bind(this);
+        this.wnd.document.addEventListener("pointermove", this.hoverHandler);
     }
 
     get activatable() {
@@ -138,6 +157,21 @@ class DecorationGroup {
 
     set activatable(value: boolean) {
         this._activatable = value;
+    }
+
+    get hoverable() {
+        return this._hoverable;
+    }
+
+    set hoverable(value: boolean) {
+        this._hoverable = value;
+        if (!value && this.hoveredItem) {
+            this.comms.send("decoration_unhovered", {
+                decorationId: this.hoveredItem.decoration.id,
+                group: this.name,
+            } as DecorationUnhoveredEvent);
+            this.hoveredItem = undefined;
+        }
     }
 
     /**
@@ -233,7 +267,10 @@ class DecorationGroup {
             mm?.delete(item.range);
         }
         this.notTextFlag?.delete(item.id);
-        
+        if (this.hoveredItem === item) {
+            this.hoveredItem = undefined;
+        }
+
         // Update shared mask if we removed a mask decoration
         if (wasMask) {
             this.updateSharedMask();
@@ -256,6 +293,7 @@ class DecorationGroup {
         this.clearContainer();
         this.items.length = 0;
         this.notTextFlag?.clear();
+        this.hoveredItem = undefined;
         // Clear shared mask
         if (this.maskSvg) {
             this.maskSvg.remove();
@@ -275,6 +313,7 @@ class DecorationGroup {
     destroy() {
         this.clear();
         this.wnd.document.removeEventListener("pointerup", this.activationHandler);
+        this.wnd.document.removeEventListener("pointermove", this.hoverHandler);
     }
 
     private handleActivation(e: PointerEvent) {
@@ -325,6 +364,67 @@ class DecorationGroup {
                 } as DecorationActivatedEvent);
                 return;
             }
+        }
+    }
+
+    private handleHover(e: PointerEvent) {
+        if (!this._hoverable) return;
+        const cssX = e.clientX;
+        const cssY = e.clientY;
+        const pixelRatio = this.wnd.devicePixelRatio;
+
+        let hitItem: DecorationItem | undefined;
+        let hitRect: DOMRect | undefined;
+
+        for (const item of this.items) {
+            if (!item.decoration.style?.isHoverable) continue;
+
+            if (item.decoration.style.type === DecorationStyleType.Template) {
+                for (const el of (item.clickableElements ?? [])) {
+                    const r = el.getBoundingClientRect();
+                    if (rectContainsPoint(r as Rect, cssX, cssY, 0)) {
+                        hitItem = item;
+                        hitRect = r;
+                        break;
+                    }
+                }
+            } else {
+                const rects = item.range.getClientRects();
+                for (const rect of rects) {
+                    if (rectContainsPoint(rect as Rect, cssX, cssY, 0)) {
+                        hitItem = item;
+                        hitRect = item.range.getBoundingClientRect();
+                        break;
+                    }
+                }
+            }
+
+            if (hitItem) break;
+        }
+
+        if (hitItem === this.hoveredItem) return;
+
+        if (this.hoveredItem) {
+            this.comms.send("decoration_unhovered", {
+                decorationId: this.hoveredItem.decoration.id,
+                group: this.name,
+            } as DecorationUnhoveredEvent);
+        }
+
+        this.hoveredItem = hitItem;
+
+        if (hitItem && hitRect) {
+            this.comms.send("decoration_hovered", {
+                decorationId: hitItem.decoration.id,
+                group: this.name,
+                rect: {
+                    top: hitRect.top * pixelRatio,
+                    left: hitRect.left * pixelRatio,
+                    width: hitRect.width * pixelRatio,
+                    height: hitRect.height * pixelRatio,
+                },
+                point: { x: cssX * pixelRatio, y: cssY * pixelRatio },
+            } as DecorationHoveredEvent);
         }
     }
 
@@ -945,6 +1045,15 @@ export class Decorator extends Module {
             const group = this.groups.get(req.group);
             if (group) {
                 group.activatable = req.activatable;
+            }
+            ack(true);
+        });
+
+        comms.register("decoration_hoverable", Decorator.moduleName, (data, ack) => {
+            const req = data as { group: string; hoverable: boolean };
+            const group = this.groups.get(req.group);
+            if (group) {
+                group.hoverable = req.hoverable;
             }
             ack(true);
         });

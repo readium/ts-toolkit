@@ -2,8 +2,8 @@ import { Layout, Link, Locator, LocatorText, Profile, Publication, ReadingProgre
 import { Configurable, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../index.ts";
 import { FramePoolManager } from "./frame/FramePoolManager.ts";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager.ts";
-import { CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, FXLModules, ModuleLibrary, ModuleName, ReflowableModules, BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent, KeyboardPeripheralEvent } from "@readium/navigator-html-injectables";
-import { Decoration, DecorationActivationEvent, DecorationObserver, DecorableNavigator, DecoratorConfig, decorationsEqual, resolveDecorationForWire, BUILTIN_DECORATION_TYPES } from "../decorations/index.ts";
+import { CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationHoveredEvent, DecorationUnhoveredEvent, FXLModules, ModuleLibrary, ModuleName, ReflowableModules, BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent, KeyboardPeripheralEvent } from "@readium/navigator-html-injectables";
+import { Decoration, DecorationActivationEvent, DecorationHoverEvent, DecorationObserver, DecorableNavigator, DecoratorConfig, decorationsEqual, resolveDecorationForWire, BUILTIN_DECORATION_TYPES } from "../decorations/index.ts";
 import * as path from "path-browserify";
 import { FXLFrameManager } from "./fxl/FXLFrameManager.ts";
 import { FrameManager } from "./frame/FrameManager.ts";
@@ -100,6 +100,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private _decorations: Map<string, Decoration[]> = new Map();
     private _decorationObservers: Map<string, Set<DecorationObserver>> = new Map();
     private _decorationActivationState: Map<string, boolean> = new Map();
+    private _decorationHoverState: Map<string, boolean> = new Map();
     private _decorationActivationConsumed = false;
 
     private reflowViewport: VisualNavigatorViewport = {
@@ -476,6 +477,12 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 if (handled) this._decorationActivationConsumed = true;
                 break;
             }
+            case "decoration_hovered":
+                this._handleDecorationHovered(data as DecorationHoveredEvent);
+                break;
+            case "decoration_unhovered":
+                this._handleDecorationUnhovered(data as DecorationUnhoveredEvent);
+                break;
             case "click":
             case "tap":
                 if (this._decorationActivationConsumed) {
@@ -658,6 +665,12 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         // Store activation state and send to current frames
         this._decorationActivationState.set(group, true);
         this._sendDecorationActivationToFrames(group, true);
+
+        // Enable hover if the observer declares hover callbacks
+        if (observer.onDecorationHovered || observer.onDecorationUnhovered) {
+            this._decorationHoverState.set(group, true);
+            this._sendDecorationHoverToFrames(group, true);
+        }
     }
 
     public unregisterDecorationObserver(observer: DecorationObserver): void {
@@ -667,6 +680,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 if (set.size === 0) {
                     this._decorationActivationState.delete(group);
                     this._sendDecorationActivationToFrames(group, false);
+                    this._decorationHoverState.delete(group);
+                    this._sendDecorationHoverToFrames(group, false);
                 }
             }
         });
@@ -676,6 +691,13 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         const frames = this._cframes.filter(f => !!f) as (FrameManager | FXLFrameManager)[];
         frames.forEach(f => {
             if (f.msg) f.msg.send("decoration_activatable", { group, activatable });
+        });
+    }
+
+    private _sendDecorationHoverToFrames(group: string, hoverable: boolean): void {
+        const frames = this._cframes.filter(f => !!f) as (FrameManager | FXLFrameManager)[];
+        frames.forEach(f => {
+            if (f.msg) f.msg.send("decoration_hoverable", { group, hoverable });
         });
     }
 
@@ -751,6 +773,9 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         for (const [group, activatable] of this._decorationActivationState) {
             frame.msg.send("decoration_activatable", { group, activatable });
         }
+        for (const [group, hoverable] of this._decorationHoverState) {
+            frame.msg.send("decoration_hoverable", { group, hoverable });
+        }
     }
 
     private _reapplyDecorationsToCurrentFrames(): void {
@@ -776,6 +801,25 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         return anyHandled;
     }
 
+    private _handleDecorationHovered(data: DecorationHoveredEvent): void {
+        const observers = this._decorationObservers.get(data.group);
+        if (!observers || observers.size === 0) return;
+        const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId);
+        if (!decoration) return;
+        const event: DecorationHoverEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
+        for (const obs of observers)
+            obs.onDecorationHovered?.(event);
+    }
+
+    private _handleDecorationUnhovered(data: DecorationUnhoveredEvent): void {
+        const observers = this._decorationObservers.get(data.group);
+        if (!observers || observers.size === 0) return;
+        const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId);
+        if (!decoration) return;
+        for (const obs of observers)
+            obs.onDecorationUnhovered?.({ decoration, group: data.group });
+    }
+
     // End of Decoration
 
     public async destroy() {
@@ -791,6 +835,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this._decorations.clear();
         this._decorationObservers.clear();
         this._decorationActivationState.clear();
+        this._decorationHoverState.clear();
     }
 
     private async changeResource(relative: number): Promise<boolean> {

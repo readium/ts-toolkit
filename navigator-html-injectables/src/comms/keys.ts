@@ -21,7 +21,9 @@ export type CommsEventKey =
     "media_pause" |
     "content_protection" |
     "keyboard_peripherals" |
-    "decoration_activated";
+    "decoration_activated" |
+    "decoration_hovered" |
+    "decoration_unhovered";
 
 export type CommsCommandKey =
     "_ping" |
@@ -40,6 +42,7 @@ export type CommsCommandKey =
     "first_visible_locator" |
     "decorate" |
     "decoration_activatable" |
+    "decoration_hoverable" |
     "protect" |
     "unprotect" |
     "unfocus" |

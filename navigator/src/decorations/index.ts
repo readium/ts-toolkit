@@ -64,12 +64,27 @@ export interface DecorationActivationEvent {
     point?: { x: number; y: number };
 }
 
+export interface DecorationHoverEvent {
+    decoration: Decoration;
+    group: string;
+    /** Bounding rect of the hovered decoration in navigator container coordinates (CSS pixels). */
+    rect?: { top: number; left: number; width: number; height: number };
+    /** Pointer position in navigator container coordinates (CSS pixels). */
+    point?: { x: number; y: number };
+}
+
 export interface DecorationObserver {
     /**
      * Called when a user activates a decoration (click or tap).
      * Return true to indicate the event was handled — this suppresses normal tap/click navigation.
      */
     onDecorationActivated(event: DecorationActivationEvent): boolean;
+
+    /** Called when the pointer enters a hoverable decoration. */
+    onDecorationHovered?(event: DecorationHoverEvent): void;
+
+    /** Called when the pointer leaves a hoverable decoration. */
+    onDecorationUnhovered?(event: { decoration: Decoration; group: string }): void;
 }
 
 function stylesEqual(a: DecorationStyle, b: DecorationStyle): boolean {
@@ -88,7 +103,9 @@ function stylesEqual(a: DecorationStyle, b: DecorationStyle): boolean {
     return ba.tint === bb.tint &&
         ba.layout === bb.layout &&
         ba.width === bb.width &&
-        (ba.enforceContrast ?? true) === (bb.enforceContrast ?? true);
+        (ba.enforceContrast ?? true) === (bb.enforceContrast ?? true) &&
+        (ba.isHoverable ?? false) === (bb.isHoverable ?? false) &&
+        (ba.expand ?? 0) === (bb.expand ?? 0);
 }
 
 function serializeLocations(loc: any): any {
@@ -118,6 +135,7 @@ export interface DecoratorConfig {
 const BUILTIN_DECORATION_TYPES = new Set<string>([
     DecorationStyleType.Highlight,
     DecorationStyleType.Underline,
+    DecorationStyleType.Strikethrough,
     DecorationStyleType.Outline,
     DecorationStyleType.TextColor,
     DecorationStyleType.Mask,
