@@ -671,11 +671,14 @@ class DecorationGroup {
                     case DecorationStyleType.Underline: {
                         const adjustedUnderlineTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
                         const isBounds = style.layout === DecorationLayout.Bounds;
+                        const [underlineSide, overlineSide] = ctx.isVertical
+                            ? ["border-right", "border-left"]
+                            : ["border-bottom", "border-top"];
                         return [
                             isBounds
-                                ? `border-top: 0.1em solid ${adjustedUnderlineTint} !important`
+                                ? `${overlineSide}: 0.1em solid ${adjustedUnderlineTint} !important`
                                 : null,
-                            `border-bottom: 0.1em solid ${adjustedUnderlineTint} !important`,
+                            `${underlineSide}: 0.1em solid ${adjustedUnderlineTint} !important`,
                             "background-color: transparent !important",
                             "box-sizing: border-box !important",
                         ].filter(Boolean).join("; ");
