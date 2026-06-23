@@ -52,6 +52,7 @@ export interface BuiltinDecorationStyle {
     isActive?: boolean;
     isHoverable?: boolean;
     enforceContrast?: boolean; // When true (default), tint is adjusted for contrast against the background.
+    expand?: number; // Inflates each client rect outward by this many CSS pixels on all sides.
 }
 
 /**
@@ -218,8 +219,7 @@ class DecorationGroup {
             }
         }
         if (this.experimentalHighlights) {
-            const { type } = decoration.style;
-            const { layout, width } = decoration.style as BuiltinDecorationStyle;
+            const { type, layout, width, expand } = decoration.style as BuiltinDecorationStyle;
             // CSS Highlight API only handles text-level highlight styling (boxes + wrap).
             // Everything else must go through the DOM overlay path.
             const needsDomOverlay =
@@ -228,7 +228,8 @@ class DecorationGroup {
                     type === DecorationStyleType.Template ||
                     type === DecorationStyleType.Mask ||
                     (layout !== undefined && layout !== DecorationLayout.Boxes) ||
-                    (width  !== undefined && width  !== DecorationWidth.Wrap)
+                    (width  !== undefined && width  !== DecorationWidth.Wrap) ||
+                    !!expand
                 );
             if (needsDomOverlay) this.notTextFlag?.set(id, true);
         }
@@ -569,25 +570,34 @@ class DecorationGroup {
             if (effectiveZoom) iz = 1 / effectiveZoom;
         }
 
+        const expand = (item.decoration.style as BuiltinDecorationStyle).expand ?? 0;
         const positionElement = (element: HTMLElement, rect: Rect, boundingRect: DOMRect, inlineInset = 0) => {
             const w = item.decoration?.style?.width;
+            const r: Rect = expand ? {
+                left:   rect.left   - expand,
+                right:  rect.right  + expand,
+                top:    rect.top    - expand,
+                bottom: rect.bottom + expand,
+                width:  rect.width  + expand * 2,
+                height: rect.height + expand * 2,
+            } : rect;
             switch (w) {
                 case DecorationWidth.Viewport: {
-                    const snap = Math.floor(ctx.inlineStart(rect) / ctx.viewportInlineSize) * ctx.viewportInlineSize;
-                    ctx.applyPosition(element, snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(rect) + ctx.blockScrollOffset, ctx.viewportInlineSize - 2 * inlineInset, ctx.blockSize(rect), iz);
+                    const snap = Math.floor(ctx.inlineStart(r) / ctx.viewportInlineSize) * ctx.viewportInlineSize;
+                    ctx.applyPosition(element, snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.viewportInlineSize - 2 * inlineInset, ctx.blockSize(r), iz);
                     break;
                 }
                 case DecorationWidth.Page: {
-                    const snap = Math.floor(ctx.inlineStart(rect) / ctx.pageInlineSize) * ctx.pageInlineSize;
-                    ctx.applyPosition(element, snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(rect) + ctx.blockScrollOffset, ctx.pageInlineSize - 2 * inlineInset, ctx.blockSize(rect), iz);
+                    const snap = Math.floor(ctx.inlineStart(r) / ctx.pageInlineSize) * ctx.pageInlineSize;
+                    ctx.applyPosition(element, snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.pageInlineSize - 2 * inlineInset, ctx.blockSize(r), iz);
                     break;
                 }
                 case DecorationWidth.Bounds: {
-                    ctx.applyPosition(element, ctx.inlineStart(boundingRect) + ctx.inlineScrollOffset, ctx.blockStart(rect) + ctx.blockScrollOffset, ctx.inlineSize(boundingRect), ctx.blockSize(rect), iz);
+                    ctx.applyPosition(element, ctx.inlineStart(boundingRect) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(boundingRect), ctx.blockSize(r), iz);
                     break;
                 }
                 default: {
-                    ctx.applyPosition(element, ctx.inlineStart(rect) + ctx.inlineScrollOffset, ctx.blockStart(rect) + ctx.blockScrollOffset, ctx.inlineSize(rect), ctx.blockSize(rect), iz);
+                    ctx.applyPosition(element, ctx.inlineStart(r) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(r), ctx.blockSize(r), iz);
                 }
             }
         }
