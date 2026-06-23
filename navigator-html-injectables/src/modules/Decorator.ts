@@ -109,7 +109,7 @@ interface DecorationItem {
     id: string;
     decoration: Decoration;
     range: Range;
-
+    hitRects: Rect[]; // Merged client rects for hit testing; refreshed after each layout.
     clickableElements: HTMLElement[] | undefined;
     container: HTMLElement | undefined;
 }
@@ -239,10 +239,14 @@ class DecorationGroup {
             decoration,
             id,
             range,
+            hitRects: [],
+            clickableElements: undefined,
+            container: undefined,
         } as DecorationItem;
 
         this.items.push(item);
         this.layout(item);
+        item.hitRects = getClientRectsNoOverlap(item.range, false, false);
         this.renderLayout([item]);
     }
 
@@ -340,12 +344,10 @@ class DecorationGroup {
                     }
                 }
             } else {
-                // Built-in styles sit over the text. Range.getClientRects() works for both
-                // rendering paths: the CSS Highlight API has no DOM overlay to target, and the
-                // DOM overlay divs have pointer-events: none, so neither intercepts the event.
-                const rects = item.range.getClientRects();
-                for (const rect of rects) {
-                    if (rectContainsPoint(rect as Rect, cssX, cssY, 0)) {
+                // Use pre-merged hit rects (computed at layout time) so that intra-line gaps
+                // between raw client rects don't create dead zones within the selection.
+                for (const rect of item.hitRects) {
+                    if (rectContainsPoint(rect, cssX, cssY, 0)) {
                         hitRect = item.range.getBoundingClientRect();
                         break;
                     }
@@ -391,9 +393,8 @@ class DecorationGroup {
                     }
                 }
             } else {
-                const rects = item.range.getClientRects();
-                for (const rect of rects) {
-                    if (rectContainsPoint(rect as Rect, cssX, cssY, 0)) {
+                for (const rect of item.hitRects) {
+                    if (rectContainsPoint(rect, cssX, cssY, 0)) {
                         hitItem = item;
                         hitRect = item.range.getBoundingClientRect();
                         break;
@@ -443,7 +444,10 @@ class DecorationGroup {
         // against stale or fallback-font layout.
         this.wnd.document.fonts.ready.then(() => {
             this.currentRender = this.wnd.requestAnimationFrame(() => {
-                this.items.forEach(i => this.layout(i));
+                this.items.forEach(i => {
+                    this.layout(i);
+                    i.hitRects = getClientRectsNoOverlap(i.range, false, false);
+                });
                 this.renderLayout(this.items);
                 // Update shared mask after layout
                 this.updateSharedMask();
