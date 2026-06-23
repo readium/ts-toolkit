@@ -22,12 +22,13 @@ function defaultTint(type: DecorationStyleType): string {
 }
 
 export const DecorationStyleType = {
-    Highlight: "highlight", // Background color overlay.
-    Underline: "underline", // Underline drawn beneath the text.
-    Outline:   "outline",   // Border drawn around the text boxes.
-    TextColor: "textColor", // Changes the text color directly.
-    Mask:      "mask",      // Dims everything outside the selection rects. Use width: Page for block-level behaviour.
-    Template:  "template",  // Custom HTML template (HTMLDecorationTemplate).
+    Highlight:     "highlight",     // Background color overlay.
+    Underline:     "underline",     // Underline drawn beneath the text.
+    Strikethrough: "strikethrough", // Line drawn through the vertical centre of the text.
+    Outline:       "outline",       // Border drawn around the text boxes.
+    TextColor:     "textColor",     // Changes the text color directly.
+    Mask:          "mask",          // Dims everything outside the selection rects. Use width: Page for block-level behaviour.
+    Template:      "template",      // Custom HTML template (HTMLDecorationTemplate).
 } as const;
 export type DecorationStyleType = typeof DecorationStyleType[keyof typeof DecorationStyleType];
 
@@ -517,6 +518,15 @@ class DecorationGroup {
                     text-decoration-thickness: 0.1em;
                 }`;
                 break;
+            case DecorationStyleType.Strikethrough: {
+                const adjustedStrikeTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
+                css = `::highlight(${this.id}) {
+                    text-decoration: line-through;
+                    text-decoration-color: ${adjustedStrikeTint};
+                    text-decoration-thickness: 0.1em;
+                }`;
+                break;
+            }
             case DecorationStyleType.Outline:
                 const adjustedOutlineTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
                 css = `::highlight(${this.id}) {
@@ -666,6 +676,14 @@ class DecorationGroup {
                             "box-sizing: border-box !important",
                         ].filter(Boolean).join("; ");
                     }
+                    case DecorationStyleType.Strikethrough: {
+                        // The rect is thinned and centred by the boxes loop below; just fill it.
+                        const adjustedStrikeTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
+                        return [
+                            `background-color: ${adjustedStrikeTint} !important`,
+                            "box-sizing: border-box !important",
+                        ].join("; ");
+                    }
                     case DecorationStyleType.Outline:
                         const adjustedOutlineTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
                         return [
@@ -699,10 +717,13 @@ class DecorationGroup {
             itemContainer.append(bounds);
         } else {
             // Fall back to "boxes" value for layout.
-            // For underline, pre-filter to text-node rects only so Ruby (rt/rp) glyphs
-            // don't produce a separate underline segment above the base text.
-            const isUnderline = (decoStyle as BuiltinDecorationStyle).type === DecorationStyleType.Underline;
-            const rectSource = isUnderline
+            // For underline/strikethrough, pre-filter to text-node rects only so Ruby
+            // (rt/rp) glyphs don't produce a separate decoration segment above the base text.
+            const decoType = (decoStyle as BuiltinDecorationStyle).type;
+            const isLineDecoration = decoType === DecorationStyleType.Underline
+                || decoType === DecorationStyleType.Strikethrough;
+            const isStrikethrough = decoType === DecorationStyleType.Strikethrough;
+            const rectSource = isLineDecoration
                 ? getTextClientRects(item.range, ["rt", "rp"])
                 : item.range;
             let clientRects = getClientRectsNoOverlap(
@@ -723,7 +744,17 @@ class DecorationGroup {
             for (let clientRect of clientRects) {
               const line = elementTemplate.cloneNode(true) as HTMLDivElement;
               line.style.setProperty("pointer-events", "none");
-              positionElement(line, clientRect, boundingRect, outlineInset);
+              let posRect: Rect = clientRect;
+              if (isStrikethrough) {
+                  // Thin the rect to ~10% of block size, centred on the mid-line.
+                  const thickness = ctx.blockSize(clientRect) * 0.1;
+                  const blockMid  = ctx.blockStart(clientRect) + ctx.blockSize(clientRect) / 2;
+                  const bs = blockMid - thickness / 2;
+                  posRect = ctx.isVertical
+                      ? { left: bs, right: bs + thickness, top: clientRect.top,    bottom: clientRect.bottom, width: thickness,           height: clientRect.height }
+                      : { top:  bs, bottom: bs + thickness, left: clientRect.left, right: clientRect.right,   height: thickness,           width: clientRect.width  };
+              }
+              positionElement(line, posRect, boundingRect, outlineInset);
               itemContainer.append(line);
             }
         }
