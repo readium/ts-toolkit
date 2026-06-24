@@ -51,7 +51,6 @@ export interface BuiltinDecorationStyle {
     layout?: DecorationLayout;
     width?: DecorationWidth;
     isActive?: boolean;
-    isHoverable?: boolean;
     enforceContrast?: boolean; // When true (default), tint is adjusted for contrast against the background.
     expand?: number; // Inflates each client rect outward by this many CSS pixels on all sides.
 }
@@ -69,7 +68,6 @@ export interface HTMLDecorationTemplate {
     element: string;
     stylesheet?: string;
     isActive?: boolean;
-    isHoverable?: boolean;
 }
 
 export type DecorationStyle = BuiltinDecorationStyle | HTMLDecorationTemplate;
@@ -330,8 +328,6 @@ class DecorationGroup {
         const pixelRatio = this.wnd.devicePixelRatio;
 
         for (const item of this.items) {
-            if (!item.decoration.style?.isActive) continue;
-
             let hitRect: DOMRect | undefined;
 
             if (item.decoration.style.type === DecorationStyleType.Template) {
@@ -382,8 +378,6 @@ class DecorationGroup {
         let hitRect: DOMRect | undefined;
 
         for (const item of this.items) {
-            if (!item.decoration.style?.isHoverable) continue;
-
             if (item.decoration.style.type === DecorationStyleType.Template) {
                 for (const el of (item.clickableElements ?? [])) {
                     const r = el.getBoundingClientRect();

@@ -82,7 +82,6 @@ function stylesEqual(a: DecorationStyle, b: DecorationStyle): boolean {
         ba.layout === bb.layout &&
         ba.width === bb.width &&
         (ba.enforceContrast ?? true) === (bb.enforceContrast ?? true) &&
-        (ba.isHoverable ?? false) === (bb.isHoverable ?? false) &&
         (ba.expand ?? 0) === (bb.expand ?? 0);
 }
 

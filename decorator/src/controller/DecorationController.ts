@@ -128,7 +128,7 @@ function _decorationsEqual(a: Decoration, b: Decoration): boolean {
     if (sa.tint !== sb.tint || sa.layout !== sb.layout || sa.width !== sb.width) return false;
     if ((sa.enforceContrast ?? true) !== (sb.enforceContrast ?? true)) return false;
     if ((sa.expand ?? 0) !== (sb.expand ?? 0)) return false;
-    if ((sa.isHoverable ?? false) !== (sb.isHoverable ?? false)) return false;
+
     if (sa.element !== sb.element || sa.stylesheet !== sb.stylesheet) return false;
     return JSON.stringify(a.extras ?? null) === JSON.stringify(b.extras ?? null);
 }
