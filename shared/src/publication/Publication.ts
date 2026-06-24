@@ -13,6 +13,7 @@ import { Resource } from '../fetcher/Resource.ts';
 import { GuidedNavigationDocument } from "./GuidedNavigation.ts";
 import { MediaType, URITemplate } from "../util/index.ts";
 import { Timeline } from './services/timeline/Timeline.ts';
+import { buildTimeline } from './services/timeline/index.ts';
 
 /** Shared model for a Readium Publication. */
 export class Publication {
@@ -51,7 +52,7 @@ export class Publication {
    * The result is cached after the first call.
    */
   public get timeline(): Timeline {
-    if (!this._timeline) this._timeline = Timeline.build(this);
+    if (!this._timeline) this._timeline = buildTimeline(this);
     return this._timeline;
   }
 

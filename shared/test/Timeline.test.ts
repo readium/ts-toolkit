@@ -1,4 +1,5 @@
-import { Link, Links, Locator, LocatorLocations, Timeline, TimelineItem } from '../src';
+import { Link, Links, Locator, LocatorLocations, Profile, Timeline, TimelineItem } from '../src';
+import { buildTimeline } from '../src/publication/services/timeline/index.ts';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -590,17 +591,25 @@ describe('Timeline – locate()', () => {
       new Locator({ href: 'chapter1.html', type: '', locations: new LocatorLocations({ fragments: ['intro'],   progression: 0.0, position: 1 }) }),
       new Locator({ href: 'chapter1.html', type: '', locations: new LocatorLocations({ fragments: ['section'], progression: 0.5, position: 5 }) }),
     ];
-    const t = Timeline.build(
-      {
-        readingOrder: ro({ href: 'chapter1.html', title: 'Chapter 1' }),
-        toc: toc(
-          { href: 'chapter1.html#intro',   title: 'Intro' },
-          { href: 'chapter1.html#section', title: 'Section' },
-        ),
-      },
-      {},
-      positionsList,
-    );
+    const t = buildTimeline({
+      readingOrder: ro({ href: 'chapter1.html', title: 'Chapter 1' }),
+      toc: toc(
+        { href: 'chapter1.html#intro',   title: 'Intro' },
+        { href: 'chapter1.html#section', title: 'Section' },
+      ),
+      metadata: { conformsTo: [Profile.EPUB] },
+    });
+    t.augment((item, link) => {
+      const hashIndex = link.href.indexOf('#');
+      const bare = hashIndex >= 0 ? link.href.slice(0, hashIndex) : link.href;
+      const fragment = hashIndex >= 0 ? link.href.slice(hashIndex + 1) : undefined;
+      const entries = positionsList.filter(p => p.href === bare);
+      if (!entries.length) return {};
+      const atFragment = fragment
+        ? entries.find(p => p.locations.fragments[0] === fragment)
+        : undefined;
+      return { scroll: atFragment?.locations.progression };
+    });
     const item = t.locate(locator('chapter1.html', { progression: 0.6 }));
     expect(item?.title).toBe('Section');
   });

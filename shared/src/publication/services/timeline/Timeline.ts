@@ -1,11 +1,13 @@
 import { Link, Links } from "../../Link.ts";
 import { Locator } from "../../Locator.ts";
+import { Profile } from "../../Profiles.ts";
+import { isNptStartOfResource, parseNptTime } from "../../../util/npt.ts";
 import { TimelineItem } from "./TimelineItem.ts";
-import { formatNptTime, isNptStartOfResource, parseNptTime } from "../../../util/npt.ts";
 
-interface PublicationLike {
+export interface PublicationLike {
     toc?: Links;
     readingOrder: Links;
+    metadata?: { conformsTo?: Profile[] };
 }
 
 /**
@@ -42,20 +44,12 @@ export class Timeline {
     static build(
         publication: PublicationLike,
         options: { depth?: number } = {},
-        positions?: Locator[],
     ): Timeline {
         const tocLinks = publication.toc?.items ?? [];
         const roLinks = publication.readingOrder.items;
         const { depth } = options;
         const linkMap = new Map<TimelineItem, Link>();
         const items: TimelineItem[] = [];
-        // Audio time labels are publication-relative. We only compute them when:
-        //   - At least one reading order link has a duration (i.e. it is an audio publication), AND
-        //   - All durations are known (multi-track), or there is only one track (offset is trivially 0).
-        // Any missing duration in a multi-track publication makes offsets uncomputable — skip all labels.
-        const isAudio = roLinks.some(ro => ro.duration !== undefined);
-        const canComputeTimeLabels = isAudio && (roLinks.length <= 1 || roLinks.every(ro => ro.duration !== undefined));
-        let timeOffset = 0;
 
         for (let i = 0; i < roLinks.length; i++) {
             const ro = roLinks[i];
@@ -66,22 +60,37 @@ export class Timeline {
                 Timeline.findTitleInToc(tocLinks, bare, depth) ??
                 `Resource ${i + 1}`;
 
-            const offset = canComputeTimeLabels ? timeOffset : undefined;
-            const tocChildren = Timeline.collectChildrenFromToc(tocLinks, bare, depth, 1, linkMap, positions, offset);
+            const tocChildren = Timeline.collectChildrenFromToc(tocLinks, bare, depth, 1, linkMap);
 
             const item: TimelineItem = {
                 title,
                 references: [ro.href],
                 children: tocChildren.length > 0 ? tocChildren : undefined,
-                position: Timeline.positionLabelForHref(ro.href, positions, offset),
             };
 
             linkMap.set(item, ro);
             items.push(item);
-            timeOffset += ro.duration ?? 0;
         }
 
         return new Timeline(items, linkMap);
+    }
+
+    /**
+     * Augments all items in the timeline by applying the mapper's returned patch.
+     * The mapper receives the item and its original manifest Link, and returns
+     * a partial TimelineItem — any fields it sets will be applied (skipping
+     * fields already set).  Use this to populate `position`, `scroll`, `role`,
+     * or any future TimelineItem fields from format-specific data.
+     */
+    augment(mapper: (item: TimelineItem, link: Link) => Partial<TimelineItem>): void {
+        for (const item of this.flatAll) {
+            const link = this.linkFor(item);
+            if (!link) continue;
+            const patch = mapper(item, link);
+            if (patch.position !== undefined) item.position ??= patch.position;
+            if (patch.scroll   !== undefined) item.scroll   ??= patch.scroll;
+            if (patch.role     !== undefined) item.role     ??= patch.role;
+        }
     }
 
     /**
@@ -227,6 +236,11 @@ export class Timeline {
         return this._flat;
     }
 
+    /** All items flattened from _allItems, depth-independent — used by augment(). */
+    private get flatAll(): TimelineItem[] {
+        return this.flattenItems(this._allItems);
+    }
+
     // -------------------------------------------------------------------------
     // TOC title resolution
     // -------------------------------------------------------------------------
@@ -261,8 +275,6 @@ export class Timeline {
         maxDepth: number | undefined,
         currentDepth: number,
         linkMap: Map<TimelineItem, Link>,
-        positions?: Locator[],
-        timeOffset?: number,
     ): TimelineItem[] {
         if (maxDepth !== undefined && currentDepth > maxDepth) return [];
 
@@ -279,8 +291,6 @@ export class Timeline {
                 const child: TimelineItem = {
                     title: link.title,
                     references: [ref],
-                    position: Timeline.positionLabelForHref(link.href, positions, timeOffset),
-                    scroll: Timeline.scrollForHref(link.href, positions),
                 };
                 linkMap.set(child, link);
                 result.push(child);
@@ -288,7 +298,7 @@ export class Timeline {
 
             if (link.children?.items?.length) {
                 result.push(...Timeline.collectChildrenFromToc(
-                    link.children.items, bare, maxDepth, currentDepth + 1, linkMap, positions, timeOffset,
+                    link.children.items, bare, maxDepth, currentDepth + 1, linkMap,
                 ));
             }
         }
@@ -426,60 +436,6 @@ export class Timeline {
 
     private itemScrollPosition(item: TimelineItem): number | undefined {
         return item.scroll;
-    }
-
-    /**
-     * Returns a display-ready position label for `href` from the positions list:
-     * - For audio: formatted start time (e.g. "27:27") from the t= fragment.
-     * - For EPUB/WebPub: position number at the specific fragment if available,
-     *   otherwise the lowest position number for the resource.
-     */
-    private static positionLabelForHref(href: string, positions?: Locator[], timeOffset?: number): string | undefined {
-        const hashIndex = href.indexOf("#");
-        const bare = hashIndex >= 0 ? href.slice(0, hashIndex) : href;
-        const fragment = hashIndex >= 0 ? href.slice(hashIndex + 1) : undefined;
-
-        if (fragment) {
-            const match = fragment.match(/(?:^|&)t=([^&]+)/);
-            if (match) {
-                const t = parseNptTime(match[1]);
-                if (t !== undefined) return timeOffset !== undefined ? formatNptTime(timeOffset + t) : undefined;
-            }
-        }
-
-        // Audio parent item: no t= fragment — label is the publication-relative start time.
-        if (timeOffset !== undefined) return formatNptTime(timeOffset);
-
-        if (!positions?.length) return undefined;
-        const entries = positions.filter(p => p.href === bare);
-        if (!entries.length) return undefined;
-
-        // Prefer the position at the specific fragment (e.g. a TOC anchor), fall back to lowest.
-        const atFragment = fragment ? entries.find(p => p.locations.fragments[0] === fragment) : undefined;
-        const candidate = atFragment ?? entries.reduce((min, p) =>
-            (p.locations.position ?? Infinity) < (min.locations.position ?? Infinity) ? p : min
-        );
-        const pos = candidate.locations.position;
-        return pos !== undefined ? String(pos) : undefined;
-    }
-
-    /**
-     * Returns the scroll progression (0–1) for a TOC child href from the
-     * positions list, matching on both bare href and fragment identifier.
-     */
-    private static scrollForHref(href: string, positions?: Locator[]): number | undefined {
-        if (!positions?.length) return undefined;
-        const hashIndex = href.indexOf("#");
-        if (hashIndex < 0) return undefined;
-        const bare = href.slice(0, hashIndex);
-        const fragment = href.slice(hashIndex + 1);
-        const entry = positions.find(p => {
-            if (p.href !== bare) return false;
-            const pFragment = p.locations.fragments[0];
-            if (!pFragment) return false;
-            return pFragment === fragment;
-        });
-        return entry?.locations.progression;
     }
 
     private static bareHref(href: string): string {

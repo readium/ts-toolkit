@@ -76,6 +76,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private positions!: Locator[];
     private currentLocation!: Locator;
     private _currentTimelineItem: TimelineItem | undefined;
+    private _timelineAugmented = false;
     private lastLocationInView: Locator | undefined;
     private currentProgression: ReadingProgression;
     private _layout: Layout;
@@ -1038,6 +1039,33 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
     get publication(): Publication {
         return this.pub;
+    }
+
+    get timeline() {
+        const t = this.pub.timeline;
+        if (!this._timelineAugmented && this.positions?.length) {
+            const positions = this.positions;
+            t.augment((item, link) => {
+                const hashIndex = link.href.indexOf('#');
+                const bare = hashIndex >= 0 ? link.href.slice(0, hashIndex) : link.href;
+                const fragment = hashIndex >= 0 ? link.href.slice(hashIndex + 1) : undefined;
+                const entries = positions.filter(p => p.href === bare);
+                if (!entries.length) return {};
+                const atFragment = fragment
+                    ? entries.find(p => p.locations.fragments[0] === fragment)
+                    : undefined;
+                const candidate = atFragment ?? entries.reduce((min, p) =>
+                    (p.locations.position ?? Infinity) < (min.locations.position ?? Infinity) ? p : min
+                );
+                return {
+                    position: candidate.locations.position !== undefined
+                        ? String(candidate.locations.position) : undefined,
+                    scroll: atFragment?.locations.progression,
+                };
+            });
+            this._timelineAugmented = true;
+        }
+        return t;
     }
 
     private async loadLocator(locator: Locator, cb: (ok: boolean) => void) {

@@ -1,4 +1,5 @@
-import { Link, Links, Locator, LocatorLocations, Timeline } from '../src';
+import { Link, Links, Locator, LocatorLocations, Profile } from '../src';
+import { buildTimeline } from '../src/publication/services/timeline/index.ts';
 
 function ro(href: string, title?: string): Links {
   return new Links([new Link({ href, title })]);
@@ -12,17 +13,36 @@ function buildLink(href: string, title?: string, children?: Link[]): Link {
   });
 }
 
-function build(
+function buildHtml(
   roHref: string,
   roTitle: string,
   tocLinks: Link[],
   positionsList: Locator[],
-): ReturnType<typeof Timeline.build> {
-  return Timeline.build(
-    { readingOrder: ro(roHref, roTitle), toc: new Links(tocLinks) },
-    {},
-    positionsList,
-  );
+) {
+  const t = buildTimeline({
+    readingOrder: ro(roHref, roTitle),
+    toc: new Links(tocLinks),
+    metadata: { conformsTo: [Profile.EPUB] },
+  });
+  t.augment((item, link) => {
+    const hashIndex = link.href.indexOf('#');
+    const bare = hashIndex >= 0 ? link.href.slice(0, hashIndex) : link.href;
+    const fragment = hashIndex >= 0 ? link.href.slice(hashIndex + 1) : undefined;
+    const entries = positionsList.filter(p => p.href === bare);
+    if (!entries.length) return {};
+    const atFragment = fragment
+      ? entries.find(p => p.locations.fragments[0] === fragment)
+      : undefined;
+    const candidate = atFragment ?? entries.reduce((min, p) =>
+      (p.locations.position ?? Infinity) < (min.locations.position ?? Infinity) ? p : min
+    );
+    return {
+      position: candidate.locations.position !== undefined
+        ? String(candidate.locations.position) : undefined,
+      scroll: atFragment?.locations.progression,
+    };
+  });
+  return t;
 }
 
 // ---------------------------------------------------------------------------
@@ -35,22 +55,26 @@ describe('TimelineItem – position label', () => {
       new Locator({ href: 'chapter1.html', type: '', locations: new LocatorLocations({ position: 6, progression: 0.2 }) }),
       new Locator({ href: 'chapter1.html', type: '', locations: new LocatorLocations({ position: 5, progression: 0.1 }) }),
     ];
-    const t = build('chapter1.html', 'Chapter 1', [], positions);
+    const t = buildHtml('chapter1.html', 'Chapter 1', [], positions);
     expect(t.items[0].position).toBe('5');
   });
 
   it('reading order item has no position label when positions list is absent', () => {
-    const t = Timeline.build({ readingOrder: ro('chapter1.html', 'Chapter 1') });
+    const t = buildTimeline({
+      readingOrder: ro('chapter1.html', 'Chapter 1'),
+      metadata: { conformsTo: [Profile.EPUB] },
+    });
     expect(t.items[0].position).toBeUndefined();
   });
 
   it('audio single-track: parent starts at 0:00, children get publication-relative time labels', () => {
-    const t = Timeline.build({
+    const t = buildTimeline({
       readingOrder: new Links([new Link({ href: 'track.mp3', title: 'Track', duration: 7200 })]),
       toc: new Links([
         buildLink('track.mp3#t=1647', 'Part 1'),
         buildLink('track.mp3#t=3600', 'Part 2'),
       ]),
+      metadata: { conformsTo: [Profile.AUDIOBOOK] },
     });
     expect(t.items[0].position).toBe('0:00');
     expect(t.items[0].children?.[0].position).toBe('27:27');
@@ -58,7 +82,7 @@ describe('TimelineItem – position label', () => {
   });
 
   it('audio multi-track: any missing duration suppresses all time labels', () => {
-    const t = Timeline.build({
+    const t = buildTimeline({
       readingOrder: new Links([
         new Link({ href: 'track1.mp3', title: 'Track 1' }), // no duration
         new Link({ href: 'track2.mp3', title: 'Track 2', duration: 1800 }),
@@ -67,6 +91,7 @@ describe('TimelineItem – position label', () => {
         buildLink('track1.mp3#t=60',  'Section A'),
         buildLink('track2.mp3#t=120', 'Section B'),
       ]),
+      metadata: { conformsTo: [Profile.AUDIOBOOK] },
     });
     expect(t.items[0].children?.[0].position).toBeUndefined();
     expect(t.items[1].position).toBeUndefined();
@@ -74,7 +99,7 @@ describe('TimelineItem – position label', () => {
   });
 
   it('audio multi-track: parent and children get publication-relative time labels', () => {
-    const t = Timeline.build({
+    const t = buildTimeline({
       readingOrder: new Links([
         new Link({ href: 'track1.mp3', title: 'Track 1', duration: 3600 }),
         new Link({ href: 'track2.mp3', title: 'Track 2', duration: 1800 }),
@@ -83,6 +108,7 @@ describe('TimelineItem – position label', () => {
         buildLink('track1.mp3#t=600', 'Section A'),
         buildLink('track2.mp3#t=120', 'Section B'),
       ]),
+      metadata: { conformsTo: [Profile.AUDIOBOOK] },
     });
     expect(t.items[0].position).toBe('0:00');
     // Section A: 0 + 600 = 600s = "10:00"
@@ -98,7 +124,7 @@ describe('TimelineItem – position label', () => {
       new Locator({ href: 'chapter1.html', type: '', locations: new LocatorLocations({ position: 5, progression: 0.0 }) }),
       new Locator({ href: 'chapter1.html', type: '', locations: new LocatorLocations({ fragments: ['section'], position: 12, progression: 0.5 }) }),
     ];
-    const t = build(
+    const t = buildHtml(
       'chapter1.html', 'Chapter 1',
       [buildLink('chapter1.html#section', 'Section')],
       positions,
@@ -118,7 +144,7 @@ describe('TimelineItem – scroll', () => {
       new Locator({ href: 'chapter1.html', type: '', locations: new LocatorLocations({ fragments: ['intro'],   progression: 0.0, position: 1 }) }),
       new Locator({ href: 'chapter1.html', type: '', locations: new LocatorLocations({ fragments: ['section'], progression: 0.5, position: 5 }) }),
     ];
-    const t = build(
+    const t = buildHtml(
       'chapter1.html', 'Chapter 1',
       [
         buildLink('chapter1.html#intro',   'Intro'),
@@ -131,7 +157,7 @@ describe('TimelineItem – scroll', () => {
   });
 
   it('TOC child has no scroll when positions list is absent', () => {
-    const t = build(
+    const t = buildHtml(
       'chapter1.html', 'Chapter 1',
       [buildLink('chapter1.html#section', 'Section')],
       [],
@@ -143,7 +169,7 @@ describe('TimelineItem – scroll', () => {
     const positions = [
       new Locator({ href: 'chapter1.html', type: '', locations: new LocatorLocations({ fragments: ['other'], progression: 0.3, position: 3 }) }),
     ];
-    const t = build(
+    const t = buildHtml(
       'chapter1.html', 'Chapter 1',
       [buildLink('chapter1.html#section', 'Section')],
       positions,
@@ -155,7 +181,7 @@ describe('TimelineItem – scroll', () => {
     const positions = [
       new Locator({ href: 'chapter1.html', type: '', locations: new LocatorLocations({ progression: 0.0, position: 1 }) }),
     ];
-    const t = build(
+    const t = buildHtml(
       'chapter1.html', 'Chapter 1',
       [buildLink('chapter1.html', 'Chapter 1')],
       positions,
