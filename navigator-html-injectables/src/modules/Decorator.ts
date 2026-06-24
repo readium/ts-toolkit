@@ -110,6 +110,8 @@ interface DecorationItem {
     hitRects: Rect[]; // Merged client rects for hit testing; refreshed after each layout.
     clickableElements: HTMLElement[] | undefined;
     container: HTMLElement | undefined;
+    highlightSubKey?: string; // CSS.highlights key shared by all items with the same type+tint.
+    highlightCSS?: string;    // The ::highlight() rule for this item's tint group.
 }
 
 const canNativeHighlight = () => ("Highlight" in window);
@@ -124,6 +126,8 @@ class DecorationGroup {
     private hoveredItem: DecorationItem | undefined = undefined;
     public readonly experimentalHighlights: boolean = false;
     private readonly notTextFlag: Map<string, boolean> | undefined;
+    private readonly _tintSubKeys = new Map<string, string>(); // (type::adjustedTint) → subKey
+    private _subKeyCounter = 0;
     private readonly activationHandler: (e: PointerEvent) => void;
     private readonly hoverHandler: (e: PointerEvent) => void;
     private maskSvg: SVGSVGElement | undefined = undefined;
@@ -266,10 +270,14 @@ class DecorationGroup {
             item.container.remove();
             item.container = undefined;
         }
-        if (this.experimentalHighlights && !this.notTextFlag?.has(item.id)) {
-            // Remove highlight from ranges
-            const mm = ((this.wnd as any).CSS.highlights as Map<string, unknown>).get(this.id) as Set<Range>;
-            mm?.delete(item.range);
+        if (this.experimentalHighlights && !this.notTextFlag?.has(item.id) && item.highlightSubKey) {
+            const cssHighlights = (this.wnd as any).CSS.highlights as Map<string, any>;
+            cssHighlights.get(item.highlightSubKey)?.delete(item.range);
+            if (!this.items.some(i => i.highlightSubKey === item.highlightSubKey)) {
+                cssHighlights.delete(item.highlightSubKey);
+            }
+            const stylesheet = this.wnd.document.getElementById(`${this.id}-style`) as HTMLStyleElement | null;
+            if (stylesheet) this._rebuildHighlightStylesheet(stylesheet);
         }
         this.notTextFlag?.delete(item.id);
         if (this.hoveredItem === item) {
@@ -451,7 +459,8 @@ class DecorationGroup {
     }
 
     private experimentalLayout(item: DecorationItem) {
-        const [stylesheet, highlighter]: [HTMLStyleElement, any] = this.requireContainer(true) as [HTMLStyleElement, unknown];
+        const stylesheet = this.requireContainer(true) as HTMLStyleElement;
+        const cssHighlights = (this.wnd as any).CSS.highlights as Map<string, any>;
 
         // Template items are always routed to the DOM overlay; only BuiltinDecorationStyle reaches here.
         const style = item.decoration.style as BuiltinDecorationStyle;
@@ -459,6 +468,29 @@ class DecorationGroup {
         const tint = style.tint ?? defaultTint(type);
         const width = style.width;
         const layout = style.layout;
+
+        // Group by (type, tint) — items sharing the same visual style share one sub-highlight and one CSS rule.
+        const subKey = this._getSubKey(type, tint);
+
+        // On update: remove this item's range from its previous sub-highlight.
+        if (item.highlightSubKey) {
+            const oldSub = cssHighlights.get(item.highlightSubKey) as any;
+            oldSub?.delete(item.range);
+            if (item.highlightSubKey !== subKey &&
+                !this.items.some(i => i !== item && i.highlightSubKey === item.highlightSubKey)) {
+                cssHighlights.delete(item.highlightSubKey);
+            }
+        }
+        item.highlightSubKey = subKey;
+
+        // Get or create the shared sub-highlight for this tint group.
+        let sub: any;
+        if (cssHighlights.has(subKey)) {
+            sub = cssHighlights.get(subKey);
+        } else {
+            sub = new (this.wnd as any).Highlight();
+            cssHighlights.set(subKey, sub);
+        }
 
         // Helper for caret position
         const caretPositionFromPoint = (x: number, y: number): CaretPosition | null => {
@@ -474,7 +506,7 @@ class DecorationGroup {
             const ctx = makeWritingContext(this.wnd);
             if (ctx.isVertical) {
                 console.warn('Vertical writing detected: caretPositionFromPoint has known bugs, falling back to original range');
-                highlighter.add(item.range);
+                sub.add(item.range);
             } else {
                 const boundingRect = item.range.getBoundingClientRect();
                 // Page snaps to the full page inline extent; Bounds/layout:Bounds uses the actual bounding rect.
@@ -494,62 +526,78 @@ class DecorationGroup {
                     const expandedRange = this.wnd.document.createRange();
                     expandedRange.setStart(startCaret.offsetNode, startCaret.offset);
                     expandedRange.setEnd(endCaret.offsetNode, endCaret.offset);
-                    highlighter.add(expandedRange);
+                    sub.add(expandedRange);
                     item.range = expandedRange;
                 } else {
-                    highlighter.add(item.range);
+                    sub.add(item.range);
                 }
             }
         } else {
-            highlighter.add(item.range);
+            sub.add(item.range);
         }
 
-        // TODO add caching layer ("vdom") to this so we aren't completely replacing the CSS every time
         const backgroundColor = this.getBackgroundColor();
         const applyContrast = style.enforceContrast !== false;
+        const adjustedTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
+
         let css: string;
         switch (type) {
             case DecorationStyleType.Underline:
-                const adjustedUnderlineTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
-                css = `::highlight(${this.id}) {
+                css = `::highlight(${subKey}) {
                     text-decoration: underline;
-                    text-decoration-color: ${adjustedUnderlineTint};
+                    text-decoration-color: ${adjustedTint};
                     text-decoration-thickness: 0.1em;
                 }`;
                 break;
-            case DecorationStyleType.Strikethrough: {
-                const adjustedStrikeTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
-                css = `::highlight(${this.id}) {
+            case DecorationStyleType.Strikethrough:
+                css = `::highlight(${subKey}) {
                     text-decoration: line-through;
-                    text-decoration-color: ${adjustedStrikeTint};
+                    text-decoration-color: ${adjustedTint};
                     text-decoration-thickness: 0.1em;
                 }`;
                 break;
-            }
             case DecorationStyleType.Outline:
-                const adjustedOutlineTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
-                css = `::highlight(${this.id}) {
-                    outline: 2px solid ${adjustedOutlineTint};
+                css = `::highlight(${subKey}) {
+                    outline: 2px solid ${adjustedTint};
                     outline-offset: 1px;
                 }`;
                 break;
-            case DecorationStyleType.TextColor: {
-                const adjustedTextTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
-                css = `::highlight(${this.id}) {
-                    color: ${adjustedTextTint};
+            case DecorationStyleType.TextColor:
+                css = `::highlight(${subKey}) {
+                    color: ${adjustedTint};
                 }`;
                 break;
-            }
             case DecorationStyleType.Highlight:
-            default: {
-                const adjustedHighlightTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
-                css = `::highlight(${this.id}) {
-                    color: ${getContrastingTextColor(adjustedHighlightTint, backgroundColor)};
-                    background-color: ${adjustedHighlightTint};
+            default:
+                css = `::highlight(${subKey}) {
+                    color: ${getContrastingTextColor(adjustedTint, backgroundColor)};
+                    background-color: ${adjustedTint};
                 }`;
+        }
+        item.highlightCSS = css;
+        this._rebuildHighlightStylesheet(stylesheet);
+    }
+
+    private _getSubKey(type: DecorationStyleType | string, tint: string): string {
+        const fingerprint = `${type}::${tint}`;
+        let subKey = this._tintSubKeys.get(fingerprint);
+        if (!subKey) {
+            subKey = `${this.id}--${this._subKeyCounter++}`;
+            this._tintSubKeys.set(fingerprint, subKey);
+        }
+        return subKey;
+    }
+
+    private _rebuildHighlightStylesheet(stylesheet: HTMLStyleElement) {
+        const seen = new Set<string>();
+        const rules: string[] = [];
+        for (const item of this.items) {
+            if (item.highlightSubKey && item.highlightCSS && !seen.has(item.highlightSubKey)) {
+                seen.add(item.highlightSubKey);
+                rules.push(item.highlightCSS);
             }
         }
-        stylesheet.innerHTML = css;
+        stylesheet.innerHTML = rules.join("\n");
     }
 
     /**
@@ -798,15 +846,7 @@ class DecorationGroup {
                 this.wnd.document.head.appendChild(d);
             }
 
-            // Setup CSS.highlights
-            let h: unknown;
-            if (((this.wnd as any).CSS.highlights as Map<string, unknown>).has(this.id)) {
-                h = ((this.wnd as any).CSS.highlights as Map<string, unknown>).get(this.id)
-            } else {
-                h = new (this.wnd as any).Highlight();
-                ((this.wnd as any).CSS.highlights as Map<string, unknown>).set(this.id, h);
-            }
-            return [d, h];
+            return d;
         }
 
         if (!this.container) {
@@ -1001,7 +1041,12 @@ class DecorationGroup {
      */
     private clearContainer() {
         if (this.experimentalHighlights) {
-            ((this.wnd as any).CSS.highlights as Map<string, unknown>).delete(this.id);
+            const cssHighlights = (this.wnd as any).CSS.highlights as Map<string, unknown>;
+            for (const subKey of this._tintSubKeys.values()) {
+                cssHighlights.delete(subKey);
+            }
+            this._tintSubKeys.clear();
+            this._subKeyCounter = 0;
         }
         this.wnd.document.getElementById(`${this.id}-custom-style`)?.remove();
         if (this.container) {
