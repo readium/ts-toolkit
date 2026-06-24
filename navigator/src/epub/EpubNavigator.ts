@@ -69,6 +69,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private readonly container: HTMLElement;
     private readonly listeners: EpubNavigatorListeners;
     private framePool!: FramePoolManager | FXLFramePoolManager;
+    private _destroyed = false;
     private positions!: Locator[];
     private currentLocation!: Locator;
     private lastLocationInView: Locator | undefined;
@@ -238,6 +239,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             });
         }
 
+        if (this._destroyed) return;
+
         if(this._layout === Layout.fixed || this._layout === Layout.scrolled) {
             this.framePool = new FXLFramePoolManager(
                 this.container,
@@ -253,6 +256,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             }
         } else {
             await this.updateCSS(false);
+            if (this._destroyed) return;
             const cssProperties = this.compileCSSProperties(this._css);
             this.framePool = new FramePoolManager(
                 this.container,
@@ -270,7 +274,9 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             this.currentLocation = this.completeLocator(this.currentLocation);
 
         await this.resizeHandler();
+        if (this._destroyed) return;
         return new Promise(async res => {
+            if (this._destroyed) return res(false);
             await this.go(this.currentLocation, false, (s) => {
                 res(s);
             });
@@ -612,6 +618,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     }
 
     public async destroy() {
+        // Flag synchronously so an in-flight load() bails before attaching frames.
+        this._destroyed = true;
         if (this._suspiciousActivityListener) {
             window.removeEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
         }
