@@ -49,6 +49,13 @@ export class Timeline {
         const { depth } = options;
         const linkMap = new Map<TimelineItem, Link>();
         const items: TimelineItem[] = [];
+        // Audio time labels are publication-relative. We only compute them when:
+        //   - At least one reading order link has a duration (i.e. it is an audio publication), AND
+        //   - All durations are known (multi-track), or there is only one track (offset is trivially 0).
+        // Any missing duration in a multi-track publication makes offsets uncomputable — skip all labels.
+        const isAudio = roLinks.some(ro => ro.duration !== undefined);
+        const canComputeTimeLabels = isAudio && (roLinks.length <= 1 || roLinks.every(ro => ro.duration !== undefined));
+        let timeOffset = 0;
 
         for (let i = 0; i < roLinks.length; i++) {
             const ro = roLinks[i];
@@ -59,17 +66,19 @@ export class Timeline {
                 Timeline.findTitleInToc(tocLinks, bare, depth) ??
                 `Resource ${i + 1}`;
 
-            const tocChildren = Timeline.collectChildrenFromToc(tocLinks, bare, depth, 1, linkMap, positions);
+            const offset = canComputeTimeLabels ? timeOffset : undefined;
+            const tocChildren = Timeline.collectChildrenFromToc(tocLinks, bare, depth, 1, linkMap, positions, offset);
 
             const item: TimelineItem = {
                 title,
                 references: [ro.href],
                 children: tocChildren.length > 0 ? tocChildren : undefined,
-                position: Timeline.positionLabelForHref(ro.href, positions),
+                position: Timeline.positionLabelForHref(ro.href, positions, offset),
             };
 
             linkMap.set(item, ro);
             items.push(item);
+            timeOffset += ro.duration ?? 0;
         }
 
         return new Timeline(items, linkMap);
@@ -253,6 +262,7 @@ export class Timeline {
         currentDepth: number,
         linkMap: Map<TimelineItem, Link>,
         positions?: Locator[],
+        timeOffset?: number,
     ): TimelineItem[] {
         if (maxDepth !== undefined && currentDepth > maxDepth) return [];
 
@@ -269,7 +279,7 @@ export class Timeline {
                 const child: TimelineItem = {
                     title: link.title,
                     references: [ref],
-                    position: Timeline.positionLabelForHref(link.href, positions),
+                    position: Timeline.positionLabelForHref(link.href, positions, timeOffset),
                     scroll: Timeline.scrollForHref(link.href, positions),
                 };
                 linkMap.set(child, link);
@@ -278,7 +288,7 @@ export class Timeline {
 
             if (link.children?.items?.length) {
                 result.push(...Timeline.collectChildrenFromToc(
-                    link.children.items, bare, maxDepth, currentDepth + 1, linkMap, positions,
+                    link.children.items, bare, maxDepth, currentDepth + 1, linkMap, positions, timeOffset,
                 ));
             }
         }
@@ -421,9 +431,10 @@ export class Timeline {
     /**
      * Returns a display-ready position label for `href` from the positions list:
      * - For audio: formatted start time (e.g. "27:27") from the t= fragment.
-     * - For EPUB/WebPub: string of the lowest position number for this resource.
+     * - For EPUB/WebPub: position number at the specific fragment if available,
+     *   otherwise the lowest position number for the resource.
      */
-    private static positionLabelForHref(href: string, positions?: Locator[]): string | undefined {
+    private static positionLabelForHref(href: string, positions?: Locator[], timeOffset?: number): string | undefined {
         const hashIndex = href.indexOf("#");
         const bare = hashIndex >= 0 ? href.slice(0, hashIndex) : href;
         const fragment = hashIndex >= 0 ? href.slice(hashIndex + 1) : undefined;
@@ -432,17 +443,23 @@ export class Timeline {
             const match = fragment.match(/(?:^|&)t=([^&]+)/);
             if (match) {
                 const t = parseNptTime(match[1]);
-                if (t !== undefined) return formatNptTime(t);
+                if (t !== undefined) return timeOffset !== undefined ? formatNptTime(timeOffset + t) : undefined;
             }
         }
+
+        // Audio parent item: no t= fragment — label is the publication-relative start time.
+        if (timeOffset !== undefined) return formatNptTime(timeOffset);
 
         if (!positions?.length) return undefined;
         const entries = positions.filter(p => p.href === bare);
         if (!entries.length) return undefined;
-        const first = entries.reduce((min, p) =>
+
+        // Prefer the position at the specific fragment (e.g. a TOC anchor), fall back to lowest.
+        const atFragment = fragment ? entries.find(p => p.locations.fragments[0] === fragment) : undefined;
+        const candidate = atFragment ?? entries.reduce((min, p) =>
             (p.locations.position ?? Infinity) < (min.locations.position ?? Infinity) ? p : min
         );
-        const pos = first.locations.position;
+        const pos = candidate.locations.position;
         return pos !== undefined ? String(pos) : undefined;
     }
 
