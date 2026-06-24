@@ -11,7 +11,7 @@ import {
   positiveNumberfromJSON,
   setToArray,
 } from '../util/JSONParse.ts';
-import { LocatorLocations, Locator } from './Locator.ts';
+import { Locator } from './Locator.ts';
 
 /**
  * Link Object for the Readium Web Publication Manifest.
@@ -197,14 +197,10 @@ export class Link {
    * Creates a [Locator] from a reading order [Link].
    */
   public get locator(): Locator {
-    let parts = this.href.split('#');
     return new Locator({
-      href: parts.length > 0 && parts[0] !== undefined ? parts[0] : this.href,
+      href: this.href,
       type: this.type ?? '',
       title: this.title,
-      locations: new LocatorLocations({
-        fragments: parts.length > 1 && parts[1] !== undefined ? [parts[1]] : [],
-      }),
     });
   }
 }

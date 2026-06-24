@@ -145,21 +145,19 @@ export class Manifest {
    * Returns null if the resource is not found in this manifest.
    */
   public locatorFromLink(link: Link): Locator | undefined {
-    const components = link.href.split("#");
-    const href = components.length == 2 ? components[0] : link.href;
-    const resourceLink = this.linkWithHref(href);
+    const bare = link.href.split("#")[0];
+    const resourceLink = this.linkWithHref(bare);
     if(!resourceLink) return undefined;
     const type = resourceLink.type;
     if(!type) return undefined;
-    const fragment = components.length == 2 ? components[1] : undefined;
+    const hasFragment = link.href.includes("#");
 
     return new Locator({
-      href,
+      href: link.href,
       type,
       title: resourceLink.title ?? link.title,
       locations: new LocatorLocations({
-        fragments: fragment ? [fragment] : undefined,
-        progression: fragment ? undefined : 0.0,
+        progression: hasFragment ? undefined : 0.0,
       })
     });
   }
