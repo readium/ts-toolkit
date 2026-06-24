@@ -86,14 +86,14 @@ export interface DecorationActivatedEvent {
     point: { x: number; y: number }; // Click point in iframe client coords.
 }
 
-export interface DecorationHoveredEvent {
+export interface DecorationPointerEnterData {
     decorationId: string;
     group: string;
     rect: { top: number; left: number; width: number; height: number }; // Bounding rect in iframe client coords.
     point: { x: number; y: number }; // Pointer position in iframe client coords.
 }
 
-export interface DecorationUnhoveredEvent {
+export interface DecorationPointerLeaveData {
     decorationId: string;
     group: string;
 }
@@ -166,10 +166,10 @@ class DecorationGroup {
     set hoverable(value: boolean) {
         this._hoverable = value;
         if (!value && this.hoveredItem) {
-            this.comms.send("decoration_unhovered", {
+            this.comms.send("decoration_pointer_leave", {
                 decorationId: this.hoveredItem.decoration.id,
                 group: this.name,
-            } as DecorationUnhoveredEvent);
+            } as DecorationPointerLeaveData);
             this.hoveredItem = undefined;
         }
     }
@@ -403,16 +403,16 @@ class DecorationGroup {
         if (hitItem === this.hoveredItem) return;
 
         if (this.hoveredItem) {
-            this.comms.send("decoration_unhovered", {
+            this.comms.send("decoration_pointer_leave", {
                 decorationId: this.hoveredItem.decoration.id,
                 group: this.name,
-            } as DecorationUnhoveredEvent);
+            } as DecorationPointerLeaveData);
         }
 
         this.hoveredItem = hitItem;
 
         if (hitItem && hitRect) {
-            this.comms.send("decoration_hovered", {
+            this.comms.send("decoration_pointer_enter", {
                 decorationId: hitItem.decoration.id,
                 group: this.name,
                 rect: {
@@ -422,7 +422,7 @@ class DecorationGroup {
                     height: hitRect.height * pixelRatio,
                 },
                 point: { x: cssX * pixelRatio, y: cssY * pixelRatio },
-            } as DecorationHoveredEvent);
+            } as DecorationPointerEnterData);
         }
     }
 

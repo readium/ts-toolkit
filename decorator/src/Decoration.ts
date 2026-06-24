@@ -7,7 +7,7 @@ export interface DecorationActivatedEvent<D = Decoration> {
     point?: { x: number; y: number };
 }
 
-export interface DecorationHoverEvent<D = Decoration> {
+export interface DecorationPointerEnterEvent<D = Decoration> {
     group: string;
     decoration: D;
     rect?: { top: number; left: number; width: number; height: number };
@@ -16,6 +16,6 @@ export interface DecorationHoverEvent<D = Decoration> {
 
 export interface DecorationObserver<D = Decoration> {
     onDecorationActivated(event: DecorationActivatedEvent<D>): boolean;
-    onDecorationHovered?(event: DecorationHoverEvent<D>): void;
-    onDecorationUnhovered?(event: { decoration: D; group: string }): void;
+    onDecorationPointerEnter?(event: DecorationPointerEnterEvent<D>): void;
+    onDecorationPointerLeave?(event: { decoration: D; group: string }): void;
 }

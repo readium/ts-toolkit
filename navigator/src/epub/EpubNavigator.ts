@@ -2,8 +2,8 @@ import { Layout, Link, Locator, LocatorText, Profile, Publication, ReadingProgre
 import { Configurable, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../index.ts";
 import { FramePoolManager } from "./frame/FramePoolManager.ts";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager.ts";
-import { CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationHoveredEvent, DecorationUnhoveredEvent, FXLModules, ModuleLibrary, ModuleName, ReflowableModules, BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent, KeyboardPeripheralEvent } from "@readium/navigator-html-injectables";
-import { Decoration, DecorationActivationEvent, DecorationHoverEvent, DecorationObserver, DecorableNavigator, DecoratorConfig, decorationsEqual, resolveDecorationForWire, BUILTIN_DECORATION_TYPES, DecorationStyleType } from "../decorations/index.ts";
+import { CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FXLModules, ModuleLibrary, ModuleName, ReflowableModules, BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent, KeyboardPeripheralEvent } from "@readium/navigator-html-injectables";
+import { Decoration, DecorationActivationEvent, DecorationPointerEnterEvent, DecorationObserver, DecorableNavigator, DecoratorConfig, decorationsEqual, resolveDecorationForWire, BUILTIN_DECORATION_TYPES, DecorationStyleType } from "../decorations/index.ts";
 import * as path from "path-browserify";
 import { FXLFrameManager } from "./fxl/FXLFrameManager.ts";
 import { FrameManager } from "./frame/FrameManager.ts";
@@ -477,11 +477,11 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 if (handled) this._decorationActivationConsumed = true;
                 break;
             }
-            case "decoration_hovered":
-                this._handleDecorationHovered(data as DecorationHoveredEvent);
+            case "decoration_pointer_enter":
+                this._handleDecorationPointerEnter(data as DecorationPointerEnterData);
                 break;
-            case "decoration_unhovered":
-                this._handleDecorationUnhovered(data as DecorationUnhoveredEvent);
+            case "decoration_pointer_leave":
+                this._handleDecorationPointerLeave(data as DecorationPointerLeaveData);
                 break;
             case "click":
             case "tap":
@@ -668,7 +668,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this._sendDecorationActivationToFrames(group, true);
 
         // Enable hover if the observer declares hover callbacks
-        if (observer.onDecorationHovered || observer.onDecorationUnhovered) {
+        if (observer.onDecorationPointerEnter || observer.onDecorationPointerLeave) {
             this._decorationHoverState.set(group, true);
             this._sendDecorationHoverToFrames(group, true);
         }
@@ -802,23 +802,23 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         return anyHandled;
     }
 
-    private _handleDecorationHovered(data: DecorationHoveredEvent): void {
+    private _handleDecorationPointerEnter(data: DecorationPointerEnterData): void {
         const observers = this._decorationObservers.get(data.group);
         if (!observers || observers.size === 0) return;
         const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId);
         if (!decoration) return;
-        const event: DecorationHoverEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
+        const event: DecorationPointerEnterEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
         for (const obs of observers)
-            obs.onDecorationHovered?.(event);
+            obs.onDecorationPointerEnter?.(event);
     }
 
-    private _handleDecorationUnhovered(data: DecorationUnhoveredEvent): void {
+    private _handleDecorationPointerLeave(data: DecorationPointerLeaveData): void {
         const observers = this._decorationObservers.get(data.group);
         if (!observers || observers.size === 0) return;
         const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId);
         if (!decoration) return;
         for (const obs of observers)
-            obs.onDecorationUnhovered?.({ decoration, group: data.group });
+            obs.onDecorationPointerLeave?.({ decoration, group: data.group });
     }
 
     // End of Decoration

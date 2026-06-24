@@ -22,8 +22,8 @@ export type CommsEventKey =
     "content_protection" |
     "keyboard_peripherals" |
     "decoration_activated" |
-    "decoration_hovered" |
-    "decoration_unhovered";
+    "decoration_pointer_enter" |
+    "decoration_pointer_leave";
 
 export type CommsCommandKey =
     "_ping" |

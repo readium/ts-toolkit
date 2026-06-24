@@ -1,6 +1,6 @@
 import type { Decoration } from "@readium/navigator-html-injectables";
 import type { DirectCommsHost } from "../comms/direct.ts";
-import type { DecorationActivatedEvent, DecorationHoverEvent, DecorationObserver } from "../Decoration.ts";
+import type { DecorationActivatedEvent, DecorationPointerEnterEvent, DecorationObserver } from "../Decoration.ts";
 
 export class DecorationController {
     private _decorations = new Map<string, Decoration[]>();
@@ -23,26 +23,26 @@ export class DecorationController {
             );
         });
 
-        host.on("decoration_hovered", (raw) => {
+        host.on("decoration_pointer_enter", (raw) => {
             const ev = raw as { decorationId: string; group: string; rect?: unknown; point?: unknown };
             const decoration = this._decorations.get(ev.group)?.find(d => d.id === ev.decorationId);
             if (!decoration) return;
             this._observers.get(ev.group)?.forEach(obs =>
-                obs.onDecorationHovered?.({
+                obs.onDecorationPointerEnter?.({
                     group: ev.group,
                     decoration,
-                    rect: ev.rect as DecorationHoverEvent["rect"],
-                    point: ev.point as DecorationHoverEvent["point"],
+                    rect: ev.rect as DecorationPointerEnterEvent["rect"],
+                    point: ev.point as DecorationPointerEnterEvent["point"],
                 })
             );
         });
 
-        host.on("decoration_unhovered", (raw) => {
+        host.on("decoration_pointer_leave", (raw) => {
             const ev = raw as { decorationId: string; group: string };
             const decoration = this._decorations.get(ev.group)?.find(d => d.id === ev.decorationId);
             if (!decoration) return;
             this._observers.get(ev.group)?.forEach(obs =>
-                obs.onDecorationUnhovered?.({ decoration, group: ev.group })
+                obs.onDecorationPointerLeave?.({ decoration, group: ev.group })
             );
         });
     }
@@ -81,7 +81,7 @@ export class DecorationController {
         this._observers.get(group)!.add(observer);
         this._activationState.set(group, true);
         this.host.send("decoration_activatable", { group, activatable: true });
-        if (observer.onDecorationHovered || observer.onDecorationUnhovered) {
+        if (observer.onDecorationPointerEnter || observer.onDecorationPointerLeave) {
             this._hoverState.set(group, true);
             this.host.send("decoration_hoverable", { group, hoverable: true });
         }
