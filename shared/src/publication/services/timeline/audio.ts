@@ -14,7 +14,7 @@ export function buildAudioTimeline(pub: PublicationLike, opts?: { depth?: number
         return [l.href, o];
     }));
 
-    t.augment((item, link) => {
+    t.augment((_item, link) => {
         const href = link.href;
         const hashIndex = href.indexOf('#');
         const bare = hashIndex >= 0 ? href.slice(0, hashIndex) : href;
