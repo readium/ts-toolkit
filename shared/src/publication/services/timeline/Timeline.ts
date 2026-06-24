@@ -105,16 +105,17 @@ export class Timeline {
     }
 
     locate(locator: Locator): TimelineItem | undefined {
-        const href = locator.href.split("#")[0];
-        const time = locator.locations?.time();
-        const htmlId = locator.locations?.htmlId();
-        const progression = locator.locations?.progression;
+        const href = locator.href;
+        const time = locator.locations.time();
+        const htmlId = locator.locations.htmlId();
+        const progression = locator.locations.progression;
 
         // Audio: best-match on t= start time.
         if (time !== undefined) {
             let bestTime = -Infinity;
             let match: TimelineItem | undefined;
             for (const item of this.flat) {
+                if (!this.itemMatchesHref(item, href)) continue;
                 const t = this.itemStartTime(item, href);
                 if (t !== undefined && t <= time && t > bestTime) {
                     bestTime = t;
@@ -127,9 +128,8 @@ export class Timeline {
         // EPUB: match on HTML ID fragment.
         if (htmlId) {
             const match = this.flat.find(item => {
-                if (this.bareHrefFromItem(item) !== href) return false;
-                const fragment = (item.references[0] ?? "").split("#")[1];
-                return fragment === htmlId;
+                if (!this.itemMatchesHref(item, href)) return false;
+                return item.references.some(ref => ref.split("#")[1] === htmlId);
             });
             if (match) return match;
         }
@@ -139,7 +139,7 @@ export class Timeline {
             let bestScroll = -Infinity;
             let match: TimelineItem | undefined;
             for (const item of this.flat) {
-                if (this.bareHrefFromItem(item) !== href) continue;
+                if (!this.itemMatchesHref(item, href)) continue;
                 const s = this.itemScrollPosition(item);
                 if (s !== undefined && s <= progression && s > bestScroll) {
                     bestScroll = s;
@@ -150,7 +150,7 @@ export class Timeline {
         }
 
         // Fallback: bare href match.
-        return this.flat.find(item => this.bareHrefFromItem(item) === href);
+        return this.flat.find(item => this.itemMatchesHref(item, href));
     }
 
     adjacentTo(item: TimelineItem): { previous: TimelineItem | undefined; next: TimelineItem | undefined } {
@@ -163,14 +163,14 @@ export class Timeline {
 
     segmentsForHref(href: string): TimelineItem[] {
         const bare = href.split("#")[0];
-        const item = this.items.find(i => this.bareHrefFromItem(i) === bare);
+        const item = this.items.find(i => this.itemMatchesHref(i, bare));
         if (!item) return [];
         return item.children?.length ? item.children : [item];
     }
 
     itemAtProgression(href: string, progression: number, duration?: number): TimelineItem | undefined {
         const bare = href.split("#")[0];
-        const item = this.items.find(i => this.bareHrefFromItem(i) === bare);
+        const item = this.items.find(i => this.itemMatchesHref(i, bare));
         if (!item) return undefined;
         if (!item.children?.length) return item;
 
@@ -259,10 +259,16 @@ export class Timeline {
         const result: TimelineItem[] = [];
 
         for (const link of tocLinks) {
-            if (Timeline.bareHref(link.href) === bare && link.title && !Timeline.isStartOfResource(link.href)) {
+            const linkBare = Timeline.bareHref(link.href);
+            // Fragment-only hrefs (e.g. "#t=60" in single-track audio) have no bare href,
+            // so they are associated with the current resource.
+            const matchesBare = linkBare === bare || linkBare === '';
+            if (matchesBare && link.title && !Timeline.isStartOfResource(link.href)) {
+                // Prepend the resource href when the link uses a fragment-only reference.
+                const ref = linkBare === '' ? bare + link.href : link.href;
                 const child: TimelineItem = {
                     title: link.title,
-                    references: [link.href],
+                    references: [ref],
                     position: Timeline.positionLabelForHref(link.href, positions),
                     scroll: Timeline.scrollForHref(link.href, positions),
                 };
@@ -299,7 +305,8 @@ export class Timeline {
         const fragments: Link[] = [];
 
         for (const link of tocLinks) {
-            if (Timeline.bareHref(link.href) === bare && link.title) {
+            const linkBare = Timeline.bareHref(link.href);
+            if ((linkBare === bare || linkBare === '') && link.title) {
                 if (Timeline.isStartOfResource(link.href)) {
                     atStart.push(link);
                 } else {
@@ -368,7 +375,8 @@ export class Timeline {
             const hashIndex = ref.indexOf("#");
             const refHref = hashIndex >= 0 ? ref.slice(0, hashIndex) : ref;
             const refFragment = hashIndex >= 0 ? ref.slice(hashIndex + 1) : undefined;
-            const effectiveHref = refHref || this.bareHrefFromItem(item);
+            // Fragment-only reference (e.g. "#t=60") has no resource of its own — use the queried href.
+            const effectiveHref = refHref || href;
             if (effectiveHref !== href) continue;
             if (!refFragment) return undefined;
             const match = refFragment.match(/(?:^|&)t=([^&]+)/);
@@ -377,17 +385,22 @@ export class Timeline {
         return undefined;
     }
 
-    private bareHrefFromItem(item: TimelineItem): string {
-        return (item.references[0] ?? "").split("#")[0];
+    private itemMatchesHref(item: TimelineItem, href: string): boolean {
+        return item.references.some(ref => {
+            const bare = ref.split("#")[0];
+            // Fragment-only reference (single-track audio) matches the current resource.
+            return bare === href || bare === '';
+        });
     }
 
     private timeFromItem(item: TimelineItem): number | undefined {
-        const ref = item.references[0];
-        if (!ref) return undefined;
-        const fragment = ref.split("#")[1];
-        if (!fragment) return undefined;
-        const match = fragment.match(/(?:^|&)t=([^&]+)/);
-        return match ? parseNptTime(match[1]) : undefined;
+        for (const ref of item.references) {
+            const fragment = ref.split("#")[1];
+            if (!fragment) continue;
+            const match = fragment.match(/(?:^|&)t=([^&]+)/);
+            if (match) return parseNptTime(match[1]);
+        }
+        return undefined;
     }
 
     private ancestorPath(items: TimelineItem[], target: TimelineItem): TimelineItem[] | null {
@@ -411,7 +424,9 @@ export class Timeline {
      * - For EPUB/WebPub: string of the lowest position number for this resource.
      */
     private static positionLabelForHref(href: string, positions?: Locator[]): string | undefined {
-        const fragment = href.split("#")[1];
+        const hashIndex = href.indexOf("#");
+        const bare = hashIndex >= 0 ? href.slice(0, hashIndex) : href;
+        const fragment = hashIndex >= 0 ? href.slice(hashIndex + 1) : undefined;
 
         if (fragment) {
             const match = fragment.match(/(?:^|&)t=([^&]+)/);
@@ -422,7 +437,6 @@ export class Timeline {
         }
 
         if (!positions?.length) return undefined;
-        const bare = href.split("#")[0];
         const entries = positions.filter(p => p.href === bare);
         if (!entries.length) return undefined;
         const first = entries.reduce((min, p) =>
@@ -438,14 +452,15 @@ export class Timeline {
      */
     private static scrollForHref(href: string, positions?: Locator[]): number | undefined {
         if (!positions?.length) return undefined;
-        const bare = href.split("#")[0];
-        const fragment = href.split("#")[1];
-        if (!fragment) return undefined;
+        const hashIndex = href.indexOf("#");
+        if (hashIndex < 0) return undefined;
+        const bare = href.slice(0, hashIndex);
+        const fragment = href.slice(hashIndex + 1);
         const entry = positions.find(p => {
             if (p.href !== bare) return false;
-            const pFragment = p.locations.fragments?.[0];
+            const pFragment = p.locations.fragments[0];
             if (!pFragment) return false;
-            return pFragment.replace(/^#/, "") === fragment;
+            return pFragment === fragment;
         });
         return entry?.locations.progression;
     }
