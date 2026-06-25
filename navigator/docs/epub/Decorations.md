@@ -45,6 +45,7 @@ interface BuiltinDecorationStyle {
 |---|---|
 | `DecorationStyleType.Highlight` | Background-color overlay (default). |
 | `DecorationStyleType.Underline` | Line drawn beneath the text. |
+| `DecorationStyleType.Strikethrough` | Line drawn through the middle of the text. |
 | `DecorationStyleType.Outline` | Border drawn around each text box. |
 | `DecorationStyleType.TextColor` | Changes the text color directly. Requires CSS Highlight API; invisible in older browsers. **Note**: Due to CSS Highlight API limitations, viewport width behaves as wrap (fits text exactly) instead of stretching to full viewport width. Page and Bounds widths are supported for TextColor. **Vertical Writing**: Due to known browser bugs with `caretPositionFromPoint()` in vertical writing modes, bounds/page width falls back to wrap behavior to ensure reliability. |
 | `DecorationStyleType.Mask` | Dims everything outside the selection rects. Use `width: Page` for block-level behavior. |
@@ -146,9 +147,9 @@ if (navigator.supportsDecorationStyle("app-sidemark")) {
 }
 ```
 
-`EpubNavigator` returns `true` for all built-in types and for any ID registered in `DecoratorConfig.decorationTemplates`. This method is mainly useful for navigator-agnostic code that may run against non-HTML navigators.
+`EpubNavigator` returns `true` for all built-in types except `TextColor`, which requires the CSS Highlight API and returns `false` in browsers that do not support it. It also returns `true` for any ID registered in `DecoratorConfig.decorationTemplates`. This method is mainly useful for navigator-agnostic code that may run against non-HTML navigators.
 
-**Note**: While TextColor is supported, it has limitations with viewport width due to CSS Highlight API constraints. Page and Bounds widths are supported for TextColor. Use other decoration styles if viewport behavior is required.
+**Note**: `TextColor` has limitations with viewport width due to CSS Highlight API constraints. Page and Bounds widths are supported for TextColor. Use other decoration styles if viewport behavior is required.
 
 ## Activation (Click / Tap)
 
@@ -466,4 +467,4 @@ navigator.applyDecorations(
 |---|---|---|
 | Template defined | Per decoration | Once at navigator init |
 | Best for | One-off or rare styles | Styles reused across many decorations |
-| `supportsDecorationStyle` | Always true | Checks the registry |
+| `supportsDecorationStyle` | True for all built-in types except `TextColor`, which requires the CSS Highlight API and returns `false` in browsers that lack it | Checks the registry |
