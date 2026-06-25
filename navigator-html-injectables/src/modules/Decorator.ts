@@ -79,24 +79,24 @@ export interface Decoration {
     extras?: Record<string, unknown>; // App-specific context data passed through to DecorationActivationEvent.
 }
 
-export interface DecorationActivatedEvent {
-    decorationId: string;
-    group: string; // Human-readable group name (matches DecoratorRequest.group).
-    rect: { top: number; left: number; width: number; height: number }; // Bounding rect in iframe client coords.
-    point: { x: number; y: number }; // Click point in iframe client coords.
-}
-
-export interface DecorationPointerEnterData {
+interface DecorationEventBase {
     decorationId: string;
     group: string;
-    rect: { top: number; left: number; width: number; height: number }; // Bounding rect in iframe client coords.
-    point: { x: number; y: number }; // Pointer position in iframe client coords.
+    rect?: { top: number; left: number; width: number; height: number };
+    point?: { x: number; y: number };
 }
 
-export interface DecorationPointerLeaveData {
-    decorationId: string;
-    group: string;
+export interface DecorationActivatedEvent extends DecorationEventBase {
+    rect: { top: number; left: number; width: number; height: number }; // Always present on activation.
+    point: { x: number; y: number }; // Always present on activation.
 }
+
+export interface DecorationPointerEnterData extends DecorationEventBase {
+    rect: { top: number; left: number; width: number; height: number }; // Always present on enter.
+    point: { x: number; y: number }; // Always present on enter.
+}
+
+export type DecorationPointerLeaveData = DecorationEventBase;
 
 export type DecoratorRequest =
     | { group: string; action: "add" | "update"; decoration: Decoration }
@@ -170,9 +170,17 @@ class DecorationGroup {
     set hoverable(value: boolean) {
         this._hoverable = value;
         if (!value && this.hoveredItem) {
+            const leaveRect = this.hoveredItem.range.getBoundingClientRect();
+            const pixelRatio = this.wnd.devicePixelRatio;
             this.comms.send("decoration_pointer_leave", {
                 decorationId: this.hoveredItem.decoration.id,
                 group: this.name,
+                rect: {
+                    top: leaveRect.top * pixelRatio,
+                    left: leaveRect.left * pixelRatio,
+                    width: leaveRect.width * pixelRatio,
+                    height: leaveRect.height * pixelRatio,
+                },
             } as DecorationPointerLeaveData);
             this.hoveredItem = undefined;
         }
@@ -411,9 +419,18 @@ class DecorationGroup {
         if (hitItem === this.hoveredItem) return;
 
         if (this.hoveredItem) {
+            const connected = this.hoveredItem.range.commonAncestorContainer.isConnected;
+            const leaveRect = connected ? this.hoveredItem.range.getBoundingClientRect() : null;
             this.comms.send("decoration_pointer_leave", {
                 decorationId: this.hoveredItem.decoration.id,
                 group: this.name,
+                rect: leaveRect ? {
+                    top: leaveRect.top * pixelRatio,
+                    left: leaveRect.left * pixelRatio,
+                    width: leaveRect.width * pixelRatio,
+                    height: leaveRect.height * pixelRatio,
+                } : undefined,
+                point: { x: cssX * pixelRatio, y: cssY * pixelRatio },
             } as DecorationPointerLeaveData);
         }
 

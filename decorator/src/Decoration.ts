@@ -1,21 +1,15 @@
-import type { Decoration } from "@readium/navigator-html-injectables";
+import type { Decoration, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData } from "@readium/navigator-html-injectables";
 
-export interface DecorationActivatedEvent<D = Decoration> {
-    group: string;
+export interface OnDecorationActivatedEvent<D = Decoration> extends Omit<DecorationActivatedEvent, "decorationId"> {
     decoration: D;
-    rect?: { top: number; left: number; width: number; height: number };
-    point?: { x: number; y: number };
 }
 
-export interface DecorationPointerEnterEvent<D = Decoration> {
-    group: string;
-    decoration: D;
-    rect?: { top: number; left: number; width: number; height: number };
-    point?: { x: number; y: number };
-}
+export type OnDecorationPointerEnterEvent<D = Decoration> = Omit<DecorationPointerEnterData, "decorationId"> & { decoration: D };
+
+export type OnDecorationPointerLeaveEvent<D = Decoration> = Omit<DecorationPointerLeaveData, "decorationId"> & { decoration: D };
 
 export interface DecorationObserver<D = Decoration> {
-    onDecorationActivated(event: DecorationActivatedEvent<D>): boolean;
-    onDecorationPointerEnter?(event: DecorationPointerEnterEvent<D>): void;
-    onDecorationPointerLeave?(event: { decoration: D; group: string }): void;
+    onDecorationActivated(event: OnDecorationActivatedEvent<D>): boolean;
+    onDecorationPointerEnter?(event: OnDecorationPointerEnterEvent<D>): void;
+    onDecorationPointerLeave?(event: OnDecorationPointerLeaveEvent<D>): void;
 }

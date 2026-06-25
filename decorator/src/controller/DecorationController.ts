@@ -1,48 +1,42 @@
-import type { Decoration } from "@readium/navigator-html-injectables";
+import type { Decoration, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData } from "@readium/navigator-html-injectables";
 import type { DirectCommsHost } from "../comms/direct.ts";
-import type { DecorationActivatedEvent, DecorationPointerEnterEvent, DecorationObserver } from "../Decoration.ts";
+import type { DecorationObserver } from "../Decoration.ts";
 
 export class DecorationController {
     private _decorations = new Map<string, Decoration[]>();
     private _activationState = new Map<string, boolean>();
     private _hoverState = new Map<string, boolean>();
     private _observers = new Map<string, Set<DecorationObserver>>();
+    private _hoveredDecorations = new Map<string, Decoration>();
 
     constructor(private readonly host: DirectCommsHost) {
         host.on("decoration_activated", (raw) => {
-            const ev = raw as { decorationId: string; group: string; rect?: unknown; point?: unknown };
+            const ev = raw as DecorationActivatedEvent;
             const decoration = this._decorations.get(ev.group)?.find(d => d.id === ev.decorationId);
             if (!decoration) return;
             this._observers.get(ev.group)?.forEach(obs =>
-                obs.onDecorationActivated({
-                    group: ev.group,
-                    decoration,
-                    rect: ev.rect as DecorationActivatedEvent["rect"],
-                    point: ev.point as DecorationActivatedEvent["point"],
-                })
+                obs.onDecorationActivated({ group: ev.group, decoration, rect: ev.rect, point: ev.point })
             );
         });
 
         host.on("decoration_pointer_enter", (raw) => {
-            const ev = raw as { decorationId: string; group: string; rect?: unknown; point?: unknown };
+            const ev = raw as DecorationPointerEnterData;
             const decoration = this._decorations.get(ev.group)?.find(d => d.id === ev.decorationId);
             if (!decoration) return;
+            this._hoveredDecorations.set(ev.group, decoration);
             this._observers.get(ev.group)?.forEach(obs =>
-                obs.onDecorationPointerEnter?.({
-                    group: ev.group,
-                    decoration,
-                    rect: ev.rect as DecorationPointerEnterEvent["rect"],
-                    point: ev.point as DecorationPointerEnterEvent["point"],
-                })
+                obs.onDecorationPointerEnter?.({ group: ev.group, decoration, rect: ev.rect, point: ev.point })
             );
         });
 
         host.on("decoration_pointer_leave", (raw) => {
-            const ev = raw as { decorationId: string; group: string };
-            const decoration = this._decorations.get(ev.group)?.find(d => d.id === ev.decorationId);
+            const ev = raw as DecorationPointerLeaveData;
+            const decoration = this._decorations.get(ev.group)?.find(d => d.id === ev.decorationId)
+                ?? this._hoveredDecorations.get(ev.group);
+            this._hoveredDecorations.delete(ev.group);
             if (!decoration) return;
             this._observers.get(ev.group)?.forEach(obs =>
-                obs.onDecorationPointerLeave?.({ decoration, group: ev.group })
+                obs.onDecorationPointerLeave?.({ group: ev.group, decoration, rect: ev.rect, point: ev.point })
             );
         });
     }
@@ -105,6 +99,7 @@ export class DecorationController {
         this._activationState.clear();
         this._hoverState.clear();
         this._observers.clear();
+        this._hoveredDecorations.clear();
     }
 }
 

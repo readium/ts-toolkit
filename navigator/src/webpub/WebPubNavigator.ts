@@ -5,7 +5,7 @@ import { WebPubFramePoolManager } from "./WebPubFramePoolManager.ts";
 import { BasicTextSelection, CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FrameClickEvent, KeyboardPeripheralEvent, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
 import { WebPubFrameManager } from "./WebPubFrameManager.ts";
-import { Decoration, DecorableNavigator, DecorationActivationEvent, DecorationPointerEnterEvent, DecorationObserver, DecoratorConfig, decorationsEqual, resolveDecorationForWire, BUILTIN_DECORATION_TYPES, DecorationStyleType } from "../decorations/index.ts";
+import { Decoration, DecorableNavigator, OnDecorationActivatedEvent, OnDecorationPointerEnterEvent, OnDecorationPointerLeaveEvent, DecorationObserver, DecoratorConfig, decorationsEqual, resolveDecorationForWire, BUILTIN_DECORATION_TYPES, DecorationStyleType } from "../decorations/index.ts";
 import { ManagerEventKey } from "../epub/EpubNavigator.ts";
 import { getScriptMode } from "../helpers/scriptMode.ts";
 import { WebPubCSS } from "./css/WebPubCSS.ts";
@@ -86,6 +86,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
     private _decorations: Map<string, Decoration[]> = new Map();
     private _decorationObservers: Map<string, Set<DecorationObserver>> = new Map();
+    private _decorationHoveredDecorations: Map<string, Decoration> = new Map();
     private _decorationActivationState: Map<string, boolean> = new Map();
     private _decorationHoverState: Map<string, boolean> = new Map();
     private _decorationActivationConsumed = false;
@@ -447,6 +448,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         await this.framePool?.destroy();
         this._decorations.clear();
         this._decorationObservers.clear();
+        this._decorationHoveredDecorations.clear();
         this._decorationActivationState.clear();
         this._decorationHoverState.clear();
     }
@@ -575,7 +577,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId);
         if (!decoration) return false;
 
-        const event: DecorationActivationEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
+        const event: OnDecorationActivatedEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
         let anyHandled = false;
         for (const obs of observers)
             if (obs.onDecorationActivated(event)) anyHandled = true;
@@ -587,7 +589,8 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         if (!observers || observers.size === 0) return;
         const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId);
         if (!decoration) return;
-        const event: DecorationPointerEnterEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
+        this._decorationHoveredDecorations.set(data.group, decoration);
+        const event: OnDecorationPointerEnterEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
         for (const obs of observers)
             obs.onDecorationPointerEnter?.(event);
     }
@@ -595,10 +598,13 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private _handleDecorationPointerLeave(data: DecorationPointerLeaveData): void {
         const observers = this._decorationObservers.get(data.group);
         if (!observers || observers.size === 0) return;
-        const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId);
+        const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId)
+            ?? this._decorationHoveredDecorations.get(data.group);
+        this._decorationHoveredDecorations.delete(data.group);
         if (!decoration) return;
+        const event: OnDecorationPointerLeaveEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
         for (const obs of observers)
-            obs.onDecorationPointerLeave?.({ decoration, group: data.group });
+            obs.onDecorationPointerLeave?.(event);
     }
 
     // End of DecorableNavigator

@@ -3,7 +3,7 @@ import { Configurable, ConfigurableSettings, LineLengths, ProgressionRange, Visu
 import { FramePoolManager } from "./frame/FramePoolManager.ts";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager.ts";
 import { CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FXLModules, ModuleLibrary, ModuleName, ReflowableModules, BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent, KeyboardPeripheralEvent } from "@readium/navigator-html-injectables";
-import { Decoration, DecorationActivationEvent, DecorationPointerEnterEvent, DecorationObserver, DecorableNavigator, DecoratorConfig, decorationsEqual, resolveDecorationForWire, BUILTIN_DECORATION_TYPES, DecorationStyleType } from "../decorations/index.ts";
+import { Decoration, OnDecorationActivatedEvent, OnDecorationPointerEnterEvent, OnDecorationPointerLeaveEvent, DecorationObserver, DecorableNavigator, DecoratorConfig, decorationsEqual, resolveDecorationForWire, BUILTIN_DECORATION_TYPES, DecorationStyleType } from "../decorations/index.ts";
 import * as path from "path-browserify";
 import { FXLFrameManager } from "./fxl/FXLFrameManager.ts";
 import { FrameManager } from "./frame/FrameManager.ts";
@@ -99,6 +99,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
     private _decorations: Map<string, Decoration[]> = new Map();
     private _decorationObservers: Map<string, Set<DecorationObserver>> = new Map();
+    private _decorationHoveredDecorations: Map<string, Decoration> = new Map();
     private _decorationActivationState: Map<string, boolean> = new Map();
     private _decorationHoverState: Map<string, boolean> = new Map();
     private _decorationActivationConsumed = false;
@@ -795,7 +796,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId);
         if (!decoration) return false;
 
-        const event: DecorationActivationEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
+        const event: OnDecorationActivatedEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
         let anyHandled = false;
         for (const obs of observers)
             if (obs.onDecorationActivated(event)) anyHandled = true;
@@ -807,7 +808,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         if (!observers || observers.size === 0) return;
         const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId);
         if (!decoration) return;
-        const event: DecorationPointerEnterEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
+        this._decorationHoveredDecorations.set(data.group, decoration);
+        const event: OnDecorationPointerEnterEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
         for (const obs of observers)
             obs.onDecorationPointerEnter?.(event);
     }
@@ -815,10 +817,13 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private _handleDecorationPointerLeave(data: DecorationPointerLeaveData): void {
         const observers = this._decorationObservers.get(data.group);
         if (!observers || observers.size === 0) return;
-        const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId);
+        const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId)
+            ?? this._decorationHoveredDecorations.get(data.group);
+        this._decorationHoveredDecorations.delete(data.group);
         if (!decoration) return;
+        const event: OnDecorationPointerLeaveEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
         for (const obs of observers)
-            obs.onDecorationPointerLeave?.({ decoration, group: data.group });
+            obs.onDecorationPointerLeave?.(event);
     }
 
     // End of Decoration
@@ -835,6 +840,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         await this.framePool?.destroy();
         this._decorations.clear();
         this._decorationObservers.clear();
+        this._decorationHoveredDecorations.clear();
         this._decorationActivationState.clear();
         this._decorationHoverState.clear();
     }

@@ -56,13 +56,15 @@ export function resolveDecorationForWire(
 }
 
 import type {
-    DecorationActivatedEvent as _DecorationActivatedEvent,
-    DecorationPointerEnterEvent as _DecorationPointerEnterEvent,
+    OnDecorationActivatedEvent as _OnDecorationActivatedEvent,
+    OnDecorationPointerEnterEvent as _OnDecorationPointerEnterEvent,
+    OnDecorationPointerLeaveEvent as _OnDecorationPointerLeaveEvent,
     DecorationObserver as _DecorationObserver,
 } from "@readium/decorator";
 
-export type DecorationActivationEvent = _DecorationActivatedEvent<Decoration>;
-export type DecorationPointerEnterEvent = _DecorationPointerEnterEvent<Decoration>;
+export type OnDecorationActivatedEvent = _OnDecorationActivatedEvent<Decoration>;
+export type OnDecorationPointerEnterEvent = _OnDecorationPointerEnterEvent<Decoration>;
+export type OnDecorationPointerLeaveEvent = _OnDecorationPointerLeaveEvent<Decoration>;
 export type DecorationObserver = _DecorationObserver<Decoration>;
 
 function stylesEqual(a: DecorationStyle, b: DecorationStyle): boolean {

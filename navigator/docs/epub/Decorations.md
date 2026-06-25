@@ -156,10 +156,10 @@ if (navigator.supportsDecorationStyle("app-sidemark")) {
 To make decorations in a group respond to user interaction, register a `DecorationObserver` for that group. All decorations in the group become tappable once an observer is registered — no per-decoration flag is required.
 
 ```ts
-import { DecorationObserver, DecorationActivationEvent } from "@readium/navigator";
+import { DecorationObserver, OnDecorationActivatedEvent } from "@readium/navigator";
 
 const highlightObserver: DecorationObserver = {
-  onDecorationActivated(event: DecorationActivationEvent): boolean {
+  onDecorationActivated(event: OnDecorationActivatedEvent): boolean {
     console.log("Decoration tapped:", event.decoration.id);
     console.log("Group:", event.group);
     console.log("Bounding rect (navigator coords):", event.rect);
@@ -189,19 +189,19 @@ navigator.applyDecorations([
 ], "user-highlights");
 ```
 
-### `DecorationActivationEvent`
+### `OnDecorationActivatedEvent`
 
 ```ts
-interface DecorationActivationEvent {
+interface OnDecorationActivatedEvent {
   decoration: Decoration;   // The full decoration that was activated
   group: string;            // The group it belongs to
-  rect?: {                  // Bounding rect in navigator container coordinates
+  rect: {                   // Bounding rect in navigator container coordinates
     top: number;
     left: number;
     width: number;
     height: number;
   };
-  point?: {                 // Tap/click point in navigator container coordinates
+  point: {                  // Tap/click point in navigator container coordinates
     x: number;
     y: number;
   };
@@ -211,7 +211,7 @@ interface DecorationActivationEvent {
 `rect` and `point` are in CSS pixels relative to the navigator's container element — you can use them to position a popover:
 
 ```ts
-onDecorationActivated(event: DecorationActivationEvent): boolean {
+onDecorationActivated(event: OnDecorationActivatedEvent): boolean {
   if (!event.rect) return false;
 
   showPopover({
@@ -234,33 +234,45 @@ Returning `false` (or not having a registered observer) lets the tap/click fall 
 To track pointer hover over decorations in a group, declare `onDecorationPointerEnter` and/or `onDecorationPointerLeave` on the observer. Hover tracking is automatically enabled for the group when either method is present, and disabled when all observers for that group are removed.
 
 ```ts
-import { DecorationObserver, DecorationPointerEnterEvent } from "@readium/navigator";
+import { DecorationObserver, OnDecorationPointerEnterEvent, OnDecorationPointerLeaveEvent } from "@readium/navigator";
 
 const observer: DecorationObserver = {
   onDecorationActivated(event): boolean {
     return false;
   },
-  onDecorationPointerEnter(event: DecorationPointerEnterEvent): void {
+  onDecorationPointerEnter(event: OnDecorationPointerEnterEvent): void {
     console.log("Pointer entered:", event.decoration.id);
     console.log("Rect:", event.rect);
     console.log("Point:", event.point);
   },
-  onDecorationPointerLeave(event: { decoration: Decoration; group: string }): void {
+  onDecorationPointerLeave(event: OnDecorationPointerLeaveEvent): void {
     console.log("Pointer left:", event.decoration.id);
+    console.log("Rect:", event.rect); // bounding rect of the decoration that was left
   },
 };
 
 navigator.registerDecorationObserver("user-highlights", observer);
 ```
 
-### `DecorationPointerEnterEvent`
+### `OnDecorationPointerEnterEvent`
 
 ```ts
-interface DecorationPointerEnterEvent {
+interface OnDecorationPointerEnterEvent {
   decoration: Decoration;
   group: string;
-  rect?: { top: number; left: number; width: number; height: number };
-  point?: { x: number; y: number };
+  rect: { top: number; left: number; width: number; height: number };
+  point: { x: number; y: number };
+}
+```
+
+### `OnDecorationPointerLeaveEvent`
+
+```ts
+interface OnDecorationPointerLeaveEvent {
+  decoration: Decoration;
+  group: string;
+  rect?: { top: number; left: number; width: number; height: number }; // absent if decoration was removed from DOM before leave fired
+  point?: { x: number; y: number };                                    // current pointer position at the moment of leave
 }
 ```
 
@@ -279,7 +291,7 @@ import {
   EpubNavigator,
   Decoration,
   DecorationObserver,
-  DecorationActivationEvent,
+  OnDecorationActivatedEvent,
   DecorationLayout,
   DecorationStyleType,
   DecorationWidth,
@@ -294,7 +306,7 @@ function syncHighlights() {
 
 // 2. Register an observer before or after load
 const observer: DecorationObserver = {
-  onDecorationActivated(event: DecorationActivationEvent): boolean {
+  onDecorationActivated(event: OnDecorationActivatedEvent): boolean {
     const noteId = event.decoration.extras?.noteId as string | undefined;
     if (noteId && event.rect) {
       showNotePopover(noteId, event.rect);

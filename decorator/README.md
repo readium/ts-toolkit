@@ -92,14 +92,16 @@ interface DecorationObserver {
     // Called when a decoration is tapped/clicked. Return true to consume the event
     // (suppresses default navigation). All decorations in the group fire this once
     // an observer is registered — no per-decoration flag required.
-    onDecorationActivated(event: DecorationActivatedEvent): boolean;
+    onDecorationActivated(event: OnDecorationActivatedEvent): boolean;
 
     // Called when the pointer enters a decoration. Registering either hover method
     // automatically enables hover tracking for the group.
-    onDecorationPointerEnter?(event: DecorationPointerEnterEvent): void;
+    onDecorationPointerEnter?(event: OnDecorationPointerEnterEvent): void;
 
     // Called when the pointer leaves a decoration.
-    onDecorationPointerLeave?(event: { decoration: Decoration; group: string }): void;
+    // rect is the bounding rect of the decoration that was left (absent if removed from DOM).
+    // point is the current pointer position at the moment of leave.
+    onDecorationPointerLeave?(event: OnDecorationPointerLeaveEvent): void;
 }
 ```
 
@@ -123,6 +125,7 @@ class Decorator {
 | `DecorationLayout` | `"boxes" \| "bounds"` |
 | `DecorationWidth` | `"wrap" \| "viewport" \| "bounds" \| "page"` |
 | `DecorationObserver` | `{ onDecorationActivated, onDecorationPointerEnter?, onDecorationPointerLeave? }` |
-| `DecorationActivatedEvent` | `{ decoration, group, rect?, point? }` |
-| `DecorationPointerEnterEvent` | `{ decoration, group, rect?, point? }` |
+| `OnDecorationActivatedEvent` | `{ decoration, group, rect, point }` — rect and point always present on activation |
+| `OnDecorationPointerEnterEvent` | `{ decoration, group, rect, point }` — rect and point always present on enter |
+| `OnDecorationPointerLeaveEvent` | `{ decoration, group, rect?, point? }` — rect present when range is still in the DOM; point is the current pointer position at moment of leave |
 | `IComms` | Interface implemented by both `Comms` (postMessage) and `DirectCommsFrame` |
