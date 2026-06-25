@@ -42,9 +42,7 @@ export abstract class Navigator {
     abstract get publication(): Publication; // Publication rendered by this navigator.
     abstract get currentLocator(): Locator; // Current position (detailed) in the publication. Can be used to save a bookmark to the current position.
 
-    get timeline(): Timeline {
-        return this.publication.timeline;
-    }
+    abstract get timeline(): Timeline;
 
     /**
      * Moves to the position in the publication corresponding to the given {Locator}.

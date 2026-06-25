@@ -1,4 +1,4 @@
-import { Feature, Link, Locator, LocatorText, Publication, ReadingProgression, LocatorLocations, TimelineItem } from "@readium/shared";
+import { Feature, Link, Locator, LocatorText, Publication, ReadingProgression, LocatorLocations, Timeline, TimelineItem } from "@readium/shared";
 import { VisualNavigator, VisualNavigatorViewport, ProgressionRange, KeyboardPeripheralEventData } from "../Navigator.ts";
 import { Configurable } from "../preferences/Configurable.ts";
 import { WebPubFramePoolManager } from "./WebPubFramePoolManager.ts";
@@ -667,6 +667,10 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
     get publication(): Publication {
         return this.pub;
+    }
+
+    get timeline(): Timeline {
+        return this.pub.timeline;
     }
 
     private async loadLocator(locator: Locator, cb: (ok: boolean) => void) {

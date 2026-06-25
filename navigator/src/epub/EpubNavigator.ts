@@ -1041,11 +1041,11 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         return this.pub;
     }
 
-    get timeline() {
+    get timeline(): Timeline {
         const t = this.pub.timeline;
         if (!this._timelineAugmented && this.positions?.length) {
             const positions = this.positions;
-            t.augment((item, link) => {
+            t.augment((_item, link) => {
                 const hashIndex = link.href.indexOf('#');
                 const bare = hashIndex >= 0 ? link.href.slice(0, hashIndex) : link.href;
                 const fragment = hashIndex >= 0 ? link.href.slice(hashIndex + 1) : undefined;
