@@ -44,6 +44,7 @@ interface BuiltinDecorationStyle {
 | Value | Description |
 |---|---|
 | `DecorationStyleType.Highlight` | Background-color overlay (default). |
+| `DecorationStyleType.HighlightUnderline` | Background-color overlay and underline simultaneously. Use to mark a decoration as selected or focused. |
 | `DecorationStyleType.Underline` | Line drawn beneath the text. |
 | `DecorationStyleType.Strikethrough` | Line drawn through the middle of the text. |
 | `DecorationStyleType.Outline` | Border drawn around each text box. |

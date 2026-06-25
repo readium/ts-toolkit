@@ -5,7 +5,7 @@ import { rangeFromLocator } from "../helpers/locator.ts";
 import { ModuleName } from "./ModuleLibrary.ts";
 import { Rect, getClientRectsNoOverlap, getTextClientRects, rectContainsPoint } from "../helpers/rect.ts";
 import { getProperty } from "../helpers/css.ts";
-import { isDarkColor, getContrastingTextColor, adjustColorForContrast } from "@readium/helpers";
+import { isDarkColor, getContrastingTextColor, adjustColorForContrast, colorToRgba } from "@readium/helpers";
 import { makeWritingContext } from "../helpers/document.ts";
 import { sML } from "../helpers/sML.ts";
 import { sanitizeHTML } from "../helpers/sanitize.ts";
@@ -15,6 +15,7 @@ function defaultTint(type: DecorationStyleType): string {
         case DecorationStyleType.Mask:
             return "rgba(255, 255, 255, 0.5)";
         case DecorationStyleType.Highlight:
+        case DecorationStyleType.HighlightUnderline:
             return "#FFFF00";
         default:
             return "#FF0000";
@@ -22,13 +23,14 @@ function defaultTint(type: DecorationStyleType): string {
 }
 
 export const DecorationStyleType = {
-    Highlight:     "highlight",     // Background color overlay.
-    Underline:     "underline",     // Underline drawn beneath the text.
-    Strikethrough: "strikethrough", // Line drawn through the vertical centre of the text.
-    Outline:       "outline",       // Border drawn around the text boxes.
-    TextColor:     "textColor",     // Changes the text color directly.
-    Mask:          "mask",          // Dims everything outside the selection rects. Use width: Page for block-level behaviour.
-    Template:      "template",      // Custom HTML template (HTMLDecorationTemplate).
+    Highlight:          "highlight",          // Background color overlay.
+    HighlightUnderline: "highlightUnderline", // Background color overlay + underline (the converged active state from RFC 008).
+    Underline:          "underline",          // Underline drawn beneath the text.
+    Strikethrough:      "strikethrough",      // Line drawn through the vertical centre of the text.
+    Outline:            "outline",            // Border drawn around the text boxes.
+    TextColor:          "textColor",          // Changes the text color directly.
+    Mask:               "mask",               // Dims everything outside the selection rects. Use width: Page for block-level behaviour.
+    Template:           "template",           // Custom HTML template (HTMLDecorationTemplate).
 } as const;
 export type DecorationStyleType = typeof DecorationStyleType[keyof typeof DecorationStyleType];
 
@@ -50,7 +52,6 @@ export interface BuiltinDecorationStyle {
     tint?: string;
     layout?: DecorationLayout;
     width?: DecorationWidth;
-    // isActive?: boolean; // RFC 008 — visual semantics TBD; currently has no visual effect
     enforceContrast?: boolean; // When true (default), tint is adjusted for contrast against the background.
     expand?: number; // Inflates each client rect outward by this many CSS pixels on all sides.
 }
@@ -67,7 +68,6 @@ export interface HTMLDecorationTemplate {
     width: DecorationWidth;
     element: string;
     stylesheet?: string;
-    // isActive?: boolean; // RFC 008 — visual semantics TBD; currently has no visual effect
 }
 
 export type DecorationStyle = BuiltinDecorationStyle | HTMLDecorationTemplate;
@@ -584,6 +584,18 @@ class DecorationGroup {
                     color: ${adjustedTint};
                 }`;
                 break;
+            case DecorationStyleType.HighlightUnderline: {
+                const { r, g, b } = colorToRgba(adjustedTint);
+                const fillTint = `rgba(${r}, ${g}, ${b}, 0.3)`;
+                css = `::highlight(${subKey}) {
+                    color: ${getContrastingTextColor(adjustedTint, backgroundColor)};
+                    background-color: ${fillTint};
+                    text-decoration: underline;
+                    text-decoration-color: ${adjustedTint};
+                    text-decoration-thickness: 0.1em;
+                }`;
+                break;
+            }
             case DecorationStyleType.Highlight:
             default:
                 css = `::highlight(${subKey}) {
@@ -759,6 +771,17 @@ class DecorationGroup {
                             "background-color: transparent !important",
                             "box-sizing: border-box !important",
                         ].join("; ");
+                    case DecorationStyleType.HighlightUnderline: {
+                        const adjustedHUTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
+                        const { r, g, b } = colorToRgba(adjustedHUTint);
+                        const huFillTint = `rgba(${r}, ${g}, ${b}, 0.3)`;
+                        const [huUnderlineSide] = ctx.isVertical ? ["border-right"] : ["border-bottom"];
+                        return [
+                            `background-color: ${huFillTint} !important`,
+                            `${huUnderlineSide}: 0.1em solid ${adjustedHUTint} !important`,
+                            "box-sizing: border-box !important",
+                        ].join("; ");
+                    }
                     case DecorationStyleType.Highlight:
                     default: {
                         const adjustedHighlightTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;

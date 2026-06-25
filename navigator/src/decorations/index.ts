@@ -47,7 +47,6 @@ export function resolveDecorationForWire(
                 layout: tpl.layout,
                 width: tpl.width,
                 stylesheet: tpl.stylesheet,
-                // isActive: style.isActive, // RFC 008 — TBD
                 element: tpl.element(decoration),
             },
         };
@@ -69,7 +68,6 @@ export type DecorationObserver = _DecorationObserver<Decoration>;
 
 function stylesEqual(a: DecorationStyle, b: DecorationStyle): boolean {
     if (a.type !== b.type) return false;
-    // if ((a.isActive ?? false) !== (b.isActive ?? false)) return false; // RFC 008 — TBD
     if (a.type === DecorationStyleType.Template) {
         const ta = a as HTMLDecorationTemplate;
         const tb = b as HTMLDecorationTemplate;
@@ -113,6 +111,7 @@ export interface DecoratorConfig {
 
 const BUILTIN_DECORATION_TYPES = new Set<string>([
     DecorationStyleType.Highlight,
+    DecorationStyleType.HighlightUnderline,
     DecorationStyleType.Underline,
     DecorationStyleType.Strikethrough,
     DecorationStyleType.Outline,

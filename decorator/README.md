@@ -121,7 +121,7 @@ class Decorator {
 | `Decoration` | `{ id, locator, style, extras? }` |
 | `DecorationStyle` | `BuiltinDecorationStyle \| HTMLDecorationTemplate` |
 | `BuiltinDecorationStyle` | `{ type?, tint?, layout?, width?, enforceContrast? }` |
-| `DecorationStyleType` | `"highlight" \| "underline" \| "strikethrough" \| "outline" \| "textColor" \| "mask" \| "template"` |
+| `DecorationStyleType` | `"highlight" \| "highlightUnderline" \| "underline" \| "strikethrough" \| "outline" \| "textColor" \| "mask" \| "template"` |
 | `DecorationLayout` | `"boxes" \| "bounds"` |
 | `DecorationWidth` | `"wrap" \| "viewport" \| "bounds" \| "page"` |
 | `DecorationObserver` | `{ onDecorationActivated, onDecorationPointerEnter?, onDecorationPointerLeave? }` |

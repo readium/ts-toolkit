@@ -115,7 +115,6 @@ function _decorationsEqual(a: Decoration, b: Decoration): boolean {
         ? (b.locator.locations as any).serialize() : b.locator.locations;
     if (JSON.stringify(locA) !== JSON.stringify(locB)) return false;
     if (a.style.type !== b.style.type) return false;
-    // if ((a.style.isActive ?? false) !== (b.style.isActive ?? false)) return false; // RFC 008 — TBD
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sa = a.style as any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
