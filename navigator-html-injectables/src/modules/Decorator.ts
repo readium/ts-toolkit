@@ -833,7 +833,7 @@ class DecorationGroup {
      * Returns the group container element, after making sure it exists.
      * @returns Group's container
      */
-    private requireContainer(experimental=false): [HTMLStyleElement, any] | HTMLDivElement {
+    private requireContainer(experimental=false): HTMLStyleElement | HTMLDivElement {
         if (experimental) {
             // Setup <style> for highlights
             let d: HTMLStyleElement;
