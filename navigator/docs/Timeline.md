@@ -123,20 +123,19 @@ const segments = navigator.timeline.segmentsForHref(locator.href);
 renderProgressBar(segments);
 ```
 
-### `itemAtProgression(href, progression, duration?)`
+### `itemAtProgression(href, progression)`
 
-Returns the item that best corresponds to a progression value (0–1) within a resource. Pass `duration` in seconds for time-based resolution (audio). Without `duration`, uses scroll progression for EPUB or evenly divides the children by index.
+Returns the item that best corresponds to a progression value (0–1) within a resource. The resolution strategy is derived automatically from the publication's profile and manifest:
+
+- **Audiobook:** the track's `duration` from the manifest is used to convert the progression to an absolute time, matched against NPT fragments.
+- **EPUB:** uses `TimelineItem.scroll` values if present, otherwise divides children evenly by index.
 
 Use this for hover inference on a progress bar.
 
 ```ts
 progressBar.addEventListener('mousemove', (e) => {
   const fraction = e.offsetX / progressBar.clientWidth;
-  const hovered = navigator.timeline.itemAtProgression(
-    currentLocator.href,
-    fraction,
-    audioDuration,   // omit for EPUB
-  );
+  const hovered = navigator.timeline.itemAtProgression(currentLocator.href, fraction);
   tooltip.textContent = hovered?.title ?? '';
 });
 ```

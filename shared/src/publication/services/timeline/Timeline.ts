@@ -30,15 +30,17 @@ export interface PublicationLike {
 export class Timeline {
     private readonly _allItems: TimelineItem[];
     private readonly linkMap: Map<TimelineItem, Link>;
+    private readonly _conformsTo: readonly Profile[];
     private _depth: number | undefined;
     private _items: TimelineItem[] | undefined;
     private _flat: TimelineItem[] | undefined;
     /** Populated when depth is set; maps cloned items from trimToDepth back to their Links. */
     private _trimmedLinkMap: Map<TimelineItem, Link> = new Map();
 
-    constructor(items: TimelineItem[], linkMap: Map<TimelineItem, Link>) {
+    constructor(items: TimelineItem[], linkMap: Map<TimelineItem, Link>, conformsTo: readonly Profile[] = []) {
         this._allItems = items;
         this.linkMap = linkMap;
+        this._conformsTo = conformsTo;
     }
 
     static build(
@@ -48,6 +50,7 @@ export class Timeline {
         const tocLinks = publication.toc?.items ?? [];
         const roLinks = publication.readingOrder.items;
         const { depth } = options;
+        const conformsTo = publication.metadata?.conformsTo ?? [];
         const linkMap = new Map<TimelineItem, Link>();
         const items: TimelineItem[] = [];
 
@@ -72,7 +75,7 @@ export class Timeline {
             items.push(item);
         }
 
-        return new Timeline(items, linkMap);
+        return new Timeline(items, linkMap, conformsTo);
     }
 
     /**
@@ -186,12 +189,15 @@ export class Timeline {
         return item.children?.length ? item.children : [item];
     }
 
-    itemAtProgression(href: string, progression: number, duration?: number): TimelineItem | undefined {
+    itemAtProgression(href: string, progression: number): TimelineItem | undefined {
         const bare = href.split("#")[0];
         const item = this.items.find(i => this.itemMatchesHref(i, bare));
         if (!item) return undefined;
         if (!item.children?.length) return item;
 
+        const duration = this._conformsTo.includes(Profile.AUDIOBOOK)
+            ? this.linkFor(item)?.duration
+            : undefined;
         if (duration !== undefined) {
             const time = progression * duration;
             let match: TimelineItem = item;
