@@ -1,0 +1,420 @@
+# Timeline
+
+> **This API is in active development and will evolve.** Behaviour, method signatures, and the shape of `TimelineItem` are subject to change without notice until this notice is removed.
+
+A `Timeline` gives reading applications a unified, format-agnostic view of a publication's structure. It answers questions like "What chapter am I in right now?", "Where does the next chapter begin?", and "Which section does this search result belong to?" — consistently across EPUBs, audiobooks, PDFs, and web publications.
+
+## Concepts
+
+### TimelineItem
+
+A `TimelineItem` represents one structural entry in the publication:
+
+```ts
+interface TimelineItem {
+  title: string;         // Display title of this entry
+  references: string[];  // Hrefs with optional fragments that identify where this entry starts
+  role?: string[];       // Structural roles, e.g. ["chapter"], ["part"]
+  position?: string;     // Display-ready position label: page number or formatted timestamp
+  scroll?: number;       // Scroll progression (0–1) for entries that start mid-resource
+  children?: TimelineItem[];
+}
+```
+
+`references` holds one or more hrefs identifying where this entry starts in the reading order. Examples:
+- Audio: `["track1.mp3#t=1620"]` (NPT time fragment)
+- EPUB: `["chapter3.html#section-2"]` (HTML id fragment)
+- PDF: `["#page=42"]` (page fragment)
+
+### Timeline
+
+`Timeline` is the container built once from a publication's reading order and table of contents. It is a lazy singleton on `Publication`: the first access builds it and the result is cached.
+
+### How it is built
+
+**The reading order is the source of truth.** Every item in the reading order becomes exactly one top-level `TimelineItem`. The TOC is consulted only to enrich those items — never to introduce new top-level entries.
+
+**Title resolution** (per reading order item, first match wins):
+1. The reading order item's own `title`.
+2. A TOC entry whose href points to the start of that resource (bare href, or `#t=0` for audio).
+3. If exactly one fragment-based TOC entry references this resource, its title.
+4. A positional placeholder (`Resource N`) when no title can be reliably derived.
+
+**Children:** all TOC entries that reference a reading order resource become flat children of the corresponding timeline item, in TOC declaration order. No parent-child relationships within the TOC are reconstructed — that inference requires role context and is planned for a future iteration.
+
+TOC entries that do not match any reading order item are ignored entirely.
+
+### Depth
+
+The `depth` option controls how many levels deep into the TOC hierarchy the timeline looks, for both title resolution and child collection. Level 1 means only top-level TOC entries; level 2 adds their children; and so on. `undefined` means no limit.
+
+Depth can be set at build time (via `Timeline.build`) or adjusted at runtime via the `depth` setter. Setting it at runtime trims the cached tree without rebuilding from scratch. Setting the same value again is a no-op.
+
+## Access
+
+```ts
+publication.timeline  // lazy, cached on first access
+navigator.timeline    // delegates to publication.timeline (may also augment with additional data)
+```
+
+Prefer `navigator.timeline` when a navigator is available: the EPUB navigator augments the timeline with additional data e.g. positions list, populating `TimelineItem.position` (page number) and `TimelineItem.scroll` (scroll progression within a resource). The audio navigator augments with formatted timestamps.
+
+```ts
+publication.timeline.depth = 2;   // limit visible tree depth at runtime
+```
+
+## Observing changes
+
+Both `EpubNavigatorListeners` and `AudioNavigatorListeners` expose a `timelineItemChanged` callback. It fires whenever the active `TimelineItem` changes — not on every position tick, only when the item actually changes. It receives `undefined` when no item is active.
+
+```ts
+// EPUB
+const listeners: EpubNavigatorListeners = {
+  timelineItemChanged(item: TimelineItem | undefined): void {
+    chapterTitle.textContent = item?.title ?? '';
+  },
+  // …
+};
+
+// Audio
+const listeners: AudioNavigatorListeners = {
+  timelineItemChanged(item: TimelineItem | undefined): void {
+    chapterTitle.textContent = item?.title ?? '';
+  },
+  // …
+};
+```
+
+Use this to keep chapter titles, breadcrumbs, or previous/next navigation in sync without polling. See `positionChanged` if you need every position tick.
+
+## Methods
+
+### `locate(locator)`
+
+Returns the most specific `TimelineItem` covering the given locator's position.
+
+- **Audio:** matches on the `#t=` NPT time fragment, returning the entry whose start time is ≤ the current time and closest to it.
+- **EPUB (paginated):** matches on the HTML id fragment if present, then falls back to the best scroll progression match.
+- **Fallback:** bare href match, returning the top-level item for the resource.
+
+```ts
+const item = navigator.timeline.locate(navigator.currentLocator);
+console.log(item?.title);
+```
+
+### `adjacentTo(item)`
+
+Returns `{ previous, next }` relative to the given item in the flattened timeline. Both values are `undefined` at the boundaries.
+
+```ts
+const { previous, next } = navigator.timeline.adjacentTo(currentItem);
+prevButton.disabled = !previous;
+nextButton.disabled = !next;
+prevLabel.textContent = previous?.title ?? '';
+nextLabel.textContent = next?.title ?? '';
+```
+
+### `segmentsForHref(href)`
+
+Returns the timeline segments within a reading order resource: the item's children if it has any, otherwise the item itself. Use this to render a labelled progress bar.
+
+```ts
+const segments = navigator.timeline.segmentsForHref(locator.href);
+renderProgressBar(segments);
+```
+
+### `itemAtProgression(href, progression, duration?)`
+
+Returns the item that best corresponds to a progression value (0–1) within a resource. Pass `duration` in seconds for time-based resolution (audio). Without `duration`, uses scroll progression for EPUB or evenly divides the children by index.
+
+Use this for hover inference on a progress bar.
+
+```ts
+progressBar.addEventListener('mousemove', (e) => {
+  const fraction = e.offsetX / progressBar.clientWidth;
+  const hovered = navigator.timeline.itemAtProgression(
+    currentLocator.href,
+    fraction,
+    audioDuration,   // omit for EPUB
+  );
+  tooltip.textContent = hovered?.title ?? '';
+});
+```
+
+### `ancestors(item)`
+
+Returns the ordered ancestor path from root to the immediate parent of `item`. Empty array if the item is top-level.
+
+```ts
+const path = navigator.timeline.ancestors(currentItem);
+breadcrumb.textContent = [...path, currentItem].map(a => a.title).join(' › ');
+```
+
+### `linkFor(item)`
+
+Returns the source `Link` from the publication manifest that this item was built from. Useful when you need to navigate to the item's starting position.
+
+```ts
+const link = navigator.timeline.linkFor(item);
+if (link) {
+  const locator = publication.locatorFromLink(link);
+  navigator.go(locator);
+}
+```
+
+## Use Cases
+
+### Running header (current chapter title)
+
+Keep a header in sync with reading position using `timelineItemChanged`:
+
+```ts
+const listeners = {
+  timelineItemChanged(item: TimelineItem | undefined): void {
+    document.getElementById('chapter-header').textContent = item?.title ?? '';
+  },
+};
+```
+
+### Previous / Next chapter navigation
+
+```ts
+let currentItem: TimelineItem | undefined;
+
+const listeners = {
+  timelineItemChanged(item: TimelineItem | undefined): void {
+    currentItem = item;
+    if (!item) return;
+
+    const { previous, next } = navigator.timeline.adjacentTo(item);
+    prevChapterButton.disabled = !previous;
+    nextChapterButton.disabled = !next;
+    prevChapterLabel.textContent = previous?.title ?? '';
+    nextChapterLabel.textContent = next?.title ?? '';
+  },
+};
+
+prevChapterButton.addEventListener('click', () => {
+  if (!currentItem) return;
+  const { previous } = navigator.timeline.adjacentTo(currentItem);
+  if (!previous) return;
+  const link = navigator.timeline.linkFor(previous);
+  if (link) navigator.go(publication.locatorFromLink(link));
+});
+```
+
+### Progress bar with chapter segments
+
+Render chapter boundaries as tick marks on a progress bar, and show which chapter the user would land in when they hover:
+
+```ts
+function renderProgressBar(locator: Locator, duration: number) {
+  const segments = navigator.timeline.segmentsForHref(locator.href);
+  const container = document.getElementById('progress-bar');
+
+  // Render chapter ticks
+  container.innerHTML = '';
+  segments.forEach((segment, i) => {
+    const tick = document.createElement('div');
+    tick.className = 'chapter-tick';
+
+    if (duration > 0) {
+      // Audio: use start time
+      const link = navigator.timeline.linkFor(segment);
+      const time = parseTimeFromHref(link?.href ?? '');
+      tick.style.left = `${(time / duration) * 100}%`;
+    } else {
+      // EPUB: evenly spaced (or use segment.scroll if available)
+      tick.style.left = `${(i / segments.length) * 100}%`;
+    }
+
+    container.appendChild(tick);
+  });
+}
+
+// Hover tooltip
+progressBar.addEventListener('mousemove', (e) => {
+  const fraction = e.offsetX / progressBar.clientWidth;
+  const hovered = navigator.timeline.itemAtProgression(
+    currentLocator.href,
+    fraction,
+    audioDuration,
+  );
+  tooltip.textContent = hovered?.title ?? '';
+  tooltip.style.left = `${e.offsetX}px`;
+});
+```
+
+### Breadcrumb
+
+Show the full structural path to the current item:
+
+```ts
+const listeners = {
+  timelineItemChanged(item: TimelineItem | undefined): void {
+    if (!item) {
+      breadcrumb.textContent = '';
+      return;
+    }
+    const path = navigator.timeline.ancestors(item);
+    breadcrumb.textContent = [...path, item].map(a => a.title).join(' › ');
+  },
+};
+```
+
+### Grouping search results by chapter
+
+```ts
+function groupResultsByChapter(locators: Locator[]): Map<string, Locator[]> {
+  const groups = new Map<string, Locator[]>();
+
+  for (const locator of locators) {
+    const item = navigator.timeline.locate(locator);
+    const key = item?.title ?? 'Unknown';
+    const existing = groups.get(key) ?? [];
+    existing.push(locator);
+    groups.set(key, existing);
+  }
+
+  return groups;
+}
+```
+
+### Contextualizing bookmarks and highlights
+
+Attach chapter context when saving annotations:
+
+```ts
+function saveHighlight(locator: Locator, text: string) {
+  const item = navigator.timeline.locate(locator);
+  const chapterTitle = item?.title;
+  const chapterPosition = item?.position;
+
+  db.saveHighlight({ locator, text, chapterTitle, chapterPosition });
+}
+```
+
+## Complete Example — EPUB Chapter Navigation UI
+
+```ts
+import { EpubNavigator, EpubNavigatorListeners, Locator, TimelineItem } from "@readium/navigator";
+
+let currentItem: TimelineItem | undefined;
+
+const listeners: EpubNavigatorListeners = {
+  positionChanged(locator: Locator): void {
+    const progression = locator.locations.progression ?? 0;
+    (document.getElementById('progress') as HTMLInputElement).value = String(progression);
+  },
+
+  timelineItemChanged(item: TimelineItem | undefined): void {
+    currentItem = item;
+
+    // Running header
+    document.getElementById('chapter-title')!.textContent = item?.title ?? '';
+
+    if (!item) return;
+
+    // Previous / Next labels
+    const { previous, next } = navigator.timeline.adjacentTo(item);
+    (document.getElementById('prev-chapter') as HTMLButtonElement).disabled = !previous;
+    (document.getElementById('next-chapter') as HTMLButtonElement).disabled = !next;
+    document.getElementById('prev-label')!.textContent = previous?.title ?? '';
+    document.getElementById('next-label')!.textContent = next?.title ?? '';
+
+    // Breadcrumb
+    const path = navigator.timeline.ancestors(item);
+    document.getElementById('breadcrumb')!.textContent =
+      [...path, item].map(a => a.title).join(' › ');
+  },
+
+  // …other required listeners
+};
+
+const navigator = new EpubNavigator(container, publication, listeners, positions);
+
+// Chapter navigation
+document.getElementById('prev-chapter')!.addEventListener('click', () => {
+  if (!currentItem) return;
+  const { previous } = navigator.timeline.adjacentTo(currentItem);
+  if (!previous) return;
+  const link = navigator.timeline.linkFor(previous);
+  if (link) navigator.go(publication.locatorFromLink(link));
+});
+
+document.getElementById('next-chapter')!.addEventListener('click', () => {
+  if (!currentItem) return;
+  const { next } = navigator.timeline.adjacentTo(currentItem);
+  if (!next) return;
+  const link = navigator.timeline.linkFor(next);
+  if (link) navigator.go(publication.locatorFromLink(link));
+});
+```
+
+## Complete Example — Audio Chapter Segments
+
+```ts
+import { AudioNavigator, AudioNavigatorListeners, Locator, TimelineItem } from "@readium/navigator";
+
+let audioDuration = 0;
+let currentLocator: Locator | undefined;
+
+const listeners: AudioNavigatorListeners = {
+  metadataLoaded(metadata): void {
+    audioDuration = metadata.duration;
+    if (currentLocator) renderSegments(currentLocator.href);
+  },
+
+  positionChanged(locator: Locator): void {
+    currentLocator = locator;
+    const progression = locator.locations.progression ?? 0;
+    (document.getElementById('progress') as HTMLInputElement).value = String(progression);
+  },
+
+  timelineItemChanged(item: TimelineItem | undefined): void {
+    document.getElementById('chapter-title')!.textContent = item?.title ?? '';
+
+    if (!item) return;
+    const { previous, next } = navigator.timeline.adjacentTo(item);
+    document.getElementById('prev-label')!.textContent = previous?.title ?? '';
+    document.getElementById('next-label')!.textContent = next?.title ?? '';
+  },
+
+  // …other required listeners
+};
+
+const navigator = new AudioNavigator(publication, listeners);
+
+function renderSegments(href: string) {
+  const segments = navigator.timeline.segmentsForHref(href);
+  const bar = document.getElementById('chapter-ticks')!;
+  bar.innerHTML = '';
+
+  segments.forEach(segment => {
+    const tick = document.createElement('div');
+    tick.className = 'tick';
+    const link = navigator.timeline.linkFor(segment);
+    if (link) {
+      const t = parseNptFromHref(link.href);
+      if (t !== undefined && audioDuration > 0) {
+        tick.style.left = `${(t / audioDuration) * 100}%`;
+        tick.title = segment.title;
+        bar.appendChild(tick);
+      }
+    }
+  });
+}
+
+// Hover tooltip
+document.getElementById('progress')!.addEventListener('mousemove', (e) => {
+  if (!currentLocator) return;
+  const el = e.currentTarget as HTMLInputElement;
+  const fraction = e.offsetX / el.clientWidth;
+  const hovered = navigator.timeline.itemAtProgression(
+    currentLocator.href,
+    fraction,
+    audioDuration,
+  );
+  document.getElementById('hover-tooltip')!.textContent = hovered?.title ?? '';
+});
+```
