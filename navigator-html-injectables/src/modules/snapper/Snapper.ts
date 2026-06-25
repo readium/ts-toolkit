@@ -10,6 +10,80 @@ export abstract class Snapper extends Module {
 
     private protected = false;
 
+    // Timeline fragment tracking
+    protected timelineObserver: IntersectionObserver | null = null;
+    protected timelineEntries: Map<string, Element> = new Map();
+    protected visibleFragmentIds: Set<string> = new Set();
+    protected cachedFragmentIds: string[] = [];
+
+    protected setupTimelineObserver(): void {
+        if (this.timelineObserver) this.timelineObserver.disconnect();
+        this.timelineObserver = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    if (entry.isIntersecting)
+                        this.visibleFragmentIds.add((entry.target as HTMLElement).id);
+                    else
+                        this.visibleFragmentIds.delete((entry.target as HTMLElement).id);
+                }
+            },
+            { threshold: [0.01] }
+        );
+    }
+
+    protected observeTimelineElements(wnd: ReadiumWindow): void {
+        if (!this.timelineObserver) return;
+        this.timelineObserver.disconnect();
+        this.visibleFragmentIds.clear();
+        this.timelineEntries.clear();
+        for (const id of this.cachedFragmentIds) {
+            const el = wnd.document.getElementById(id);
+            if (el) {
+                this.timelineEntries.set(id, el);
+                this.timelineObserver.observe(el);
+            }
+        }
+    }
+
+    /**
+     * Returns the ID of the currently active timeline fragment:
+     * 1. Primary — IntersectionObserver: returns the first visible element in DOM (reading) order.
+     *    This is direction-agnostic; works for LTR, RTL, and vertical writing modes.
+     * 2. Fallback — rect scan: used when IntersectionObserver hasn't fired yet (e.g. programmatic
+     *    navigation). Iterates elements in DOM order, returns the last one whose leading edge has
+     *    already been scrolled past. Subclasses implement `hasScrolledPast` for their layout.
+     */
+    protected currentTimelineFragment(): string | undefined {
+        const inDomOrder = (a: string, b: string): number => {
+            const ea = this.timelineEntries.get(a);
+            const eb = this.timelineEntries.get(b);
+            if (!ea || !eb) return 0;
+            const cmp = ea.compareDocumentPosition(eb);
+            return cmp & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+        };
+
+        if (this.visibleFragmentIds.size > 0) {
+            return Array.from(this.visibleFragmentIds).sort(inDomOrder)[0];
+        }
+
+        // Fallback: last element in DOM order whose leading edge has been scrolled past
+        const sorted = Array.from(this.timelineEntries.keys()).sort(inDomOrder);
+        let nearestId: string | undefined;
+        for (const id of sorted) {
+            const el = this.timelineEntries.get(id)!;
+            if (this.hasScrolledPast(el)) nearestId = id;
+            else break;
+        }
+        return nearestId;
+    }
+
+    /**
+     * Returns true if the element's leading edge (in reading direction) has been scrolled past
+     * — i.e. the element is before the current viewport position.
+     * Subclasses implement this for their specific scroll axis and reading direction.
+     */
+    protected abstract hasScrolledPast(el: Element): boolean;
+
     buildStyles() {
         return `
         html, body {

@@ -68,6 +68,13 @@ export class CJKVerticalSnapper extends Snapper {
         return Math.max(0, this.doc().scrollWidth - this.wnd.innerWidth);
     }
 
+    protected hasScrolledPast(el: Element): boolean {
+        const rect = el.getBoundingClientRect();
+        // vertical-rl: content flows right→left; leading edge is right, scrolled past when off-screen right.
+        // vertical-lr: content flows left→right; leading edge is left, scrolled past when off-screen left.
+        return this.verticalLR ? rect.right <= 0 : rect.left >= this.wnd.innerWidth;
+    }
+
     private reportProgress() {
         if (!this.comms.ready) return;
         const scrollWidth = this.doc().scrollWidth;
@@ -82,7 +89,8 @@ export class CJKVerticalSnapper extends Snapper {
 
         this.comms.send("progress", {
             start: progress,
-            end: viewportEnd
+            end: viewportEnd,
+            fragmentId: this.currentTimelineFragment()
         });
     }
 
@@ -150,6 +158,7 @@ export class CJKVerticalSnapper extends Snapper {
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
+        this.setupTimelineObserver();
 
         this.initialScrollHandled = false;
         this.lastScrollLeft = 0;
@@ -311,6 +320,12 @@ export class CJKVerticalSnapper extends Snapper {
             ack(true);
         });
 
+        comms.register("timeline_entries", CJKVerticalSnapper.moduleName, (data, ack) => {
+            this.cachedFragmentIds = Array.isArray(data) ? data as string[] : [];
+            this.observeTimelineElements(wnd);
+            ack(true);
+        });
+
         comms.log("CJKVerticalSnapper Mounted");
         return true;
     }
@@ -326,6 +341,11 @@ export class CJKVerticalSnapper extends Snapper {
             this.patternAnalyzer = null;
             this.isScrollProtectionEnabled = false;
         }
+
+        this.timelineObserver?.disconnect();
+        this.timelineObserver = null;
+        this.visibleFragmentIds.clear();
+        this.timelineEntries.clear();
 
         comms.log("CJKVerticalSnapper Unmounted");
         return true;

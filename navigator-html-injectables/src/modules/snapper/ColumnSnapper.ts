@@ -72,6 +72,13 @@ export class ColumnSnapper extends Snapper {
         return this.rtl ? Math.abs(raw) : Math.max(0, this.wnd.scrollX > 0 ? this.wnd.scrollX : raw);
     }
 
+    protected hasScrolledPast(el: Element): boolean {
+        const rect = el.getBoundingClientRect();
+        // LTR: element's right edge left the viewport's left boundary.
+        // RTL: element's left edge passed the viewport's right boundary.
+        return this.rtl ? rect.left >= this.wnd.innerWidth : rect.right <= 0;
+    }
+
     reportProgress() {
         const scrollWidth = this.cachedScrollWidth;
         const viewportWidth = this.wnd.innerWidth;
@@ -83,7 +90,8 @@ export class ColumnSnapper extends Snapper {
         const viewportEnd = Math.max(0, Math.min(1, (norm + viewportWidth) / scrollWidth));
         this.comms.send("progress", {
             start: progress,
-            end: viewportEnd
+            end: viewportEnd,
+            fragmentId: this.currentTimelineFragment()
         });
     }
 
@@ -330,6 +338,7 @@ export class ColumnSnapper extends Snapper {
         this.wnd = wnd;
         this.comms = comms;
         this.rtl = isRTL(wnd);
+        this.setupTimelineObserver();
         if(!super.mount(wnd, comms)) return false;
 
         wnd.navigator.epubReadingSystem && (wnd.navigator.epubReadingSystem.layoutStyle = "paginated");
@@ -608,6 +617,12 @@ export class ColumnSnapper extends Snapper {
             ack(true);
         });
 
+        comms.register("timeline_entries", ColumnSnapper.moduleName, (data, ack) => {
+            this.cachedFragmentIds = Array.isArray(data) ? data as string[] : [];
+            this.observeTimelineElements(wnd);
+            ack(true);
+        });
+
         // Add interaction listeners
         wnd.addEventListener("touchstart", this.onTouchStarter, { passive: true });
         wnd.addEventListener("touchend", this.onTouchEnder, { passive: true });
@@ -640,6 +655,11 @@ export class ColumnSnapper extends Snapper {
         wnd.removeEventListener("resize", this.onWidthChanger);
 
         wnd.document.getElementById(COLUMN_SNAPPER_STYLE_ID)?.remove();
+
+        this.timelineObserver?.disconnect();
+        this.timelineObserver = null;
+        this.visibleFragmentIds.clear();
+        this.timelineEntries.clear();
 
         comms.log("ColumnSnapper Unmounted");
         return super.unmount(wnd, comms);

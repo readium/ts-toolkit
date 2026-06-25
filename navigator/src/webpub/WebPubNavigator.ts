@@ -187,7 +187,11 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             cssProperties,
             this._injector,
             this._contentProtection,
-            this._keyboardPeripherals
+            this._keyboardPeripherals,
+            (href) => this.pub.timeline.segmentsForHref(href)
+                .flatMap(item => item.references)
+                .map(ref => { const h = ref.indexOf('#'); return h >= 0 ? ref.slice(h + 1) : ''; })
+                .filter(Boolean)
         );
 
         await this.apply();
@@ -609,7 +613,10 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
         this.updateViewport(progression);
         this.listeners.positionChanged(this.currentLocation);
-        this._notifyTimelineChange(this.currentLocation);
+        const locatorForTimeline = progression.fragmentId
+            ? this.currentLocation.copyWithLocations({ fragments: [`#${progression.fragmentId}`] })
+            : this.currentLocation;
+        this._notifyTimelineChange(locatorForTimeline);
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
     }
 

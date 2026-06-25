@@ -37,6 +37,10 @@ export class ScrollSnapper extends Snapper {
         return this.wnd.document.scrollingElement as HTMLElement;
     }
 
+    protected hasScrolledPast(el: Element): boolean {
+        return el.getBoundingClientRect().bottom <= 0;
+    }
+
     private reportProgress() {
         if (!this.comms.ready) return;
         // We have to round up the scroll position because
@@ -50,7 +54,8 @@ export class ScrollSnapper extends Snapper {
 
         this.comms.send("progress", {
             start: progress,
-            end: viewportEnd
+            end: viewportEnd,
+            fragmentId: this.currentTimelineFragment()
         });
     }
 
@@ -124,6 +129,7 @@ export class ScrollSnapper extends Snapper {
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
+        this.setupTimelineObserver();
 
         this.initialScrollHandled = false;
         this.lastScrollTop = 0;
@@ -289,6 +295,12 @@ export class ScrollSnapper extends Snapper {
             ack(true);
         });
 
+        comms.register("timeline_entries", ScrollSnapper.moduleName, (data, ack) => {
+            this.cachedFragmentIds = Array.isArray(data) ? data as string[] : [];
+            this.observeTimelineElements(wnd);
+            ack(true);
+        });
+
         comms.log("ScrollSnapper Mounted");
         return true;
     }
@@ -298,6 +310,10 @@ export class ScrollSnapper extends Snapper {
         this.resizeObserver.disconnect();
         if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
         wnd.document.getElementById(SCROLL_SNAPPER_STYLE_ID)?.remove();
+        this.timelineObserver?.disconnect();
+        this.timelineObserver = null;
+        this.visibleFragmentIds.clear();
+        this.timelineEntries.clear();
 
         if (this.patternAnalyzer) {
             this.patternAnalyzer.clear();

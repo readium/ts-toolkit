@@ -31,6 +31,10 @@ export class WebPubSnapper extends Snapper {
         return this.wnd.document.scrollingElement as HTMLElement;
     }
 
+    protected hasScrolledPast(el: Element): boolean {
+        return el.getBoundingClientRect().bottom <= 0;
+    }
+
     private reportProgress() {
         if (!this.comms.ready) return;
 
@@ -42,7 +46,8 @@ export class WebPubSnapper extends Snapper {
 
         this.comms.send("progress", {
             start: progress,
-            end: viewportEnd
+            end: viewportEnd,
+            fragmentId: this.currentTimelineFragment()
         });
     }
 
@@ -115,6 +120,7 @@ export class WebPubSnapper extends Snapper {
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
+        this.setupTimelineObserver();
 
         this.initialScrollHandled = false;
         this.lastScrollTop = 0;
@@ -259,6 +265,12 @@ export class WebPubSnapper extends Snapper {
             ack(true);
         });
 
+        comms.register("timeline_entries", WebPubSnapper.moduleName, (data, ack) => {
+            this.cachedFragmentIds = Array.isArray(data) ? data as string[] : [];
+            this.observeTimelineElements(wnd);
+            ack(true);
+        });
+
         comms.log("WebPubSnapper Mounted");
         return true;
     }
@@ -273,6 +285,11 @@ export class WebPubSnapper extends Snapper {
             this.patternAnalyzer = null;
             this.isScrollProtectionEnabled = false;
         }
+
+        this.timelineObserver?.disconnect();
+        this.timelineObserver = null;
+        this.visibleFragmentIds.clear();
+        this.timelineEntries.clear();
 
         comms.log("WebPubSnapper Unmounted");
         return true;

@@ -24,6 +24,7 @@ export type IKeyboardPeripheralsConfig = Array<Omit<KeyboardPeripheral, 'type'> 
 export interface ProgressionRange {
     start: number;
     end: number;
+    fragmentId?: string;  // DOM element ID of the currently active timeline anchor
 }
 
 export interface VisualNavigatorViewport {
