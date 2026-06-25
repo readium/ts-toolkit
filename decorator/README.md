@@ -74,11 +74,32 @@ class DecorationController {
     // Replace all decorations for a group. Diffs against previous state.
     applyDecorations(decorations: Decoration[], group: string): void
 
-    // Register a listener for when a user taps/clicks a decoration marked isActive: true.
+    // Register an observer for activation (tap/click) and optional hover events on a group.
+    // All decorations in the group become tappable once an observer is registered.
+    // Hover tracking is enabled automatically when the observer declares onDecorationPointerEnter
+    // or onDecorationPointerLeave.
     registerDecorationObserver(group: string, observer: DecorationObserver): void
     unregisterDecorationObserver(observer: DecorationObserver): void
 
     destroy(): void
+}
+```
+
+### `DecorationObserver`
+
+```ts
+interface DecorationObserver {
+    // Called when a decoration is tapped/clicked. Return true to consume the event
+    // (suppresses default navigation). All decorations in the group fire this once
+    // an observer is registered — no per-decoration flag required.
+    onDecorationActivated(event: DecorationActivatedEvent): boolean;
+
+    // Called when the pointer enters a decoration. Registering either hover method
+    // automatically enables hover tracking for the group.
+    onDecorationPointerEnter?(event: DecorationPointerEnterEvent): void;
+
+    // Called when the pointer leaves a decoration.
+    onDecorationPointerLeave?(event: { decoration: Decoration; group: string }): void;
 }
 ```
 
@@ -101,4 +122,7 @@ class Decorator {
 | `DecorationStyleType` | `"highlight" \| "underline" \| "outline" \| "textColor" \| "mask" \| "template"` |
 | `DecorationLayout` | `"boxes" \| "bounds"` |
 | `DecorationWidth` | `"wrap" \| "viewport" \| "bounds" \| "page"` |
+| `DecorationObserver` | `{ onDecorationActivated, onDecorationPointerEnter?, onDecorationPointerLeave? }` |
+| `DecorationActivatedEvent` | `{ decoration, group, rect?, point? }` |
+| `DecorationPointerEnterEvent` | `{ decoration, group, rect?, point? }` |
 | `IComms` | Interface implemented by both `Comms` (postMessage) and `DirectCommsFrame` |

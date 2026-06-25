@@ -35,7 +35,7 @@ interface BuiltinDecorationStyle {
   tint?: string;                // Any CSS color — "#ffff00", "rgba(255,200,0,0.4)", etc.
   layout?: DecorationLayout;    // Defaults to Boxes
   width?: DecorationWidth;      // Defaults to Wrap
-  isActive?: boolean;           // Set to true to allow the user to click/tap this decoration
+  isActive?: boolean;           // Visual active state — renders the decoration in its activated appearance
   enforceContrast?: boolean;    // When true (default), tint is adjusted for contrast against the background
 }
 ```
@@ -78,7 +78,7 @@ interface HTMLDecorationTemplate {
   width: DecorationWidth;                          // Required
   element: (decoration: Decoration) => string;     // Returns an HTML snippet for each decoration
   stylesheet?: string;                             // CSS injected into the resource
-  isActive?: boolean;
+  isActive?: boolean;                              // Visual active state
 }
 ```
 
@@ -154,7 +154,7 @@ if (navigator.supportsDecorationStyle("app-sidemark")) {
 
 ## Activation (Click / Tap)
 
-To make a decoration respond to user interaction, set `isActive: true` in its style and register a `DecorationObserver` for the group.
+To make decorations in a group respond to user interaction, register a `DecorationObserver` for that group. All decorations in the group become tappable once an observer is registered — no per-decoration flag is required.
 
 ```ts
 import { DecorationObserver, DecorationActivationEvent } from "@readium/navigator";
@@ -176,8 +176,6 @@ const highlightObserver: DecorationObserver = {
 navigator.registerDecorationObserver("user-highlights", highlightObserver);
 ```
 
-Then create the decoration with `isActive: true`:
-
 ```ts
 navigator.applyDecorations([
   {
@@ -186,7 +184,6 @@ navigator.applyDecorations([
     style: {
       type: DecorationStyleType.Highlight,
       tint: "#ffff00",
-      isActive: true,        // ← required for activation events
     },
     extras: { noteId: "note-42" },  // ← passed through to DecorationActivationEvent
   },
@@ -232,6 +229,41 @@ onDecorationActivated(event: DecorationActivationEvent): boolean {
 Returning `true` from `onDecorationActivated` tells the navigator that you handled the event. The navigator will **not** process the tap/click further — no page turn, no `miscPointer`, no `tap`/`click` listener call.
 
 Returning `false` (or not having a registered observer) lets the tap/click fall through to normal navigation.
+
+## Hover (Pointer Enter / Leave)
+
+To track pointer hover over decorations in a group, declare `onDecorationPointerEnter` and/or `onDecorationPointerLeave` on the observer. Hover tracking is automatically enabled for the group when either method is present, and disabled when all observers for that group are removed.
+
+```ts
+import { DecorationObserver, DecorationPointerEnterEvent } from "@readium/navigator";
+
+const observer: DecorationObserver = {
+  onDecorationActivated(event): boolean {
+    return false;
+  },
+  onDecorationPointerEnter(event: DecorationPointerEnterEvent): void {
+    console.log("Pointer entered:", event.decoration.id);
+    console.log("Rect:", event.rect);
+    console.log("Point:", event.point);
+  },
+  onDecorationPointerLeave(event: { decoration: Decoration; group: string }): void {
+    console.log("Pointer left:", event.decoration.id);
+  },
+};
+
+navigator.registerDecorationObserver("user-highlights", observer);
+```
+
+### `DecorationPointerEnterEvent`
+
+```ts
+interface DecorationPointerEnterEvent {
+  decoration: Decoration;
+  group: string;
+  rect?: { top: number; left: number; width: number; height: number };
+  point?: { x: number; y: number };
+}
+```
 
 ### Unregistering an observer
 
@@ -285,7 +317,6 @@ function addHighlight(locator: Locator, color: string, noteId: string) {
       style: {
         type: DecorationStyleType.Highlight,
         tint: color,
-        isActive: true,
       },
       extras: { noteId },
     },
@@ -329,7 +360,7 @@ function clearSearch() {
 }
 ```
 
-Because `isActive` is not set, tapping a search result falls through to normal navigation — no observer needed.
+Because no observer is registered for this group, tapping a search result falls through to normal navigation.
 
 ## Complete Example — Custom Template (Sidemark)
 
