@@ -118,7 +118,7 @@ class Decorator {
 |------|-------|
 | `Decoration` | `{ id, locator, style, extras? }` |
 | `DecorationStyle` | `BuiltinDecorationStyle \| HTMLDecorationTemplate` |
-| `BuiltinDecorationStyle` | `{ type?, tint?, layout?, width?, isActive?, enforceContrast? }` |
+| `BuiltinDecorationStyle` | `{ type?, tint?, layout?, width?, enforceContrast? }` |
 | `DecorationStyleType` | `"highlight" \| "underline" \| "outline" \| "textColor" \| "mask" \| "template"` |
 | `DecorationLayout` | `"boxes" \| "bounds"` |
 | `DecorationWidth` | `"wrap" \| "viewport" \| "bounds" \| "page"` |

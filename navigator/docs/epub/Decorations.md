@@ -35,7 +35,6 @@ interface BuiltinDecorationStyle {
   tint?: string;                // Any CSS color — "#ffff00", "rgba(255,200,0,0.4)", etc.
   layout?: DecorationLayout;    // Defaults to Boxes
   width?: DecorationWidth;      // Defaults to Wrap
-  isActive?: boolean;           // Visual active state — renders the decoration in its activated appearance
   enforceContrast?: boolean;    // When true (default), tint is adjusted for contrast against the background
 }
 ```
@@ -78,7 +77,6 @@ interface HTMLDecorationTemplate {
   width: DecorationWidth;                          // Required
   element: (decoration: Decoration) => string;     // Returns an HTML snippet for each decoration
   stylesheet?: string;                             // CSS injected into the resource
-  isActive?: boolean;                              // Visual active state
 }
 ```
 

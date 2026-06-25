@@ -50,7 +50,7 @@ export interface BuiltinDecorationStyle {
     tint?: string;
     layout?: DecorationLayout;
     width?: DecorationWidth;
-    isActive?: boolean;
+    // isActive?: boolean; // RFC 008 — visual semantics TBD; currently has no visual effect
     enforceContrast?: boolean; // When true (default), tint is adjusted for contrast against the background.
     expand?: number; // Inflates each client rect outward by this many CSS pixels on all sides.
 }
@@ -67,7 +67,7 @@ export interface HTMLDecorationTemplate {
     width: DecorationWidth;
     element: string;
     stylesheet?: string;
-    isActive?: boolean;
+    // isActive?: boolean; // RFC 008 — visual semantics TBD; currently has no visual effect
 }
 
 export type DecorationStyle = BuiltinDecorationStyle | HTMLDecorationTemplate;
