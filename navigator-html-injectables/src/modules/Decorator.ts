@@ -749,8 +749,18 @@ class DecorationGroup {
                         ].filter(Boolean).join("; ");
                     }
                     case DecorationStyleType.Strikethrough: {
-                        // The rect is thinned and centred by the boxes loop below; just fill it.
                         const adjustedStrikeTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
+                        const isBounds = style.layout === DecorationLayout.Bounds;
+                        if (isBounds) {
+                            // Bounds covers the full height of the selection — use diagonal hatch lines
+                            // so the text remains readable (physical "crossing out" appearance).
+                            return [
+                                `background: repeating-linear-gradient(-45deg, transparent, transparent 12px, ${adjustedStrikeTint} 12px, ${adjustedStrikeTint} 13px) !important`,
+                                "background-color: transparent !important",
+                                "box-sizing: border-box !important",
+                            ].join("; ");
+                        }
+                        // Boxes path: the rect is thinned and centred by the boxes loop below; just fill it.
                         return [
                             `background-color: ${adjustedStrikeTint} !important`,
                             "box-sizing: border-box !important",
@@ -768,12 +778,16 @@ class DecorationGroup {
                         const adjustedHUTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
                         const { r, g, b } = colorToRgba(adjustedHUTint);
                         const huFillTint = `rgba(${r}, ${g}, ${b}, 0.3)`;
-                        const [huUnderlineSide] = ctx.isVertical ? ["border-right"] : ["border-bottom"];
+                        const isBounds = style.layout === DecorationLayout.Bounds;
+                        const [huUnderlineSide, huOverlineSide] = ctx.isVertical
+                            ? ["border-right", "border-left"]
+                            : ["border-bottom", "border-top"];
                         return [
                             `background-color: ${huFillTint} !important`,
+                            isBounds ? `${huOverlineSide}: 0.1em solid ${adjustedHUTint} !important` : null,
                             `${huUnderlineSide}: 0.1em solid ${adjustedHUTint} !important`,
                             "box-sizing: border-box !important",
-                        ].join("; ");
+                        ].filter(Boolean).join("; ");
                     }
                     case DecorationStyleType.Highlight:
                     default: {
