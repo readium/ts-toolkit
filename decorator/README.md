@@ -26,7 +26,7 @@ The `Decorator` module that renders highlights lives in `@readium/navigator-html
 ## Usage
 
 ```ts
-import { DirectCommsChannel, Decorator, DecorationController } from "@readium/decorator";
+import { DirectCommsChannel, Decorator, DecorationController, DecorationStyleType } from "@readium/decorator";
 
 // 1. Create the in-process comms channel
 const channel = new DirectCommsChannel();
@@ -38,7 +38,12 @@ decorator.mount(window, channel.frame);
 // 3. Create the controller — it owns the diff state and sends commands through channel.host
 const ctrl = new DecorationController(channel.host);
 
-// 4. Apply decorations (call again with a new array to update)
+// 4. Check style support before applying (TextColor requires the CSS Highlight API)
+if (!ctrl.supportsDecorationStyle(DecorationStyleType.TextColor)) {
+    // fall back to a supported style
+}
+
+// 5. Apply decorations (call again with a new array to update)
 ctrl.applyDecorations([
     {
         id: "tts-0",
@@ -47,7 +52,7 @@ ctrl.applyDecorations([
     }
 ], "tts");
 
-// 5. Cleanup
+// 6. Cleanup
 decorator.unmount(window, channel.frame);
 ctrl.destroy();
 channel.frame.destroy();
@@ -69,19 +74,28 @@ channel.host   // DirectCommsHost — controller side
 
 ```ts
 class DecorationController {
-    constructor(host: DirectCommsHost)
+    constructor(host: DirectCommsHost, config?: DecorationControllerConfig)
+
+    // Returns true if the given style ID can be rendered. Returns false for TextColor
+    // when the CSS Highlight API is unavailable, and checks decorationTemplates for custom IDs.
+    supportsDecorationStyle(styleTypeId: string): boolean
 
     // Replace all decorations for a group. Diffs against previous state.
     applyDecorations(decorations: Decoration[], group: string): void
 
     // Register an observer for activation (tap/click) and optional hover events on a group.
-    // All decorations in the group become tappable once an observer is registered.
+    // Activation is enabled for the group only when the observer declares onDecorationActivated.
     // Hover tracking is enabled automatically when the observer declares onDecorationPointerEnter
     // or onDecorationPointerLeave.
     registerDecorationObserver(group: string, observer: DecorationObserver): void
     unregisterDecorationObserver(observer: DecorationObserver): void
 
     destroy(): void
+}
+
+interface DecorationControllerConfig {
+    // Custom named style templates resolved before sending decorations to the Decorator module.
+    decorationTemplates?: Record<string, HTMLDecorationTemplate>;
 }
 ```
 
@@ -90,9 +104,9 @@ class DecorationController {
 ```ts
 interface DecorationObserver {
     // Called when a decoration is tapped/clicked. Return true to consume the event
-    // (suppresses default navigation). All decorations in the group fire this once
-    // an observer is registered — no per-decoration flag required.
-    onDecorationActivated(event: OnDecorationActivatedEvent): boolean;
+    // (suppresses default navigation). Activation is enabled for the group only when
+    // this method is declared — no per-decoration flag required.
+    onDecorationActivated?(event: OnDecorationActivatedEvent): boolean;
 
     // Called when the pointer enters a decoration. Registering either hover method
     // automatically enables hover tracking for the group.
@@ -119,12 +133,14 @@ class Decorator {
 | Name | Notes |
 |------|-------|
 | `Decoration` | `{ id, locator, style, extras? }` |
-| `DecorationStyle` | `BuiltinDecorationStyle \| HTMLDecorationTemplate` |
+| `DecorationStyle` | `BuiltinDecorationStyle \| HTMLDecorationTemplate \| NamedDecorationStyle` |
 | `BuiltinDecorationStyle` | `{ type?, tint?, layout?, width?, enforceContrast? }` |
+| `NamedDecorationStyle` | `{ type: string }` — reference to a style registered in `DecorationControllerConfig.decorationTemplates` |
 | `DecorationStyleType` | `"highlight" \| "highlightUnderline" \| "underline" \| "strikethrough" \| "outline" \| "textColor" \| "mask" \| "template"` |
 | `DecorationLayout` | `"boxes" \| "bounds"` |
 | `DecorationWidth` | `"wrap" \| "viewport" \| "bounds" \| "page"` |
-| `DecorationObserver` | `{ onDecorationActivated, onDecorationPointerEnter?, onDecorationPointerLeave? }` |
+| `DecorationControllerConfig` | `{ decorationTemplates? }` — optional config passed to `DecorationController` |
+| `DecorationObserver` | `{ onDecorationActivated?, onDecorationPointerEnter?, onDecorationPointerLeave? }` |
 | `OnDecorationActivatedEvent` | `{ decoration, group, rect, point }` — rect and point always present on activation |
 | `OnDecorationPointerEnterEvent` | `{ decoration, group, rect, point }` — rect and point always present on enter |
 | `OnDecorationPointerLeaveEvent` | `{ decoration, group, rect?, point? }` — rect present when range is still in the DOM; point is the current pointer position at moment of leave |

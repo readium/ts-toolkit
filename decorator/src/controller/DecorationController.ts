@@ -1,6 +1,13 @@
-import type { Decoration, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData } from "@readium/navigator-html-injectables";
+import type { Decoration, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, HTMLDecorationTemplate } from "@readium/navigator-html-injectables";
+import { DecorationStyleType } from "@readium/navigator-html-injectables";
 import type { DirectCommsHost } from "../comms/direct.ts";
 import type { DecorationObserver } from "../Decoration.ts";
+
+const BUILTIN_DECORATION_TYPES = new Set<string>(Object.values(DecorationStyleType));
+
+export interface DecorationControllerConfig {
+    decorationTemplates?: Record<string, HTMLDecorationTemplate>;
+}
 
 export class DecorationController {
     private _decorations = new Map<string, Decoration[]>();
@@ -8,8 +15,10 @@ export class DecorationController {
     private _hoverState = new Map<string, boolean>();
     private _observers = new Map<string, Set<DecorationObserver>>();
     private _hoveredDecorations = new Map<string, Decoration>();
+    private readonly _config: DecorationControllerConfig;
 
-    constructor(private readonly host: DirectCommsHost) {
+    constructor(private readonly host: DirectCommsHost, config: DecorationControllerConfig = {}) {
+        this._config = config;
         host.on("decoration_activated", (raw) => {
             const ev = raw as DecorationActivatedEvent;
             const decoration = this._decorations.get(ev.group)?.find(d => d.id === ev.decorationId);
@@ -39,6 +48,12 @@ export class DecorationController {
                 obs.onDecorationPointerLeave?.({ group: ev.group, decoration, rect: ev.rect, point: ev.point })
             );
         });
+    }
+
+    supportsDecorationStyle(styleTypeId: string): boolean {
+        if (styleTypeId === DecorationStyleType.TextColor) return "Highlight" in window;
+        if (BUILTIN_DECORATION_TYPES.has(styleTypeId)) return true;
+        return !!this._config.decorationTemplates?.[styleTypeId];
     }
 
     applyDecorations(decorations: Decoration[], group: string): void {
