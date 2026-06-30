@@ -15,7 +15,7 @@ export class DecorationController {
             const decoration = this._decorations.get(ev.group)?.find(d => d.id === ev.decorationId);
             if (!decoration) return;
             this._observers.get(ev.group)?.forEach(obs =>
-                obs.onDecorationActivated({ group: ev.group, decoration, rect: ev.rect, point: ev.point })
+                obs.onDecorationActivated?.({ group: ev.group, decoration, rect: ev.rect, point: ev.point })
             );
         });
 
@@ -73,8 +73,10 @@ export class DecorationController {
     registerDecorationObserver(group: string, observer: DecorationObserver): void {
         if (!this._observers.has(group)) this._observers.set(group, new Set());
         this._observers.get(group)!.add(observer);
-        this._activationState.set(group, true);
-        this.host.send("decoration_activatable", { group, activatable: true });
+        if (observer.onDecorationActivated) {
+            this._activationState.set(group, true);
+            this.host.send("decoration_activatable", { group, activatable: true });
+        }
         if (observer.onDecorationPointerEnter || observer.onDecorationPointerLeave) {
             this._hoverState.set(group, true);
             this.host.send("decoration_hoverable", { group, hoverable: true });

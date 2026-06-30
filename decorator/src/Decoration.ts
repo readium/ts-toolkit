@@ -9,7 +9,7 @@ export type OnDecorationPointerEnterEvent<D = Decoration> = Omit<DecorationPoint
 export type OnDecorationPointerLeaveEvent<D = Decoration> = Omit<DecorationPointerLeaveData, "decorationId"> & { decoration: D };
 
 export interface DecorationObserver<D = Decoration> {
-    onDecorationActivated(event: OnDecorationActivatedEvent<D>): boolean;
+    onDecorationActivated?(event: OnDecorationActivatedEvent<D>): boolean;
     onDecorationPointerEnter?(event: OnDecorationPointerEnterEvent<D>): void;
     onDecorationPointerLeave?(event: OnDecorationPointerLeaveEvent<D>): void;
 }

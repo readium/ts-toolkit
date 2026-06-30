@@ -664,9 +664,11 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             this._decorationObservers.set(group, new Set());
         this._decorationObservers.get(group)!.add(observer);
 
-        // Store activation state and send to current frames
-        this._decorationActivationState.set(group, true);
-        this._sendDecorationActivationToFrames(group, true);
+        // Enable activation if the observer handles it
+        if (observer.onDecorationActivated) {
+            this._decorationActivationState.set(group, true);
+            this._sendDecorationActivationToFrames(group, true);
+        }
 
         // Enable hover if the observer declares hover callbacks
         if (observer.onDecorationPointerEnter || observer.onDecorationPointerLeave) {
@@ -803,7 +805,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         const event: OnDecorationActivatedEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
         let anyHandled = false;
         for (const obs of observers)
-            if (obs.onDecorationActivated(event)) anyHandled = true;
+            if (obs.onDecorationActivated?.(event)) anyHandled = true;
         return anyHandled;
     }
 

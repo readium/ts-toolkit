@@ -237,9 +237,6 @@ To track pointer hover over decorations in a group, declare `onDecorationPointer
 import { DecorationObserver, OnDecorationPointerEnterEvent, OnDecorationPointerLeaveEvent } from "@readium/navigator";
 
 const observer: DecorationObserver = {
-  onDecorationActivated(event): boolean {
-    return false;
-  },
   onDecorationPointerEnter(event: OnDecorationPointerEnterEvent): void {
     console.log("Pointer entered:", event.decoration.id);
     console.log("Rect:", event.rect);

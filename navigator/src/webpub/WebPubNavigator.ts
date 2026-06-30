@@ -466,8 +466,10 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             this._decorationObservers.set(group, new Set());
         this._decorationObservers.get(group)!.add(observer);
 
-        this._decorationActivationState.set(group, true);
-        this._sendDecorationActivatable(group, true);
+        if (observer.onDecorationActivated) {
+            this._decorationActivationState.set(group, true);
+            this._sendDecorationActivatable(group, true);
+        }
 
         if (observer.onDecorationPointerEnter || observer.onDecorationPointerLeave) {
             this._decorationHoverState.set(group, true);
@@ -582,7 +584,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         const event: OnDecorationActivatedEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
         let anyHandled = false;
         for (const obs of observers)
-            if (obs.onDecorationActivated(event)) anyHandled = true;
+            if (obs.onDecorationActivated?.(event)) anyHandled = true;
         return anyHandled;
     }
 
