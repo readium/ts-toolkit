@@ -730,6 +730,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         if (activatable !== undefined) {
             this._sendDecorationActivationToFrames(group, activatable);
         }
+        const hoverable = this._decorationHoverState.get(group);
+        if (hoverable !== undefined) {
+            this._sendDecorationHoverToFrames(group, hoverable);
+        }
     }
 
     private _sendDecorationOps(

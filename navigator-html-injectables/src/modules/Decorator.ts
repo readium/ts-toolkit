@@ -257,7 +257,7 @@ class DecorationGroup {
 
         this.items.push(item);
         this.layout(item);
-        item.hitRects = getClientRectsNoOverlap(item.range, false, false, (item.decoration.style as BuiltinDecorationStyle).expand ?? 0);
+        item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, ((item.decoration.style as BuiltinDecorationStyle).expand ?? 0) + this.hitGap()));
         this.renderLayout([item]);
     }
 
@@ -337,10 +337,37 @@ class DecorationGroup {
         this.wnd.document.removeEventListener("pointermove", this.hoverHandler);
     }
 
+    private clientRectsToDocCoords(rects: Rect[]): Rect[] {
+        const ctx = makeWritingContext(this.wnd);
+        const dx = ctx.xDocOffset;
+        const dy = ctx.yDocOffset;
+        if (dx === 0 && dy === 0) return rects;
+        return rects.map(r => ({
+            left: r.left + dx, top: r.top + dy,
+            right: r.right + dx, bottom: r.bottom + dy,
+            width: r.width, height: r.height,
+        }));
+    }
+
+    private pointerToDocCoords(e: PointerEvent): { docX: number; docY: number } {
+        const ctx = makeWritingContext(this.wnd);
+        return { docX: e.clientX + ctx.xDocOffset, docY: e.clientY + ctx.yDocOffset };
+    }
+
+    private effectiveZoom(): number {
+        if (!sML.UA.Blink) return 1;
+        const rootZoom = parseFloat(this.wnd.getComputedStyle(this.wnd.document.documentElement).zoom);
+        const bodyZoom = parseFloat(this.wnd.getComputedStyle(this.wnd.document.body).zoom);
+        return (rootZoom || 1) * (bodyZoom || 1);
+    }
+
+    private hitGap(): number {
+        return 2 * this.effectiveZoom();
+    }
+
     private handleActivation(e: PointerEvent) {
         if (!this._activatable) return;
-        const cssX = e.clientX;
-        const cssY = e.clientY;
+        const { docX, docY } = this.pointerToDocCoords(e);
         const pixelRatio = this.wnd.devicePixelRatio;
 
         for (const item of this.items) {
@@ -351,16 +378,16 @@ class DecorationGroup {
                 // against the rendered elements rather than the text range rects.
                 for (const el of (item.clickableElements ?? [])) {
                     const r = el.getBoundingClientRect();
-                    if (rectContainsPoint(r as Rect, cssX, cssY, 0)) {
+                    if (rectContainsPoint(r as Rect, e.clientX, e.clientY, 0)) {
                         hitRect = r;
                         break;
                     }
                 }
             } else {
-                // Use pre-merged hit rects (computed at layout time) so that intra-line gaps
-                // between raw client rects don't create dead zones within the selection.
+                // Use pre-merged hit rects stored in document coordinates so they remain
+                // valid across column/scroll navigation.
                 for (const rect of item.hitRects) {
-                    if (rectContainsPoint(rect, cssX, cssY, 0)) {
+                    if (rectContainsPoint(rect, docX, docY, 0)) {
                         hitRect = item.range.getBoundingClientRect();
                         break;
                     }
@@ -377,7 +404,7 @@ class DecorationGroup {
                         width: hitRect.width * pixelRatio,
                         height: hitRect.height * pixelRatio,
                     },
-                    point: { x: cssX * pixelRatio, y: cssY * pixelRatio },
+                    point: { x: e.clientX * pixelRatio, y: e.clientY * pixelRatio },
                 } as DecorationActivatedEvent);
                 return;
             }
@@ -386,8 +413,7 @@ class DecorationGroup {
 
     private handleHover(e: PointerEvent) {
         if (!this._hoverable) return;
-        const cssX = e.clientX;
-        const cssY = e.clientY;
+        const { docX, docY } = this.pointerToDocCoords(e);
         const pixelRatio = this.wnd.devicePixelRatio;
 
         let hitItem: DecorationItem | undefined;
@@ -397,7 +423,7 @@ class DecorationGroup {
             if (item.decoration.style.type === DecorationStyleType.Template) {
                 for (const el of (item.clickableElements ?? [])) {
                     const r = el.getBoundingClientRect();
-                    if (rectContainsPoint(r as Rect, cssX, cssY, 0)) {
+                    if (rectContainsPoint(r as Rect, e.clientX, e.clientY, 0)) {
                         hitItem = item;
                         hitRect = r;
                         break;
@@ -405,7 +431,7 @@ class DecorationGroup {
                 }
             } else {
                 for (const rect of item.hitRects) {
-                    if (rectContainsPoint(rect, cssX, cssY, 0)) {
+                    if (rectContainsPoint(rect, docX, docY, 0)) {
                         hitItem = item;
                         hitRect = item.range.getBoundingClientRect();
                         break;
@@ -430,7 +456,7 @@ class DecorationGroup {
                     width: leaveRect.width * pixelRatio,
                     height: leaveRect.height * pixelRatio,
                 } : undefined,
-                point: { x: cssX * pixelRatio, y: cssY * pixelRatio },
+                point: { x: e.clientX * pixelRatio, y: e.clientY * pixelRatio },
             } as DecorationPointerLeaveData);
         }
 
@@ -446,7 +472,7 @@ class DecorationGroup {
                     width: hitRect.width * pixelRatio,
                     height: hitRect.height * pixelRatio,
                 },
-                point: { x: cssX * pixelRatio, y: cssY * pixelRatio },
+                point: { x: e.clientX * pixelRatio, y: e.clientY * pixelRatio },
             } as DecorationPointerEnterData);
         }
     }
@@ -466,7 +492,7 @@ class DecorationGroup {
             this.currentRender = this.wnd.requestAnimationFrame(() => {
                 this.items.forEach(i => {
                     this.layout(i);
-                    i.hitRects = getClientRectsNoOverlap(i.range, false, false, (i.decoration.style as BuiltinDecorationStyle).expand ?? 0);
+                    i.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(i.range, false, false, ((i.decoration.style as BuiltinDecorationStyle).expand ?? 0) + this.hitGap()));
                 });
                 this.renderLayout(this.items);
                 // Update shared mask after layout
@@ -648,13 +674,7 @@ class DecorationGroup {
 
         const ctx = makeWritingContext(this.wnd);
 
-        let iz = 1;
-        if (sML.UA.Blink) {
-            const rootZoom = parseFloat(this.wnd.getComputedStyle(this.wnd.document.documentElement).zoom);
-            const bodyZoom = parseFloat(this.wnd.getComputedStyle(this.wnd.document.body).zoom);
-            const effectiveZoom = (rootZoom || 1) * (bodyZoom || 1);
-            if (effectiveZoom) iz = 1 / effectiveZoom;
-        }
+        const iz = 1 / this.effectiveZoom();
 
         const expand = (item.decoration.style as BuiltinDecorationStyle).expand ?? 0;
         const positionElement = (element: HTMLElement, rect: Rect, boundingRect: DOMRect, inlineInset = 0) => {
@@ -963,13 +983,7 @@ class DecorationGroup {
 
         const ctx = makeWritingContext(this.wnd);
 
-        let iz = 1;
-        if (sML.UA.Blink) {
-            const rootZoom = parseFloat(this.wnd.getComputedStyle(this.wnd.document.documentElement).zoom);
-            const bodyZoom = parseFloat(this.wnd.getComputedStyle(this.wnd.document.body).zoom);
-            const effectiveZoom = (rootZoom || 1) * (bodyZoom || 1);
-            if (effectiveZoom) iz = 1 / effectiveZoom;
-        }
+        const iz = 1 / this.effectiveZoom();
 
         // Collect all hole rects from mask decorations
         const docEl = this.wnd.document.documentElement;

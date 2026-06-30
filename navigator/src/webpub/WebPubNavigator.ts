@@ -521,6 +521,8 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
         const activatable = this._decorationActivationState.get(group);
         if (activatable !== undefined) this._sendDecorationActivatable(group, activatable);
+        const hoverable = this._decorationHoverState.get(group);
+        if (hoverable !== undefined) this._sendDecorationHoverable(group, hoverable);
     }
 
     private _sendDecorationOps(
