@@ -14,8 +14,13 @@ export function getTextClientRects(range: Range, skipTags: string[]): Rect[] {
     const upperTags = skipTags.map(t => t.toUpperCase());
     const rects: Rect[] = [];
 
+    const ancestor = range.commonAncestorContainer;
+    // TreeWalker only visits descendants, never the root itself. If the common
+    // ancestor is already a text node (single-node selection), walk from its
+    // parent so the text node itself is included in the traversal.
+    const walkerRoot = ancestor.nodeType === Node.TEXT_NODE ? ancestor.parentNode! : ancestor;
     const walker = range.startContainer.ownerDocument!.createTreeWalker(
-        range.commonAncestorContainer,
+        walkerRoot,
         NodeFilter.SHOW_TEXT
     );
 
@@ -52,7 +57,8 @@ export function getTextClientRects(range: Range, skipTags: string[]): Rect[] {
 export function getClientRectsNoOverlap(
     source: Range | Rect[],
     doNotMergeHorizontallyAlignedRects: boolean,
-    doNotMergeVerticallyAlignedRects: boolean = false
+    doNotMergeVerticallyAlignedRects: boolean = false,
+    expand: number = 0
 ) {
     const tolerance = 1;
     let originalRects: Rect[];
@@ -77,6 +83,16 @@ export function getClientRectsNoOverlap(
                 top: rangeClientRect.top,
                 width: rangeClientRect.width,
             });
+        }
+    }
+    if (expand) {
+        for (const rect of originalRects) {
+            rect.left   -= expand;
+            rect.top    -= expand;
+            rect.right  += expand;
+            rect.bottom += expand;
+            rect.width  += expand * 2;
+            rect.height += expand * 2;
         }
     }
     const mergedRects = mergeTouchingRects(

@@ -257,7 +257,7 @@ class DecorationGroup {
 
         this.items.push(item);
         this.layout(item);
-        item.hitRects = getClientRectsNoOverlap(item.range, false, false);
+        item.hitRects = getClientRectsNoOverlap(item.range, false, false, (item.decoration.style as BuiltinDecorationStyle).expand ?? 0);
         this.renderLayout([item]);
     }
 
@@ -466,7 +466,7 @@ class DecorationGroup {
             this.currentRender = this.wnd.requestAnimationFrame(() => {
                 this.items.forEach(i => {
                     this.layout(i);
-                    i.hitRects = getClientRectsNoOverlap(i.range, false, false);
+                    i.hitRects = getClientRectsNoOverlap(i.range, false, false, (i.decoration.style as BuiltinDecorationStyle).expand ?? 0);
                 });
                 this.renderLayout(this.items);
                 // Update shared mask after layout
@@ -659,14 +659,7 @@ class DecorationGroup {
         const expand = (item.decoration.style as BuiltinDecorationStyle).expand ?? 0;
         const positionElement = (element: HTMLElement, rect: Rect, boundingRect: DOMRect, inlineInset = 0) => {
             const w = item.decoration?.style?.width;
-            const r: Rect = expand ? {
-                left:   rect.left   - expand,
-                right:  rect.right  + expand,
-                top:    rect.top    - expand,
-                bottom: rect.bottom + expand,
-                width:  rect.width  + expand * 2,
-                height: rect.height + expand * 2,
-            } : rect;
+            const r = rect;
             switch (w) {
                 case DecorationWidth.Viewport: {
                     const snap = Math.floor(ctx.inlineStart(r) / ctx.viewportInlineSize) * ctx.viewportInlineSize;
@@ -803,7 +796,15 @@ class DecorationGroup {
         if(item.decoration?.style?.layout === DecorationLayout.Bounds) {
             const bounds = elementTemplate.cloneNode(true) as HTMLDivElement;
             bounds.style.setProperty("pointer-events", "none");
-            positionElement(bounds, boundingRect, boundingRect, outlineInset);
+            const boundsRect: Rect = expand ? {
+                left:   boundingRect.left   - expand,
+                right:  boundingRect.right  + expand,
+                top:    boundingRect.top    - expand,
+                bottom: boundingRect.bottom + expand,
+                width:  boundingRect.width  + expand * 2,
+                height: boundingRect.height + expand * 2,
+            } : boundingRect;
+            positionElement(bounds, boundsRect, boundingRect, outlineInset);
             itemContainer.append(bounds);
         } else {
             // Fall back to "boxes" value for layout.
@@ -816,10 +817,13 @@ class DecorationGroup {
             const rectSource = isLineDecoration
                 ? getTextClientRects(item.range, ["rt", "rp"])
                 : item.range;
+            // Line decorations (underline/strikethrough) don't expand in the block axis —
+            // expand extends endpoints along the inline axis only.
             let clientRects = getClientRectsNoOverlap(
               rectSource,
               true,              // doNotMergeHorizontallyAlignedRects
-              ctx.isVertical     // doNotMergeVerticallyAlignedRects
+              ctx.isVertical,    // doNotMergeVerticallyAlignedRects
+              isLineDecoration ? 0 : expand
             );
 
             clientRects = clientRects.sort((r1, r2) => {
@@ -843,6 +847,12 @@ class DecorationGroup {
                   posRect = ctx.isVertical
                       ? { left: bs, right: bs + thickness, top: clientRect.top,    bottom: clientRect.bottom, width: thickness,           height: clientRect.height }
                       : { top:  bs, bottom: bs + thickness, left: clientRect.left, right: clientRect.right,   height: thickness,           width: clientRect.width  };
+              }
+              // Expand line decorations along the inline axis only (extend endpoints, not block size).
+              if (expand && isLineDecoration) {
+                  posRect = ctx.isVertical
+                      ? { ...posRect, top: posRect.top - expand, bottom: posRect.bottom + expand, height: posRect.height + expand * 2 }
+                      : { ...posRect, left: posRect.left - expand, right: posRect.right + expand, width: posRect.width + expand * 2 };
               }
               positionElement(line, posRect, boundingRect, outlineInset);
               itemContainer.append(line);
@@ -956,12 +966,15 @@ class DecorationGroup {
             const style  = item.decoration.style as BuiltinDecorationStyle;
             const layout = style.layout ?? DecorationLayout.Boxes;
             const width  = style.width  ?? DecorationWidth.Wrap;
+            const ex     = style.expand ?? 0;
 
             const boundingRect = item.range.getBoundingClientRect();
 
-            const baseRects: DOMRect[] = layout === DecorationLayout.Bounds
-                ? [boundingRect]
-                : Array.from(item.range.getClientRects());
+            // For Bounds layout the hole is a single bounding rect; expand it directly.
+            // For Boxes layout, merge rects first with expand baked in (same as highlights).
+            const baseRects: Rect[] = layout === DecorationLayout.Bounds
+                ? [ex ? { left: boundingRect.left - ex, top: boundingRect.top - ex, right: boundingRect.right + ex, bottom: boundingRect.bottom + ex, width: boundingRect.width + ex * 2, height: boundingRect.height + ex * 2 } : boundingRect]
+                : getClientRectsNoOverlap(item.range, false, false, ex);
 
             for (const rect of baseRects) {
                 let hole: DOMRect;
@@ -981,7 +994,7 @@ class DecorationGroup {
                         break;
                     }
                     default:
-                        hole = rect;
+                        hole = ctx.toRect(ctx.inlineStart(rect), ctx.blockStart(rect), ctx.inlineSize(rect), ctx.blockSize(rect));
                 }
                 allHoleRects.push(hole);
             }
