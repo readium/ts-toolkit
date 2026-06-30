@@ -455,7 +455,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
     // DecorableNavigator
 
-    public supportsDecorationStyle(styleTypeId: DecorationStyleType): boolean {
+    public supportsDecorationStyle(styleTypeId: DecorationStyleType | string): boolean {
         if (styleTypeId === DecorationStyleType.TextColor && !("Highlight" in window)) return false;
         return BUILTIN_DECORATION_TYPES.has(styleTypeId) ||
             !!this._decoratorConfig.decorationTemplates?.[styleTypeId];

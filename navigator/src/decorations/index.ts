@@ -17,7 +17,12 @@ export interface HTMLDecorationTemplate extends Omit<WireHTMLDecorationTemplate,
     element: (decoration: Decoration) => string;
 }
 
-export type DecorationStyle = BuiltinDecorationStyle | HTMLDecorationTemplate;
+/** A reference to a named style registered in `DecoratorConfig.decorationTemplates`. */
+export interface NamedDecorationStyle {
+    type: string;
+}
+
+export type DecorationStyle = BuiltinDecorationStyle | HTMLDecorationTemplate | NamedDecorationStyle;
 
 export interface Decoration extends Omit<InjectableDecoration, 'style'> {
     style: DecorationStyle;
@@ -132,7 +137,7 @@ export interface DecorableNavigator {
      * Returns whether the given style type ID can be rendered by this navigator.
      * Returns true for all built-in types and any IDs registered in DecoratorConfig.
      */
-    supportsDecorationStyle(styleTypeId: DecorationStyleType): boolean;
+    supportsDecorationStyle(styleTypeId: DecorationStyleType | string): boolean;
 
     /** Registers an observer for activation events on the given group. */
     registerDecorationObserver(group: string, observer: DecorationObserver): void;

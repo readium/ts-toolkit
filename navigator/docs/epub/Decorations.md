@@ -84,7 +84,8 @@ interface HTMLDecorationTemplate {
 
 Because `element` receives the full `Decoration` object, the generated HTML can vary per-decoration — for example to embed the decoration's tint color or extra data as an inline style or attribute. The returned HTML is cloned once per positioned box (or once for `Bounds` layout). Use CSS classes and the injected `stylesheet` to style the elements. Prefix all class names and IDs with your app name to avoid conflicts — `r2-` and `readium-` are reserved.
 
-> **Security** — The HTML returned by `element` is sanitized through an allowlist before injection. Script elements, event-handler attributes (`on*`), and `javascript:`/`data:` URLs are always stripped.
+> [!WARNING]
+> The HTML returned by `element` is sanitized through an allowlist before injection. Script elements, event-handler attributes (`on*`), and `javascript:`/`data:` URLs are always stripped.
 
 ### Groups
 
@@ -97,7 +98,7 @@ Decoration IDs must be **unique within their group**, but the same ID can appear
 Call `applyDecorations` with the **complete desired state** for a group. The navigator diffs the new list against the previous one and sends only the necessary add / update / remove commands to the rendered frames.
 
 ```ts
-import { Decoration, DecorationLayout, DecorationStyleType, DecorationWidth } from "@readium/navigator";
+import { Decoration, DecorationStyleType } from "@readium/navigator";
 
 const highlights: Decoration[] = [
   {
@@ -185,7 +186,7 @@ navigator.applyDecorations([
       type: DecorationStyleType.Highlight,
       tint: "#ffff00",
     },
-    extras: { noteId: "note-42" },  // ← passed through to DecorationActivationEvent
+    extras: { noteId: "note-42" },  // ← passed through to OnDecorationActivatedEvent
   },
 ], "user-highlights");
 ```
@@ -213,8 +214,6 @@ interface OnDecorationActivatedEvent {
 
 ```ts
 onDecorationActivated(event: OnDecorationActivatedEvent): boolean {
-  if (!event.rect) return false;
-
   showPopover({
     content: lookupNote(event.decoration.extras?.noteId as string),
     anchorRect: event.rect,
@@ -293,9 +292,7 @@ import {
   Decoration,
   DecorationObserver,
   OnDecorationActivatedEvent,
-  DecorationLayout,
   DecorationStyleType,
-  DecorationWidth,
 } from "@readium/navigator";
 
 // 1. Keep your highlights in application state
@@ -344,7 +341,6 @@ function removeHighlight(id: string) {
 
 // 5. Clean up when done
 navigator.unregisterDecorationObserver(observer);
-await navigator.destroy();
 ```
 
 ## Complete Example — Search Results
@@ -419,6 +415,7 @@ navigator.applyDecorations(
 );
 ```
 
+> [!NOTE]
 > Prefix all class names and IDs with your app name. `r2-` and `readium-` are reserved by the toolkit.
 
 ## Custom Named Styles
@@ -480,4 +477,3 @@ navigator.applyDecorations(
 |---|---|---|
 | Template defined | Per decoration | Once at navigator init |
 | Best for | One-off or rare styles | Styles reused across many decorations |
-| `supportsDecorationStyle` | True for all built-in types except `TextColor`, which requires the CSS Highlight API and returns `false` in browsers that lack it | Checks the registry |
