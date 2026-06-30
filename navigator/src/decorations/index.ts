@@ -132,7 +132,7 @@ export interface DecorableNavigator {
      * Returns whether the given style type ID can be rendered by this navigator.
      * Returns true for all built-in types and any IDs registered in DecoratorConfig.
      */
-    supportsDecorationStyle(styleTypeId: string): boolean;
+    supportsDecorationStyle(styleTypeId: DecorationStyleType): boolean;
 
     /** Registers an observer for activation events on the given group. */
     registerDecorationObserver(group: string, observer: DecorationObserver): void;
