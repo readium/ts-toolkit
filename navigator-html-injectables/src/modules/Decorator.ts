@@ -755,7 +755,7 @@ class DecorationGroup {
                             // Bounds covers the full height of the selection — use diagonal hatch lines
                             // so the text remains readable (physical "crossing out" appearance).
                             return [
-                                `background: repeating-linear-gradient(-45deg, transparent, transparent 12px, ${adjustedStrikeTint} 12px, ${adjustedStrikeTint} 13px) !important`,
+                                `background: repeating-linear-gradient(-45deg, transparent, transparent 19px, ${adjustedStrikeTint} 19px, ${adjustedStrikeTint} 20px) !important`,
                                 "background-color: transparent !important",
                                 "box-sizing: border-box !important",
                             ].join("; ");
