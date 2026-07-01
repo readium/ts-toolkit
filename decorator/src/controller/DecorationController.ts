@@ -1,13 +1,10 @@
-import type { BuiltinDecorationStyle, Decoration, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, HTMLDecorationTemplate } from "@readium/navigator-html-injectables";
-import { DecorationStyleType } from "@readium/navigator-html-injectables";
+import type { DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData } from "@readium/navigator-html-injectables";
 import type { DirectCommsHost } from "../comms/direct.ts";
 import type { DecorationObserver } from "../Decoration.ts";
+import type { Decoration, DecoratorConfig } from "../styles.ts";
+import { decorationsEqual, resolveDecorationForWire, supportsDecorationStyle } from "../styles.ts";
 
-const BUILTIN_DECORATION_TYPES = new Set<string>(Object.values(DecorationStyleType));
-
-export interface DecorationControllerConfig {
-    decorationTemplates?: Record<string, HTMLDecorationTemplate>;
-}
+export type DecorationControllerConfig = DecoratorConfig;
 
 export class DecorationController {
     private _decorations = new Map<string, Decoration[]>();
@@ -51,9 +48,7 @@ export class DecorationController {
     }
 
     supportsDecorationStyle(styleTypeId: string): boolean {
-        if (styleTypeId === DecorationStyleType.TextColor) return "Highlight" in window;
-        if (BUILTIN_DECORATION_TYPES.has(styleTypeId)) return true;
-        return !!this._config.decorationTemplates?.[styleTypeId];
+        return supportsDecorationStyle(styleTypeId, this._config.decorationTemplates);
     }
 
     applyDecorations(decorations: Decoration[], group: string): void {
@@ -62,15 +57,16 @@ export class DecorationController {
         const nextById = new Map(decorations.map(d => [d.id, d]));
 
         for (const [id, prev] of prevById) {
-            if (!nextById.has(id)) {
+            const next = nextById.get(id);
+            if (!next) {
                 this.host.send("decorate", { group, action: "remove", decoration: { id } });
-            } else if (!_decorationsEqual(prev, nextById.get(id)!)) {
-                this.host.send("decorate", { group, action: "update", decoration: nextById.get(id)! });
+            } else if (!decorationsEqual(prev, next)) {
+                this.host.send("decorate", { group, action: "update", decoration: resolveDecorationForWire(next, this._config.decorationTemplates) });
             }
         }
         for (const [id, next] of nextById) {
             if (!prevById.has(id)) {
-                this.host.send("decorate", { group, action: "add", decoration: next });
+                this.host.send("decorate", { group, action: "add", decoration: resolveDecorationForWire(next, this._config.decorationTemplates) });
             }
         }
 
@@ -118,24 +114,4 @@ export class DecorationController {
         this._observers.clear();
         this._hoveredDecorations.clear();
     }
-}
-
-function _decorationsEqual(a: Decoration, b: Decoration): boolean {
-    if (a.locator.href !== b.locator.href) return false;
-    if (JSON.stringify(a.locator.locations.serialize()) !== JSON.stringify(b.locator.locations.serialize())) return false;
-    if (JSON.stringify(a.locator.text ?? null) !== JSON.stringify(b.locator.text ?? null)) return false;
-    if (a.style.type !== b.style.type) return false;
-    if (a.style.type === "template") {
-        const sa = a.style;
-        const sb = b.style as HTMLDecorationTemplate;
-        if (sa.layout !== sb.layout || sa.width !== sb.width) return false;
-        if (sa.element !== sb.element || sa.stylesheet !== sb.stylesheet) return false;
-    } else {
-        const sa = a.style as BuiltinDecorationStyle;
-        const sb = b.style as BuiltinDecorationStyle;
-        if (sa.tint !== sb.tint || sa.layout !== sb.layout || sa.width !== sb.width) return false;
-        if ((sa.enforceContrast ?? true) !== (sb.enforceContrast ?? true)) return false;
-        if ((sa.expand ?? 0) !== (sb.expand ?? 0)) return false;
-    }
-    return JSON.stringify(a.extras ?? null) === JSON.stringify(b.extras ?? null);
 }

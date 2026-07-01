@@ -5,7 +5,7 @@ import { WebPubFramePoolManager } from "./WebPubFramePoolManager.ts";
 import { BasicTextSelection, CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FrameClickEvent, KeyboardPeripheralEvent, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
 import { WebPubFrameManager } from "./WebPubFrameManager.ts";
-import { Decoration, DecorableNavigator, OnDecorationActivatedEvent, OnDecorationPointerEnterEvent, OnDecorationPointerLeaveEvent, DecorationObserver, DecoratorConfig, decorationsEqual, resolveDecorationForWire, BUILTIN_DECORATION_TYPES, DecorationStyleType } from "../decorations/index.ts";
+import { Decoration, DecorableNavigator, OnDecorationActivatedEvent, OnDecorationPointerEnterEvent, OnDecorationPointerLeaveEvent, DecorationObserver, DecoratorConfig, decorationsEqual, resolveDecorationForWire, supportsDecorationStyle as canRenderDecorationStyle, DecorationStyleType } from "../decorations/index.ts";
 import { ManagerEventKey } from "../epub/EpubNavigator.ts";
 import { getScriptMode } from "../helpers/scriptMode.ts";
 import { WebPubCSS } from "./css/WebPubCSS.ts";
@@ -456,9 +456,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     // DecorableNavigator
 
     public supportsDecorationStyle(styleTypeId: DecorationStyleType | string): boolean {
-        if (styleTypeId === DecorationStyleType.TextColor && !("Highlight" in window)) return false;
-        return BUILTIN_DECORATION_TYPES.has(styleTypeId) ||
-            !!this._decoratorConfig.decorationTemplates?.[styleTypeId];
+        return canRenderDecorationStyle(styleTypeId, this._decoratorConfig.decorationTemplates);
     }
 
     public registerDecorationObserver(group: string, observer: DecorationObserver): void {

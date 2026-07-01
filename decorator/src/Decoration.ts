@@ -1,4 +1,5 @@
-import type { Decoration, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData } from "@readium/navigator-html-injectables";
+import type { DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData } from "@readium/navigator-html-injectables";
+import type { Decoration } from "./styles.ts";
 
 export interface OnDecorationActivatedEvent<D = Decoration> extends Omit<DecorationActivatedEvent, "decorationId"> {
     decoration: D;

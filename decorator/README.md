@@ -118,7 +118,8 @@ class Decorator {
 |------|-------|
 | `Decoration` | `{ id, locator, style, extras? }` |
 | `DecorationStyle` | `BuiltinDecorationStyle \| HTMLDecorationTemplate \| NamedDecorationStyle` |
-| `BuiltinDecorationStyle` | `{ type?, tint?, layout?, width?, enforceContrast? }` |
+| `BuiltinDecorationStyle` | `{ type?, tint?, layout?, width?, enforceContrast?, expand? }` |
+| `HTMLDecorationTemplate` | `{ type: "template", layout, width, element, stylesheet? }` — `element` is a function `(decoration) => string`, resolved to HTML per decoration before rendering |
 | `NamedDecorationStyle` | `{ type: string }` — reference to a style registered in `DecorationControllerConfig.decorationTemplates` |
 | `DecorationStyleType` | `"highlight" \| "highlightUnderline" \| "underline" \| "strikethrough" \| "outline" \| "textColor" \| "mask" \| "template"` |
 | `DecorationLayout` | `"boxes" \| "bounds"` |
