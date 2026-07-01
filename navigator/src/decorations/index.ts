@@ -98,6 +98,7 @@ export function decorationsEqual(a: Decoration, b: Decoration): boolean {
     return (
         a.locator.href === b.locator.href &&
         JSON.stringify(serializeLocations(a.locator.locations)) === JSON.stringify(serializeLocations(b.locator.locations)) &&
+        JSON.stringify(a.locator.text ?? null) === JSON.stringify(b.locator.text ?? null) &&
         stylesEqual(a.style, b.style) &&
         JSON.stringify(a.extras ?? null) === JSON.stringify(b.extras ?? null)
     );

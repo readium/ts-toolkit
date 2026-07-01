@@ -1,4 +1,4 @@
-import type { Decoration, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, HTMLDecorationTemplate } from "@readium/navigator-html-injectables";
+import type { BuiltinDecorationStyle, Decoration, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, HTMLDecorationTemplate } from "@readium/navigator-html-injectables";
 import { DecorationStyleType } from "@readium/navigator-html-injectables";
 import type { DirectCommsHost } from "../comms/direct.ts";
 import type { DecorationObserver } from "../Decoration.ts";
@@ -122,24 +122,20 @@ export class DecorationController {
 
 function _decorationsEqual(a: Decoration, b: Decoration): boolean {
     if (a.locator.href !== b.locator.href) return false;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const locA = typeof (a.locator.locations as any)?.serialize === "function"
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ? (a.locator.locations as any).serialize() : a.locator.locations;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const locB = typeof (b.locator.locations as any)?.serialize === "function"
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ? (b.locator.locations as any).serialize() : b.locator.locations;
-    if (JSON.stringify(locA) !== JSON.stringify(locB)) return false;
+    if (JSON.stringify(a.locator.locations.serialize()) !== JSON.stringify(b.locator.locations.serialize())) return false;
+    if (JSON.stringify(a.locator.text ?? null) !== JSON.stringify(b.locator.text ?? null)) return false;
     if (a.style.type !== b.style.type) return false;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sa = a.style as any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sb = b.style as any;
-    if (sa.tint !== sb.tint || sa.layout !== sb.layout || sa.width !== sb.width) return false;
-    if ((sa.enforceContrast ?? true) !== (sb.enforceContrast ?? true)) return false;
-    if ((sa.expand ?? 0) !== (sb.expand ?? 0)) return false;
-
-    if (sa.element !== sb.element || sa.stylesheet !== sb.stylesheet) return false;
+    if (a.style.type === "template") {
+        const sa = a.style;
+        const sb = b.style as HTMLDecorationTemplate;
+        if (sa.layout !== sb.layout || sa.width !== sb.width) return false;
+        if (sa.element !== sb.element || sa.stylesheet !== sb.stylesheet) return false;
+    } else {
+        const sa = a.style as BuiltinDecorationStyle;
+        const sb = b.style as BuiltinDecorationStyle;
+        if (sa.tint !== sb.tint || sa.layout !== sb.layout || sa.width !== sb.width) return false;
+        if ((sa.enforceContrast ?? true) !== (sb.enforceContrast ?? true)) return false;
+        if ((sa.expand ?? 0) !== (sb.expand ?? 0)) return false;
+    }
     return JSON.stringify(a.extras ?? null) === JSON.stringify(b.extras ?? null);
 }
