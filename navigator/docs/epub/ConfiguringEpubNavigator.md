@@ -78,6 +78,12 @@ const navigator = new EpubNavigator(
       minimalLineLength: 20,
       optimalLineLength: 55,
       maximalLineLength: 65
+    },
+    decoratorConfig: {
+      // Optional — register named decoration styles; see Decorations.md
+      decorationTemplates: {
+        "app-sidemark": { ... }
+      }
     }
   }
 );

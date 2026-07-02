@@ -20,8 +20,8 @@ export type CommsEventKey =
     "media_play" |
     "media_pause" |
     "content_protection" |
-    "keyboard_peripherals";
-;
+    "keyboard_peripherals" |
+    "decoration_activated";
 
 export type CommsCommandKey =
     "_ping" |
@@ -39,6 +39,7 @@ export type CommsCommandKey =
     // "exact_progress" |
     "first_visible_locator" |
     "decorate" |
+    "decoration_activatable" |
     "protect" |
     "unprotect" |
     "unfocus" |

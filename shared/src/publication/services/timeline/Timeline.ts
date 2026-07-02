@@ -1,6 +1,7 @@
 import { Link, Links } from "../../Link.ts";
 import { Locator } from "../../Locator.ts";
 import { TimelineItem } from "./TimelineItem.ts";
+import { isNptStartOfResource, parseNptTime } from "../../../util/npt.ts";
 
 interface PublicationLike {
     toc?: Links;
@@ -271,15 +272,14 @@ export class Timeline {
 
     /**
      * A TOC href points to the start of its resource when it has no fragment,
-     * or when the fragment contains a parsable `t=` value of 0 (audio: explicit
-     * beginning of the file).  Accepts decimals and extra params, e.g. `t=0.0`
-     * or `foo=bar&t=0`.
+     * or when the fragment contains a parsable NPT `t=` value of 0 (audio:
+     * explicit beginning of the file).
      */
     private static isStartOfResource(href: string): boolean {
         const fragment = href.split("#")[1];
         if (!fragment) return true;
-        const match = fragment.match(/(?:^|&)t=(\d+(?:\.\d+)?)/);
-        return match !== null && parseFloat(match[1]) === 0;
+        const match = fragment.match(/(?:^|&)t=([^&]+)/);
+        return match !== null && isNptStartOfResource(match[1]);
     }
 
     // -------------------------------------------------------------------------
@@ -322,8 +322,8 @@ export class Timeline {
             const effectiveHref = refHref || this.bareHrefFromItem(item);
             if (effectiveHref !== href) continue;
             if (!refFragment) return undefined;
-            const match = refFragment.match(/(?:^|&)t=(\d+(?:\.\d+)?)/);
-            return match ? parseFloat(match[1]) : undefined;
+            const match = refFragment.match(/(?:^|&)t=([^&]+)/);
+            return match ? parseNptTime(match[1]) : undefined;
         }
         return undefined;
     }
@@ -337,8 +337,8 @@ export class Timeline {
         if (!ref) return undefined;
         const fragment = ref.split("#")[1];
         if (!fragment) return undefined;
-        const match = fragment.match(/(?:^|&)t=(\d+(?:\.\d+)?)/);
-        return match ? parseFloat(match[1]) : undefined;
+        const match = fragment.match(/(?:^|&)t=([^&]+)/);
+        return match ? parseNptTime(match[1]) : undefined;
     }
 
     private ancestorPath(items: TimelineItem[], target: TimelineItem): TimelineItem[] | null {

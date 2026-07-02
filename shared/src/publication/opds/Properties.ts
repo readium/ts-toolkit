@@ -4,7 +4,7 @@ import { Link } from '../Link.ts';
 import { Properties } from '../Properties.ts';
 
 // OPDS extensions for link [Properties].
-// https://drafts.opds.io/schema/properties.schema.json
+// https://specs.opds.io/schema/properties.schema.json
 
 declare module '../Properties' {
   export interface Properties {
@@ -43,7 +43,7 @@ declare module '../Properties' {
      * Indicates that the linked resource supports authentication with the associated Authentication
      * Document.
      *
-     * See https://drafts.opds.io/authentication-for-opds-1.0.html
+     * See https://specs.opds.io/authentication-for-opds-1.0.html
      */
     getAuthenticate(): Link | undefined;
   }

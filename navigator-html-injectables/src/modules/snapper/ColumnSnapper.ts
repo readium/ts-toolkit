@@ -1,6 +1,7 @@
 import { Comms } from "../../comms/index.ts";
 import { Snapper } from "./Snapper.ts";
 import { getColumnCountPerScreen, isRTL, appendVirtualColumnIfNeeded } from "../../helpers/document.ts";
+import { styleChangeAffectsLayout } from "../../helpers/css.ts";
 import { easeInOutQuad } from "../../helpers/animation.ts";
 import { ModuleName } from "../ModuleLibrary.ts";
 import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
@@ -392,7 +393,7 @@ export class ColumnSnapper extends Snapper {
                     const oldValueTransform = oldValue?.match(transformRegex);
                     const newValueTransform = newValue?.match(transformRegex);
                     if (
-                        (!oldValueTransform && !newValueTransform) ||
+                        (!oldValueTransform && !newValueTransform && styleChangeAffectsLayout(oldValue, newValue)) ||
                         (oldValueTransform && !newValueTransform) ||
                         (oldValueTransform && newValueTransform && oldValueTransform[1] !== newValueTransform[1])
                     ) {

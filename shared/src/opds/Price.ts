@@ -8,7 +8,7 @@ import { positiveNumberfromJSON } from '../util/JSONParse.ts';
 /**
  * The price of a publication in an OPDS link.
  *
- * https://drafts.opds.io/schema/properties.schema.json
+ * https://specs.opds.io/schema/properties.schema.json
  *
  * currency Currency for the price, eg. EUR.
  * value Price value, should only be used for display purposes, because of precision issues

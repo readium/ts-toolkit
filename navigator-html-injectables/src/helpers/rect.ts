@@ -12,7 +12,8 @@ export interface Rect {
 
 export function getClientRectsNoOverlap(
     range: Range,
-    doNotMergeHorizontallyAlignedRects: boolean
+    doNotMergeHorizontallyAlignedRects: boolean,
+    doNotMergeVerticallyAlignedRects: boolean = false
 ) {
     let clientRects = range.getClientRects();
 
@@ -36,7 +37,8 @@ export function getClientRectsNoOverlap(
     const mergedRects = mergeTouchingRects(
         originalRects,
         tolerance,
-        doNotMergeHorizontallyAlignedRects
+        doNotMergeHorizontallyAlignedRects,
+        doNotMergeVerticallyAlignedRects
     );
     const noContainedRects = removeContainedRects(mergedRects, tolerance);
     const newRects = replaceOverlapingRects(noContainedRects);
@@ -61,7 +63,8 @@ export function getClientRectsNoOverlap(
 function mergeTouchingRects(
     rects: Rect[],
     tolerance: number,
-    doNotMergeHorizontallyAlignedRects: boolean
+    doNotMergeHorizontallyAlignedRects: boolean,
+    doNotMergeVerticallyAlignedRects: boolean = false
 ): Rect[] {
     for (let i = 0; i < rects.length; i++) {
         for (let j = i + 1; j < rects.length; j++) {
@@ -78,8 +81,9 @@ function mergeTouchingRects(
                 almostEqual(rect1.left, rect2.left, tolerance) &&
                 almostEqual(rect1.right, rect2.right, tolerance);
             const horizontalAllowed = !doNotMergeHorizontallyAlignedRects;
+            const verticalAllowed = !doNotMergeVerticallyAlignedRects;
             const aligned =
-                (rectsLineUpHorizontally && horizontalAllowed) ||
+                (rectsLineUpHorizontally && horizontalAllowed && verticalAllowed) ||
                 (rectsLineUpVertically && !rectsLineUpHorizontally);
             const canMerge = aligned && rectsTouchOrOverlap(rect1, rect2, tolerance);
             if (canMerge) {
@@ -94,7 +98,8 @@ function mergeTouchingRects(
                 return mergeTouchingRects(
                     newRects,
                     tolerance,
-                    doNotMergeHorizontallyAlignedRects
+                    doNotMergeHorizontallyAlignedRects,
+                    doNotMergeVerticallyAlignedRects
                 );
             }
         }

@@ -1,8 +1,9 @@
-import { Layout, Link, Locator, Profile, Publication, ReadingProgression } from "@readium/shared";
+import { Layout, Link, Locator, LocatorText, Profile, Publication, ReadingProgression } from "@readium/shared";
 import { Configurable, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../index.ts";
 import { FramePoolManager } from "./frame/FramePoolManager.ts";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager.ts";
-import { CommsEventKey, ContextMenuEvent, FXLModules, ModuleLibrary, ModuleName, ReflowableModules, BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent, KeyboardPeripheralEvent } from "@readium/navigator-html-injectables";
+import { CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, FXLModules, ModuleLibrary, ModuleName, ReflowableModules, BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent, KeyboardPeripheralEvent } from "@readium/navigator-html-injectables";
+import { Decoration, DecorationActivationEvent, DecorationObserver, DecorableNavigator, DecoratorConfig, decorationsEqual, resolveDecorationForWire, BUILTIN_DECORATION_TYPES } from "../decorations/index.ts";
 import * as path from "path-browserify";
 import { FXLFrameManager } from "./fxl/FXLFrameManager.ts";
 import { FrameManager } from "./frame/FrameManager.ts";
@@ -29,6 +30,7 @@ export interface EpubNavigatorConfiguration {
     injectables?: IInjectablesConfig;
     contentProtection?: IContentProtectionConfig;
     keyboardPeripherals?: IKeyboardPeripheralsConfig;
+    decoratorConfig?: DecoratorConfig;
 }
 
 export interface EpubNavigatorListeners {
@@ -64,7 +66,7 @@ const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListe
     peripheral: listeners.peripheral || (() => {}),
 })
 
-export class EpubNavigator extends VisualNavigator implements Configurable<ConfigurableSettings, EpubPreferences> {
+export class EpubNavigator extends VisualNavigator implements Configurable<ConfigurableSettings, EpubPreferences>, DecorableNavigator {
     private readonly pub: Publication;
     private readonly container: HTMLElement;
     private readonly listeners: EpubNavigatorListeners;
@@ -92,6 +94,13 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private readonly _keyboardPeripheralListener: ((event: Event) => void) | null = null;
 
     private resizeObserver: ResizeObserver;
+
+    private readonly _decoratorConfig: DecoratorConfig;
+
+    private _decorations: Map<string, Decoration[]> = new Map();
+    private _decorationObservers: Map<string, Set<DecorationObserver>> = new Map();
+    private _decorationActivationState: Map<string, boolean> = new Map();
+    private _decorationActivationConsumed = false;
 
     private reflowViewport: VisualNavigatorViewport = {
         readingOrder: [],
@@ -152,6 +161,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this._readiumRulesPromise = createReadiumEpubRules(pub.metadata, pub.readingOrder.items);
 
         this._contentProtection = configuration.contentProtection || {};
+        this._decoratorConfig = configuration.decoratorConfig || {};
 
         // Merge keyboard peripherals
         this._keyboardPeripherals = this.mergeKeyboardPeripherals(
@@ -421,11 +431,19 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
      * to trigger the navigator when user's mouse/keyboard focus is
      * outside the readium-controller navigator. Be careful!
      */
-    public eventListener(key: CommsEventKey | ManagerEventKey, data: unknown) {
+    public eventListener(key: CommsEventKey | ManagerEventKey, data: unknown, sourceFrame?: FrameManager | FXLFrameManager) {
         switch (key) {
             case "_pong":
                 this.listeners.frameLoaded(this._cframes[0]!.iframe.contentWindow!);
                 this.listeners.positionChanged(this.currentLocation);
+                if (sourceFrame) {
+                    const frames = this._cframes.filter(f => !!f) as (FrameManager | FXLFrameManager)[];
+                    const i = frames.indexOf(sourceFrame);
+                    const href = i >= 0 ? this.viewport.readingOrder[i] : undefined;
+                    if (href) this._reapplyDecorationsToFrame(sourceFrame, href);
+                } else {
+                    this._reapplyDecorationsToCurrentFrames();
+                }
                 break;
             case "first_visible_locator":
                 const loc = Locator.deserialize(data as string);
@@ -439,11 +457,31 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 });
                 this.listeners.positionChanged(this.currentLocation);
                 break;
-            case "text_selected":
-                this.listeners.textSelected(data as BasicTextSelection);
+            case "text_selected": {
+                const selection = data as BasicTextSelection;
+                if (sourceFrame) {
+                    const frames = this._cframes.filter(f => !!f) as (FrameManager | FXLFrameManager)[];
+                    const i = frames.indexOf(sourceFrame);
+                    const href = i >= 0 ? this.viewport.readingOrder[i] : undefined;
+                    if (href) {
+                        const link = this.pub.readingOrder.findWithHref(href);
+                        selection.locator = new Locator({ href, type: link!.type || "application/xhtml+xml", text: new LocatorText({ highlight: selection.text }) });
+                    }
+                }
+                this.listeners.textSelected(selection);
                 break;
+            }
+            case "decoration_activated": {
+                const handled = this._handleDecorationActivated(data as DecorationActivatedEvent);
+                if (handled) this._decorationActivationConsumed = true;
+                break;
+            }
             case "click":
             case "tap":
+                if (this._decorationActivationConsumed) {
+                    this._decorationActivationConsumed = false;
+                    break;
+                }
                 const edata = data as FrameClickEvent;
                 if (edata.interactiveElement) {
                     const element = new DOMParser().parseFromString(
@@ -589,10 +627,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         if(vframes.length === 0) throw Error("no cframe to attach listener to");
         vframes.forEach(f => {
             if(f.msg) f.msg.listener = (key: CommsEventKey | ManagerEventKey, value: unknown) => {
-                this.eventListener(key, value);
+                this.eventListener(key, value, f);
             }
         })
-
+        this._reapplyDecorationsToCurrentFrames();
     }
 
     private async apply() {
@@ -605,6 +643,141 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             throw Error("Link for " + this.currentLocation.href + " not found!");
     }
 
+    // DecorableNavigator
+
+    public supportsDecorationStyle(styleTypeId: string): boolean {
+        return BUILTIN_DECORATION_TYPES.has(styleTypeId) ||
+            !!this._decoratorConfig.decorationTemplates?.[styleTypeId];
+    }
+
+    public registerDecorationObserver(group: string, observer: DecorationObserver): void {
+        if (!this._decorationObservers.has(group))
+            this._decorationObservers.set(group, new Set());
+        this._decorationObservers.get(group)!.add(observer);
+
+        // Store activation state and send to current frames
+        this._decorationActivationState.set(group, true);
+        this._sendDecorationActivationToFrames(group, true);
+    }
+
+    public unregisterDecorationObserver(observer: DecorationObserver): void {
+        this._decorationObservers.forEach((set, group) => {
+            if (set.has(observer)) {
+                set.delete(observer);
+                if (set.size === 0) {
+                    this._decorationActivationState.delete(group);
+                    this._sendDecorationActivationToFrames(group, false);
+                }
+            }
+        });
+    }
+
+    private _sendDecorationActivationToFrames(group: string, activatable: boolean): void {
+        const frames = this._cframes.filter(f => !!f) as (FrameManager | FXLFrameManager)[];
+        frames.forEach(f => {
+            if (f.msg) f.msg.send("decoration_activatable", { group, activatable });
+        });
+    }
+
+    public applyDecorations(decorations: Decoration[], group: string): void {
+        const previous = this._decorations.get(group) ?? [];
+        const prevById = new Map(previous.map(d => [d.id, d]));
+        const nextById = new Map(decorations.map(d => [d.id, d]));
+
+        const toRemove: string[] = [];
+        const toAdd: Decoration[] = [];
+        const toUpdate: Decoration[] = [];
+
+        for (const [id, prev] of prevById) {
+            if (!nextById.has(id)) toRemove.push(id);
+            else if (!decorationsEqual(prev, nextById.get(id)!)) toUpdate.push(nextById.get(id)!);
+        }
+        for (const [id, next] of nextById) {
+            if (!prevById.has(id)) toAdd.push(next);
+        }
+
+        this._decorations.set(group, decorations);
+        this._sendDecorationOps(group, toRemove, toAdd, toUpdate, previous);
+        // Resend activation state after ops: FIFO postMessage guarantees the group
+        // exists in the injectable by the time this arrives, so it won't be dropped.
+        // Fixes the case where registerDecorationObserver was called before the group
+        // was created (activation sent before first decorate:add → silently dropped).
+        const activatable = this._decorationActivationState.get(group);
+        if (activatable !== undefined) {
+            this._sendDecorationActivationToFrames(group, activatable);
+        }
+    }
+
+    private _sendDecorationOps(
+        group: string,
+        toRemove: string[],
+        toAdd: Decoration[],
+        toUpdate: Decoration[],
+        previous: Decoration[]
+    ): void {
+        const frames = this._cframes.filter(f => !!f) as (FrameManager | FXLFrameManager)[];
+        const prevById = new Map(previous.map(d => [d.id, d]));
+        const visibleHrefs = this.viewport.readingOrder;
+
+        frames.forEach((frame, i) => {
+            if (!frame.msg) return;
+            const href = visibleHrefs[i];
+            if (!href) return;
+            for (const id of toRemove) {
+                const d = prevById.get(id);
+                if (!d || d.locator.href !== href) continue;
+                frame.msg.send("decorate", { group, action: "remove", decoration: { id } });
+            }
+            for (const d of toAdd) {
+                if (d.locator.href !== href) continue;
+                frame.msg.send("decorate", { group, action: "add", decoration: resolveDecorationForWire(d, this._decoratorConfig.decorationTemplates) });
+            }
+            for (const d of toUpdate) {
+                if (d.locator.href !== href) continue;
+                frame.msg.send("decorate", { group, action: "update", decoration: resolveDecorationForWire(d, this._decoratorConfig.decorationTemplates) });
+            }
+        });
+    }
+
+    private _reapplyDecorationsToFrame(frame: FrameManager | FXLFrameManager, href: string): void {
+        if (!frame.msg) return;
+        for (const [group, decorations] of this._decorations) {
+            const matching = decorations.filter(d => d.locator.href === href);
+            if (matching.length === 0) continue;
+            frame.msg.send("decorate", { group, action: "clear" });
+            for (const d of matching)
+                frame.msg.send("decorate", { group, action: "add", decoration: resolveDecorationForWire(d, this._decoratorConfig.decorationTemplates) });
+        }
+        for (const [group, activatable] of this._decorationActivationState) {
+            frame.msg.send("decoration_activatable", { group, activatable });
+        }
+    }
+
+    private _reapplyDecorationsToCurrentFrames(): void {
+        const frames = this._cframes.filter(f => !!f) as (FrameManager | FXLFrameManager)[];
+        const visibleHrefs = this.viewport.readingOrder;
+        frames.forEach((frame, i) => {
+            const href = visibleHrefs[i];
+            if (href) this._reapplyDecorationsToFrame(frame, href);
+        });
+    }
+
+    private _handleDecorationActivated(data: DecorationActivatedEvent): boolean {
+        const observers = this._decorationObservers.get(data.group);
+        if (!observers || observers.size === 0) return false;
+
+        const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId);
+        if (!decoration) return false;
+
+        const event: DecorationActivationEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
+        let anyHandled = false;
+        for (const obs of observers)
+            if (obs.onDecorationActivated(event)) anyHandled = true;
+        return anyHandled;
+    }
+
+    // End of Decoration
+
     public async destroy() {
         if (this._suspiciousActivityListener) {
             window.removeEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
@@ -615,6 +788,9 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this._navigatorProtector?.destroy();
         this._keyboardPeripheralsManager?.destroy();
         await this.framePool?.destroy();
+        this._decorations.clear();
+        this._decorationObservers.clear();
+        this._decorationActivationState.clear();
     }
 
     private async changeResource(relative: number): Promise<boolean> {

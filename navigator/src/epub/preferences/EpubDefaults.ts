@@ -19,7 +19,7 @@ import {
   withFallback
 } from "../../preferences/guards.ts";
 
-import { sMLWithRequest } from "../../helpers/index.ts";
+import { sMLWithRequest } from "@readium/navigator-html-injectables";
 
 export interface IEpubDefaults {
   backgroundColor?: string | null,

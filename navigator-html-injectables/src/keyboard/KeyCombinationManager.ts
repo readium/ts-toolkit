@@ -146,6 +146,7 @@ export class KeyCombinationManager {
         const handlers = this.createKeyboardHandlers(targetFrameSrc, shortcuts, dispatcher, wnd);
 
         return (event: KeyboardEvent) => {
+            if (!event.isTrusted) return;
             for (const handlerConfig of handlers) {
                 if (this.match(event, [handlerConfig])) {
                     const suppress = handlerConfig.suppressOnInteractiveElement;

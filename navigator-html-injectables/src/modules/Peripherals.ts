@@ -1,3 +1,4 @@
+import { Locator } from "@readium/shared";
 import { Comms } from "../comms/comms.ts";
 import { Module } from "./Module.ts";
 import { ReadiumWindow, nearestInteractiveElement } from "../helpers/dom.ts";
@@ -28,6 +29,8 @@ export interface BasicTextSelection {
     width: number;
     height: number;
     targetFrameSrc: string;
+    /** Locator for the frame the selection originated from. Populated by the navigator. */
+    locator?: Locator;
 }
 
 export interface BaseSuspiciousActivityEvent {

@@ -14,8 +14,6 @@ import { GuidedNavigationDocument } from "./GuidedNavigation.ts";
 import { MediaType, URITemplate } from "../util/index.ts";
 import { Timeline } from './services/timeline/Timeline.ts';
 
-export type ServiceFactory = () => null;
-
 /** Shared model for a Readium Publication. */
 export class Publication {
   /** The manifest holding the publication metadata extracted from the publication file */
