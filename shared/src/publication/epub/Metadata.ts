@@ -7,10 +7,14 @@ declare module '../Metadata' {
   }
 }
 
-Metadata.prototype.getMediaOverlay = function(): MediaOverlay | undefined {
-  const mediaOverlay = this.otherMetadata?.['mediaOverlay'];
+export const __epubMetadata = ((): true => {
+  Metadata.prototype.getMediaOverlay = function(): MediaOverlay | undefined {
+    const mediaOverlay = this.otherMetadata?.['mediaOverlay'];
 
-  if (!mediaOverlay) return;
+    if (!mediaOverlay) return;
 
-  return MediaOverlay.deserialize(mediaOverlay);
-};
+    return MediaOverlay.deserialize(mediaOverlay);
+  };
+
+  return true;
+})();

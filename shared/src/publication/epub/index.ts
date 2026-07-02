@@ -1,4 +1,4 @@
 export * from './MediaOverlay.ts';
-export * from './Metadata.ts';
-export * from './Properties.ts';
-export * from './Publication.ts';
+export { __epubMetadata } from './Metadata.ts';
+export { __epubProperties } from './Properties.ts';
+export { __epubPublication } from './Publication.ts';

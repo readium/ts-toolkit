@@ -11,17 +11,18 @@ pnpm run test
 
 It will output the results in your shell.
 
+Locale files from [edrlab/thorium-locales](https://github.com/edrlab/thorium-locales) are vendored in `src/locales/` and must be present before building. Update them when upstream changes:
+
+```sh
+pnpm run update-locales
+```
+
+This fetches all available locale files from the upstream repository and runs a coverage check.
+
 To build: 
 
 ```sh
 pnpm run build
 ```
 
-It will output 6 files (`shared.js` and `shared.umd.cjs`, `fetcher.js` and `fetcher.cjs`) in `dist`.
-
-To check the size limit: 
-
-```sh
-# Check ths size limit is not exceeded
-pnpm run size
-```
+It will output files in `dist`.

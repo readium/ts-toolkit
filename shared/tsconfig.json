@@ -24,7 +24,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     // use Node's module resolution algorithm, instead of the legacy TS one
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     // Enable JSON imports and ESM/CJS interop
     "resolveJsonModule": true,
     "esModuleInterop": true,

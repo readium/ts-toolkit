@@ -9,6 +9,10 @@ declare module '../Publication' {
   }
 }
 
-Publication.prototype.getImages = function(): Links | undefined {
-  return this.linksWithRole('images');
-};
+export const __opdsPublication = ((): true => {
+  Publication.prototype.getImages = function(): Links | undefined {
+    return this.linksWithRole('images');
+  };
+
+  return true;
+})();

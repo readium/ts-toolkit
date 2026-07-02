@@ -16,7 +16,7 @@ jobs:
         working-directory: ./shared
     strategy:
       matrix:
-        node: ['20.x', '22.x']
+        node: ['22.x', '24.x']
         os: [ubuntu-latest, windows-latest, macOS-latest]
 
     steps:

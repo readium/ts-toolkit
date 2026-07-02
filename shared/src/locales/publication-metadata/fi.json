@@ -1,0 +1,310 @@
+{
+    "publication": {
+        "format": {
+            "audiobook": "Äänikirja",
+            "audiobookJSON": "Äänikirjaluettelo",
+            "cbz": "Sarjakuva-arkisto",
+            "divina": "Divina-julkaisu",
+            "divinaJSON": "Divina-julkaisuluettelo",
+            "epub": "EPUB",
+            "lcpa": "LCP-suojattu äänikirja",
+            "lcpdf": "LCP-suojattu PDF",
+            "lcpl": "LCP-lisenssi",
+            "pdf": "PDF",
+            "rwp": "Readium Web -julkaisu",
+            "rwpm": "Readium Web -julkaisuluettelo",
+            "zab": "Äänikirja-arkisto",
+            "zip": "ZIP-arkisto"
+        },
+        "kind": {
+            "audiobook_one": "äänikirja",
+            "audiobook_other": "äänikirjaa",
+            "book_one": "kirja",
+            "book_other": "kirjaa",
+            "comic_one": "sarjakuva",
+            "comic_other": "sarjakuvaa",
+            "document_one": "tiedosto",
+            "document_other": "tiedostoa"
+        },
+        "metadata": {
+            "accessibility": {
+                "display-guide": {
+                    "accessibility-summary": {
+                        "no-metadata": "Tietoa ei saatavilla",
+                        "publisher-contact": "Ota yhteyttä julkaisijaan, jos haluat lisää tietoa julkaisun saavutettavuudesta: ",
+                        "title": "Saavutettavuuden yhteenveto"
+                    },
+                    "additional-accessibility-information": {
+                        "aria": {
+                            "compact": "ARIA-rooleja on käytetty",
+                            "descriptive": "Sisältöön on lisätty ARIA-rooleja, jotka selkeyttävät rakennetta ja voivat helpottaa navigaatiota"
+                        },
+                        "audio-descriptions": "Kuvailutulkkaus",
+                        "braille": "Pistekirjoitus",
+                        "color-not-sole-means-of-conveying-information": "Väri ei ole ainoa keino välittää tietoa",
+                        "dyslexia-readability": "Soveltuu henkilöille, joilla on lukivaikeus",
+                        "full-ruby-annotations": "Kattavat rubi-merkinnät",
+                        "high-contrast-between-foreground-and-background-audio": "Korkea kontrasti äänisisältöjen edusta- ja taustaäänen tasoissa",
+                        "high-contrast-between-text-and-background": "Korkea kontrasti tekstin ja taustan välillä",
+                        "large-print": "Isotekstinen",
+                        "page-breaks": {
+                            "compact": "Sivunvaihtokohdat on merkitty",
+                            "descriptive": "Painetun julkaisun sivunvaihtokohdat on merkitty"
+                        },
+                        "ruby-annotations": "Sisältää rubi-merkintöjä",
+                        "sign-language": "Viittomakielinen",
+                        "tactile-graphics": {
+                            "compact": "Sisältää kohokuvia",
+                            "descriptive": "Sisältää kohokuvia sokeille henkilöille"
+                        },
+                        "tactile-objects": "Kolmiulotteisia taktiiliosia",
+                        "text-to-speech-hinting": "Tekstistä puheeksi -vihjeitä",
+                        "title": "Lisätietoa saavutettavuudesta",
+                        "ultra-high-contrast-between-text-and-background": "Erittäin korkea kontrasti tekstin ja taustan välillä",
+                        "visible-page-numbering": "Näkyvä sivunumerointi",
+                        "without-background-sounds": "Ei taustaääniä"
+                    },
+                    "conformance": {
+                        "a": {
+                            "compact": "Tämä julkaisu noudattaa saavutettavuusstandardien alinta tasoa",
+                            "descriptive": "Tämä julkaisu ilmoittaa, että se noudattaa standardeja EPUB Accessibility ja WCAG 2, taso A"
+                        },
+                        "aa": {
+                            "compact": "Tämä julkaisu noudattaa saavutettavuusstandardien yleisesti hyväksyttyä tasoa",
+                            "descriptive": "Tämä julkaisu ilmoittaa, että se noudattaa standardeja EPUB Accessibility ja WCAG 2, taso AA"
+                        },
+                        "aaa": {
+                            "compact": "Tämä julkaisu ylittää saavutettavuusstandardien yleisesti hyväksytyn tason",
+                            "descriptive": "Tämä julkaisu ilmoittaa, että se noudattaa standardeja EPUB Accessibility ja WCAG 2, taso AAA"
+                        },
+                        "certifier": "Julkaisun saavutettavuuden on arvioinut ",
+                        "certifier-credentials": "Arvioijan sertifiointitunnus on ",
+                        "details": {
+                            "certification-info": "Julkaisu on arvioitu ",
+                            "certifier-report": "Lisätietoja arvioijan raportissa",
+                            "claim": "Tämän julkaisun ilmoitetaan noudattavan standardia",
+                            "epub-accessibility-1-0": "EPUB Accessibility 1.0",
+                            "epub-accessibility-1-1": "EPUB Accessibility 1.1",
+                            "level-a": "Taso A",
+                            "level-aa": "Taso AA",
+                            "level-aaa": "Taso AAA",
+                            "wcag-2-0": {
+                                "compact": "WCAG 2.0",
+                                "descriptive": "Verkkosisällön saavutettavuusohjeet (WCAG) 2.0"
+                            },
+                            "wcag-2-1": {
+                                "compact": "WCAG 2.1",
+                                "descriptive": "Verkkosisällön saavutettavuusohjeet (WCAG) 2.1"
+                            },
+                            "wcag-2-2": {
+                                "compact": "WCAG 2.2",
+                                "descriptive": "Verkkosisällön saavutettavuusohjeet (WCAG) 2.2"
+                            }
+                        },
+                        "details-title": "Tarkat tiedot saavutettavuusstandardien noudattamisesta",
+                        "no": "Tietoa ei ole saatavilla",
+                        "title": "Saavutettavuusstandardien noudattaminen",
+                        "unknown-standard": "Ei ole tiedossa, noudattaako julkaisu saavutettavuusstandardeja"
+                    },
+                    "hazards": {
+                        "flashing": {
+                            "compact": "Välkkyvää sisältöä",
+                            "descriptive": "Julkaisussa on välkkyvää sisältöä, joka voi olla haitallista valoherkille"
+                        },
+                        "flashing-none": {
+                            "compact": "Ei välkkyvää sisältöä",
+                            "descriptive": "Julkaisussa ei ole välkkyvää sisältöä, joka voi olla haitallista valoherkille"
+                        },
+                        "flashing-unknown": {
+                            "compact": "Ei tietoa välkkyvästä sisällöstä",
+                            "descriptive": "Ei ole tietoa, onko julkaisussa välkkyvää sisältöä"
+                        },
+                        "motion": {
+                            "compact": "Simuloitua liikettä",
+                            "descriptive": "Julkaisu sisältää simuloitua liikettä, joka voi aiheuttaa liikepahoinvointia"
+                        },
+                        "motion-none": {
+                            "compact": "Ei simuloitua liikettä",
+                            "descriptive": "Julkaisu ei sisällä simuloitua liikettä, joka voi aiheuttaa liikepahoinvointia"
+                        },
+                        "motion-unknown": {
+                            "compact": "Ei tietoa simuloidusta liikkeestä",
+                            "descriptive": "Ei ole tietoa, onko julkaisussa simuloitua liikettä, joka voi aiheuttaa liikepahoinvointia"
+                        },
+                        "no-metadata": "Tietoa ei ole saatavilla",
+                        "none": {
+                            "compact": "Ei vaaratekijöitä",
+                            "descriptive": "Julkaisu ei sisällä vaaratekijöitä"
+                        },
+                        "sound": {
+                            "compact": "Ääniä",
+                            "descriptive": "Julkaisu sisältää ääniä, jotka voivat olla häiritseviä"
+                        },
+                        "sound-none": {
+                            "compact": "Ei häiritseviä ääniä",
+                            "descriptive": "Julkaisu ei sisällä häiritseviä ääniä"
+                        },
+                        "sound-unknown": {
+                            "compact": "Ei tietoa häiritsevistä äänistä",
+                            "descriptive": "Ei ole tietoa, onko julkaisussa häiritseviä ääniä"
+                        },
+                        "title": "Vaaratekijät",
+                        "unknown": "Ei tietoa vaaratekijöistä"
+                    },
+                    "legal-considerations": {
+                        "exempt": {
+                            "compact": "Vedotaan poikkeukseen saavutettavuusvaatimuksissa",
+                            "descriptive": "Tämän julkaisun kohdalla vedotaan poikkeukseen saavutettavuusvaatimuksissa"
+                        },
+                        "no-metadata": "Tietoa ei ole saatavilla",
+                        "title": "Oikeudellisia huomioita"
+                    },
+                    "navigation": {
+                        "index": {
+                            "compact": "Hakemisto",
+                            "descriptive": "Hakemisto, jossa hakusanat on linkitetty sisältöön"
+                        },
+                        "no-metadata": "Tietoa ei ole saatavilla",
+                        "page-navigation": {
+                            "compact": "Siirry sivulle",
+                            "descriptive": "Sivuluettelo, jonka avulla voi siirtyä painetun version sivuja vastaaviin kohtiin"
+                        },
+                        "structural": {
+                            "compact": "Otsikot",
+                            "descriptive": "Sisältää navigointia helpottavia rakenteita, kuten otsikoita"
+                        },
+                        "title": "Siirtyminen",
+                        "toc": {
+                            "compact": "Sisällysluettelo",
+                            "descriptive": "Sisällysluettelo, jossa on linkit kaikkiin lukuihin"
+                        }
+                    },
+                    "rich-content": {
+                        "accessible-chemistry-as-latex": {
+                            "compact": "Kemialliset kaavat LaTeX-muodossa",
+                            "descriptive": "Kemialliset kaavat saavutettavassa muodossa (LaTeX)"
+                        },
+                        "accessible-chemistry-as-mathml": {
+                            "compact": "Kemialliset kaavat MathML-muodossa",
+                            "descriptive": "Kemialliset kaavat saavutettavassa muodossa (MathML)"
+                        },
+                        "accessible-math-as-latex": {
+                            "compact": "Matematiikka LaTeX-muodossa",
+                            "descriptive": "Matemaattiset kaavat saavutettavassa muodossa (LaTeX)"
+                        },
+                        "accessible-math-described": "Matematiikalle on tekstikuvaukset",
+                        "closed-captions": {
+                            "compact": "Videoissa on tekstitys",
+                            "descriptive": "Julkaisuihin sisältyvissä videoissa on tekstitys"
+                        },
+                        "extended-descriptions": "Paljon tietoa sisältävillä kuvilla on pitkät selostukset",
+                        "math-as-mathml": {
+                            "compact": "Matematiikka MathML-muodossa",
+                            "descriptive": "Matemaattiset kaavat saavutettavassa muodossa (MathML)"
+                        },
+                        "open-captions": {
+                            "compact": "Videoissa on kiinteä tekstitys",
+                            "descriptive": "Julkaisuihin sisältyvissä videoissa on kiinteä tekstitys"
+                        },
+                        "title": "Monimuotoinen sisältö",
+                        "transcript": "Tekstivastine ääni- tai videosisällölle",
+                        "unknown": "Tietoa ei ole saatavilla"
+                    },
+                    "ways-of-reading": {
+                        "nonvisual-reading": {
+                            "alt-text": {
+                                "compact": "Sisältää vaihtoehtoiset tekstit",
+                                "descriptive": "Sisältää vaihtoehtoiset tekstit kuville"
+                            },
+                            "no-metadata": "Ei tietoa tukeeko muita kuin näköön perustuvia tapoja lukea",
+                            "none": {
+                                "compact": "Ei luettavissa ruudunlukuohjelmalla tai pistenäytöllä",
+                                "descriptive": "Sisältö ei ole luettavissa ruudunlukuohjelmalla tai pistenäytöllä"
+                            },
+                            "not-fully": {
+                                "compact": "Ei kokonaan luettavissa ruudunlukuohjelmalla tai pistenäytöllä",
+                                "descriptive": "Ei kokonaan luettavissa ruudunlukuohjelmalla tai pistenäytöllä"
+                            },
+                            "readable": {
+                                "compact": "Luettavissa ruudunlukuohjelmalla tai pistenäytöllä",
+                                "descriptive": "Kaikki sisältö on luettavissa ruudunlukuohjelmalla tai pistenäytöllä"
+                            }
+                        },
+                        "prerecorded-audio": {
+                            "complementary": {
+                                "compact": "Sisältää äänitteitä",
+                                "descriptive": "Sisällössä on äänitettyjä osuuksia"
+                            },
+                            "no-metadata": "Ei tietoa äänitteistä",
+                            "only": {
+                                "compact": "Sisältää vain ääntä",
+                                "descriptive": "Äänikirja, jossa ei ole tekstiä"
+                            },
+                            "synchronized": {
+                                "compact": "Äänite on synkronoitu tekstin kanssa",
+                                "descriptive": "Koko sisältö on käytettävissä äänitteenä, joka on synkronoitu tekstin kanssa"
+                            }
+                        },
+                        "title": "Lukemisen keinot",
+                        "visual-adjustments": {
+                            "modifiable": {
+                                "compact": "Ulkoasua voi mukauttaa",
+                                "descriptive": "Tekstin ja sivujen ulkoasua voi mukauttaa lukuohjelman toimintojen avulla (esimerkiksi muuttaa kirjaintyyppiä, tekstin kokoa ja välistyksiä sekä tekstin ja taustan värejä)"
+                            },
+                            "unknown": "Ei tietoa siitä, voiko ulkoasua mukauttaa",
+                            "unmodifiable": {
+                                "compact": "Ulkoasua ei voi mukauttaa",
+                                "descriptive": "Tekstin ja sivujen ulkoasu mukailee painettua versiota eikä ulkoasua voi mukauttaa. Lukuohjelmassa voi kuitenkin olla mahdollista zoomata."
+                            }
+                        }
+                    }
+                }
+            },
+            "altIdentifier_one": "vaihtoehtoinen tunniste",
+            "altIdentifier_other": "vaihtoehtoiset tunnisteet",
+            "artist_one": "taiteilija",
+            "artist_other": "taiteilijat",
+            "author_one": "kirjailija",
+            "author_other": "kirjailijat",
+            "collection_one": "toimituksellinen kirjasarja",
+            "collection_other": "toimitukselliset kirjasarjat",
+            "colorist_one": "värittäjä",
+            "colorist_other": "värittäjät",
+            "contributor_one": "avustaja",
+            "contributor_other": "avustajat",
+            "description": "kuvaus",
+            "duration": "kesto",
+            "editor_one": "toimittaja",
+            "editor_other": "toimittajat",
+            "identifier_one": "tunniste",
+            "identifier_other": "tunnisteet",
+            "illustrator_one": "kuvittaja",
+            "illustrator_other": "kuvittajat",
+            "imprint_one": "imprint-kustantamo",
+            "imprint_other": "imprint-kustantamot",
+            "inker_one": "puhtaaksipiirtäjä",
+            "inker_other": "puhtaaksipiirtäjät",
+            "language_one": "kieli",
+            "language_other": "kielet",
+            "letterer_one": "tekstaaja",
+            "letterer_other": "tekstaajat",
+            "modified": "muokkauspäivämäärä",
+            "narrator_one": "lukija",
+            "narrator_other": "lukijat",
+            "numberOfPages": "painetun kirjan sivumäärä",
+            "penciler_one": "piirtäjä",
+            "penciler_other": "piirtäjät",
+            "published": "julkaisupäivä",
+            "publisher_one": "kustantaja",
+            "publisher_other": "kustantajat",
+            "series_one": "sarja",
+            "series_other": "sarjat",
+            "subject_one": "aihe",
+            "subject_other": "aiheet",
+            "subtitle": "alaotsikko",
+            "title": "nimi",
+            "translator_one": "kääntäjä",
+            "translator_other": "kääntäjät"
+        }
+    }
+}
