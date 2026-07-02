@@ -25,6 +25,8 @@
     "noUnusedParameters": true,
     // use Node's module resolution algorithm, instead of the legacy TS one
     "moduleResolution": "bundler",
+    // resolve @readium/* workspace imports to each package's src (no build-before-import)
+    "customConditions": ["source"],
     // Enable JSON imports and ESM/CJS interop
     "resolveJsonModule": true,
     "esModuleInterop": true,

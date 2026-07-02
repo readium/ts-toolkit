@@ -2,7 +2,7 @@ import { Loader, ModuleName } from "@readium/navigator-html-injectables";
 import { Page, ReadingProgression } from "@readium/shared";
 import { FrameComms } from "../frame/FrameComms.ts";
 import { FXLPeripherals } from "./FXLPeripherals.ts";
-import type { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
+import type { ReadiumWindow } from "@readium/navigator-html-injectables";
 import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator.ts";
 import { KeyboardConditionBridge } from "../../peripherals/KeyboardConditionBridge.ts";
 

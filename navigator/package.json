@@ -29,6 +29,7 @@
   "types": "./types/src/index.d.ts",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./types/src/index.d.ts",
       "import": "./dist/index.js"
     }

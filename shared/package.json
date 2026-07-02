@@ -29,22 +29,27 @@
   "types": "./types/src/index.d.ts",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./types/src/index.d.ts",
       "import": "./dist/index.js"
     },
     "./html": {
+      "source": "./src/publication/html/index.ts",
       "types": "./types/src/publication/html/index.d.ts",
       "import": "./dist/publication/html/index.js"
     },
     "./epub": {
+      "source": "./src/publication/epub/index.ts",
       "types": "./types/src/publication/epub/index.d.ts",
       "import": "./dist/publication/epub/index.js"
     },
     "./opds": {
+      "source": "./src/publication/opds/index.ts",
       "types": "./types/src/publication/opds/index.d.ts",
       "import": "./dist/publication/opds/index.js"
     },
     "./encryption": {
+      "source": "./src/publication/encryption/index.ts",
       "types": "./types/src/publication/encryption/index.d.ts",
       "import": "./dist/publication/encryption/index.js"
     }

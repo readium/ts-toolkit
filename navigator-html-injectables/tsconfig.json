@@ -25,6 +25,10 @@
     "noUnusedParameters": true,
     // use Node's module resolution algorithm, instead of the legacy TS one
     "moduleResolution": "bundler",
+    // resolve @readium/* workspace imports to each package's src (no build-before-import)
+    "customConditions": ["source"],
+    // needed to compile shared's vendored-locale JSON imports reached via source resolution
+    "resolveJsonModule": true,
     // transpile JSX to React.createElement
     "jsx": "react",
     // interop between ESM and CJS modules. Recommended by TS
