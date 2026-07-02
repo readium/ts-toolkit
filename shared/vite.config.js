@@ -5,7 +5,13 @@ import packageJson from "./package.json";
 export default defineConfig({
   build: {
     rollupOptions: {
-      input: resolve(__dirname, "src/index.ts"),
+      input: [
+        resolve(__dirname, "src/index.ts"),
+        resolve(__dirname, "src/publication/html/index.ts"),
+        resolve(__dirname, "src/publication/epub/index.ts"),
+        resolve(__dirname, "src/publication/opds/index.ts"),
+        resolve(__dirname, "src/publication/encryption/index.ts"),
+      ],
       preserveEntrySignatures: "strict",
       output: {
         format: "es",
