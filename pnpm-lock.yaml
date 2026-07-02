@@ -73,6 +73,9 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      user-agent-data-types:
+        specifier: ^0.4.2
+        version: 0.4.3
       vite:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.0.9)
