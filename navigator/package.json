@@ -48,6 +48,7 @@
     "generate:css-selector": "node scripts/generate-css-selector.js"
   },
   "dependencies": {
+    "@readium/decorator": "workspace:*",
     "@readium/navigator-html-injectables": "workspace:*",
     "@readium/shared": "workspace:*"
   },

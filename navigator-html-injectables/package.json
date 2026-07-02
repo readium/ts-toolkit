@@ -47,6 +47,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@readium/helpers": "workspace:*",
     "@readium/shared": "workspace:*"
   },
   "devDependencies": {

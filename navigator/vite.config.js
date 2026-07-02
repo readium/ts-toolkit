@@ -6,7 +6,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: resolve(__dirname, "src/index.ts"),
-      external: [/^@readium\/shared(\/.*)?$/, "@readium/navigator-html-injectables"],
+      external: [/^@readium\/shared(\/.*)?$/, "@readium/navigator-html-injectables", "@readium/decorator"],
       preserveEntrySignatures: "strict",
       output: {
         format: "es",

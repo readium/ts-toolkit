@@ -3,6 +3,7 @@ packages:
   - 'shared'
   - 'navigator'
   - 'navigator-html-injectables'
+  - 'decorator'
 
 minimumReleaseAge: 4320 # 3 days
 blockExoticSubdeps: true
