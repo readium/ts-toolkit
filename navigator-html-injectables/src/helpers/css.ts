@@ -67,7 +67,7 @@ export function updateProperties(wnd: ReadiumWindow, properties: { [key: string]
 }
 
 // Easy way to get a CSS property
-export function getProperty(wnd: ReadiumWindow, key: string) {
+export function getProperty(wnd: Window, key: string) {
     return wnd.document.documentElement.style.getPropertyValue(key);
 }
 

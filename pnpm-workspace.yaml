@@ -1,4 +1,5 @@
 packages:
+  - 'helpers'
   - 'shared'
   - 'navigator'
   - 'navigator-html-injectables'

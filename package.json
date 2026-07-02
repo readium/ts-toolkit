@@ -7,9 +7,11 @@
         "vite": "^7.3.1"
     },
     "workspaces": [
+        "helpers",
         "navigator",
         "navigator-html-injectables",
-        "shared"
+        "shared",
+        "decorator"
     ],
     "packageManager": "pnpm@11.1.0"
 }
