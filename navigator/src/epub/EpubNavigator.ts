@@ -1,4 +1,4 @@
-import { Layout, Link, Locator, LocatorText, Profile, Publication, ReadingProgression, getCssSelector, htmlId } from "@readium/shared";
+import { Layout, Link, Locator, LocatorText, Profile, Publication, ReadingProgression, getCssSelector, getHtmlId } from "@readium/shared";
 import { Configurable, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../index.ts";
 import { FramePoolManager } from "./frame/FramePoolManager.ts";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager.ts";
@@ -1123,7 +1123,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         // This sanity check has to be performed because we're still passing non-locator class
         // locator objects to this function. This is not good and should eventually be forbidden
         // or the locator should be deserialized sometime before this function.
-        const hid = htmlId(locator.locations);
+        const hid = getHtmlId(locator.locations);
         if(hid)
             done = await new Promise<boolean>((res, _) => {
                 // Attempt to go to an HTML ID in the resource

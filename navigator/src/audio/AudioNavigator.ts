@@ -1,4 +1,4 @@
-import { Link, Locator, LocatorLocations, Publication, Timeline, TimelineItem, time as locatorTime } from "@readium/shared";
+import { Link, Locator, LocatorLocations, Publication, Timeline, TimelineItem, getTime as locatorTime } from "@readium/shared";
 import { MediaNavigator, IContentProtectionConfig, IKeyboardPeripheralsConfig, KeyboardPeripheralEventData } from "../Navigator.ts";
 import { Configurable } from "../preferences/Configurable.ts";
 import { WebAudioEngine, PlaybackState } from "./engine/index.ts";

@@ -1,6 +1,6 @@
 import { Link, Links } from "../../Link.ts";
 import { Locator } from "../../Locator.ts";
-import { time as locatorTime } from "../../html/Locations.ts";
+import { getTime as locatorTime } from "../../html/Locations.ts";
 import { TimelineItem } from "./TimelineItem.ts";
 import { isNptStartOfResource, parseNptTime } from "../../../util/npt.ts";
 
