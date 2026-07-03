@@ -74,9 +74,39 @@ export class ColumnSnapper extends Snapper {
 
     protected hasScrolledPast(el: Element): boolean {
         const rect = el.getBoundingClientRect();
-        // LTR: element's right edge left the viewport's left boundary.
-        // RTL: element's left edge passed the viewport's right boundary.
         return this.rtl ? rect.left >= this.wnd.innerWidth : rect.right <= 0;
+    }
+
+    /**
+     * IntersectionObserver is unreliable in CSS multi-column layout (underspecified
+     * in the spec, inconsistently implemented). Use rect-based detection instead:
+     * walk elements in DOM order and return the last one whose leading edge has
+     * entered or passed the viewport — that is the current section.
+     */
+    protected currentTimelineFragment(): string | undefined {
+        if (this.timelineEntries.size === 0) return undefined;
+
+        const inDomOrder = (a: string, b: string): number => {
+            const ea = this.timelineEntries.get(a);
+            const eb = this.timelineEntries.get(b);
+            if (!ea || !eb) return 0;
+            const cmp = ea.compareDocumentPosition(eb);
+            return cmp & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+        };
+
+        const sorted = Array.from(this.timelineEntries.keys()).sort(inDomOrder);
+        const vw = this.wnd.innerWidth;
+        let result: string | undefined;
+        for (const id of sorted) {
+            const el = this.timelineEntries.get(id)!;
+            const rect = el.getBoundingClientRect();
+            // LTR: element has started when its left edge is before the viewport's right.
+            // RTL: element has started when its right edge is past the viewport's left.
+            const started = this.rtl ? rect.right > 0 : rect.left < vw;
+            if (started) result = id;
+            else break;
+        }
+        return result;
     }
 
     reportProgress() {
@@ -338,7 +368,6 @@ export class ColumnSnapper extends Snapper {
         this.wnd = wnd;
         this.comms = comms;
         this.rtl = isRTL(wnd);
-        this.setupTimelineObserver();
         if(!super.mount(wnd, comms)) return false;
 
         wnd.navigator.epubReadingSystem && (wnd.navigator.epubReadingSystem.layoutStyle = "paginated");
@@ -619,7 +648,12 @@ export class ColumnSnapper extends Snapper {
 
         comms.register("timeline_entries", ColumnSnapper.moduleName, (data, ack) => {
             this.cachedFragmentIds = Array.isArray(data) ? data as string[] : [];
-            this.observeTimelineElements(wnd);
+            this.timelineEntries.clear();
+            for (const id of this.cachedFragmentIds) {
+                const el = wnd.document.getElementById(id);
+                if (el) this.timelineEntries.set(id, el);
+            }
+            wnd.requestAnimationFrame(() => this.reportProgress());
             ack(true);
         });
 
@@ -656,9 +690,6 @@ export class ColumnSnapper extends Snapper {
 
         wnd.document.getElementById(COLUMN_SNAPPER_STYLE_ID)?.remove();
 
-        this.timelineObserver?.disconnect();
-        this.timelineObserver = null;
-        this.visibleFragmentIds.clear();
         this.timelineEntries.clear();
 
         comms.log("ColumnSnapper Unmounted");
