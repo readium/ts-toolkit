@@ -1,55 +1,30 @@
 import { Links } from '../Link.ts';
 import { Publication } from '../Publication.ts';
 
-// EPUB extensions for [Publication].
+// EPUB extensions for Publication.
 // https://readium.org/webpub-manifest/schema/extensions/epub/subcollections.schema.json
 // https://idpf.github.io/epub-vocabs/structure/#navigation
 
-declare module '../Publication' {
-  export interface Publication {
-    /**
-     * Provides navigation to positions in the Publication content that correspond to the locations of
-     * page boundaries present in a print source being represented by this EPUB Publication.
-     */
-    getPageList(): Links | undefined;
-
-    /**
-     * Identifies fundamental structural components of the publication in order to enable Reading
-     * Systems to provide the User efficient access to them.
-     */
-    getLandmarks(): Links | undefined;
-
-    getListOfAudioClips(): Links | undefined;
-    getListOfIllustrations(): Links | undefined;
-    getListOfTables(): Links | undefined;
-    getListOfVideoClips(): Links | undefined;
-  }
+export function getPageList(pub: Publication): Links | undefined {
+  return pub.linksWithRole('pageList');
 }
 
-export const __epubPublication = ((): true => {
-  Publication.prototype.getPageList = function(): Links | undefined {
-    return this.linksWithRole('pageList');
-  };
+export function getLandmarks(pub: Publication): Links | undefined {
+  return pub.linksWithRole('landmarks');
+}
 
-  Publication.prototype.getLandmarks = function(): Links | undefined {
-    return this.linksWithRole('landmarks');
-  };
+export function getListOfAudioClips(pub: Publication): Links | undefined {
+  return pub.linksWithRole('loa');
+}
 
-  Publication.prototype.getListOfAudioClips = function(): Links | undefined {
-    return this.linksWithRole('loa');
-  };
+export function getListOfIllustrations(pub: Publication): Links | undefined {
+  return pub.linksWithRole('loi');
+}
 
-  Publication.prototype.getListOfIllustrations = function(): Links | undefined {
-    return this.linksWithRole('loi');
-  };
+export function getListOfTables(pub: Publication): Links | undefined {
+  return pub.linksWithRole('lot');
+}
 
-  Publication.prototype.getListOfTables = function(): Links | undefined {
-    return this.linksWithRole('lot');
-  };
-
-  Publication.prototype.getListOfVideoClips = function(): Links | undefined {
-    return this.linksWithRole('lov');
-  };
-
-  return true;
-})();
+export function getListOfVideoClips(pub: Publication): Links | undefined {
+  return pub.linksWithRole('lov');
+}

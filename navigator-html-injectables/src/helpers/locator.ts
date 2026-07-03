@@ -1,4 +1,4 @@
-import { Locator } from "@readium/shared";
+import { getCssSelector, Locator } from "@readium/shared";
 import { TextQuoteAnchor } from "../vendor/hypothesis/anchoring/types.ts";
 
 function isReplacedLikeElement(element: Element): boolean {
@@ -13,8 +13,8 @@ export function rangeFromLocator(doc: Document, locator: Locator) {
         const text = locator.text;
         if (text && text.highlight) {
             let root;
-            if (locations && locations.getCssSelector()) {
-                root = doc.querySelector(locations.getCssSelector()!);
+            if (locations && getCssSelector(locations)) {
+                root = doc.querySelector(getCssSelector(locations)!);
             }
             if (!root) {
                 root = doc.body;
@@ -36,8 +36,8 @@ export function rangeFromLocator(doc: Document, locator: Locator) {
         if (locations) {
             let element = null;
 
-            if (!element && locations.getCssSelector()) {
-                element = doc.querySelector(locations.getCssSelector()!);
+            if (!element && getCssSelector(locations)) {
+                element = doc.querySelector(getCssSelector(locations)!);
             }
 
             if (!element && locations.fragments) {

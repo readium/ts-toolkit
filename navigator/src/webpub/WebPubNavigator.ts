@@ -1,4 +1,4 @@
-import { Feature, Link, Locator, LocatorText, Publication, ReadingProgression, LocatorLocations } from "@readium/shared";
+import { Feature, Link, Locator, LocatorText, Publication, ReadingProgression, LocatorLocations, getCssSelector, htmlId } from "@readium/shared";
 import { VisualNavigator, VisualNavigatorViewport, ProgressionRange, KeyboardPeripheralEventData } from "../Navigator.ts";
 import { Configurable } from "../preferences/Configurable.ts";
 import { WebPubFramePoolManager } from "./WebPubFramePoolManager.ts";
@@ -716,7 +716,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
     private async loadLocator(locator: Locator, cb: (ok: boolean) => void) {
         let done = false;
-        let cssSelector = (typeof locator.locations.getCssSelector === "function") && locator.locations.getCssSelector();
+        let cssSelector = getCssSelector(locator.locations);
         if(locator.text?.highlight) {
             done = await new Promise<boolean>((res, _) => {
                 // Attempt to go to a highlighted piece of text in the resource
@@ -748,7 +748,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         // This sanity check has to be performed because we're still passing non-locator class
         // locator objects to this function. This is not good and should eventually be forbidden
         // or the locator should be deserialized sometime before this function.
-        const hid = (typeof locator.locations.htmlId === "function") && locator.locations.htmlId();
+        const hid = htmlId(locator.locations);
         if(hid)
             done = await new Promise<boolean>((res, _) => {
                 // Attempt to go to an HTML ID in the resource

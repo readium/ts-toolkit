@@ -1,28 +1,28 @@
-import { Encryption, Properties } from '../../src';
+import { Encryption, Properties, getEncryption } from '../../src';
 
 describe('Encryption Properties Tests', () => {
   it('get Properties {encryption} when available', () => {
     expect(
-      new Properties({
+      getEncryption(new Properties({
         encrypted: {
           algorithm: 'http://algo',
           compression: 'gzip',
         },
-      }).encryption
+      }))
     ).toEqual(
       new Encryption({ algorithm: 'http://algo', compression: 'gzip' })
     );
   });
 
   it('get Properties {encryption} when missing', () => {
-    expect(new Properties({}).encryption).toBeUndefined();
+    expect(getEncryption(new Properties({}))).toBeUndefined();
   });
 
   it('get Properties {encryption} when not valid', () => {
     expect(
-      new Properties({
+      getEncryption(new Properties({
         encrypted: 'invalid',
-      }).encryption
+      }))
     ).toBeUndefined();
   });
 });

@@ -1,5 +1,3 @@
-export { __htmlLocations } from "@readium/shared/html";
-
 export * from './Navigator.ts';
 export * from './decorations/index.ts';
 export * from './webpub/index.ts';

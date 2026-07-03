@@ -1,24 +1,8 @@
 import { Properties } from '../Properties.ts';
 import { Encryption } from './Encryption.ts';
 
-// Encryption extensions for link [Properties].
+// Encryption extensions for link Properties.
 
-declare module '../Properties' {
-  export interface Properties {
-    /**
-     * Indicates that a resource is encrypted/obfuscated and provides relevant information for
-     * decryption.
-     */
-    encryption: Encryption | undefined;
-  }
+export function getEncryption(properties: Properties): Encryption | undefined {
+  return Encryption.deserialize(properties.otherProperties.encrypted);
 }
-
-export const __encryptionProperties = ((): true => {
-  Object.defineProperty(Properties.prototype, 'encryption', {
-    get: function(): Encryption | undefined {
-      return Encryption.deserialize(this.otherProperties.encrypted);
-    },
-  });
-
-  return true;
-})();

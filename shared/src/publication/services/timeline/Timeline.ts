@@ -1,5 +1,6 @@
 import { Link, Links } from "../../Link.ts";
 import { Locator } from "../../Locator.ts";
+import { time as locatorTime } from "../../html/Locations.ts";
 import { TimelineItem } from "./TimelineItem.ts";
 import { isNptStartOfResource, parseNptTime } from "../../../util/npt.ts";
 
@@ -101,7 +102,7 @@ export class Timeline {
 
     locate(locator: Locator): TimelineItem | undefined {
         const href = locator.href.split("#")[0];
-        const time = locator.locations?.time();
+        const time = locator.locations ? locatorTime(locator.locations) : undefined;
 
         let match: TimelineItem | undefined;
 

@@ -1,37 +1,37 @@
-import { DomRange, DomRangePoint, LocatorLocations } from '../../src';
+import { DomRange, DomRangePoint, LocatorLocations, getCssSelector, getPartialCfi, getDomRange } from '../../src';
 
 describe('Locator Html Extension Tests', () => {
   it('get Locations {cssSelector} when available', () => {
     expect(
-      new LocatorLocations({
+      getCssSelector(new LocatorLocations({
         otherLocations: new Map([['cssSelector', 'p']]),
-      }).getCssSelector()
+      }))
     ).toEqual('p');
   });
 
   it('get Locations {cssSelector} when missing', () => {
-    expect(new LocatorLocations({}).getCssSelector()).toBeUndefined();
+    expect(getCssSelector(new LocatorLocations({}))).toBeUndefined();
   });
 
   it('get Locations {partialCfi} when available', () => {
     expect(
-      new LocatorLocations({
+      getPartialCfi(new LocatorLocations({
         otherLocations: new Map([['partialCfi', 'epubcfi(/4)']]),
-      }).getPartialCfi()
+      }))
     ).toEqual('epubcfi(/4)');
   });
 
   it('get Locations {partialCfi} when missing', () => {
-    expect(new LocatorLocations({}).getPartialCfi()).toBeUndefined();
+    expect(getPartialCfi(new LocatorLocations({}))).toBeUndefined();
   });
 
   it('get Locations {domRange} when available', () => {
     expect(
-      new LocatorLocations({
+      getDomRange(new LocatorLocations({
         otherLocations: new Map<string, any>([
           ['domRange', { start: { cssSelector: 'p', textNodeIndex: 4 } }],
         ]),
-      }).getDomRange()
+      }))
     ).toEqual(
       new DomRange({
         start: new DomRangePoint({ cssSelector: 'p', textNodeIndex: 4 }),
@@ -40,6 +40,6 @@ describe('Locator Html Extension Tests', () => {
   });
 
   it('get Locations {domRange} when missing', () => {
-    expect(new LocatorLocations({}).getDomRange()).toBeUndefined();
+    expect(getDomRange(new LocatorLocations({}))).toBeUndefined();
   });
 });

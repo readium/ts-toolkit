@@ -1,25 +1,25 @@
-import { Properties } from '../../src';
+import { Properties, getContains } from '../../src';
 
 describe('Epub Properties Tests', () => {
   it('get Properties {contains} when available', () => {
     expect(
-      new Properties({ contains: ['mathml', 'onix'] }).getContains()
+      getContains(new Properties({ contains: ['mathml', 'onix'] }))
     ).toEqual(new Set(['mathml', 'onix']));
   });
 
   it('get Properties {contains} removes duplicates', () => {
     expect(
-      new Properties({ contains: ['mathml', 'onix', 'onix'] }).getContains()
+      getContains(new Properties({ contains: ['mathml', 'onix', 'onix'] }))
     ).toEqual(new Set(['mathml', 'onix']));
   });
 
   it('get Properties {contains} when missing', () => {
-    expect(new Properties({}).getContains()).toEqual(new Set());
+    expect(getContains(new Properties({}))).toEqual(new Set());
   });
 
   it('get Properties {contains} skips duplicates', () => {
     expect(
-      new Properties({ contains: ['mathml', 'mathml'] }).getContains()
+      getContains(new Properties({ contains: ['mathml', 'mathml'] }))
     ).toEqual(new Set(['mathml']));
   });
 });
