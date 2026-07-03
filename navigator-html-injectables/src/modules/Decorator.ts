@@ -7,7 +7,7 @@ import { Rect, getClientRectsNoOverlap, getTextClientRects, rectContainsPoint } 
 import { getProperty } from "../helpers/css.ts";
 import { isDarkColor, getContrastingTextColor, adjustColorForContrast, colorToRgba } from "@readium/helpers";
 import { makeWritingContext } from "../helpers/document.ts";
-import { sML } from "../helpers/sML.ts";
+import { sML } from "@readium/helpers";
 import { sanitizeHTML } from "../helpers/sanitize.ts";
 
 function defaultTint(type: DecorationStyleType): string {

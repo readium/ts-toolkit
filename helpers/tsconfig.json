@@ -23,6 +23,6 @@
     "noEmit": false,
     "emitDeclarationOnly": true,
     "allowImportingTsExtensions": true,
-    "types": ["vite/client"]
+    "types": ["vite/client", "user-agent-data-types"]
   }
 }
