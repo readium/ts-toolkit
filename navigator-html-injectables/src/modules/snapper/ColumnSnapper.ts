@@ -78,26 +78,22 @@ export class ColumnSnapper extends Snapper {
     }
 
     /**
-     * IntersectionObserver is unreliable in CSS multi-column layout (underspecified
-     * in the spec, inconsistently implemented). Use rect-based detection instead:
-     * walk elements in DOM order and return the last one whose leading edge has
-     * entered or passed the viewport — that is the current section.
+     * IntersectionObserver cannot be used here. In Chrome and Safari, body's computed
+     * dimensions in a CSS multi-column layout are wrong unless body height is constrained
+     * to 100% *and* overflow is visible — but we can't set overflow: visible, since content
+     * overflowing a column must stay clipped to it rather than bleeding into adjacent
+     * columns. Even with that fix applied, Safari's IntersectionObserver still never fires
+     * a single callback — confirmed dead end there, and WebKit is mandatory on iOS. Firefox
+     * needs no fix at all: it reports accurate body dimensions in this layout regardless.
+     * Use rect-based detection instead: walk elements in DOM order and return the last one
+     * whose leading edge has entered or passed the viewport — that is the current section.
      */
     protected currentTimelineFragment(): string | undefined {
         if (this.timelineEntries.size === 0) return undefined;
 
-        const inDomOrder = (a: string, b: string): number => {
-            const ea = this.timelineEntries.get(a);
-            const eb = this.timelineEntries.get(b);
-            if (!ea || !eb) return 0;
-            const cmp = ea.compareDocumentPosition(eb);
-            return cmp & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
-        };
-
-        const sorted = Array.from(this.timelineEntries.keys()).sort(inDomOrder);
         const vw = this.wnd.innerWidth;
         let result: string | undefined;
-        for (const id of sorted) {
+        for (const id of this.sortedFragmentIds) {
             const el = this.timelineEntries.get(id)!;
             const rect = el.getBoundingClientRect();
             // LTR: element has started when its left edge is before the viewport's right.
@@ -109,7 +105,7 @@ export class ColumnSnapper extends Snapper {
         return result;
     }
 
-    reportProgress() {
+    reportProgress(forcedFragmentId?: string) {
         const scrollWidth = this.cachedScrollWidth;
         const viewportWidth = this.wnd.innerWidth;
         const norm = this.normScroll();
@@ -121,7 +117,7 @@ export class ColumnSnapper extends Snapper {
         this.comms.send("progress", {
             start: progress,
             end: viewportEnd,
-            fragmentId: this.currentTimelineFragment()
+            fragmentId: forcedFragmentId !== undefined ? forcedFragmentId : this.currentTimelineFragment()
         });
     }
 
@@ -512,7 +508,7 @@ export class ColumnSnapper extends Snapper {
                 } else {
                     this.doc().scrollLeft = this.snapOffset(element.getBoundingClientRect().left + wnd.scrollX);
                 }
-                this.reportProgress();
+                this.reportProgress(this.nearestPrecedingFragmentId(element));
                 deselect(this.wnd);
                 ack(true);
             });
@@ -547,7 +543,7 @@ export class ColumnSnapper extends Snapper {
                 } else {
                     this.doc().scrollLeft = this.snapOffset(r.getBoundingClientRect().left + wnd.scrollX);
                 }
-                this.reportProgress();
+                this.reportProgress(this.nearestPrecedingFragmentId(r.startContainer));
                 deselect(this.wnd);
                 ack(true);
             });
@@ -566,7 +562,7 @@ export class ColumnSnapper extends Snapper {
                 }
                 if(this.doc().scrollLeft === snappedFinal) return ack(false);
                 this.doc().scrollLeft = snappedFinal;
-                this.reportProgress();
+                this.reportProgress(this.sortedFragmentIds[this.sortedFragmentIds.length - 1]);
                 deselect(this.wnd);
                 ack(true);
             });
@@ -576,7 +572,7 @@ export class ColumnSnapper extends Snapper {
             this.wnd.requestAnimationFrame(() => {
                 if(this.doc().scrollLeft === 0) return ack(false);
                 this.doc().scrollLeft = 0;
-                this.reportProgress();
+                this.reportProgress(this.sortedFragmentIds[0]);
                 deselect(this.wnd);
                 ack(true);
             });
@@ -647,12 +643,7 @@ export class ColumnSnapper extends Snapper {
         });
 
         comms.register("timeline_entries", ColumnSnapper.moduleName, (data, ack) => {
-            this.cachedFragmentIds = Array.isArray(data) ? data as string[] : [];
-            this.timelineEntries.clear();
-            for (const id of this.cachedFragmentIds) {
-                const el = wnd.document.getElementById(id);
-                if (el) this.timelineEntries.set(id, el);
-            }
+            this.updateTimelineEntries(Array.isArray(data) ? data as string[] : [], wnd);
             wnd.requestAnimationFrame(() => this.reportProgress());
             ack(true);
         });

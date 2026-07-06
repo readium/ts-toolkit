@@ -75,7 +75,7 @@ export class CJKVerticalSnapper extends Snapper {
         return this.verticalLR ? rect.right <= 0 : rect.left >= this.wnd.innerWidth;
     }
 
-    private reportProgress() {
+    private reportProgress(forcedFragmentId?: string) {
         if (!this.comms.ready) return;
         const scrollWidth = this.doc().scrollWidth;
         const viewportWidth = this.wnd.innerWidth;
@@ -90,7 +90,7 @@ export class CJKVerticalSnapper extends Snapper {
         this.comms.send("progress", {
             start: progress,
             end: viewportEnd,
-            fragmentId: this.currentTimelineFragment()
+            fragmentId: forcedFragmentId !== undefined ? forcedFragmentId : this.currentTimelineFragment()
         });
     }
 
@@ -232,7 +232,9 @@ export class CJKVerticalSnapper extends Snapper {
                 // vertical-lr: scrollLeft is positive; vertical-rl: negative.
                 const target = this.scrollable() * position;
                 this.doc().scrollLeft = this.verticalLR ? target : -target;
-                this.reportProgress();
+                // No known target fragment for an arbitrary position — force a fresh
+                // geometry scan instead of trusting a possibly-stale visibility cache.
+                this.reportProgress(this.fragmentFromGeometry());
                 deselect(this.wnd);
                 ack(true);
             });
@@ -244,7 +246,7 @@ export class CJKVerticalSnapper extends Snapper {
             this.wnd.requestAnimationFrame(() => {
                 // getBoundingClientRect().left is in viewport coords; translate to scroll coords
                 this.doc().scrollLeft += element.getBoundingClientRect().left - wnd.innerWidth / 2;
-                this.reportProgress();
+                this.reportProgress(this.nearestPrecedingFragmentId(element));
                 deselect(this.wnd);
                 ack(true);
             });
@@ -268,7 +270,7 @@ export class CJKVerticalSnapper extends Snapper {
             if (!r) { ack(false); return; }
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollLeft += r.getBoundingClientRect().left - wnd.innerWidth / 2;
-                this.reportProgress();
+                this.reportProgress(this.nearestPrecedingFragmentId(r.startContainer));
                 deselect(this.wnd);
                 ack(true);
             });
@@ -278,7 +280,7 @@ export class CJKVerticalSnapper extends Snapper {
         comms.register("go_start", CJKVerticalSnapper.moduleName, (_, ack) => {
             if (this.doc().scrollLeft === 0) return ack(false);
             this.doc().scrollLeft = 0;
-            this.reportProgress();
+            this.reportProgress(this.sortedFragmentIds[0]);
             ack(true);
         });
 
@@ -288,7 +290,7 @@ export class CJKVerticalSnapper extends Snapper {
         comms.register("go_end", CJKVerticalSnapper.moduleName, (_, ack) => {
             if (Math.abs(this.doc().scrollLeft) === this.scrollable()) return ack(false);
             this.doc().scrollLeft = this.verticalLR ? this.scrollable() : -this.scrollable();
-            this.reportProgress();
+            this.reportProgress(this.sortedFragmentIds[this.sortedFragmentIds.length - 1]);
             ack(true);
         });
 
@@ -321,8 +323,7 @@ export class CJKVerticalSnapper extends Snapper {
         });
 
         comms.register("timeline_entries", CJKVerticalSnapper.moduleName, (data, ack) => {
-            this.cachedFragmentIds = Array.isArray(data) ? data as string[] : [];
-            this.observeTimelineElements(wnd);
+            this.updateTimelineEntries(Array.isArray(data) ? data as string[] : [], wnd);
             ack(true);
         });
 

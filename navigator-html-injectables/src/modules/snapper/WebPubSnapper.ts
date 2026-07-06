@@ -35,7 +35,7 @@ export class WebPubSnapper extends Snapper {
         return el.getBoundingClientRect().bottom <= 0;
     }
 
-    private reportProgress() {
+    private reportProgress(forcedFragmentId?: string) {
         if (!this.comms.ready) return;
 
         const scrollTop = Math.ceil(this.doc().scrollTop);
@@ -47,7 +47,7 @@ export class WebPubSnapper extends Snapper {
         this.comms.send("progress", {
             start: progress,
             end: viewportEnd,
-            fragmentId: this.currentTimelineFragment()
+            fragmentId: forcedFragmentId !== undefined ? forcedFragmentId : this.currentTimelineFragment()
         });
     }
 
@@ -176,7 +176,9 @@ export class WebPubSnapper extends Snapper {
 
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollTop = this.doc().offsetHeight * position;
-                this.reportProgress();
+                // No known target fragment for an arbitrary position — force a fresh
+                // geometry scan instead of trusting a possibly-stale visibility cache.
+                this.reportProgress(this.fragmentFromGeometry());
                 deselect(this.wnd);
                 ack(true);
             });
@@ -190,7 +192,7 @@ export class WebPubSnapper extends Snapper {
             }
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollTop = element.getBoundingClientRect().top + wnd.scrollY - wnd.innerHeight / 2;
-                this.reportProgress();
+                this.reportProgress(this.nearestPrecedingFragmentId(element));
                 deselect(this.wnd);
                 ack(true);
             });
@@ -220,7 +222,7 @@ export class WebPubSnapper extends Snapper {
             }
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollTop = r.getBoundingClientRect().top + wnd.scrollY - wnd.innerHeight / 2;
-                this.reportProgress();
+                this.reportProgress(this.nearestPrecedingFragmentId(r.startContainer));
                 deselect(this.wnd);
                 ack(true);
             });
@@ -229,14 +231,14 @@ export class WebPubSnapper extends Snapper {
         comms.register("go_start", WebPubSnapper.moduleName, (_, ack) => {
             if (this.doc().scrollTop === 0) return ack(false);
             this.doc().scrollTop = 0;
-            this.reportProgress();
+            this.reportProgress(this.sortedFragmentIds[0]);
             ack(true);
         });
 
         comms.register("go_end", WebPubSnapper.moduleName, (_, ack) => {
             if (this.doc().scrollTop === this.doc().scrollHeight - this.doc().offsetHeight) return ack(false);
             this.doc().scrollTop = this.doc().scrollHeight - this.doc().offsetHeight;
-            this.reportProgress();
+            this.reportProgress(this.sortedFragmentIds[this.sortedFragmentIds.length - 1]);
             ack(true);
         });
 
@@ -266,8 +268,7 @@ export class WebPubSnapper extends Snapper {
         });
 
         comms.register("timeline_entries", WebPubSnapper.moduleName, (data, ack) => {
-            this.cachedFragmentIds = Array.isArray(data) ? data as string[] : [];
-            this.observeTimelineElements(wnd);
+            this.updateTimelineEntries(Array.isArray(data) ? data as string[] : [], wnd);
             ack(true);
         });
 
