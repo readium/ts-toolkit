@@ -100,8 +100,7 @@ export class Timeline {
 
             const title =
                 ro.title ??
-                Timeline.findTitleInToc(tocLinks, bare, depth) ??
-                `Resource ${i + 1}`;
+                Timeline.findTitleInToc(tocLinks, bare, depth);
 
             const tocChildren = Timeline.collectChildrenFromToc(tocLinks, bare, depth, 1, linkMap);
 

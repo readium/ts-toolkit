@@ -6,8 +6,8 @@
  * show previous/next as chapter titles, group search results by chapter, etc.
  */
 export interface TimelineItem {
-    /** Display title of this entry. */
-    title: string;
+    /** Display title of this entry, when one could be derived. */
+    title?: string;
     /**
      * References as hrefs with optional fragments.
      * e.g. ["track1.mp3#t=60"] for audio, ["chapter1.html"] for EPUB, ["#page=6"] for PDF.

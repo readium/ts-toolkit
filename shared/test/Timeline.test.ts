@@ -55,14 +55,14 @@ describe('Timeline – no TOC', () => {
     ]);
   });
 
-  it('1.2 reading order items without titles receive a positional placeholder', () => {
+  it('1.2 reading order items without a derivable title get an undefined title', () => {
     const t = build(ro(
       { href: 'chapter1.html' },
       { href: 'chapter2.html' },
     ));
     expect(clean(t.items)).toEqual([
-      { title: 'Resource 1', references: ['chapter1.html'] },
-      { title: 'Resource 2', references: ['chapter2.html'] },
+      { title: undefined, references: ['chapter1.html'] },
+      { title: undefined, references: ['chapter2.html'] },
     ]);
   });
 
@@ -101,7 +101,7 @@ describe('Timeline – title resolution', () => {
     expect(clean(t.items)[0]).toMatchObject({ title: 'Opening' });
   });
 
-  it('2.4 no RO title – multiple fragment TOC entries → positional placeholder, entries become children', () => {
+  it('2.4 no RO title – multiple fragment TOC entries → undefined title, entries become children', () => {
     const t = build(
       ro({ href: 'chapter1.html' }),
       toc(
@@ -111,7 +111,7 @@ describe('Timeline – title resolution', () => {
     );
     expect(clean(t.items)).toEqual([
       {
-        title: 'Resource 1',
+        title: undefined,
         references: ['chapter1.html'],
         children: [
           { title: 'Section 1', references: ['chapter1.html#section-1'] },
@@ -121,13 +121,13 @@ describe('Timeline – title resolution', () => {
     ]);
   });
 
-  it('2.5 no RO title, no TOC match → positional placeholder', () => {
+  it('2.5 no RO title, no TOC match → undefined title', () => {
     const t = build(
       ro({ href: 'chapter1.html' }, { href: 'chapter2.html', title: 'Chapter 2' }),
       toc({ href: 'chapter2.html', title: 'Chapter Two' }),
     );
     expect(clean(t.items)).toEqual([
-      { title: 'Resource 1', references: ['chapter1.html'] },
+      { title: undefined, references: ['chapter1.html'] },
       { title: 'Chapter 2', references: ['chapter2.html'] },
     ]);
   });

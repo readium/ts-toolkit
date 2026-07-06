@@ -15,7 +15,8 @@ Tried in order, first match wins:
 1. The reading order item's own `title`.
 2. A TOC entry whose href is the start of that resource — bare href with no fragment, or `#t=0` for audio (both are treated as equivalent).
 3. If exactly one fragment-based TOC entry references this resource, its title.
-4. A positional placeholder (`Resource N`) when no title can be reliably derived.
+
+If none of the above apply, `title` is `undefined` — the consuming app decides how to render this (e.g. its own positional placeholder, or hiding the label).
 
 ### Children
 
