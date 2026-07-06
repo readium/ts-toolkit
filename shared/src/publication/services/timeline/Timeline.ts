@@ -1,13 +1,30 @@
 import { Link, Links } from "../../Link.ts";
 import { Locator } from "../../Locator.ts";
 import { Profile } from "../../Profiles.ts";
-import { isNptStartOfResource, parseNptTime } from "../../../util/npt.ts";
+import { formatNptTime, isNptStartOfResource, parseNptTime } from "../../../util/npt.ts";
 import { TimelineItem } from "./TimelineItem.ts";
 
 export interface PublicationLike {
     toc?: Links;
     readingOrder: Links;
     metadata?: { conformsTo?: Profile[] };
+}
+
+/**
+ * A TOC entry, mirroring `publication.toc`'s authored hierarchy and
+ * contextualized with display-ready progression.  When a publication has no
+ * `toc` at all, falls back to one flat entry per reading-order item.
+ *
+ * Exactly one of `position`/`timestamp` is populated, depending on the
+ * publication's profile.
+ */
+export interface ContextualizedTocEntry {
+    link: Link;
+    /** Display-ready label for non-audio profiles (e.g. EPUB/PDF page number "42"). */
+    position?: string;
+    /** Display-ready formatted time for audiobooks (e.g. "27:27"). */
+    timestamp?: string;
+    children?: ContextualizedTocEntry[];
 }
 
 /**
@@ -19,28 +36,51 @@ export interface PublicationLike {
  *   2. Populate flat children — all TOC fragment entries that reference the
  *      resource, collected depth-first in TOC declaration order.
  *
- * No TOC hierarchy is reconstructed; that requires role context and is not yet
- * implemented.  TOC entries whose href does not match any reading order item
- * are ignored.
+ * `contextualizedToc` returns the real, authored TOC hierarchy (see
+ * `ContextualizedTocEntry`), each entry contextualized with progression.
+ * `tocEntryFor(item)` maps a `TimelineItem` (e.g. from
+ * `locate()`) back to its entry in that hierarchy.  TOC entries whose href
+ * does not match any reading order item are ignored.
  *
- * The `depth` build option limits how many levels deep into the TOC tree both
- * title resolution and child collection may look.  Level 1 = top-level TOC
- * entries; level 2 = their children; etc.  `undefined` means no limit.
+ * The `depth` build option limits how many levels deep into the TOC tree
+ * title resolution, child collection, and `contextualizedToc` traversal may
+ * look.  Level 1 = top-level TOC entries; level 2 = their children; etc.
+ * `undefined` means no limit.
  */
 export class Timeline {
     private readonly _allItems: TimelineItem[];
     private readonly linkMap: Map<TimelineItem, Link>;
     private readonly _conformsTo: readonly Profile[];
+    private readonly tocLinks: Link[];
     private _depth: number | undefined;
+    /**
+     * Depth used for `contextualizedToc` traversal.  Tracks `_depth`, but is
+     * seeded independently from `Timeline.build()`'s `depth` option: unlike
+     * `_depth`, which only ever triggers `items`/`flat` re-trimming via the
+     * runtime `depth` setter, the TOC tree is walked fresh from `tocLinks`
+     * every time, so there's no equivalent "already baked in, don't reapply"
+     * hazard to avoid.
+     */
+    private _tocDepth: number | undefined;
     private _items: TimelineItem[] | undefined;
     private _flat: TimelineItem[] | undefined;
+    private _toc: ContextualizedTocEntry[] | undefined;
+    private _linkToItem: Map<Link, TimelineItem> | undefined;
     /** Populated when depth is set; maps cloned items from trimToDepth back to their Links. */
     private _trimmedLinkMap: Map<TimelineItem, Link> = new Map();
 
-    constructor(items: TimelineItem[], linkMap: Map<TimelineItem, Link>, conformsTo: readonly Profile[] = []) {
+    constructor(
+        items: TimelineItem[],
+        linkMap: Map<TimelineItem, Link>,
+        conformsTo: readonly Profile[] = [],
+        tocLinks: Link[] = [],
+        tocDepth: number | undefined = undefined,
+    ) {
         this._allItems = items;
         this.linkMap = linkMap;
         this._conformsTo = conformsTo;
+        this.tocLinks = tocLinks;
+        this._tocDepth = tocDepth;
     }
 
     static build(
@@ -75,7 +115,7 @@ export class Timeline {
             items.push(item);
         }
 
-        return new Timeline(items, linkMap, conformsTo);
+        return new Timeline(items, linkMap, conformsTo, tocLinks, depth);
     }
 
     /**
@@ -108,8 +148,10 @@ export class Timeline {
     set depth(value: number | undefined) {
         if (this._depth === value) return;
         this._depth = value;
+        this._tocDepth = value;
         this._items = undefined;
         this._flat = undefined;
+        this._toc = undefined;
     }
 
     /** Top-level timeline items.  Cached; invalidated when `depth` changes. */
@@ -237,6 +279,37 @@ export class Timeline {
         return this.linkMap.get(item) ?? this._trimmedLinkMap.get(item);
     }
 
+    /**
+     * The real TOC, contextualized with display-ready progression.  Mirrors
+     * `publication.toc`'s authored hierarchy (respecting `depth`), falling
+     * back to one flat entry per reading-order item when there's no toc at
+     * all.  Cached; invalidated when `depth` changes.
+     */
+    get contextualizedToc(): ContextualizedTocEntry[] {
+        if (!this._toc) {
+            this._toc = this.tocLinks.length > 0
+                ? this.buildTocEntries(this.tocLinks, this._tocDepth, 1)
+                : this._allItems.map(item => this.entryFor(this.linkFor(item)!, item));
+        }
+        return this._toc;
+    }
+
+    /**
+     * Maps a `TimelineItem` (typically from `locate()`) to its `ContextualizedTocEntry`:
+     * a direct match first, falling back to the nearest preceding toc entry
+     * for that resource when there's no exact match (e.g. a mid-resource
+     * audio position between chapter markers).
+     */
+    tocEntryFor(current: TimelineItem): ContextualizedTocEntry | undefined {
+        const link = this.linkFor(current);
+        if (!link) return undefined;
+
+        const direct = this.findTocEntryByLink(this.contextualizedToc, link);
+        if (direct) return direct;
+
+        return this.nearestTocEntryForResource(link.href, current);
+    }
+
     private get flat(): TimelineItem[] {
         if (!this._flat) this._flat = this.flattenItems(this.items);
         return this._flat;
@@ -362,6 +435,88 @@ export class Timeline {
         if (!fragment) return true;
         const match = fragment.match(/(?:^|&)t=([^&]+)/);
         return match !== null && isNptStartOfResource(match[1]);
+    }
+
+    // -------------------------------------------------------------------------
+    // Contextualized TOC
+    // -------------------------------------------------------------------------
+
+    private get linkToItem(): Map<Link, TimelineItem> {
+        if (!this._linkToItem) {
+            this._linkToItem = new Map();
+            for (const [item, link] of this.linkMap) this._linkToItem.set(link, item);
+        }
+        return this._linkToItem;
+    }
+
+    private buildTocEntries(links: Link[], maxDepth: number | undefined, currentDepth: number): ContextualizedTocEntry[] {
+        if (maxDepth !== undefined && currentDepth > maxDepth) return [];
+        return links.map(link => {
+            const item = this.linkToItem.get(link) ?? this.resourceStartItem(link.href);
+            const kids = link.children?.items?.length
+                ? this.buildTocEntries(link.children.items, maxDepth, currentDepth + 1)
+                : [];
+            return { ...this.entryFor(link, item), children: kids.length > 0 ? kids : undefined };
+        });
+    }
+
+    /** All toc Links flattened, respecting the same depth limit as `buildTocEntries`. */
+    private tocLinksFlat(links: Link[], maxDepth: number | undefined, currentDepth: number): Link[] {
+        if (maxDepth !== undefined && currentDepth > maxDepth) return [];
+        const result: Link[] = [];
+        for (const link of links) {
+            result.push(link);
+            if (link.children?.items?.length) {
+                result.push(...this.tocLinksFlat(link.children.items, maxDepth, currentDepth + 1));
+            }
+        }
+        return result;
+    }
+
+    private entryFor(link: Link, item: TimelineItem | undefined): ContextualizedTocEntry {
+        const isAudio = this._conformsTo.includes(Profile.AUDIOBOOK);
+        return {
+            link,
+            position: !isAudio && item?.position !== undefined ? String(item.position) : undefined,
+            timestamp: isAudio && item?.position !== undefined ? formatNptTime(item.position) : undefined,
+        };
+    }
+
+    private resourceStartItem(href: string): TimelineItem | undefined {
+        const bare = Timeline.bareHref(href);
+        return this._allItems.find(i => this.itemMatchesHref(i, bare));
+    }
+
+    private findTocEntryByLink(entries: ContextualizedTocEntry[], link: Link): ContextualizedTocEntry | undefined {
+        for (const entry of entries) {
+            if (entry.link === link) return entry;
+            if (entry.children) {
+                const found = this.findTocEntryByLink(entry.children, link);
+                if (found) return found;
+            }
+        }
+        return undefined;
+    }
+
+    private nearestTocEntryForResource(href: string, current: TimelineItem): ContextualizedTocEntry | undefined {
+        const bare = Timeline.bareHref(href);
+        // Re-walk with raw items (not the display-formatted TocEntry tree) so we can compare
+        // current.position/current.scroll directly against each candidate's source TimelineItem.
+        const candidates = this.tocLinksFlat(this.tocLinks, this._tocDepth, 1)
+            .filter(link => Timeline.bareHref(link.href) === bare)
+            .map(link => ({ link, item: this.linkToItem.get(link) ?? this.resourceStartItem(link.href) }));
+        if (candidates.length === 0) return undefined;
+
+        const isAudio = this._conformsTo.includes(Profile.AUDIOBOOK);
+        const currentValue = isAudio ? (current.position ?? 0) : (current.scroll ?? 0);
+        let best: { link: Link; item: TimelineItem | undefined } | undefined;
+        let bestValue = -Infinity;
+        for (const c of candidates) {
+            const v = isAudio ? (c.item?.position ?? 0) : (c.item?.scroll ?? 0);
+            if (v <= currentValue && v > bestValue) { bestValue = v; best = c; }
+        }
+        const chosen = best ?? candidates[0];
+        return this.findTocEntryByLink(this.contextualizedToc, chosen.link);
     }
 
     // -------------------------------------------------------------------------

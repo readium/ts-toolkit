@@ -672,3 +672,147 @@ describe('Timeline – locate()', () => {
     expect(customTimeline.locate(locator('track2.mp3', { fragments: ['t=30'] }))?.title).toBe('Spanning Part');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Group 9 – contextualizedToc
+// ---------------------------------------------------------------------------
+
+describe('Timeline – contextualizedToc', () => {
+  const sharedRo = ro({ href: 'c.html', title: 'Chapter' });
+  const sharedToc = toc(
+    {
+      href: 'c.html#part',
+      title: 'Part',
+      children: [
+        {
+          href: 'c.html#s1',
+          title: 'Section 1',
+          children: [
+            { href: 'c.html#s1a', title: 'Sub-section 1a' },
+          ],
+        },
+        { href: 'c.html#s2', title: 'Section 2' },
+      ],
+    },
+    { href: 'c.html#epilogue', title: 'Epilogue' },
+  );
+
+  function cleanToc(entries: ReturnType<Timeline['contextualizedToc']>): unknown[] {
+    return entries.map(e => {
+      const out: Record<string, unknown> = { title: e.link.title };
+      if (e.position !== undefined) out['position'] = e.position;
+      if (e.timestamp !== undefined) out['timestamp'] = e.timestamp;
+      if (e.children?.length) out['children'] = cleanToc(e.children);
+      return out;
+    });
+  }
+
+  it('9.1 mirrors the real, authored TOC hierarchy — deeper than items\' one-level-flat children', () => {
+    const t = build(sharedRo, sharedToc);
+    expect(cleanToc(t.contextualizedToc)).toEqual([
+      {
+        title: 'Part',
+        children: [
+          {
+            title: 'Section 1',
+            children: [{ title: 'Sub-section 1a' }],
+          },
+          { title: 'Section 2' },
+        ],
+      },
+      { title: 'Epilogue' },
+    ]);
+  });
+
+  it('9.2 respects depth', () => {
+    const t = build(sharedRo, sharedToc, 1);
+    expect(cleanToc(t.contextualizedToc)).toEqual([
+      { title: 'Part' },
+      { title: 'Epilogue' },
+    ]);
+  });
+
+  it('9.3 non-audio profile: position (string) is populated from the matching item, timestamp is not', () => {
+    const positions = [
+      new Locator({ href: 'chapter1.html', type: '', locations: new LocatorLocations({ fragments: ['section'], position: 12, progression: 0.5 }) }),
+    ];
+    const t = buildTimeline({
+      readingOrder: ro({ href: 'chapter1.html', title: 'Chapter 1' }),
+      toc: toc({ href: 'chapter1.html#section', title: 'Section' }),
+      metadata: { conformsTo: [Profile.EPUB] },
+    });
+    t.augment((_item, link) => {
+      const fragment = link.href.split('#')[1];
+      const entry = positions.find(p => p.locations.fragments[0] === fragment);
+      return { position: entry?.locations.position };
+    });
+    const entry = t.contextualizedToc[0];
+    expect(entry.position).toBe('12');
+    expect(entry.timestamp).toBeUndefined();
+  });
+
+  it('9.4 audiobook profile: timestamp (formatted string) is populated, position is not', () => {
+    const t = buildTimeline({
+      readingOrder: new Links([new Link({ href: 'track.mp3', title: 'Track', duration: 7200 })]),
+      toc: new Links([buildLink({ href: 'track.mp3#t=1647', title: 'Part 1' })]),
+      metadata: { conformsTo: [Profile.AUDIOBOOK] },
+    });
+    const entry = t.contextualizedToc[0];
+    expect(entry.timestamp).toBe('27:27');
+    expect(entry.position).toBeUndefined();
+  });
+
+  it('9.5 falls back to one flat entry per reading-order item when there is no manifest toc at all', () => {
+    const t = build(ro(
+      { href: 'chapter1.html', title: 'Chapter 1' },
+      { href: 'chapter2.html', title: 'Chapter 2' },
+    ));
+    expect(t.contextualizedToc.map(e => e.link.href)).toEqual(['chapter1.html', 'chapter2.html']);
+    expect(t.contextualizedToc.every(e => e.children === undefined)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Group 10 – tocEntryFor
+// ---------------------------------------------------------------------------
+
+describe('Timeline – tocEntryFor', () => {
+  it('10.1 direct match: a TOC-derived child item resolves to its own toc entry', () => {
+    const t = build(
+      ro({ href: 'chapter1.html', title: 'Chapter 1' }),
+      toc({ href: 'chapter1.html#intro', title: 'Introduction' }),
+    );
+    const child = t.items[0].children![0];
+    expect(t.tocEntryFor(child)?.link.title).toBe('Introduction');
+  });
+
+  it('10.2 fallback match: a plain reading-order item resolves to the nearest preceding toc entry by scroll', () => {
+    const t = build(
+      ro({ href: 'chapter1.html', title: 'Chapter 1' }),
+      toc(
+        { href: 'chapter1.html#s1', title: 'Section 1' },
+        { href: 'chapter1.html#s2', title: 'Section 2' },
+      ),
+    );
+    // Simulate scroll progression normally populated via augment().
+    t.items[0].children![0].scroll = 0.0;
+    t.items[0].children![1].scroll = 0.5;
+    t.items[0].scroll = 0.6;
+
+    expect(t.tocEntryFor(t.items[0])?.link.title).toBe('Section 2');
+  });
+
+  it('10.3 no match: an item unknown to the timeline resolves to undefined', () => {
+    const t = build(
+      ro({ href: 'chapter1.html', title: 'Chapter 1' }),
+      toc({ href: 'chapter1.html#intro', title: 'Introduction' }),
+    );
+    const untracked: TimelineItem = { title: 'Untracked', references: ['nowhere.html'] };
+    expect(t.tocEntryFor(untracked)).toBeUndefined();
+  });
+
+  it('10.4 no manifest toc: a reading-order item direct-matches its own fallback toc entry', () => {
+    const t = build(ro({ href: 'chapter1.html', title: 'Chapter 1' }));
+    expect(t.tocEntryFor(t.items[0])?.link.href).toBe('chapter1.html');
+  });
+});

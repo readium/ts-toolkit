@@ -15,11 +15,13 @@ interface TimelineItem {
   title: string;         // Display title of this entry
   references: string[];  // Hrefs with optional fragments that identify where this entry starts
   role?: string[];       // Structural roles, e.g. ["chapter"], ["part"]
-  position?: string;     // Display-ready position label: page number or formatted timestamp
+  position?: number;     // Raw position: book-global seconds for audio, page number for EPUB/PDF
   scroll?: number;       // Scroll progression (0–1) for entries that start mid-resource
   children?: TimelineItem[];
 }
 ```
+
+`position` is a raw value, not display-ready — use `tocEntryFor(item)` (see below) to get a formatted label/timestamp for UI.
 
 `references` holds one or more hrefs identifying where this entry starts in the reading order. Examples:
 - Audio: `["track1.mp3#t=1620"]` (NPT time fragment)
@@ -161,6 +163,51 @@ if (link) {
 }
 ```
 
+### `contextualizedToc`
+
+Returns the publication's real, authored TOC hierarchy — unlike `TimelineItem`'s `children` (which only flatten TOC fragments one level, per reading-order resource), this mirrors `publication.toc` as declared, nested arbitrarily. Each entry is contextualized with display-ready progression: exactly one of `position` (EPUB/PDF page label) or `timestamp` (audiobook formatted time) is populated, depending on the publication's profile. When a publication has no `toc` at all, falls back to one flat entry per reading-order item.
+
+```ts
+interface ContextualizedTocEntry {
+  link: Link;
+  position?: string;    // e.g. "42"
+  timestamp?: string;   // e.g. "27:27"
+  children?: ContextualizedTocEntry[];
+}
+```
+
+```ts
+function renderTocPanel(entries: ContextualizedTocEntry[], container: HTMLElement) {
+  for (const entry of entries) {
+    const row = document.createElement('div');
+    row.textContent = `${entry.link.title ?? ''} ${entry.position ?? entry.timestamp ?? ''}`;
+    container.appendChild(row);
+    if (entry.children) {
+      const nested = document.createElement('div');
+      nested.style.paddingLeft = '1em';
+      renderTocPanel(entry.children, nested);
+      container.appendChild(nested);
+    }
+  }
+}
+
+renderTocPanel(navigator.timeline.contextualizedToc, document.getElementById('toc-panel')!);
+```
+
+### `tocEntryFor(item)`
+
+Maps a `TimelineItem` (typically from `locate()` or the `timelineItemChanged` listener) to its `ContextualizedTocEntry`, so a TOC panel can highlight the current entry without re-implementing the cross-reference between the reading-order-derived `TimelineItem` and the authored TOC hierarchy. Falls back to the nearest preceding TOC entry for that resource when there's no exact match (e.g. a mid-resource audio position between chapter markers).
+
+```ts
+const listeners = {
+  timelineItemChanged(item: TimelineItem | undefined): void {
+    if (!item) return;
+    const tocEntry = navigator.timeline.tocEntryFor(item);
+    highlightTocEntry(tocEntry?.link);
+  },
+};
+```
+
 ## Use Cases
 
 ### Running header (current chapter title)
@@ -287,7 +334,8 @@ Attach chapter context when saving annotations:
 function saveHighlight(locator: Locator, text: string) {
   const item = navigator.timeline.locate(locator);
   const chapterTitle = item?.title;
-  const chapterPosition = item?.position;
+  const tocEntry = item && navigator.timeline.tocEntryFor(item);
+  const chapterPosition = tocEntry?.position ?? tocEntry?.timestamp;
 
   db.saveHighlight({ locator, text, chapterTitle, chapterPosition });
 }

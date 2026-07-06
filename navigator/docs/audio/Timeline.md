@@ -104,3 +104,21 @@ Returns the source `Link` the item was built from.
 ```js
 const link = publication.timeline.linkFor(item);
 ```
+
+### `contextualizedToc`
+
+Returns the publication's real, authored TOC hierarchy (mirrors `publication.toc` as declared, nested arbitrarily — unlike `TimelineItem.children`, which only flattens TOC fragments one level per resource). Each entry is contextualized with a display-ready `timestamp` (e.g. `"27:27"`, book-global). Falls back to one flat entry per reading-order item when there's no `toc` at all.
+
+```js
+const entries = publication.timeline.contextualizedToc;
+// entries[i].link, entries[i].timestamp, entries[i].children
+```
+
+### `tocEntryFor(item)`
+
+Maps a `TimelineItem` to its `ContextualizedTocEntry`, so a chapter list can highlight the current entry without re-deriving the cross-reference itself. Falls back to the nearest preceding entry for that resource when there's no exact match (e.g. between chapter markers).
+
+```js
+const tocEntry = publication.timeline.tocEntryFor(item);
+highlightChapter(tocEntry?.link);
+```

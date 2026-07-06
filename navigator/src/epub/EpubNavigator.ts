@@ -1065,8 +1065,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                     (p.locations.position ?? Infinity) < (min.locations.position ?? Infinity) ? p : min
                 );
                 return {
-                    position: candidate.locations.position !== undefined
-                        ? String(candidate.locations.position) : undefined,
+                    position: candidate.locations.position,
                     scroll: atFragment?.locations.progression,
                 };
             });

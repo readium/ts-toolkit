@@ -37,8 +37,7 @@ function buildHtml(
       (p.locations.position ?? Infinity) < (min.locations.position ?? Infinity) ? p : min
     );
     return {
-      position: candidate.locations.position !== undefined
-        ? String(candidate.locations.position) : undefined,
+      position: candidate.locations.position,
       scroll: atFragment?.locations.progression,
     };
   });
@@ -46,17 +45,17 @@ function buildHtml(
 }
 
 // ---------------------------------------------------------------------------
-// position label
+// position (raw)
 // ---------------------------------------------------------------------------
 
-describe('TimelineItem – position label', () => {
+describe('TimelineItem – position', () => {
   it('reading order item gets lowest page number when multiple positions exist for the resource', () => {
     const positions = [
       new Locator({ href: 'chapter1.html', type: '', locations: new LocatorLocations({ position: 6, progression: 0.2 }) }),
       new Locator({ href: 'chapter1.html', type: '', locations: new LocatorLocations({ position: 5, progression: 0.1 }) }),
     ];
     const t = buildHtml('chapter1.html', 'Chapter 1', [], positions);
-    expect(t.items[0].position).toBe('5');
+    expect(t.items[0].position).toBe(5);
   });
 
   it('reading order item has no position label when positions list is absent', () => {
@@ -67,7 +66,7 @@ describe('TimelineItem – position label', () => {
     expect(t.items[0].position).toBeUndefined();
   });
 
-  it('audio single-track: parent starts at 0:00, children get publication-relative time labels', () => {
+  it('audio single-track: parent starts at 0, children get publication-relative time in seconds', () => {
     const t = buildTimeline({
       readingOrder: new Links([new Link({ href: 'track.mp3', title: 'Track', duration: 7200 })]),
       toc: new Links([
@@ -76,12 +75,12 @@ describe('TimelineItem – position label', () => {
       ]),
       metadata: { conformsTo: [Profile.AUDIOBOOK] },
     });
-    expect(t.items[0].position).toBe('0:00');
-    expect(t.items[0].children?.[0].position).toBe('27:27');
-    expect(t.items[0].children?.[1].position).toBe('1:00:00');
+    expect(t.items[0].position).toBe(0);
+    expect(t.items[0].children?.[0].position).toBe(1647);
+    expect(t.items[0].children?.[1].position).toBe(3600);
   });
 
-  it('audio multi-track: any missing duration suppresses all time labels', () => {
+  it('audio multi-track: any missing duration suppresses all time values', () => {
     const t = buildTimeline({
       readingOrder: new Links([
         new Link({ href: 'track1.mp3', title: 'Track 1' }), // no duration
@@ -98,7 +97,7 @@ describe('TimelineItem – position label', () => {
     expect(t.items[1].children?.[0].position).toBeUndefined();
   });
 
-  it('audio multi-track: parent and children get publication-relative time labels', () => {
+  it('audio multi-track: parent and children get publication-relative time in seconds', () => {
     const t = buildTimeline({
       readingOrder: new Links([
         new Link({ href: 'track1.mp3', title: 'Track 1', duration: 3600 }),
@@ -110,13 +109,13 @@ describe('TimelineItem – position label', () => {
       ]),
       metadata: { conformsTo: [Profile.AUDIOBOOK] },
     });
-    expect(t.items[0].position).toBe('0:00');
-    // Section A: 0 + 600 = 600s = "10:00"
-    expect(t.items[0].children?.[0].position).toBe('10:00');
-    // Track 2 starts at offset 3600s = "1:00:00"
-    expect(t.items[1].position).toBe('1:00:00');
-    // Section B: 3600 + 120 = 3720s = "1:02:00"
-    expect(t.items[1].children?.[0].position).toBe('1:02:00');
+    expect(t.items[0].position).toBe(0);
+    // Section A: 0 + 600 = 600s
+    expect(t.items[0].children?.[0].position).toBe(600);
+    // Track 2 starts at offset 3600s
+    expect(t.items[1].position).toBe(3600);
+    // Section B: 3600 + 120 = 3720s
+    expect(t.items[1].children?.[0].position).toBe(3720);
   });
 
   it('EPUB: parent and children both get page numbers from positions list', () => {
@@ -129,8 +128,8 @@ describe('TimelineItem – position label', () => {
       [buildLink('chapter1.html#section', 'Section')],
       positions,
     );
-    expect(t.items[0].position).toBe('5');
-    expect(t.items[0].children?.[0].position).toBe('12');
+    expect(t.items[0].position).toBe(5);
+    expect(t.items[0].children?.[0].position).toBe(12);
   });
 });
 

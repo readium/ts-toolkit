@@ -1,4 +1,4 @@
-import { formatNptTime, parseNptTime } from "../../../util/npt.ts";
+import { parseNptTime } from "../../../util/npt.ts";
 import { Timeline, PublicationLike } from "./Timeline.ts";
 
 export function buildAudioTimeline(pub: PublicationLike, opts?: { depth?: number }): Timeline {
@@ -23,9 +23,7 @@ export function buildAudioTimeline(pub: PublicationLike, opts?: { depth?: number
         const tMatch = fragment?.match(/(?:^|&)t=([^&]+)/);
         const seconds = tMatch ? parseNptTime(tMatch[1]) : undefined;
         return {
-            position: seconds !== undefined
-                ? formatNptTime(trackOffset + seconds)
-                : formatNptTime(trackOffset),
+            position: trackOffset + (seconds ?? 0),
         };
     });
 
