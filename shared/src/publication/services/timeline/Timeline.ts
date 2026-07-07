@@ -209,6 +209,18 @@ export class Timeline {
                 }
             }
             if (match) return match;
+
+            // No scroll data resolved anywhere in this resource yet: guess a
+            // child by evenly dividing the fraction across its children,
+            // rather than naming the whole resource.
+            const container = this.items.find(i => this.itemMatchesHref(i, href));
+            if (container?.children?.length && !container.children.some(c => c.scroll !== undefined)) {
+                const index = Math.min(
+                    Math.floor(progression * container.children.length),
+                    container.children.length - 1,
+                );
+                return container.children[index];
+            }
         }
 
         // Fallback: bare href match.
@@ -228,46 +240,6 @@ export class Timeline {
         const item = this.items.find(i => this.itemMatchesHref(i, bare));
         if (!item) return [];
         return item.children?.length ? item.children : [item];
-    }
-
-    itemAtProgression(href: string, progression: number): TimelineItem | undefined {
-        const bare = href.split("#")[0];
-        const item = this.items.find(i => this.itemMatchesHref(i, bare));
-        if (!item) return undefined;
-        if (!item.children?.length) return item;
-
-        const duration = this._conformsTo.includes(Profile.AUDIOBOOK)
-            ? this.linkFor(item)?.duration
-            : undefined;
-        if (duration !== undefined) {
-            const time = progression * duration;
-            let match: TimelineItem = item;
-            let bestTime = -Infinity;
-            for (const child of item.children) {
-                const t = this.timeFromItem(child);
-                if (t !== undefined && t <= time && t > bestTime) {
-                    bestTime = t;
-                    match = child;
-                }
-            }
-            return match;
-        }
-
-        if (item.children.some(c => c.scroll !== undefined)) {
-            let match: TimelineItem = item;
-            let bestScroll = -Infinity;
-            for (const child of item.children) {
-                const s = this.itemScrollPosition(child);
-                if (s !== undefined && s <= progression && s > bestScroll) {
-                    bestScroll = s;
-                    match = child;
-                }
-            }
-            return match;
-        }
-
-        const index = Math.min(Math.floor(progression * item.children.length), item.children.length - 1);
-        return item.children[index];
     }
 
     ancestors(item: TimelineItem): TimelineItem[] {
@@ -571,16 +543,6 @@ export class Timeline {
             // Fragment-only reference (single-track audio) matches the current resource.
             return bare === href || bare === '';
         });
-    }
-
-    private timeFromItem(item: TimelineItem): number | undefined {
-        for (const ref of item.references) {
-            const fragment = ref.split("#")[1];
-            if (!fragment) continue;
-            const match = fragment.match(/(?:^|&)t=([^&]+)/);
-            if (match) return parseNptTime(match[1]);
-        }
-        return undefined;
     }
 
     private ancestorPath(items: TimelineItem[], target: TimelineItem): TimelineItem[] | null {

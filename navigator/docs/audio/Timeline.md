@@ -66,6 +66,19 @@ Returns the most specific `TimelineItem` covering the given locator's position. 
 const item = publication.timeline.locate(navigator.currentLocator);
 ```
 
+This also covers tooltip inference on hover: convert the hovered fraction to an absolute NPT time using the resource's duration, and build a **fresh** `Locator` for it (not derived from `currentLocator`, whose existing `progression`/fragment would otherwise take precedence over the one you're trying to set).
+
+```js
+const time = hoverFraction * resourceDuration;
+const locator = new Locator({
+  href: currentLocator.href,
+  type: currentLocator.type,
+  locations: new LocatorLocations({ fragments: [`t=${time}`] }),
+});
+const hovered = publication.timeline.locate(locator);
+tooltip.textContent = hovered.title;
+```
+
 ### `adjacentTo(item)`
 
 Returns `{ previous, next }` relative to the given item in the flat timeline.
@@ -80,15 +93,6 @@ Returns the timeline segments within a reading order resource. Returns the item 
 
 ```js
 const segments = publication.timeline.segmentsForHref(locator.href);
-```
-
-### `itemAtProgression(href, progression, duration?)`
-
-Returns the item that best corresponds to a progression (0–1) within a resource. Pass `duration` in seconds for time-based resolution. Use this for tooltip inference on hover.
-
-```js
-const hovered = publication.timeline.itemAtProgression(href, hoverFraction, resourceDuration);
-tooltip.textContent = hovered.title;
 ```
 
 ### `ancestors(item)`

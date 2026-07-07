@@ -116,6 +116,37 @@ const item = navigator.timeline.locate(navigator.currentLocator);
 console.log(item?.title);
 ```
 
+This also covers hover inference within the current resource — build a **fresh** `Locator` for the hovered fraction (not derived from `currentLocator`, whose existing fragment/progression would otherwise take precedence over the one you're trying to set) and pass it in:
+
+```ts
+// EPUB: fraction maps directly to scroll progression.
+progressBar.addEventListener('mousemove', (e) => {
+  const fraction = e.offsetX / progressBar.clientWidth;
+  const locator = new Locator({
+    href: currentLocator.href,
+    type: currentLocator.type,
+    locations: new LocatorLocations({ progression: fraction }),
+  });
+  const hovered = navigator.timeline.locate(locator);
+  tooltip.textContent = hovered?.title ?? '';
+});
+```
+
+```ts
+// Audio: fraction needs converting to an absolute NPT time first.
+progressBar.addEventListener('mousemove', (e) => {
+  const fraction = e.offsetX / progressBar.clientWidth;
+  const time = fraction * audioDuration;
+  const locator = new Locator({
+    href: currentLocator.href,
+    type: currentLocator.type,
+    locations: new LocatorLocations({ fragments: [`t=${time}`] }),
+  });
+  const hovered = navigator.timeline.locate(locator);
+  tooltip.textContent = hovered?.title ?? '';
+});
+```
+
 ### `adjacentTo(item)`
 
 Returns `{ previous, next }` relative to the given item in the flattened timeline. Both values are `undefined` at the boundaries.
@@ -135,23 +166,6 @@ Returns the timeline segments within a reading order resource: the item's childr
 ```ts
 const segments = navigator.timeline.segmentsForHref(locator.href);
 renderProgressBar(segments);
-```
-
-### `itemAtProgression(href, progression)`
-
-Returns the item that best corresponds to a progression value (0–1) within a resource. The resolution strategy is derived automatically from the publication's profile and manifest:
-
-- **Audiobook:** the track's `duration` from the manifest is used to convert the progression to an absolute time, matched against NPT fragments.
-- **EPUB:** uses `TimelineItem.scroll` values if present, otherwise divides children evenly by index.
-
-Use this for hover inference on a progress bar.
-
-```ts
-progressBar.addEventListener('mousemove', (e) => {
-  const fraction = e.offsetX / progressBar.clientWidth;
-  const hovered = navigator.timeline.itemAtProgression(currentLocator.href, fraction);
-  tooltip.textContent = hovered?.title ?? '';
-});
 ```
 
 ### `ancestors(item)`
@@ -293,11 +307,14 @@ function renderProgressBar(locator: Locator, duration: number) {
 // Hover tooltip
 progressBar.addEventListener('mousemove', (e) => {
   const fraction = e.offsetX / progressBar.clientWidth;
-  const hovered = navigator.timeline.itemAtProgression(
-    currentLocator.href,
-    fraction,
-    audioDuration,
-  );
+  const locator = new Locator({
+    href: currentLocator.href,
+    type: currentLocator.type,
+    locations: duration > 0
+      ? new LocatorLocations({ fragments: [`t=${fraction * duration}`] })
+      : new LocatorLocations({ progression: fraction }),
+  });
+  const hovered = navigator.timeline.locate(locator);
   tooltip.textContent = hovered?.title ?? '';
   tooltip.style.left = `${e.offsetX}px`;
 });
@@ -356,7 +373,7 @@ function saveHighlight(locator: Locator, text: string) {
 ## Complete Example — EPUB Chapter Navigation UI
 
 ```ts
-import { EpubNavigator, EpubNavigatorListeners, Locator, TimelineItem } from "@readium/navigator";
+import { EpubNavigator, EpubNavigatorListeners, Locator, LocatorLocations, TimelineItem } from "@readium/navigator";
 
 let currentItem: TimelineItem | undefined;
 
@@ -413,7 +430,7 @@ document.getElementById('next-chapter')!.addEventListener('click', () => {
 ## Complete Example — Audio Chapter Segments
 
 ```ts
-import { AudioNavigator, AudioNavigatorListeners, Locator, TimelineItem } from "@readium/navigator";
+import { AudioNavigator, AudioNavigatorListeners, Locator, LocatorLocations, TimelineItem } from "@readium/navigator";
 
 let audioDuration = 0;
 let currentLocator: Locator | undefined;
@@ -469,11 +486,13 @@ document.getElementById('progress')!.addEventListener('mousemove', (e) => {
   if (!currentLocator) return;
   const el = e.currentTarget as HTMLInputElement;
   const fraction = e.offsetX / el.clientWidth;
-  const hovered = navigator.timeline.itemAtProgression(
-    currentLocator.href,
-    fraction,
-    audioDuration,
-  );
+  const time = fraction * audioDuration;
+  const locator = new Locator({
+    href: currentLocator.href,
+    type: currentLocator.type,
+    locations: new LocatorLocations({ fragments: [`t=${time}`] }),
+  });
+  const hovered = navigator.timeline.locate(locator);
   document.getElementById('hover-tooltip')!.textContent = hovered?.title ?? '';
 });
 ```
