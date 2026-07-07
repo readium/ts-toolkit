@@ -20,7 +20,7 @@ export interface PublicationLike {
  */
 export interface ContextualizedTocEntry {
     link: Link;
-    /** Display-ready label for non-audio profiles (e.g. EPUB/PDF page number "42"). */
+    /** Display-ready label for non-audio profiles: a Positions List position for EPUB, a page number for PDF (e.g. "42"). */
     position?: string;
     /** Display-ready formatted time for audiobooks (e.g. "27:27"). */
     timestamp?: string;
@@ -36,7 +36,7 @@ export interface ContextualizedTocEntry {
  *   2. Populate flat children — all TOC fragment entries that reference the
  *      resource, collected depth-first in TOC declaration order.
  *
- * `contextualizedToc` returns the real, authored TOC hierarchy (see
+ * `contextualizedToc` returns the authored TOC hierarchy (see
  * `ContextualizedTocEntry`), each entry contextualized with progression.
  * `tocEntryFor(item)` maps a `TimelineItem` (e.g. from
  * `locate()`) back to its entry in that hierarchy.  TOC entries whose href
@@ -120,18 +120,18 @@ export class Timeline {
     /**
      * Augments all items in the timeline by applying the mapper's returned patch.
      * The mapper receives the item and its original manifest Link, and returns
-     * a partial TimelineItem — any fields it sets will be applied (skipping
-     * fields already set).  Use this to populate `position`, `scroll`, `role`,
-     * or any future TimelineItem fields from format-specific data.
+     * a partial TimelineItem — any fields it sets will overwrite the item's
+     * current value.  Use this to populate `position`, `scroll`, `role`, or any
+     * future TimelineItem fields from format-specific data.
      */
     augment(mapper: (item: TimelineItem, link: Link) => Partial<TimelineItem>): void {
         for (const item of this.flatAll) {
             const link = this.linkFor(item);
             if (!link) continue;
             const patch = mapper(item, link);
-            if (patch.position !== undefined) item.position ??= patch.position;
-            if (patch.scroll   !== undefined) item.scroll   ??= patch.scroll;
-            if (patch.role     !== undefined) item.role     ??= patch.role;
+            if (patch.position !== undefined) item.position = patch.position;
+            if (patch.scroll   !== undefined) item.scroll   = patch.scroll;
+            if (patch.role     !== undefined) item.role     = patch.role;
         }
     }
 
@@ -279,7 +279,7 @@ export class Timeline {
     }
 
     /**
-     * The real TOC, contextualized with display-ready progression.  Mirrors
+     * The authored TOC, contextualized with display-ready progression.  Mirrors
      * `publication.toc`'s authored hierarchy (respecting `depth`), falling
      * back to one flat entry per reading-order item when there's no toc at
      * all.  Cached; invalidated when `depth` changes.

@@ -12,10 +12,10 @@ A `TimelineItem` represents one structural entry in the publication:
 
 ```ts
 interface TimelineItem {
-  title: string;         // Display title of this entry
+  title?: string;        // Display title of this entry, when one could be derived
   references: string[];  // Hrefs with optional fragments that identify where this entry starts
   role?: string[];       // Structural roles, e.g. ["chapter"], ["part"]
-  position?: number;     // Raw position: book-global seconds for audio, page number for EPUB/PDF
+  position?: number;     // Raw position: book-global seconds for audio, a Positions List position for EPUB, a page number for PDF
   scroll?: number;       // Scroll progression (0–1) for entries that start mid-resource
   children?: TimelineItem[];
 }
@@ -59,7 +59,19 @@ publication.timeline  // lazy, cached on first access
 navigator.timeline    // delegates to publication.timeline (may also augment with additional data)
 ```
 
-Prefer `navigator.timeline` when a navigator is available: the EPUB navigator augments the timeline with additional data e.g. positions list, populating `TimelineItem.position` (page number) and `TimelineItem.scroll` (scroll progression within a resource). The audio navigator augments with formatted timestamps.
+Prefer `navigator.timeline` when a navigator is available: the EPUB navigator augments the timeline with the Positions List, populating `TimelineItem.position` (Positions List position) and `TimelineItem.scroll` (scroll progression within a resource). For audiobooks, `position` (book-global seconds) is already populated on `publication.timeline` itself — audio publications don't need a navigator for this, since track durations come straight from the manifest.
+
+### `augment(mapper)`
+
+The mechanism behind all of the above: applies `mapper`'s returned patch to every item, resolving `position`, `scroll`, or `role` from data the mapper has access to. Each field the patch sets overwrites the item's current value, so calling `augment` again refreshes it with the latest data — e.g. after positions are recomputed following a reflow.
+
+```ts
+navigator.timeline.augment((item, link) => {
+  const entry = positionsList.find(p => p.href === bareHref(link.href));
+  if (!entry) return {};
+  return { position: entry.locations.position, scroll: entry.locations.progression };
+});
+```
 
 ```ts
 publication.timeline.depth = 2;   // limit visible tree depth at runtime
@@ -165,7 +177,7 @@ if (link) {
 
 ### `contextualizedToc`
 
-Returns the publication's real, authored TOC hierarchy — unlike `TimelineItem`'s `children` (which only flatten TOC fragments one level, per reading-order resource), this mirrors `publication.toc` as declared, nested arbitrarily. Each entry is contextualized with display-ready progression: exactly one of `position` (EPUB/PDF page label) or `timestamp` (audiobook formatted time) is populated, depending on the publication's profile. When a publication has no `toc` at all, falls back to one flat entry per reading-order item.
+Returns the publication's authored TOC hierarchy — unlike `TimelineItem`'s `children` (which only flatten TOC fragments one level, per reading-order resource), this mirrors `publication.toc` as declared, nested arbitrarily. Each entry is contextualized with a position (EPUB Positions List position), page number (PDF), or timestamp (audiobook), depending on the publication's profile. When a publication has no `toc` at all, falls back to one flat entry per reading-order item.
 
 ```ts
 interface ContextualizedTocEntry {

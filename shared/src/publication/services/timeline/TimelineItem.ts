@@ -15,7 +15,7 @@ export interface TimelineItem {
     references: string[];
     /** Structural roles of this entry, e.g. ["chapter"], ["part"]. */
     role?: string[];
-    /** Raw position: book-global seconds for audio, page number for EPUB/PDF. */
+    /** Raw position: book-global seconds for audio, a Positions List position for EPUB, a page number for PDF. */
     position?: number;
     /** Scroll progression within the resource (0 to 1), for entries that start mid-way in a resource. */
     scroll?: number;

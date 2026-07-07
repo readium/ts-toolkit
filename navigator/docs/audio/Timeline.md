@@ -4,6 +4,8 @@
 
 A `Timeline` is built from a publication's reading order and table of contents. It is available directly on the publication and is the single source of truth for structure and position queries.
 
+For audiobooks, `TimelineItem.position` (book-global seconds) is populated automatically when the timeline is built — track durations come straight from the manifest, so no navigator involvement is needed. Internally this uses `Timeline.augment`, the same mechanism an EPUB navigator uses to populate `position`/`scroll` from a Positions List.
+
 ## How it is built
 
 **The reading order is the source of truth.** Every item in the reading order becomes exactly one top-level `TimelineItem`. The TOC is consulted only to enrich those items — never to introduce new top-level entries and never to impose its own hierarchy on them.
@@ -108,7 +110,7 @@ const link = publication.timeline.linkFor(item);
 
 ### `contextualizedToc`
 
-Returns the publication's real, authored TOC hierarchy (mirrors `publication.toc` as declared, nested arbitrarily — unlike `TimelineItem.children`, which only flattens TOC fragments one level per resource). Each entry is contextualized with a display-ready `timestamp` (e.g. `"27:27"`, book-global). Falls back to one flat entry per reading-order item when there's no `toc` at all.
+Returns the publication's authored TOC hierarchy (mirrors `publication.toc` as declared, nested arbitrarily — unlike `TimelineItem.children`, which only flattens TOC fragments one level per resource). Each entry is contextualized with a `timestamp` (e.g. `"27:27"`, book-global). Falls back to one flat entry per reading-order item when there's no `toc` at all.
 
 ```js
 const entries = publication.timeline.contextualizedToc;
