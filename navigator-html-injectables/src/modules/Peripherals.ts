@@ -1,3 +1,4 @@
+import { Locator } from "@readium/shared";
 import { Comms } from "../comms/comms.ts";
 import { Module } from "./Module.ts";
 import { ReadiumWindow, nearestInteractiveElement } from "../helpers/dom.ts";
@@ -28,6 +29,8 @@ export interface BasicTextSelection {
     width: number;
     height: number;
     targetFrameSrc: string;
+    /** Locator for the frame the selection originated from. Populated by the navigator. */
+    locator?: Locator;
 }
 
 export interface BaseSuspiciousActivityEvent {
@@ -534,6 +537,15 @@ export class Peripherals extends Module {
                 }
             }
 
+            ack(true);
+        });
+
+        // Disable keyboard handler when frame is unfocused so that stale focus
+        // inside a hidden/off-screen iframe doesn't silently swallow key events
+        // through a halted comms channel. The handler is re-established on the
+        // next show() cycle via the keyboard_peripherals message below.
+        this.comms?.register("unfocus", Peripherals.moduleName, (_, ack) => {
+            this.disableKeyboardPeripherals();
             ack(true);
         });
 

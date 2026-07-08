@@ -79,6 +79,10 @@ export function isInteractiveElement(element: Element | null): boolean {
     // Check for interactive roles
     if (element.role && interactiveRoles.includes(element.role)) return true;
 
+    // An iframe element is a separate browsing context — its focused content cannot be inspected
+    // cross-origin, so the iframe container itself must not be treated as interactive.
+    if (element.tagName.toLowerCase() === "iframe") return false;
+
     if ((element as HTMLElement).tabIndex >= 0) return true;
     
     // Use existing interactive tags logic

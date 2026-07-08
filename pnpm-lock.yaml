@@ -50,9 +50,6 @@ importers:
       typescript-plugin-css-modules:
         specifier: ^5.2.0
         version: 5.2.0(typescript@5.9.3)
-      user-agent-data-types:
-        specifier: ^0.4.2
-        version: 0.4.2
       vite:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.0.9)(jiti@2.6.1)(less@4.5.1)(sass@1.97.2)(stylus@0.62.0)
@@ -74,6 +71,9 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      user-agent-data-types:
+        specifier: ^0.4.2
+        version: 0.4.2
       vite:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.0.9)(jiti@2.6.1)(less@4.5.1)(sass@1.97.2)(stylus@0.62.0)

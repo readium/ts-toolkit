@@ -1,7 +1,7 @@
 import { Loader, ModuleName } from "@readium/navigator-html-injectables";
 import { FrameComms } from "./FrameComms.ts";
 import type { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
-import { sML } from "../../helpers/index.ts";
+import { sML } from "@readium/navigator-html-injectables";
 import type { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator.ts";
 import { KeyboardConditionBridge } from "../../peripherals/KeyboardConditionBridge.ts";
 
@@ -115,6 +115,9 @@ export class FrameManager {
         this.frame.style.opacity = "0";
         this.frame.style.pointerEvents = "none";
         this.hidden = true;
+        // Return focus to the parent document so keyboard events aren't silently
+        // swallowed by a hidden iframe whose comms channel has been halted.
+        this.frame.blur();
         if(this.frame.parentElement) {
             if(this.comms === undefined || !this.comms.ready) return;
             return new Promise((res, _) => {

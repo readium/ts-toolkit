@@ -203,3 +203,66 @@ export const isLightColor = (color: string, blendedWith: string | null = null): 
 export const getContrastingTextColor = (color: string, blendedWith: string | null = null): "black" | "white" => {
   return isDarkColor(color, blendedWith) ? "white" : "black";
 };
+
+const rgbaToCss = (rgba: { r: number; g: number; b: number; a?: number }): string => {
+  const a = rgba.a !== undefined ? rgba.a : 1;
+  return `rgba(${Math.round(rgba.r)}, ${Math.round(rgba.g)}, ${Math.round(rgba.b)}, ${a})`;
+};
+
+const lightenColor = (rgba: { r: number; g: number; b: number; a?: number }, factor: number): { r: number; g: number; b: number; a: number } => {
+  return {
+    r: Math.min(255, rgba.r + (255 - rgba.r) * factor),
+    g: Math.min(255, rgba.g + (255 - rgba.g) * factor),
+    b: Math.min(255, rgba.b + (255 - rgba.b) * factor),
+    a: rgba.a ?? 1
+  };
+};
+
+const darkenColor = (rgba: { r: number; g: number; b: number; a?: number }, factor: number): { r: number; g: number; b: number; a: number } => {
+  return {
+    r: Math.max(0, rgba.r * (1 - factor)),
+    g: Math.max(0, rgba.g * (1 - factor)),
+    b: Math.max(0, rgba.b * (1 - factor)),
+    a: rgba.a ?? 1
+  };
+};
+
+export const adjustColorForContrast = (
+  baseColor: string,
+  backgroundColor: string | null = null,
+  targetContrast: number = 3
+): string => {
+  const baseRgba = colorToRgba(baseColor);
+  const bgRgba = backgroundColor ? colorToRgba(backgroundColor) : { r: 255, g: 255, b: 255, a: 1 };
+  
+  let currentContrast = checkContrast(baseRgba, bgRgba);
+  
+  // If already meets target, return as-is
+  if (currentContrast >= targetContrast) {
+    return baseColor;
+  }
+  
+  const bgLuminance = getLuminance(bgRgba);
+  const isBgDark = bgLuminance < 0.5;
+  
+  let adjustedRgba = { ...baseRgba, a: baseRgba.a ?? 1 };
+  const maxIterations = 20;
+  const step = 0.1;
+  
+  for (let i = 0; i < maxIterations; i++) {
+    if (isBgDark) {
+      // Dark background: lighten the base color
+      adjustedRgba = lightenColor(adjustedRgba, step);
+    } else {
+      // Light background: darken the base color
+      adjustedRgba = darkenColor(adjustedRgba, step);
+    }
+    
+    currentContrast = checkContrast(adjustedRgba, bgRgba);
+    if (currentContrast >= targetContrast) {
+      break;
+    }
+  }
+  
+  return rgbaToCss(adjustedRgba);
+};

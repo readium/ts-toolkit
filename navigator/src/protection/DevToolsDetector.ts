@@ -1,4 +1,4 @@
-import { sML } from "../helpers/sML.ts";
+import { sML } from "@readium/navigator-html-injectables";
 import { WorkerConsole } from "./utils/WorkerConsole.ts";
 import { log, table, clear } from "./utils/console.ts";
 import { isBrave } from "./utils/platform.ts";

@@ -1,4 +1,5 @@
 export * from './Navigator.ts';
+export * from './decorations/index.ts';
 export * from './webpub/index.ts';
 export * from './epub/index.ts';
 export * from './audio/index.ts';

@@ -46,6 +46,7 @@ The `initialPosition` is the position at which the `EpubNavigator` will `load` t
 2. **Content Protection** - For security and protection features, see [Content Protection](./ContentProtection.md)
 3. **Resource Injection** - For injecting custom resources into publications, see [Resource Injection](./ResourceInjection.md)
 4. **Keyboard Peripherals** - For custom keyboard shortcuts, see [Keyboard Peripherals](./KeyboardPeripherals.md)
+5. **Decorations** - For highlighting and annotating text, see [Decorations](./Decorations.md)
 
 Each of these configuration aspects can be combined in the `configuration` object when creating a new `EpubNavigator` instance.
 

@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.1] – 2026-06-23
+
+### Fixed
+
+- `LocatorLocations.time()` now handles decimals properly, which fixes the retrieval of timeline items ([#232](https://github.com/readium/ts-toolkit/pull/232))
+
+## [2.6.0] – 2026–06–04
+
+### Added
+
+- Implemented Decorator API ([#209](https://github.com/readium/ts-toolkit/pull/209))
+
+## [2.5.8] – 2026–06–04
+
+### Added
+
+- Added a check for trusted events in Keyboard Peripherals to ignore synthetic key events ([#227](https://github.com/readium/ts-toolkit/pull/227))
+
+## [2.5.7] – 2026–04–27
+
+### Fixed
+
+- Safari-specific follow-up for keyboard peripheral input being hijacked by a previously focused `iframe` after navigation ([#221](https://github.com/readium/ts-toolkit/issues/221))
+
+## [2.5.6] – 2026–04–27
+
+### Fixed
+
+- Fixed an issue where keyboard peripheral input would be hijacked by a previously focused `iframe` after navigation ([#221](https://github.com/readium/ts-toolkit/issues/221))
+- Added a navigation lock so that FramePool Managers do not become overwhelmed with quick-fire navigation ([#190](https://github.com/readium/ts-toolkit/issues/190))
+
+## [2.5.5] – 2026–05–21
+
+### Fixed
+
+- `positionChanged` event now fires reliably for FXL in EPUBNavigator (([#218](https://github.com/readium/ts-toolkit/pull/218)))
+
 ## [2.5.4] – 2026–05–13
 
 ### Changed

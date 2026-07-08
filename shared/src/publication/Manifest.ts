@@ -19,7 +19,7 @@ export class Manifest {
 
   public readonly metadata: Metadata;
 
-  public readonly links: Links;
+  public readonly links?: Links;
 
   /** Identifies a list of resources in reading order for the publication. */
   public readonly readingOrder: Links;
@@ -69,6 +69,12 @@ export class Manifest {
 
     if (!readingOrder) return;
 
+    const knownKeys = new Set(['@context', 'metadata', 'links', 'readingOrder', 'spine', 'resources', 'toc']);
+    const remaining: Record<string, unknown> = {};
+    Object.keys(json).forEach(key => {
+      if (!knownKeys.has(key)) remaining[key] = json[key];
+    });
+
     return new Manifest({
       context: arrayfromJSONorString(json['@context']),
       metadata,
@@ -76,9 +82,7 @@ export class Manifest {
       readingOrder,
       resources: Links.deserialize(json.resources),
       toc: Links.deserialize(json.toc),
-      subcollections: PublicationCollection.deserializeCollections({
-        sub: json.sub,
-      }),
+      subcollections: PublicationCollection.deserializeCollections(remaining),
     });
   }
 
@@ -89,7 +93,7 @@ export class Manifest {
     const json: any = {};
     if (this.context !== undefined) json['@context'] = this.context;
     json.metadata = this.metadata.serialize();
-    if (this.links?.items.length > 0) json.links = this.links.serialize();
+    if (this.links && this.links.items.length > 0) json.links = this.links.serialize();
     json.readingOrder = this.readingOrder.serialize();
     if (this.resources) json.resources = this.resources.serialize();
     if (this.toc) json.toc = this.toc.serialize();
@@ -104,7 +108,7 @@ export class Manifest {
     if (this.resources) {
       links.push(this.resources);
     }
-    if(this.links) {
+    if (this.links) {
       links.push(this.links);
     }
 
@@ -127,7 +131,7 @@ export class Manifest {
     if (this.resources) {
       result.push(this.resources.filterByRel(rel));
     }
-    if(this.links) {
+    if (this.links) {
       result.push(this.links.filterByRel(rel));
     }
 
@@ -197,7 +201,7 @@ export class Manifest {
     if (this.resources) {
       links.push(this.resources);
     }
-    if(this.links) {
+    if (this.links) {
       links.push(this.links);
     }
 
@@ -220,7 +224,7 @@ export class Manifest {
    *  e.g. https://provider.com/pub1293/manifest.json gives https://provider.com/pub1293/
    */
   public get baseURL(): string | undefined {
-    const selfLink = this.links.items.find(
+    const selfLink = this.links?.items.find(
       el => el.rels && el.rels.has('self')
     );
     if (selfLink) {
@@ -244,10 +248,11 @@ export class Manifest {
    * Sets the URL where this [Publication]'s RWPM manifest is served.
    */
   public setSelfLink(href: string): void {
-    this.links.items = this.links.items.filter(
+    if (!this.links) (this as any).links = new Links([]);
+    this.links!.items = this.links!.items.filter(
       x => x.rels === undefined || !x.rels?.has('self')
     );
-    this.links.items.push(
+    this.links!.items.push(
       new Link({
         href,
         type: MediaType.READIUM_WEBPUB_MANIFEST.string,
