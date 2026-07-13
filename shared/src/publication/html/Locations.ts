@@ -53,7 +53,7 @@ declare module '../Locator' {
      *
      * https://www.w3.org/TR/media-frags/#naming-space
      */
-    space(): { unit: "pixel" | "percent"; x: number; y: number; w: number; h: number } | undefined;
+    space(): { unit: "pixel" | "percent"; x: number; y: number; width: number; height: number } | undefined;
   }
 }
 
@@ -118,7 +118,7 @@ LocatorLocations.prototype.time = function(): number | undefined {
   return parseNptTime(raw);
 }
 
-LocatorLocations.prototype.space = function(): { unit: "pixel" | "percent"; x: number; y: number; w: number; h: number } | undefined {
+LocatorLocations.prototype.space = function(): { unit: "pixel" | "percent"; x: number; y: number; width: number; height: number } | undefined {
   const fp = this.fragmentParameters();
   if (!fp.has("xywh")) return;
 
@@ -138,6 +138,6 @@ LocatorLocations.prototype.space = function(): { unit: "pixel" | "percent"; x: n
   const parts = coords.split(",").map(parse);
   if (parts.length !== 4 || parts.some(isNaN)) return;
 
-  const [x, y, w, h] = parts;
-  return { unit, x, y, w, h };
+  const [x, y, width, height] = parts;
+  return { unit, x, y, width, height };
 }
