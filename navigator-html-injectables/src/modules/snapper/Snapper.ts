@@ -69,7 +69,7 @@ export abstract class Snapper extends Module {
      * dependency on rendered geometry — safe to call for programmatic navigation where the
      * target is already known, regardless of whether layout/IntersectionObserver has settled.
      */
-    protected nearestPrecedingFragmentId(node: Node): string | undefined {
+    protected nearestPrecedingTimelineEntry(node: Node): string | undefined {
         let nearestId: string | undefined;
         for (const id of this.sortedFragmentIds) {
             const el = this.timelineEntries.get(id)!;
@@ -96,6 +96,20 @@ export abstract class Snapper extends Module {
             else break;
         }
         return nearestId;
+    }
+
+    /**
+     * go_start-specific check: whether the first known fragment's leading edge has
+     * already been scrolled past, checking only that one element rather than scanning
+     * the whole timeline. At document start there is nothing before the first fragment
+     * to confuse the result, so a single rect check is sufficient (and cheaper than
+     * `fragmentFromGeometry`).
+     */
+    protected firstFragmentIfReached(): string | undefined {
+        const id = this.sortedFragmentIds[0];
+        if (id === undefined) return undefined;
+        const el = this.timelineEntries.get(id)!;
+        return this.hasScrolledPast(el) ? id : undefined;
     }
 
     /**

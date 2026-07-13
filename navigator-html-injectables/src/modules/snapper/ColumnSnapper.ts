@@ -508,7 +508,10 @@ export class ColumnSnapper extends Snapper {
                 } else {
                     this.doc().scrollLeft = this.snapOffset(element.getBoundingClientRect().left + wnd.scrollX);
                 }
-                this.reportProgress(this.nearestPrecedingFragmentId(element));
+                const targetId = data as string;
+                this.reportProgress(
+                    this.timelineEntries.has(targetId) ? targetId : this.nearestPrecedingTimelineEntry(element)
+                );
                 deselect(this.wnd);
                 ack(true);
             });
@@ -543,7 +546,7 @@ export class ColumnSnapper extends Snapper {
                 } else {
                     this.doc().scrollLeft = this.snapOffset(r.getBoundingClientRect().left + wnd.scrollX);
                 }
-                this.reportProgress(this.nearestPrecedingFragmentId(r.startContainer));
+                this.reportProgress(this.nearestPrecedingTimelineEntry(r.startContainer));
                 deselect(this.wnd);
                 ack(true);
             });
@@ -572,7 +575,10 @@ export class ColumnSnapper extends Snapper {
             this.wnd.requestAnimationFrame(() => {
                 if(this.doc().scrollLeft === 0) return ack(false);
                 this.doc().scrollLeft = 0;
-                this.reportProgress(this.sortedFragmentIds[0]);
+                // The first fragment isn't necessarily reached at document start
+                // (there may be content before it) — check only that one element
+                // instead of assuming sortedFragmentIds[0] is already visible.
+                this.reportProgress(this.firstFragmentIfReached());
                 deselect(this.wnd);
                 ack(true);
             });

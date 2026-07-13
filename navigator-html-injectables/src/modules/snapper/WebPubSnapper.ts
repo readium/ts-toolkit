@@ -192,7 +192,10 @@ export class WebPubSnapper extends Snapper {
             }
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollTop = element.getBoundingClientRect().top + wnd.scrollY - wnd.innerHeight / 2;
-                this.reportProgress(this.nearestPrecedingFragmentId(element));
+                const targetId = data as string;
+                this.reportProgress(
+                    this.timelineEntries.has(targetId) ? targetId : this.nearestPrecedingTimelineEntry(element)
+                );
                 deselect(this.wnd);
                 ack(true);
             });
@@ -222,7 +225,7 @@ export class WebPubSnapper extends Snapper {
             }
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollTop = r.getBoundingClientRect().top + wnd.scrollY - wnd.innerHeight / 2;
-                this.reportProgress(this.nearestPrecedingFragmentId(r.startContainer));
+                this.reportProgress(this.nearestPrecedingTimelineEntry(r.startContainer));
                 deselect(this.wnd);
                 ack(true);
             });
@@ -231,7 +234,10 @@ export class WebPubSnapper extends Snapper {
         comms.register("go_start", WebPubSnapper.moduleName, (_, ack) => {
             if (this.doc().scrollTop === 0) return ack(false);
             this.doc().scrollTop = 0;
-            this.reportProgress(this.sortedFragmentIds[0]);
+            // The first fragment isn't necessarily reached at document start
+            // (there may be content before it) — check only that one element
+            // instead of assuming sortedFragmentIds[0] is already visible.
+            this.reportProgress(this.firstFragmentIfReached());
             ack(true);
         });
 
