@@ -66,7 +66,7 @@ export class FrameManager {
             this.frame.onerror = (err) => {
                 try { rej(err); } catch (error) {}
             }
-            this.frame.contentWindow!.location.replace(this.source);
+            this.frame.src = this.source;
         });
     }
 
