@@ -1052,7 +1052,17 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         const t = this.pub.timeline;
         if (!this._timelineAugmented && this.positions?.length) {
             const positions = this.positions;
-            t.augment((_item, link) => {
+            // We have no way to tell which position within an href corresponds to which
+            // toc entry (fragment ids aren't resolvable against the positions list). So
+            // only the first *leaf* entry for a given href without a fragment match gets
+            // the resource's start position; every other leaf entry sharing that href is
+            // left without a position rather than being given one we can't actually derive.
+            // Container items (chapters with their own toc children) are skipped entirely
+            // here — otherwise the chapter itself would claim the one derivable slot before
+            // any of its displayed children get a turn.
+            const assignedHrefs = new Set<string>();
+            t.augment((item, link) => {
+                if (item.children?.length) return {};
                 const hashIndex = link.href.indexOf('#');
                 const bare = hashIndex >= 0 ? link.href.slice(0, hashIndex) : link.href;
                 const fragment = hashIndex >= 0 ? link.href.slice(hashIndex + 1) : undefined;
@@ -1061,9 +1071,18 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 const atFragment = fragment
                     ? entries.find(p => p.locations.fragments[0] === fragment)
                     : undefined;
-                const candidate = atFragment ?? entries.reduce((min, p) =>
-                    (p.locations.position ?? Infinity) < (min.locations.position ?? Infinity) ? p : min
-                );
+                let candidate: Locator | undefined;
+                if (atFragment) {
+                    candidate = atFragment;
+                } else if (!assignedHrefs.has(bare)) {
+                    assignedHrefs.add(bare);
+                    candidate = entries.reduce((min, p) =>
+                        (p.locations.position ?? Infinity) < (min.locations.position ?? Infinity) ? p : min
+                    );
+                } else {
+                    candidate = undefined;
+                }
+                if (!candidate) return {};
                 return {
                     position: candidate.locations.position,
                     scroll: atFragment?.locations.progression,
