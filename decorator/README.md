@@ -13,11 +13,10 @@ npm install @readium/decorator
 ### Requirements
 
 - A browser environment. The renderer (`Decorator`) mounts on a real `Window`/`document` and uses `ResizeObserver` and `MutationObserver` to keep decorations positioned as the page reflows — there's no server-side/Node rendering path.
-- The controller (`DecorationController`) only needs the comms objects described below — it does no direct DOM work itself and can run outside the browser (e.g. in a parent app driving an iframe).
 
 ## Concepts
 
-- **Comms**: `DecorationController` (your app logic) and `Decorator` (the DOM renderer) talk over a small message-passing interface, `IComms`, so they can live in the same JS context or on either side of an iframe boundary. `DirectCommsChannel` (below) covers the same-context case; for a real iframe, implement `IComms` yourself over `postMessage`.
+- **Comms**: `DecorationController` (your app logic) and `Decorator` (the DOM renderer) talk over a small message-passing interface, handled for you by `DirectCommsChannel` (below).
 - **Groups**: every decoration belongs to a `group` (an arbitrary string you choose — `"tts"`, `"search-results"`, `"annotations"`, etc). `applyDecorations` replaces *all* decorations for one group at a time, diffing against that group's previous state. Separate groups don't interfere with each other, and each can independently opt into activation (tap/click) and hover tracking depending on which callbacks its `DecorationObserver` declares.
 - **Locators**: each decoration's `locator` is a `Locator` instance from `@readium/shared`, identifying the text range (or other target) to decorate within a resource.
 

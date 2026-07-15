@@ -49,7 +49,7 @@ export function supportsDecorationStyle(
     styleTypeId: string,
     decorationTemplates?: Record<string, HTMLDecorationTemplate>
 ): boolean {
-    if (styleTypeId === DecorationStyleType.TextColor) return "Highlight" in window;
+    if (styleTypeId === DecorationStyleType.TextColor) return typeof window !== "undefined" && "Highlight" in window;
     if (BUILTIN_DECORATION_TYPES.has(styleTypeId)) return true;
     return !!decorationTemplates?.[styleTypeId];
 }
