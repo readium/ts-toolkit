@@ -201,7 +201,7 @@ export class FXLFramePoolManager {
         } else {
             const spineStyle = {
                 transition: animate ? `all ${fast ? SLIDE_FAST : SLIDE_SLOW}ms ease-out` : "all 0ms ease-out",
-                marginRight: this.rtl ? `${this.width / 2}px` : "0",
+                marginRight: this.rtl ? `${margin}px` : "0",
                 marginLeft: this.rtl ? "0" : `${margin}px`,
                 width: `${(this.width / this.perPage) * this.length}px`,
                 transform: this.transform ? `translate3d(${this.transform}px, 0px, 0px)` : "",
