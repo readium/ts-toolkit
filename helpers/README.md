@@ -43,4 +43,8 @@ sML.Env  // string[] of all detected OS/UA flag names
 sMLWithRequest.iOSRequest // "mobile" | "desktop" | undefined — iPadOS "Request Desktop Site" state
 ```
 
-`sML` is a bundled subset of [sML.js](https://github.com/satorumurmur/sML) by Satoru Matsushima (MIT licensed). Falls back safely when `navigator` is unavailable (SSR).
+`sML` is a bundled subset of [sML.js](https://github.com/satorumurmur/sML) by Satoru Matsushima, MIT licensed. Falls back safely when `navigator` is unavailable (SSR).
+
+## Third-party licenses
+
+This package is BSD-3-Clause, except for `src/sML.ts`, which vendors code from [sML.js](https://github.com/satorumurmur/sML), Copyright (c) Satoru Matsushima, licensed under the MIT license (see the header of that file for the full notice).
