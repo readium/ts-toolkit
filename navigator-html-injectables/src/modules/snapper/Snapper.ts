@@ -27,12 +27,30 @@ export abstract class Snapper extends Module {
         return cmp & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
     }
 
+    /**
+     * A zero-area target (e.g. an empty `<a id="…">` landmark) always has
+     * intersectionRatio 0 by spec, so `isIntersecting` can never become true for it —
+     * no threshold value changes that. For those entries, fall back to a geometric
+     * containment check against `rootBounds` instead of trusting `isIntersecting`.
+     */
+    private static isVisibleEntry(entry: IntersectionObserverEntry): boolean {
+        const rect = entry.boundingClientRect;
+        // Element has real width and height: isIntersecting is spec-correct, trust it as-is.
+        if (rect.width > 0 && rect.height > 0) return entry.isIntersecting;
+        // Zero-width or zero-height element: isIntersecting is stuck at false (ratio is
+        // area / 0, defined as 0), so it can't be trusted. Do our own overlap check instead.
+        const root = entry.rootBounds;
+        if (!root) return entry.isIntersecting;
+        return rect.left <= root.right && rect.right >= root.left &&
+            rect.top <= root.bottom && rect.bottom >= root.top;
+    }
+
     protected setupTimelineObserver(): void {
         if (this.timelineObserver) this.timelineObserver.disconnect();
         this.timelineObserver = new IntersectionObserver(
             (entries) => {
                 for (const entry of entries) {
-                    if (entry.isIntersecting)
+                    if (Snapper.isVisibleEntry(entry))
                         this.visibleFragmentIds.add((entry.target as HTMLElement).id);
                     else
                         this.visibleFragmentIds.delete((entry.target as HTMLElement).id);
