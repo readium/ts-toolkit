@@ -1,4 +1,5 @@
-import { Link, Links, Timeline, TimelineItem } from '../src';
+import { Link, Links, Locator, LocatorLocations, Profile, Timeline, TimelineItem } from '../src';
+import { buildTimeline } from '../src/publication/services/timeline/index.ts';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -54,14 +55,14 @@ describe('Timeline – no TOC', () => {
     ]);
   });
 
-  it('1.2 reading order items without titles receive a positional placeholder', () => {
+  it('1.2 reading order items without a derivable title get an undefined title', () => {
     const t = build(ro(
       { href: 'chapter1.html' },
       { href: 'chapter2.html' },
     ));
     expect(clean(t.items)).toEqual([
-      { title: 'Resource 1', references: ['chapter1.html'] },
-      { title: 'Resource 2', references: ['chapter2.html'] },
+      { title: undefined, references: ['chapter1.html'] },
+      { title: undefined, references: ['chapter2.html'] },
     ]);
   });
 
@@ -100,7 +101,7 @@ describe('Timeline – title resolution', () => {
     expect(clean(t.items)[0]).toMatchObject({ title: 'Opening' });
   });
 
-  it('2.4 no RO title – multiple fragment TOC entries → positional placeholder, entries become children', () => {
+  it('2.4 no RO title – multiple fragment TOC entries → undefined title, entries become children', () => {
     const t = build(
       ro({ href: 'chapter1.html' }),
       toc(
@@ -110,7 +111,7 @@ describe('Timeline – title resolution', () => {
     );
     expect(clean(t.items)).toEqual([
       {
-        title: 'Resource 1',
+        title: undefined,
         references: ['chapter1.html'],
         children: [
           { title: 'Section 1', references: ['chapter1.html#section-1'] },
@@ -120,13 +121,13 @@ describe('Timeline – title resolution', () => {
     ]);
   });
 
-  it('2.5 no RO title, no TOC match → positional placeholder', () => {
+  it('2.5 no RO title, no TOC match → undefined title', () => {
     const t = build(
       ro({ href: 'chapter1.html' }, { href: 'chapter2.html', title: 'Chapter 2' }),
       toc({ href: 'chapter2.html', title: 'Chapter Two' }),
     );
     expect(clean(t.items)).toEqual([
-      { title: 'Resource 1', references: ['chapter1.html'] },
+      { title: undefined, references: ['chapter1.html'] },
       { title: 'Chapter 2', references: ['chapter2.html'] },
     ]);
   });
@@ -496,5 +497,322 @@ describe('Timeline – depth', () => {
         ],
       },
     ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Group 7 – Single-track audio: fragment-only TOC links (#t=N)
+// ---------------------------------------------------------------------------
+
+describe('Timeline – single-track audio (fragment-only references)', () => {
+  it('7.1 fragment-only TOC children are collected and stored with the resource href prepended', () => {
+    const t = build(
+      ro({ href: 'audio.mp3', title: 'Audiobook' }),
+      toc(
+        { href: '#t=60',   title: 'Part 1' },
+        { href: '#t=1800', title: 'Part 2' },
+      ),
+    );
+    expect(clean(t.items)).toEqual([
+      {
+        title: 'Audiobook',
+        references: ['audio.mp3'],
+        children: [
+          { title: 'Part 1', references: ['audio.mp3#t=60'] },
+          { title: 'Part 2', references: ['audio.mp3#t=1800'] },
+        ],
+      },
+    ]);
+  });
+
+  it('7.2 #t=0 fragment-only TOC link is treated as start-of-resource', () => {
+    const t = build(
+      ro({ href: 'audio.mp3' }),
+      toc(
+        { href: '#t=0',  title: 'Audiobook Title' },
+        { href: '#t=60', title: 'Part 1' },
+      ),
+    );
+    expect(clean(t.items)[0]).toMatchObject({ title: 'Audiobook Title' });
+    expect((clean(t.items)[0] as any).children).toEqual([
+      { title: 'Part 1', references: ['audio.mp3#t=60'] },
+    ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Group 8 – locate()
+// ---------------------------------------------------------------------------
+
+function locator(href: string, locations?: ConstructorParameters<typeof LocatorLocations>[0]): Locator {
+  return new Locator({ href, type: '', locations: locations ? new LocatorLocations(locations) : undefined });
+}
+
+describe('Timeline – locate()', () => {
+  // ── EPUB ──────────────────────────────────────────────────────────────────
+
+  it('8.1 EPUB: matches on HTML ID fragment', () => {
+    const t = build(
+      ro({ href: 'chapter1.html', title: 'Chapter 1' }),
+      toc(
+        { href: 'chapter1.html#intro',   title: 'Intro' },
+        { href: 'chapter1.html#section', title: 'Section' },
+      ),
+    );
+    const item = t.locate(locator('chapter1.html', { fragments: ['section'] }));
+    expect(item?.title).toBe('Section');
+  });
+
+  it('8.2 EPUB: href with fragment is normalized and matched', () => {
+    const t = build(
+      ro({ href: 'chapter1.html', title: 'Chapter 1' }),
+      toc({ href: 'chapter1.html#intro', title: 'Intro' }),
+    );
+    // Fragment in href should be normalized into locations by the Locator constructor.
+    const item = t.locate(locator('chapter1.html#intro'));
+    expect(item?.title).toBe('Intro');
+  });
+
+  it('8.3 EPUB: falls back to bare href when no fragment matches', () => {
+    const t = build(
+      ro({ href: 'chapter1.html', title: 'Chapter 1' }),
+    );
+    const item = t.locate(locator('chapter1.html'));
+    expect(item?.title).toBe('Chapter 1');
+  });
+
+  it('8.4 EPUB: returns undefined for unknown href', () => {
+    const t = build(ro({ href: 'chapter1.html', title: 'Chapter 1' }));
+    expect(t.locate(locator('unknown.html'))).toBeUndefined();
+  });
+
+  it('8.5 EPUB: matches on scroll progression', () => {
+    const positionsList = [
+      new Locator({ href: 'chapter1.html', type: '', locations: new LocatorLocations({ fragments: ['intro'],   progression: 0.0, position: 1 }) }),
+      new Locator({ href: 'chapter1.html', type: '', locations: new LocatorLocations({ fragments: ['section'], progression: 0.5, position: 5 }) }),
+    ];
+    const t = buildTimeline({
+      readingOrder: ro({ href: 'chapter1.html', title: 'Chapter 1' }),
+      toc: toc(
+        { href: 'chapter1.html#intro',   title: 'Intro' },
+        { href: 'chapter1.html#section', title: 'Section' },
+      ),
+      metadata: { conformsTo: [Profile.EPUB] },
+    });
+    t.augment((item, link) => {
+      const hashIndex = link.href.indexOf('#');
+      const bare = hashIndex >= 0 ? link.href.slice(0, hashIndex) : link.href;
+      const fragment = hashIndex >= 0 ? link.href.slice(hashIndex + 1) : undefined;
+      const entries = positionsList.filter(p => p.href === bare);
+      if (!entries.length) return {};
+      const atFragment = fragment
+        ? entries.find(p => p.locations.fragments[0] === fragment)
+        : undefined;
+      return { scroll: atFragment?.locations.progression };
+    });
+    const item = t.locate(locator('chapter1.html', { progression: 0.6 }));
+    expect(item?.title).toBe('Section');
+  });
+
+  // ── Audio multi-track ─────────────────────────────────────────────────────
+
+  it('8.6 audio multi-track: best-match on t= start time', () => {
+    const t = build(
+      ro({ href: 'track1.mp3', title: 'Track 1' }),
+      toc(
+        { href: 'track1.mp3#t=0',   title: 'Intro' },
+        { href: 'track1.mp3#t=60',  title: 'Part 1' },
+        { href: 'track1.mp3#t=120', title: 'Part 2' },
+      ),
+    );
+    const item = t.locate(locator('track1.mp3', { fragments: ['t=90'] }));
+    expect(item?.title).toBe('Part 1');
+  });
+
+  it('8.7 audio multi-track: does not match items from a different track', () => {
+    const t = build(
+      ro({ href: 'track1.mp3', title: 'Track 1' }, { href: 'track2.mp3', title: 'Track 2' }),
+      toc(
+        { href: 'track1.mp3#t=60', title: 'Part 1' },
+        { href: 'track2.mp3#t=60', title: 'Part 2' },
+      ),
+    );
+    const item = t.locate(locator('track2.mp3', { fragments: ['t=90'] }));
+    expect(item?.title).toBe('Part 2');
+  });
+
+  // ── Audio single-track ────────────────────────────────────────────────────
+
+  it('8.8 audio single-track: best-match on t= start time with fragment-only references in TOC', () => {
+    const t = build(
+      ro({ href: 'audio.mp3', title: 'Audiobook' }),
+      toc(
+        { href: '#t=0',   title: 'Intro' },
+        { href: '#t=60',  title: 'Part 1' },
+        { href: '#t=120', title: 'Part 2' },
+      ),
+    );
+    const item = t.locate(locator('audio.mp3', { fragments: ['t=90'] }));
+    expect(item?.title).toBe('Part 1');
+  });
+
+  // ── Multi-reference items ─────────────────────────────────────────────────
+
+  it('8.9 multi-reference: item is matched via its second reference', () => {
+    const t = Timeline.build({ readingOrder: ro({ href: 'track1.mp3', title: 'Track 1' }, { href: 'track2.mp3', title: 'Track 2' }) });
+    // Manually inject an item with two references (external consumer use case).
+    const multiItem: TimelineItem = {
+      title: 'Spanning Part',
+      references: ['track1.mp3#t=3600', 'track2.mp3#t=0'],
+    };
+    const customTimeline = new Timeline(
+      [multiItem],
+      new Map([[multiItem, new Link({ href: 'track1.mp3' })]]),
+    );
+    expect(customTimeline.locate(locator('track2.mp3', { fragments: ['t=30'] }))?.title).toBe('Spanning Part');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Group 9 – contextualizedToc
+// ---------------------------------------------------------------------------
+
+describe('Timeline – contextualizedToc', () => {
+  const sharedRo = ro({ href: 'c.html', title: 'Chapter' });
+  const sharedToc = toc(
+    {
+      href: 'c.html#part',
+      title: 'Part',
+      children: [
+        {
+          href: 'c.html#s1',
+          title: 'Section 1',
+          children: [
+            { href: 'c.html#s1a', title: 'Sub-section 1a' },
+          ],
+        },
+        { href: 'c.html#s2', title: 'Section 2' },
+      ],
+    },
+    { href: 'c.html#epilogue', title: 'Epilogue' },
+  );
+
+  function cleanToc(entries: ReturnType<Timeline['contextualizedToc']>): unknown[] {
+    return entries.map(e => {
+      const out: Record<string, unknown> = { title: e.link.title };
+      if (e.position !== undefined) out['position'] = e.position;
+      if (e.timestamp !== undefined) out['timestamp'] = e.timestamp;
+      if (e.children?.length) out['children'] = cleanToc(e.children);
+      return out;
+    });
+  }
+
+  it('9.1 mirrors the real, authored TOC hierarchy — deeper than items\' one-level-flat children', () => {
+    const t = build(sharedRo, sharedToc);
+    expect(cleanToc(t.contextualizedToc)).toEqual([
+      {
+        title: 'Part',
+        children: [
+          {
+            title: 'Section 1',
+            children: [{ title: 'Sub-section 1a' }],
+          },
+          { title: 'Section 2' },
+        ],
+      },
+      { title: 'Epilogue' },
+    ]);
+  });
+
+  it('9.2 respects depth', () => {
+    const t = build(sharedRo, sharedToc, 1);
+    expect(cleanToc(t.contextualizedToc)).toEqual([
+      { title: 'Part' },
+      { title: 'Epilogue' },
+    ]);
+  });
+
+  it('9.3 non-audio profile: position (string) is populated from the matching item, timestamp is not', () => {
+    const positions = [
+      new Locator({ href: 'chapter1.html', type: '', locations: new LocatorLocations({ fragments: ['section'], position: 12, progression: 0.5 }) }),
+    ];
+    const t = buildTimeline({
+      readingOrder: ro({ href: 'chapter1.html', title: 'Chapter 1' }),
+      toc: toc({ href: 'chapter1.html#section', title: 'Section' }),
+      metadata: { conformsTo: [Profile.EPUB] },
+    });
+    t.augment((_item, link) => {
+      const fragment = link.href.split('#')[1];
+      const entry = positions.find(p => p.locations.fragments[0] === fragment);
+      return { position: entry?.locations.position };
+    });
+    const entry = t.contextualizedToc[0];
+    expect(entry.position).toBe('12');
+    expect(entry.timestamp).toBeUndefined();
+  });
+
+  it('9.4 audiobook profile: timestamp (formatted string) is populated, position is not', () => {
+    const t = buildTimeline({
+      readingOrder: new Links([new Link({ href: 'track.mp3', title: 'Track', duration: 7200 })]),
+      toc: new Links([buildLink({ href: 'track.mp3#t=1647', title: 'Part 1' })]),
+      metadata: { conformsTo: [Profile.AUDIOBOOK] },
+    });
+    const entry = t.contextualizedToc[0];
+    expect(entry.timestamp).toBe('27:27');
+    expect(entry.position).toBeUndefined();
+  });
+
+  it('9.5 falls back to one flat entry per reading-order item when there is no manifest toc at all', () => {
+    const t = build(ro(
+      { href: 'chapter1.html', title: 'Chapter 1' },
+      { href: 'chapter2.html', title: 'Chapter 2' },
+    ));
+    expect(t.contextualizedToc.map(e => e.link.href)).toEqual(['chapter1.html', 'chapter2.html']);
+    expect(t.contextualizedToc.every(e => e.children === undefined)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Group 10 – tocEntryFor
+// ---------------------------------------------------------------------------
+
+describe('Timeline – tocEntryFor', () => {
+  it('10.1 direct match: a TOC-derived child item resolves to its own toc entry', () => {
+    const t = build(
+      ro({ href: 'chapter1.html', title: 'Chapter 1' }),
+      toc({ href: 'chapter1.html#intro', title: 'Introduction' }),
+    );
+    const child = t.items[0].children![0];
+    expect(t.tocEntryFor(child)?.link.title).toBe('Introduction');
+  });
+
+  it('10.2 fallback match: a plain reading-order item resolves to the nearest preceding toc entry by scroll', () => {
+    const t = build(
+      ro({ href: 'chapter1.html', title: 'Chapter 1' }),
+      toc(
+        { href: 'chapter1.html#s1', title: 'Section 1' },
+        { href: 'chapter1.html#s2', title: 'Section 2' },
+      ),
+    );
+    // Simulate scroll progression normally populated via augment().
+    t.items[0].children![0].scroll = 0.0;
+    t.items[0].children![1].scroll = 0.5;
+    t.items[0].scroll = 0.6;
+
+    expect(t.tocEntryFor(t.items[0])?.link.title).toBe('Section 2');
+  });
+
+  it('10.3 no match: an item unknown to the timeline resolves to undefined', () => {
+    const t = build(
+      ro({ href: 'chapter1.html', title: 'Chapter 1' }),
+      toc({ href: 'chapter1.html#intro', title: 'Introduction' }),
+    );
+    const untracked: TimelineItem = { title: 'Untracked', references: ['nowhere.html'] };
+    expect(t.tocEntryFor(untracked)).toBeUndefined();
+  });
+
+  it('10.4 no manifest toc: a reading-order item direct-matches its own fallback toc entry', () => {
+    const t = build(ro({ href: 'chapter1.html', title: 'Chapter 1' }));
+    expect(t.tocEntryFor(t.items[0])?.link.href).toBe('chapter1.html');
   });
 });

@@ -1,11 +1,30 @@
 import { Link, Links } from "../../Link.ts";
 import { Locator } from "../../Locator.ts";
+import { Profile } from "../../Profiles.ts";
+import { formatNptTime, isNptStartOfResource, parseNptTime } from "../../../util/npt.ts";
 import { TimelineItem } from "./TimelineItem.ts";
-import { isNptStartOfResource, parseNptTime } from "../../../util/npt.ts";
 
-interface PublicationLike {
+export interface PublicationLike {
     toc?: Links;
     readingOrder: Links;
+    metadata?: { conformsTo?: Profile[] };
+}
+
+/**
+ * A TOC entry, mirroring `publication.toc`'s authored hierarchy and
+ * contextualized with display-ready progression.  When a publication has no
+ * `toc` at all, falls back to one flat entry per reading-order item.
+ *
+ * Exactly one of `position`/`timestamp` is populated, depending on the
+ * publication's profile.
+ */
+export interface ContextualizedTocEntry {
+    link: Link;
+    /** Display-ready label for non-audio profiles: a Positions List position for EPUB, a page number for PDF (e.g. "42"). */
+    position?: string;
+    /** Display-ready formatted time for audiobooks (e.g. "27:27"). */
+    timestamp?: string;
+    children?: ContextualizedTocEntry[];
 }
 
 /**
@@ -17,32 +36,61 @@ interface PublicationLike {
  *   2. Populate flat children — all TOC fragment entries that reference the
  *      resource, collected depth-first in TOC declaration order.
  *
- * No TOC hierarchy is reconstructed; that requires role context and is not yet
- * implemented.  TOC entries whose href does not match any reading order item
- * are ignored.
+ * `contextualizedToc` returns the authored TOC hierarchy (see
+ * `ContextualizedTocEntry`), each entry contextualized with progression.
+ * `tocEntryFor(item)` maps a `TimelineItem` (e.g. from
+ * `locate()`) back to its entry in that hierarchy.  TOC entries whose href
+ * does not match any reading order item are ignored.
  *
- * The `depth` build option limits how many levels deep into the TOC tree both
- * title resolution and child collection may look.  Level 1 = top-level TOC
- * entries; level 2 = their children; etc.  `undefined` means no limit.
+ * The `depth` build option limits how many levels deep into the TOC tree
+ * title resolution, child collection, and `contextualizedToc` traversal may
+ * look.  Level 1 = top-level TOC entries; level 2 = their children; etc.
+ * `undefined` means no limit.
  */
 export class Timeline {
     private readonly _allItems: TimelineItem[];
     private readonly linkMap: Map<TimelineItem, Link>;
+    private readonly _conformsTo: readonly Profile[];
+    private readonly tocLinks: Link[];
     private _depth: number | undefined;
+    /**
+     * Depth used for `contextualizedToc` traversal.  Tracks `_depth`, but is
+     * seeded independently from `Timeline.build()`'s `depth` option: unlike
+     * `_depth`, which only ever triggers `items`/`flat` re-trimming via the
+     * runtime `depth` setter, the TOC tree is walked fresh from `tocLinks`
+     * every time, so there's no equivalent "already baked in, don't reapply"
+     * hazard to avoid.
+     */
+    private _tocDepth: number | undefined;
     private _items: TimelineItem[] | undefined;
     private _flat: TimelineItem[] | undefined;
+    private _toc: ContextualizedTocEntry[] | undefined;
+    private _linkToItem: Map<Link, TimelineItem> | undefined;
     /** Populated when depth is set; maps cloned items from trimToDepth back to their Links. */
     private _trimmedLinkMap: Map<TimelineItem, Link> = new Map();
 
-    constructor(items: TimelineItem[], linkMap: Map<TimelineItem, Link>) {
+    constructor(
+        items: TimelineItem[],
+        linkMap: Map<TimelineItem, Link>,
+        conformsTo: readonly Profile[] = [],
+        tocLinks: Link[] = [],
+        tocDepth: number | undefined = undefined,
+    ) {
         this._allItems = items;
         this.linkMap = linkMap;
+        this._conformsTo = conformsTo;
+        this.tocLinks = tocLinks;
+        this._tocDepth = tocDepth;
     }
 
-    static build(publication: PublicationLike, options: { depth?: number } = {}): Timeline {
+    static build(
+        publication: PublicationLike,
+        options: { depth?: number } = {},
+    ): Timeline {
         const tocLinks = publication.toc?.items ?? [];
         const roLinks = publication.readingOrder.items;
         const { depth } = options;
+        const conformsTo = publication.metadata?.conformsTo ?? [];
         const linkMap = new Map<TimelineItem, Link>();
         const items: TimelineItem[] = [];
 
@@ -52,8 +100,7 @@ export class Timeline {
 
             const title =
                 ro.title ??
-                Timeline.findTitleInToc(tocLinks, bare, depth) ??
-                `Resource ${i + 1}`;
+                Timeline.findTitleInToc(tocLinks, bare, depth);
 
             const tocChildren = Timeline.collectChildrenFromToc(tocLinks, bare, depth, 1, linkMap);
 
@@ -67,7 +114,25 @@ export class Timeline {
             items.push(item);
         }
 
-        return new Timeline(items, linkMap);
+        return new Timeline(items, linkMap, conformsTo, tocLinks, depth);
+    }
+
+    /**
+     * Augments all items in the timeline by applying the mapper's returned patch.
+     * The mapper receives the item and its original manifest Link, and returns
+     * a partial TimelineItem — any fields it sets will overwrite the item's
+     * current value.  Use this to populate `position`, `scroll`, `role`, or any
+     * future TimelineItem fields from format-specific data.
+     */
+    augment(mapper: (item: TimelineItem, link: Link) => Partial<TimelineItem>): void {
+        for (const item of this.flatAll) {
+            const link = this.linkFor(item);
+            if (!link) continue;
+            const patch = mapper(item, link);
+            if (patch.position !== undefined) item.position = patch.position;
+            if (patch.scroll   !== undefined) item.scroll   = patch.scroll;
+            if (patch.role     !== undefined) item.role     = patch.role;
+        }
     }
 
     /**
@@ -82,8 +147,10 @@ export class Timeline {
     set depth(value: number | undefined) {
         if (this._depth === value) return;
         this._depth = value;
+        this._tocDepth = value;
         this._items = undefined;
         this._flat = undefined;
+        this._toc = undefined;
     }
 
     /** Top-level timeline items.  Cached; invalidated when `depth` changes. */
@@ -100,27 +167,64 @@ export class Timeline {
     }
 
     locate(locator: Locator): TimelineItem | undefined {
-        const href = locator.href.split("#")[0];
-        const time = locator.locations?.time();
+        const href = locator.href;
+        const time = locator.locations.time();
+        const htmlId = locator.locations.htmlId();
+        const progression = locator.locations.progression;
 
-        let match: TimelineItem | undefined;
-
+        // Audio: best-match on t= start time.
         if (time !== undefined) {
             let bestTime = -Infinity;
+            let match: TimelineItem | undefined;
             for (const item of this.flat) {
+                if (!this.itemMatchesHref(item, href)) continue;
                 const t = this.itemStartTime(item, href);
                 if (t !== undefined && t <= time && t > bestTime) {
                     bestTime = t;
                     match = item;
                 }
             }
+            if (match) return match;
         }
 
-        if (!match) {
-            match = this.flat.find(item => this.bareHrefFromItem(item) === href);
+        // EPUB: match on HTML ID fragment.
+        if (htmlId) {
+            const match = this.flat.find(item => {
+                if (!this.itemMatchesHref(item, href)) return false;
+                return item.references.some(ref => ref.split("#")[1] === htmlId);
+            });
+            if (match) return match;
         }
 
-        return match;
+        // EPUB: best-match on scroll progression.
+        if (progression !== undefined) {
+            let bestScroll = -Infinity;
+            let match: TimelineItem | undefined;
+            for (const item of this.flat) {
+                if (!this.itemMatchesHref(item, href)) continue;
+                const s = this.itemScrollPosition(item);
+                if (s !== undefined && s <= progression && s > bestScroll) {
+                    bestScroll = s;
+                    match = item;
+                }
+            }
+            if (match) return match;
+
+            // No scroll data resolved anywhere in this resource yet: guess a
+            // child by evenly dividing the fraction across its children,
+            // rather than naming the whole resource.
+            const container = this.items.find(i => this.itemMatchesHref(i, href));
+            if (container?.children?.length && !container.children.some(c => c.scroll !== undefined)) {
+                const index = Math.min(
+                    Math.floor(progression * container.children.length),
+                    container.children.length - 1,
+                );
+                return container.children[index];
+            }
+        }
+
+        // Fallback: bare href match.
+        return this.flat.find(item => this.itemMatchesHref(item, href));
     }
 
     adjacentTo(item: TimelineItem): { previous: TimelineItem | undefined; next: TimelineItem | undefined } {
@@ -133,33 +237,9 @@ export class Timeline {
 
     segmentsForHref(href: string): TimelineItem[] {
         const bare = href.split("#")[0];
-        const item = this.items.find(i => this.bareHrefFromItem(i) === bare);
+        const item = this.items.find(i => this.itemMatchesHref(i, bare));
         if (!item) return [];
         return item.children?.length ? item.children : [item];
-    }
-
-    itemAtProgression(href: string, progression: number, duration?: number): TimelineItem | undefined {
-        const bare = href.split("#")[0];
-        const item = this.items.find(i => this.bareHrefFromItem(i) === bare);
-        if (!item) return undefined;
-        if (!item.children?.length) return item;
-
-        if (duration !== undefined) {
-            const time = progression * duration;
-            let match: TimelineItem = item;
-            let bestTime = -Infinity;
-            for (const child of item.children) {
-                const t = this.timeFromItem(child);
-                if (t !== undefined && t <= time && t > bestTime) {
-                    bestTime = t;
-                    match = child;
-                }
-            }
-            return match;
-        }
-
-        const index = Math.min(Math.floor(progression * item.children.length), item.children.length - 1);
-        return item.children[index];
     }
 
     ancestors(item: TimelineItem): TimelineItem[] {
@@ -170,9 +250,45 @@ export class Timeline {
         return this.linkMap.get(item) ?? this._trimmedLinkMap.get(item);
     }
 
+    /**
+     * The authored TOC, contextualized with display-ready progression.  Mirrors
+     * `publication.toc`'s authored hierarchy (respecting `depth`), falling
+     * back to one flat entry per reading-order item when there's no toc at
+     * all.  Cached; invalidated when `depth` changes.
+     */
+    get contextualizedToc(): ContextualizedTocEntry[] {
+        if (!this._toc) {
+            this._toc = this.tocLinks.length > 0
+                ? this.buildTocEntries(this.tocLinks, this._tocDepth, 1)
+                : this._allItems.map(item => this.entryFor(this.linkFor(item)!, item));
+        }
+        return this._toc;
+    }
+
+    /**
+     * Maps a `TimelineItem` (typically from `locate()`) to its `ContextualizedTocEntry`:
+     * a direct match first, falling back to the nearest preceding toc entry
+     * for that resource when there's no exact match (e.g. a mid-resource
+     * audio position between chapter markers).
+     */
+    tocEntryFor(current: TimelineItem): ContextualizedTocEntry | undefined {
+        const link = this.linkFor(current);
+        if (!link) return undefined;
+
+        const direct = this.findTocEntryByLink(this.contextualizedToc, link);
+        if (direct) return direct;
+
+        return this.nearestTocEntryForResource(link.href, current);
+    }
+
     private get flat(): TimelineItem[] {
         if (!this._flat) this._flat = this.flattenItems(this.items);
         return this._flat;
+    }
+
+    /** All items flattened from _allItems, depth-independent — used by augment(). */
+    private get flatAll(): TimelineItem[] {
+        return this.flattenItems(this._allItems);
     }
 
     // -------------------------------------------------------------------------
@@ -215,8 +331,17 @@ export class Timeline {
         const result: TimelineItem[] = [];
 
         for (const link of tocLinks) {
-            if (Timeline.bareHref(link.href) === bare && link.title && !Timeline.isStartOfResource(link.href)) {
-                const child: TimelineItem = { title: link.title, references: [link.href] };
+            const linkBare = Timeline.bareHref(link.href);
+            // Fragment-only hrefs (e.g. "#t=60" in single-track audio) have no bare href,
+            // so they are associated with the current resource.
+            const matchesBare = linkBare === bare || linkBare === '';
+            if (matchesBare && link.title && !Timeline.isStartOfResource(link.href)) {
+                // Prepend the resource href when the link uses a fragment-only reference.
+                const ref = linkBare === '' ? bare + link.href : link.href;
+                const child: TimelineItem = {
+                    title: link.title,
+                    references: [ref],
+                };
                 linkMap.set(child, link);
                 result.push(child);
             }
@@ -250,7 +375,8 @@ export class Timeline {
         const fragments: Link[] = [];
 
         for (const link of tocLinks) {
-            if (Timeline.bareHref(link.href) === bare && link.title) {
+            const linkBare = Timeline.bareHref(link.href);
+            if ((linkBare === bare || linkBare === '') && link.title) {
                 if (Timeline.isStartOfResource(link.href)) {
                     atStart.push(link);
                 } else {
@@ -280,6 +406,88 @@ export class Timeline {
         if (!fragment) return true;
         const match = fragment.match(/(?:^|&)t=([^&]+)/);
         return match !== null && isNptStartOfResource(match[1]);
+    }
+
+    // -------------------------------------------------------------------------
+    // Contextualized TOC
+    // -------------------------------------------------------------------------
+
+    private get linkToItem(): Map<Link, TimelineItem> {
+        if (!this._linkToItem) {
+            this._linkToItem = new Map();
+            for (const [item, link] of this.linkMap) this._linkToItem.set(link, item);
+        }
+        return this._linkToItem;
+    }
+
+    private buildTocEntries(links: Link[], maxDepth: number | undefined, currentDepth: number): ContextualizedTocEntry[] {
+        if (maxDepth !== undefined && currentDepth > maxDepth) return [];
+        return links.map(link => {
+            const item = this.linkToItem.get(link) ?? this.resourceStartItem(link.href);
+            const kids = link.children?.items?.length
+                ? this.buildTocEntries(link.children.items, maxDepth, currentDepth + 1)
+                : [];
+            return { ...this.entryFor(link, item), children: kids.length > 0 ? kids : undefined };
+        });
+    }
+
+    /** All toc Links flattened, respecting the same depth limit as `buildTocEntries`. */
+    private tocLinksFlat(links: Link[], maxDepth: number | undefined, currentDepth: number): Link[] {
+        if (maxDepth !== undefined && currentDepth > maxDepth) return [];
+        const result: Link[] = [];
+        for (const link of links) {
+            result.push(link);
+            if (link.children?.items?.length) {
+                result.push(...this.tocLinksFlat(link.children.items, maxDepth, currentDepth + 1));
+            }
+        }
+        return result;
+    }
+
+    private entryFor(link: Link, item: TimelineItem | undefined): ContextualizedTocEntry {
+        const isAudio = this._conformsTo.includes(Profile.AUDIOBOOK);
+        return {
+            link,
+            position: !isAudio && item?.position !== undefined ? String(item.position) : undefined,
+            timestamp: isAudio && item?.position !== undefined ? formatNptTime(item.position) : undefined,
+        };
+    }
+
+    private resourceStartItem(href: string): TimelineItem | undefined {
+        const bare = Timeline.bareHref(href);
+        return this._allItems.find(i => this.itemMatchesHref(i, bare));
+    }
+
+    private findTocEntryByLink(entries: ContextualizedTocEntry[], link: Link): ContextualizedTocEntry | undefined {
+        for (const entry of entries) {
+            if (entry.link === link) return entry;
+            if (entry.children) {
+                const found = this.findTocEntryByLink(entry.children, link);
+                if (found) return found;
+            }
+        }
+        return undefined;
+    }
+
+    private nearestTocEntryForResource(href: string, current: TimelineItem): ContextualizedTocEntry | undefined {
+        const bare = Timeline.bareHref(href);
+        // Re-walk with raw items (not the display-formatted TocEntry tree) so we can compare
+        // current.position/current.scroll directly against each candidate's source TimelineItem.
+        const candidates = this.tocLinksFlat(this.tocLinks, this._tocDepth, 1)
+            .filter(link => Timeline.bareHref(link.href) === bare)
+            .map(link => ({ link, item: this.linkToItem.get(link) ?? this.resourceStartItem(link.href) }));
+        if (candidates.length === 0) return undefined;
+
+        const isAudio = this._conformsTo.includes(Profile.AUDIOBOOK);
+        const currentValue = isAudio ? (current.position ?? 0) : (current.scroll ?? 0);
+        let best: { link: Link; item: TimelineItem | undefined } | undefined;
+        let bestValue = -Infinity;
+        for (const c of candidates) {
+            const v = isAudio ? (c.item?.position ?? 0) : (c.item?.scroll ?? 0);
+            if (v <= currentValue && v > bestValue) { bestValue = v; best = c; }
+        }
+        const chosen = best ?? candidates[0];
+        return this.findTocEntryByLink(this.contextualizedToc, chosen.link);
     }
 
     // -------------------------------------------------------------------------
@@ -319,7 +527,8 @@ export class Timeline {
             const hashIndex = ref.indexOf("#");
             const refHref = hashIndex >= 0 ? ref.slice(0, hashIndex) : ref;
             const refFragment = hashIndex >= 0 ? ref.slice(hashIndex + 1) : undefined;
-            const effectiveHref = refHref || this.bareHrefFromItem(item);
+            // Fragment-only reference (e.g. "#t=60") has no resource of its own — use the queried href.
+            const effectiveHref = refHref || href;
             if (effectiveHref !== href) continue;
             if (!refFragment) return undefined;
             const match = refFragment.match(/(?:^|&)t=([^&]+)/);
@@ -328,17 +537,12 @@ export class Timeline {
         return undefined;
     }
 
-    private bareHrefFromItem(item: TimelineItem): string {
-        return (item.references[0] ?? "").split("#")[0];
-    }
-
-    private timeFromItem(item: TimelineItem): number | undefined {
-        const ref = item.references[0];
-        if (!ref) return undefined;
-        const fragment = ref.split("#")[1];
-        if (!fragment) return undefined;
-        const match = fragment.match(/(?:^|&)t=([^&]+)/);
-        return match ? parseNptTime(match[1]) : undefined;
+    private itemMatchesHref(item: TimelineItem, href: string): boolean {
+        return item.references.some(ref => {
+            const bare = ref.split("#")[0];
+            // Fragment-only reference (single-track audio) matches the current resource.
+            return bare === href || bare === '';
+        });
     }
 
     private ancestorPath(items: TimelineItem[], target: TimelineItem): TimelineItem[] | null {
@@ -350,6 +554,10 @@ export class Timeline {
             }
         }
         return null;
+    }
+
+    private itemScrollPosition(item: TimelineItem): number | undefined {
+        return item.scroll;
     }
 
     private static bareHref(href: string): string {

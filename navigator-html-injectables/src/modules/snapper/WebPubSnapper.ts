@@ -31,7 +31,11 @@ export class WebPubSnapper extends Snapper {
         return this.wnd.document.scrollingElement as HTMLElement;
     }
 
-    private reportProgress() {
+    protected hasScrolledPast(el: Element): boolean {
+        return el.getBoundingClientRect().bottom <= 0;
+    }
+
+    private reportProgress(forcedFragmentId?: string) {
         if (!this.comms.ready) return;
 
         const scrollTop = Math.ceil(this.doc().scrollTop);
@@ -42,7 +46,8 @@ export class WebPubSnapper extends Snapper {
 
         this.comms.send("progress", {
             start: progress,
-            end: viewportEnd
+            end: viewportEnd,
+            fragmentId: forcedFragmentId !== undefined ? forcedFragmentId : this.currentTimelineFragment()
         });
     }
 
@@ -115,6 +120,7 @@ export class WebPubSnapper extends Snapper {
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
+        this.setupTimelineObserver();
 
         this.initialScrollHandled = false;
         this.lastScrollTop = 0;
@@ -170,7 +176,9 @@ export class WebPubSnapper extends Snapper {
 
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollTop = this.doc().offsetHeight * position;
-                this.reportProgress();
+                // No known target fragment for an arbitrary position — force a fresh
+                // geometry scan instead of trusting a possibly-stale visibility cache.
+                this.reportProgress(this.fragmentFromGeometry());
                 deselect(this.wnd);
                 ack(true);
             });
@@ -184,7 +192,10 @@ export class WebPubSnapper extends Snapper {
             }
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollTop = element.getBoundingClientRect().top + wnd.scrollY - wnd.innerHeight / 2;
-                this.reportProgress();
+                const targetId = data as string;
+                this.reportProgress(
+                    this.timelineEntries.has(targetId) ? targetId : this.nearestPrecedingTimelineEntry(element)
+                );
                 deselect(this.wnd);
                 ack(true);
             });
@@ -214,7 +225,7 @@ export class WebPubSnapper extends Snapper {
             }
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollTop = r.getBoundingClientRect().top + wnd.scrollY - wnd.innerHeight / 2;
-                this.reportProgress();
+                this.reportProgress(this.nearestPrecedingTimelineEntry(r.startContainer));
                 deselect(this.wnd);
                 ack(true);
             });
@@ -223,14 +234,17 @@ export class WebPubSnapper extends Snapper {
         comms.register("go_start", WebPubSnapper.moduleName, (_, ack) => {
             if (this.doc().scrollTop === 0) return ack(false);
             this.doc().scrollTop = 0;
-            this.reportProgress();
+            // The first fragment isn't necessarily reached at document start
+            // (there may be content before it) — check only that one element
+            // instead of assuming sortedFragmentIds[0] is already visible.
+            this.reportProgress(this.firstFragmentIfReached());
             ack(true);
         });
 
         comms.register("go_end", WebPubSnapper.moduleName, (_, ack) => {
             if (this.doc().scrollTop === this.doc().scrollHeight - this.doc().offsetHeight) return ack(false);
             this.doc().scrollTop = this.doc().scrollHeight - this.doc().offsetHeight;
-            this.reportProgress();
+            this.reportProgress(this.sortedFragmentIds[this.sortedFragmentIds.length - 1]);
             ack(true);
         });
 
@@ -259,6 +273,11 @@ export class WebPubSnapper extends Snapper {
             ack(true);
         });
 
+        comms.register("timeline_entries", WebPubSnapper.moduleName, (data, ack) => {
+            this.updateTimelineEntries(Array.isArray(data) ? data as string[] : [], wnd);
+            ack(true);
+        });
+
         comms.log("WebPubSnapper Mounted");
         return true;
     }
@@ -273,6 +292,11 @@ export class WebPubSnapper extends Snapper {
             this.patternAnalyzer = null;
             this.isScrollProtectionEnabled = false;
         }
+
+        this.timelineObserver?.disconnect();
+        this.timelineObserver = null;
+        this.visibleFragmentIds.clear();
+        this.timelineEntries.clear();
 
         comms.log("WebPubSnapper Unmounted");
         return true;

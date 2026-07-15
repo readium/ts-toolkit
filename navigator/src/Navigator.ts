@@ -1,4 +1,4 @@
-import { Link, Locator, Publication, ReadingProgression } from "@readium/shared";
+import { Link, Locator, Publication, ReadingProgression, Timeline } from "@readium/shared";
 import { 
     ContentProtectionConfig, 
     PrintProtectionConfig, 
@@ -24,6 +24,7 @@ export type IKeyboardPeripheralsConfig = Array<Omit<KeyboardPeripheral, 'type'> 
 export interface ProgressionRange {
     start: number;
     end: number;
+    fragmentId?: string;  // DOM element ID of the currently active timeline anchor
 }
 
 export interface VisualNavigatorViewport {
@@ -41,6 +42,8 @@ export interface IContentProtectionConfig extends ContentProtectionConfig {
 export abstract class Navigator {
     abstract get publication(): Publication; // Publication rendered by this navigator.
     abstract get currentLocator(): Locator; // Current position (detailed) in the publication. Can be used to save a bookmark to the current position.
+
+    abstract get timeline(): Timeline;
 
     /**
      * Moves to the position in the publication corresponding to the given {Locator}.

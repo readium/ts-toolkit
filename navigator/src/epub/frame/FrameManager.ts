@@ -21,7 +21,8 @@ export class FrameManager {
     constructor(
         source: string,
         contentProtectionConfig: IContentProtectionConfig = {},
-        keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = []
+        keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = [],
+        private readonly timelineFragmentIds: string[] = []
     ) {
         this.frame = document.createElement("iframe");
         this.frame.sandbox.value = "allow-same-origin allow-scripts";
@@ -140,6 +141,10 @@ export class FrameManager {
                 this.comms?.send("focus", undefined, () => {
                     // Apply content protection synchronously
                     this.applyContentProtection();
+
+                    // Send timeline fragment IDs so the snapper can set up observers
+                    if (this.timelineFragmentIds.length > 0)
+                        this.comms?.send("timeline_entries", this.timelineFragmentIds);
 
                     const remove = () => {
                         this.frame.style.removeProperty("visibility");

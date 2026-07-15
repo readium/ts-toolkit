@@ -42,6 +42,41 @@ describe('Locator Tests', () => {
     expect(Locator.deserialize({ invalid: 'object' })).toBeUndefined();
   });
 
+  it('normalize href fragment into locations.fragments on construction', () => {
+    const locator = new Locator({ href: 'chapter.html#section-2', type: 'text/html' });
+    expect(locator.href).toEqual('chapter.html');
+    expect(locator.locations.fragments).toEqual(['section-2']);
+    expect(locator.locations.htmlId()).toEqual('section-2');
+  });
+
+  it('normalize audio t= fragment into locations on construction', () => {
+    const locator = new Locator({ href: 'audio.mp3#t=27:27', type: 'audio/mpeg' });
+    expect(locator.href).toEqual('audio.mp3');
+    expect(locator.locations.fragments).toEqual(['t=27:27']);
+    expect(locator.locations.time()).toEqual(27 * 60 + 27);
+  });
+
+  it('explicit locations.fragments win over href fragment on construction', () => {
+    const locator = new Locator({
+      href: 'chapter.html#from-href',
+      type: 'text/html',
+      locations: new LocatorLocations({ fragments: ['from-locations'] }),
+    });
+    expect(locator.href).toEqual('chapter.html');
+    expect(locator.locations.fragments).toEqual(['from-locations']);
+  });
+
+  it('construction with no fragment leaves locations intact', () => {
+    const locator = new Locator({
+      href: 'chapter.html',
+      type: 'text/html',
+      locations: new LocatorLocations({ progression: 0.5 }),
+    });
+    expect(locator.href).toEqual('chapter.html');
+    expect(locator.locations.fragments).toEqual([]);
+    expect(locator.locations.progression).toEqual(0.5);
+  });
+
   it('create {Locator} from minimal {Link}', () => {
     expect(new Link({ href: 'http://locator' }).locator).toEqual(
       new Locator({ href: 'http://locator', type: '' })
