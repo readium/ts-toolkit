@@ -21,6 +21,7 @@ export class FramePoolManager {
     private readonly injector: Injector | null = null;
     private readonly contentProtectionConfig: IContentProtectionConfig;
     private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
+    private updateSequence = 0;
 
     constructor(
         container: HTMLElement,
@@ -75,6 +76,7 @@ export class FramePoolManager {
     }
 
     async update(pub: Publication, locator: Locator, modules: ModuleName[], force=false) {
+        const updateSequence = ++this.updateSequence;
         let i = this.positions.findIndex(l => l.locations.position === locator.locations.position);
         if(i < 0) throw Error(`Locator not found in position list: ${locator.locations.position} > ${this.positions.reduce<number>((acc, l) => l.locations.position || 0 > acc ? l.locations.position || 0 : acc, 0)  }`);
         const newHref = this.positions[i].href;
@@ -179,6 +181,12 @@ export class FramePoolManager {
                 await Promise.all(creation.filter(href => href === newHref).map(href => creator(href)));
             } catch (error) {
                 reject(error);
+                return;
+            }
+
+            if (updateSequence !== this.updateSequence) {
+                resolve();
+                return;
             }
 
             // Remaining frames can resolve later
@@ -190,17 +198,47 @@ export class FramePoolManager {
             }));
 
             // Update current frame
-            const newFrame = this.pool.get(newHref)!;
+            const newFrame = this.pool.get(newHref);
+            if (!newFrame) {
+                resolve();
+                return;
+            }
+
             if(newFrame?.source !== this._currentFrame?.source || force) {
                 await this._currentFrame?.hide(); // Hide current frame. It's possible it no longer even exists in the DOM at this point
-                if(newFrame) // If user is speeding through the publication, this can get destroyed
-                    await newFrame.load(modules); // In order to ensure modules match the latest configuration
+
+                // Resolve if there is a concurrent update that has started since this one began
+                if (updateSequence !== this.updateSequence) {
+                    resolve();
+                    return;
+                }
+
+                // If user is speeding through the publication, this can get destroyed
+                const currentFrame = this.pool.get(newHref);
+                if (!currentFrame) {
+                    resolve();
+                    return;
+                }
+                
+                await currentFrame.load(modules); // In order to ensure modules match the latest configuration
+
+                // Resolve if there is a concurrent update that has started since this one began
+                if (updateSequence !== this.updateSequence) {
+                    resolve();
+                    return;
+                }
+
+                // Check if it was destroyed, again
+                const latestFrame = this.pool.get(newHref);
+                if (!latestFrame) {
+                    resolve();
+                    return;
+                }
 
                 // Update progression if necessary and show the new frame
-                if(newFrame) // If user is speeding through the publication, this can get destroyed
-                    await newFrame.show(locator.locations.progression); // Show/activate new frame
+                await latestFrame.show(locator.locations.progression); // Show/activate new frame
 
-                this._currentFrame = newFrame;
+                this._currentFrame = latestFrame;
 
                 // Safari retains focus on the hidden iframe; transfer it to the new
                 // frame only if no meaningful element in the parent document owns focus.
