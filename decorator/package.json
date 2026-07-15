@@ -2,7 +2,7 @@
   "name": "@readium/decorator",
   "version": "1.0.0",
   "type": "module",
-  "description": "Standalone decoration controller for Readium publications",
+  "description": "Standalone decoration controller and renderer for HTML content",
   "author": "readium",
   "repository": {
     "type": "git",
