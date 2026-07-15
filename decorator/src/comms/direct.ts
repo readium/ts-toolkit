@@ -3,6 +3,40 @@ import type { IComms, CommsCallback } from "@readium/navigator-html-injectables"
 type AckFn = (ok: boolean) => void;
 type EventListener = (data: unknown) => void;
 
+/**
+ * Defers pushed tasks to a macrotask, mirroring postMessage's scheduling (as opposed to a
+ * microtask) so the standalone direct-comms path behaves like the iframe/postMessage path:
+ * it never reenters the caller's stack, and it interleaves with rAF/observer callbacks the
+ * same way postMessage does. Tasks pushed within the same tick are flushed together, in order.
+ */
+class MacrotaskQueue {
+    private queue: (() => void)[] = [];
+    private readonly channel = typeof MessageChannel !== "undefined" ? new MessageChannel() : undefined;
+
+    constructor() {
+        if (this.channel) this.channel.port1.onmessage = () => this.flush();
+    }
+
+    push(task: () => void): void {
+        const wasEmpty = this.queue.length === 0;
+        this.queue.push(task);
+        if (wasEmpty) {
+            if (this.channel) this.channel.port2.postMessage(null);
+            else setTimeout(() => this.flush(), 0);
+        }
+    }
+
+    private flush(): void {
+        const tasks = this.queue;
+        this.queue = [];
+        tasks.forEach(task => task());
+    }
+
+    clear(): void {
+        this.queue = [];
+    }
+}
+
 export class DirectCommsChannel {
     readonly frame: DirectCommsFrame;
     readonly host: DirectCommsHost;
@@ -15,6 +49,7 @@ export class DirectCommsChannel {
 
 export class DirectCommsFrame implements IComms {
     private registrar = new Map<string, { module: string; cb: CommsCallback }[]>();
+    private readonly outbox = new MacrotaskQueue();
 
     constructor(private readonly channel: DirectCommsChannel) {}
 
@@ -51,27 +86,29 @@ export class DirectCommsFrame implements IComms {
     }
 
     send(key: string, data: unknown): void {
-        this.channel.host._receive(key, data);
+        this.outbox.push(() => this.channel.host._receive(key, data));
     }
 
     log(...data: unknown[]): void {
-        this.channel.host._receive("log", data);
+        this.outbox.push(() => this.channel.host._receive("log", data));
     }
 
     readonly ready = true;
 
     destroy(): void {
         this.registrar.clear();
+        this.outbox.clear();
     }
 }
 
 export class DirectCommsHost {
     private listeners = new Map<string, EventListener[]>();
+    private readonly outbox = new MacrotaskQueue();
 
     constructor(private readonly channel: DirectCommsChannel) {}
 
     send(key: string, data: unknown, callback?: AckFn): void {
-        this.channel.frame._dispatch(key, data, callback ?? (() => {}));
+        this.outbox.push(() => this.channel.frame._dispatch(key, data, callback ?? (() => {})));
     }
 
     on(key: string, cb: EventListener): void {
