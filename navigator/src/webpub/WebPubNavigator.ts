@@ -1,4 +1,4 @@
-import { Feature, Link, Locator, LocatorText, Publication, ReadingProgression, LocatorLocations, getCssSelector, getHtmlId } from "@readium/shared";
+import { Feature, Link, Locator, LocatorText, Publication, ReadingProgression, LocatorLocations, Timeline, TimelineItem, getCssSelector, getHtmlId } from "@readium/shared";
 import { VisualNavigator, VisualNavigatorViewport, ProgressionRange, KeyboardPeripheralEventData } from "../Navigator.ts";
 import { Configurable } from "../preferences/Configurable.ts";
 import { WebPubFramePoolManager } from "./WebPubFramePoolManager.ts";
@@ -33,6 +33,7 @@ export interface WebPubNavigatorConfiguration {
 export interface WebPubNavigatorListeners {
     frameLoaded: (wnd: Window) => void;
     positionChanged: (locator: Locator) => void;
+    timelineItemChanged: (item: TimelineItem | undefined) => void;
     tap: (e: FrameClickEvent) => boolean;
     click: (e: FrameClickEvent) => boolean;
     zoom: (scale: number) => void;
@@ -48,6 +49,7 @@ export interface WebPubNavigatorListeners {
 const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorListeners => ({
     frameLoaded: listeners.frameLoaded || (() => {}),
     positionChanged: listeners.positionChanged || (() => {}),
+    timelineItemChanged: listeners.timelineItemChanged || (() => {}),
     tap: listeners.tap || (() => false),
     click: listeners.click || (() => false),
     zoom: listeners.zoom || (() => {}),
@@ -67,6 +69,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private framePool!: WebPubFramePoolManager;
     private currentIndex: number = 0;
     private currentLocation: Locator;
+    private _currentTimelineItem: TimelineItem | undefined;
 
     private _preferences: WebPubPreferences;
     private _defaults: WebPubDefaults;
@@ -186,7 +189,11 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             cssProperties,
             this._injector,
             this._contentProtection,
-            this._keyboardPeripherals
+            this._keyboardPeripherals,
+            (href) => this.pub.timeline.segmentsForHref(href)
+                .flatMap(item => item.references)
+                .map(ref => { const h = ref.indexOf('#'); return h >= 0 ? ref.slice(h + 1) : ''; })
+                .filter(Boolean)
         );
 
         await this.apply();
@@ -266,6 +273,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             case "_pong":
                 this.listeners.frameLoaded(this.framePool.currentFrames[0]!.iframe.contentWindow!);
                 this.listeners.positionChanged(this.currentLocation);
+                this._notifyTimelineChange(this.currentLocation);
                 this._reapplyDecorationsToCurrentFrame();
                 break;
             case "first_visible_locator":
@@ -279,6 +287,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
                     text: loc?.text
                 });
                 this.listeners.positionChanged(this.currentLocation);
+                this._notifyTimelineChange(this.currentLocation);
                 break;
             case "text_selected": {
                 const selection = data as BasicTextSelection;
@@ -655,6 +664,10 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
         this.updateViewport(progression);
         this.listeners.positionChanged(this.currentLocation);
+        const locatorForTimeline = progression.fragmentId
+            ? this.currentLocation.copyWithLocations({ fragments: [`#${progression.fragmentId}`] })
+            : this.currentLocation;
+        this._notifyTimelineChange(locatorForTimeline);
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
     }
 
@@ -712,6 +725,10 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
     get publication(): Publication {
         return this.pub;
+    }
+
+    get timeline(): Timeline {
+        return this.pub.timeline;
     }
 
     private async loadLocator(locator: Locator, cb: (ok: boolean) => void) {
@@ -828,6 +845,14 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
                 position: this.currentIndex + 1
             })
         });
+    }
+
+    private _notifyTimelineChange(locator: Locator): void {
+        const item = this.timeline.locate(locator);
+        if (item !== this._currentTimelineItem) {
+            this._currentTimelineItem = item;
+            this.listeners.timelineItemChanged(item);
+        }
     }
 }
 

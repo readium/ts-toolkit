@@ -1,4 +1,4 @@
-import { Layout, Link, Locator, LocatorText, Profile, Publication, ReadingProgression, getCssSelector, getHtmlId } from "@readium/shared";
+import { Layout, Link, Locator, LocatorText, Profile, Publication, ReadingProgression, Timeline, TimelineItem, getCssSelector, getHtmlId } from "@readium/shared";
 import { Configurable, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../index.ts";
 import { FramePoolManager } from "./frame/FramePoolManager.ts";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager.ts";
@@ -36,6 +36,7 @@ export interface EpubNavigatorConfiguration {
 export interface EpubNavigatorListeners {
     frameLoaded: (wnd: Window) => void;
     positionChanged: (locator: Locator) => void;
+    timelineItemChanged: (item: TimelineItem | undefined) => void;
     tap: (e: FrameClickEvent) => boolean; // Return true to prevent handling here
     click: (e: FrameClickEvent) => boolean;  // Return true to prevent handling here
     zoom: (scale: number) => void;
@@ -53,6 +54,7 @@ export interface EpubNavigatorListeners {
 const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListeners => ({
     frameLoaded: listeners.frameLoaded || (() => {}),
     positionChanged: listeners.positionChanged || (() => {}),
+    timelineItemChanged: listeners.timelineItemChanged || (() => {}),
     tap: listeners.tap || (() => false),
     click: listeners.click || (() => false),
     zoom: listeners.zoom || (() => {}),
@@ -73,6 +75,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private framePool!: FramePoolManager | FXLFramePoolManager;
     private positions!: Locator[];
     private currentLocation!: Locator;
+    private _currentTimelineItem: TimelineItem | undefined;
+    private _timelineAugmented = false;
     private lastLocationInView: Locator | undefined;
     private currentProgression: ReadingProgression;
     private _layout: Layout;
@@ -272,7 +276,11 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 cssProperties,
                 this._injector,
                 this._contentProtection,
-                this._keyboardPeripherals
+                this._keyboardPeripherals,
+                (href) => this.pub.timeline.segmentsForHref(href)
+                    .flatMap(item => item.references)
+                    .map(ref => { const h = ref.indexOf('#'); return h >= 0 ? ref.slice(h + 1) : ''; })
+                    .filter(Boolean)
             );
         }
 
@@ -438,6 +446,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             case "_pong":
                 this.listeners.frameLoaded(this._cframes[0]!.iframe.contentWindow!);
                 this.listeners.positionChanged(this.currentLocation);
+                this._notifyTimelineChange(this.currentLocation);
                 if (sourceFrame) {
                     const frames = this._cframes.filter(f => !!f) as (FrameManager | FXLFrameManager)[];
                     const i = frames.indexOf(sourceFrame);
@@ -458,6 +467,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                     text: loc?.text
                 });
                 this.listeners.positionChanged(this.currentLocation);
+                this._notifyTimelineChange(this.currentLocation);
                 break;
             case "text_selected": {
                 const selection = data as BasicTextSelection;
@@ -885,6 +895,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             // positionChanged via _pong; on back-then-forward to an
             // already-loaded frame no _pong fires, so dispatch explicitly here.
             this.listeners.positionChanged(this.currentLocation);
+            this._notifyTimelineChange(this.currentLocation);
             return true;
         }
 
@@ -987,6 +998,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this.lastLocationInView = nearestPositions.last;
         this.updateViewport(progression);
         this.listeners.positionChanged(this.currentLocation);
+        const locatorForTimeline = progression.fragmentId
+            ? this.currentLocation.copyWithLocations({ fragments: [`#${progression.fragmentId}`] })
+            : this.currentLocation;
+        this._notifyTimelineChange(locatorForTimeline);
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
     }
 
@@ -1089,6 +1104,51 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         return this.pub;
     }
 
+    get timeline(): Timeline {
+        const t = this.pub.timeline;
+        if (!this._timelineAugmented && this.positions?.length) {
+            const positions = this.positions;
+            // We have no way to tell which position within an href corresponds to which
+            // toc entry (fragment ids aren't resolvable against the positions list). So
+            // only the first *leaf* entry for a given href without a fragment match gets
+            // the resource's start position; every other leaf entry sharing that href is
+            // left without a position rather than being given one we can't actually derive.
+            // Container items (chapters with their own toc children) are skipped entirely
+            // here — otherwise the chapter itself would claim the one derivable slot before
+            // any of its displayed children get a turn.
+            const assignedHrefs = new Set<string>();
+            t.augment((item, link) => {
+                if (item.children?.length) return {};
+                const hashIndex = link.href.indexOf('#');
+                const bare = hashIndex >= 0 ? link.href.slice(0, hashIndex) : link.href;
+                const fragment = hashIndex >= 0 ? link.href.slice(hashIndex + 1) : undefined;
+                const entries = positions.filter(p => p.href === bare);
+                if (!entries.length) return {};
+                const atFragment = fragment
+                    ? entries.find(p => p.locations.fragments[0] === fragment)
+                    : undefined;
+                let candidate: Locator | undefined;
+                if (atFragment) {
+                    candidate = atFragment;
+                } else if (!assignedHrefs.has(bare)) {
+                    assignedHrefs.add(bare);
+                    candidate = entries.reduce((min, p) =>
+                        (p.locations.position ?? Infinity) < (min.locations.position ?? Infinity) ? p : min
+                    );
+                } else {
+                    candidate = undefined;
+                }
+                if (!candidate) return {};
+                return {
+                    position: candidate.locations.position,
+                    scroll: atFragment?.locations.progression,
+                };
+            });
+            this._timelineAugmented = true;
+        }
+        return t;
+    }
+
     private async loadLocator(locator: Locator, cb: (ok: boolean) => void) {
         let done = false;
         let cssSelector = getCssSelector(locator.locations);
@@ -1168,5 +1228,13 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
     public goLink(link: Link, animated: boolean, cb: (ok: boolean) => void): void {
         return this.go(link.locator, animated, cb);
+    }
+
+    private _notifyTimelineChange(locator: Locator): void {
+        const item = this.timeline.locate(locator);
+        if (item !== this._currentTimelineItem) {
+            this._currentTimelineItem = item;
+            this.listeners.timelineItemChanged(item);
+        }
     }
 }

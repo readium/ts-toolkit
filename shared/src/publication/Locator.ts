@@ -176,12 +176,22 @@ export class Locator {
     locations?: LocatorLocations;
     text?: LocatorText;
   }) {
-    this.href = values.href;
+    const hashIndex = values.href.indexOf("#");
+    const hrefFragment = hashIndex >= 0 ? values.href.slice(hashIndex + 1) : undefined;
+    this.href = hashIndex >= 0 ? values.href.slice(0, hashIndex) : values.href;
     this.type = values.type;
     this.title = values.title;
+    // If locations.fragments is already set, it takes precedence over any fragment in the href.
+    // We don't merge both because explicit fragments are considered authoritative.
+    const existingFragments = values.locations?.fragments;
+    const needsFragment = hrefFragment && (!existingFragments || existingFragments.length === 0);
     this.locations = values.locations
-      ? values.locations
-      : new LocatorLocations({});
+      ? needsFragment
+        ? new LocatorLocations({ ...values.locations, fragments: [hrefFragment!] })
+        : values.locations
+      : hrefFragment
+        ? new LocatorLocations({ fragments: [hrefFragment] })
+        : new LocatorLocations({});
     this.text = values.text;
   }
 

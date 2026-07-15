@@ -57,12 +57,26 @@ export function getTime(loc: LocatorLocations): number | undefined {
   return parseNptTime(raw);
 }
 
-export function getSpace(loc: LocatorLocations): [number, number, number, number] | undefined {
+export function getSpace(loc: LocatorLocations): { unit: "pixel" | "percent"; x: number; y: number; width: number; height: number } | undefined {
   const fp = getFragmentParameters(loc);
   if (!fp.has('xywh')) return;
-  // TODO more sophisticated parsing to handle the format
-  const xywh = fp.get('xywh')!.split(',').map(s => parseInt(s));
-  if (xywh.length !== 4) return;
-  if (xywh.some(isNaN)) return;
-  return xywh as [number, number, number, number];
+
+  const raw = fp.get('xywh')!;
+  let unit: "pixel" | "percent" = "pixel";
+  let coords = raw;
+
+  const normalizedRaw = raw.toLowerCase();
+  if (normalizedRaw.startsWith("pixel:")) {
+    coords = raw.slice(6);
+  } else if (normalizedRaw.startsWith("percent:")) {
+    unit = "percent";
+    coords = raw.slice(8);
+  }
+
+  const parse = unit === "percent" ? parseFloat : (s: string) => parseInt(s, 10);
+  const parts = coords.split(",").map(parse);
+  if (parts.length !== 4 || parts.some(isNaN)) return;
+
+  const [x, y, width, height] = parts;
+  return { unit, x, y, width, height };
 }

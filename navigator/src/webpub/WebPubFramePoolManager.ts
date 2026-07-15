@@ -17,19 +17,22 @@ export class WebPubFramePoolManager {
     private readonly injector?: Injector | null = null;
     private readonly contentProtectionConfig: IContentProtectionConfig;
     private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
+    private readonly getFragmentIds: (href: string) => string[];
 
     constructor(
         container: HTMLElement,
         cssProperties?: { [key: string]: string },
         injector?: Injector | null,
         contentProtectionConfig: IContentProtectionConfig = {},
-        keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = []
+        keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = [],
+        getFragmentIds?: (href: string) => string[]
     ) {
         this.container = container;
         this.currentCssProperties = cssProperties;
         this.injector = injector;
         this.contentProtectionConfig = contentProtectionConfig;
         this.keyboardPeripheralsConfig = [...keyboardPeripheralsConfig];
+        this.getFragmentIds = getFragmentIds ?? (() => []);
     }
 
     async destroy() {
@@ -154,7 +157,7 @@ export class WebPubFramePoolManager {
                     this.blobs.set(href, blobURL);
                 }
 
-                const fm = new WebPubFrameManager(this.blobs.get(href)!, this.contentProtectionConfig, this.keyboardPeripheralsConfig);
+                const fm = new WebPubFrameManager(this.blobs.get(href)!, this.contentProtectionConfig, this.keyboardPeripheralsConfig, this.getFragmentIds(href));
                 if(href !== newHref) await fm.hide();
                 this.container.appendChild(fm.iframe);
                 await fm.load(modules);

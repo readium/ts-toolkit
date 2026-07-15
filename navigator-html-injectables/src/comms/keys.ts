@@ -53,7 +53,8 @@ export type CommsCommandKey =
     "peripherals_protection" |
     "keyboard_peripherals" |
     "scroll_protection" |
-    "print_protection";
+    "print_protection" |
+    "timeline_entries";
 ;
 
 export type SuspiciousActivityType = 

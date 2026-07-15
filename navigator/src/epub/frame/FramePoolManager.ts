@@ -21,6 +21,7 @@ export class FramePoolManager {
     private readonly injector: Injector | null = null;
     private readonly contentProtectionConfig: IContentProtectionConfig;
     private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
+    private readonly getFragmentIds: (href: string) => string[];
 
     constructor(
         container: HTMLElement,
@@ -28,7 +29,8 @@ export class FramePoolManager {
         cssProperties?: { [key: string]: string },
         injector?: Injector | null,
         contentProtectionConfig?: IContentProtectionConfig,
-        keyboardPeripheralsConfig?: IKeyboardPeripheralsConfig
+        keyboardPeripheralsConfig?: IKeyboardPeripheralsConfig,
+        getFragmentIds?: (href: string) => string[]
     ) {
         this.container = container;
         this.positions = positions;
@@ -36,6 +38,7 @@ export class FramePoolManager {
         this.injector = injector ?? null;
         this.contentProtectionConfig = contentProtectionConfig || {};
         this.keyboardPeripheralsConfig = keyboardPeripheralsConfig || [];
+        this.getFragmentIds = getFragmentIds ?? (() => []);
     }
 
     async destroy() {
@@ -171,7 +174,7 @@ export class FramePoolManager {
                 }
 
                 // Create <iframe>
-                const fm = new FrameManager(this.blobs.get(href)!, this.contentProtectionConfig, this.keyboardPeripheralsConfig);
+                const fm = new FrameManager(this.blobs.get(href)!, this.contentProtectionConfig, this.keyboardPeripheralsConfig, this.getFragmentIds(href));
                 if(href !== newHref) await fm.hide(); // Avoid unecessary hide
                 this.container.appendChild(fm.iframe);
                 await fm.load(modules);
