@@ -59,12 +59,20 @@ export class LocatorLocations {
       'progression',
       'totalProgression',
       'position',
+      'otherLocations',
     ]);
     Object.entries(json).forEach(([key, value]) => {
       if (!reservedKeys.has(key)) {
         otherLocations.set(key, value);
       }
     });
+    // json may be a live LocatorLocations instance (e.g. passed through in-memory
+    // rather than round-tripped as RWPM JSON) — its otherLocations is a Map, not
+    // flattened keys, and must be merged in directly rather than treated as an
+    // extension entry itself.
+    if (json.otherLocations instanceof Map) {
+      json.otherLocations.forEach((value: any, key: string) => otherLocations.set(key, value));
+    }
 
     return new LocatorLocations({
       fragments: arrayfromJSONorString(json.fragments || json.fragment),
