@@ -98,9 +98,15 @@ export class DecorationController {
         this._observers.forEach((set, group) => {
             if (!set.has(observer)) return;
             set.delete(observer);
-            if (set.size === 0) {
+
+            const stillActivatable = [...set].some(o => o.onDecorationActivated);
+            if (this._activationState.has(group) && !stillActivatable) {
                 this._activationState.delete(group);
                 this.host.send("decoration_activatable", { group, activatable: false });
+            }
+
+            const stillHoverable = [...set].some(o => o.onDecorationPointerEnter || o.onDecorationPointerLeave);
+            if (this._hoverState.has(group) && !stillHoverable) {
                 this._hoverState.delete(group);
                 this.host.send("decoration_hoverable", { group, hoverable: false });
             }

@@ -486,14 +486,19 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
     public unregisterDecorationObserver(observer: DecorationObserver): void {
         this._decorationObservers.forEach((set, group) => {
-            if (set.has(observer)) {
-                set.delete(observer);
-                if (set.size === 0) {
-                    this._decorationActivationState.delete(group);
-                    this._sendDecorationActivatable(group, false);
-                    this._decorationHoverState.delete(group);
-                    this._sendDecorationHoverable(group, false);
-                }
+            if (!set.has(observer)) return;
+            set.delete(observer);
+
+            const stillActivatable = [...set].some(o => o.onDecorationActivated);
+            if (this._decorationActivationState.has(group) && !stillActivatable) {
+                this._decorationActivationState.delete(group);
+                this._sendDecorationActivatable(group, false);
+            }
+
+            const stillHoverable = [...set].some(o => o.onDecorationPointerEnter || o.onDecorationPointerLeave);
+            if (this._decorationHoverState.has(group) && !stillHoverable) {
+                this._decorationHoverState.delete(group);
+                this._sendDecorationHoverable(group, false);
             }
         });
     }
