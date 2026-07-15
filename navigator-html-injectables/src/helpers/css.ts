@@ -1,5 +1,7 @@
 import { ReadiumWindow } from "./dom.ts";
 
+export const isTypedOMSupported = () => typeof window.CSSTransformValue !== 'undefined';
+
 const COSMETIC_PROPERTIES = new Set([
     "backgroundColor", "textColor",
     "linkColor", "visitedColor",

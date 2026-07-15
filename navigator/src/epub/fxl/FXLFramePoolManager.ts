@@ -1,9 +1,9 @@
 import { ModuleName } from "@readium/navigator-html-injectables";
-import { Locator, Publication, ReadingProgression, Page, Link } from "@readium/shared";
+import { Locator, Publication, ReadingProgression, Page, Link, Layout } from "@readium/shared";
 import { FrameCommsListener } from "../frame/index.ts";
-import FrameBlobBuider from "../frame/FrameBlobBuilder.ts";
+import FrameBlobBuilder from "../frame/FrameBlobBuilder.ts";
 import { FXLFrameManager } from "./FXLFrameManager.ts";
-import { FXLPeripherals } from "./FXLPeripherals.ts";
+import { FXLPeripherals, isTypedOMSupported } from "./FXLPeripherals.ts";
 import { FXLSpreader, Orientation, Spread } from "./FXLSpreader.ts";
 import { VisualNavigatorViewport, IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator.ts";
 import { Injector } from "../../injection/Injector.ts";
@@ -21,7 +21,7 @@ export class FXLFramePoolManager {
     private readonly container: HTMLElement;
     private readonly positions: Locator[];
     private readonly pool: Map<string, FXLFrameManager> = new Map();
-    private readonly blobs: Map<string, string> = new Map();
+    private readonly blobs: Map<string, FrameBlobBuilder> = new Map();
     private readonly inprogress: Map<string, Promise<void>> = new Map();
     private readonly delayedShow: Map<string, Promise<void>> = new Map();
     private readonly delayedTimeout: Map<string, number> = new Map();
@@ -37,7 +37,7 @@ export class FXLFramePoolManager {
     private readonly pub: Publication;
     public width: number = 0;
     public height: number = 0;
-    private transform: string = "";
+    private transform: number | undefined;
     public currentSlide: number = 0;
     private spreader: FXLSpreader;
     private spread = true; // TODO
@@ -52,6 +52,7 @@ export class FXLFramePoolManager {
         container: HTMLElement,
         positions: Locator[],
         pub: Publication,
+        _layout: Layout, // TODO: used by upcoming scrolled-layout support
         injector?: Injector | null,
         contentProtectionConfig?: IContentProtectionConfig,
         keyboardPeripheralsConfig?: IKeyboardPeripheralsConfig,
@@ -63,10 +64,6 @@ export class FXLFramePoolManager {
         this.contentProtectionConfig = contentProtectionConfig || {};
         this.keyboardPeripheralsConfig = keyboardPeripheralsConfig || [];
         this.spreadPresentation = pub.metadata.otherMetadata?.spread || Spread.auto;
-
-        if(this.pub.metadata.effectiveReadingProgression !== ReadingProgression.rtl && this.pub.metadata.effectiveReadingProgression !== ReadingProgression.ltr)
-            // TODO support TTB and BTT
-            throw Error("Unsupported reading progression for EPUB");
 
         // NEW
         this.spreader = new FXLSpreader(this.pub);
@@ -86,16 +83,18 @@ export class FXLFramePoolManager {
 
         this.peripherals = new FXLPeripherals(this);
 
+        const fragment = document.createDocumentFragment();
         this.pub.readingOrder.items.forEach((link) => {
             // Create <iframe>
             const fm = new FXLFrameManager(this.peripherals, this.pub.metadata.effectiveReadingProgression, link.href, this.contentProtectionConfig, this.keyboardPeripheralsConfig);
-            this.spineElement.appendChild(fm.element);
 
-            // this.pages.push(fm);
             this.pool.set(link.href, fm);
             fm.width = 100 / this.length * (link.properties?.otherProperties["orientation"] === Orientation.landscape || link.properties?.otherProperties["addBlank"] ? this.perPage : 1);
             fm.height = this.height;
+            fragment.appendChild(fm.wrapper);
         });
+        this.spineElement.appendChild(fragment);
+
     }
 
     private _listener!: FrameCommsListener;
@@ -134,15 +133,18 @@ export class FXLFramePoolManager {
 
         clearTimeout(this.resizeTimeout);
         this.resizeTimeout = window.setTimeout(() => {
-            // TODO optimize this expensive set of loops and operations
+            const baseWidthFactor = 100 / this.length;
+            const itemLookup = new Map(this.pub.readingOrder.items.map(item => [item.href, item]));
             this.pool.forEach((frm, linkHref) => {
-                let i = this.pub.readingOrder.items.findIndex(l => l.href === linkHref);
-                const link = this.pub.readingOrder.items[i];
-                frm.width = 100 / this.length * (link.properties?.otherProperties["orientation"] === Orientation.landscape || link.properties?.otherProperties["addBlank"] ? this.perPage : 1);
-                frm.height = this.height;
-                if(!frm.loaded) return;
-                const spread = this.spreader.findByLink(link)!;
-                frm.update(this.spreadPosition(spread, link));
+                const link = itemLookup.get(linkHref);
+                if(!link) return;
+                requestAnimationFrame(() => {
+                    frm.width = baseWidthFactor * (link.properties?.otherProperties["orientation"] === Orientation.landscape || link.properties?.otherProperties["addBlank"] ? this.perPage : 1);
+                    frm.height = this.height;
+                    if(!frm.loaded) return;
+                    const spread = this.spreader.findByLink(link)!;
+                    frm.update(this.spreadPosition(spread, link));
+                });
             });
         }, RESIZE_UPDATE_TIMEOUT);
     }
@@ -181,23 +183,33 @@ export class FXLFramePoolManager {
     }
 
     public updateSpineStyle(animate: boolean, fast = true) {
-        let margin = "0";
+        let margin = 0;
         this.updateDimensions();
         if(this.perPage > 1 && true) // this.shift
-            margin = `${this.width / 2}px`;
+            margin = this.width / 2;
 
-        const spineStyle = {
-            transition: animate ? `all ${fast ? SLIDE_FAST : SLIDE_SLOW}ms ease-out` : "all 0ms ease-out",
-            marginRight: this.rtl ? margin : "0",
-            marginLeft: this.rtl ? "0" : margin,
-            width: `${(this.width / this.perPage) * this.length}px`,
-            transform: this.transform,
-
-            // Static (should be moved to CSS)
-            contain: "content"
-        } as CSSStyleDeclaration;
-
-        Object.assign(this.spineElement.style, spineStyle);
+        if(isTypedOMSupported()) {
+            // TODO: don't use UnparsedValue, but rather the longhand of every transition property
+            this.spineElement.attributeStyleMap.set("transition", new CSSUnparsedValue([animate ? `all ${fast ? SLIDE_FAST : SLIDE_SLOW}ms ease-out` : "all 0ms ease-out"]));
+            this.spineElement.attributeStyleMap.set("margin-right", CSS.px(this.rtl ? margin : 0));
+            this.spineElement.attributeStyleMap.set("margin-left", CSS.px(this.rtl ? 0 : margin));
+            this.spineElement.attributeStyleMap.set("width", CSS.px((this.width / this.perPage) * this.length));
+            this.transform ? this.spineElement.attributeStyleMap.set("transform", new CSSTransformValue([
+                new CSSTranslate(CSS.px(this.transform || 0), CSS.px(0), CSS.px(0))
+            ])) : this.spineElement.attributeStyleMap.delete("transform");
+            this.spineElement.attributeStyleMap.set("contain", new CSSUnparsedValue(["content"]));
+        } else {
+            const spineStyle = {
+                transition: animate ? `all ${fast ? SLIDE_FAST : SLIDE_SLOW}ms ease-out` : "all 0ms ease-out",
+                marginRight: this.rtl ? `${margin}px` : "0",
+                marginLeft: this.rtl ? "0" : `${margin}px`,
+                width: `${(this.width / this.perPage) * this.length}px`,
+                transform: this.transform ? `translate3d(${this.transform}px, 0px, 0px)` : "",
+                // Static (should be moved to CSS)
+                contain: "content"
+            } as CSSStyleDeclaration;
+            Object.assign(this.spineElement.style, spineStyle);
+        }
     }
 
     public updateBookStyle(initial=false) {
@@ -218,7 +230,16 @@ export class FXLFramePoolManager {
             } as CSSStyleDeclaration;
             Object.assign(this.bookElement.style, bookStyle);
         }
-        this.bookElement.style.transform = `scale(${this.peripherals?.scale || 1})` + (this.peripherals ? ` translate3d(${this.peripherals.pan.translateX}px, ${this.peripherals.pan.translateY}px, 0px)` : "");
+        if(isTypedOMSupported()) {
+            this.bookElement.attributeStyleMap.set("transform", new CSSTransformValue([
+                new CSSScale(this.peripherals?.scale || 1, this.peripherals?.scale || 1),
+                this.peripherals ? new CSSTranslate(
+                    CSS.px(this.peripherals.pan.translateX), CSS.px(this.peripherals.pan.translateY), CSS.px(0)
+                ) : new CSSTranslate(CSS.px(0), CSS.px(0), CSS.px(0))
+            ]));
+        } else {
+            this.bookElement.style.transform = `scale(${this.peripherals?.scale || 1})` + (this.peripherals ? ` translate3d(${this.peripherals.pan.translateX}px, ${this.peripherals.pan.translateY}px, 0px)` : "");
+        }
     }
 
     /**
@@ -289,7 +310,7 @@ export class FXLFramePoolManager {
                 requestAnimationFrame(() => {
                     const newTransform = `translate3d(${this.offset}px, 0, 0)`;
                     if(this.spineElement.style.transform === newTransform) return;
-                    this.transform = newTransform;
+                    this.transform = this.offset;
                     this.updateSpineStyle(true, fast);
                     this.deselect();
                 });
@@ -297,7 +318,7 @@ export class FXLFramePoolManager {
         } else {
             const newTransform = `translate3d(${this.offset}px, 0, 0)`;
             if(this.spineElement.style.transform === newTransform) return;
-            this.transform = newTransform;
+            this.transform = this.offset;
             this.updateSpineStyle(false);
             this.deselect();
         }
@@ -305,10 +326,10 @@ export class FXLFramePoolManager {
 
     bounce(rtl = false) {
         requestAnimationFrame(() => {
-            this.transform = `translate3d(${this.offset+(50 * (rtl ? 1 : -1))}px, 0, 0)`;
+            this.transform = this.offset + (50 * (rtl ? 1 : -1));
             this.updateSpineStyle(true, true);
             setTimeout(() => {
-                this.transform = `translate3d(${this.offset}px, 0, 0)`;
+                this.transform = this.offset;
                 this.updateSpineStyle(true, true);
             }, 100);
         });
@@ -405,7 +426,8 @@ export class FXLFramePoolManager {
         this.pool.clear();
 
         // Revoke all blobs
-        this.blobs.forEach(v => URL.revokeObjectURL(v));
+        this.blobs.forEach(v => v.reset());
+        this.blobs.clear();
 
         // Clean up injector if it exists
         this.injector?.dispose();
@@ -496,13 +518,13 @@ export class FXLFramePoolManager {
                 if(!this.pool.has(href)) return;
                 this.cancelShowing(href);
                 await this.pool.get(href)?.unload();
-                // this.pool.delete(href);
+                this.blobs.get(href)?.reset();
             });
 
             // Check if base URL of publication has changed
             if(this.currentBaseURL !== undefined && pub.baseURL !== this.currentBaseURL) {
                 // Revoke all blobs
-                this.blobs.forEach(v => URL.revokeObjectURL(v));
+                this.blobs.forEach(v => v.reset());
                 this.blobs.clear();
             }
             this.currentBaseURL = pub.baseURL;
@@ -512,16 +534,14 @@ export class FXLFramePoolManager {
                 const itm = pub.readingOrder.items[index];
                 if(!itm) return; // TODO throw?
                 if(!this.blobs.has(href)) {
-                    const blobBuilder = new FrameBlobBuider(
+                    this.blobs.set(href, new FrameBlobBuilder(
                         pub,
                         this.currentBaseURL || "",
                         itm,
                         {
                             injector: this.injector
                         }
-                    );
-                    const blobURL = await blobBuilder.build(true);
-                    this.blobs.set(href, blobURL);
+                    ));
                 }
 
                 // Show future offscreen frame in advance after a delay
@@ -535,7 +555,7 @@ export class FXLFramePoolManager {
                             const spread = this.makeSpread(this.reAlign(index));
                             const page = this.spreadPosition(spread, itm);
                             const fm = this.pool.get(href)!;
-                            await fm.load(modules, this.blobs.get(href)!);
+                            await fm.load(modules, await this.blobs.get(href)!.build(true));
                             if(!this.peripherals.isScaled) // When scaled, positioning is screwed up, so wait to show
                                 await fm.show(page); // Show/activate new frame
                             this.delayedShow.delete(href);
@@ -559,10 +579,10 @@ export class FXLFramePoolManager {
             for (const s of spread) {
                 const newFrame = this.pool.get(s.href)!;
                 const source = this.blobs.get(s.href);
-                if(!source) continue; // This can get destroyed
+                if(!source) continue; // Thfis can get destroyed
 
                 this.cancelShowing(s.href);
-                await newFrame.load(modules, source); // In order to ensure modules match the latest configuration
+                await newFrame.load(modules, await source.build(true)); // In order to ensure modules match the latest configuration
                 await newFrame.show(this.spreadPosition(spread, s)); // Show/activate new frame
                 this.previousFrames.push(newFrame);
                 await newFrame.activate();

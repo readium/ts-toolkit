@@ -1,13 +1,14 @@
 import { Loader, ModuleName } from "@readium/navigator-html-injectables";
 import { Page, ReadingProgression } from "@readium/shared";
 import { FrameComms } from "../frame/FrameComms.ts";
-import { FXLPeripherals } from "./FXLPeripherals.ts";
+import { FXLPeripherals, isTypedOMSupported } from "./FXLPeripherals.ts";
 import type { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
 import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator.ts";
 import { KeyboardConditionBridge } from "../../peripherals/KeyboardConditionBridge.ts";
 
 export class FXLFrameManager {
     private frame: HTMLIFrameElement;
+    private frameIsAppended = false;
     private loader: Loader | undefined;
     public source: string;
     private comms: FrameComms | undefined;
@@ -22,6 +23,7 @@ export class FXLFrameManager {
     public debugHref: string;
     private loadPromise: Promise<Window> | undefined;
     private showPromise: Promise<void> | undefined;
+    private viewportSize: { width: number, height: number } | undefined = undefined;
 
     constructor(
         peripherals: FXLPeripherals,
@@ -41,7 +43,7 @@ export class FXLFrameManager {
         this.frame.classList.add("blank");
         this.frame.scrolling = "no";
         this.frame.style.visibility = "hidden";
-        this.frame.style.setProperty("aria-hidden", "true");
+        this.frame.ariaHidden = "true";
         this.frame.style.display = "none";
         this.frame.style.position = "absolute";
         this.frame.style.pointerEvents = "none";
@@ -52,15 +54,17 @@ export class FXLFrameManager {
         this.frame.dataset.originalHref = debugHref;
         this.source = "about:blank";
 
-        // NEW
         this.wrapper = document.createElement("div");
         this.wrapper.style.position = "relative";
+        this.wrapper.style.contain = "strict";
         this.wrapper.style.float = this.wrapper.style.cssFloat = direction === ReadingProgression.rtl ? "right" : "left";
-
-        this.wrapper.appendChild(this.frame);
     }
 
     async load(modules: ModuleName[], source: string): Promise<Window> {
+        if(!this.frameIsAppended) {
+            this.wrapper.appendChild(this.frame);
+            this.frameIsAppended = true;
+        }
         if(this.source === source && this.loadPromise/* && this.loaded*/) {
             if([...this.currModules].sort().join("|") === [...modules].sort().join("|")) {
                 return this.loadPromise;
@@ -106,6 +110,7 @@ export class FXLFrameManager {
 
     // Parses the page size from the viewport meta tag of the loaded resource.
     loadPageSize(): { width: number, height: number } {
+        if(this.viewportSize) return this.viewportSize;
         const wnd = this.frame.contentWindow!;
 
         // Try to get the page size from the viewport meta tag
@@ -122,8 +127,10 @@ export class FXLFrameManager {
                 else if(match[1] === "height")
                     height = Number.parseFloat(match[2]);
             }
-            if(width > 0 && height > 0)
-                return { width, height };
+            if(width > 0 && height > 0) {
+                this.viewportSize = { width, height };
+                return this.viewportSize;
+            }
         }
 
         // Otherwise get it from the size of the loaded content
@@ -136,25 +143,47 @@ export class FXLFrameManager {
     update(page?: Page) {
         if(!this.loaded) return;
         const dimensions = this.loadPageSize();
-        this.frame.style.height = `${dimensions.height}px`;
-        this.frame.style.width = `${dimensions.width}px`;
         const ratio = Math.min(this.wrapper.clientWidth / dimensions.width, this.wrapper.clientHeight / dimensions.height);
-        this.frame.style.transform = `scale(${ratio})`;
+        if(isTypedOMSupported()) {
+            this.frame.attributeStyleMap.set("width", CSS.px(dimensions.width));
+            this.frame.attributeStyleMap.set("height", CSS.px(dimensions.height));
+            this.frame.attributeStyleMap.set("transform", new CSSTransformValue([
+                new CSSScale(ratio, ratio),
+            ]));
+        } else {
+            this.frame.style.height = `${dimensions.height}px`;
+            this.frame.style.width = `${dimensions.width}px`;
+            this.frame.style.transform = `scale(${ratio})`;
+        }
         const bcr = this.frame.getBoundingClientRect();
         const hdiff = this.wrapper.clientHeight - bcr.height;
-        this.frame.style.top = `${hdiff / 2}px`;
-        if(page === Page.left) {
-            const wdiff = this.wrapper.clientWidth - bcr.width;
-            this.frame.style.left = `${wdiff}px`;
-        } else if(page === Page.center) {
-            const wdiff = this.wrapper.clientWidth - bcr.width;
-            this.frame.style.left = `${wdiff / 2}px`;
+
+        if(isTypedOMSupported()) {
+            this.frame.attributeStyleMap.set("top", CSS.px(hdiff / 2));
+            if(page === Page.left) {
+                const wdiff = this.wrapper.clientWidth - bcr.width;
+                this.frame.attributeStyleMap.set("left", CSS.px(wdiff));
+            } else if(page === Page.center) {
+                const wdiff = this.wrapper.clientWidth - bcr.width;
+                this.frame.attributeStyleMap.set("left", CSS.px(wdiff / 2));
+            } else {
+                this.frame.attributeStyleMap.set("left", CSS.px(0));
+            }
         } else {
-            this.frame.style.left = "0px";
+            this.frame.style.top = `${hdiff / 2}px`;
+            if(page === Page.left) {
+                const wdiff = this.wrapper.clientWidth - bcr.width;
+                this.frame.style.left = `${wdiff}px`;
+            } else if(page === Page.center) {
+                const wdiff = this.wrapper.clientWidth - bcr.width;
+                this.frame.style.left = `${wdiff / 2}px`;
+            } else {
+                this.frame.style.left = "0px";
+            }
         }
 
         this.frame.style.removeProperty("visibility");
-        this.frame.style.removeProperty("aria-hidden");
+        this.frame.ariaHidden = null;
         this.frame.style.removeProperty("pointer-events");
         this.frame.classList.remove("blank");
         this.frame.classList.add("loaded");
@@ -171,7 +200,7 @@ export class FXLFrameManager {
         if(!this.loaded) return;
         this.deselect();
         this.frame.style.visibility = "hidden";
-        this.frame.style.setProperty("aria-hidden", "true");
+        this.frame.ariaHidden = "true";
         this.frame.style.pointerEvents = "none";
         this.frame.classList.add("blank");
         this.frame.classList.remove("loaded");
@@ -189,6 +218,8 @@ export class FXLFrameManager {
             this.source = "about:blank";
             this.frame.contentWindow!.location.replace("about:blank");
             this.frame.style.display = "none";
+            this.frame.style.width = "0px";
+            this.frame.style.height = "0px";
         });
     }
 

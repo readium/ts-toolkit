@@ -1,12 +1,12 @@
 import { ModuleName } from "@readium/navigator-html-injectables";
 import { Locator, Publication } from "@readium/shared";
-import FrameBlobBuider from "./FrameBlobBuilder.ts";
+import FrameBlobBuilder from "./FrameBlobBuilder.ts";
 import { FrameManager } from "./FrameManager.ts";
 import { Injector } from "../../injection/Injector.ts";
 import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator.ts";
 
-const UPPER_BOUNDARY = 5;
-const LOWER_BOUNDARY = 3;
+const UPPER_BOUNDARY = 10;
+const LOWER_BOUNDARY = 5;
 
 export class FramePoolManager {
     private readonly container: HTMLElement;
@@ -14,13 +14,14 @@ export class FramePoolManager {
     private _currentFrame: FrameManager | undefined;
     private currentCssProperties: { [key: string]: string } | undefined;
     private readonly pool: Map<string, FrameManager> = new Map();
-    private readonly blobs: Map<string, string> = new Map();
-    private readonly inprogress: Map<string, Promise<void>> = new Map();
+    private readonly blobs: Map<string, FrameBlobBuilder> = new Map();
+    private readonly inprogress: Map<string, Promise<unknown>> = new Map();
     private pendingUpdates: Map<string, { inPool: boolean }> = new Map();
     private currentBaseURL: string | undefined;
     private readonly injector: Injector | null = null;
     private readonly contentProtectionConfig: IContentProtectionConfig;
     private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
+    private updateSequence = 0;
 
     constructor(
         container: HTMLElement,
@@ -42,7 +43,7 @@ export class FramePoolManager {
         // Wait for all in-progress loads to complete
         let iit = this.inprogress.values();
         let inp = iit.next();
-        const inprogressPromises: Promise<void>[] = [];
+        const inprogressPromises: Promise<unknown>[] = [];
         while(inp.value) {
             inprogressPromises.push(inp.value);
             inp = iit.next();
@@ -62,10 +63,8 @@ export class FramePoolManager {
         this.pool.clear();
 
         // Revoke all blobs
-        this.blobs.forEach(v => {
-            this.injector?.releaseBlobUrl?.(v);
-            URL.revokeObjectURL(v);
-        });
+        this.blobs.forEach(v => v.reset());
+        this.blobs.clear();
 
         // Clean up injector if it exists
         this.injector?.dispose();
@@ -77,6 +76,7 @@ export class FramePoolManager {
     }
 
     async update(pub: Publication, locator: Locator, modules: ModuleName[], force=false) {
+        const updateSequence = ++this.updateSequence;
         let i = this.positions.findIndex(l => l.locations.position === locator.locations.position);
         if(i < 0) throw Error(`Locator not found in position list: ${locator.locations.position} > ${this.positions.reduce<number>((acc, l) => l.locations.position || 0 > acc ? l.locations.position || 0 : acc, 0)  }`);
         const newHref = this.positions[i].href;
@@ -106,15 +106,18 @@ export class FramePoolManager {
                 this.pool.delete(href);
                 if(this.pendingUpdates.has(href))
                     this.pendingUpdates.set(href, { inPool: false });
+                // Note that we don't reset the blob here, unlike in the FXL pool.
+                // This is because FXL tends to have a ton more blobs. Maybe we'll adjust
+                // this at a later point with a much larger boundary for resets to deal
+                // with extremely long/large reflowable publications.
+                // Reflowable publication resources also tend to be much larger documents,
+                // so they're more expensive to preprocess with the FrameBlobBuilder.
             });
 
             // Check if base URL of publication has changed
             if(this.currentBaseURL !== undefined && pub.baseURL !== this.currentBaseURL) {
                 // Revoke all blobs
-                this.blobs.forEach(v => {
-                    this.injector?.releaseBlobUrl?.(v);
-                    URL.revokeObjectURL(v);
-                });
+                this.blobs.forEach(v => v.reset());
                 this.blobs.clear();
             }
             this.currentBaseURL = pub.baseURL;
@@ -127,18 +130,14 @@ export class FramePoolManager {
                     // when navigating backwards, where paginated will go the
                     // start of the resource instead of the end due to the
                     // corrupted width ColumnSnapper (injectables) gets on init
-                    this.blobs.forEach(v => {
-                        this.injector?.releaseBlobUrl?.(v);
-                        URL.revokeObjectURL(v);
-                    });
+                    this.blobs.forEach(v => v.reset());
                     this.blobs.clear();
                     this.pendingUpdates.clear();
                 }
                 if(this.pendingUpdates.has(href) && this.pendingUpdates.get(href)?.inPool === false) {
-                    const url = this.blobs.get(href);
-                    if(url) {
-                        this.injector?.releaseBlobUrl?.(url);
-                        URL.revokeObjectURL(url);
+                    const v = this.blobs.get(href);
+                    if(v) {
+                        v.reset();
                         this.blobs.delete(href);
                         this.pendingUpdates.delete(href);
                     }
@@ -157,7 +156,7 @@ export class FramePoolManager {
                 const itm = pub.readingOrder.findWithHref(href);
                 if(!itm) return; // TODO throw?
                 if(!this.blobs.has(href)) {
-                    const blobBuilder = new FrameBlobBuider(
+                    this.blobs.set(href, new FrameBlobBuilder(
                         pub,
                         this.currentBaseURL || "",
                         itm,
@@ -165,36 +164,81 @@ export class FramePoolManager {
                             cssProperties: this.currentCssProperties,
                             injector: this.injector
                         }
-                    );
-                    const blobURL = await blobBuilder.build();
-                    this.blobs.set(href, blobURL);
+                    ));
                 }
 
                 // Create <iframe>
-                const fm = new FrameManager(this.blobs.get(href)!, this.contentProtectionConfig, this.keyboardPeripheralsConfig);
+                const fm = new FrameManager(await this.blobs.get(href)!.build(), this.contentProtectionConfig, this.keyboardPeripheralsConfig);
                 if(href !== newHref) await fm.hide(); // Avoid unecessary hide
                 this.container.appendChild(fm.iframe);
                 await fm.load(modules);
                 this.pool.set(href, fm);
+                return fm;
             }
+
+            // Target frame is awaited
             try {
-                await Promise.all(creation.map(href => creator(href)));
+                await Promise.all(creation.filter(href => href === newHref).map(href => creator(href)));
             } catch (error) {
                 reject(error);
+                return;
             }
 
+            if (updateSequence !== this.updateSequence) {
+                resolve();
+                return;
+            }
+
+            // Remaining frames can resolve later
+            Promise.all(creation.map(async href => {
+                const c = creator(href);
+                this.inprogress.set(href, c);
+                await c;
+                this.inprogress.delete(href);
+            }));
+
             // Update current frame
-            const newFrame = this.pool.get(newHref)!;
+            const newFrame = this.pool.get(newHref);
+            if (!newFrame) {
+                resolve();
+                return;
+            }
+
             if(newFrame?.source !== this._currentFrame?.source || force) {
                 await this._currentFrame?.hide(); // Hide current frame. It's possible it no longer even exists in the DOM at this point
-                if(newFrame) // If user is speeding through the publication, this can get destroyed
-                    await newFrame.load(modules); // In order to ensure modules match the latest configuration
+
+                // Resolve if there is a concurrent update that has started since this one began
+                if (updateSequence !== this.updateSequence) {
+                    resolve();
+                    return;
+                }
+
+                // If user is speeding through the publication, this can get destroyed
+                const currentFrame = this.pool.get(newHref);
+                if (!currentFrame) {
+                    resolve();
+                    return;
+                }
+                
+                await currentFrame.load(modules); // In order to ensure modules match the latest configuration
+
+                // Resolve if there is a concurrent update that has started since this one began
+                if (updateSequence !== this.updateSequence) {
+                    resolve();
+                    return;
+                }
+
+                // Check if it was destroyed, again
+                const latestFrame = this.pool.get(newHref);
+                if (!latestFrame) {
+                    resolve();
+                    return;
+                }
 
                 // Update progression if necessary and show the new frame
-                if(newFrame) // If user is speeding through the publication, this can get destroyed
-                    await newFrame.show(locator.locations.progression); // Show/activate new frame
+                await latestFrame.show(locator.locations.progression); // Show/activate new frame
 
-                this._currentFrame = newFrame;
+                this._currentFrame = latestFrame;
 
                 // Safari retains focus on the hidden iframe; transfer it to the new
                 // frame only if no meaningful element in the parent document owns focus.

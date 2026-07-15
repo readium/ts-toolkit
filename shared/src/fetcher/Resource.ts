@@ -27,11 +27,11 @@ export abstract class Resource {
       return JSON.parse(str);
     });
   }
-  readAsXML(): Promise<XMLDocument | undefined> {
-    return this.readAsString().then(str => {
+  readAsXML(): Promise<Document | undefined> {
+    return this.link().then(l => this.readAsString().then(str => {
       if (str === undefined) return str;
-      return new DOMParser().parseFromString(str, 'text/xml');
-    });
+      return new DOMParser().parseFromString(str, l.mediaType.isHTML ? (l.mediaType.string as 'application/xhtml+xml' | 'text/html') : 'text/xml');
+    }));
   }
   abstract close(): void;
 }
