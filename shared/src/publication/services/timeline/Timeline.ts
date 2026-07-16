@@ -284,7 +284,7 @@ export class Timeline {
         const nearest = this.nearestTocEntryForResource(link.href, current);
         if (nearest) return nearest;
 
-        return this.previousResolvedTocEntry(link.href);
+        return this.previousResolvedTocEntry(link);
     }
 
     private get flat(): TimelineItem[] {
@@ -506,9 +506,8 @@ export class Timeline {
      * `href`'s resource at all, walk backward through the reading order and
      * return the nearest preceding resource's toc entry.
      */
-    private previousResolvedTocEntry(href: string): ContextualizedTocEntry | undefined {
-        const bare = Timeline.bareHref(href);
-        const index = this._allItems.findIndex(item => this.itemMatchesHref(item, bare));
+    private previousResolvedTocEntry(link: Link): ContextualizedTocEntry | undefined {
+        const index = this._allItems.findIndex(item => this.linkFor(item) === link);
         if (index === -1) return undefined;
 
         for (let i = index - 1; i >= 0; i--) {
@@ -516,7 +515,7 @@ export class Timeline {
             if (!precedingLink) continue;
             const precedingBare = Timeline.bareHref(precedingLink.href);
             const { atStart, fragments } = Timeline.collectTocCandidates(this.tocLinks, precedingBare, this._tocDepth, 1);
-            const chosen = atStart[0] ?? (fragments.length === 1 ? fragments[0] : undefined);
+            const chosen = atStart[0] ?? (fragments.length > 0 ? fragments[fragments.length - 1] : undefined);
             if (!chosen) continue;
             const entry = this.findTocEntryByLink(this.contextualizedToc, chosen);
             if (entry) return entry;
