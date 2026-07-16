@@ -267,10 +267,12 @@ export class Timeline {
     }
 
     /**
-     * Maps a `TimelineItem` (typically from `locate()`) to its `ContextualizedTocEntry`:
-     * a direct match first, falling back to the nearest preceding toc entry
-     * for that resource when there's no exact match (e.g. a mid-resource
-     * audio position between chapter markers).
+     * Maps a `TimelineItem` (typically from `locate()`) to its `ContextualizedTocEntry`,
+     * trying three fallbacks in order:
+     *   1. A direct match on `current`'s own link.
+     *   2. The nearest preceding toc entry within the same resource.
+     *   3. When no toc entry references the resource at all, the nearest
+     *      preceding resource's toc entry.
      */
     tocEntryFor(current: TimelineItem): ContextualizedTocEntry | undefined {
         const link = this.linkFor(current);
@@ -279,7 +281,10 @@ export class Timeline {
         const direct = this.findTocEntryByLink(this.contextualizedToc, link);
         if (direct) return direct;
 
-        return this.nearestTocEntryForResource(link.href, current);
+        const nearest = this.nearestTocEntryForResource(link.href, current);
+        if (nearest) return nearest;
+
+        return this.previousResolvedTocEntry(link.href);
     }
 
     private get flat(): TimelineItem[] {
@@ -470,6 +475,11 @@ export class Timeline {
         return undefined;
     }
 
+    /**
+     * Tier-2 fallback for `tocEntryFor`: among the toc entries that reference
+     * `href`'s own resource (e.g. chapter markers within one audio file),
+     * return the nearest one at or before `current`'s position/scroll.
+     */
     private nearestTocEntryForResource(href: string, current: TimelineItem): ContextualizedTocEntry | undefined {
         const bare = Timeline.bareHref(href);
         // Re-walk with raw items (not the display-formatted TocEntry tree) so we can compare
@@ -489,6 +499,29 @@ export class Timeline {
         }
         const chosen = best ?? candidates[0];
         return this.findTocEntryByLink(this.contextualizedToc, chosen.link);
+    }
+
+    /**
+     * Tier-3 fallback for `tocEntryFor`: when no toc entry references
+     * `href`'s resource at all, walk backward through the reading order and
+     * return the nearest preceding resource's toc entry.
+     */
+    private previousResolvedTocEntry(href: string): ContextualizedTocEntry | undefined {
+        const bare = Timeline.bareHref(href);
+        const index = this._allItems.findIndex(item => this.itemMatchesHref(item, bare));
+        if (index === -1) return undefined;
+
+        for (let i = index - 1; i >= 0; i--) {
+            const precedingLink = this.linkFor(this._allItems[i]);
+            if (!precedingLink) continue;
+            const precedingBare = Timeline.bareHref(precedingLink.href);
+            const { atStart, fragments } = Timeline.collectTocCandidates(this.tocLinks, precedingBare, this._tocDepth, 1);
+            const chosen = atStart[0] ?? (fragments.length === 1 ? fragments[0] : undefined);
+            if (!chosen) continue;
+            const entry = this.findTocEntryByLink(this.contextualizedToc, chosen);
+            if (entry) return entry;
+        }
+        return undefined;
     }
 
     // -------------------------------------------------------------------------
