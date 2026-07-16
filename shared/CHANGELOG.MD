@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Timeline` can now be built for HTML-based publications, not just audiobooks, via the new `buildTimeline`/`buildHtmlTimeline` helpers ([#234](https://github.com/readium/ts-toolkit/pull/234))
 - Added `formatNptTime()` utility, formatting a duration in seconds as `H:MM:SS`/`M:SS` ([#234](https://github.com/readium/ts-toolkit/pull/234))
 - Added `./html`, `./epub`, `./opds`, and `./encryption` subpath exports, so consumers can import only the format-specific extensions they need ([#228](https://github.com/readium/ts-toolkit/pull/228))
-- Greek (`el`) is now a supported accessibility metadata display-guide language, registered in `SUPPORTED_LANGUAGES` and `Localization` ([#228](https://github.com/readium/ts-toolkit/pull/228))
+- Spanish (`es`), Estonian (`et`), Finnish (`fi`), Polish (`pl`), and Greek (`el`) are now supported accessibility metadata display-guide languages, registered in `SUPPORTED_LANGUAGES` and `Localization` ([#228](https://github.com/readium/ts-toolkit/pull/228))
 
 ### Changed
 
