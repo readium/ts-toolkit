@@ -515,7 +515,12 @@ export class Timeline {
             if (!precedingLink) continue;
             const precedingBare = Timeline.bareHref(precedingLink.href);
             const { atStart, fragments } = Timeline.collectTocCandidates(this.tocLinks, precedingBare, this._tocDepth, 1);
-            const chosen = atStart[0] ?? (fragments.length > 0 ? fragments[fragments.length - 1] : undefined);
+            // Exclude fragment-only entries (bareHref "") — collectTocCandidates
+            // treats them as matching any bare href for single-track audio, but
+            // here they must belong to this specific preceding resource.
+            const ownAtStart = atStart.filter(l => Timeline.bareHref(l.href) === precedingBare);
+            const ownFragments = fragments.filter(l => Timeline.bareHref(l.href) === precedingBare);
+            const chosen = ownAtStart[0] ?? (ownFragments.length > 0 ? ownFragments[ownFragments.length - 1] : undefined);
             if (!chosen) continue;
             const entry = this.findTocEntryByLink(this.contextualizedToc, chosen);
             if (entry) return entry;

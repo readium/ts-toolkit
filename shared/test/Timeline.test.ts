@@ -846,7 +846,21 @@ describe('Timeline – tocEntryFor', () => {
     expect(t.tocEntryFor(t.items[1])?.link.title).toBe('Section 2');
   });
 
-  it('10.6 tier-3 fallback: no preceding entry exists → undefined', () => {
+  it('10.6 tier-3 fallback: excludes fragment-only toc entries when resolving the preceding resource', () => {
+    // "#t=30" is fragment-only (single-track audio convention) and loosely
+    // matches any resource's own title resolution in build(), but it does
+    // not belong to track1.mp3 specifically — must not be picked as its entry.
+    const t = build(
+      ro(
+        { href: 'track1.mp3' },
+        { href: 'track2.mp3' },
+      ),
+      toc({ href: '#t=30', title: 'Marker' }),
+    );
+    expect(t.tocEntryFor(t.items[1])).toBeUndefined();
+  });
+
+  it('10.7 tier-3 fallback: no preceding entry exists → undefined', () => {
     const t = build(
       ro({ href: 'chapter1.html' }, { href: 'chapter2.html', title: 'Chapter 2' }),
       toc({ href: 'chapter2.html', title: 'Chapter Two' }),
@@ -854,7 +868,7 @@ describe('Timeline – tocEntryFor', () => {
     expect(t.tocEntryFor(t.items[0])).toBeUndefined();
   });
 
-  it('10.7 tier-3 fallback: does not misresolve when the reading order repeats the same href', () => {
+  it('10.8 tier-3 fallback: does not misresolve when the reading order repeats the same href', () => {
     // Two RO entries share an href; the second (untitled, no toc entries of
     // its own) must resolve against its own preceding neighbor by identity,
     // not the first occurrence of a matching href.
@@ -869,7 +883,7 @@ describe('Timeline – tocEntryFor', () => {
     expect(t.tocEntryFor(t.items[2])?.link.title).toBe('Other');
   });
 
-  it('10.8 no match: an item unknown to the timeline resolves to undefined', () => {
+  it('10.9 no match: an item unknown to the timeline resolves to undefined', () => {
     const t = build(
       ro({ href: 'chapter1.html', title: 'Chapter 1' }),
       toc({ href: 'chapter1.html#intro', title: 'Introduction' }),
@@ -878,7 +892,7 @@ describe('Timeline – tocEntryFor', () => {
     expect(t.tocEntryFor(untracked)).toBeUndefined();
   });
 
-  it('10.9 no manifest toc: a reading-order item direct-matches its own fallback toc entry', () => {
+  it('10.10 no manifest toc: a reading-order item direct-matches its own fallback toc entry', () => {
     const t = build(ro({ href: 'chapter1.html', title: 'Chapter 1' }));
     expect(t.tocEntryFor(t.items[0])?.link.href).toBe('chapter1.html');
   });
