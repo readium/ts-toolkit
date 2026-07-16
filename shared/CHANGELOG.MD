@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] – 2026-07-16
+
+### Added
+
+- `Timeline` can now be built for HTML-based publications, not just audiobooks, via the new `buildTimeline`/`buildHtmlTimeline` helpers ([#234](https://github.com/readium/ts-toolkit/pull/234))
+- Added `formatNptTime()` utility, formatting a duration in seconds as `H:MM:SS`/`M:SS` ([#234](https://github.com/readium/ts-toolkit/pull/234))
+- Added `./html`, `./epub`, `./opds`, and `./encryption` subpath exports, so consumers can import only the format-specific extensions they need ([#228](https://github.com/readium/ts-toolkit/pull/228))
+
+### Changed
+
+- **Breaking:** All format-specific prototype augmentations (on `LocatorLocations`, EPUB/OPDS `Properties`, `Publication`, `Metadata`, etc.) have been replaced with standalone exported functions, e.g. `loc.time()` → `getTime(loc)`. Augmentation modules were side-effect-only and incompatible with the package's new `sideEffects: false`/tree-shakeable build. See [`docs/migration-standalone-extensions.md`](docs/migration-standalone-extensions.md) for the full before/after mapping ([#228](https://github.com/readium/ts-toolkit/pull/228))
+- **Breaking:** As part of the above, `getSpace(loc)` (formerly `loc.space()`) now returns `{ unit: "pixel" | "percent", x, y, width, height }` instead of a `[number, number, number, number]` tuple, to support percentage-based spatial media fragments ([#235](https://github.com/readium/ts-toolkit/pull/235))
+- **Breaking:** Dropped the CommonJS/UMD build; the package is now ESM-only ([#228](https://github.com/readium/ts-toolkit/pull/228))
+- Vendored `@edrlab/thorium-locales` locale files directly under `src/locales/` instead of depending on the package at install time; added an `update-locales` script to refresh them ([#228](https://github.com/readium/ts-toolkit/pull/228))
+
+### Fixed
+
+- Greek (`el`) accessibility metadata display-guide strings are now registered in `SUPPORTED_LANGUAGES` and `Localization`; the locale file shipped complete in [#228](https://github.com/readium/ts-toolkit/pull/228) but was never wired up, so it was unreachable via `loadLocale`/`setLocale`
+
 ## [2.2.3] – 2026-06-23
 
 ### Changed

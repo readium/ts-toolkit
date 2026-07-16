@@ -15,6 +15,7 @@ interface LocaleData {
 const jsonLoaders: Record<string, () => Promise<{ default: any }>> = {
   'ar': () => import('../../locales/publication-metadata/ar.json'),
   'da': () => import('../../locales/publication-metadata/da.json'),
+  'el': () => import('../../locales/publication-metadata/el.json'),
   'es': () => import('../../locales/publication-metadata/es.json'),
   'et': () => import('../../locales/publication-metadata/et.json'),
   'fi': () => import('../../locales/publication-metadata/fi.json'),

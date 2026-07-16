@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] – 2026-07-16
+
+### Added
+
+- `Timeline` is now available on every navigator (not just audio) via the new abstract `Navigator.timeline` getter; `EpubNavigator` and `WebPubNavigator` expose it and fire a new `timelineItemChanged` listener as the current timeline item changes ([#234](https://github.com/readium/ts-toolkit/pull/234))
+- `ProgressionRange` now carries an optional `fragmentId` for the active timeline anchor ([#234](https://github.com/readium/ts-toolkit/pull/234))
+
+### Changed
+
+- **Breaking:** Decoration-related types and functions (`Decoration`, `DecorationObserver`, `decorationsEqual`, `resolveDecorationForWire`, `supportsDecorationStyle`, etc.) are now re-exported from the new `@readium/decorator` package instead of being defined locally; `DecorationObserver` gains `onDecorationPointerEnter`/`onDecorationPointerLeave` callbacks ([#228](https://github.com/readium/ts-toolkit/pull/228))
+- **Breaking:** Dropped the CommonJS/UMD build; the package is now ESM-only ([#228](https://github.com/readium/ts-toolkit/pull/228))
+
 ## [2.6.1] – 2026-06-23
 
 ### Fixed

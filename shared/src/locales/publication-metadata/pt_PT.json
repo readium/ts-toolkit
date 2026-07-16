@@ -39,7 +39,7 @@
                             "compact": "Inclui funções ARIA",
                             "descriptive": "O conteúdo foi otimizado com funções ARIA para melhorar a organização e facilitar a navegação"
                         },
-                        "audio-descriptions": "Descrições em áudio",
+                        "audio-descriptions": "Descrições de áudio",
                         "braille": "Braille",
                         "color-not-sole-means-of-conveying-information": "A cor não é o único meio de transmitir informação",
                         "dyslexia-readability": "Otimizado para dislexia",
@@ -48,7 +48,7 @@
                         "high-contrast-between-text-and-background": "Alto contraste entre texto e fundo",
                         "large-print": "Impressão ampliada",
                         "page-breaks": {
-                            "compact": "Inclui quebras de página",
+                            "compact": "Quebras de página incluídas",
                             "descriptive": "Inclui quebras de página da fonte impressa original"
                         },
                         "ruby-annotations": "Algumas anotações Ruby",

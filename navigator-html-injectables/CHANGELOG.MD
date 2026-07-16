@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] – 2026-07-16
+
+### Changed
+
+- **Breaking:** Decoration types and equality/style-support logic (`decorationsEqual`, `resolveDecorationForWire`, `supportsDecorationStyle`, etc.) have moved to the new standalone `@readium/decorator` package; the `Decorator` module now delegates rendering to it ([#228](https://github.com/readium/ts-toolkit/pull/228))
+- **Breaking:** `@readium/shared` is now a runtime dependency instead of a dev dependency, and `@readium/helpers` (extracted from `@readium/shared`) is a new dependency ([#228](https://github.com/readium/ts-toolkit/pull/228))
+- **Breaking:** Dropped the CommonJS/UMD build; the package is now ESM-only ([#228](https://github.com/readium/ts-toolkit/pull/228))
+- Snappers now track timeline anchors to support Timeline-driven navigation in HTML publications ([#234](https://github.com/readium/ts-toolkit/pull/234))
+
 ## [2.5.0] – 2026–06–04
 
 ### Added
