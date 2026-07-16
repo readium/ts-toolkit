@@ -1,11 +1,11 @@
-import { Feature, Link, Locator, LocatorText, Publication, ReadingProgression, LocatorLocations, Timeline, TimelineItem } from "@readium/shared";
+import { Feature, Link, Locator, LocatorText, Publication, ReadingProgression, LocatorLocations, Timeline, TimelineItem, getCssSelector, getHtmlId } from "@readium/shared";
 import { VisualNavigator, VisualNavigatorViewport, ProgressionRange, KeyboardPeripheralEventData } from "../Navigator.ts";
 import { Configurable } from "../preferences/Configurable.ts";
 import { WebPubFramePoolManager } from "./WebPubFramePoolManager.ts";
-import { BasicTextSelection, CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, FrameClickEvent, KeyboardPeripheralEvent, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
+import { BasicTextSelection, CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FrameClickEvent, KeyboardPeripheralEvent, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
 import { WebPubFrameManager } from "./WebPubFrameManager.ts";
-import { Decoration, DecorableNavigator, DecorationActivationEvent, DecorationObserver, DecoratorConfig, decorationsEqual, resolveDecorationForWire, BUILTIN_DECORATION_TYPES } from "../decorations/index.ts";
+import { Decoration, DecorableNavigator, OnDecorationActivatedEvent, OnDecorationPointerEnterEvent, OnDecorationPointerLeaveEvent, DecorationObserver, DecoratorConfig, decorationsEqual, resolveDecorationForWire, supportsDecorationStyle as canRenderDecorationStyle, DecorationStyleType } from "../decorations/index.ts";
 import { ManagerEventKey } from "../epub/EpubNavigator.ts";
 import { getScriptMode } from "../helpers/scriptMode.ts";
 import { WebPubCSS } from "./css/WebPubCSS.ts";
@@ -89,7 +89,9 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
     private _decorations: Map<string, Decoration[]> = new Map();
     private _decorationObservers: Map<string, Set<DecorationObserver>> = new Map();
+    private _decorationHoveredDecorations: Map<string, Decoration> = new Map();
     private _decorationActivationState: Map<string, boolean> = new Map();
+    private _decorationHoverState: Map<string, boolean> = new Map();
     private _decorationActivationConsumed = false;
 
     private webViewport: VisualNavigatorViewport = {
@@ -298,6 +300,12 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
                 if (handled) this._decorationActivationConsumed = true;
                 break;
             }
+            case "decoration_pointer_enter":
+                this._handleDecorationPointerEnter(data as DecorationPointerEnterData);
+                break;
+            case "decoration_pointer_leave":
+                this._handleDecorationPointerLeave(data as DecorationPointerLeaveData);
+                break;
             case "click":
             case "tap":
                 if (this._decorationActivationConsumed) {
@@ -449,14 +457,15 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         await this.framePool?.destroy();
         this._decorations.clear();
         this._decorationObservers.clear();
+        this._decorationHoveredDecorations.clear();
         this._decorationActivationState.clear();
+        this._decorationHoverState.clear();
     }
 
     // DecorableNavigator
 
-    public supportsDecorationStyle(styleTypeId: string): boolean {
-        return BUILTIN_DECORATION_TYPES.has(styleTypeId) ||
-            !!this._decoratorConfig.decorationTemplates?.[styleTypeId];
+    public supportsDecorationStyle(styleTypeId: DecorationStyleType | string): boolean {
+        return canRenderDecorationStyle(styleTypeId, this._decoratorConfig.decorationTemplates);
     }
 
     public registerDecorationObserver(group: string, observer: DecorationObserver): void {
@@ -464,18 +473,32 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             this._decorationObservers.set(group, new Set());
         this._decorationObservers.get(group)!.add(observer);
 
-        this._decorationActivationState.set(group, true);
-        this._sendDecorationActivatable(group, true);
+        if (observer.onDecorationActivated) {
+            this._decorationActivationState.set(group, true);
+            this._sendDecorationActivatable(group, true);
+        }
+
+        if (observer.onDecorationPointerEnter || observer.onDecorationPointerLeave) {
+            this._decorationHoverState.set(group, true);
+            this._sendDecorationHoverable(group, true);
+        }
     }
 
     public unregisterDecorationObserver(observer: DecorationObserver): void {
         this._decorationObservers.forEach((set, group) => {
-            if (set.has(observer)) {
-                set.delete(observer);
-                if (set.size === 0) {
-                    this._decorationActivationState.delete(group);
-                    this._sendDecorationActivatable(group, false);
-                }
+            if (!set.has(observer)) return;
+            set.delete(observer);
+
+            const stillActivatable = [...set].some(o => o.onDecorationActivated);
+            if (this._decorationActivationState.has(group) && !stillActivatable) {
+                this._decorationActivationState.delete(group);
+                this._sendDecorationActivatable(group, false);
+            }
+
+            const stillHoverable = [...set].some(o => o.onDecorationPointerEnter || o.onDecorationPointerLeave);
+            if (this._decorationHoverState.has(group) && !stillHoverable) {
+                this._decorationHoverState.delete(group);
+                this._sendDecorationHoverable(group, false);
             }
         });
     }
@@ -483,6 +506,11 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private _sendDecorationActivatable(group: string, activatable: boolean): void {
         const frame = this.framePool?.currentFrames[0];
         if (frame?.msg) frame.msg.send("decoration_activatable", { group, activatable });
+    }
+
+    private _sendDecorationHoverable(group: string, hoverable: boolean): void {
+        const frame = this.framePool?.currentFrames[0];
+        if (frame?.msg) frame.msg.send("decoration_hoverable", { group, hoverable });
     }
 
     public applyDecorations(decorations: Decoration[], group: string): void {
@@ -507,6 +535,8 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
         const activatable = this._decorationActivationState.get(group);
         if (activatable !== undefined) this._sendDecorationActivatable(group, activatable);
+        const hoverable = this._decorationHoverState.get(group);
+        if (hoverable !== undefined) this._sendDecorationHoverable(group, hoverable);
     }
 
     private _sendDecorationOps(
@@ -551,6 +581,9 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         for (const [group, activatable] of this._decorationActivationState) {
             frame.msg.send("decoration_activatable", { group, activatable });
         }
+        for (const [group, hoverable] of this._decorationHoverState) {
+            frame.msg.send("decoration_hoverable", { group, hoverable });
+        }
     }
 
     private _handleDecorationActivated(data: DecorationActivatedEvent): boolean {
@@ -560,11 +593,34 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId);
         if (!decoration) return false;
 
-        const event: DecorationActivationEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
+        const event: OnDecorationActivatedEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
         let anyHandled = false;
         for (const obs of observers)
-            if (obs.onDecorationActivated(event)) anyHandled = true;
+            if (obs.onDecorationActivated?.(event)) anyHandled = true;
         return anyHandled;
+    }
+
+    private _handleDecorationPointerEnter(data: DecorationPointerEnterData): void {
+        const observers = this._decorationObservers.get(data.group);
+        if (!observers || observers.size === 0) return;
+        const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId);
+        if (!decoration) return;
+        this._decorationHoveredDecorations.set(data.group, decoration);
+        const event: OnDecorationPointerEnterEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
+        for (const obs of observers)
+            obs.onDecorationPointerEnter?.(event);
+    }
+
+    private _handleDecorationPointerLeave(data: DecorationPointerLeaveData): void {
+        const observers = this._decorationObservers.get(data.group);
+        if (!observers || observers.size === 0) return;
+        const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId)
+            ?? this._decorationHoveredDecorations.get(data.group);
+        this._decorationHoveredDecorations.delete(data.group);
+        if (!decoration) return;
+        const event: OnDecorationPointerLeaveEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
+        for (const obs of observers)
+            obs.onDecorationPointerLeave?.(event);
     }
 
     // End of DecorableNavigator
@@ -682,7 +738,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
     private async loadLocator(locator: Locator, cb: (ok: boolean) => void) {
         let done = false;
-        let cssSelector = (typeof locator.locations.getCssSelector === "function") && locator.locations.getCssSelector();
+        let cssSelector = getCssSelector(locator.locations);
         if(locator.text?.highlight) {
             done = await new Promise<boolean>((res, _) => {
                 // Attempt to go to a highlighted piece of text in the resource
@@ -714,7 +770,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         // This sanity check has to be performed because we're still passing non-locator class
         // locator objects to this function. This is not good and should eventually be forbidden
         // or the locator should be deserialized sometime before this function.
-        const hid = (typeof locator.locations.htmlId === "function") && locator.locations.htmlId();
+        const hid = getHtmlId(locator.locations);
         if(hid)
             done = await new Promise<boolean>((res, _) => {
                 // Attempt to go to an HTML ID in the resource

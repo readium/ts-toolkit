@@ -7,33 +7,36 @@ import {
   Link,
   Price,
   Properties,
+  getNumberOfItems,
+  getPrice,
+  getIndirectAcquisitions,
+  getHolds,
+  getCopies,
+  getAvailability,
+  getAuthenticate,
 } from '../../src';
 
 describe('opds Properties Tests', () => {
   it('get Properties {numberOfItems} when available', () => {
-    expect(new Properties({ numberOfItems: 42 }).getNumberOfItems()).toEqual(
-      42
-    );
+    expect(getNumberOfItems(new Properties({ numberOfItems: 42 }))).toEqual(42);
   });
 
   it('get Properties {numberOfItems} when missing', () => {
-    expect(new Properties({}).getNumberOfItems()).toBeUndefined();
+    expect(getNumberOfItems(new Properties({}))).toBeUndefined();
   });
 
   it('Properties {numberOfItems} must be positive', () => {
-    expect(
-      new Properties({ numberOfItems: -20 }).getNumberOfItems()
-    ).toBeUndefined();
+    expect(getNumberOfItems(new Properties({ numberOfItems: -20 }))).toBeUndefined();
   });
 
   it('get Properties {price} when available', () => {
     expect(
-      new Properties({ price: { currency: 'EUR', value: 4.36 } }).getPrice()
+      getPrice(new Properties({ price: { currency: 'EUR', value: 4.36 } }))
     ).toEqual(new Price({ currency: 'EUR', value: 4.36 }));
   });
 
   it('get Properties {price} when missing', () => {
-    expect(new Properties({}).getPrice()).toBeUndefined();
+    expect(getPrice(new Properties({}))).toBeUndefined();
   });
 
   it('get Properties {price} json', () => {
@@ -45,9 +48,9 @@ describe('opds Properties Tests', () => {
 
   it('get Properties {indirectAcquisitions} when available', () => {
     expect(
-      new Properties({
+      getIndirectAcquisitions(new Properties({
         indirectAcquisition: [{ type: 'acq1' }, { type: 'acq2' }],
-      }).getIndirectAcquisitions()
+      }))
     ).toEqual([
       new Acquisition({ type: 'acq1' }),
       new Acquisition({ type: 'acq2' }),
@@ -64,11 +67,11 @@ describe('opds Properties Tests', () => {
   });
 
   it('get Properties {indirectAcquisitions} when missing', () => {
-    expect(new Properties({}).getIndirectAcquisitions()).toBeUndefined();
+    expect(getIndirectAcquisitions(new Properties({}))).toBeUndefined();
   });
 
   it('get Properties {holds} when available', () => {
-    expect(new Properties({ holds: { total: 5 } }).getHolds()).toEqual(
+    expect(getHolds(new Properties({ holds: { total: 5 } }))).toEqual(
       new Holds({ total: 5 })
     );
   });
@@ -81,11 +84,11 @@ describe('opds Properties Tests', () => {
   });
 
   it('get Properties {holds} when missing', () => {
-    expect(new Properties({}).getHolds()).toBeUndefined();
+    expect(getHolds(new Properties({}))).toBeUndefined();
   });
 
   it('get Properties {copies} when available', () => {
-    expect(new Properties({ copies: { total: 5 } }).getCopies()).toEqual(
+    expect(getCopies(new Properties({ copies: { total: 5 } }))).toEqual(
       new Copies({ total: 5 })
     );
   });
@@ -98,12 +101,12 @@ describe('opds Properties Tests', () => {
   });
 
   it('get Properties {copies} when missing', () => {
-    expect(new Properties({}).getCopies()).toBeUndefined();
+    expect(getCopies(new Properties({}))).toBeUndefined();
   });
 
   it('get Properties {availability} when available', () => {
     expect(
-      new Properties({ availability: { state: 'available' } }).getAvailability()
+      getAvailability(new Properties({ availability: { state: 'available' } }))
     ).toEqual(new Availability({ state: AvailabilityStatus.available }));
   });
 
@@ -122,21 +125,21 @@ describe('opds Properties Tests', () => {
   });
 
   it('get Properties {availability} when missing', () => {
-    expect(new Properties({}).getAvailability()).toBeUndefined();
+    expect(getAvailability(new Properties({}))).toBeUndefined();
   });
 
   it('get Properties {authenticate} when missing', () => {
-    expect(new Properties({}).getAuthenticate()).toBeUndefined();
+    expect(getAuthenticate(new Properties({}))).toBeUndefined();
   });
 
   it('get Properties {authenticate} when available', () => {
     expect(
-      new Properties({
+      getAuthenticate(new Properties({
         authenticate: {
           href: 'https://example.com/authentication.json',
           type: 'application/opds-authentication+json',
         },
-      }).getAuthenticate()
+      }))
     ).toEqual(
       new Link({
         href: 'https://example.com/authentication.json',
@@ -147,11 +150,11 @@ describe('opds Properties Tests', () => {
 
   it('get Properties {authenticate} when invalid', () => {
     expect(
-      new Properties({
+      getAuthenticate(new Properties({
         authenticate: {
           type: 'application/opds-authentication+json',
         },
-      }).getAuthenticate()
+      }))
     ).toBeUndefined();
   });
 });

@@ -3,7 +3,7 @@ import { ExperimentKey, TextAlignment } from "../../preferences/Types.ts";
 import { EpubDefaults } from "./EpubDefaults.ts";
 import { EpubPreferences } from "./EpubPreferences.ts";
 
-import { sMLWithRequest } from "@readium/navigator-html-injectables";
+import { sMLWithRequest } from "@readium/helpers";
 
 export interface IEpubSettings {
   backgroundColor?: string | null,

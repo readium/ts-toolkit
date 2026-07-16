@@ -26,16 +26,35 @@
     "parser",
     "tts"
   ],
-  "main": "./dist/index.umd.cjs",
-  "module": "./dist/index.js",
   "types": "./types/src/index.d.ts",
   "exports": {
     ".": {
+      "ts-toolkit-source": "./src/index.ts",
       "types": "./types/src/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.umd.cjs"
+      "import": "./dist/index.js"
+    },
+    "./html": {
+      "ts-toolkit-source": "./src/publication/html/index.ts",
+      "types": "./types/src/publication/html/index.d.ts",
+      "import": "./dist/publication/html/index.js"
+    },
+    "./epub": {
+      "ts-toolkit-source": "./src/publication/epub/index.ts",
+      "types": "./types/src/publication/epub/index.d.ts",
+      "import": "./dist/publication/epub/index.js"
+    },
+    "./opds": {
+      "ts-toolkit-source": "./src/publication/opds/index.ts",
+      "types": "./types/src/publication/opds/index.d.ts",
+      "import": "./dist/publication/opds/index.js"
+    },
+    "./encryption": {
+      "ts-toolkit-source": "./src/publication/encryption/index.ts",
+      "types": "./types/src/publication/encryption/index.d.ts",
+      "import": "./dist/publication/encryption/index.js"
     }
   },
+  "sideEffects": false,
   "files": [
     "dist",
     "src",
@@ -49,30 +68,18 @@
     "clean": "rimraf types dist",
     "build": "pnpm clean && tsc && vite build",
     "test": "jest",
-    "size": "size-limit",
     "check-locales": "node scripts/check-locales.mjs",
-    "update-locales": "pnpm remove @edrlab/thorium-locales && pnpm add @edrlab/thorium-locales@github:edrlab/thorium-locales && pnpm check-locales"
-  },
-  "size-limit": [
-    {
-      "path": "dist/index.js",
-      "limit": "50 KB"
-    }
-  ],
-  "dependencies": {
-    "@edrlab/thorium-locales": "github:edrlab/thorium-locales"
+    "update-locales": "node scripts/update-locales.mjs && node scripts/check-locales.mjs"
   },
   "devDependencies": {
     "@babel/core": "^7.28.6",
     "@babel/preset-env": "^7.28.6",
     "@babel/preset-typescript": "^7.28.5",
-    "@size-limit/file": "^12.0.0",
     "@types/jest": "^30.0.0",
     "babel-jest": "^30.2.0",
     "css-selector-generator": "^3.8.0",
     "jest": "^30.2.0",
-    "rimraf": "^6.1.2",
-    "size-limit": "^12.0.0",
+    "rimraf": "^6.1.3",
     "ts-jest": "^29.4.6",
     "tslib": "^2.8.1",
     "typescript": "^5.9.3",

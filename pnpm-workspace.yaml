@@ -1,4 +1,13 @@
 packages:
+  - 'helpers'
   - 'shared'
   - 'navigator'
   - 'navigator-html-injectables'
+  - 'decorator'
+
+minimumReleaseAge: 4320 # 3 days
+blockExoticSubdeps: true
+trustPolicy: no-downgrade
+allowBuilds:
+  esbuild: true
+  unrs-resolver: true

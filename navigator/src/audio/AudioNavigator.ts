@@ -1,4 +1,4 @@
-import { Link, Locator, LocatorLocations, Publication, Timeline, TimelineItem } from "@readium/shared";
+import { Link, Locator, LocatorLocations, Publication, Timeline, TimelineItem, getTime as locatorTime } from "@readium/shared";
 import { MediaNavigator, IContentProtectionConfig, IKeyboardPeripheralsConfig, KeyboardPeripheralEventData } from "../Navigator.ts";
 import { Configurable } from "../preferences/Configurable.ts";
 import { WebAudioEngine, PlaybackState } from "./engine/index.ts";
@@ -135,7 +135,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         if (trackIndex === -1) {
             throw new Error(`AudioNavigator: initial href "${ initialHref }" not found in reading order`);
         }
-        const initialTime = this.currentLocation.locations?.time() || 0;
+        const initialTime = locatorTime(this.currentLocation.locations) || 0;
 
         const audioEngine = new WebAudioEngine({
             playback: {
@@ -529,7 +529,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             locator = this.ensureLocatorLocations(locator);
             const href = locator.href.split("#")[0];
             const trackIndex = this.hrefToTrackIndex(href);
-            const time = locator.locations?.time() || 0;
+            const startTime = locatorTime(locator.locations) || 0;
 
             if (trackIndex === -1) {
                 cb(false);
@@ -547,7 +547,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             this.pool.setCurrentAudio(trackIndex, direction);
             this.currentLocation = locator.copyWithLocations(locator.locations);
 
-            await this.waitForLoadedAndSeeked(time, id);
+            await this.waitForLoadedAndSeeked(startTime, id);
             this._isNavigating = false;
 
             if (id !== this.navigationId) {
@@ -583,8 +583,8 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             cb(false);
             return;
         }
-        const time = link.locator.locations?.time() ?? 0;
-        const locator = this.createLocator(trackIndex, time);
+        const startTime = locatorTime(link.locator.locations) ?? 0;
+        const locator = this.createLocator(trackIndex, startTime);
         await this.go(locator, _animated, cb);
     }
 
@@ -642,7 +642,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
 
     get isTrackStart(): boolean {
         return this.currentTrackIndex() === 0
-            && (this.currentLocation.locations?.time() || 0) === 0;
+            && (locatorTime(this.currentLocation.locations) || 0) === 0;
     }
 
     get isTrackEnd(): boolean {
@@ -652,7 +652,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         if (progression !== undefined) return progression >= 1;
         const link = this.pub.readingOrder.items[trackIndex];
         const duration = this.duration || link?.duration || 0;
-        return duration > 0 && (this.currentLocation.locations?.time() ?? 0) >= duration;
+        return duration > 0 && (locatorTime(this.currentLocation.locations) ?? 0) >= duration;
     }
 
     get canGoBackward(): boolean {

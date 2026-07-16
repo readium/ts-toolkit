@@ -6,6 +6,7 @@ import {
   Metadata,
   Publication,
   PublicationCollection,
+  getImages,
 } from '../../src';
 
 describe('Epub Publication Tests', () => {
@@ -28,13 +29,15 @@ describe('Epub Publication Tests', () => {
   it('get {images}', () => {
     const links = new Links([new Link({ href: '/image.png' })]);
     expect(
-      createPublication(
-        new Map([['images', [new PublicationCollection({ links })]]])
-      ).getImages()
+      getImages(
+        createPublication(
+          new Map([['images', [new PublicationCollection({ links })]]])
+        )
+      )
     ).toEqual(links);
   });
 
   it('get {images} when missing', () => {
-    expect(createPublication().getImages()).toBeUndefined();
+    expect(getImages(createPublication())).toBeUndefined();
   });
 });

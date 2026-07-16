@@ -1,4 +1,4 @@
-import { Link, LocatorLocations, Locator, LocatorText } from '../src';
+import { Link, LocatorLocations, Locator, LocatorText, getHtmlId, getTime } from '../src';
 
 describe('Locator Tests', () => {
   it('parse {Locator} minimal JSON', () => {
@@ -46,14 +46,14 @@ describe('Locator Tests', () => {
     const locator = new Locator({ href: 'chapter.html#section-2', type: 'text/html' });
     expect(locator.href).toEqual('chapter.html');
     expect(locator.locations.fragments).toEqual(['section-2']);
-    expect(locator.locations.htmlId()).toEqual('section-2');
+    expect(getHtmlId(locator.locations)).toEqual('section-2');
   });
 
   it('normalize audio t= fragment into locations on construction', () => {
     const locator = new Locator({ href: 'audio.mp3#t=27:27', type: 'audio/mpeg' });
     expect(locator.href).toEqual('audio.mp3');
     expect(locator.locations.fragments).toEqual(['t=27:27']);
-    expect(locator.locations.time()).toEqual(27 * 60 + 27);
+    expect(getTime(locator.locations)).toEqual(27 * 60 + 27);
   });
 
   it('explicit locations.fragments win over href fragment on construction', () => {

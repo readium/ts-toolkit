@@ -10,29 +10,90 @@ export interface Rect {
     width: number;
 }
 
+export function getTextClientRects(range: Range, skipTags: string[]): Rect[] {
+    const upperTags = skipTags.map(t => t.toUpperCase());
+    const rects: Rect[] = [];
+
+    const ancestor = range.commonAncestorContainer;
+    // TreeWalker only visits descendants, never the root itself. If the common
+    // ancestor is already a text node (single-node selection), walk from its
+    // parent so the text node itself is included in the traversal.
+    const walkerRoot = ancestor.nodeType === Node.TEXT_NODE ? ancestor.parentNode! : ancestor;
+    const walker = range.startContainer.ownerDocument!.createTreeWalker(
+        walkerRoot,
+        NodeFilter.SHOW_TEXT
+    );
+
+    let node = walker.nextNode();
+    while (node) {
+        if (range.intersectsNode(node)) {
+            let ancestor = node.parentNode;
+            let skip = false;
+            while (ancestor) {
+                if (ancestor.nodeType === Node.ELEMENT_NODE && upperTags.includes((ancestor as Element).tagName.toUpperCase())) {
+                    skip = true;
+                    break;
+                }
+                ancestor = ancestor.parentNode;
+            }
+            if (!skip) {
+                const textRange = range.cloneRange();
+                textRange.selectNode(node);
+                if (textRange.compareBoundaryPoints(Range.START_TO_START, range) < 0)
+                    textRange.setStart(range.startContainer, range.startOffset);
+                if (textRange.compareBoundaryPoints(Range.END_TO_END, range) > 0)
+                    textRange.setEnd(range.endContainer, range.endOffset);
+                for (const r of textRange.getClientRects()) {
+                    rects.push({ left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height });
+                }
+            }
+        }
+        node = walker.nextNode();
+    }
+
+    return rects;
+}
+
 export function getClientRectsNoOverlap(
-    range: Range,
+    source: Range | Rect[],
     doNotMergeHorizontallyAlignedRects: boolean,
-    doNotMergeVerticallyAlignedRects: boolean = false
+    doNotMergeVerticallyAlignedRects: boolean = false,
+    expand: number = 0
 ) {
-    let clientRects = range.getClientRects();
-
-    // Try falling back to the client rects of the common ancestor of the range if it's an HTML Element
-    if(!clientRects.length)
-        if(range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE)
-            clientRects = (range.commonAncestorContainer as HTMLElement).getClientRects();
-
     const tolerance = 1;
-    const originalRects: Rect[] = [];
-    for (const rangeClientRect of clientRects) {
-        originalRects.push({
-            bottom: rangeClientRect.bottom,
-            height: rangeClientRect.height,
-            left: rangeClientRect.left,
-            right: rangeClientRect.right,
-            top: rangeClientRect.top,
-            width: rangeClientRect.width,
-        });
+    let originalRects: Rect[];
+
+    if (Array.isArray(source)) {
+        originalRects = source;
+    } else {
+        let clientRects = source.getClientRects();
+
+        // Try falling back to the client rects of the common ancestor of the range if it's an HTML Element
+        if(!clientRects.length)
+            if(source.commonAncestorContainer.nodeType === Node.ELEMENT_NODE)
+                clientRects = (source.commonAncestorContainer as HTMLElement).getClientRects();
+
+        originalRects = [];
+        for (const rangeClientRect of clientRects) {
+            originalRects.push({
+                bottom: rangeClientRect.bottom,
+                height: rangeClientRect.height,
+                left: rangeClientRect.left,
+                right: rangeClientRect.right,
+                top: rangeClientRect.top,
+                width: rangeClientRect.width,
+            });
+        }
+    }
+    if (expand) {
+        for (const rect of originalRects) {
+            rect.left   -= expand;
+            rect.top    -= expand;
+            rect.right  += expand;
+            rect.bottom += expand;
+            rect.width  += expand * 2;
+            rect.height += expand * 2;
+        }
     }
     const mergedRects = mergeTouchingRects(
         originalRects,

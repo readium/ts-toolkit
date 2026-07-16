@@ -1,0 +1,47 @@
+{
+  "name": "@readium/helpers",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "General-purpose browser helpers for Readium packages",
+  "author": "readium",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/readium/ts-toolkit.git",
+    "directory": "helpers"
+  },
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/readium/ts-toolkit/issues"
+  },
+  "homepage": "https://github.com/readium/ts-toolkit",
+  "types": "./types/src/index.d.ts",
+  "exports": {
+    ".": {
+      "ts-toolkit-source": "./src/index.ts",
+      "types": "./types/src/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "src",
+    "types"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "clean": "rimraf types dist",
+    "build": "pnpm clean && tsc && vite build"
+  },
+  "dependencies": {
+    "user-agent-data-types": "^0.4.2"
+  },
+  "devDependencies": {
+    "rimraf": "^6.1.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  }
+}

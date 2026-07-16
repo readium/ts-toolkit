@@ -1,5 +1,4 @@
-import '../../src/publication/epub/Publication.ts';
-import { Manifest, Publication } from '../../src';
+import { Manifest, Publication, getPageList, getLandmarks, getListOfAudioClips, getListOfIllustrations, getListOfTables, getListOfVideoClips } from '../../src';
 
 const manifestJSON = {
   '@context': 'https://readium.org/webpub-manifest/context.jsonld',
@@ -46,39 +45,39 @@ describe('Epub Publication Tests', () => {
   });
 
   it('get {pageList}', () => {
-    const pageList = publication.getPageList();
+    const pageList = getPageList(publication);
     expect(pageList?.items).toHaveLength(7);
     expect(pageList?.items[0].href).toBe('EPUB/georgia.xhtml#page752');
     expect(pageList?.items[6].href).toBe('EPUB/georgia.xhtml#page758');
   });
 
   it('get {landmarks}', () => {
-    const landmarks = publication.getLandmarks();
+    const landmarks = getLandmarks(publication);
     expect(landmarks?.items).toHaveLength(1);
     expect(landmarks?.items[0].href).toBe('EPUB/cover.xhtml');
     expect(landmarks?.items[0].title).toBe('cover');
   });
 
   it('get {listOfAudioClips}', () => {
-    const loa = publication.getListOfAudioClips();
+    const loa = getListOfAudioClips(publication);
     expect(loa?.items).toHaveLength(1);
     expect(loa?.items[0].href).toBe('EPUB/audio.mp3');
   });
 
   it('get {listOfIllustrations}', () => {
-    const loi = publication.getListOfIllustrations();
+    const loi = getListOfIllustrations(publication);
     expect(loi?.items).toHaveLength(1);
     expect(loi?.items[0].href).toBe('EPUB/images/figure1.png');
   });
 
   it('get {listOfTables}', () => {
-    const lot = publication.getListOfTables();
+    const lot = getListOfTables(publication);
     expect(lot?.items).toHaveLength(1);
     expect(lot?.items[0].href).toBe('EPUB/table1.xhtml');
   });
 
   it('get {listOfVideoClips}', () => {
-    const lov = publication.getListOfVideoClips();
+    const lov = getListOfVideoClips(publication);
     expect(lov?.items).toHaveLength(1);
     expect(lov?.items[0].href).toBe('EPUB/video.mp4');
   });

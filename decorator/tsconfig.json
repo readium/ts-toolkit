@@ -1,0 +1,29 @@
+{
+  "include": ["src"],
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "es6",
+    "lib": ["esnext", "es2022.intl", "dom", "dom.iterable"],
+    "importHelpers": true,
+    "declaration": true,
+    "declarationDir": "./types",
+    "sourceMap": true,
+    "rootDir": "./",
+    "strict": true,
+    "isolatedModules": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "moduleResolution": "bundler",
+    "customConditions": ["ts-toolkit-source"],
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "allowImportingTsExtensions": true,
+    "types": ["vite/client"]
+  }
+}

@@ -1,5 +1,6 @@
 import { Link, Links } from "../../Link.ts";
 import { Locator } from "../../Locator.ts";
+import { getHtmlId, getTime } from "../../html/Locations.ts";
 import { Profile } from "../../Profiles.ts";
 import { formatNptTime, isNptStartOfResource, parseNptTime } from "../../../util/npt.ts";
 import { TimelineItem } from "./TimelineItem.ts";
@@ -167,9 +168,9 @@ export class Timeline {
     }
 
     locate(locator: Locator): TimelineItem | undefined {
-        const href = locator.href;
-        const time = locator.locations.time();
-        const htmlId = locator.locations.htmlId();
+        const href = locator.href.split("#")[0];
+        const time = getTime(locator.locations);
+        const htmlId = getHtmlId(locator.locations);
         const progression = locator.locations.progression;
 
         // Audio: best-match on t= start time.

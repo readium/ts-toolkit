@@ -14,7 +14,7 @@ import {
   ensureExperiment
 } from "../../preferences/guards.ts";
 
-import { sMLWithRequest } from "@readium/navigator-html-injectables";
+import { sMLWithRequest } from "@readium/helpers";
 
 export interface IWebPubDefaults {
   fontFamily?: string | null,

@@ -1,19 +1,19 @@
 import { ReadiumWindow } from "./dom.ts";
 
-export function isRTL(wnd: ReadiumWindow): boolean {
+export function isRTL(wnd: Window): boolean {
     // Check documentElement first, then fall back to body.
     const dir = wnd.document.documentElement.dir || wnd.document.body.dir;
     return dir.toLowerCase() === "rtl";
 }
 
-export function isVerticalLR(wnd: ReadiumWindow): boolean {
+export function isVerticalLR(wnd: Window): boolean {
     // Check documentElement first, then fall back to body.
     const writingMode = wnd.getComputedStyle(wnd.document.documentElement).writingMode
         || wnd.getComputedStyle(wnd.document.body).writingMode;
     return writingMode === 'vertical-lr';
 }
 
-export function isVerticalWriting(wnd: ReadiumWindow): boolean {
+export function isVerticalWriting(wnd: Window): boolean {
     const writingMode = wnd.getComputedStyle(wnd.document.documentElement).writingMode
         || wnd.getComputedStyle(wnd.document.body).writingMode;
     return writingMode === 'vertical-rl' || writingMode === 'vertical-lr';
@@ -75,7 +75,7 @@ export interface WritingContext {
     toRect(inlineStart: number, blockStart: number, inlineSize: number, blockSize: number): DOMRect;
 }
 
-export function makeWritingContext(wnd: ReadiumWindow): WritingContext {
+export function makeWritingContext(wnd: Window): WritingContext {
     const isVert = isVerticalWriting(wnd);
     const isVLR  = isVert && isVerticalLR(wnd);
     const vw     = wnd.innerWidth;
@@ -133,7 +133,7 @@ export function makeWritingContext(wnd: ReadiumWindow): WritingContext {
     };
 }
 
-export function getColumnCountPerScreen(wnd: ReadiumWindow): number {
+export function getColumnCountPerScreen(wnd: Window): number {
     return parseInt(
         wnd.getComputedStyle(
             wnd.document.documentElement

@@ -4,20 +4,21 @@ import packageJson from "./package.json";
 
 export default defineConfig({
   build: {
-    lib: {
-      entry: resolve(__dirname, "src/index.ts"),
-      name: "navigator-html-injectables",
-      fileName: "index"
+    rollupOptions: {
+      input: resolve(__dirname, "src/index.ts"),
+      external: [/^@readium\/shared(\/.*)?$/, "@readium/helpers"],
+      preserveEntrySignatures: "strict",
+      output: {
+        format: "es",
+        preserveModules: true,
+        preserveModulesRoot: resolve(__dirname, "src"),
+        dir: "dist",
+        entryFileNames: "[name].js",
+      }
     }
   },
   define: {
     "import.meta.env.PACKAGE_NAME": JSON.stringify(packageJson.name),
     "import.meta.env.PACKAGE_VERSION": JSON.stringify(packageJson.version),
-  },
-  resolve: {
-    alias: {
-      // Treat shared as internal source code when building standalone
-      "@readium/shared": resolve(__dirname, "../shared/src")
-    }
   }
 });
