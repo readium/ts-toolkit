@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.2] – 2026-07-16
+
+### Fixed
+
+- `Timeline.tocEntryFor()` (via `@readium/shared`) now falls back to the nearest preceding resource's toc entry when a resource has no toc entry of its own — the case where one toc entry spans several consecutive reading-order resources ([#242](https://github.com/readium/ts-toolkit/pull/242))
+
 ## [2.7.1] – 2026-07-16
 
 ### Fixed
