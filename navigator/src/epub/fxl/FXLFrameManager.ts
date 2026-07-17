@@ -327,15 +327,27 @@ export class FXLFrameManager {
     }
 
     set width(width: number) {
-        const newWidth = `${width}%`;
-        if(this.wrapper.style.width === newWidth) return;
-        this.wrapper.style.width = newWidth;
+        if(isTypedOMSupported()) {
+            const current = this.wrapper.attributeStyleMap.get("width");
+            if(current instanceof CSSUnitValue && current.unit === "percent" && current.value === width) return;
+            this.wrapper.attributeStyleMap.set("width", CSS.percent(width));
+        } else {
+            const newWidth = `${width}%`;
+            if(this.wrapper.style.width === newWidth) return;
+            this.wrapper.style.width = newWidth;
+        }
     }
 
     set height(height: number) {
-        const newHeight = `${height}px`;
-        if(this.wrapper.style.height === newHeight) return;
-        this.wrapper.style.height = newHeight;
+        if(isTypedOMSupported()) {
+            const current = this.wrapper.attributeStyleMap.get("height");
+            if(current instanceof CSSUnitValue && current.unit === "px" && current.value === height) return;
+            this.wrapper.attributeStyleMap.set("height", CSS.px(height));
+        } else {
+            const newHeight = `${height}px`;
+            if(this.wrapper.style.height === newHeight) return;
+            this.wrapper.style.height = newHeight;
+        }
     }
 
     get window() {

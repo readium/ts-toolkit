@@ -341,6 +341,12 @@ export class FXLPeripherals {
 
     private moveFrame = 0;
 
+    // Reused typed transform for the per-frame drag write: allocating fresh
+    // CSSTransformValue/CSSTranslate objects per write is slower than string
+    // parsing; mutating a persistent one is faster than both
+    private dragTranslate: CSSTranslate | null = null;
+    private dragTransform: CSSTransformValue | null = null;
+
     /**
      * touchmove event handler
      */
@@ -496,20 +502,23 @@ export class FXLPeripherals {
             const currentOffset = currentSlide * (this.manager.width / this.manager.perPage);
             const dragOffset = (this.pan.endX - this.pan.startX);
             const offset = this.manager.rtl ? currentOffset + dragOffset : currentOffset - dragOffset;
+            // Snap the translation to device pixels: at fractional offsets the
+            // spread gutter is rasterized with a hairline gap between the pages
+            const dpr = window.devicePixelRatio || 1;
+            const snapped = Math.round((this.manager.rtl ? 1 : -1) * offset * dpr) / dpr;
 
             cancelAnimationFrame(this.moveFrame);
             this.moveFrame = requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                     if(isTypedOMSupported()) {
-                        this.manager.spineElement.attributeStyleMap.set("transform", new CSSTransformValue([
-                            new CSSTranslate(
-                                CSS.px((this.manager.rtl ? 1 : -1) * offset), 
-                                CSS.px(0),
-                                CSS.px(0)
-                            )
-                        ]));
+                        if(!this.dragTransform) {
+                            this.dragTranslate = new CSSTranslate(CSS.px(0), CSS.px(0), CSS.px(0));
+                            this.dragTransform = new CSSTransformValue([this.dragTranslate]);
+                        }
+                        (this.dragTranslate!.x as CSSUnitValue).value = snapped;
+                        this.manager.spineElement.attributeStyleMap.set("transform", this.dragTransform);
                     } else {
-                        this.manager.spineElement.style.transform = `translate3d(${(this.manager.rtl ? 1 : -1) * offset}px, 0, 0)`;
+                        this.manager.spineElement.style.transform = `translate3d(${snapped}px, 0, 0)`;
                     }
                 })
             });

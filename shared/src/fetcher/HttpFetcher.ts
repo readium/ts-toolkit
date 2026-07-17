@@ -1,6 +1,6 @@
 import { Link } from '../publication/Link.ts';
 import { Fetcher } from './Fetcher.ts';
-import { NumberRange, Resource } from './Resource.ts';
+import { NumberRange, Resource, ResourceReadOptions } from './Resource.ts';
 
 export type FetchImplementation = (
   input: RequestInfo | URL,
@@ -72,9 +72,9 @@ export class HttpResource implements Resource {
     return this._link; // TODO mediatype alteration. Need http response mediatype sniffer stuff
   }
 
-  async read(range?: NumberRange): Promise<Uint8Array | undefined> {
+  async read(range?: NumberRange, options?: ResourceReadOptions): Promise<Uint8Array | undefined> {
     if (range) throw new Error('http read range not implemented!'); // TODO
-    const resp = await this.client(this.url);
+    const resp = await this.client(this.url, options?.signal ? { signal: options.signal } : undefined);
     if (!resp.ok)
       throw new Error(
         `http GET request for ${this.url} failed with HTTP status code ${resp.status}`

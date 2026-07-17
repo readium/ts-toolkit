@@ -65,6 +65,10 @@ export class FXLFramePoolManager {
         this.keyboardPeripheralsConfig = keyboardPeripheralsConfig || [];
         this.spreadPresentation = pub.metadata.otherMetadata?.spread || Spread.auto;
 
+        if(this.pub.metadata.effectiveReadingProgression !== ReadingProgression.rtl && this.pub.metadata.effectiveReadingProgression !== ReadingProgression.ltr)
+            // TODO support TTB and BTT
+            throw Error("Unsupported reading progression for fixed-layout EPUB");
+
         // NEW
         this.spreader = new FXLSpreader(this.pub);
         this.containerHeightCached = container.clientHeight;
@@ -212,6 +216,13 @@ export class FXLFramePoolManager {
         }
     }
 
+    // Reused typed transform for the per-event zoom/pan write: allocating
+    // fresh CSSTransformValue objects per write is slower than string
+    // parsing; mutating a persistent one is faster than both
+    private bookScale: CSSScale | null = null;
+    private bookTranslate: CSSTranslate | null = null;
+    private bookTransform: CSSTransformValue | null = null;
+
     public updateBookStyle(initial=false) {
         if(initial) {
             const bookStyle = {
@@ -230,15 +241,22 @@ export class FXLFramePoolManager {
             } as CSSStyleDeclaration;
             Object.assign(this.bookElement.style, bookStyle);
         }
+        const scale = this.peripherals?.scale || 1;
+        const translateX = this.peripherals?.pan.translateX || 0;
+        const translateY = this.peripherals?.pan.translateY || 0;
         if(isTypedOMSupported()) {
-            this.bookElement.attributeStyleMap.set("transform", new CSSTransformValue([
-                new CSSScale(this.peripherals?.scale || 1, this.peripherals?.scale || 1),
-                this.peripherals ? new CSSTranslate(
-                    CSS.px(this.peripherals.pan.translateX), CSS.px(this.peripherals.pan.translateY), CSS.px(0)
-                ) : new CSSTranslate(CSS.px(0), CSS.px(0), CSS.px(0))
-            ]));
+            if(!this.bookTransform) {
+                this.bookScale = new CSSScale(1, 1);
+                this.bookTranslate = new CSSTranslate(CSS.px(0), CSS.px(0), CSS.px(0));
+                this.bookTransform = new CSSTransformValue([this.bookScale, this.bookTranslate]);
+            }
+            (this.bookScale!.x as CSSUnitValue).value = scale;
+            (this.bookScale!.y as CSSUnitValue).value = scale;
+            (this.bookTranslate!.x as CSSUnitValue).value = translateX;
+            (this.bookTranslate!.y as CSSUnitValue).value = translateY;
+            this.bookElement.attributeStyleMap.set("transform", this.bookTransform);
         } else {
-            this.bookElement.style.transform = `scale(${this.peripherals?.scale || 1})` + (this.peripherals ? ` translate3d(${this.peripherals.pan.translateX}px, ${this.peripherals.pan.translateY}px, 0px)` : "");
+            this.bookElement.style.transform = `scale(${scale}) translate3d(${translateX}px, ${translateY}px, 0px)`;
         }
     }
 
@@ -303,21 +321,21 @@ export class FXLFramePoolManager {
      */
     slideToCurrent(enableTransition?: boolean, fast = true) {
         this.updateDimensions();
+        // Always commit: the spine transform may have been written directly
+        // by the peripherals during a drag (snap-back relies on this), and
+        // reading style.transform back as a string for comparison doesn't
+        // match under CSS Typed OM (its serialization differs).
         if (enableTransition) {
             // This one is tricky, I know but this is a perfect explanation:
             // https://youtu.be/cCOL7MC4Pl0
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    const newTransform = `translate3d(${this.offset}px, 0, 0)`;
-                    if(this.spineElement.style.transform === newTransform) return;
                     this.transform = this.offset;
                     this.updateSpineStyle(true, fast);
                     this.deselect();
                 });
             });
         } else {
-            const newTransform = `translate3d(${this.offset}px, 0, 0)`;
-            if(this.spineElement.style.transform === newTransform) return;
             this.transform = this.offset;
             this.updateSpineStyle(false);
             this.deselect();

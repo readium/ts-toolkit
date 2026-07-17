@@ -6,6 +6,7 @@ import { CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, FXLModules, 
 import { Decoration, DecorationActivationEvent, DecorationObserver, DecorableNavigator, DecoratorConfig, decorationsEqual, resolveDecorationForWire, BUILTIN_DECORATION_TYPES } from "../decorations/index.ts";
 import * as path from "path-browserify";
 import { FXLFrameManager } from "./fxl/FXLFrameManager.ts";
+import { isTypedOMSupported } from "./fxl/FXLPeripherals.ts";
 import { FrameManager } from "./frame/FrameManager.ts";
 import { IEpubPreferences, EpubPreferences } from "./preferences/EpubPreferences.ts";
 import { IEpubDefaults, EpubDefaults } from "./preferences/EpubDefaults.ts";
@@ -252,7 +253,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
         if (this._destroyed) return;
 
-        if(this._layout === Layout.fixed || this._layout === Layout.scrolled) {
+        if(this._layout === Layout.fixed) {
             this.framePool = new FXLFramePoolManager(
                 this.container,
                 this.positions,
@@ -396,7 +397,12 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         const parentEl = this.container.parentElement || document.documentElement;
 
         if (this._layout === Layout.fixed) {
-            this.container.style.width = `${ getContentWidth(parentEl) - this._settings.constraint }px`;
+            const width = getContentWidth(parentEl) - this._settings.constraint;
+            if (isTypedOMSupported()) {
+                this.container.attributeStyleMap.set("width", CSS.px(width));
+            } else {
+                this.container.style.width = `${ width }px`;
+            }
             if (!this.framePool) return;
             (this.framePool as FXLFramePoolManager).resizeHandler();
         } else {

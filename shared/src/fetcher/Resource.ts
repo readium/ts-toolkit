@@ -11,10 +11,15 @@ export class NumberRange {
   }
 }
 
+export interface ResourceReadOptions {
+  /** Aborts the underlying request, e.g. when a prefetched resource is no longer needed */
+  signal?: AbortSignal;
+}
+
 export abstract class Resource {
   abstract link(): Promise<Link>;
   abstract length(): Promise<number | undefined>; // TODO make try?
-  abstract read(range?: NumberRange): Promise<Uint8Array | undefined>;
+  abstract read(range?: NumberRange, options?: ResourceReadOptions): Promise<Uint8Array | undefined>;
   readAsString(): Promise<string | undefined> {
     return this.read().then(bytes => {
       if (bytes === undefined) return bytes;
