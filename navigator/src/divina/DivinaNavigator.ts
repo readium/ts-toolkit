@@ -211,9 +211,12 @@ export class DivinaNavigator extends VisualNavigator implements Configurable<Con
 
         // Build the page pool
         const fetchBlob = async (link: Link, signal?: AbortSignal): Promise<Blob> => {
-            const bytes = await this.pub.get(link).read(undefined, { signal });
+            const resource = this.pub.get(link);
+            const bytes = await resource.read(undefined, { signal });
             if(!bytes) throw new Error(`Empty resource: ${link.href}`);
-            return new Blob([bytes as BlobPart], { type: link.mediaType.string });
+            const served = await resource.link();
+            const mediaType = served.type !== undefined ? served.mediaType : link.mediaType;
+            return new Blob([bytes as BlobPart], { type: mediaType.string });
         };
         const getQuality = () => this._settings.quality;
         this.spreader.pages.forEach((page) => {
