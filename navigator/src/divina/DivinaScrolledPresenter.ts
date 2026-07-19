@@ -7,6 +7,12 @@ const LOWER_BOUNDARY = 5; // Load pages within this many items
 const SCROLL_STEP_FACTOR = 0.8; // goForward/goBackward scroll this fraction of the viewport
 const POSITION_DEBOUNCE = 150; // ms of scroll quiet before reporting the position
 const PROGRAMMATIC_SCROLL_TIMEOUT = 1200; // Fallback for browsers without scrollend
+// Owned scroll animation (native smooth scrolling restarts its easing curve on
+// every retarget, which crawls under key autorepeat and then sprints the
+// accumulated backlog on release)
+const SCROLL_CRUISE_SPEED = 8; // Top speed, in viewports per second (held page keys reach it, line steps stay demand-limited)
+const SCROLL_APPROACH_RATE = 20; // 1/s: fraction of the remaining distance per second (ease-out)
+const SCROLL_TARGET_MAX_LEAD = 1.5; // Chained targets may lead the position by at most this many viewports
 
 export type DivinaScrolledEventKey = "scroll" | "position" | "tap" | "click";
 export type DivinaScrolledListener = (key: DivinaScrolledEventKey, data: unknown) => void;
@@ -49,6 +55,11 @@ export class DivinaScrolledPresenter {
     private programmaticScroll = false;
     private programmaticTimer = 0;
     private scrollTarget: number | null = null;
+
+    // Owned smooth-scroll animation state
+    private animating = false;
+    private animRAF = 0;
+    private animLastTime = 0;
 
     public listener: DivinaScrolledListener = () => {};
 
@@ -99,6 +110,7 @@ export class DivinaScrolledPresenter {
 
     private readonly bscrollHandler = this.scrollHandler.bind(this);
     private readonly bscrollendHandler = this.scrollendHandler.bind(this);
+    private readonly banimStep = this.animStep.bind(this);
     private readonly buserTakeoverHandler = this.userTakeoverHandler.bind(this);
     private readonly bmousedownHandler = this.mousedownHandler.bind(this);
     private readonly bclickHandler = this.clickHandler.bind(this);
@@ -210,6 +222,10 @@ export class DivinaScrolledPresenter {
     }
 
     private scrollendHandler() {
+        // Instant scrollTop writes fire scrollend per write, so while the
+        // owned animation runs this event says nothing about settling —
+        // acting on it would kill the animation one frame in
+        if(this.animating) return;
         window.clearTimeout(this.programmaticTimer);
         this.programmaticScroll = false;
         this.scrollTarget = null;
@@ -229,6 +245,7 @@ export class DivinaScrolledPresenter {
         window.clearTimeout(this.programmaticTimer);
         this.programmaticScroll = false;
         this.scrollTarget = null;
+        this.stopAnimation();
     }
 
     private scrollHandler() {
@@ -333,28 +350,79 @@ export class DivinaScrolledPresenter {
     /**
      * Scroll forward/backward by a fraction of the viewport.
      * Repeated calls chain from the pending target, so rapid key presses
-     * extend one smooth animation instead of restarting it.
+     * (including autorepeat from a held key) extend one animation that keeps
+     * cruising instead of restarting; the target is clamped to stay within
+     * reach of the position so releasing the key stops promptly rather than
+     * replaying the queued distance.
      * @returns whether scrolling was possible
      */
-    next(animated = true): boolean {
+    next(animated = true, stepPx?: number): boolean {
         const max = this.scrollerElement.scrollHeight - this.scrollerElement.clientHeight;
         const base = this.scrollTarget ?? this.scrollerElement.scrollTop;
         if(base >= max - 1) return false;
-        this.scrollToTarget(Math.min(base + this.viewportHeightCached * SCROLL_STEP_FACTOR, max), animated);
+        let target = Math.min(base + (stepPx ?? this.viewportHeightCached * SCROLL_STEP_FACTOR), max);
+        if(animated) target = Math.min(target,
+            this.scrollerElement.scrollTop + this.viewportHeightCached * SCROLL_TARGET_MAX_LEAD);
+        this.scrollToTarget(target, animated);
         return true;
     }
 
-    prev(animated = true): boolean {
+    prev(animated = true, stepPx?: number): boolean {
         const base = this.scrollTarget ?? this.scrollerElement.scrollTop;
         if(base <= 1) return false;
-        this.scrollToTarget(Math.max(base - this.viewportHeightCached * SCROLL_STEP_FACTOR, 0), animated);
+        let target = Math.max(base - (stepPx ?? this.viewportHeightCached * SCROLL_STEP_FACTOR), 0);
+        if(animated) target = Math.max(target,
+            this.scrollerElement.scrollTop - this.viewportHeightCached * SCROLL_TARGET_MAX_LEAD);
+        this.scrollToTarget(target, animated);
         return true;
     }
 
     private scrollToTarget(target: number, animated: boolean) {
         this.beginProgrammaticScroll();
         this.scrollTarget = target;
-        this.scrollerElement.scrollTo({ top: target, behavior: animated ? "smooth" : "auto" });
+        if(!animated) {
+            this.stopAnimation();
+            this.scrollerElement.scrollTo({ top: target, behavior: "auto" });
+            return;
+        }
+        // A running animation just picks up the new target on its next frame
+        if(!this.animating) {
+            this.animating = true;
+            this.animLastTime = performance.now();
+            this.animRAF = requestAnimationFrame(this.banimStep);
+        }
+    }
+
+    /**
+     * One frame of the owned scroll animation: exponential approach toward
+     * the (re)targetable scrollTarget, capped at a cruise speed. Under a held
+     * key the cap dominates and the scroll advances at constant speed; once
+     * input stops the exponential term eases it out into the target.
+     */
+    private animStep(now: number) {
+        if(this.destroyed) return;
+        const target = this.scrollTarget;
+        if(target === null) { this.stopAnimation(); return; } // User took over
+        const dt = Math.min(Math.max(now - this.animLastTime, 0) / 1000, 0.1);
+        this.animLastTime = now;
+
+        const el = this.scrollerElement;
+        const delta = target - el.scrollTop;
+        if(Math.abs(delta) <= 1) {
+            el.scrollTop = target;
+            this.stopAnimation();
+            return;
+        }
+        const maxStep = this.viewportHeightCached * SCROLL_CRUISE_SPEED * dt;
+        let step = delta * Math.min(1, SCROLL_APPROACH_RATE * dt);
+        if(Math.abs(step) > maxStep) step = Math.sign(delta) * maxStep;
+        el.scrollTop += step;
+        this.animRAF = requestAnimationFrame(this.banimStep);
+    }
+
+    private stopAnimation() {
+        this.animating = false;
+        cancelAnimationFrame(this.animRAF);
     }
 
     /**
@@ -431,6 +499,7 @@ export class DivinaScrolledPresenter {
         this.destroyed = true;
         cancelAnimationFrame(this.scrollRAF);
         cancelAnimationFrame(this.restoreRAF);
+        cancelAnimationFrame(this.animRAF);
         window.clearTimeout(this.positionTimer);
         window.clearTimeout(this.programmaticTimer);
         this.scrollerElement.removeEventListener("scroll", this.bscrollHandler);

@@ -9,7 +9,7 @@ export enum DivinaQuality {
     auto = "auto", // Match the display resolution
     low = "low", // Smallest available variant
     high = "high", // One step above the display resolution
-    original = "original", // Largest available variant
+    max = "max", // Largest available variant
 }
 
 // Display caps for mobile devices: beyond this, decode lag, memory pressure
@@ -61,7 +61,7 @@ export function selectVariant(item: Link, opts: VariantSelectionOptions): Link {
     switch (opts.quality) {
         case DivinaQuality.low:
             return sorted[0];
-        case DivinaQuality.original:
+        case DivinaQuality.max:
             return capped(sorted[sorted.length - 1]);
         default: {
             const target = Math.min(opts.axis === "width" ? opts.targetWidth : opts.targetHeight, cap);

@@ -449,10 +449,28 @@ export class DivinaNavigator extends VisualNavigator implements Configurable<Con
         return locator;
     }
 
+    /**
+     * The reading order index for a href, tolerating representation
+     * mismatches: a TOC can use absolute URLs while the reading order is
+     * relative (or vice versa), and it can reference a page through one of
+     * its alternate variants rather than the main href. Both sides are
+     * resolved against the publication base, and each page matches on its
+     * own href or any of its alternates.
+     */
+    private findReadingOrderIndex(href: string): number {
+        const direct = this.pub.readingOrder.findIndexWithHref(href);
+        if(direct >= 0) return direct;
+        const base = this.pub.baseURL;
+        const target = new Link({ href }).toURL(base) ?? href;
+        const matches = (l: Link): boolean => (l.toURL(base) ?? l.href) === target;
+        return this.pub.readingOrder.items.findIndex(item =>
+            matches(item) || !!item.alternates?.items.some(matches));
+    }
+
     public go(locator: Locator, animated: boolean, cb: (ok: boolean) => void): void {
         locator = this.completeLocator(locator);
         const href = locator.href?.split("#")[0];
-        const index = href ? this.pub.readingOrder.findIndexWithHref(href) : -1;
+        const index = href ? this.findReadingOrderIndex(href) : -1;
         if(index < 0) {
             return cb(this.listeners.handleLocator(locator));
         }
@@ -495,6 +513,21 @@ export class DivinaNavigator extends VisualNavigator implements Configurable<Con
             return;
         }
         cb(this.changeSpread(-1));
+    }
+
+    /**
+     * Scrolled mode: scroll by a fixed pixel amount (e.g. a line step for
+     * arrow keys) instead of the viewport-sized go* step. Falls back to a
+     * spread turn in paged mode.
+     */
+    public scrollBy(px: number, animated: boolean, cb: (ok: boolean) => void): void {
+        if(this.scrolledPresenter) {
+            cb(px >= 0
+                ? this.scrolledPresenter.next(animated, px)
+                : this.scrolledPresenter.prev(animated, -px));
+            return;
+        }
+        cb(this.changeSpread(px >= 0 ? 1 : -1));
     }
 
     // === Zoom (paged mode only) ===

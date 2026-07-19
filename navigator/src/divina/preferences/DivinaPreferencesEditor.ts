@@ -48,7 +48,7 @@ export class DivinaPreferencesEditor implements IPreferencesEditor {
       onChange: (newValue) => {
         this.updatePreference("quality", newValue ?? null);
       },
-      supportedValues: [DivinaQuality.auto, DivinaQuality.low, DivinaQuality.high, DivinaQuality.original]
+      supportedValues: [DivinaQuality.auto, DivinaQuality.low, DivinaQuality.high, DivinaQuality.max]
     });
   }
 
