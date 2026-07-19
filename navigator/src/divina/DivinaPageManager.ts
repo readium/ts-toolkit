@@ -24,7 +24,7 @@ export function placeholderSVG(width: number, height: number, message: string, d
         `<rect width="100%" height="100%" fill="rgba(128,128,128,0.08)"/>` +
         `<text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" ` +
         `font-family="sans-serif" font-weight="bold" font-size="${fontSize}" fill="#999">${message}</text>` +
-        (detail ? `<text x="50%" y="97%" text-anchor="middle" font-family="sans-serif" font-size="${Math.round(fontSize / 3)}" fill="#aaa">${detail}</text>` : "") +
+        (detail ? `<text x="50%" y="97%" text-anchor="middle" font-family="sans-serif" font-size="${Math.round(fontSize / 3)}" fill="#aaa">${detail.length > 40 ? "…" + detail.slice(detail.length - 40) : detail}</text>` : "") +
         `</svg>`;
     const uri = `data:image/svg+xml,${encodeURIComponent(svg)}`;
     placeholderCache.set(key, uri);
@@ -82,7 +82,7 @@ export class DivinaPageManager {
         // @ts-expect-error webkitUserDrag is non-standard but needed for Safari
         this.img.style.webkitUserDrag = "none";
 
-        this.placeholder = placeholderSVG(this.intrinsicWidth, this.intrinsicHeight, "···");
+        this.placeholder = placeholderSVG(this.intrinsicWidth, this.intrinsicHeight, "···", this.page.link.title ? this.page.link.title : `Page ${this.page.number}`);
         this.img.src = this.placeholder;
         this.wrapper.appendChild(this.img);
     }
@@ -287,7 +287,7 @@ export class DivinaPageManager {
             } catch (error) {
                 if(!this.destroyed && gen === this.generation) {
                     console.warn("Divina page load failed", this.page.link.href, error);
-                    this.img.src = placeholderSVG(this.intrinsicWidth, this.intrinsicHeight, "!", `${this.page.link.href.split("/").pop()}`);
+                    this.img.src = placeholderSVG(this.intrinsicWidth, this.intrinsicHeight, "!", this.page.link.title ? this.page.link.title : `Page ${this.page.number}`);
                 }
             } finally {
                 if(gen === this.generation) this.loadPromise = null;
