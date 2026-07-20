@@ -32,6 +32,6 @@ export class DivinaDefaults {
     this.quality = ensureEnumValue<DivinaQuality>(defaults.quality, DivinaQuality) || DivinaQuality.auto;
     this.scrolled = ensureBoolean(defaults.scrolled) ?? null;
     this.spreads = ensureBoolean(defaults.spreads) ?? true;
-    this.stripWidth = ensureValueInRange(defaults.stripWidth, stripWidthRangeConfig.range) || 1000;
+    this.stripWidth = ensureValueInRange(defaults.stripWidth, stripWidthRangeConfig.range) || 720;
   }
 }
