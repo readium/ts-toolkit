@@ -122,18 +122,13 @@ export class FramePoolManager {
             }
             this.currentBaseURL = pub.baseURL;
 
+            if(force) {
+                this.blobs.forEach(v => v.reset());
+                this.blobs.clear();
+                this.pendingUpdates.clear();
+            }
+
             const creator = async (href: string) => {
-                if(force) {
-                    // Revoke all blobs so that CSSProperties are not stale
-                    // When using force, we switch scroll/paginated
-                    // If this property is not up to date, it creates issues
-                    // when navigating backwards, where paginated will go the
-                    // start of the resource instead of the end due to the
-                    // corrupted width ColumnSnapper (injectables) gets on init
-                    this.blobs.forEach(v => v.reset());
-                    this.blobs.clear();
-                    this.pendingUpdates.clear();
-                }
                 if(this.pendingUpdates.has(href) && this.pendingUpdates.get(href)?.inPool === false) {
                     const v = this.blobs.get(href);
                     if(v) {
@@ -189,8 +184,7 @@ export class FramePoolManager {
                 return;
             }
 
-            // Remaining frames can resolve later
-            Promise.all(creation.map(async href => {
+            Promise.all(creation.filter(href => href !== newHref).map(async href => {
                 const c = creator(href);
                 this.inprogress.set(href, c);
                 await c;
