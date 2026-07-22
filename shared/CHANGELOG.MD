@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.2] – 2026-07-22
+
+### Fixed
+
+- `Timeline` no longer matches hrefless toc entries (e.g. `<span>` grouping headings, which carry no `href`) against every resource; they are now correctly excluded as candidates ([#243](https://github.com/readium/ts-toolkit/pull/243))
+
 ## [2.3.1] – 2026-07-16
 
 ### Fixed

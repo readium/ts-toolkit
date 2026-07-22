@@ -38,7 +38,12 @@ export class ScrollSnapper extends Snapper {
     }
 
     protected hasScrolledPast(el: Element): boolean {
-        return el.getBoundingClientRect().bottom <= 0;
+        // go_id/go_text center the target in the viewport, not scroll it to the top —
+        // so "reached" has to mean "crossed the viewport's vertical center", the same
+        // line navigation scrolls to, not the top/bottom edge. The tolerance matches
+        // setupTimelineObserver's rootMargin so both agree even with scrollTop rounding.
+        const center = this.wnd.innerHeight / 2;
+        return el.getBoundingClientRect().top <= center + this.wnd.innerHeight * Snapper.CENTER_TOLERANCE;
     }
 
     private reportProgress(forcedFragmentId?: string) {

@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.3] – 2026-07-22
+
+### Fixed
+
+- Timeline matching no longer matches hrefless toc entries (e.g. `<span>` grouping headings) against every resource (via `@readium/shared`) ([#243](https://github.com/readium/ts-toolkit/pull/243))
+- Snappers now align id monitoring with the actual centering behaviour of `goId`/`goText` (via `@readium/navigator-html-injectables`), so `timeline` stays in sync when navigating to an id ([#243](https://github.com/readium/ts-toolkit/pull/243))
+
 ## [2.7.2] – 2026-07-16
 
 ### Fixed
