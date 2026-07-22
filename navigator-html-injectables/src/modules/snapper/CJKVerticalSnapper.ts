@@ -69,10 +69,16 @@ export class CJKVerticalSnapper extends Snapper {
     }
 
     protected hasScrolledPast(el: Element): boolean {
+        // go_id/go_text center the target in the viewport, not scroll it to the edge —
+        // so "reached" has to mean "crossed the viewport's horizontal center", the same
+        // line navigation scrolls to, not the leading edge. The tolerance matches
+        // setupTimelineObserver's rootMargin so both agree even with scrollLeft rounding.
         const rect = el.getBoundingClientRect();
-        // vertical-rl: content flows right→left; leading edge is right, scrolled past when off-screen right.
-        // vertical-lr: content flows left→right; leading edge is left, scrolled past when off-screen left.
-        return this.verticalLR ? rect.right <= 0 : rect.left >= this.wnd.innerWidth;
+        const center = this.wnd.innerWidth / 2;
+        const tolerance = this.wnd.innerWidth * Snapper.CENTER_TOLERANCE;
+        // vertical-rl: content flows right→left; leading edge is right, scrolled past when past center.
+        // vertical-lr: content flows left→right; leading edge is left, scrolled past when past center.
+        return this.verticalLR ? rect.right <= center + tolerance : rect.left >= center - tolerance;
     }
 
     private reportProgress(forcedFragmentId?: string) {
@@ -158,7 +164,7 @@ export class CJKVerticalSnapper extends Snapper {
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
-        this.setupTimelineObserver();
+        this.setupTimelineObserver("horizontal");
 
         this.initialScrollHandled = false;
         this.lastScrollLeft = 0;

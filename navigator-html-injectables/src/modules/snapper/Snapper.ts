@@ -8,6 +8,11 @@ const SNAPPER_STYLE_ID = "readium-snapper-style";
 export abstract class Snapper extends Module {
     static readonly moduleName: ModuleName = "snapper";
 
+    // Shared by the observer's rootMargin and every hasScrolledPast implementation so both
+    // stay pinned to the exact same boundary. Sized to comfortably exceed realistic
+    // scrollTop-rounding error (~1px) while still reading as "the center", not a wide band.
+    protected static readonly CENTER_TOLERANCE = 0.01;
+
     private protected = false;
 
     // Timeline fragment tracking
@@ -45,8 +50,17 @@ export abstract class Snapper extends Module {
             rect.top <= root.bottom && rect.bottom >= root.top;
     }
 
-    protected setupTimelineObserver(): void {
+    /**
+     * Collapses the observer's root to a thin band around the same center line
+     * `hasScrolledPast` tests against (go_id/go_text navigate by centering the target, not by
+     * aligning it to an edge), so "intersecting" and "scrolled past" can't disagree about
+     * where "current" is. A literal zero-height root would make every intersection area zero
+     * — isIntersecting would never fire — so CENTER_TOLERANCE leaves it a real, if thin, band.
+     * Percentage-based margins track viewport resizes automatically, no re-setup needed.
+     */
+    protected setupTimelineObserver(axis: "vertical" | "horizontal" = "vertical"): void {
         if (this.timelineObserver) this.timelineObserver.disconnect();
+        const inset = `-${50 - Snapper.CENTER_TOLERANCE * 100}%`;
         this.timelineObserver = new IntersectionObserver(
             (entries) => {
                 for (const entry of entries) {
@@ -56,7 +70,10 @@ export abstract class Snapper extends Module {
                         this.visibleFragmentIds.delete((entry.target as HTMLElement).id);
                 }
             },
-            { threshold: [0.01] }
+            {
+                threshold: [0.01],
+                rootMargin: axis === "vertical" ? `${inset} 0px ${inset} 0px` : `0px ${inset} 0px ${inset}`
+            }
         );
     }
 
