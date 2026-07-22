@@ -339,8 +339,11 @@ export class Timeline {
         for (const link of tocLinks) {
             const linkBare = Timeline.bareHref(link.href);
             // Fragment-only hrefs (e.g. "#t=60" in single-track audio) have no bare href,
-            // so they are associated with the current resource.
-            const matchesBare = linkBare === bare || linkBare === '';
+            // so they are associated with the current resource. A hrefless link (e.g. a
+            // <span> grouping heading) also bareHrefs to '', but names no resource at all
+            // and must not match every resource.
+            const isFragmentOnly = link.href.startsWith('#');
+            const matchesBare = linkBare === bare || (isFragmentOnly && linkBare === '');
             if (matchesBare && link.title && !Timeline.isStartOfResource(link.href)) {
                 // Prepend the resource href when the link uses a fragment-only reference.
                 const ref = linkBare === '' ? bare + link.href : link.href;
@@ -382,7 +385,8 @@ export class Timeline {
 
         for (const link of tocLinks) {
             const linkBare = Timeline.bareHref(link.href);
-            if ((linkBare === bare || linkBare === '') && link.title) {
+            const isFragmentOnly = link.href.startsWith('#');
+            if ((linkBare === bare || (isFragmentOnly && linkBare === '')) && link.title) {
                 if (Timeline.isStartOfResource(link.href)) {
                     atStart.push(link);
                 } else {

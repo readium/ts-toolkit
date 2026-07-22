@@ -146,6 +146,42 @@ describe('Timeline – title resolution', () => {
     );
     expect(clean(t.items)[0]).toMatchObject({ title: 'Introduction' });
   });
+
+  it('2.7 a hrefless grouping heading (e.g. a <span>) does not become the title of every resource', () => {
+    const t = build(
+      ro(
+        { href: 'bib.xhtml' },
+        { href: 'intro.xhtml' },
+        { href: 'isaacs.xhtml' },
+        { href: 'andersen.xhtml' },
+      ),
+      toc(
+        { href: 'bib.xhtml', title: 'Bibliography' },
+        { href: 'intro.xhtml', title: 'Introductory' },
+        {
+          href: '',
+          title: 'Abram S. Isaacs',
+          children: [
+            { href: 'isaacs.xhtml', title: 'The Story' },
+          ],
+        },
+        {
+          href: '',
+          title: 'Hans Christian Andersen',
+          children: [
+            { href: 'andersen.xhtml#story1', title: 'The Real Princess' },
+            { href: 'andersen.xhtml#story2', title: "The Emperor's New Clothes" },
+          ],
+        },
+      ),
+    );
+    expect(clean(t.items)).toMatchObject([
+      { title: 'Bibliography', references: ['bib.xhtml'] },
+      { title: 'Introductory', references: ['intro.xhtml'] },
+      { title: 'The Story', references: ['isaacs.xhtml'] },
+      { title: undefined, references: ['andersen.xhtml'] },
+    ]);
+  });
 });
 
 // ---------------------------------------------------------------------------
