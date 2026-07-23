@@ -13,8 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `EpubNavigator`/`WebPubNavigator` now bind `timeline.navigableFrom()` so that when the current fragment is at its own resource's start, navigation steps from the resource's top-level item instead of resolving back to the same item ([#244](https://github.com/readium/ts-toolkit/pull/244))
-- Snappers (via `@readium/navigator-html-injectables`) now align their rect-based fallback with `IntersectionObserver`'s center-band check, keeping `timeline` in sync when the observer hasn't reported yet ([#244](https://github.com/readium/ts-toolkit/pull/244))
+- `EpubNavigator`/`WebPubNavigator` now bind `timeline.navigableFrom()` so that `previous`/`next` skip every fragment currently visible on screen — not just the single resolved current item — anchoring on the ends of that visible run and, at a resource's actual scroll start, on the outermost ancestor still within that resource ([#244](https://github.com/readium/ts-toolkit/pull/244))
 
 ## [2.7.3] – 2026-07-22
 

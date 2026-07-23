@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.6.3] – 2026-07-23
 
-### Fixed
+### Changed
 
-- Snappers' rect-based fallback now also checks whether a fragment currently overlaps the center band, matching `IntersectionObserver`'s `intersectionRatio`, before falling back to "last fragment scrolled past" — keeping the two current-fragment resolution paths in sync ([#244](https://github.com/readium/ts-toolkit/pull/244))
+- Scroll-based tracking of the reader's position no longer relies on `IntersectionObserver` at all — current position and everything currently visible are now computed directly from live scroll position instead. As a result, every part of a resource currently on screen can now be reported, not just a single current spot ([#244](https://github.com/readium/ts-toolkit/pull/244))
 
 ## [2.6.2] – 2026-07-22
 
