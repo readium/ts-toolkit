@@ -40,8 +40,7 @@ export class ScrollSnapper extends Snapper {
     protected hasScrolledPast(el: Element): boolean {
         // go_id/go_text center the target in the viewport, not scroll it to the top —
         // so "reached" has to mean "crossed the viewport's vertical center", the same
-        // line navigation scrolls to, not the top/bottom edge. The tolerance matches
-        // setupTimelineObserver's rootMargin so both agree even with scrollTop rounding.
+        // line navigation scrolls to, not the top/bottom edge.
         const center = this.wnd.innerHeight / 2;
         return el.getBoundingClientRect().top <= center + this.wnd.innerHeight * Snapper.CENTER_TOLERANCE;
     }
@@ -58,12 +57,20 @@ export class ScrollSnapper extends Snapper {
         const bandTop = center - tolerance;
         const bandBottom = center + tolerance;
         if (rect.height === 0) {
-            // Zero-area landmark: ratio is undefined (0/0) by spec, same case
-            // `isVisibleEntry` handles for the observer path — fall back to a point check.
+            // Zero-area landmark: ratio is undefined (0/0) by spec — fall back to a point check.
             return rect.top <= bandBottom && rect.top >= bandTop;
         }
         const overlap = Math.max(0, Math.min(rect.bottom, bandBottom) - Math.max(rect.top, bandTop));
         return overlap / rect.height >= Snapper.CENTER_TOLERANCE;
+    }
+
+    /** Document-absolute (scrollTop-independent) leading-edge position. */
+    protected fragmentStart(el: Element): number {
+        return el.getBoundingClientRect().top + this.doc().scrollTop;
+    }
+
+    protected currentScrollExtent(): { pos: number; size: number } {
+        return { pos: this.doc().scrollTop, size: this.wnd.innerHeight };
     }
 
     private reportProgress(forcedFragmentId?: string) {
@@ -80,7 +87,8 @@ export class ScrollSnapper extends Snapper {
         this.comms.send("progress", {
             start: progress,
             end: viewportEnd,
-            fragmentId: forcedFragmentId !== undefined ? forcedFragmentId : this.currentTimelineFragment()
+            fragmentId: forcedFragmentId !== undefined ? forcedFragmentId : this.currentTimelineFragment(),
+            visibleFragmentIds: this.sortedVisibleFragmentIds()
         });
     }
 
@@ -154,7 +162,6 @@ export class ScrollSnapper extends Snapper {
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
-        this.setupTimelineObserver();
 
         this.initialScrollHandled = false;
         this.lastScrollTop = 0;
@@ -193,6 +200,7 @@ export class ScrollSnapper extends Snapper {
             this.resizeDebounce = this.wnd.setTimeout(() => {
                 this.isResizing = false;
                 this.resizeDebounce = null;
+                this.refreshFragmentStarts();
                 this.reportProgress();
             }, 50);
         });
@@ -342,9 +350,6 @@ export class ScrollSnapper extends Snapper {
         this.resizeObserver.disconnect();
         if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
         wnd.document.getElementById(SCROLL_SNAPPER_STYLE_ID)?.remove();
-        this.timelineObserver?.disconnect();
-        this.timelineObserver = null;
-        this.visibleFragmentIds.clear();
         this.timelineEntries.clear();
 
         if (this.patternAnalyzer) {

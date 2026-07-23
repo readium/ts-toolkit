@@ -71,8 +71,7 @@ export class CJKVerticalSnapper extends Snapper {
     protected hasScrolledPast(el: Element): boolean {
         // go_id/go_text center the target in the viewport, not scroll it to the edge —
         // so "reached" has to mean "crossed the viewport's horizontal center", the same
-        // line navigation scrolls to, not the leading edge. The tolerance matches
-        // setupTimelineObserver's rootMargin so both agree even with scrollLeft rounding.
+        // line navigation scrolls to, not the leading edge.
         const rect = el.getBoundingClientRect();
         const center = this.wnd.innerWidth / 2;
         const tolerance = this.wnd.innerWidth * Snapper.CENTER_TOLERANCE;
@@ -95,12 +94,24 @@ export class CJKVerticalSnapper extends Snapper {
         const bandLeft = center - tolerance;
         const bandRight = center + tolerance;
         if (rect.width === 0) {
-            // Zero-area landmark: ratio is undefined (0/0) by spec, same case
-            // `isVisibleEntry` handles for the observer path — fall back to a point check.
+            // Zero-area landmark: ratio is undefined (0/0) by spec — fall back to a point check.
             return rect.left <= bandRight && rect.left >= bandLeft;
         }
         const overlap = Math.max(0, Math.min(rect.right, bandRight) - Math.max(rect.left, bandLeft));
         return overlap / rect.width >= Snapper.CENTER_TOLERANCE;
+    }
+
+    /**
+     * Document-absolute (scrollLeft-independent) leading-edge position. Uses the same
+     * `Math.abs(scrollLeft)` normalization as `reportProgress` so this stays in the same
+     * coordinate space as the live scroll position regardless of vertical-lr/rl sign.
+     */
+    protected fragmentStart(el: Element): number {
+        return el.getBoundingClientRect().left + Math.abs(this.doc().scrollLeft);
+    }
+
+    protected currentScrollExtent(): { pos: number; size: number } {
+        return { pos: Math.abs(this.doc().scrollLeft), size: this.wnd.innerWidth };
     }
 
     private reportProgress(forcedFragmentId?: string) {
@@ -118,7 +129,8 @@ export class CJKVerticalSnapper extends Snapper {
         this.comms.send("progress", {
             start: progress,
             end: viewportEnd,
-            fragmentId: forcedFragmentId !== undefined ? forcedFragmentId : this.currentTimelineFragment()
+            fragmentId: forcedFragmentId !== undefined ? forcedFragmentId : this.currentTimelineFragment(),
+            visibleFragmentIds: this.sortedVisibleFragmentIds()
         });
     }
 
@@ -186,7 +198,6 @@ export class CJKVerticalSnapper extends Snapper {
     mount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.wnd = wnd;
         this.comms = comms;
-        this.setupTimelineObserver("horizontal");
 
         this.initialScrollHandled = false;
         this.lastScrollLeft = 0;
@@ -225,6 +236,7 @@ export class CJKVerticalSnapper extends Snapper {
             this.resizeDebounce = this.wnd.setTimeout(() => {
                 this.isResizing = false;
                 this.resizeDebounce = null;
+                this.refreshFragmentStarts();
                 this.reportProgress();
             }, 50);
         });
@@ -377,9 +389,6 @@ export class CJKVerticalSnapper extends Snapper {
             this.isScrollProtectionEnabled = false;
         }
 
-        this.timelineObserver?.disconnect();
-        this.timelineObserver = null;
-        this.visibleFragmentIds.clear();
         this.timelineEntries.clear();
 
         comms.log("CJKVerticalSnapper Unmounted");

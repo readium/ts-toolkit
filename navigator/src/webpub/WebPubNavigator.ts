@@ -62,6 +62,10 @@ const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorL
     peripheral: listeners.peripheral || (() => {})
 })
 
+function sameTimelineItems(a: TimelineItem[], b: TimelineItem[]): boolean {
+    return a.length === b.length && a.every((item, i) => item === b[i]);
+}
+
 export class WebPubNavigator extends VisualNavigator implements Configurable<WebPubSettings, WebPubPreferences>, DecorableNavigator {
     private readonly pub: Publication;
     private readonly container: HTMLElement;
@@ -70,6 +74,8 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private currentIndex: number = 0;
     private currentLocation: Locator;
     private _currentTimelineItem: TimelineItem | undefined;
+    private _visibleTimelineItems: TimelineItem[] = [];
+    private _notifiedVisibleTimelineItems: TimelineItem[] = [];
     private _timelineAdjacentToWrapped = false;
 
     private _preferences: WebPubPreferences;
@@ -673,6 +679,9 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         const locatorForTimeline = progression.fragmentId
             ? this.currentLocation.copyWithLocations({ fragments: [`#${progression.fragmentId}`] })
             : this.currentLocation;
+        this._visibleTimelineItems = (progression.visibleFragmentIds ?? [])
+            .map(id => this.pub.timeline.locate(this.currentLocation.copyWithLocations({ fragments: [`#${id}`] })))
+            .filter((item): item is TimelineItem => item !== undefined);
         this._notifyTimelineChange(locatorForTimeline);
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
     }
@@ -736,19 +745,25 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     get timeline(): Timeline {
         const t = this.pub.timeline;
         if (!this._timelineAdjacentToWrapped) {
-            // navigableFrom() can't tell whether we're already at the resource's own start —
-            // that's live scroll state, not TOC structure — so step from the resource's
-            // top-level item instead of `item` when we are, to skip past it rather than
-            // land back where we already are.
+            // Fragments on screen are always contiguous in the flattened timeline, so anchor
+            // previous/next on the two ends of the visible run instead of on `item` itself.
             const originalNavigableFrom = t.navigableFrom.bind(t);
             t.navigableFrom = (item: TimelineItem) => {
-                const href = item.references[0]?.split("#")[0];
-                const atResourceStart = href !== undefined &&
-                    this.viewport.progressions.get(href)?.start === 0;
-                const stepFrom = atResourceStart
-                    ? t.items.find(i => i.references[0]?.split("#")[0] === href) ?? item
-                    : item;
-                return originalNavigableFrom(stepFrom);
+                const visible = this._visibleTimelineItems.length ? this._visibleTimelineItems : [item];
+                let first = visible[0];
+                // The current resource's own bare-href container(s) have no DOM anchor, so
+                // they never appear in _visibleTimelineItems. Only when scrollTop is actually
+                // 0 (untracked content can precede the first fragment, and scrolling past it
+                // must leave "back to resource start" reachable) walk out to the outermost
+                // ancestor still within this resource, so previous is anchored past all of
+                // them at once rather than one guessed step back.
+                if (this.isScrollStart) {
+                    const outermost = t.ancestors(first).find(a => a.references.includes(this.currentLocation.href));
+                    if (outermost) first = outermost;
+                }
+                const previous = originalNavigableFrom(first).previous;
+                const next = originalNavigableFrom(visible[visible.length - 1]).next;
+                return { previous, next };
             };
             this._timelineAdjacentToWrapped = true;
         }
@@ -873,8 +888,10 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
     private _notifyTimelineChange(locator: Locator): void {
         const item = this.timeline.locate(locator);
-        if (item !== this._currentTimelineItem) {
+        const visibleChanged = !sameTimelineItems(this._visibleTimelineItems, this._notifiedVisibleTimelineItems);
+        if (item !== this._currentTimelineItem || visibleChanged) {
             this._currentTimelineItem = item;
+            this._notifiedVisibleTimelineItems = this._visibleTimelineItems;
             this.listeners.timelineItemChanged(item);
         }
     }

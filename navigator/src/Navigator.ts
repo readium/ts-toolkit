@@ -25,6 +25,7 @@ export interface ProgressionRange {
     start: number;
     end: number;
     fragmentId?: string;  // DOM element ID of the currently active timeline anchor
+    visibleFragmentIds?: string[];  // DOM-order IDs of every timeline anchor currently on screen
 }
 
 export interface VisualNavigatorViewport {

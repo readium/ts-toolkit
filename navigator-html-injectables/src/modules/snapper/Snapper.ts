@@ -8,21 +8,24 @@ const SNAPPER_STYLE_ID = "readium-snapper-style";
 export abstract class Snapper extends Module {
     static readonly moduleName: ModuleName = "snapper";
 
-    // Shared by the observer's rootMargin and every hasScrolledPast implementation so both
-    // stay pinned to the exact same boundary. Sized to comfortably exceed realistic
-    // scrollTop-rounding error (~1px) while still reading as "the center", not a wide band.
+    // Shared by every hasScrolledPast/inCenterBand implementation so they stay pinned to the
+    // exact same boundary. Sized to comfortably exceed realistic scrollTop-rounding error
+    // (~1px) while still reading as "the center", not a wide band.
     protected static readonly CENTER_TOLERANCE = 0.01;
 
     private protected = false;
 
     // Timeline fragment tracking
-    protected timelineObserver: IntersectionObserver | null = null;
     protected timelineEntries: Map<string, Element> = new Map();
-    protected visibleFragmentIds: Set<string> = new Set();
     protected cachedFragmentIds: string[] = [];
     // DOM-order-sorted fragment ids, recomputed only when entries are (re)populated —
     // sorting on every progress report (i.e. every scroll frame) is wasted work.
     protected sortedFragmentIds: string[] = [];
+    // Document-absolute leading-edge position per fragment, refreshed on (re)population and
+    // resize only, never per scroll frame. A single point, not a start/end range: some TOC
+    // ids sit on wrapping elements that contain everything after them (a whole chapter's
+    // <section>), so an element's own height isn't a trustworthy measure of where it ends.
+    protected cachedFragmentStarts: Map<string, number> = new Map();
 
     private static inDomOrder(entries: Map<string, Element>, a: string, b: string): number {
         const ea = entries.get(a);
@@ -33,76 +36,55 @@ export abstract class Snapper extends Module {
     }
 
     /**
-     * A zero-area target (e.g. an empty `<a id="…">` landmark) always has
-     * intersectionRatio 0 by spec, so `isIntersecting` can never become true for it —
-     * no threshold value changes that. For those entries, fall back to a geometric
-     * containment check against `rootBounds` instead of trusting `isIntersecting`.
-     */
-    private static isVisibleEntry(entry: IntersectionObserverEntry): boolean {
-        const rect = entry.boundingClientRect;
-        // Element has real width and height: isIntersecting is spec-correct, trust it as-is.
-        if (rect.width > 0 && rect.height > 0) return entry.isIntersecting;
-        // Zero-width or zero-height element: isIntersecting is stuck at false (ratio is
-        // area / 0, defined as 0), so it can't be trusted. Do our own overlap check instead.
-        const root = entry.rootBounds;
-        if (!root) return entry.isIntersecting;
-        return rect.left <= root.right && rect.right >= root.left &&
-            rect.top <= root.bottom && rect.bottom >= root.top;
-    }
-
-    /**
-     * Collapses the observer's root to a thin band around the same center line
-     * `hasScrolledPast` tests against (go_id/go_text navigate by centering the target, not by
-     * aligning it to an edge), so "intersecting" and "scrolled past" can't disagree about
-     * where "current" is. A literal zero-height root would make every intersection area zero
-     * — isIntersecting would never fire — so CENTER_TOLERANCE leaves it a real, if thin, band.
-     * Percentage-based margins track viewport resizes automatically, no re-setup needed.
-     */
-    protected setupTimelineObserver(axis: "vertical" | "horizontal" = "vertical"): void {
-        if (this.timelineObserver) this.timelineObserver.disconnect();
-        const inset = `-${50 - Snapper.CENTER_TOLERANCE * 100}%`;
-        this.timelineObserver = new IntersectionObserver(
-            (entries) => {
-                for (const entry of entries) {
-                    if (Snapper.isVisibleEntry(entry))
-                        this.visibleFragmentIds.add((entry.target as HTMLElement).id);
-                    else
-                        this.visibleFragmentIds.delete((entry.target as HTMLElement).id);
-                }
-            },
-            {
-                threshold: [0.01],
-                rootMargin: axis === "vertical" ? `${inset} 0px ${inset} 0px` : `0px ${inset} 0px ${inset}`
-            }
-        );
-    }
-
-    /**
-     * Populates `timelineEntries`/`sortedFragmentIds` from a fresh id list, and
-     * (re)starts IntersectionObserver-based visibility tracking for subclasses that use it.
-     * Shared by all snappers' `timeline_entries` comms handler so DOM-order sorting and
-     * observer bookkeeping only happen once per (re)population, not per report.
+     * Populates `timelineEntries`/`sortedFragmentIds` from a fresh id list, and refreshes
+     * `cachedFragmentStarts` for the new elements. Shared by all snappers' `timeline_entries`
+     * comms handler so DOM-order sorting and position caching only happen once per
+     * (re)population, not per report.
      */
     protected updateTimelineEntries(ids: string[], wnd: ReadiumWindow): void {
         this.cachedFragmentIds = ids;
-        this.timelineObserver?.disconnect();
-        this.visibleFragmentIds.clear();
         this.timelineEntries.clear();
         for (const id of ids) {
             const el = wnd.document.getElementById(id);
-            if (el) {
-                this.timelineEntries.set(id, el);
-                this.timelineObserver?.observe(el);
-            }
+            if (el) this.timelineEntries.set(id, el);
         }
         this.sortedFragmentIds = Array.from(this.timelineEntries.keys())
             .sort((a, b) => Snapper.inDomOrder(this.timelineEntries, a, b));
+        this.refreshFragmentStarts();
+    }
+
+    /**
+     * Recomputes `cachedFragmentStarts` for every tracked fragment. Call whenever layout may
+     * have changed — on (re)population here, and from each snapper's own resize handler.
+     */
+    protected refreshFragmentStarts(): void {
+        for (const [id, el] of this.timelineEntries) {
+            this.cachedFragmentStarts.set(id, this.fragmentStart(el));
+        }
+    }
+
+    /**
+     * Axis-appropriate, document-absolute leading-edge position of `el`. Subclasses with a
+     * scroll axis override this; `ColumnSnapper` doesn't use the cache (it has its own
+     * rect-based visibility test) so keeps this no-op default.
+     */
+    protected fragmentStart(_el: Element): number {
+        return 0;
+    }
+
+    /**
+     * The current viewport's position and size along the scroll axis, in the same
+     * document-absolute coordinate space as `fragmentStart`. Paired with it to test
+     * on-screen-ness without any per-frame geometry read.
+     */
+    protected currentScrollExtent(): { pos: number; size: number } {
+        return { pos: 0, size: 0 };
     }
 
     /**
      * Returns the nearest fragment at or before `node` in DOM (reading) order, with no
      * dependency on rendered geometry — safe to call for programmatic navigation where the
-     * target is already known, regardless of whether layout/IntersectionObserver has settled.
+     * target is already known, regardless of whether layout has settled.
      */
     protected nearestPrecedingTimelineEntry(node: Node): string | undefined {
         let nearestId: string | undefined;
@@ -118,11 +100,10 @@ export abstract class Snapper extends Module {
     }
 
     /**
-     * Rect-based scan, used only as a fallback while IntersectionObserver hasn't reported
-     * anything yet. Mirrors the observer's own tie-break so the two can't disagree: first
-     * checks for a fragment currently in the center band (same "first in DOM order" rule as
-     * `currentTimelineFragment`'s primary path), and only if none is currently in the band
-     * falls back to the last fragment whose leading edge has been scrolled past.
+     * Rect-based scan for an accurate one-off read right after a programmatic jump
+     * (go_id/go_text), before the next scroll event would otherwise refresh things: first
+     * checks for a fragment currently in the center band, and only if none is currently in
+     * the band falls back to the last fragment whose leading edge has been scrolled past.
      */
     protected fragmentFromGeometry(): string | undefined {
         for (const id of this.sortedFragmentIds) {
@@ -154,20 +135,43 @@ export abstract class Snapper extends Module {
     }
 
     /**
-     * Returns the ID of the currently active timeline fragment:
-     * 1. Primary — IntersectionObserver: returns the first visible element in DOM (reading) order.
-     *    This is direction-agnostic; works for LTR, RTL, and vertical writing modes. Reliable for
-     *    continuous, gradual scrolling.
-     * 2. Fallback — rect scan (`fragmentFromGeometry`): used when IntersectionObserver hasn't
-     *    fired yet. Not reliable right after an instantaneous programmatic jump — callers that
-     *    know the target (goTo-style navigation) should bypass this method entirely.
+     * Returns the ID of the currently active timeline fragment: the last fragment in DOM
+     * order whose cached leading edge is at or before the viewport's center point — the same
+     * center line `hasScrolledPast`/`go_id`/`go_text` navigate to.
      */
     protected currentTimelineFragment(): string | undefined {
-        if (this.visibleFragmentIds.size > 0) {
-            return Array.from(this.visibleFragmentIds)
-                .sort((a, b) => Snapper.inDomOrder(this.timelineEntries, a, b))[0];
+        const { pos, size } = this.currentScrollExtent();
+        const center = pos + size / 2;
+        let nearestId: string | undefined;
+        for (const id of this.sortedFragmentIds) {
+            const start = this.cachedFragmentStarts.get(id);
+            if (start === undefined) continue;
+            if (start <= center) nearestId = id;
+            else break;
         }
-        return this.fragmentFromGeometry();
+        return nearestId;
+    }
+
+    /**
+     * Every timeline fragment currently on screen, in DOM order — not just the single one
+     * `currentTimelineFragment` picks. Since fragments are ordered points, not ranges, "on
+     * screen" means the run of fragments whose leading edges fall between whichever one
+     * governs the viewport's top edge and whichever falls before its bottom edge.
+     */
+    protected sortedVisibleFragmentIds(): string[] {
+        const { pos, size } = this.currentScrollExtent();
+        const bottom = pos + size;
+        let from = -1;
+        let to = -1;
+        for (let i = 0; i < this.sortedFragmentIds.length; i++) {
+            const start = this.cachedFragmentStarts.get(this.sortedFragmentIds[i]);
+            if (start === undefined) continue;
+            if (start <= pos) from = i;
+            if (start < bottom) to = i;
+        }
+        if (from < 0) from = 0;
+        if (to < from) return [];
+        return this.sortedFragmentIds.slice(from, to + 1);
     }
 
     /**
@@ -178,9 +182,9 @@ export abstract class Snapper extends Module {
     protected abstract hasScrolledPast(el: Element): boolean;
 
     /**
-     * Whether the element currently overlaps `setupTimelineObserver`'s center band, not
-     * merely "already scrolled past" it. Defaults to `false` for subclasses with no
-     * center-line concept (e.g. paginated `ColumnSnapper`).
+     * Whether the element currently overlaps the viewport's center band, not merely
+     * "already scrolled past" it. Defaults to `false` for subclasses with no center-line
+     * concept (e.g. paginated `ColumnSnapper`).
      */
     protected inCenterBand(_el: Element): boolean {
         return false;
