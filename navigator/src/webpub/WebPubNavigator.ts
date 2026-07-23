@@ -76,7 +76,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private _currentTimelineItem: TimelineItem | undefined;
     private _visibleFragmentIds: string[] = [];
     private _notifiedVisibleFragmentIds: string[] = [];
-    private _timelineAdjacentToWrapped = false;
+    private _wrappedTimeline: Timeline | undefined;
 
     private _preferences: WebPubPreferences;
     private _defaults: WebPubDefaults;
@@ -742,35 +742,46 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
     get timeline(): Timeline {
         const t = this.pub.timeline;
-        if (!this._timelineAdjacentToWrapped) {
-            // Fragments on screen are always contiguous in the flattened timeline, so anchor
-            // previous/next on the two ends of the visible run instead of on `item` itself.
-            const originalNavigableFrom = t.navigableFrom.bind(t);
-            t.navigableFrom = (item: TimelineItem) => {
-                // Resolved lazily, here, rather than eagerly on every scroll frame in
-                // syncLocation: navigableFrom() is called on demand (e.g. building prev/next
-                // UI), far less often than progress reports, and only the two ends are ever
-                // used — Timeline.locate() is an O(n) scan, not worth paying per fragment.
-                const ids = this._visibleFragmentIds;
-                let first = (ids.length ? t.locate(this.currentLocation.copyWithLocations({ fragments: [`#${ids[0]}`] })) : undefined) ?? item;
-                const last = (ids.length ? t.locate(this.currentLocation.copyWithLocations({ fragments: [`#${ids[ids.length - 1]}`] })) : undefined) ?? item;
-                // The current resource's own bare-href container(s) have no DOM anchor, so
-                // they never appear among visible fragment ids. Only when scrollTop is actually
-                // 0 (untracked content can precede the first fragment, and scrolling past it
-                // must leave "back to resource start" reachable) walk out to the outermost
-                // ancestor still within this resource, so previous is anchored past all of
-                // them at once rather than one guessed step back.
-                if (this.isScrollStart) {
-                    const outermost = t.ancestors(first).find(a => a.references.includes(this.currentLocation.href));
-                    if (outermost) first = outermost;
+        if (!this._wrappedTimeline) {
+            // Wraps the real, shared Timeline rather than mutating it — publication.timeline
+            // stays plain for every consumer; only navigator.timeline answers navigableFrom()
+            // with visible-range-aware previous/next. Every other member (locate, ancestors,
+            // augment, etc.) passes straight through to the real instance untouched.
+            this._wrappedTimeline = new Proxy(t, {
+                get: (target, prop) => {
+                    if (prop !== 'navigableFrom') {
+                        // Resolve strictly against `target`, never the proxy: Timeline's own
+                        // getters (flat, items) lazily cache onto `this` on first access, and
+                        // forwarding the proxy as receiver would make that caching target the
+                        // wrong object instead of the real Timeline.
+                        const value = Reflect.get(target, prop, target);
+                        return typeof value === 'function' ? value.bind(target) : value;
+                    }
+                    return (item: TimelineItem) => {
+                        // Fragments on screen are always contiguous in the flattened timeline,
+                        // so anchor previous/next on the two ends of the visible run instead of
+                        // on `item` itself.
+                        const ids = this._visibleFragmentIds;
+                        let first = (ids.length ? target.locate(this.currentLocation.copyWithLocations({ fragments: [`#${ids[0]}`] })) : undefined) ?? item;
+                        const last = (ids.length ? target.locate(this.currentLocation.copyWithLocations({ fragments: [`#${ids[ids.length - 1]}`] })) : undefined) ?? item;
+                        // The current resource's own bare-href container(s) have no DOM anchor,
+                        // so they never appear among visible fragment ids. Only when scrollTop is
+                        // actually 0 (untracked content can precede the first fragment, and
+                        // scrolling past it must leave "back to resource start" reachable) walk
+                        // out to the outermost ancestor still within this resource, so previous
+                        // is anchored past all of them at once rather than one guessed step back.
+                        if (this.isScrollStart) {
+                            const outermost = target.ancestors(first).find(a => a.references.includes(this.currentLocation.href));
+                            if (outermost) first = outermost;
+                        }
+                        const previous = target.navigableFrom(first).previous;
+                        const next = target.navigableFrom(last).next;
+                        return { previous, next };
+                    };
                 }
-                const previous = originalNavigableFrom(first).previous;
-                const next = originalNavigableFrom(last).next;
-                return { previous, next };
-            };
-            this._timelineAdjacentToWrapped = true;
+            });
         }
-        return t;
+        return this._wrappedTimeline;
     }
 
     private async loadLocator(locator: Locator, cb: (ok: boolean) => void) {
