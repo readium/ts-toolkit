@@ -1150,19 +1150,19 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 };
             });
 
-            // adjacentTo() can't tell whether we're already at the resource's own start —
+            // navigableFrom() can't tell whether we're already at the resource's own start —
             // that's live scroll state, not TOC structure — so step from the resource's
             // top-level item instead of `item` when we are, to skip past it rather than
             // land back where we already are.
-            const originalAdjacentTo = t.adjacentTo.bind(t);
-            t.adjacentTo = (item: TimelineItem) => {
+            const originalNavigableFrom = t.navigableFrom.bind(t);
+            t.navigableFrom = (item: TimelineItem) => {
                 const href = item.references[0]?.split("#")[0];
                 const atResourceStart = href !== undefined &&
                     this.viewport.progressions.get(href)?.start === 0;
                 const stepFrom = atResourceStart
                     ? t.items.find(i => i.references[0]?.split("#")[0] === href) ?? item
                     : item;
-                return originalAdjacentTo(stepFrom);
+                return originalNavigableFrom(stepFrom);
             };
 
             this._timelineAugmented = true;

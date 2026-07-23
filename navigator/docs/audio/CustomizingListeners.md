@@ -69,7 +69,7 @@ const listeners = {
     chapterTitle.textContent = item?.title ?? '';
 
     if (item) {
-      const { previous, next } = publication.timeline.adjacentTo(item);
+      const { previous, next } = publication.timeline.navigableFrom(item);
       prevButton.disabled = !previous;
       nextButton.disabled = !next;
     }
