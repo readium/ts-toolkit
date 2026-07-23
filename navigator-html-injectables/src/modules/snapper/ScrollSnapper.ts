@@ -351,6 +351,9 @@ export class ScrollSnapper extends Snapper {
         if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
         wnd.document.getElementById(SCROLL_SNAPPER_STYLE_ID)?.remove();
         this.timelineEntries.clear();
+        this.cachedFragmentIds = [];
+        this.sortedFragmentIds = [];
+        this.cachedFragmentStarts.clear();
 
         if (this.patternAnalyzer) {
             this.patternAnalyzer.clear();

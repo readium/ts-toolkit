@@ -390,6 +390,9 @@ export class CJKVerticalSnapper extends Snapper {
         }
 
         this.timelineEntries.clear();
+        this.cachedFragmentIds = [];
+        this.sortedFragmentIds = [];
+        this.cachedFragmentStarts.clear();
 
         comms.log("CJKVerticalSnapper Unmounted");
         return true;

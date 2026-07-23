@@ -327,6 +327,9 @@ export class WebPubSnapper extends Snapper {
         }
 
         this.timelineEntries.clear();
+        this.cachedFragmentIds = [];
+        this.sortedFragmentIds = [];
+        this.cachedFragmentStarts.clear();
 
         comms.log("WebPubSnapper Unmounted");
         return true;

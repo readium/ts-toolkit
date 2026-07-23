@@ -44,6 +44,7 @@ export abstract class Snapper extends Module {
     protected updateTimelineEntries(ids: string[], wnd: ReadiumWindow): void {
         this.cachedFragmentIds = ids;
         this.timelineEntries.clear();
+        this.cachedFragmentStarts.clear();
         for (const id of ids) {
             const el = wnd.document.getElementById(id);
             if (el) this.timelineEntries.set(id, el);
@@ -222,6 +223,11 @@ export abstract class Snapper extends Module {
 
     unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         wnd.document.getElementById(SNAPPER_STYLE_ID)?.remove();
+
+        this.timelineEntries.clear();
+        this.cachedFragmentIds = [];
+        this.sortedFragmentIds = [];
+        this.cachedFragmentStarts.clear();
 
         comms.log("Snapper Unmounted");
         return true;
