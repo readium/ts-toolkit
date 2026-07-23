@@ -149,7 +149,9 @@ progressBar.addEventListener('mousemove', (e) => {
 
 ### `navigableFrom(item)`
 
-Returns `{ previous, next }` relative to the given item in the flattened timeline. Both values are `undefined` at the boundaries.
+Returns `{ previous, next }` relative to the given item. Both values are `undefined` at the boundaries.
+
+In `EpubNavigator`/`WebPubNavigator`, `navigator.timeline.navigableFrom()` is visibility-aware: rather than the item's immediate neighbors, it skips over the whole run of items currently visible on screen, anchoring `previous`/`next` on the ends of that visible run. `publication.timeline.navigableFrom()` is unaffected and always returns the item's immediate neighbors in the flattened timeline.
 
 ```ts
 const { previous, next } = navigator.timeline.navigableFrom(currentItem);
