@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.3] – 2026-07-23
+
+### Fixed
+
+- Snappers' rect-based fallback now also checks whether a fragment currently overlaps the center band, matching `IntersectionObserver`'s `intersectionRatio`, before falling back to "last fragment scrolled past" — keeping the two current-fragment resolution paths in sync ([#244](https://github.com/readium/ts-toolkit/pull/244))
+
 ## [2.6.2] – 2026-07-22
 
 ### Fixed

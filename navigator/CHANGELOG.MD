@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.4] – 2026-07-23
+
+### Changed
+
+- **Breaking:** `Timeline.adjacentTo()` (via `@readium/shared`) has been renamed to `navigableFrom()` ([#244](https://github.com/readium/ts-toolkit/pull/244))
+
+### Fixed
+
+- `EpubNavigator`/`WebPubNavigator` now bind `timeline.navigableFrom()` so that when the current fragment is at its own resource's start, navigation steps from the resource's top-level item instead of resolving back to the same item ([#244](https://github.com/readium/ts-toolkit/pull/244))
+- Snappers (via `@readium/navigator-html-injectables`) now align their rect-based fallback with `IntersectionObserver`'s center-band check, keeping `timeline` in sync when the observer hasn't reported yet ([#244](https://github.com/readium/ts-toolkit/pull/244))
+
 ## [2.7.3] – 2026-07-22
 
 ### Fixed
