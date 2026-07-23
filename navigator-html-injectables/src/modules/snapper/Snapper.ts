@@ -118,12 +118,18 @@ export abstract class Snapper extends Module {
     }
 
     /**
-     * Rect-based scan: last element in DOM order whose leading edge has already been
-     * scrolled past. Subclasses implement `hasScrolledPast` for their layout/axis.
-     * Exposed so callers can force an accurate one-off geometry check (e.g. right after
-     * a `go_progression` jump) instead of trusting a possibly-stale visibility cache.
+     * Rect-based scan, used only as a fallback while IntersectionObserver hasn't reported
+     * anything yet. Mirrors the observer's own tie-break so the two can't disagree: first
+     * checks for a fragment currently in the center band (same "first in DOM order" rule as
+     * `currentTimelineFragment`'s primary path), and only if none is currently in the band
+     * falls back to the last fragment whose leading edge has been scrolled past.
      */
     protected fragmentFromGeometry(): string | undefined {
+        for (const id of this.sortedFragmentIds) {
+            const el = this.timelineEntries.get(id)!;
+            if (this.inCenterBand(el)) return id;
+        }
+
         let nearestId: string | undefined;
         for (const id of this.sortedFragmentIds) {
             const el = this.timelineEntries.get(id)!;
@@ -170,6 +176,15 @@ export abstract class Snapper extends Module {
      * Subclasses implement this for their specific scroll axis and reading direction.
      */
     protected abstract hasScrolledPast(el: Element): boolean;
+
+    /**
+     * Whether the element currently overlaps `setupTimelineObserver`'s center band, not
+     * merely "already scrolled past" it. Defaults to `false` for subclasses with no
+     * center-line concept (e.g. paginated `ColumnSnapper`).
+     */
+    protected inCenterBand(_el: Element): boolean {
+        return false;
+    }
 
     buildStyles() {
         return `

@@ -81,6 +81,28 @@ export class CJKVerticalSnapper extends Snapper {
         return this.verticalLR ? rect.right <= center + tolerance : rect.left >= center - tolerance;
     }
 
+    /**
+     * Overlap as a fraction of the element's own width, matching IntersectionObserver's
+     * intersectionRatio — a plain overlap test would keep a large wrapping element "in
+     * band" for its entire on-screen span, masking smaller fragments nested inside it.
+     * Direction-agnostic (unlike `hasScrolledPast`): overlap ratio is the same question
+     * regardless of vertical-lr/vertical-rl.
+     */
+    protected inCenterBand(el: Element): boolean {
+        const rect = el.getBoundingClientRect();
+        const center = this.wnd.innerWidth / 2;
+        const tolerance = this.wnd.innerWidth * Snapper.CENTER_TOLERANCE;
+        const bandLeft = center - tolerance;
+        const bandRight = center + tolerance;
+        if (rect.width === 0) {
+            // Zero-area landmark: ratio is undefined (0/0) by spec, same case
+            // `isVisibleEntry` handles for the observer path — fall back to a point check.
+            return rect.left <= bandRight && rect.left >= bandLeft;
+        }
+        const overlap = Math.max(0, Math.min(rect.right, bandRight) - Math.max(rect.left, bandLeft));
+        return overlap / rect.width >= Snapper.CENTER_TOLERANCE;
+    }
+
     private reportProgress(forcedFragmentId?: string) {
         if (!this.comms.ready) return;
         const scrollWidth = this.doc().scrollWidth;

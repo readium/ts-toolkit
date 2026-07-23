@@ -46,6 +46,26 @@ export class ScrollSnapper extends Snapper {
         return el.getBoundingClientRect().top <= center + this.wnd.innerHeight * Snapper.CENTER_TOLERANCE;
     }
 
+    /**
+     * Overlap as a fraction of the element's own height, matching IntersectionObserver's
+     * intersectionRatio — a plain overlap test would keep a large wrapping element "in
+     * band" for its entire on-screen span, masking smaller fragments nested inside it.
+     */
+    protected inCenterBand(el: Element): boolean {
+        const rect = el.getBoundingClientRect();
+        const center = this.wnd.innerHeight / 2;
+        const tolerance = this.wnd.innerHeight * Snapper.CENTER_TOLERANCE;
+        const bandTop = center - tolerance;
+        const bandBottom = center + tolerance;
+        if (rect.height === 0) {
+            // Zero-area landmark: ratio is undefined (0/0) by spec, same case
+            // `isVisibleEntry` handles for the observer path — fall back to a point check.
+            return rect.top <= bandBottom && rect.top >= bandTop;
+        }
+        const overlap = Math.max(0, Math.min(rect.bottom, bandBottom) - Math.max(rect.top, bandTop));
+        return overlap / rect.height >= Snapper.CENTER_TOLERANCE;
+    }
+
     private reportProgress(forcedFragmentId?: string) {
         if (!this.comms.ready) return;
         // We have to round up the scroll position because
