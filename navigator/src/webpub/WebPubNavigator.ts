@@ -70,6 +70,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private currentIndex: number = 0;
     private currentLocation: Locator;
     private _currentTimelineItem: TimelineItem | undefined;
+    private _timelineAdjacentToWrapped = false;
 
     private _preferences: WebPubPreferences;
     private _defaults: WebPubDefaults;
@@ -733,7 +734,25 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     }
 
     get timeline(): Timeline {
-        return this.pub.timeline;
+        const t = this.pub.timeline;
+        if (!this._timelineAdjacentToWrapped) {
+            // adjacentTo() can't tell whether we're already at the resource's own start —
+            // that's live scroll state, not TOC structure — so step from the resource's
+            // top-level item instead of `item` when we are, to skip past it rather than
+            // land back where we already are.
+            const originalAdjacentTo = t.adjacentTo.bind(t);
+            t.adjacentTo = (item: TimelineItem) => {
+                const href = item.references[0]?.split("#")[0];
+                const atResourceStart = href !== undefined &&
+                    this.viewport.progressions.get(href)?.start === 0;
+                const stepFrom = atResourceStart
+                    ? t.items.find(i => i.references[0]?.split("#")[0] === href) ?? item
+                    : item;
+                return originalAdjacentTo(stepFrom);
+            };
+            this._timelineAdjacentToWrapped = true;
+        }
+        return t;
     }
 
     private async loadLocator(locator: Locator, cb: (ok: boolean) => void) {
