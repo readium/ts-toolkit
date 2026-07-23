@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.0] – 2026-07-23
+
+### Changed
+
+- **Breaking:** `Timeline.adjacentTo()` (via `@readium/shared`) has been renamed to `navigableFrom()` ([#244](https://github.com/readium/ts-toolkit/pull/244))
+
+### Fixed
+
+- `EpubNavigator`/`WebPubNavigator` now bind `timeline.navigableFrom()` so that `previous`/`next` skip every fragment currently visible on screen — not just the single resolved current item — anchoring on the ends of that visible run and, at a resource's actual scroll start, on the outermost ancestor still within that resource ([#244](https://github.com/readium/ts-toolkit/pull/244))
+
 ## [2.7.3] – 2026-07-22
 
 ### Fixed

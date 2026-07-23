@@ -105,6 +105,18 @@ export class ColumnSnapper extends Snapper {
         return result;
     }
 
+    /**
+     * Tests each fragment's rect directly against the current column viewport, returning
+     * every one actually on screen rather than only the last one to have started.
+     */
+    protected sortedVisibleFragmentIds(): string[] {
+        const vw = this.wnd.innerWidth;
+        return this.sortedFragmentIds.filter(id => {
+            const rect = this.timelineEntries.get(id)!.getBoundingClientRect();
+            return this.rtl ? (rect.left < vw && rect.right > 0) : (rect.right > 0 && rect.left < vw);
+        });
+    }
+
     reportProgress(forcedFragmentId?: string) {
         const scrollWidth = this.cachedScrollWidth;
         const viewportWidth = this.wnd.innerWidth;
@@ -117,7 +129,8 @@ export class ColumnSnapper extends Snapper {
         this.comms.send("progress", {
             start: progress,
             end: viewportEnd,
-            fragmentId: forcedFragmentId !== undefined ? forcedFragmentId : this.currentTimelineFragment()
+            fragmentId: forcedFragmentId !== undefined ? forcedFragmentId : this.currentTimelineFragment(),
+            visibleFragmentIds: this.sortedVisibleFragmentIds()
         });
     }
 

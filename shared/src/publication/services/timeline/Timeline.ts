@@ -228,7 +228,8 @@ export class Timeline {
         return this.flat.find(item => this.itemMatchesHref(item, href));
     }
 
-    adjacentTo(item: TimelineItem): { previous: TimelineItem | undefined; next: TimelineItem | undefined } {
+    /** The items navigable to/from `item`: its previous/next neighbors in the flattened timeline. */
+    navigableFrom(item: TimelineItem): { previous: TimelineItem | undefined; next: TimelineItem | undefined } {
         const index = this.flat.indexOf(item);
         return {
             previous: index > 0 ? this.flat[index - 1] : undefined,

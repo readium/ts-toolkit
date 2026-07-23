@@ -68,6 +68,10 @@ const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListe
     peripheral: listeners.peripheral || (() => {}),
 })
 
+function sameIds(a: string[], b: string[]): boolean {
+    return a.length === b.length && a.every((id, i) => id === b[i]);
+}
+
 export class EpubNavigator extends VisualNavigator implements Configurable<ConfigurableSettings, EpubPreferences>, DecorableNavigator {
     private readonly pub: Publication;
     private readonly container: HTMLElement;
@@ -76,7 +80,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private positions!: Locator[];
     private currentLocation!: Locator;
     private _currentTimelineItem: TimelineItem | undefined;
+    private _visibleFragmentIds: string[] = [];
+    private _notifiedVisibleFragmentIds: string[] = [];
     private _timelineAugmented = false;
+    private _wrappedTimeline: Timeline | undefined;
     private lastLocationInView: Locator | undefined;
     private currentProgression: ReadingProgression;
     private _layout: Layout;
@@ -1006,6 +1013,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         const locatorForTimeline = progression.fragmentId
             ? this.currentLocation.copyWithLocations({ fragments: [`#${progression.fragmentId}`] })
             : this.currentLocation;
+        this._visibleFragmentIds = progression.visibleFragmentIds ?? [];
         this._notifyTimelineChange(locatorForTimeline);
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
     }
@@ -1149,9 +1157,50 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                     scroll: atFragment?.locations.progression,
                 };
             });
+
             this._timelineAugmented = true;
         }
-        return t;
+
+        if (!this._wrappedTimeline) {
+            // Wraps the real, shared Timeline rather than mutating it — publication.timeline
+            // stays plain for every consumer; only navigator.timeline answers navigableFrom()
+            // with visible-range-aware previous/next. Every other member (locate, ancestors,
+            // augment, etc.) passes straight through to the real instance untouched.
+            this._wrappedTimeline = new Proxy(t, {
+                get: (target, prop) => {
+                    if (prop !== 'navigableFrom') {
+                        // Resolve strictly against `target`, never the proxy: Timeline's own
+                        // getters (flat, items) lazily cache onto `this` on first access, and
+                        // forwarding the proxy as receiver would make that caching target the
+                        // wrong object instead of the real Timeline.
+                        const value = Reflect.get(target, prop, target);
+                        return typeof value === 'function' ? value.bind(target) : value;
+                    }
+                    return (item: TimelineItem) => {
+                        // Fragments on screen are always contiguous in the flattened timeline,
+                        // so anchor previous/next on the two ends of the visible run instead of
+                        // on `item` itself.
+                        const ids = this._visibleFragmentIds;
+                        let first = (ids.length ? target.locate(this.currentLocation.copyWithLocations({ fragments: [`#${ids[0]}`] })) : undefined) ?? item;
+                        const last = (ids.length ? target.locate(this.currentLocation.copyWithLocations({ fragments: [`#${ids[ids.length - 1]}`] })) : undefined) ?? item;
+                        // The current resource's own bare-href container(s) have no DOM anchor,
+                        // so they never appear among visible fragment ids. Only when scrollTop is
+                        // actually 0 (untracked content can precede the first fragment, and
+                        // scrolling past it must leave "back to resource start" reachable) walk
+                        // out to the outermost ancestor still within this resource, so previous
+                        // is anchored past all of them at once rather than one guessed step back.
+                        if (this.isScrollStart) {
+                            const outermost = target.ancestors(first).find(a => a.references.includes(this.currentLocation.href));
+                            if (outermost) first = outermost;
+                        }
+                        const previous = target.navigableFrom(first).previous;
+                        const next = target.navigableFrom(last).next;
+                        return { previous, next };
+                    };
+                }
+            });
+        }
+        return this._wrappedTimeline;
     }
 
     private async loadLocator(locator: Locator, cb: (ok: boolean) => void) {
@@ -1237,8 +1286,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
     private _notifyTimelineChange(locator: Locator): void {
         const item = this.timeline.locate(locator);
-        if (item !== this._currentTimelineItem) {
+        const visibleChanged = !sameIds(this._visibleFragmentIds, this._notifiedVisibleFragmentIds);
+        if (item !== this._currentTimelineItem || visibleChanged) {
             this._currentTimelineItem = item;
+            this._notifiedVisibleFragmentIds = this._visibleFragmentIds;
             this.listeners.timelineItemChanged(item);
         }
     }

@@ -147,12 +147,14 @@ progressBar.addEventListener('mousemove', (e) => {
 });
 ```
 
-### `adjacentTo(item)`
+### `navigableFrom(item)`
 
-Returns `{ previous, next }` relative to the given item in the flattened timeline. Both values are `undefined` at the boundaries.
+Returns `{ previous, next }` relative to the given item. Both values are `undefined` at the boundaries.
+
+In `EpubNavigator`/`WebPubNavigator`, `navigator.timeline.navigableFrom()` is visibility-aware: rather than the item's immediate neighbors, it skips over the whole run of items currently visible on screen, anchoring `previous`/`next` on the ends of that visible run. `publication.timeline.navigableFrom()` is unaffected and always returns the item's immediate neighbors in the flattened timeline.
 
 ```ts
-const { previous, next } = navigator.timeline.adjacentTo(currentItem);
+const { previous, next } = navigator.timeline.navigableFrom(currentItem);
 prevButton.disabled = !previous;
 nextButton.disabled = !next;
 prevLabel.textContent = previous?.title ?? '';
@@ -258,7 +260,7 @@ const listeners = {
     currentItem = item;
     if (!item) return;
 
-    const { previous, next } = navigator.timeline.adjacentTo(item);
+    const { previous, next } = navigator.timeline.navigableFrom(item);
     prevChapterButton.disabled = !previous;
     nextChapterButton.disabled = !next;
     prevChapterLabel.textContent = previous?.title ?? '';
@@ -268,7 +270,7 @@ const listeners = {
 
 prevChapterButton.addEventListener('click', () => {
   if (!currentItem) return;
-  const { previous } = navigator.timeline.adjacentTo(currentItem);
+  const { previous } = navigator.timeline.navigableFrom(currentItem);
   if (!previous) return;
   const link = navigator.timeline.linkFor(previous);
   if (link) navigator.go(publication.locatorFromLink(link));
@@ -392,7 +394,7 @@ const listeners: EpubNavigatorListeners = {
     if (!item) return;
 
     // Previous / Next labels
-    const { previous, next } = navigator.timeline.adjacentTo(item);
+    const { previous, next } = navigator.timeline.navigableFrom(item);
     (document.getElementById('prev-chapter') as HTMLButtonElement).disabled = !previous;
     (document.getElementById('next-chapter') as HTMLButtonElement).disabled = !next;
     document.getElementById('prev-label')!.textContent = previous?.title ?? '';
@@ -412,7 +414,7 @@ const navigator = new EpubNavigator(container, publication, listeners, positions
 // Chapter navigation
 document.getElementById('prev-chapter')!.addEventListener('click', () => {
   if (!currentItem) return;
-  const { previous } = navigator.timeline.adjacentTo(currentItem);
+  const { previous } = navigator.timeline.navigableFrom(currentItem);
   if (!previous) return;
   const link = navigator.timeline.linkFor(previous);
   if (link) navigator.go(publication.locatorFromLink(link));
@@ -420,7 +422,7 @@ document.getElementById('prev-chapter')!.addEventListener('click', () => {
 
 document.getElementById('next-chapter')!.addEventListener('click', () => {
   if (!currentItem) return;
-  const { next } = navigator.timeline.adjacentTo(currentItem);
+  const { next } = navigator.timeline.navigableFrom(currentItem);
   if (!next) return;
   const link = navigator.timeline.linkFor(next);
   if (link) navigator.go(publication.locatorFromLink(link));
@@ -451,7 +453,7 @@ const listeners: AudioNavigatorListeners = {
     document.getElementById('chapter-title')!.textContent = item?.title ?? '';
 
     if (!item) return;
-    const { previous, next } = navigator.timeline.adjacentTo(item);
+    const { previous, next } = navigator.timeline.navigableFrom(item);
     document.getElementById('prev-label')!.textContent = previous?.title ?? '';
     document.getElementById('next-label')!.textContent = next?.title ?? '';
   },
