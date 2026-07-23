@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `EpubNavigator`/`WebPubNavigator` now bind `timeline.navigableFrom()` so that `previous`/`next` skip every fragment currently visible on screen — not just the single resolved current item — anchoring on the ends of that visible run and, at a resource's actual scroll start, on the outermost ancestor still within that resource ([#244](https://github.com/readium/ts-toolkit/pull/244))
+- `EpubNavigator`/`WebPubNavigator` now proxy `timeline.navigableFrom()` so that `previous`/`next` skip every fragment currently visible on screen — not just the single resolved current item — anchoring on the ends of that visible run and, at a resource's actual scroll start, on the outermost ancestor still within that resource ([#244](https://github.com/readium/ts-toolkit/pull/244))
 
 ## [2.7.3] – 2026-07-22
 
