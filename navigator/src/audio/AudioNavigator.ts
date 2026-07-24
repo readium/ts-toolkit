@@ -131,9 +131,19 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         }
 
         const initialHref = this.currentLocation.href.split("#")[0];
-        const trackIndex = this.hrefToTrackIndex(initialHref);
+        let trackIndex = this.hrefToTrackIndex(initialHref);
         if (trackIndex === -1) {
-            throw new Error(`AudioNavigator: initial href "${ initialHref }" not found in reading order`);
+            // Progression-only locators (e.g. restored from an OPDS progression)
+            // Resolve totalProgression against the
+            // cumulative track durations instead of failing outright.
+            const totalProgression = this.currentLocation.locations?.totalProgression;
+            if (totalProgression !== undefined) {
+                const resolved = this.locatorFromTotalProgression(totalProgression);
+                this.currentLocation = resolved.locator;
+                trackIndex = resolved.trackIndex;
+            } else {
+                throw new Error(`AudioNavigator: initial href "${ initialHref }" not found in reading order`);
+            }
         }
         const initialTime = this.currentLocation.locations?.time() || 0;
 
@@ -289,6 +299,47 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         return this.hrefToTrackIndex(this.currentLocation.href);
     }
 
+    /**
+     * Builds a locator for an overall publication progression (0–1) by walking
+     * the cumulative track durations. Falls back to the start of the first
+     * track when the reading order carries no duration metadata.
+     */
+    private locatorFromTotalProgression(totalProgression: number): { locator: Locator, trackIndex: number } {
+        const items = this.pub.readingOrder.items;
+        const durations = items.map(link => link.duration ?? 0);
+        const totalDuration = durations.reduce((sum, d) => sum + d, 0);
+
+        let trackIndex = 0;
+        let time = 0;
+        if (totalDuration > 0) {
+            let remaining = Math.min(Math.max(totalProgression, 0), 1) * totalDuration;
+            for (let i = 0; i < durations.length; i++) {
+                trackIndex = i;
+                if (remaining <= durations[i] || i === durations.length - 1) {
+                    time = remaining;
+                    break;
+                }
+                remaining -= durations[i];
+            }
+        }
+
+        const link = items[trackIndex];
+        return {
+            trackIndex,
+            locator: new Locator({
+                href: link.href,
+                type: link.type || "", // Should have a mimetype
+                title: link.title,
+                locations: new LocatorLocations({
+                    position: trackIndex + 1,
+                    progression: durations[trackIndex] > 0 ? time / durations[trackIndex] : 0,
+                    totalProgression: Math.min(Math.max(totalProgression, 0), 1),
+                    fragments: [`t=${ time }`]
+                })
+            })
+        };
+    }
+
     get currentLocator(): Locator {
         return this.currentLocation;
     }
@@ -384,7 +435,11 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                 fragments: [`t=${this.duration}`]
             }));
             this.listeners.trackEnded(this.currentLocator);
-            if (!this.canGoForward) return;
+            if (!this.canGoForward) {
+                // Set final progress in audiobook
+                this.listeners.positionChanged(this.currentLocator);
+                return;
+            }
             await this.nextTrack();
             if (this._settings.autoPlay) this.play();
         });
