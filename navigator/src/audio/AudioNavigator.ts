@@ -1,7 +1,7 @@
 import { Link, Locator, LocatorLocations, Publication, Timeline, TimelineItem } from "@readium/shared";
 import { MediaNavigator, IContentProtectionConfig, IKeyboardPeripheralsConfig, KeyboardPeripheralEventData } from "../Navigator.ts";
 import { Configurable } from "../preferences/Configurable.ts";
-import { WebAudioEngine, PlaybackState } from "./engine/index.ts";
+import { WebAudioEngine, PlaybackState, AudioMseLoaderFactory } from "./engine/index.ts";
 import {
     AudioPreferences,
     AudioDefaults,
@@ -69,6 +69,26 @@ export interface AudioNavigatorConfiguration {
     defaults: IAudioDefaults;
     contentProtection?: IAudioContentProtectionConfig;
     keyboardPeripherals?: IKeyboardPeripheralsConfig;
+
+    /**
+     * Called with the persistent playback element before
+     * the first src is assigned, so the host can prepare it. Use for MSE/EME
+     * setups. When it returns a promise, loading of
+     * the initial track (and prefetching of adjacent ones) is deferred until
+     * the promise settles; a rejection is forwarded to the error listener and
+     * loading proceeds anyway.
+     */
+    mediaElementSetup?: (element: HTMLMediaElement) => void | Promise<void>;
+
+    /**
+     * When provided, media bytes reach the playback element through Media
+     * Source Extensions instead of direct `src` assignment: the engine
+     * creates one loader per track via this factory and the loader owns all
+     * fetching. Supply one for e.g. EME encrypted audio, since browsers have
+     * poor support for encrypted audio directly through `src`. The container
+     * handling (WebM, fMP4, …) is the loader implementation's concern.
+     */
+    mseLoaderFactory?: AudioMseLoaderFactory;
 }
 
 export class AudioNavigator extends MediaNavigator implements Configurable<AudioSettings, AudioPreferences> {
@@ -94,6 +114,8 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     /** True while a track transition is in progress; suppresses spurious mid-navigation events. */
     private _isNavigating: boolean = false;
     private _isStalled: boolean = false;
+    /** Set by destroy(); stops the deferred initial load from touching a dead instance. */
+    private _destroyed: boolean = false;
     private _stalledWatchdog: ReturnType<typeof setInterval> | null = null;
     private _stalledCheckTime: number = 0;
 
@@ -155,7 +177,8 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
                 } as PlaybackState,
                 playWhenReady: false,
                 index: trackIndex
-            }
+            },
+            mseLoaderFactory: configuration.mseLoaderFactory,
         });
 
         this.pool = new AudioPoolManager(audioEngine, publication, configuration.contentProtection);
@@ -198,6 +221,28 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         this.setupEventListeners();
 
         this._isNavigating = true;
+
+        const startInitialLoad = () => this.startInitialLoad(trackIndex, initialTime);
+        if (configuration.mediaElementSetup) {
+            // Defer the initial load until the host has prepared the element
+            // (e.g. attached MediaKeys for EME) so no media data is fetched or
+            // decoded before protection is in place.
+            Promise.resolve()
+                .then(() => configuration.mediaElementSetup!(this.pool.audioEngine.getMediaElement()))
+                .catch((error) => { this.listeners.error(error, this.currentLocator); })
+                .then(startInitialLoad);
+        } else {
+            startInitialLoad();
+        }
+    }
+
+    /** Sets the initial track on the primary element and seeks to the starting position. */
+    private startInitialLoad(trackIndex: number, initialTime: number): void {
+        // The navigator may have been destroyed while an async
+        // mediaElementSetup was pending (React StrictMode does this in dev) —
+        // don't start loading media on the orphaned element.
+        if (this._destroyed) return;
+
         this.pool.setCurrentAudio(trackIndex, "forward");
 
         // applyPreferences() must come after setCurrentAudio() so that the src
@@ -753,6 +798,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     }
 
     destroy(): void {
+        this._destroyed = true;
         this.stopPositionPolling();
         this._stopStalledWatchdog();
         this.destroyMediaSession();

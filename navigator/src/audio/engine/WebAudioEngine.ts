@@ -2,6 +2,8 @@
 
 import {
   AudioEngine,
+  AudioMseLoader,
+  AudioMseLoaderFactory,
   Playback,
 } from "./AudioEngine.ts";
 import { PreservePitchWorklet } from "./PreservePitchWorklet.ts";
@@ -25,6 +27,10 @@ export class WebAudioEngine implements AudioEngine {
   private isStoppedValue: boolean = false;
   private worklet: PreservePitchWorklet | null = null;
   private webAudioActive: boolean = false;
+  private readonly mseLoaderFactory: AudioMseLoaderFactory | null;
+  private mseLoader: AudioMseLoader | null = null;
+  /** The resource href currently loaded (element src is a blob: URL in MSE mode). */
+  private currentHref: string = "";
 
   private readonly boundOnCanPlayThrough = this.onCanPlayThrough.bind(this);
   private readonly boundOnTimeUpdate = this.onTimeUpdate.bind(this);
@@ -42,8 +48,9 @@ export class WebAudioEngine implements AudioEngine {
   private readonly boundOnPause = this.onPause.bind(this);
   private readonly boundOnProgress = this.onProgress.bind(this);
 
-  constructor(values: { playback: Playback }) {
+  constructor(values: { playback: Playback, mseLoaderFactory?: AudioMseLoaderFactory }) {
     this.playback = values.playback;
+    this.mseLoaderFactory = values.mseLoaderFactory ?? null;
 
     // crossOrigin is set lazily in activateWebAudio() only when the worklet is needed
     this.mediaElement = document.createElement("audio");
@@ -386,6 +393,19 @@ export class WebAudioEngine implements AudioEngine {
   private async activateWebAudio(): Promise<void> {
     if (this.webAudioActive) return;
 
+    if (this.usesMse) {
+      // blob: MediaSource URLs are same-origin — no CORS reload required
+      this.sourceNode = new MediaElementAudioSourceNode(this.getOrCreateAudioContext(), { mediaElement: this.mediaElement });
+      const audioContext = this.getOrCreateAudioContext();
+      this.gainNode = audioContext.createGain();
+      this.gainNode.gain.value = this.mediaElement.volume;
+      this.mediaElement.volume = 1;
+      this.sourceNode.connect(this.gainNode);
+      this.gainNode.connect(audioContext.destination);
+      this.webAudioActive = true;
+      return;
+    }
+
     const src = this.mediaElement.src;
     if (!src) return;
 
@@ -469,6 +489,11 @@ export class WebAudioEngine implements AudioEngine {
     return this.webAudioActive;
   }
 
+  /** True when this engine streams media through Media Source Extensions. */
+  public get usesMse(): boolean {
+    return this.mseLoaderFactory !== null;
+  }
+
   /**
    * Tears down the Web Audio graph and restores the media element to standalone
    * playback. Safe to call even if Web Audio was never activated.
@@ -499,16 +524,27 @@ export class WebAudioEngine implements AudioEngine {
    * the required headers), the graph is torn down and the src is reloaded
    * without CORS so playback continues — just without pitch correction.
    */
-  public changeSrc(href: string): void {
-    if (this.mediaElement.src === href) {
+  public changeSrc(href: string, mimeType?: string): void {
+    if (this.currentHref === href || this.mediaElement.src === href) {
       return;
     }
+    this.currentHref = href;
     this.mediaElement.pause();
     this.isPlayingValue = false;
     this.isPausedValue = false;
     this.isLoadedValue = false;
     this.isLoadingValue = true;
     this.isEndedValue = false;
+
+    if (this.mseLoaderFactory) {
+      // MSE path: swap loaders on the persistent element. The blob: object
+      // URL is same-origin, so none of the crossOrigin reload handling below
+      // applies here — the Web Audio graph (if active) keeps working.
+      this.mseLoader?.destroy();
+      this.mseLoader = this.mseLoaderFactory(this.mediaElement, href, mimeType);
+      this.mseLoader.start();
+      return;
+    }
 
     if (this.webAudioActive) {
       this.mediaElement.crossOrigin = "anonymous";
@@ -541,5 +577,14 @@ export class WebAudioEngine implements AudioEngine {
    */
   public getMediaElement(): HTMLMediaElement {
     return this.mediaElement;
+  }
+
+  /**
+   * Releases loader resources (in-flight fetches, MediaSource object URL).
+   * The media element itself is left intact.
+   */
+  public destroy(): void {
+    this.mseLoader?.destroy();
+    this.mseLoader = null;
   }
 }

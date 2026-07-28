@@ -38,19 +38,20 @@ export class AudioPoolManager {
         return supported;
     }
 
-    private pickPlayableHref(link: Link): string {
+    private pickPlayableHref(link: Link): { href: string, type?: string } {
         const base = this._publication.baseURL;
         const candidates = [link, ...(link.alternates?.items ?? [])];
-        let best: { href: string; confidence: "probably" | "maybe" } | undefined;
+        let best: { href: string; type?: string; confidence: "probably" | "maybe" } | undefined;
         for (const candidate of candidates) {
             if (!candidate.type) continue;
             const confidence = this._supportedAudioTypes.get(candidate.type);
             if (!confidence) continue;
             const href = candidate.toURL(base) ?? candidate.href;
-            if (confidence === "probably") return href;
-            if (!best) best = { href, confidence };
+            if (confidence === "probably") return { href, type: candidate.type };
+            if (!best) best = { href, type: candidate.type, confidence };
         }
-        return best?.href ?? (link.toURL(base) ?? link.href);
+        if (best) return { href: best.href, type: best.type };
+        return { href: link.toURL(base) ?? link.href, type: link.type };
     }
 
     get audioEngine(): WebAudioEngine {
@@ -84,12 +85,16 @@ export class AudioPoolManager {
      * The current track is excluded — the primary engine element represents it.
      */
     private update(currentIndex: number): void {
+        // Progressive preload elements would feed encrypted media through the
+        // broken src= demuxer path — the MSE loader owns fetching instead
+        if (this._audioEngine.usesMse) return;
+
         const items = this._publication.readingOrder.items;
         const keep = new Set<string>();
 
         for (let j = 0; j < items.length; j++) {
             if (j === currentIndex) continue; // primary element handles the current track
-            const href = this.pickPlayableHref(items[j]);
+            const { href } = this.pickPlayableHref(items[j]);
             if (j >= currentIndex - LOWER_BOUNDARY && j <= currentIndex + LOWER_BOUNDARY) {
                 this.ensure(href);
                 keep.add(href);
@@ -117,8 +122,8 @@ export class AudioPoolManager {
      * session and any Web Audio graph connections across track changes.
      */
     setCurrentAudio(currentIndex: number, _direction: 'forward' | 'backward'): void {
-        const href = this.pickPlayableHref(this._publication.readingOrder.items[currentIndex]);
-        this.audioEngine.changeSrc(href);
+        const { href, type } = this.pickPlayableHref(this._publication.readingOrder.items[currentIndex]);
+        this.audioEngine.changeSrc(href, type);
 
         // Discard any pool entry for this href — the primary element owns it now
         if (this.pool.has(href)) {
@@ -134,6 +139,7 @@ export class AudioPoolManager {
 
     destroy(): void {
         this.audioEngine.stop();
+        this.audioEngine.destroy();
         for (const [, element] of this.pool) {
             element.removeAttribute("src");
             element.load();
