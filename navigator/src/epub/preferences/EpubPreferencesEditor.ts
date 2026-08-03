@@ -59,7 +59,7 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
       maximalLineLength: null,
       minimalLineLength: null,
       noRuby: null,
-      optimalLineLength: 65,
+      optimalLineLength: null,
       pageGutter: null,
       paragraphIndent: null,
       paragraphSpacing: null,
