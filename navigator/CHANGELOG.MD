@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.2] – 2026-08-03
+
+### Fixed
+
+- `AudioPreferencesEditor`, `WebPubPreferencesEditor`, and `EpubPreferencesEditor` now clone the preferences passed to their constructor instead of aliasing the navigator's live preferences object, so staged edits no longer mutate navigator state before `submitPreferences()` is called
+- `clear()` on all three preferences editors now resets every field to an explicit `null` instead of leaving it `undefined`, so it actually takes effect when submitted through `submitPreferences()`
+
 ## [2.8.1] – 2026-07-29
 
 ### Fixed
