@@ -20,13 +20,29 @@ export class WebPubPreferencesEditor implements IPreferencesEditor {
   private metadata: Metadata | null;
 
   constructor(initialPreferences: WebPubPreferences, settings: WebPubSettings, metadata: Metadata) {
-    this.preferences = initialPreferences;
+    this.preferences = new WebPubPreferences({ ...initialPreferences });
     this.settings = settings;
     this.metadata = metadata;
   }
 
   clear() {
-    this.preferences = new WebPubPreferences({});
+    this.preferences = new WebPubPreferences({
+      fontFamily: null,
+      fontWeight: null,
+      hyphens: null,
+      iOSPatch: null,
+      iPadOSPatch: null,
+      letterSpacing: null,
+      ligatures: null,
+      lineHeight: null,
+      noRuby: null,
+      paragraphIndent: null,
+      paragraphSpacing: null,
+      textAlign: null,
+      textNormalization: null,
+      wordSpacing: null,
+      zoom: null
+    });
   }
 
   private updatePreference<K extends keyof WebPubPreferences>(key: K, value: WebPubPreferences[K]) {

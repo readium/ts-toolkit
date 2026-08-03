@@ -27,14 +27,55 @@ export class EpubPreferencesEditor implements IPreferencesEditor {
   private layout: Layout;
 
   constructor(initialPreferences: EpubPreferences, settings: EpubSettings, metadata: Metadata) {
-    this.preferences = initialPreferences;
+    this.preferences = new EpubPreferences({ ...initialPreferences });
     this.settings = settings;
     this.metadata = metadata;
     this.layout = this.metadata?.effectiveLayout || Layout.reflowable;
   }
 
   clear() {
-    this.preferences = new EpubPreferences({ optimalLineLength: 65 });
+    this.preferences = new EpubPreferences({
+      backgroundColor: null,
+      blendFilter: null,
+      columnCount: null,
+      constraint: null,
+      darkenFilter: null,
+      deprecatedFontSize: null,
+      fontFamily: null,
+      fontSize: null,
+      fontSizeNormalize: null,
+      fontOpticalSizing: null,
+      fontWeight: null,
+      fontWidth: null,
+      hyphens: null,
+      invertFilter: null,
+      invertGaijiFilter: null,
+      iOSPatch: null,
+      iPadOSPatch: null,
+      letterSpacing: null,
+      ligatures: null,
+      lineHeight: null,
+      linkColor: null,
+      maximalLineLength: null,
+      minimalLineLength: null,
+      noRuby: null,
+      optimalLineLength: 65,
+      pageGutter: null,
+      paragraphIndent: null,
+      paragraphSpacing: null,
+      scroll: null,
+      scrollPaddingTop: null,
+      scrollPaddingBottom: null,
+      scrollPaddingLeft: null,
+      scrollPaddingRight: null,
+      selectionBackgroundColor: null,
+      selectionTextColor: null,
+      textAlign: null,
+      textColor: null,
+      textNormalization: null,
+      visitedColor: null,
+      wordSpacing: null
+    });
   }
 
   private updatePreference<K extends keyof EpubPreferences>(key: K, value: EpubPreferences[K]) {

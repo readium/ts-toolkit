@@ -13,12 +13,21 @@ export class AudioPreferencesEditor implements IPreferencesEditor {
   private settings: AudioSettings;
 
   constructor(initialPreferences: AudioPreferences, settings: AudioSettings) {
-    this.preferences = initialPreferences;
+    this.preferences = new AudioPreferences({ ...initialPreferences });
     this.settings = settings;
   }
 
   clear(): void {
-    this.preferences = new AudioPreferences();
+    this.preferences = new AudioPreferences({
+      volume: null,
+      playbackRate: null,
+      preservePitch: null,
+      skipBackwardInterval: null,
+      skipForwardInterval: null,
+      pollInterval: null,
+      autoPlay: null,
+      enableMediaSession: null
+    });
   }
 
   private updatePreference<K extends keyof AudioPreferences>(key: K, value: AudioPreferences[K]) {
