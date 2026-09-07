@@ -12,6 +12,7 @@ export default defineConfig({
         resolve(__dirname, "src/publication/opds/index.ts"),
         resolve(__dirname, "src/publication/encryption/index.ts"),
       ],
+      external: ["@readium/helpers"],
       preserveEntrySignatures: "strict",
       output: {
         format: "es",
