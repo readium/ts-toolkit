@@ -1,5 +1,5 @@
-import { DomRangePoint, getCssSelector, getDomRange, Locator, LocatorLocations } from "@readium/shared";
-import { decodeTextFragmentDirective, processTextFragmentDirective } from "@readium/helpers";
+import { DomRangePoint, getCssSelector, getDomRange, getTextFragment, Locator, LocatorLocations } from "@readium/shared";
+import { processTextFragmentDirective } from "@readium/helpers";
 import { TextQuoteAnchor } from "../vendor/hypothesis/anchoring/types.ts";
 
 function isReplacedLikeElement(element: Element): boolean {
@@ -75,9 +75,7 @@ export function rangeFromLocator(doc: Document, locator: Locator) {
         // express (it also supports a textStart...textEnd range), so checking
         // text.highlight first would mean this branch is rarely reached.
         if (locations) {
-            const fragmentDirective = locations.fragments
-                ?.map((fragment) => decodeTextFragmentDirective(fragment))
-                .find((directive) => directive !== undefined);
+            const fragmentDirective = getTextFragment(locations);
 
             if (fragmentDirective) {
                 const root = resolveTextSearchRoot(doc, locations);

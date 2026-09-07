@@ -1,6 +1,7 @@
 import { LocatorLocations } from '../Locator.ts';
 import { DomRange } from './DomRange.ts';
 import { parseNptTime } from '../../util/npt.ts';
+import { decodeTextFragmentDirective, TextFragmentDirective } from '@readium/helpers';
 
 // HTML extensions for LocatorLocations.
 // https://github.com/readium/architecture/blob/master/models/locators/extensions/html.md
@@ -15,6 +16,16 @@ export function getPartialCfi(loc: LocatorLocations): string | undefined {
 
 export function getDomRange(loc: LocatorLocations): DomRange | undefined {
   return DomRange.deserialize(loc.otherLocations?.get('domRange'));
+}
+
+// A WICG text-fragment directive (":~:text=...") found among fragments, per
+// https://wicg.github.io/scroll-to-text-fragment/.
+export function getTextFragment(loc: LocatorLocations): TextFragmentDirective | undefined {
+  for (const fragment of loc.fragments) {
+    const directive = decodeTextFragmentDirective(fragment);
+    if (directive) return directive;
+  }
+  return undefined;
 }
 
 export function getFragmentParameters(loc: LocatorLocations): Map<string, string> {
