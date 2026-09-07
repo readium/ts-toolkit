@@ -1,9 +1,18 @@
-import { DomRangePoint, getCssSelector, getDomRange, Locator } from "@readium/shared";
+import { DomRangePoint, getCssSelector, getDomRange, Locator, LocatorLocations } from "@readium/shared";
+import { decodeTextFragmentDirective, processTextFragmentDirective } from "@readium/helpers";
 import { TextQuoteAnchor } from "../vendor/hypothesis/anchoring/types.ts";
 
 function isReplacedLikeElement(element: Element): boolean {
     const tagName = element.tagName.toUpperCase();
     return tagName === "IMG" || tagName === "VIDEO" || tagName === "AUDIO" || tagName === "IFRAME" || tagName === "OBJECT" || tagName === "EMBED" || tagName === "CANVAS";
+}
+
+// Root used for text-based searches: the cssSelector-referenced element when
+// present and resolvable, otherwise the whole document body.
+function resolveTextSearchRoot(doc: Document, locations: LocatorLocations | undefined): Element {
+    const cssSelector = locations && getCssSelector(locations);
+    const root = cssSelector ? doc.querySelector(cssSelector) : null;
+    return root ?? doc.body;
 }
 
 function resolveDomRangePoint(doc: Document, point: DomRangePoint): { node: Text; offset?: number } | null {
@@ -61,14 +70,26 @@ export function rangeFromLocator(doc: Document, locator: Locator) {
             }
         }
 
+        // Tried before text.highlight for the same reason as domRange: a
+        // ":~:text=" fragment is a strict superset of what text.highlight can
+        // express (it also supports a textStart...textEnd range), so checking
+        // text.highlight first would mean this branch is rarely reached.
+        if (locations) {
+            const fragmentDirective = locations.fragments
+                ?.map((fragment) => decodeTextFragmentDirective(fragment))
+                .find((directive) => directive !== undefined);
+
+            if (fragmentDirective) {
+                const root = resolveTextSearchRoot(doc, locations);
+                const results = processTextFragmentDirective(fragmentDirective, doc, root);
+                if (results.length > 0) {
+                    return results[0]!;
+                }
+            }
+        }
+
         if (text && text.highlight) {
-            let root;
-            if (locations && getCssSelector(locations)) {
-                root = doc.querySelector(getCssSelector(locations)!);
-            }
-            if (!root) {
-                root = doc.body;
-            }
+            const root = resolveTextSearchRoot(doc, locations);
 
             const anchor = new TextQuoteAnchor(root, text.highlight, {
                 prefix: text.before,
