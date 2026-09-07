@@ -1,4 +1,4 @@
-import { getCssSelector, Locator } from "@readium/shared";
+import { DomRangePoint, getCssSelector, getDomRange, Locator } from "@readium/shared";
 import { TextQuoteAnchor } from "../vendor/hypothesis/anchoring/types.ts";
 
 function isReplacedLikeElement(element: Element): boolean {
@@ -6,11 +6,61 @@ function isReplacedLikeElement(element: Element): boolean {
     return tagName === "IMG" || tagName === "VIDEO" || tagName === "AUDIO" || tagName === "IFRAME" || tagName === "OBJECT" || tagName === "EMBED" || tagName === "CANVAS";
 }
 
+function resolveDomRangePoint(doc: Document, point: DomRangePoint): { node: Text; offset?: number } | null {
+    const container = doc.querySelector(point.cssSelector);
+    if (!container) {
+        console.error(`Can't resolve domRange cssSelector: ${point.cssSelector}`);
+        return null;
+    }
+
+    let index = 0;
+    for (const child of Array.from(container.childNodes)) {
+        if (child.nodeType === Node.TEXT_NODE) {
+            if (index === point.textNodeIndex) {
+                return { node: child as Text, offset: point.charOffset };
+            }
+            index++;
+        }
+    }
+
+    console.error(`Can't resolve domRange textNodeIndex ${point.textNodeIndex} for selector: ${point.cssSelector}`);
+    return null;
+}
+
 // Based on the kotlin-toolkit code
 export function rangeFromLocator(doc: Document, locator: Locator) {
     try {
         const locations = locator.locations;
         const text = locator.text;
+
+        // Tried before text.highlight: a domRange pinpoints an exact node/offset,
+        // which disambiguates between multiple occurrences of the same quote that
+        // a text-based search alone cannot tell apart.
+        if (locations) {
+            const domRange = getDomRange(locations);
+            if (domRange) {
+                const start = resolveDomRangePoint(doc, domRange.start);
+                const end = domRange.end ? resolveDomRangePoint(doc, domRange.end) : start;
+                if (start && end) {
+                    const range = doc.createRange();
+
+                    if (start.offset !== undefined) {
+                        range.setStart(start.node, start.offset);
+                    } else {
+                        range.setStartBefore(start.node);
+                    }
+
+                    if (end.offset !== undefined) {
+                        range.setEnd(end.node, end.offset);
+                    } else {
+                        range.setEndBefore(end.node);
+                    }
+
+                    return range;
+                }
+            }
+        }
+
         if (text && text.highlight) {
             let root;
             if (locations && getCssSelector(locations)) {
