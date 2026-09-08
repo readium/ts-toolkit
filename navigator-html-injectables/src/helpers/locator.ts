@@ -11,12 +11,25 @@ function isReplacedLikeElement(element: Element): boolean {
 // present and resolvable, otherwise the whole document body.
 function resolveTextSearchRoot(doc: Document, locations: LocatorLocations | undefined): Element {
     const cssSelector = locations && getCssSelector(locations);
-    const root = cssSelector ? doc.querySelector(cssSelector) : null;
-    return root ?? doc.body;
+    let root: Element | null = null;
+    if (cssSelector) {
+        try {
+            root = doc.querySelector(cssSelector);
+        } catch (error) {
+            console.warn(`Invalid cssSelector: ${cssSelector}`, error);
+        }
+    }
+    return root ?? doc.body ?? doc.documentElement;
 }
 
 function resolveDomRangePoint(doc: Document, point: DomRangePoint): { node: Text; offset?: number } | null {
-    const container = doc.querySelector(point.cssSelector);
+    let container: Element | null;
+    try {
+        container = doc.querySelector(point.cssSelector);
+    } catch (error) {
+        console.error(`Invalid domRange cssSelector: ${point.cssSelector}`, error);
+        return null;
+    }
     if (!container) {
         console.error(`Can't resolve domRange cssSelector: ${point.cssSelector}`);
         return null;
