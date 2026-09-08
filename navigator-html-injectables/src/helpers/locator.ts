@@ -22,14 +22,14 @@ function resolveDomRangePoint(doc: Document, point: DomRangePoint): { node: Text
         return null;
     }
 
+    const walker = doc.createTreeWalker(container, NodeFilter.SHOW_TEXT);
     let index = 0;
-    for (const child of Array.from(container.childNodes)) {
-        if (child.nodeType === Node.TEXT_NODE) {
-            if (index === point.textNodeIndex) {
-                return { node: child as Text, offset: point.charOffset };
-            }
-            index++;
+    let node: Node | null;
+    while ((node = walker.nextNode())) {
+        if (index === point.textNodeIndex) {
+            return { node: node as Text, offset: point.charOffset };
         }
+        index++;
     }
 
     console.error(`Can't resolve domRange textNodeIndex ${point.textNodeIndex} for selector: ${point.cssSelector}`);
