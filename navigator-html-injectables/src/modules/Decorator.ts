@@ -1152,6 +1152,7 @@ export class Decorator extends Module {
         height: 0
     };*/
     private resizeFrame = 0;
+    private scrollFrame = 0;
 
     private lastGroupId = 0;
     private groups = new Map<string, DecorationGroup>();
@@ -1176,6 +1177,16 @@ export class Decorator extends Module {
         }, 50);
     }
     private readonly handleResizer = this.handleResize.bind(this);
+
+    private handleScroll() {
+        this.wnd.clearTimeout(this.scrollFrame);
+        this.scrollFrame = this.wnd.setTimeout(() => {
+            this.groups.forEach(g => {
+                if(g.hasOverlayItems) g.requestLayout();
+            });
+        }, 50);
+    }
+    private readonly handleScroller = this.handleScroll.bind(this);
 
     mount(wnd: Window, comms: IComms): boolean {
         this.wnd = wnd;
@@ -1236,6 +1247,7 @@ export class Decorator extends Module {
         this.resizeObserver.observe(wnd.document.documentElement);
         wnd.addEventListener("orientationchange", this.handleResizer);
         wnd.addEventListener("resize", this.handleResizer);
+        wnd.addEventListener("scroll", this.handleScroller, { passive: true });
 
         // Watch for any style change on <html> — covers appearance, background color,
         // font size, line height, margins, and anything else that reflows text.
@@ -1261,6 +1273,7 @@ export class Decorator extends Module {
     unmount(wnd: Window, comms: IComms): boolean {
         wnd.removeEventListener("orientationchange", this.handleResizer);
         wnd.removeEventListener("resize", this.handleResizer);
+        wnd.removeEventListener("scroll", this.handleScroller);
 
         comms.unregisterAll(Decorator.moduleName);
         this.resizeObserver.disconnect();
