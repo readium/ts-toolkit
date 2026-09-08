@@ -25,11 +25,11 @@ export function decodeTextFragmentDirective(textref: string | undefined): TextFr
     let parts = raw.split(",");
     const result: TextFragmentDirective = { textStart: "" };
 
-    if (parts[0]!.endsWith("-")) {
+    if (parts.length > 1 && parts[0]!.endsWith("-")) {
       result.prefix = decodeURIComponent(parts[0]!.slice(0, -1));
       parts = parts.slice(1);
     }
-    if (parts.length > 0 && parts[parts.length - 1]!.startsWith("-")) {
+    if (parts.length > 1 && parts[parts.length - 1]!.startsWith("-")) {
       result.suffix = decodeURIComponent(parts[parts.length - 1]!.slice(1));
       parts = parts.slice(0, -1);
     }
