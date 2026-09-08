@@ -51,21 +51,25 @@ export function rangeFromLocator(doc: Document, locator: Locator) {
                 const start = resolveDomRangePoint(doc, domRange.start);
                 const end = domRange.end ? resolveDomRangePoint(doc, domRange.end) : start;
                 if (start && end) {
-                    const range = doc.createRange();
+                    try {
+                        const range = doc.createRange();
 
-                    if (start.offset !== undefined) {
-                        range.setStart(start.node, start.offset);
-                    } else {
-                        range.setStartBefore(start.node);
+                        if (start.offset !== undefined) {
+                            range.setStart(start.node, start.offset);
+                        } else {
+                            range.setStartBefore(start.node);
+                        }
+
+                        if (end.offset !== undefined) {
+                            range.setEnd(end.node, end.offset);
+                        } else {
+                            range.setEndBefore(end.node);
+                        }
+
+                        return range;
+                    } catch (error) {
+                        console.warn("Invalid domRange, falling back:", error);
                     }
-
-                    if (end.offset !== undefined) {
-                        range.setEnd(end.node, end.offset);
-                    } else {
-                        range.setEndBefore(end.node);
-                    }
-
-                    return range;
                 }
             }
         }
