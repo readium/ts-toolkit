@@ -167,6 +167,11 @@ class DecorationGroup {
         return this._hoverable;
     }
 
+    /** True if this group has at least one item rendered via the DOM overlay path (not CSS Highlight API). */
+    get hasOverlayItems(): boolean {
+        return !this.experimentalHighlights || (this.notTextFlag?.size ?? 0) > 0;
+    }
+
     set hoverable(value: boolean) {
         this._hoverable = value;
         if (!value && this.hoveredItem) {
@@ -1166,7 +1171,7 @@ export class Decorator extends Module {
         this.wnd.clearTimeout(this.resizeFrame);
         this.resizeFrame = this.wnd.setTimeout(() => {
             this.groups.forEach(g => {
-                if(!g.experimentalHighlights) g.requestLayout();
+                if(g.hasOverlayItems) g.requestLayout();
             });
         }, 50);
     }
