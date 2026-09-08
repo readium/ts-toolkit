@@ -2,11 +2,11 @@ import { Link, MediaType, Publication, ReadingProgression } from "@readium/share
 import { Injector } from "../../injection/Injector.ts";
 import { getScriptMode } from "../../helpers/scriptMode.ts";
 
-const csp = (domains: string[]) => {
+const csp = (domains: string[], secure = true) => {
     const d = domains.join(" ");
     return [
         // 'self' is useless because the document is loaded from a blob: URL
-        `upgrade-insecure-requests`,
+        ...(secure ? [`upgrade-insecure-requests`] : []),
         `default-src ${d} blob:`,
         `connect-src 'none'`, // No fetches to anywhere. TODO: change?
         `script-src ${d} blob: 'unsafe-inline'`, // JS scripts
@@ -178,9 +178,10 @@ export default class FrameBlobBuider {
         }
 
         // Add CSP with allowed domains
+        const secure = typeof root === "string" && root.startsWith("https:");
         const meta = doc.createElement("meta");
         meta.httpEquiv = "Content-Security-Policy";
-        meta.content = csp(domains);
+        meta.content = csp(domains, secure);
         meta.dataset.readium = "true";
         doc.head.firstChild!.before(meta);
 
