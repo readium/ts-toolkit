@@ -125,6 +125,10 @@ importers:
         version: 7.3.1(@types/node@25.0.9)
 
   shared:
+    dependencies:
+      '@readium/helpers':
+        specifier: workspace:*
+        version: link:../helpers
     devDependencies:
       '@babel/core':
         specifier: ^7.28.6

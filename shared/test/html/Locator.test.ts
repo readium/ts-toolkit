@@ -1,4 +1,4 @@
-import { DomRange, DomRangePoint, LocatorLocations, getCssSelector, getPartialCfi, getDomRange } from '../../src';
+import { DomRange, DomRangePoint, LocatorLocations, getCssSelector, getPartialCfi, getDomRange, getTextFragment } from '../../src';
 
 describe('Locator Html Extension Tests', () => {
   it('get Locations {cssSelector} when available', () => {
@@ -41,5 +41,54 @@ describe('Locator Html Extension Tests', () => {
 
   it('get Locations {domRange} when missing', () => {
     expect(getDomRange(new LocatorLocations({}))).toBeUndefined();
+  });
+
+  it('get Locations {textFragment} exact match, when available', () => {
+    expect(
+      getTextFragment(new LocatorLocations({
+        fragments: [':~:text=Hello'],
+      }))
+    ).toEqual({ textStart: 'Hello' });
+  });
+
+  it('get Locations {textFragment} range match with prefix/suffix, when available', () => {
+    expect(
+      getTextFragment(new LocatorLocations({
+        fragments: [':~:text=pre-,Hello,World,-post'],
+      }))
+    ).toEqual({
+      prefix: 'pre',
+      textStart: 'Hello',
+      textEnd: 'World',
+      suffix: 'post',
+    });
+  });
+
+  it('get Locations {textFragment} finds the directive among unrelated fragments', () => {
+    expect(
+      getTextFragment(new LocatorLocations({
+        fragments: ['chapter3', ':~:text=Hello'],
+      }))
+    ).toEqual({ textStart: 'Hello' });
+  });
+
+  it('get Locations {textFragment} finds the directive when glued onto another fragment in the same string', () => {
+    expect(
+      getTextFragment(new LocatorLocations({
+        fragments: ['css(p.chapter):~:text=Hello'],
+      }))
+    ).toEqual({ textStart: 'Hello' });
+  });
+
+  it('get Locations {textFragment} when missing', () => {
+    expect(getTextFragment(new LocatorLocations({}))).toBeUndefined();
+  });
+
+  it('get Locations {textFragment} ignores fragments without a directive', () => {
+    expect(
+      getTextFragment(new LocatorLocations({
+        fragments: ['chapter3', 'css=p.chapter', 'page=12'],
+      }))
+    ).toBeUndefined();
   });
 });

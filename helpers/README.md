@@ -1,11 +1,11 @@
 # @readium/helpers
 
-General-purpose browser helpers for Readium packages: color parsing/contrast utilities and OS/browser detection.
+General-purpose browser helpers for Readium packages: color parsing/contrast utilities, OS/browser detection, and WICG Text Fragment parsing/resolution/generation.
 
 ## Installation
 
 ```ts
-import { colorToRgba, checkContrast, isDarkColor, isLightColor, getContrastingTextColor, adjustColorForContrast, getLuminance, sML, sMLWithRequest } from "@readium/helpers";
+import { colorToRgba, checkContrast, isDarkColor, isLightColor, getContrastingTextColor, adjustColorForContrast, getLuminance, sML, sMLWithRequest, decodeTextFragmentDirective, processTextFragmentDirective, generateFragmentFromRange } from "@readium/helpers";
 ```
 
 ## Color utilities
@@ -45,6 +45,24 @@ sMLWithRequest.iOSRequest // "mobile" | "desktop" | undefined — iPadOS "Reques
 
 `sML` is a bundled subset of [sML.js](https://github.com/satorumurmur/sML) by Satoru Matsushima, MIT licensed. Falls back safely when `navigator` is unavailable (SSR).
 
+## Text Fragments
+
+```ts
+// Parses a "text=[prefix-,]textStart[,textEnd][,-suffix]" directive out of a URL fragment/hash
+decodeTextFragmentDirective("#some-id:~:text=hello,world"): TextFragmentDirective | undefined
+
+// Resolves a TextFragmentDirective to zero or more Ranges in a document
+processTextFragmentDirective(directive, document, root?): Range[]
+
+// Generates a TextFragmentDirective that uniquely resolves back to the given Range
+generateFragmentFromRange(range): { status: GenerateFragmentStatusValue; fragment?: TextFragment }
+```
+
+`processTextFragmentDirective` and `generateFragmentFromRange` come from a vendored [text-fragments-polyfill](https://github.com/GoogleChromeLabs/text-fragments-polyfill) — see [Third-party licenses](#third-party-licenses).
+
 ## Third-party licenses
 
-This package is BSD-3-Clause, except for `src/sML.ts`, which vendors code from [sML.js](https://github.com/satorumurmur/sML), Copyright (c) Satoru Matsushima, licensed under the MIT license (see the header of that file for the full notice).
+This package is BSD-3-Clause, except for:
+
+- `src/sML.ts`, which vendors code from [sML.js](https://github.com/satorumurmur/sML), Copyright (c) Satoru Matsushima, licensed under the MIT license (see the header of that file for the full notice)
+- `src/vendor/text-fragments-polyfill/`, ported from [text-fragments-polyfill](https://github.com/GoogleChromeLabs/text-fragments-polyfill), licensed under the Apache License 2.0 (see that directory's `LICENSE` and `README.MD`)

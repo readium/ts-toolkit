@@ -18,7 +18,11 @@ npm install @readium/decorator
 
 - **Comms**: `DecorationController` (your app logic) and `Decorator` (the DOM renderer) talk over a small message-passing interface, handled for you by `DirectCommsChannel` (below).
 - **Groups**: every decoration belongs to a `group` (an arbitrary string you choose — `"tts"`, `"search-results"`, `"annotations"`, etc). `applyDecorations` replaces *all* decorations for one group at a time, diffing against that group's previous state. Separate groups don't interfere with each other, and each can independently opt into activation (tap/click) and hover tracking depending on which callbacks its `DecorationObserver` declares.
-- **Locators**: each decoration's `locator` is a `Locator` instance from `@readium/shared`, identifying the text range (or other target) to decorate within a resource.
+- **Locators**: each decoration's `locator` is a `Locator` instance from `@readium/shared`, identifying the text range (or other target) to decorate within a resource. Resolving a `Locator` to an actual DOM range tries each of the following in order, falling through when a strategy is absent, invalid, or unresolvable:
+    1. `locations`' `domRange` — an exact node/offset selection
+    2. a WICG text-fragment directive (`:~:text=...`) found in `locations.fragments`
+    3. `text.highlight` — a quote search, disambiguated by `text.before`/`text.after`
+    4. `locations`' `cssSelector`, then an element id from `locations.fragments`
 
 ## Usage
 
