@@ -2,7 +2,7 @@
 // text=[prefix-,]textStart[,textEnd][,-suffix]
 // https://wicg.github.io/scroll-to-text-fragment/
 
-export const TEXT_DIRECTIVE_MARK = ":~:text=";
+const TEXT_DIRECTIVE_MARK = ":~:text=";
 
 export interface TextFragmentDirective {
   textStart: string;

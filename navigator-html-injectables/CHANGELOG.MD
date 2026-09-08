@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] – 2026-09-08
+
+### Added
+
+- `rangeFromLocator` can now resolve a `Locator`'s `domRange` (an exact node/offset selection) or a WICG text-fragment directive found in `locations.fragments`, in addition to `text.highlight` and element/id fallbacks — trying each strategy in turn and falling through safely if one is invalid or unresolvable ([#249](https://github.com/readium/ts-toolkit/pull/249))
+
 ## [2.6.3] – 2026-07-23
 
 ### Changed
