@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.0] – 2026-09-10
+
+### Added
+
+- `Decorator` can now watch additional elements for resize via `resizeWatchSelectors` (config) and `addDecorationResizeTarget`/`removeDecorationResizeTarget`, so decoration overlays relay out when an element resizes for reasons that don't affect the document's own size — e.g. a sidebar collapsing and the reading pane reflowing inside it
+
+### Fixed
+
+- Removing the last `Mask` decoration in a group no longer leaves an orphaned, unreachable shadow-host element attached to the document, and no longer removes other decorations sharing the same shadow root along with it
+
 ## [2.7.1] – 2026-09-09
 
 ### Fixed

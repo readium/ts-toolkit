@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] – 2026-09-10
+
+### Added
+
+- `DecorationController` can now watch additional elements for resize via `resizeWatchSelectors` (config) and `addDecorationResizeTarget`/`removeDecorationResizeTarget`, so decoration overlays relay out when an element resizes for reasons that don't affect the document's own size — e.g. a sidebar collapsing and the reading pane reflowing inside it, via updated `@readium/navigator-html-injectables`
+
+### Fixed
+
+- Removing the last `Mask` decoration no longer leaks an orphaned shadow-host element or removes other decorations sharing the same shadow root, via updated `@readium/navigator-html-injectables`
+
 ## [1.1.1] – 2026-09-09
 
 ### Fixed
