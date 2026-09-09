@@ -1225,6 +1225,7 @@ export class Decorator extends Module {
     private resizeObserver!: ResizeObserver;
     private styleObserver!: MutationObserver;
     private wnd!: Window;
+    private observedResizeTargets = new Map<string, Element>();
     /*private readonly lastSize = {
         width: 0,
         height: 0
@@ -1237,6 +1238,7 @@ export class Decorator extends Module {
     private cleanup() {
         this.groups.forEach(g => g.destroy());
         this.groups.clear();
+        this.observedResizeTargets.clear();
     }
 
     private updateHighlightStyles() {
@@ -1374,12 +1376,23 @@ export class Decorator extends Module {
     }
 
     private addDecorationResizeTarget(selector: string): void {
+        const existing = this.observedResizeTargets.get(selector);
+        if (existing) this.resizeObserver.unobserve(existing);
+
         const el = this.wnd.document.querySelector(selector);
-        if (el) this.resizeObserver.observe(el);
+        if (el) {
+            this.resizeObserver.observe(el);
+            this.observedResizeTargets.set(selector, el);
+        } else {
+            this.observedResizeTargets.delete(selector);
+        }
     }
 
     private removeDecorationResizeTarget(selector: string): void {
-        const el = this.wnd.document.querySelector(selector);
-        if (el) this.resizeObserver.unobserve(el);
+        const el = this.observedResizeTargets.get(selector);
+        if (el) {
+            this.resizeObserver.unobserve(el);
+            this.observedResizeTargets.delete(selector);
+        }
     }
 }
