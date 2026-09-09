@@ -342,8 +342,7 @@ class DecorationGroup {
         this.wnd.document.removeEventListener("pointermove", this.hoverHandler);
     }
 
-    private clientRectsToDocCoords(rects: Rect[]): Rect[] {
-        const ctx = makeWritingContext(this.wnd);
+    private clientRectsToDocCoords(rects: Rect[], ctx: WritingContext = makeWritingContext(this.wnd)): Rect[] {
         const dx = ctx.xDocOffset;
         const dy = ctx.yDocOffset;
         if (dx === 0 && dy === 0) return rects;
@@ -514,18 +513,19 @@ class DecorationGroup {
     repositionOverlays() {
         let hasMaskItem = false;
         const relaidOut: DecorationItem[] = [];
+        const ctx = makeWritingContext(this.wnd);
         this.items.forEach(item => {
             if (this.experimentalHighlights && !this.notTextFlag?.has(item.id)) return;
             if (item.decoration.style?.type === DecorationStyleType.Mask) {
                 hasMaskItem = true;
                 return;
             }
-            if (!this.repositionItem(item)) {
+            if (!this.repositionItem(item, ctx)) {
                 item.container?.remove();
                 this.layout(item);
                 relaidOut.push(item);
             }
-            item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, ((item.decoration.style as BuiltinDecorationStyle).expand ?? 0) + this.hitGap()));
+            item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, ((item.decoration.style as BuiltinDecorationStyle).expand ?? 0) + this.hitGap()), ctx);
         });
         if (relaidOut.length) this.renderLayout(relaidOut);
         if (hasMaskItem) this.updateSharedMask();
@@ -785,7 +785,7 @@ class DecorationGroup {
      * longer matches the current geometry (a genuine reflow happened), signalling the
      * caller to fall back to a full layout().
      */
-    private repositionItem(item: DecorationItem): boolean {
+    private repositionItem(item: DecorationItem, ctx: WritingContext): boolean {
         if (!item.container) return true;
         const decoStyle = item.decoration.style;
         if (decoStyle.type !== DecorationStyleType.Template) {
@@ -793,7 +793,6 @@ class DecorationGroup {
             if (type === DecorationStyleType.TextColor || type === DecorationStyleType.Mask) return true;
         }
 
-        const ctx = makeWritingContext(this.wnd);
         const iz = 1 / this.effectiveZoom();
         const expand = (decoStyle as BuiltinDecorationStyle).expand ?? 0;
         const boundingRect = item.range.getBoundingClientRect();
