@@ -30,6 +30,7 @@ export class FXLFramePoolManager {
     private readonly injector: Injector | null = null;
     private readonly contentProtectionConfig: IContentProtectionConfig;
     private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
+    private resizeWatchSelectors: string[];
 
     // NEW
     private readonly bookElement: HTMLDivElement;
@@ -55,6 +56,7 @@ export class FXLFramePoolManager {
         injector?: Injector | null,
         contentProtectionConfig?: IContentProtectionConfig,
         keyboardPeripheralsConfig?: IKeyboardPeripheralsConfig,
+        resizeWatchSelectors: string[] = [],
     ) {
         this.container = container;
         this.positions = positions;
@@ -62,6 +64,7 @@ export class FXLFramePoolManager {
         this.injector = injector ?? null;
         this.contentProtectionConfig = contentProtectionConfig || {};
         this.keyboardPeripheralsConfig = keyboardPeripheralsConfig || [];
+        this.resizeWatchSelectors = [...resizeWatchSelectors];
         this.spreadPresentation = pub.metadata.otherMetadata?.spread || Spread.auto;
 
         if(this.pub.metadata.effectiveReadingProgression !== ReadingProgression.rtl && this.pub.metadata.effectiveReadingProgression !== ReadingProgression.ltr)
@@ -88,7 +91,7 @@ export class FXLFramePoolManager {
 
         this.pub.readingOrder.items.forEach((link) => {
             // Create <iframe>
-            const fm = new FXLFrameManager(this.peripherals, this.pub.metadata.effectiveReadingProgression, link.href, this.contentProtectionConfig, this.keyboardPeripheralsConfig);
+            const fm = new FXLFrameManager(this.peripherals, this.pub.metadata.effectiveReadingProgression, link.href, this.contentProtectionConfig, this.keyboardPeripheralsConfig, this.resizeWatchSelectors);
             this.spineElement.appendChild(fm.element);
 
             // this.pages.push(fm);
@@ -593,6 +596,16 @@ export class FXLFramePoolManager {
         for (const s of spread) {
             this.inprogress.delete(s.href); // Delete it from the in progress map!
         }
+    }
+
+    addResizeTarget(selector: string): void {
+        if (!this.resizeWatchSelectors.includes(selector)) this.resizeWatchSelectors.push(selector);
+        this.pool.forEach(f => f.addResizeTarget(selector));
+    }
+
+    removeResizeTarget(selector: string): void {
+        this.resizeWatchSelectors = this.resizeWatchSelectors.filter(s => s !== selector);
+        this.pool.forEach(f => f.removeResizeTarget(selector));
     }
 
     get currentFrames(): (FXLFrameManager | undefined)[] {

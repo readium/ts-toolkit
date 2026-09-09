@@ -14,6 +14,7 @@ export class WebPubFrameManager {
     private destroyed: boolean = false;
     private readonly contentProtectionConfig: IContentProtectionConfig;
     private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
+    private resizeWatchSelectors: string[];
     private conditionBridge?: KeyboardConditionBridge;
     private currModules: ModuleName[] = [];
 
@@ -21,7 +22,8 @@ export class WebPubFrameManager {
         source: string,
         contentProtectionConfig: IContentProtectionConfig = {},
         keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = [],
-        private readonly timelineFragmentIds: string[] = []
+        private readonly timelineFragmentIds: string[] = [],
+        resizeWatchSelectors: string[] = []
     ) {
         this.frame = document.createElement("iframe");
         this.frame.classList.add("readium-navigator-iframe");
@@ -38,6 +40,7 @@ export class WebPubFrameManager {
         // Use the provided content protection config directly without overriding defaults
         this.contentProtectionConfig = { ...contentProtectionConfig };
         this.keyboardPeripheralsConfig = [...keyboardPeripheralsConfig];
+        this.resizeWatchSelectors = [...resizeWatchSelectors];
     }
 
     async load(modules: ModuleName[] = []): Promise<Window> {
@@ -97,6 +100,21 @@ export class WebPubFrameManager {
         if (this.contentProtectionConfig.protectPrinting?.disable) {
             this.comms!.send("print_protection", this.contentProtectionConfig.protectPrinting);
         }
+
+        // Send resize-watch targets
+        this.resizeWatchSelectors.forEach(selector => {
+            this.comms!.send("decoration_resize", { action: "watch", selector });
+        });
+    }
+
+    addResizeTarget(selector: string): void {
+        if (!this.resizeWatchSelectors.includes(selector)) this.resizeWatchSelectors.push(selector);
+        if (this.comms?.ready) this.comms.send("decoration_resize", { action: "watch", selector });
+    }
+
+    removeResizeTarget(selector: string): void {
+        this.resizeWatchSelectors = this.resizeWatchSelectors.filter(s => s !== selector);
+        if (this.comms?.ready) this.comms.send("decoration_resize", { action: "unwatch", selector });
     }
 
     async destroy() {

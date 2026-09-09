@@ -21,6 +21,7 @@ export class FramePoolManager {
     private readonly injector: Injector | null = null;
     private readonly contentProtectionConfig: IContentProtectionConfig;
     private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
+    private resizeWatchSelectors: string[];
     private readonly getFragmentIds: (href: string) => string[];
 
     constructor(
@@ -30,7 +31,8 @@ export class FramePoolManager {
         injector?: Injector | null,
         contentProtectionConfig?: IContentProtectionConfig,
         keyboardPeripheralsConfig?: IKeyboardPeripheralsConfig,
-        getFragmentIds?: (href: string) => string[]
+        getFragmentIds?: (href: string) => string[],
+        resizeWatchSelectors: string[] = []
     ) {
         this.container = container;
         this.positions = positions;
@@ -39,6 +41,20 @@ export class FramePoolManager {
         this.contentProtectionConfig = contentProtectionConfig || {};
         this.keyboardPeripheralsConfig = keyboardPeripheralsConfig || [];
         this.getFragmentIds = getFragmentIds ?? (() => []);
+        this.resizeWatchSelectors = [...resizeWatchSelectors];
+    }
+
+    addResizeTarget(selector: string): void {
+        if (!this.resizeWatchSelectors.includes(selector)) this.resizeWatchSelectors.push(selector);
+        // Forward to the whole pool, not just currentFrames: off-screen cached frames
+        // (preloaded within the pool's boundary window) must not keep stale state that
+        // resurfaces if they're shown again later without being recreated.
+        this.pool.forEach(f => f.addResizeTarget(selector));
+    }
+
+    removeResizeTarget(selector: string): void {
+        this.resizeWatchSelectors = this.resizeWatchSelectors.filter(s => s !== selector);
+        this.pool.forEach(f => f.removeResizeTarget(selector));
     }
 
     async destroy() {
@@ -174,7 +190,7 @@ export class FramePoolManager {
                 }
 
                 // Create <iframe>
-                const fm = new FrameManager(this.blobs.get(href)!, this.contentProtectionConfig, this.keyboardPeripheralsConfig, this.getFragmentIds(href));
+                const fm = new FrameManager(this.blobs.get(href)!, this.contentProtectionConfig, this.keyboardPeripheralsConfig, this.getFragmentIds(href), this.resizeWatchSelectors);
                 if(href !== newHref) await fm.hide(); // Avoid unecessary hide
                 this.container.appendChild(fm.iframe);
                 await fm.load(modules);

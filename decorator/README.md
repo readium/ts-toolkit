@@ -90,8 +90,8 @@ class DecorationController {
     // Watches an additional element for resize, so decorations relay out when it resizes
     // even if the document's own size doesn't change (e.g. a sidebar collapsing and the
     // reading pane reflowing inside it). Selector is resolved against the Decorator's document.
-    observeElement(selector: string): void
-    unobserveElement(selector: string): void
+    addDecorationResizeTarget(selector: string): void
+    removeDecorationResizeTarget(selector: string): void
 
     destroy(): void
 }
@@ -101,7 +101,7 @@ interface DecorationControllerConfig {
     decorationTemplates?: Record<string, HTMLDecorationTemplate>;
 
     // CSS selectors to watch for resize from construction, equivalent to calling
-    // observeElement() for each one right after construction.
+    // addDecorationResizeTarget() for each one right after construction.
     resizeWatchSelectors?: string[];
 }
 ```

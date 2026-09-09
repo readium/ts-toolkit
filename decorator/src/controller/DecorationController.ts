@@ -16,7 +16,7 @@ export class DecorationController {
 
     constructor(private readonly host: DirectCommsHost, config: DecorationControllerConfig = {}) {
         this._config = config;
-        config.resizeWatchSelectors?.forEach(selector => this.observeElement(selector));
+        config.resizeWatchSelectors?.forEach(selector => this.addDecorationResizeTarget(selector));
         host.on("decoration_activated", (raw) => {
             const ev = raw as DecorationActivatedEvent;
             const decoration = this._decorations.get(ev.group)?.find(d => d.id === ev.decorationId);
@@ -48,11 +48,11 @@ export class DecorationController {
         });
     }
 
-    observeElement(selector: string): void {
+    addDecorationResizeTarget(selector: string): void {
         this.host.send("decoration_resize", { action: "watch", selector });
     }
 
-    unobserveElement(selector: string): void {
+    removeDecorationResizeTarget(selector: string): void {
         this.host.send("decoration_resize", { action: "unwatch", selector });
     }
 

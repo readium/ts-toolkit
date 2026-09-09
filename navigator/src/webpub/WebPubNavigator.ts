@@ -100,6 +100,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private _decorationActivationState: Map<string, boolean> = new Map();
     private _decorationHoverState: Map<string, boolean> = new Map();
     private _decorationActivationConsumed = false;
+    private _decorationResizeSelectors: Set<string>;
 
     private webViewport: VisualNavigatorViewport = {
         readingOrder: [],
@@ -134,6 +135,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         // Initialize content protection with provided config or default values
         this._contentProtection = configuration.contentProtection || {};
         this._decoratorConfig = configuration.decoratorConfig || {};
+        this._decorationResizeSelectors = new Set(this._decoratorConfig.resizeWatchSelectors ?? []);
 
         // Merge keyboard peripherals
         this._keyboardPeripherals = this.mergeKeyboardPeripherals(
@@ -200,7 +202,8 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             (href) => this.pub.timeline.segmentsForHref(href)
                 .flatMap(item => item.references)
                 .map(ref => { const h = ref.indexOf('#'); return h >= 0 ? ref.slice(h + 1) : ''; })
-                .filter(Boolean)
+                .filter(Boolean),
+            [...this._decorationResizeSelectors]
         );
 
         await this.apply();
@@ -467,6 +470,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         this._decorationHoveredDecorations.clear();
         this._decorationActivationState.clear();
         this._decorationHoverState.clear();
+        this._decorationResizeSelectors.clear();
     }
 
     // DecorableNavigator
@@ -518,6 +522,21 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private _sendDecorationHoverable(group: string, hoverable: boolean): void {
         const frame = this.framePool?.currentFrames[0];
         if (frame?.msg) frame.msg.send("decoration_hoverable", { group, hoverable });
+    }
+
+    // Watches an element within the current content document for resize, so decoration
+    // overlays relay out when it resizes even if the resource's own document size doesn't
+    // change. Forwarded to framePool the same way contentProtectionConfig/
+    // keyboardPeripheralsConfig are — applied on every frame show(), not replayed
+    // reactively off decoration state.
+    public addDecorationResizeTarget(selector: string): void {
+        this._decorationResizeSelectors.add(selector);
+        this.framePool?.addResizeTarget(selector);
+    }
+
+    public removeDecorationResizeTarget(selector: string): void {
+        this._decorationResizeSelectors.delete(selector);
+        this.framePool?.removeResizeTarget(selector);
     }
 
     public applyDecorations(decorations: Decoration[], group: string): void {

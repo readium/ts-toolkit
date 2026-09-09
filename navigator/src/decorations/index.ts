@@ -42,4 +42,14 @@ export interface DecorableNavigator {
 
     /** Unregisters a previously registered observer from all groups. */
     unregisterDecorationObserver(observer: DecorationObserver): void;
+
+    /**
+     * Watches an element within the current content document for resize, so decoration
+     * overlays relay out when it resizes even if the resource's own document size doesn't
+     * change (e.g. a sidebar collapsing and the reading pane reflowing inside it).
+     */
+    addDecorationResizeTarget(selector: string): void;
+
+    /** Stops watching an element previously registered with addDecorationResizeTarget. */
+    removeDecorationResizeTarget(selector: string): void;
 }

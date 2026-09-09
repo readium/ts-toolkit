@@ -1306,8 +1306,8 @@ export class Decorator extends Module {
 
         comms.register("decoration_resize", Decorator.moduleName, (data, ack) => {
             const req = data as DecorationResizeRequest;
-            if (req.action === "watch") this.observeElement(req.selector);
-            else this.unobserveElement(req.selector);
+            if (req.action === "watch") this.addDecorationResizeTarget(req.selector);
+            else this.removeDecorationResizeTarget(req.selector);
             ack(true);
         });
 
@@ -1373,12 +1373,12 @@ export class Decorator extends Module {
         return true;
     }
 
-    private observeElement(selector: string): void {
+    private addDecorationResizeTarget(selector: string): void {
         const el = this.wnd.document.querySelector(selector);
         if (el) this.resizeObserver.observe(el);
     }
 
-    private unobserveElement(selector: string): void {
+    private removeDecorationResizeTarget(selector: string): void {
         const el = this.wnd.document.querySelector(selector);
         if (el) this.resizeObserver.unobserve(el);
     }

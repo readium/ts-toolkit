@@ -114,6 +114,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private _decorationActivationState: Map<string, boolean> = new Map();
     private _decorationHoverState: Map<string, boolean> = new Map();
     private _decorationActivationConsumed = false;
+    private _decorationResizeSelectors: Set<string>;
 
     private reflowViewport: VisualNavigatorViewport = {
         readingOrder: [],
@@ -175,6 +176,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
         this._contentProtection = configuration.contentProtection || {};
         this._decoratorConfig = configuration.decoratorConfig || {};
+        this._decorationResizeSelectors = new Set(this._decoratorConfig.resizeWatchSelectors ?? []);
 
         // Merge keyboard peripherals
         this._keyboardPeripherals = this.mergeKeyboardPeripherals(
@@ -269,7 +271,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 this.pub,
                 this._injector,
                 this._contentProtection,
-                this._keyboardPeripherals
+                this._keyboardPeripherals,
+                [...this._decorationResizeSelectors]
             );
             this.framePool.listener = (key: CommsEventKey | ManagerEventKey, data: unknown) => {
                 this.eventListener(key, data);
@@ -287,7 +290,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 (href) => this.pub.timeline.segmentsForHref(href)
                     .flatMap(item => item.references)
                     .map(ref => { const h = ref.indexOf('#'); return h >= 0 ? ref.slice(h + 1) : ''; })
-                    .filter(Boolean)
+                    .filter(Boolean),
+                [...this._decorationResizeSelectors]
             );
         }
 
@@ -725,6 +729,21 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         });
     }
 
+    // Watches an element within the current content document(s) for resize, so decoration
+    // overlays relay out when it resizes even if the resource's own document size doesn't
+    // change. Not resource-scoped: forwarded to every frame, current and future, via
+    // framePool the same way contentProtectionConfig/keyboardPeripheralsConfig are — applied
+    // on every frame show(), not just replayed reactively off decoration state.
+    public addDecorationResizeTarget(selector: string): void {
+        this._decorationResizeSelectors.add(selector);
+        this.framePool?.addResizeTarget(selector);
+    }
+
+    public removeDecorationResizeTarget(selector: string): void {
+        this._decorationResizeSelectors.delete(selector);
+        this.framePool?.removeResizeTarget(selector);
+    }
+
     public applyDecorations(decorations: Decoration[], group: string): void {
         const previous = this._decorations.get(group) ?? [];
         const prevById = new Map(previous.map(d => [d.id, d]));
@@ -869,6 +888,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this._decorationHoveredDecorations.clear();
         this._decorationActivationState.clear();
         this._decorationHoverState.clear();
+        this._decorationResizeSelectors.clear();
     }
 
     private async changeResource(relative: number): Promise<boolean> {
