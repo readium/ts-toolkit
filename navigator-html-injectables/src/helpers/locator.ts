@@ -35,14 +35,14 @@ function resolveDomRangePoint(doc: Document, point: DomRangePoint): { node: Text
         return null;
     }
 
-    const walker = doc.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    // textNodeIndex counts only direct-child text nodes (spec: html.md "child Text node"),
+    // matching the generator in @readium/speech's domRangeGenerator.
     let index = 0;
-    let node: Node | null;
-    while ((node = walker.nextNode())) {
-        if (index === point.textNodeIndex) {
-            return { node: node as Text, offset: point.charOffset };
+    for (const child of container.childNodes) {
+        if (child.nodeType === Node.TEXT_NODE) {
+            if (index === point.textNodeIndex) return { node: child as Text, offset: point.charOffset };
+            index++;
         }
-        index++;
     }
 
     console.error(`Can't resolve domRange textNodeIndex ${point.textNodeIndex} for selector: ${point.cssSelector}`);
