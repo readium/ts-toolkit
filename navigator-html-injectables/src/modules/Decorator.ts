@@ -6,7 +6,7 @@ import { ModuleName } from "./ModuleLibrary.ts";
 import { Rect, getClientRectsNoOverlap, getTextClientRects, rectContainsPoint } from "../helpers/rect.ts";
 import { getProperty } from "../helpers/css.ts";
 import { isDarkColor, getContrastingTextColor, adjustColorForContrast, colorToRgba } from "@readium/helpers";
-import { makeWritingContext } from "../helpers/document.ts";
+import { makeWritingContext, WritingContext } from "../helpers/document.ts";
 import { sML } from "@readium/helpers";
 import { sanitizeHTML } from "../helpers/sanitize.ts";
 
@@ -165,6 +165,11 @@ class DecorationGroup {
 
     get hoverable() {
         return this._hoverable;
+    }
+
+    /** True if this group has at least one item rendered via the DOM overlay path (not CSS Highlight API). */
+    get hasOverlayItems(): boolean {
+        return !this.experimentalHighlights || (this.notTextFlag?.size ?? 0) > 0;
     }
 
     set hoverable(value: boolean) {
@@ -337,8 +342,7 @@ class DecorationGroup {
         this.wnd.document.removeEventListener("pointermove", this.hoverHandler);
     }
 
-    private clientRectsToDocCoords(rects: Rect[]): Rect[] {
-        const ctx = makeWritingContext(this.wnd);
+    private clientRectsToDocCoords(rects: Rect[], ctx: WritingContext = makeWritingContext(this.wnd)): Rect[] {
         const dx = ctx.xDocOffset;
         const dy = ctx.yDocOffset;
         if (dx === 0 && dy === 0) return rects;
@@ -501,6 +505,32 @@ class DecorationGroup {
         });
     }
 
+    /**
+     * Cheap scroll-driven pass: repositions existing overlay elements in place instead of
+     * requestLayout()'s full destroy-and-rebuild, only falling back to a full layout()
+     * per item when geometry has genuinely changed shape (a real reflow).
+     */
+    repositionOverlays() {
+        let hasMaskItem = false;
+        const relaidOut: DecorationItem[] = [];
+        const ctx = makeWritingContext(this.wnd);
+        this.items.forEach(item => {
+            if (this.experimentalHighlights && !this.notTextFlag?.has(item.id)) return;
+            if (item.decoration.style?.type === DecorationStyleType.Mask) {
+                hasMaskItem = true;
+                return;
+            }
+            if (!this.repositionItem(item, ctx)) {
+                item.container?.remove();
+                this.layout(item);
+                relaidOut.push(item);
+            }
+            item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, ((item.decoration.style as BuiltinDecorationStyle).expand ?? 0) + this.hitGap()), ctx);
+        });
+        if (relaidOut.length) this.renderLayout(relaidOut);
+        if (hasMaskItem) this.updateSharedMask();
+    }
+
     private experimentalLayout(item: DecorationItem) {
         const stylesheet = this.requireContainer(true) as HTMLStyleElement;
         const cssHighlights = (this.wnd as any).CSS.highlights as Map<string, any>;
@@ -656,6 +686,131 @@ class DecorationGroup {
     }
 
     /**
+     * Positions a single overlay element according to the decoration's width mode.
+     */
+    private positionElement(item: DecorationItem, ctx: WritingContext, iz: number, element: HTMLElement, rect: Rect, boundingRect: DOMRect, inlineInset = 0) {
+        const w = item.decoration?.style?.width;
+        const r = rect;
+        switch (w) {
+            case DecorationWidth.Viewport: {
+                const snap = Math.floor(ctx.inlineStart(r) / ctx.viewportInlineSize) * ctx.viewportInlineSize;
+                ctx.applyPosition(element, snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.viewportInlineSize - 2 * inlineInset, ctx.blockSize(r), iz);
+                break;
+            }
+            case DecorationWidth.Page: {
+                const snap = Math.floor(ctx.inlineStart(r) / ctx.pageInlineSize) * ctx.pageInlineSize;
+                ctx.applyPosition(element, snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.pageInlineSize - 2 * inlineInset, ctx.blockSize(r), iz);
+                break;
+            }
+            case DecorationWidth.Bounds: {
+                ctx.applyPosition(element, ctx.inlineStart(boundingRect) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(boundingRect), ctx.blockSize(r), iz);
+                break;
+            }
+            default: {
+                ctx.applyPosition(element, ctx.inlineStart(r) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(r), ctx.blockSize(r), iz);
+            }
+        }
+    }
+
+    /**
+     * Computes the ordered list of rects an overlay item's elements should occupy
+     * (one rect for Bounds layout, one per merged client rect for Boxes layout).
+     * Shared between the full build path (layout) and the cheap reposition path.
+     */
+    private computeOverlayRects(item: DecorationItem, ctx: WritingContext, boundingRect: DOMRect, expand: number): Rect[] {
+        if (item.decoration?.style?.layout === DecorationLayout.Bounds) {
+            const boundsRect: Rect = expand ? {
+                left:   boundingRect.left   - expand,
+                right:  boundingRect.right  + expand,
+                top:    boundingRect.top    - expand,
+                bottom: boundingRect.bottom + expand,
+                width:  boundingRect.width  + expand * 2,
+                height: boundingRect.height + expand * 2,
+            } : boundingRect;
+            return [boundsRect];
+        }
+
+        // Fall back to "boxes" value for layout.
+        // For underline/strikethrough, pre-filter to text-node rects only so Ruby
+        // (rt/rp) glyphs don't produce a separate decoration segment above the base text.
+        const decoStyle = item.decoration.style;
+        const decoType = (decoStyle as BuiltinDecorationStyle).type;
+        const isLineDecoration = decoType === DecorationStyleType.Underline
+            || decoType === DecorationStyleType.Strikethrough;
+        const isStrikethrough = decoType === DecorationStyleType.Strikethrough;
+        const rectSource = isLineDecoration
+            ? getTextClientRects(item.range, ["rt", "rp"])
+            : item.range;
+        // Line decorations (underline/strikethrough) don't expand in the block axis —
+        // expand extends endpoints along the inline axis only.
+        let clientRects = getClientRectsNoOverlap(
+            rectSource,
+            true,              // doNotMergeHorizontallyAlignedRects
+            ctx.isVertical,    // doNotMergeVerticallyAlignedRects
+            isLineDecoration ? 0 : expand
+        );
+
+        clientRects = clientRects.sort((r1, r2) => {
+            if (ctx.isVertical) {
+                // vertical-rl: rightmost column first; vertical-lr: leftmost first
+                const factor = ctx.isVertLR ? 1 : -1;
+                return factor * (r1.left - r2.left);
+            }
+            return r1.top - r2.top;
+        });
+
+        return clientRects.map(clientRect => {
+            let posRect: Rect = clientRect;
+            if (isStrikethrough) {
+                // Thin the rect to ~10% of block size, centred on the mid-line.
+                const thickness = ctx.blockSize(clientRect) * 0.1;
+                const blockMid  = ctx.blockStart(clientRect) + ctx.blockSize(clientRect) / 2;
+                const bs = blockMid - thickness / 2;
+                posRect = ctx.isVertical
+                    ? { left: bs, right: bs + thickness, top: clientRect.top,    bottom: clientRect.bottom, width: thickness,           height: clientRect.height }
+                    : { top:  bs, bottom: bs + thickness, left: clientRect.left, right: clientRect.right,   height: thickness,           width: clientRect.width  };
+            }
+            if (expand && isLineDecoration) {
+                posRect = ctx.isVertical
+                    ? { ...posRect, top: posRect.top - expand, bottom: posRect.bottom + expand, height: posRect.height + expand * 2 }
+                    : { ...posRect, left: posRect.left - expand, right: posRect.right + expand, width: posRect.width + expand * 2 };
+            }
+            return posRect;
+        });
+    }
+
+    /**
+     * Cheaply repositions an already-rendered overlay item's existing elements in place,
+     * without destroying and rebuilding them. Returns false if the element count no
+     * longer matches the current geometry (a genuine reflow happened), signalling the
+     * caller to fall back to a full layout().
+     */
+    private repositionItem(item: DecorationItem, ctx: WritingContext): boolean {
+        if (!item.container) return true;
+        const decoStyle = item.decoration.style;
+        if (decoStyle.type !== DecorationStyleType.Template) {
+            const type = (decoStyle as BuiltinDecorationStyle).type ?? DecorationStyleType.Highlight;
+            if (type === DecorationStyleType.TextColor || type === DecorationStyleType.Mask) return true;
+        }
+
+        const iz = 1 / this.effectiveZoom();
+        const expand = (decoStyle as BuiltinDecorationStyle).expand ?? 0;
+        const boundingRect = item.range.getBoundingClientRect();
+        const outlineInset = (() => {
+            if ((decoStyle as BuiltinDecorationStyle).type !== DecorationStyleType.Outline) return 0;
+            const w = (decoStyle as BuiltinDecorationStyle).width;
+            return (w === DecorationWidth.Page || w === DecorationWidth.Viewport) ? 3 : 0;
+        })();
+
+        const rects = this.computeOverlayRects(item, ctx, boundingRect, expand);
+        const children = Array.from(item.container.children) as HTMLElement[];
+        if (children.length !== rects.length) return false;
+
+        children.forEach((el, i) => this.positionElement(item, ctx, iz, el, rects[i], boundingRect, outlineInset));
+        return true;
+    }
+
+    /**
      * Layouts a single DecorationItem.
      * @param item
      */
@@ -677,29 +832,6 @@ class DecorationGroup {
         const iz = 1 / this.effectiveZoom();
 
         const expand = (item.decoration.style as BuiltinDecorationStyle).expand ?? 0;
-        const positionElement = (element: HTMLElement, rect: Rect, boundingRect: DOMRect, inlineInset = 0) => {
-            const w = item.decoration?.style?.width;
-            const r = rect;
-            switch (w) {
-                case DecorationWidth.Viewport: {
-                    const snap = Math.floor(ctx.inlineStart(r) / ctx.viewportInlineSize) * ctx.viewportInlineSize;
-                    ctx.applyPosition(element, snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.viewportInlineSize - 2 * inlineInset, ctx.blockSize(r), iz);
-                    break;
-                }
-                case DecorationWidth.Page: {
-                    const snap = Math.floor(ctx.inlineStart(r) / ctx.pageInlineSize) * ctx.pageInlineSize;
-                    ctx.applyPosition(element, snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.pageInlineSize - 2 * inlineInset, ctx.blockSize(r), iz);
-                    break;
-                }
-                case DecorationWidth.Bounds: {
-                    ctx.applyPosition(element, ctx.inlineStart(boundingRect) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(boundingRect), ctx.blockSize(r), iz);
-                    break;
-                }
-                default: {
-                    ctx.applyPosition(element, ctx.inlineStart(r) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(r), ctx.blockSize(r), iz);
-                }
-            }
-        }
         const boundingRect = item.range.getBoundingClientRect();
 
         const decoStyle = item.decoration.style;
@@ -817,6 +949,8 @@ class DecorationGroup {
                             `mix-blend-mode: ${isDarkMode ? "exclusion" : "multiply"} !important`,
                             "opacity: 1 !important",
                             "box-sizing: border-box !important",
+                            // Works around an iPadOS Safari bug where mix-blend-mode paints opaque instead of blending.
+                            "transform: translateZ(0) !important",
                         ].join("; ");
                     }
                 }
@@ -827,70 +961,12 @@ class DecorationGroup {
             elementTemplate = template.content.firstElementChild!;
         }
 
-        if(item.decoration?.style?.layout === DecorationLayout.Bounds) {
-            const bounds = elementTemplate.cloneNode(true) as HTMLDivElement;
-            bounds.style.setProperty("pointer-events", "none");
-            const boundsRect: Rect = expand ? {
-                left:   boundingRect.left   - expand,
-                right:  boundingRect.right  + expand,
-                top:    boundingRect.top    - expand,
-                bottom: boundingRect.bottom + expand,
-                width:  boundingRect.width  + expand * 2,
-                height: boundingRect.height + expand * 2,
-            } : boundingRect;
-            positionElement(bounds, boundsRect, boundingRect, outlineInset);
-            itemContainer.append(bounds);
-        } else {
-            // Fall back to "boxes" value for layout.
-            // For underline/strikethrough, pre-filter to text-node rects only so Ruby
-            // (rt/rp) glyphs don't produce a separate decoration segment above the base text.
-            const decoType = (decoStyle as BuiltinDecorationStyle).type;
-            const isLineDecoration = decoType === DecorationStyleType.Underline
-                || decoType === DecorationStyleType.Strikethrough;
-            const isStrikethrough = decoType === DecorationStyleType.Strikethrough;
-            const rectSource = isLineDecoration
-                ? getTextClientRects(item.range, ["rt", "rp"])
-                : item.range;
-            // Line decorations (underline/strikethrough) don't expand in the block axis —
-            // expand extends endpoints along the inline axis only.
-            let clientRects = getClientRectsNoOverlap(
-              rectSource,
-              true,              // doNotMergeHorizontallyAlignedRects
-              ctx.isVertical,    // doNotMergeVerticallyAlignedRects
-              isLineDecoration ? 0 : expand
-            );
-
-            clientRects = clientRects.sort((r1, r2) => {
-              if (ctx.isVertical) {
-                // vertical-rl: rightmost column first; vertical-lr: leftmost first
-                const factor = ctx.isVertLR ? 1 : -1;
-                return factor * (r1.left - r2.left);
-              }
-              return r1.top - r2.top;
-            });
-
-            for (let clientRect of clientRects) {
-              const line = elementTemplate.cloneNode(true) as HTMLDivElement;
-              line.style.setProperty("pointer-events", "none");
-              let posRect: Rect = clientRect;
-              if (isStrikethrough) {
-                  // Thin the rect to ~10% of block size, centred on the mid-line.
-                  const thickness = ctx.blockSize(clientRect) * 0.1;
-                  const blockMid  = ctx.blockStart(clientRect) + ctx.blockSize(clientRect) / 2;
-                  const bs = blockMid - thickness / 2;
-                  posRect = ctx.isVertical
-                      ? { left: bs, right: bs + thickness, top: clientRect.top,    bottom: clientRect.bottom, width: thickness,           height: clientRect.height }
-                      : { top:  bs, bottom: bs + thickness, left: clientRect.left, right: clientRect.right,   height: thickness,           width: clientRect.width  };
-              }
-              // Expand line decorations along the inline axis only (extend endpoints, not block size).
-              if (expand && isLineDecoration) {
-                  posRect = ctx.isVertical
-                      ? { ...posRect, top: posRect.top - expand, bottom: posRect.bottom + expand, height: posRect.height + expand * 2 }
-                      : { ...posRect, left: posRect.left - expand, right: posRect.right + expand, width: posRect.width + expand * 2 };
-              }
-              positionElement(line, posRect, boundingRect, outlineInset);
-              itemContainer.append(line);
-            }
+        const rects = this.computeOverlayRects(item, ctx, boundingRect, expand);
+        for (const posRect of rects) {
+            const el = elementTemplate.cloneNode(true) as HTMLDivElement;
+            el.style.setProperty("pointer-events", "none");
+            this.positionElement(item, ctx, iz, el, posRect, boundingRect, outlineInset);
+            itemContainer.append(el);
         }
 
         item.container = itemContainer;
@@ -1165,12 +1241,24 @@ export class Decorator extends Module {
     private handleResize() {
         this.wnd.clearTimeout(this.resizeFrame);
         this.resizeFrame = this.wnd.setTimeout(() => {
-            this.groups.forEach(g => {
-                if(!g.experimentalHighlights) g.requestLayout();
-            });
+            this.groups.forEach(g => g.requestLayout());
         }, 50);
     }
     private readonly handleResizer = this.handleResize.bind(this);
+
+    private scrollScheduled = false;
+    private handleScroll() {
+        // rAF-throttled, not debounced: overlays must track every frame, not just settle after scroll stops.
+        if (this.scrollScheduled) return;
+        this.scrollScheduled = true;
+        this.wnd.requestAnimationFrame(() => {
+            this.scrollScheduled = false;
+            this.groups.forEach(g => {
+                if(g.hasOverlayItems) g.repositionOverlays();
+            });
+        });
+    }
+    private readonly handleScroller = this.handleScroll.bind(this);
 
     mount(wnd: Window, comms: IComms): boolean {
         this.wnd = wnd;
@@ -1231,6 +1319,10 @@ export class Decorator extends Module {
         this.resizeObserver.observe(wnd.document.documentElement);
         wnd.addEventListener("orientationchange", this.handleResizer);
         wnd.addEventListener("resize", this.handleResizer);
+        // Capture phase: scroll events don't bubble, so a scrollable descendant
+        // (e.g. an app shell's own reading-pane container) would never reach a
+        // bubble-phase listener on wnd.
+        wnd.addEventListener("scroll", this.handleScroller, { passive: true, capture: true });
 
         // Watch for any style change on <html> — covers appearance, background color,
         // font size, line height, margins, and anything else that reflows text.
@@ -1256,6 +1348,7 @@ export class Decorator extends Module {
     unmount(wnd: Window, comms: IComms): boolean {
         wnd.removeEventListener("orientationchange", this.handleResizer);
         wnd.removeEventListener("resize", this.handleResizer);
+        wnd.removeEventListener("scroll", this.handleScroller, { capture: true });
 
         comms.unregisterAll(Decorator.moduleName);
         this.resizeObserver.disconnect();
