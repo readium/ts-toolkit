@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.1] – 2026-09-09
+
+### Fixed
+
+- Decorations rendered via the DOM overlay path no longer stay frozen at their original position when the reader scrolls, and are now correctly relaid out on resize when mixed into a group that also uses the CSS Highlight API, via updated `@readium/decorator`/`@readium/navigator-html-injectables`
+
 ## [2.9.0] – 2026-09-08
 
 ### Added
