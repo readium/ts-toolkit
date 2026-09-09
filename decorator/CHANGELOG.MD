@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Decorations rendered via the DOM overlay path no longer stay frozen at their original position when the reader scrolls, and every group is now correctly relaid out on resize, including ones that only use the CSS Highlight API, via updated `@readium/navigator-html-injectables`
+- `Highlight` decorations with `layout: Bounds` no longer render as an opaque block hiding the underlying text on iPadOS Safari, via updated `@readium/navigator-html-injectables`
 
 ## [1.1.0] – 2026-09-08
 
