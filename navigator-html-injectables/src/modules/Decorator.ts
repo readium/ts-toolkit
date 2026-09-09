@@ -949,6 +949,8 @@ class DecorationGroup {
                             `mix-blend-mode: ${isDarkMode ? "exclusion" : "multiply"} !important`,
                             "opacity: 1 !important",
                             "box-sizing: border-box !important",
+                            // Works around an iPadOS Safari bug where mix-blend-mode paints opaque instead of blending.
+                            "transform: translateZ(0) !important",
                         ].join("; ");
                     }
                 }
