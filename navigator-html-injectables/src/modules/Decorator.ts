@@ -1054,6 +1054,9 @@ class DecorationGroup {
             if (this.shadowRoot) {
                 this.shadowRoot.innerHTML = '';
             }
+            this.container = undefined;
+            this.shadowRoot = undefined;
+            this.shadowHost = undefined;
             return;
         }
 
