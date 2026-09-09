@@ -35,8 +35,7 @@ function resolveDomRangePoint(doc: Document, point: DomRangePoint): { node: Text
         return null;
     }
 
-    // textNodeIndex counts only direct-child text nodes (spec: html.md "child Text node"),
-    // matching the generator in @readium/speech's domRangeGenerator.
+    // textNodeIndex counts only direct-child text nodes (spec: html.md "child Text node").
     let index = 0;
     for (const child of container.childNodes) {
         if (child.nodeType === Node.TEXT_NODE) {
