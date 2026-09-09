@@ -1055,12 +1055,12 @@ class DecorationGroup {
                 this.maskSvg.remove();
                 this.maskSvg = undefined;
             }
-            if (this.shadowRoot) {
-                this.shadowRoot.innerHTML = '';
+            // Only tear down the shared shadow host if no other decorations use it
+            if (this.shadowHost && !this.container) {
+                this.shadowHost.remove();
+                this.shadowRoot = undefined;
+                this.shadowHost = undefined;
             }
-            this.container = undefined;
-            this.shadowRoot = undefined;
-            this.shadowHost = undefined;
             return;
         }
 
