@@ -87,12 +87,22 @@ class DecorationController {
     registerDecorationObserver(group: string, observer: DecorationObserver): void
     unregisterDecorationObserver(observer: DecorationObserver): void
 
+    // Watches an additional element for resize, so decorations relay out when it resizes
+    // even if the document's own size doesn't change (e.g. a sidebar collapsing and the
+    // reading pane reflowing inside it). Selector is resolved against the Decorator's document.
+    observeElement(selector: string): void
+    unobserveElement(selector: string): void
+
     destroy(): void
 }
 
 interface DecorationControllerConfig {
     // Named style templates. Register a template here and reference it by ID in decoration styles.
     decorationTemplates?: Record<string, HTMLDecorationTemplate>;
+
+    // CSS selectors to watch for resize from construction, equivalent to calling
+    // observeElement() for each one right after construction.
+    resizeWatchSelectors?: string[];
 }
 ```
 
@@ -165,7 +175,7 @@ interface IComms {
 | `BuiltinDecorationStyle` | `{ type?, tint?, layout?, width?, enforceContrast?, expand? }` |
 | `HTMLDecorationTemplate` | `{ type: "template", layout, width, element, stylesheet? }` — `element` is a function `(decoration) => string`, resolved to HTML per decoration before rendering |
 | `NamedDecorationStyle` | `{ type: string }` — reference to a style registered in `DecoratorConfig.decorationTemplates` |
-| `DecoratorConfig` | `{ decorationTemplates? }` — same shape as `DecorationControllerConfig` (the latter is a type alias of this) |
+| `DecoratorConfig` | `{ decorationTemplates?, resizeWatchSelectors? }` — same shape as `DecorationControllerConfig` (the latter is a type alias of this) |
 | `DecorationStyleType` | `"highlight" \| "highlightUnderline" \| "underline" \| "strikethrough" \| "outline" \| "textColor" \| "mask" \| "template"` |
 | `DecorationLayout` | `"boxes" \| "bounds"` |
 | `DecorationWidth` | `"wrap" \| "viewport" \| "bounds" \| "page"` |

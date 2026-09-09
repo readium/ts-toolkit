@@ -1373,12 +1373,12 @@ export class Decorator extends Module {
         return true;
     }
 
-    observeElement(selector: string): void {
+    private observeElement(selector: string): void {
         const el = this.wnd.document.querySelector(selector);
         if (el) this.resizeObserver.observe(el);
     }
 
-    unobserveElement(selector: string): void {
+    private unobserveElement(selector: string): void {
         const el = this.wnd.document.querySelector(selector);
         if (el) this.resizeObserver.unobserve(el);
     }
