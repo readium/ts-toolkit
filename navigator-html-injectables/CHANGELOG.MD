@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Decorations rendered via the DOM overlay path (`Outline`, `Template`, `Mask`, `Bounds`/`Viewport`/`Page` width, `expand`, or any style when the browser lacks `CSS.highlights` support) are now repositioned when the reader scrolls, instead of staying frozen at their original position. `Decorator` also now correctly relayouts DOM-overlay items on resize when they're mixed into a group that otherwise uses the CSS Highlight API — previously skipped entirely
+- Decorations rendered via the DOM overlay path (`Outline`, `Template`, `Mask`, `Bounds`/`Viewport`/`Page` width, `expand`, or any style when the browser lacks `CSS.highlights` support) are now repositioned when the reader scrolls, instead of staying frozen at their original position. `Decorator` also now relayouts every group on resize, including ones that only use the CSS Highlight API — previously skipped entirely, leaving their hit-testing rects stale
 - `rangeFromLocator` now resolves a `domRange`'s `textNodeIndex` against direct-child text nodes only, matching the Locator spec; it previously walked every text-node descendant, so any container with a nested inline element (`<a>`, `<em>`, `<span>`, ...) resolved the wrong node and threw `IndexSizeError`
 
 ## [2.7.0] – 2026-09-08
