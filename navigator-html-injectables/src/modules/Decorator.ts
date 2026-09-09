@@ -1239,9 +1239,7 @@ export class Decorator extends Module {
     private handleResize() {
         this.wnd.clearTimeout(this.resizeFrame);
         this.resizeFrame = this.wnd.setTimeout(() => {
-            this.groups.forEach(g => {
-                if(g.hasOverlayItems) g.requestLayout();
-            });
+            this.groups.forEach(g => g.requestLayout());
         }, 50);
     }
     private readonly handleResizer = this.handleResize.bind(this);
