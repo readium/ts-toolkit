@@ -513,15 +513,21 @@ class DecorationGroup {
      */
     repositionOverlays() {
         let hasMaskItem = false;
+        const relaidOut: DecorationItem[] = [];
         this.items.forEach(item => {
             if (this.experimentalHighlights && !this.notTextFlag?.has(item.id)) return;
             if (item.decoration.style?.type === DecorationStyleType.Mask) {
                 hasMaskItem = true;
                 return;
             }
-            if (!this.repositionItem(item)) this.layout(item);
+            if (!this.repositionItem(item)) {
+                item.container?.remove();
+                this.layout(item);
+                relaidOut.push(item);
+            }
             item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, ((item.decoration.style as BuiltinDecorationStyle).expand ?? 0) + this.hitGap()));
         });
+        if (relaidOut.length) this.renderLayout(relaidOut);
         if (hasMaskItem) this.updateSharedMask();
     }
 
