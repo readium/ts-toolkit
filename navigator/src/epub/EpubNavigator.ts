@@ -21,6 +21,9 @@ import { IContentProtectionConfig, IKeyboardPeripheralsConfig, KeyboardPeriphera
 import { NavigatorProtector, NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector.ts";
 import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../peripherals/KeyboardPeripherals.ts";
 import { getScriptMode } from "../helpers/scriptMode.ts";
+import { UpgradeInsecureRequests } from "./frame/FrameBlobBuilder.ts";
+
+export type { UpgradeInsecureRequests };
 
 export type ManagerEventKey = "zoom";
 
@@ -31,6 +34,7 @@ export interface EpubNavigatorConfiguration {
     contentProtection?: IContentProtectionConfig;
     keyboardPeripherals?: IKeyboardPeripheralsConfig;
     decoratorConfig?: DecoratorConfig;
+    upgradeInsecureRequests?: UpgradeInsecureRequests;
 }
 
 export interface EpubNavigatorListeners {
@@ -99,6 +103,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private readonly _injectablesConfig: IInjectablesConfig;
     private readonly _contentProtection: IContentProtectionConfig;
     private readonly _keyboardPeripherals: IKeyboardPeripheralsConfig;
+    private readonly _upgradeInsecureRequests: UpgradeInsecureRequests;
     private readonly _navigatorProtector: NavigatorProtector | null = null;
     private readonly _keyboardPeripheralsManager: KeyboardPeripherals | null = null;
     private readonly _suspiciousActivityListener: ((event: Event) => void) | null = null;
@@ -177,6 +182,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this._contentProtection = configuration.contentProtection || {};
         this._decoratorConfig = configuration.decoratorConfig || {};
         this._decorationResizeSelectors = new Set(this._decoratorConfig.resizeWatchSelectors ?? []);
+        this._upgradeInsecureRequests = configuration.upgradeInsecureRequests ?? 'always';
 
         // Merge keyboard peripherals
         this._keyboardPeripherals = this.mergeKeyboardPeripherals(
@@ -272,7 +278,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 this._injector,
                 this._contentProtection,
                 this._keyboardPeripherals,
-                [...this._decorationResizeSelectors]
+                [...this._decorationResizeSelectors],
+                this._upgradeInsecureRequests
             );
             this.framePool.listener = (key: CommsEventKey | ManagerEventKey, data: unknown) => {
                 this.eventListener(key, data);
@@ -291,7 +298,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                     .flatMap(item => item.references)
                     .map(ref => { const h = ref.indexOf('#'); return h >= 0 ? ref.slice(h + 1) : ''; })
                     .filter(Boolean),
-                [...this._decorationResizeSelectors]
+                [...this._decorationResizeSelectors],
+                this._upgradeInsecureRequests
             );
         }
 
@@ -633,7 +641,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         if(this._layout === Layout.fixed) {
             return modules.filter((m) => FXLModules.includes(m));
         } else modules = modules.filter((m) => ReflowableModules.includes(m));
-        
+
         // CJK/Mongolian vertical: uses the X-axis snapper, never column or scroll snappers
         const mode = getScriptMode(this.pub.metadata);
         if (mode === 'cjk-vertical' || mode === 'mongolian-vertical') {

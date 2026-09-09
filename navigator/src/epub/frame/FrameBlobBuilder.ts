@@ -2,11 +2,28 @@ import { Link, MediaType, Publication, ReadingProgression } from "@readium/share
 import { Injector } from "../../injection/Injector.ts";
 import { getScriptMode } from "../../helpers/scriptMode.ts";
 
-const csp = (domains: string[], secure = true) => {
-    const d = domains.join(" ");
+/**
+ * A flag to control whether `upgrade-insecure-requests` is included in the Content
+ * Security Policy of each spine-item blob frame:
+ *
+ * - `always` will always upgrade insecure requests
+ * - `never` will never upgrade insecure requests
+ * - `auto` will upgrade insecure requests only when the publication root URL is HTTPS
+ */
+export type UpgradeInsecureRequests = 'always' | 'never' | 'auto';
+
+const csp = (domains: string[], upgrade: UpgradeInsecureRequests = 'auto', root?: string) => {
+  const includeUpgrade =
+    upgrade === "always" ||
+    (upgrade === "never"
+      ? false
+      : typeof root === "string" && root.startsWith("https:"));
+
+
+  const d = domains.join(" ");
     return [
         // 'self' is useless because the document is loaded from a blob: URL
-        ...(secure ? [`upgrade-insecure-requests`] : []),
+        ...(includeUpgrade ? [`upgrade-insecure-requests`] : []),
         `default-src ${d} blob:`,
         `connect-src 'none'`, // No fetches to anywhere. TODO: change?
         `script-src ${d} blob: 'unsafe-inline'`, // JS scripts
@@ -26,6 +43,7 @@ export default class FrameBlobBuider {
     private readonly pub: Publication;
     private readonly cssProperties?: { [key: string]: string };
     private readonly injector: Injector | null = null;
+    private readonly upgradeInsecureRequests: UpgradeInsecureRequests;
 
     constructor(
         pub: Publication,
@@ -34,6 +52,7 @@ export default class FrameBlobBuider {
         options: {
             cssProperties?: { [key: string]: string };
             injector?: Injector | null;
+            upgradeInsecureRequests?: UpgradeInsecureRequests;
         }
     ) {
         this.pub = pub;
@@ -41,6 +60,7 @@ export default class FrameBlobBuider {
         this.burl = item.toURL(baseURL) || "";
         this.cssProperties = options.cssProperties;
         this.injector = options.injector ?? null;
+        this.upgradeInsecureRequests = options.upgradeInsecureRequests ?? 'always';
     }
 
     public async build(fxl = false): Promise<string> {
@@ -75,7 +95,7 @@ export default class FrameBlobBuider {
             await this.injector.injectForDocument(doc, this.item);
         }
 
-        return this.finalizeDOM(doc, this.pub.baseURL, this.burl, this.item.mediaType, fxl, this.cssProperties);
+        return this.finalizeDOM(doc, this.pub.baseURL, this.burl, this.item.mediaType, fxl, this.cssProperties, this.upgradeInsecureRequests);
     }
 
     private buildImageFrame(): string {
@@ -86,7 +106,7 @@ export default class FrameBlobBuider {
         simg.alt = this.item.title || "";
         simg.decoding = "async";
         doc.body.appendChild(simg);
-        return this.finalizeDOM(doc, this.pub.baseURL, this.burl, this.item.mediaType, true);
+        return this.finalizeDOM(doc, this.pub.baseURL, this.burl, this.item.mediaType, true, undefined, this.upgradeInsecureRequests);
     }
 
     private setProperties(cssProperties: { [key: string]: string }, doc: Document) {
@@ -96,7 +116,7 @@ export default class FrameBlobBuider {
         }
     }
 
-    private finalizeDOM(doc: Document, root: string | undefined, base: string | undefined, mediaType: MediaType, fxl = false, cssProperties?: { [key: string]: string }): string {
+    private finalizeDOM(doc: Document, root: string | undefined, base: string | undefined, mediaType: MediaType, fxl = false, cssProperties?: { [key: string]: string }, upgradeInsecureRequests: UpgradeInsecureRequests = 'auto'): string {
         if(!doc) return "";
 
         // Get allowed domains from injector if it exists
@@ -178,10 +198,9 @@ export default class FrameBlobBuider {
         }
 
         // Add CSP with allowed domains
-        const secure = typeof root === "string" && root.startsWith("https:");
         const meta = doc.createElement("meta");
         meta.httpEquiv = "Content-Security-Policy";
-        meta.content = csp(domains, secure);
+        meta.content = csp(domains, upgradeInsecureRequests, root);
         meta.dataset.readium = "true";
         doc.head.firstChild!.before(meta);
 
