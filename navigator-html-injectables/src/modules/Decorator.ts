@@ -103,6 +103,10 @@ export type DecoratorRequest =
     | { group: string; action: "remove"; decoration: Pick<Decoration, "id"> }
     | { group: string; action: "clear" };
 
+export type DecorationResizeRequest =
+    | { action: "watch"; selector: string }
+    | { action: "unwatch"; selector: string };
+
 interface DecorationItem {
     id: string;
     decoration: Decoration;
@@ -1300,6 +1304,13 @@ export class Decorator extends Module {
             ack(true);
         });
 
+        comms.register("decoration_resize", Decorator.moduleName, (data, ack) => {
+            const req = data as DecorationResizeRequest;
+            if (req.action === "watch") this.observeElement(req.selector);
+            else this.unobserveElement(req.selector);
+            ack(true);
+        });
+
         comms.register("decoration_activatable", Decorator.moduleName, (data, ack) => {
             const req = data as { group: string; activatable: boolean };
             const group = this.groups.get(req.group);
@@ -1360,5 +1371,15 @@ export class Decorator extends Module {
 
         comms.log("Decorator Unmounted");
         return true;
+    }
+
+    observeElement(selector: string): void {
+        const el = this.wnd.document.querySelector(selector);
+        if (el) this.resizeObserver.observe(el);
+    }
+
+    unobserveElement(selector: string): void {
+        const el = this.wnd.document.querySelector(selector);
+        if (el) this.resizeObserver.unobserve(el);
     }
 }

@@ -16,6 +16,7 @@ export class DecorationController {
 
     constructor(private readonly host: DirectCommsHost, config: DecorationControllerConfig = {}) {
         this._config = config;
+        config.resizeWatchSelectors?.forEach(selector => this.observeElement(selector));
         host.on("decoration_activated", (raw) => {
             const ev = raw as DecorationActivatedEvent;
             const decoration = this._decorations.get(ev.group)?.find(d => d.id === ev.decorationId);
@@ -45,6 +46,14 @@ export class DecorationController {
                 obs.onDecorationPointerLeave?.({ group: ev.group, decoration, rect: ev.rect, point: ev.point })
             );
         });
+    }
+
+    observeElement(selector: string): void {
+        this.host.send("decoration_resize", { action: "watch", selector });
+    }
+
+    unobserveElement(selector: string): void {
+        this.host.send("decoration_resize", { action: "unwatch", selector });
     }
 
     supportsDecorationStyle(styleTypeId: string): boolean {
