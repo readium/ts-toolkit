@@ -103,6 +103,10 @@ export type DecoratorRequest =
     | { group: string; action: "remove"; decoration: Pick<Decoration, "id"> }
     | { group: string; action: "clear" };
 
+export type DecorationResizeRequest =
+    | { action: "watch"; selector: string }
+    | { action: "unwatch"; selector: string };
+
 interface DecorationItem {
     id: string;
     decoration: Decoration;
@@ -1051,8 +1055,11 @@ class DecorationGroup {
                 this.maskSvg.remove();
                 this.maskSvg = undefined;
             }
-            if (this.shadowRoot) {
-                this.shadowRoot.innerHTML = '';
+            // Only tear down the shared shadow host if no other decorations use it
+            if (this.shadowHost && !this.container) {
+                this.shadowHost.remove();
+                this.shadowRoot = undefined;
+                this.shadowHost = undefined;
             }
             return;
         }
@@ -1218,6 +1225,7 @@ export class Decorator extends Module {
     private resizeObserver!: ResizeObserver;
     private styleObserver!: MutationObserver;
     private wnd!: Window;
+    private observedResizeTargets = new Map<string, Element>();
     /*private readonly lastSize = {
         width: 0,
         height: 0
@@ -1230,6 +1238,7 @@ export class Decorator extends Module {
     private cleanup() {
         this.groups.forEach(g => g.destroy());
         this.groups.clear();
+        this.observedResizeTargets.clear();
     }
 
     private updateHighlightStyles() {
@@ -1297,6 +1306,13 @@ export class Decorator extends Module {
             ack(true);
         });
 
+        comms.register("decoration_resize", Decorator.moduleName, (data, ack) => {
+            const req = data as DecorationResizeRequest;
+            if (req.action === "watch") this.addDecorationResizeTarget(req.selector);
+            else this.removeDecorationResizeTarget(req.selector);
+            ack(true);
+        });
+
         comms.register("decoration_activatable", Decorator.moduleName, (data, ack) => {
             const req = data as { group: string; activatable: boolean };
             const group = this.groups.get(req.group);
@@ -1357,5 +1373,26 @@ export class Decorator extends Module {
 
         comms.log("Decorator Unmounted");
         return true;
+    }
+
+    private addDecorationResizeTarget(selector: string): void {
+        const existing = this.observedResizeTargets.get(selector);
+        if (existing) this.resizeObserver.unobserve(existing);
+
+        const el = this.wnd.document.querySelector(selector);
+        if (el) {
+            this.resizeObserver.observe(el);
+            this.observedResizeTargets.set(selector, el);
+        } else {
+            this.observedResizeTargets.delete(selector);
+        }
+    }
+
+    private removeDecorationResizeTarget(selector: string): void {
+        const el = this.observedResizeTargets.get(selector);
+        if (el) {
+            this.resizeObserver.unobserve(el);
+            this.observedResizeTargets.delete(selector);
+        }
     }
 }

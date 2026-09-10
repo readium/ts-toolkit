@@ -41,6 +41,7 @@ export type CommsCommandKey =
     // "exact_progress" |
     "first_visible_locator" |
     "decorate" |
+    "decoration_resize" |
     "decoration_activatable" |
     "decoration_hoverable" |
     "protect" |

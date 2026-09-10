@@ -36,6 +36,13 @@ export interface DecoratorConfig {
      * Template-type decoration.
      */
     decorationTemplates?: Record<string, HTMLDecorationTemplate>;
+
+    /**
+     * CSS selectors of additional elements to watch for resize, so decoration overlays are
+     * relaid-out when they resize for reasons that don't affect the document's own size
+     * (e.g. a sidebar collapsing and the reading pane reflowing within a flex/grid layout).
+     */
+    resizeWatchSelectors?: string[];
 }
 
 export const BUILTIN_DECORATION_TYPES = new Set<string>(Object.values(DecorationStyleType));
