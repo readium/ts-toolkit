@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `EpubNavigator` and `WebPubNavigator` now expose `addDecorationResizeTarget`/`removeDecorationResizeTarget`, so decoration overlays relay out when a watched element within the current content document resizes for reasons that don't affect the document's own size — e.g. a sidebar collapsing and the reading pane reflowing inside it, via updated `@readium/decorator`/`@readium/navigator-html-injectables`
+- `EpubNavigator` and `WebPubNavigator` now accept `resizeWatchSelectors` (decorator config) and expose `addDecorationResizeTarget`/`removeDecorationResizeTarget`, so decoration overlays relay out when a watched element within the current content document resizes for reasons that don't affect the document's own size — e.g. a sidebar collapsing and the reading pane reflowing inside it, via updated `@readium/decorator`/`@readium/navigator-html-injectables`
 
 ### Fixed
 
