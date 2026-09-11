@@ -256,6 +256,29 @@ describe('Accessibility Tests', () => {
         expect(Accessibility.deserialize(json2)).toEqual(expected2);
     });
 
+    it('parse conformsTo serialized as a bare string', () => {
+        const json = {
+            conformsTo: 'https://www.w3.org/TR/epub-a11y-11#wcag-2.0-a'
+        };
+
+        const expected = new Accessibility({
+            conformsTo: [new AccessibilityProfile('https://www.w3.org/TR/epub-a11y-11#wcag-2.0-a')]
+        });
+
+        expect(Accessibility.deserialize(json)).toEqual(expected);
+    });
+
+    it('does not throw when accessMode/feature/hazard are serialized as a bare string', () => {
+        const json = {
+            accessMode: 'textual',
+            feature: 'alternativeText',
+            hazard: 'none',
+            accessModeSufficient: 'textual'
+        };
+
+        expect(Accessibility.deserialize(json)).toEqual(new Accessibility());
+    });
+
     it('serialize Profile', () => {
         const accessibility = new Accessibility({
             conformsTo: [
