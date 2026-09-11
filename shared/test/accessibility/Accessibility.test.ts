@@ -256,6 +256,51 @@ describe('Accessibility Tests', () => {
         expect(Accessibility.deserialize(json2)).toEqual(expected2);
     });
 
+    it('parse conformsTo serialized as a bare string', () => {
+        const json = {
+            conformsTo: 'https://www.w3.org/TR/epub-a11y-11#wcag-2.0-a'
+        };
+
+        const expected = new Accessibility({
+            conformsTo: [new AccessibilityProfile('https://www.w3.org/TR/epub-a11y-11#wcag-2.0-a')]
+        });
+
+        expect(Accessibility.deserialize(json)).toEqual(expected);
+    });
+
+    it('does not throw when accessMode/feature/hazard are serialized as a bare string', () => {
+        const json = {
+            accessMode: 'textual',
+            feature: 'alternativeText',
+            hazard: 'none'
+        };
+
+        expect(Accessibility.deserialize(json)).toEqual(new Accessibility());
+    });
+
+    it('does not throw when accessModeSufficient itself is serialized as a bare string', () => {
+        const json = {
+            accessModeSufficient: 'textual'
+        };
+
+        expect(Accessibility.deserialize(json)).toEqual(new Accessibility());
+    });
+
+    it('still parses accessModeSufficient items as string or array per the spec oneOf', () => {
+        const json = {
+            accessModeSufficient: ['textual', ['visual', 'auditory']]
+        };
+
+        const expected = new Accessibility({
+            accessModeSufficient: [
+                new PrimaryAccessMode('textual'),
+                new PrimaryAccessMode(['visual', 'auditory'])
+            ]
+        });
+
+        expect(Accessibility.deserialize(json)).toEqual(expected);
+    });
+
     it('serialize Profile', () => {
         const accessibility = new Accessibility({
             conformsTo: [
