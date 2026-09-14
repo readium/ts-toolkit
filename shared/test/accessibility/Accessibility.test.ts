@@ -268,19 +268,40 @@ describe('Accessibility Tests', () => {
         expect(Accessibility.deserialize(json)).toEqual(expected);
     });
 
-    it('does not throw when accessMode/feature/hazard are serialized as a bare string', () => {
+    it('parses accessMode/feature/hazard/exemption serialized as a bare string', () => {
         const json = {
             accessMode: 'textual',
             feature: 'alternativeText',
-            hazard: 'none'
+            hazard: 'none',
+            exemption: 'eaa-microenterprise'
         };
 
-        expect(Accessibility.deserialize(json)).toEqual(new Accessibility());
+        const expected = new Accessibility({
+            accessMode: [new AccessMode('textual')],
+            feature: [new Feature('alternativeText')],
+            hazard: [new Hazard('none')],
+            exemption: [new Exemption('eaa-microenterprise')]
+        });
+
+        expect(Accessibility.deserialize(json)).toEqual(expected);
     });
 
     it('does not throw when accessModeSufficient itself is serialized as a bare string', () => {
         const json = {
             accessModeSufficient: 'textual'
+        };
+
+        expect(Accessibility.deserialize(json)).toEqual(new Accessibility());
+    });
+
+    it('does not throw and ignores malformed non-string, non-array values', () => {
+        const json = {
+            conformsTo: 42,
+            accessMode: null,
+            accessModeSufficient: { foo: 'bar' },
+            feature: true,
+            hazard: 42,
+            exemption: {}
         };
 
         expect(Accessibility.deserialize(json)).toEqual(new Accessibility());

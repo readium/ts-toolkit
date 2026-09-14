@@ -86,22 +86,22 @@ export class Accessibility {
                 report: string;
             };
             summary?: string;
-            accessMode?: string[];
+            accessMode?: string | string[];
             accessModeSufficient?: (string | string[])[];
-            feature?: string[];
-            hazard?: string[];
-            exemption?: string[];
+            feature?: string | string[];
+            hazard?: string | string[];
+            exemption?: string | string[];
         };
 
         const accessibilityJson = json as AccessibilityJson;
 
-        // Per the RWPM a11y schema, conformsTo may be a bare string or an array of strings.
+        // Per the RWPM a11y schema, these fields may be a bare string or an array of strings.
         const conformsTo = arrayfromJSONorString(accessibilityJson.conformsTo);
-        const accessMode = arrayfromJSON(accessibilityJson.accessMode);
+        const accessMode = arrayfromJSONorString(accessibilityJson.accessMode);
         const accessModeSufficient = arrayfromJSON(accessibilityJson.accessModeSufficient);
-        const feature = arrayfromJSON(accessibilityJson.feature);
-        const hazard = arrayfromJSON(accessibilityJson.hazard);
-        const exemption = arrayfromJSON(accessibilityJson.exemption);
+        const feature = arrayfromJSONorString(accessibilityJson.feature);
+        const hazard = arrayfromJSONorString(accessibilityJson.hazard);
+        const exemption = arrayfromJSONorString(accessibilityJson.exemption);
 
         return new Accessibility({
             conformsTo: conformsTo
