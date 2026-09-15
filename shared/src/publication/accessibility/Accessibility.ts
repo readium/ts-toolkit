@@ -437,6 +437,9 @@ export class PrimaryAccessMode {
         if (!json) return;
         
         if (typeof json === 'string') {
+            if (!PrimaryAccessMode.VALID_MODES.has(json.toLowerCase())) {
+                return undefined;
+            }
             return new PrimaryAccessMode(json);
         }
 

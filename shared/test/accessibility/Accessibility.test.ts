@@ -222,6 +222,18 @@ describe('Accessibility Tests', () => {
         expect(Accessibility.deserialize(json2)).toEqual(expected2);
     });
 
+    it('parse drops invalid bare-string PrimaryAccessMode entries', () => {
+        const json = {
+            accessModeSufficient: ['invalid', 'textual']
+        };
+
+        const expected = new Accessibility({
+            accessModeSufficient: [new PrimaryAccessMode('textual')]
+        });
+
+        expect(Accessibility.deserialize(json)).toEqual(expected);
+    });
+
     it('parse PrimaryAccessMode with multiple arrays', () => {
         const json = {
             accessModeSufficient: [['textual', 'visual'], ['auditory']]
