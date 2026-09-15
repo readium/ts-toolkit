@@ -2,10 +2,17 @@ import { SUPPORTED_LANGUAGES } from '../../src/publication/accessibility/Support
 import { Localization } from '../../src/publication/accessibility/Localization';
 
 describe('Localization', () => {
+  let warnSpy: jest.SpyInstance;
+
   // Reset the singleton instance before each test
   beforeEach(() => {
     // @ts-ignore - Accessing private member for testing
     Localization.instance = undefined;
+    warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
   });
 
   it('should be a singleton', () => {
