@@ -1137,7 +1137,7 @@ class DecorationGroup {
             
             // Create SVG in shared shadow root
             this.maskSvg = this.wnd.document.createElementNS(svgNS, "svg") as SVGSVGElement;
-            this.maskSvg.style.cssText = `position:absolute;top:0;left:0;width:${docW}px;height:${docH}px;pointer-events:none;z-index:9999`;
+            this.maskSvg.style.cssText = `position:absolute;top:0;left:0;width:${docW}px;height:${docH}px;pointer-events:none;z-index:2147483647`;
             this.maskSvg.dataset.readium = "true";
             const defs = this.wnd.document.createElementNS(svgNS, "defs");
             const clipPath = this.wnd.document.createElementNS(svgNS, "clipPath") as SVGClipPathElement;
