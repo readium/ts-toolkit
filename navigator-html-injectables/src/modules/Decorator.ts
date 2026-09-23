@@ -355,7 +355,7 @@ class DecorationGroup {
     /** True if the element triggers WebKit's CSS Custom Highlight repaint bug. */
     private isWebkitRepaintProne(el: Element): boolean {
         const style = this.wnd.getComputedStyle(el);
-        if (webkitRepaintProneTags.has(el.tagName) || style.display === "inline-block" || style.verticalAlign !== "baseline") {
+        if (webkitRepaintProneTags.has(el.tagName.toUpperCase()) || style.display === "inline-block" || style.verticalAlign !== "baseline") {
             return true;
         }
         const parentStyle = el.parentElement ? this.wnd.getComputedStyle(el.parentElement) : null;
