@@ -297,10 +297,12 @@ class DecorationGroup {
             }
             const stylesheet = this.wnd.document.getElementById(`${this.id}-style`) as HTMLStyleElement | null;
             if (stylesheet) this._rebuildHighlightStylesheet(stylesheet);
-            if (sML.UA.WebKit && this.hasWebkitRepaintProneAncestor(item.range)) {
-                const range = item.range;
-                // Forcing layout synchronously doesn't guarantee a paint; defer to a real frame.
-                this.wnd.requestAnimationFrame(() => this.forceWebkitBlockReflow(range));
+            if (sML.UA.WebKit) {
+                const offender = this.findWebkitRepaintProneElement(item.range);
+                if (offender) {
+                    // Forcing layout synchronously doesn't guarantee a paint; defer to a real frame.
+                    this.wnd.requestAnimationFrame(() => this.forceWebkitBlockReflow(offender));
+                }
             }
         }
         this.notTextFlag?.delete(item.id);
@@ -363,31 +365,30 @@ class DecorationGroup {
         return !!parentStyle && parseFloat(style.fontSize) !== parseFloat(parentStyle.fontSize);
     }
 
-    /** True if a repaint-prone element (see isWebkitRepaintProne) intersects the range. */
-    private hasWebkitRepaintProneAncestor(range: Range): boolean {
+    /** Finds a repaint-prone element (see isWebkitRepaintProne) intersecting the range, if any. */
+    private findWebkitRepaintProneElement(range: Range): Element | null {
         let el: Element | null = range.startContainer.nodeType === Node.ELEMENT_NODE
             ? range.startContainer as Element
             : range.startContainer.parentElement;
         while (el) {
-            if (this.isWebkitRepaintProne(el)) return true;
+            if (this.isWebkitRepaintProne(el)) return el;
             if (this.wnd.getComputedStyle(el).display !== "inline") break; // reached the containing block
             el = el.parentElement;
         }
 
         const root = range.commonAncestorContainer;
         const walkRoot = root.nodeType === Node.ELEMENT_NODE ? root as Element : root.parentElement;
-        if (!walkRoot) return false;
+        if (!walkRoot) return null;
         const walker = this.wnd.document.createTreeWalker(walkRoot, NodeFilter.SHOW_ELEMENT);
         for (let node = walker.nextNode() as Element | null; node; node = walker.nextNode() as Element | null) {
-            if (range.intersectsNode(node) && this.isWebkitRepaintProne(node)) return true;
+            if (range.intersectsNode(node) && this.isWebkitRepaintProne(node)) return node;
         }
-        return false;
+        return null;
     }
 
-    /** Reflows the containing block; the offending element's own box isn't enough since inline layout is computed per line. */
-    private forceWebkitBlockReflow(range: Range) {
-        const startNode = range.startContainer;
-        let el: Element | null = startNode.nodeType === Node.ELEMENT_NODE ? startNode as Element : startNode.parentElement;
+    /** Reflows the containing block of the offending element; its own box isn't enough since inline layout is computed per line. */
+    private forceWebkitBlockReflow(offender: Element) {
+        let el: Element | null = offender;
         while (el) {
             const display = this.wnd.getComputedStyle(el).display;
             if (display !== "inline" && display !== "inline-block") break;
