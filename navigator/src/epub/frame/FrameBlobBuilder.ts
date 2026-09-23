@@ -2,6 +2,28 @@ import { Link, MediaType, Publication, ReadingProgression, Resource } from "@rea
 import { Injector } from "../../injection/Injector.ts";
 import { getScriptMode } from "../../helpers/scriptMode.ts";
 
+/** CSP source expressions cannot carry a query or fragment */
+const cspSource = (url: string) => url.split(/[?#]/)[0];
+
+/** A CSP path only prefix-matches when it ends in a slash; otherwise it must
+ *  match exactly, which would allow the manifest and block every resource.
+ *  See https://w3c.github.io/webappsec-csp/#match-paths */
+const cspRootSource = (url: string) => {
+    const source = cspSource(url);
+    if (source.endsWith("/")) return source;
+    try {
+        const parsed = new URL(source);
+        parsed.pathname = parsed.pathname.substring(
+            0,
+            parsed.pathname.lastIndexOf("/") + 1
+        );
+        return parsed.href;
+    } catch {
+        // Relative root, not parseable by `URL`
+        return source.replace(/[^/]*$/, "");
+    }
+};
+
 const csp = (domains: string[]) => {
     const d = domains.join(" ");
     return [
@@ -147,16 +169,16 @@ export default class FrameBlobBuilder {
     private finalizeDOM(doc: Document, root: string | undefined, base: string | undefined, mediaType: MediaType, fxl = false, cssProperties?: { [key: string]: string }): string {
         if(!doc) return "";
 
-        // Get allowed domains from injector if it exists
-        const allowedDomains = this.injector?.getAllowedDomains?.() || [];
+        // Get allowed domains from injector if it exists. Host-configured, so
+        // only strip what CSP cannot express and leave their paths as given
+        const allowedDomains = (this.injector?.getAllowedDomains?.() || []).map(cspSource);
 
-        // Remove query from root if present, as CSP doesn't allow them
-        root = root?.split("?")[0];
-
+        // The root must be a directory so the policy covers the whole publication
+        const rootSource = root ? cspRootSource(root) : undefined;
 
         // Always include the root domain if provided
         const domains = [...new Set([
-            ...(root ? [root] : []),
+            ...(rootSource ? [rootSource] : []),
             ...allowedDomains
         ])].filter(Boolean);
 

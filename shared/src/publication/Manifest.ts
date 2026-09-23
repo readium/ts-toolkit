@@ -222,26 +222,33 @@ export class Manifest {
 
   /** The URL where this publication is served, computed from the `Link` with `self` relation.
    *  e.g. https://provider.com/pub1293/manifest.json gives https://provider.com/pub1293/
+   *
+   *  Drops the query, fragment and last path segment, so for any hierarchical
+   *  URL the result ends in `/`. The frame CSP relies on this, since a source
+   *  path only prefix-matches when it ends in a slash.
    */
   public get baseURL(): string | undefined {
     const selfLink = this.links?.items.find(
       el => el.rels && el.rels.has('self')
     );
-    if (selfLink) {
-      let href = selfLink.href;
-      if (href) {
-        const li = href.lastIndexOf('/');
-        const lastpart = li === -1 ? undefined : href.substring(li + 1);
+    if (!selfLink) return undefined;
 
-        href = href.replace(new RegExp('/?$query$'), '');
-        href = href.replace(new RegExp('//$'), '');
-        if (lastpart) {
-          href = href.replace(new RegExp(lastpart + '$'), '');
-        }
-      }
-      return href;
+    const href = selfLink.href;
+    if (!href) return undefined;
+
+    try {
+      const url = new URL(href);
+      url.search = '';
+      url.hash = '';
+      url.pathname = url.pathname.substring(
+        0,
+        url.pathname.lastIndexOf('/') + 1
+      );
+      return url.href;
+    } catch {
+      // Relative self link (e.g. `/manifest.json`), not parseable by `URL`
+      return href.split(/[?#]/)[0].replace(/[^/]*$/, '');
     }
-    return undefined;
   }
 
   /**
