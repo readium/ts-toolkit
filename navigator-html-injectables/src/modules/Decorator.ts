@@ -395,10 +395,14 @@ class DecorationGroup {
         }
         if (!el || !el.isConnected) return;
         const block = el as HTMLElement;
-        const previousDisplay = block.style.display;
-        block.style.display = "none";
-        void block.offsetHeight; // force a synchronous layout flush
-        block.style.display = previousDisplay;
+        const previousTransform = block.style.transform;
+        // Paint-only nudge: promotes then repaints the compositing layer without
+        // touching layout, so it can't disturb scroll position, focus, or selection.
+        block.style.transform = "translateZ(0.001px)";
+        void block.offsetHeight;
+        block.style.transform = "translateZ(0px)";
+        void block.offsetHeight;
+        block.style.transform = previousTransform;
     }
 
     private clientRectsToDocCoords(rects: Rect[], ctx: WritingContext = makeWritingContext(this.wnd)): Rect[] {
