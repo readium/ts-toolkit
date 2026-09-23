@@ -120,6 +120,8 @@ interface DecorationItem {
 
 const canNativeHighlight = () => ("Highlight" in window);
 const cannotNativeHighlight = ["IMG", "IMAGE", "AUDIO", "VIDEO", "SVG"];
+// Elements that trigger WebKit's CSS Custom Highlight repaint bug on removal.
+const webkitRepaintProneTags = new Set(["SUP", "SUB", "SMALL", "CODE"]);
 
 class DecorationGroup {
     public readonly items: DecorationItem[] = [];
@@ -295,6 +297,11 @@ class DecorationGroup {
             }
             const stylesheet = this.wnd.document.getElementById(`${this.id}-style`) as HTMLStyleElement | null;
             if (stylesheet) this._rebuildHighlightStylesheet(stylesheet);
+            if (sML.UA.WebKit && this.hasWebkitRepaintProneAncestor(item.range)) {
+                const range = item.range;
+                // Forcing layout synchronously doesn't guarantee a paint; defer to a real frame.
+                this.wnd.requestAnimationFrame(() => this.forceWebkitBlockReflow(range));
+            }
         }
         this.notTextFlag?.delete(item.id);
         if (this.hoveredItem === item) {
@@ -344,6 +351,54 @@ class DecorationGroup {
         this.clear();
         this.wnd.document.removeEventListener("pointerup", this.activationHandler);
         this.wnd.document.removeEventListener("pointermove", this.hoverHandler);
+    }
+
+    /** True if the element triggers WebKit's CSS Custom Highlight repaint bug. */
+    private isWebkitRepaintProne(el: Element): boolean {
+        const style = this.wnd.getComputedStyle(el);
+        if (webkitRepaintProneTags.has(el.tagName) || style.display === "inline-block" || style.verticalAlign !== "baseline") {
+            return true;
+        }
+        const parentStyle = el.parentElement ? this.wnd.getComputedStyle(el.parentElement) : null;
+        return !!parentStyle && parseFloat(style.fontSize) !== parseFloat(parentStyle.fontSize);
+    }
+
+    /** True if a repaint-prone element (see isWebkitRepaintProne) intersects the range. */
+    private hasWebkitRepaintProneAncestor(range: Range): boolean {
+        let el: Element | null = range.startContainer.nodeType === Node.ELEMENT_NODE
+            ? range.startContainer as Element
+            : range.startContainer.parentElement;
+        while (el) {
+            if (this.isWebkitRepaintProne(el)) return true;
+            if (this.wnd.getComputedStyle(el).display !== "inline") break; // reached the containing block
+            el = el.parentElement;
+        }
+
+        const root = range.commonAncestorContainer;
+        const walkRoot = root.nodeType === Node.ELEMENT_NODE ? root as Element : root.parentElement;
+        if (!walkRoot) return false;
+        const walker = this.wnd.document.createTreeWalker(walkRoot, NodeFilter.SHOW_ELEMENT);
+        for (let node = walker.nextNode() as Element | null; node; node = walker.nextNode() as Element | null) {
+            if (range.intersectsNode(node) && this.isWebkitRepaintProne(node)) return true;
+        }
+        return false;
+    }
+
+    /** Reflows the containing block; the offending element's own box isn't enough since inline layout is computed per line. */
+    private forceWebkitBlockReflow(range: Range) {
+        const startNode = range.startContainer;
+        let el: Element | null = startNode.nodeType === Node.ELEMENT_NODE ? startNode as Element : startNode.parentElement;
+        while (el) {
+            const display = this.wnd.getComputedStyle(el).display;
+            if (display !== "inline" && display !== "inline-block") break;
+            el = el.parentElement;
+        }
+        if (!el || !el.isConnected) return;
+        const block = el as HTMLElement;
+        const previousDisplay = block.style.display;
+        block.style.display = "none";
+        void block.offsetHeight; // force a synchronous layout flush
+        block.style.display = previousDisplay;
     }
 
     private clientRectsToDocCoords(rects: Rect[], ctx: WritingContext = makeWritingContext(this.wnd)): Rect[] {
