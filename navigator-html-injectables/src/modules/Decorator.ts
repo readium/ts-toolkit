@@ -297,13 +297,7 @@ class DecorationGroup {
             }
             const stylesheet = this.wnd.document.getElementById(`${this.id}-style`) as HTMLStyleElement | null;
             if (stylesheet) this._rebuildHighlightStylesheet(stylesheet);
-            if (sML.UA.WebKit) {
-                const offender = this.findWebkitRepaintProneElement(item.range);
-                if (offender) {
-                    // Forcing layout synchronously doesn't guarantee a paint; defer to a real frame.
-                    this.wnd.requestAnimationFrame(() => this.forceWebkitBlockReflow(offender));
-                }
-            }
+            this.scheduleWebkitRepaintFix([item]);
         }
         this.notTextFlag?.delete(item.id);
         if (this.hoveredItem === item) {
@@ -329,6 +323,9 @@ class DecorationGroup {
      * Removes all decorations from this group.
      */
     clear() {
+        if (this.experimentalHighlights) {
+            this.scheduleWebkitRepaintFix(this.items);
+        }
         this.clearContainer();
         this.items.length = 0;
         this.notTextFlag?.clear();
@@ -408,6 +405,20 @@ class DecorationGroup {
         block.style.transform = "translateZ(0px)";
         void block.offsetHeight;
         block.style.transform = previousTransform;
+    }
+
+    /** Finds WebKit repaint-prone elements among the given items and schedules a reflow of their containing blocks. */
+    private scheduleWebkitRepaintFix(items: DecorationItem[]) {
+        if (!sML.UA.WebKit) return;
+        const offenders = new Set<Element>();
+        for (const item of items) {
+            if (this.notTextFlag?.has(item.id) || !item.highlightSubKey) continue;
+            const offender = this.findWebkitRepaintProneElement(item.range);
+            if (offender) offenders.add(offender);
+        }
+        if (!offenders.size) return;
+        // Forcing layout synchronously doesn't guarantee a paint; defer to a real frame.
+        this.wnd.requestAnimationFrame(() => offenders.forEach(el => this.forceWebkitBlockReflow(el)));
     }
 
     private clientRectsToDocCoords(rects: Rect[], ctx: WritingContext = makeWritingContext(this.wnd)): Rect[] {
