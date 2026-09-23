@@ -218,7 +218,7 @@ export function appendVirtualColumnIfNeeded(wnd: ReadiumWindow): boolean {
  * unless you force a recalc or reflow.
  * It is not needed in paginated mode.
  */
-export function forceWebkitRecalc(wnd: ReadiumWindow) {
+export function forceWebkitRecalc(wnd: Window) {
     // Borrowed from APB themselves…
     const styleElement = wnd.document.createElement("style");
     styleElement.appendChild(wnd.document.createTextNode("*{}"));

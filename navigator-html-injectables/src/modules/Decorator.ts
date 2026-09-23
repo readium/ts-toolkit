@@ -120,6 +120,8 @@ interface DecorationItem {
 
 const canNativeHighlight = () => ("Highlight" in window);
 const cannotNativeHighlight = ["IMG", "IMAGE", "AUDIO", "VIDEO", "SVG"];
+// Elements that trigger WebKit's CSS Custom Highlight repaint bug on removal.
+const webkitRepaintProneTags = new Set(["SUP", "SUB", "SMALL", "CODE"]);
 
 class DecorationGroup {
     public readonly items: DecorationItem[] = [];
@@ -132,6 +134,7 @@ class DecorationGroup {
     private readonly notTextFlag: Map<string, boolean> | undefined;
     private readonly _tintSubKeys = new Map<string, string>(); // (type::adjustedTint) → subKey
     private _subKeyCounter = 0;
+    private pendingWebkitReflow: Set<Element> | null = null;
     private readonly activationHandler: (e: PointerEvent) => void;
     private readonly hoverHandler: (e: PointerEvent) => void;
     private maskSvg: SVGSVGElement | undefined = undefined;
@@ -295,6 +298,7 @@ class DecorationGroup {
             }
             const stylesheet = this.wnd.document.getElementById(`${this.id}-style`) as HTMLStyleElement | null;
             if (stylesheet) this._rebuildHighlightStylesheet(stylesheet);
+            this.scheduleWebkitRepaintFix([item]);
         }
         this.notTextFlag?.delete(item.id);
         if (this.hoveredItem === item) {
@@ -320,6 +324,9 @@ class DecorationGroup {
      * Removes all decorations from this group.
      */
     clear() {
+        if (this.experimentalHighlights) {
+            this.scheduleWebkitRepaintFix(this.items);
+        }
         this.clearContainer();
         this.items.length = 0;
         this.notTextFlag?.clear();
@@ -344,6 +351,90 @@ class DecorationGroup {
         this.clear();
         this.wnd.document.removeEventListener("pointerup", this.activationHandler);
         this.wnd.document.removeEventListener("pointermove", this.hoverHandler);
+    }
+
+    /** True if the element triggers WebKit's CSS Custom Highlight repaint bug. */
+    private isWebkitRepaintProne(el: Element): boolean {
+        const style = this.wnd.getComputedStyle(el);
+        if (webkitRepaintProneTags.has(el.tagName.toUpperCase()) || style.display === "inline-block" || style.verticalAlign !== "baseline") {
+            return true;
+        }
+        const parentStyle = el.parentElement ? this.wnd.getComputedStyle(el.parentElement) : null;
+        return !!parentStyle && parseFloat(style.fontSize) !== parseFloat(parentStyle.fontSize);
+    }
+
+    /** Finds a repaint-prone element (see isWebkitRepaintProne) intersecting the range, if any. */
+    private findWebkitRepaintProneElement(range: Range): Element | null {
+        let el: Element | null = range.startContainer.nodeType === Node.ELEMENT_NODE
+            ? range.startContainer as Element
+            : range.startContainer.parentElement;
+        while (el) {
+            if (this.isWebkitRepaintProne(el)) return el;
+            if (this.wnd.getComputedStyle(el).display !== "inline") break; // reached the containing block
+            el = el.parentElement;
+        }
+
+        const root = range.commonAncestorContainer;
+        const walkRoot = root.nodeType === Node.ELEMENT_NODE ? root as Element : root.parentElement;
+        if (!walkRoot) return null;
+        // Reject prunes subtrees the range doesn't touch, so a small range under a large
+        // common ancestor (e.g. spanning two paragraphs in a big section) doesn't walk the whole thing.
+        const walker = this.wnd.document.createTreeWalker(walkRoot, NodeFilter.SHOW_ELEMENT, node =>
+            range.intersectsNode(node as Element) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+        );
+        for (let node = walker.nextNode() as Element | null; node; node = walker.nextNode() as Element | null) {
+            if (this.isWebkitRepaintProne(node)) return node;
+        }
+        return null;
+    }
+
+    /** Reflows the containing block of the offending element; its own box isn't enough since inline layout is computed per line. */
+    private forceWebkitBlockReflow(offender: Element) {
+        let el: Element | null = offender;
+        while (el) {
+            const display = this.wnd.getComputedStyle(el).display;
+            if (display !== "inline" && display !== "inline-block") break;
+            el = el.parentElement;
+        }
+        if (!el || !el.isConnected) return;
+        const block = el as HTMLElement;
+        const previousTransform = block.style.getPropertyValue("transform");
+        const previousPriority = block.style.getPropertyPriority("transform");
+        // Paint-only nudge: promotes then repaints the compositing layer without
+        // touching layout, so it can't disturb scroll position, focus, or selection.
+        block.style.setProperty("transform", "translateZ(0.001px)", "important");
+        void block.offsetHeight;
+        block.style.setProperty("transform", "translateZ(0px)", "important");
+        void block.offsetHeight;
+        if (previousTransform) {
+            block.style.setProperty("transform", previousTransform, previousPriority);
+        } else {
+            block.style.removeProperty("transform");
+        }
+    }
+
+    /** Finds WebKit repaint-prone elements among the given items and queues a reflow of their containing blocks. */
+    private scheduleWebkitRepaintFix(items: DecorationItem[]) {
+        if (!sML.UA.WebKit) return;
+        for (const item of items) {
+            if (this.notTextFlag?.has(item.id) || !item.highlightSubKey) continue;
+            const offender = this.findWebkitRepaintProneElement(item.range);
+            if (offender) this.queueWebkitReflow(offender);
+        }
+    }
+
+    /** Batches offenders behind a single animation frame so many decorations removed in the same tick only reflow each block once. */
+    private queueWebkitReflow(offender: Element) {
+        if (!this.pendingWebkitReflow) {
+            this.pendingWebkitReflow = new Set();
+            // Forcing layout synchronously doesn't guarantee a paint; defer to a real frame.
+            this.wnd.requestAnimationFrame(() => {
+                const pending = this.pendingWebkitReflow;
+                this.pendingWebkitReflow = null;
+                pending?.forEach(el => this.forceWebkitBlockReflow(el));
+            });
+        }
+        this.pendingWebkitReflow.add(offender);
     }
 
     private clientRectsToDocCoords(rects: Rect[], ctx: WritingContext = makeWritingContext(this.wnd)): Rect[] {
