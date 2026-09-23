@@ -379,9 +379,13 @@ class DecorationGroup {
         const root = range.commonAncestorContainer;
         const walkRoot = root.nodeType === Node.ELEMENT_NODE ? root as Element : root.parentElement;
         if (!walkRoot) return null;
-        const walker = this.wnd.document.createTreeWalker(walkRoot, NodeFilter.SHOW_ELEMENT);
+        // Reject prunes subtrees the range doesn't touch, so a small range under a large
+        // common ancestor (e.g. spanning two paragraphs in a big section) doesn't walk the whole thing.
+        const walker = this.wnd.document.createTreeWalker(walkRoot, NodeFilter.SHOW_ELEMENT, node =>
+            range.intersectsNode(node as Element) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+        );
         for (let node = walker.nextNode() as Element | null; node; node = walker.nextNode() as Element | null) {
-            if (range.intersectsNode(node) && this.isWebkitRepaintProne(node)) return node;
+            if (this.isWebkitRepaintProne(node)) return node;
         }
         return null;
     }
