@@ -12,13 +12,20 @@ export class DivinaPreferencesEditor implements IPreferencesEditor {
   private metadata: Metadata;
 
   constructor(initialPreferences: DivinaPreferences, settings: DivinaSettings, metadata: Metadata) {
-    this.preferences = initialPreferences;
+    this.preferences = new DivinaPreferences({ ...initialPreferences });
     this.settings = settings;
     this.metadata = metadata;
   }
 
   clear(): void {
-    this.preferences = new DivinaPreferences({});
+    this.preferences = new DivinaPreferences({
+      backgroundColor: null,
+      constraint: null,
+      quality: null,
+      scrolled: null,
+      spreads: null,
+      stripWidth: null
+    });
   }
 
   private updatePreference<K extends keyof DivinaPreferences>(key: K, value: DivinaPreferences[K]) {
