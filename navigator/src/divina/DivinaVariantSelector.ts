@@ -1,5 +1,5 @@
 import { Link } from "@readium/shared";
-import { sML } from "@readium/navigator-html-injectables";
+import { sML } from "@readium/helpers";
 
 /**
  * User-selectable image quality for publications that provide alternate
