@@ -227,6 +227,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
             // Defer the initial load until the host has prepared the element
             // (e.g. attached MediaKeys for EME) so no media data is fetched or
             // decoded before protection is in place.
+            if (this._destroyed) return;
             Promise.resolve()
                 .then(() => configuration.mediaElementSetup!(this.pool.audioEngine.getMediaElement()))
                 .catch((error) => { this.listeners.error(error, this.currentLocator); })
