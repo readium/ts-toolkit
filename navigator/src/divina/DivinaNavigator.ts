@@ -1,4 +1,4 @@
-import { Layout, Link, Locator, Publication, ReadingProgression } from "@readium/shared";
+import { Layout, Link, Locator, Publication, ReadingProgression, Timeline, TimelineItem } from "@readium/shared";
 import {
     ContextMenuEvent,
     FrameClickEvent,
@@ -39,6 +39,7 @@ export interface DivinaNavigatorConfiguration {
 
 export interface DivinaNavigatorListeners {
     positionChanged: (locator: Locator) => void;
+    timelineItemChanged: (item: TimelineItem | undefined) => void;
     tap: (e: FrameClickEvent) => boolean; // Return true to prevent handling here
     click: (e: FrameClickEvent) => boolean; // Return true to prevent handling here
     zoom: (scale: number) => void;
@@ -53,6 +54,7 @@ export interface DivinaNavigatorListeners {
 
 const defaultListeners = (listeners: Partial<DivinaNavigatorListeners>): DivinaNavigatorListeners => ({
     positionChanged: listeners.positionChanged || (() => {}),
+    timelineItemChanged: listeners.timelineItemChanged || (() => {}),
     tap: listeners.tap || (() => false),
     click: listeners.click || (() => false),
     zoom: listeners.zoom || (() => {}),
@@ -78,6 +80,9 @@ export class DivinaNavigator extends VisualNavigator implements Configurable<Con
     private currentLocation!: Locator;
     private _destroyed = false;
     private _isNavigating = false;
+    private _timelineAugmented = false;
+    private _wrappedTimeline: Timeline | undefined;
+    private _currentTimelineItem: TimelineItem | undefined;
 
     private _preferences: DivinaPreferences;
     private _defaults: DivinaDefaults;
@@ -188,6 +193,40 @@ export class DivinaNavigator extends VisualNavigator implements Configurable<Con
 
     get publication(): Publication {
         return this.pub;
+    }
+
+    get timeline(): Timeline {
+        const t = this.pub.timeline;
+        if (!this._timelineAugmented && this.positions?.length) {
+            // Each Divina page is exactly one position — there's no intra-resource
+            // fragment/scroll granularity to resolve, unlike EPUB's reflowable text.
+            // This mirrors the EPUB fixed-layout case: one leaf toc entry per href
+            // gets that resource's single position.
+            const positions = this.positions;
+            const assignedHrefs = new Set<string>();
+            t.augment((item, link) => {
+                if (item.children?.length) return {};
+                if (assignedHrefs.has(link.href)) return {};
+                const entry = positions.find(p => p.href === link.href);
+                if (!entry) return {};
+                assignedHrefs.add(link.href);
+                return { position: entry.locations.position };
+            });
+            this._timelineAugmented = true;
+        }
+        // Divina pages have no in-resource fragments to anchor previous/next
+        // against, so unlike the HTML navigators, navigableFrom can pass straight
+        // through to the real Timeline without a visible-range-aware wrapper.
+        if (!this._wrappedTimeline) this._wrappedTimeline = t;
+        return this._wrappedTimeline;
+    }
+
+    private _notifyTimelineChange(locator: Locator): void {
+        const item = this.timeline.locate(locator);
+        if (item !== this._currentTimelineItem) {
+            this._currentTimelineItem = item;
+            this.listeners.timelineItemChanged(item);
+        }
     }
 
     get layout(): Layout {
@@ -341,6 +380,7 @@ export class DivinaNavigator extends VisualNavigator implements Configurable<Con
         this.setLocationToIndex(p.currentIndex);
         p.update();
         this.listeners.positionChanged(this.currentLocation);
+        this._notifyTimelineChange(this.currentLocation);
         return true;
     }
 
@@ -363,6 +403,7 @@ export class DivinaNavigator extends VisualNavigator implements Configurable<Con
             totalProgression: n > 0 ? Math.min((index + progression) / n, 1) : 0
         });
         this.listeners.positionChanged(this.currentLocation);
+        this._notifyTimelineChange(this.currentLocation);
     }
 
     private applyBackground() {
@@ -489,6 +530,7 @@ export class DivinaNavigator extends VisualNavigator implements Configurable<Con
             }
             this.setLocationToIndex(this.pagedPresenter ? this.pagedPresenter.currentIndex : index);
             this.listeners.positionChanged(this.currentLocation);
+            this._notifyTimelineChange(this.currentLocation);
             cb(true);
         } finally {
             this._isNavigating = false;
