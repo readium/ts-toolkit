@@ -11,10 +11,15 @@ export class NumberRange {
   }
 }
 
+export interface ResourceReadOptions {
+  /** Aborts the underlying request, e.g. when a prefetched resource is no longer needed */
+  signal?: AbortSignal;
+}
+
 export abstract class Resource {
   abstract link(): Promise<Link>;
   abstract length(): Promise<number | undefined>; // TODO make try?
-  abstract read(range?: NumberRange): Promise<Uint8Array | undefined>;
+  abstract read(range?: NumberRange, options?: ResourceReadOptions): Promise<Uint8Array | undefined>;
   readAsString(): Promise<string | undefined> {
     return this.read().then(bytes => {
       if (bytes === undefined) return bytes;
@@ -27,11 +32,11 @@ export abstract class Resource {
       return JSON.parse(str);
     });
   }
-  readAsXML(): Promise<XMLDocument | undefined> {
-    return this.readAsString().then(str => {
+  readAsXML(): Promise<Document | undefined> {
+    return this.link().then(l => this.readAsString().then(str => {
       if (str === undefined) return str;
-      return new DOMParser().parseFromString(str, 'text/xml');
-    });
+      return new DOMParser().parseFromString(str, l.mediaType.isHTML ? (l.mediaType.string as 'application/xhtml+xml' | 'text/html') : 'text/xml');
+    }));
   }
   abstract close(): void;
 }

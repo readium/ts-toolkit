@@ -31,7 +31,7 @@ export class FrameManager {
         this.frame.sandbox.value = "allow-same-origin allow-scripts";
         this.frame.classList.add("readium-navigator-iframe");
         this.frame.style.visibility = "hidden";
-        this.frame.style.setProperty("aria-hidden", "true");
+        this.frame.ariaHidden = "true";
         this.frame.style.opacity = "0";
         this.frame.style.position = "absolute";
         this.frame.style.pointerEvents = "none";
@@ -142,7 +142,7 @@ export class FrameManager {
     async hide(): Promise<void> {
         if(this.destroyed) return;
         this.frame.style.visibility = "hidden";
-        this.frame.style.setProperty("aria-hidden", "true");
+        this.frame.ariaHidden = "true";
         this.frame.style.opacity = "0";
         this.frame.style.pointerEvents = "none";
         this.hidden = true;
@@ -178,9 +178,9 @@ export class FrameManager {
 
                     const remove = () => {
                         this.frame.style.removeProperty("visibility");
-                        this.frame.style.removeProperty("aria-hidden");
                         this.frame.style.removeProperty("opacity");
                         this.frame.style.removeProperty("pointer-events");
+                        this.frame.ariaHidden = null;
                         this.hidden = false;
 
                         if (sML.UA.WebKit) {

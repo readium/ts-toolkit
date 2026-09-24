@@ -6,6 +6,7 @@ import { CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPo
 import { Decoration, OnDecorationActivatedEvent, OnDecorationPointerEnterEvent, OnDecorationPointerLeaveEvent, DecorationObserver, DecorableNavigator, DecoratorConfig, decorationsEqual, resolveDecorationForWire, supportsDecorationStyle as canRenderDecorationStyle, DecorationStyleType } from "../decorations/index.ts";
 import * as path from "path-browserify";
 import { FXLFrameManager } from "./fxl/FXLFrameManager.ts";
+import { isTypedOMSupported } from "./fxl/FXLPeripherals.ts";
 import { FrameManager } from "./frame/FrameManager.ts";
 import { IEpubPreferences, EpubPreferences } from "./preferences/EpubPreferences.ts";
 import { IEpubDefaults, EpubDefaults } from "./preferences/EpubDefaults.ts";
@@ -77,6 +78,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private readonly container: HTMLElement;
     private readonly listeners: EpubNavigatorListeners;
     private framePool!: FramePoolManager | FXLFramePoolManager;
+    private _destroyed = false;
     private positions!: Locator[];
     private currentLocation!: Locator;
     private _currentTimelineItem: TimelineItem | undefined;
@@ -264,11 +266,14 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             });
         }
 
+        if (this._destroyed) return;
+
         if(this._layout === Layout.fixed) {
             this.framePool = new FXLFramePoolManager(
                 this.container,
                 this.positions,
                 this.pub,
+                this._layout,
                 this._injector,
                 this._contentProtection,
                 this._keyboardPeripherals,
@@ -279,6 +284,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             }
         } else {
             await this.updateCSS(false);
+            if (this._destroyed) return;
             const cssProperties = this.compileCSSProperties(this._css);
             this.framePool = new FramePoolManager(
                 this.container,
@@ -297,9 +303,17 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
         if(this.currentLocation === undefined)
             this.currentLocation = this.positions[0];
+        else
+            this.currentLocation = this.completeLocator(this.currentLocation);
 
         await this.resizeHandler();
-        await this.apply();
+        if (this._destroyed) return;
+        return new Promise(async res => {
+            if (this._destroyed) return res(false);
+            await this.go(this.currentLocation, false, (s) => {
+                res(s);
+            });
+        });
     }
 
     public get settings(): Readonly<EpubSettings> {
@@ -404,7 +418,12 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         const parentEl = this.container.parentElement || document.documentElement;
 
         if (this._layout === Layout.fixed) {
-            this.container.style.width = `${ getContentWidth(parentEl) - this._settings.constraint }px`;
+            const width = getContentWidth(parentEl) - this._settings.constraint;
+            if (isTypedOMSupported()) {
+                this.container.attributeStyleMap.set("width", CSS.px(width));
+            } else {
+                this.container.style.width = `${ width }px`;
+            }
             if (!this.framePool) return;
             (this.framePool as FXLFramePoolManager).resizeHandler();
         } else {
@@ -874,6 +893,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     // End of Decoration
 
     public async destroy() {
+        // Flag synchronously so an in-flight load() bails before attaching frames.
+        this._destroyed = true;
         if (this._suspiciousActivityListener) {
             window.removeEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
         }
@@ -1268,7 +1289,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             return;
         }
 
-        const progression = locator?.locations?.progression;
+        const progression = locator.locations?.progression;
         const hasProgression = progression && progression > 0;
         if(hasProgression)
             done = await new Promise<boolean>((res, _) => {
@@ -1279,7 +1300,42 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         cb(done);
     }
 
+    private completeLocator(locator: Locator): Locator {
+        if(!locator.href) {
+            let fellback = false;
+            if(typeof locator.locations.position === "number") {
+                const match = this.positions.find(p => p.locations.position === locator.locations.position);
+                if (match) {
+                    locator = match.copyWithLocations(locator.locations);
+                    fellback = true;
+                }
+            }
+            if(!fellback && typeof locator.locations?.totalProgression === "number") {
+                // If locator has no href, but it does have a totalProgression,
+                // we can attempt to find the right resource from the positions list.
+                // This is here to help with conversion from OPDS locators which only
+                // require the total progression in the publication.
+                const targetProgression = locator.locations.totalProgression;
+                let closestIdx = 0;
+                let closestDist = Infinity;
+                for (let i = 0; i < this.positions.length; i++) {
+                    const pos = this.positions[i];
+                    // Use totalProgression if available, otherwise estimate from index
+                    const posProg = pos.locations.totalProgression ?? (i / this.positions.length);
+                    const dist = Math.abs(posProg - targetProgression);
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        closestIdx = i;
+                    }
+                }
+                locator = this.positions[closestIdx].copyWithLocations(locator.locations);
+            }
+        }
+        return locator;
+    }
+
     public go(locator: Locator, _: boolean, cb: (ok: boolean) => void): void {
+        locator = this.completeLocator(locator);
         const href = locator.href.split("#")[0];
         let link = this.pub.readingOrder.findWithHref(href);
         if(!link) {

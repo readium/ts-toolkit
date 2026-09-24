@@ -31,6 +31,37 @@ export interface Playback {
 }
 
 /**
+ * A consumer-supplied loader that feeds one resource to the playback element
+ * through Media Source Extensions. The engine constructs one per track via
+ * the [AudioMseLoaderFactory] and calls [start] immediately; the loader owns
+ * the element's `src` (a MediaSource object URL), all fetching, buffering and
+ * seek servicing until [destroy] is called. Container specifics (WebM, fMP4,
+ * byte ranges vs. segments…) are entirely up to the implementation.
+ */
+export interface AudioMseLoader {
+    /** Attaches to the element and begins streaming. Called exactly once. */
+    start(): void;
+
+    /**
+     * Cancels in-flight fetches, detaches element listeners and releases the
+     * MediaSource object URL. The element itself must be left intact — the
+     * engine reuses it for the next track.
+     */
+    destroy(): void;
+}
+
+/**
+ * Creates the [AudioMseLoader] for a resource. [mimeType] is the resource's
+ * media type from the manifest, when known — needed to configure the
+ * SourceBuffer.
+ */
+export type AudioMseLoaderFactory = (
+    element: HTMLMediaElement,
+    href: string,
+    mimeType?: string,
+) => AudioMseLoader;
+
+/**
  * An audio engine that plays audio resources from a publication.
  * @playback - The current [Playback] state.
 */
@@ -58,8 +89,10 @@ export interface AudioEngine {
      * Changes the src of the primary media element without swapping it,
      * preserving the RemotePlayback session and all attached event listeners.
      * @param href The URL of the new audio resource.
+     * @param mimeType The media type of the resource, when known. Required for
+     * MSE-based loading to configure the SourceBuffer.
      */
-    changeSrc(href: string): void;
+    changeSrc(href: string, mimeType?: string): void;
     
     /**
      * Plays the current audio resource.

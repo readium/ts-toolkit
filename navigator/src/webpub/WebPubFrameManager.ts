@@ -29,7 +29,7 @@ export class WebPubFrameManager {
         this.frame = document.createElement("iframe");
         this.frame.classList.add("readium-navigator-iframe");
         this.frame.style.visibility = "hidden";
-        this.frame.style.setProperty("aria-hidden", "true");
+        this.frame.ariaHidden = "true";
         this.frame.style.opacity = "0";
         this.frame.style.position = "absolute";
         this.frame.style.pointerEvents = "none";
@@ -140,7 +140,7 @@ export class WebPubFrameManager {
     async hide(): Promise<void> {
         if(this.destroyed) return;
         this.frame.style.visibility = "hidden";
-        this.frame.style.setProperty("aria-hidden", "true");
+        this.frame.ariaHidden = "true";
         this.frame.style.opacity = "0";
         this.frame.style.pointerEvents = "none";
         this.hidden = true;
@@ -176,7 +176,7 @@ export class WebPubFrameManager {
 
                     const remove = () => {
                         this.frame.style.removeProperty("visibility");
-                        this.frame.style.removeProperty("aria-hidden");
+                        this.frame.ariaHidden = null;
                         this.frame.style.removeProperty("opacity");
                         this.frame.style.removeProperty("pointer-events");
                         this.hidden = false;
