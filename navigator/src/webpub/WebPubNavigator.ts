@@ -67,6 +67,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private framePool!: WebPubFramePoolManager;
     private currentIndex: number = 0;
     private currentLocation: Locator;
+    private _destroyed = false;
 
     private _preferences: WebPubPreferences;
     private _defaults: WebPubDefaults;
@@ -178,6 +179,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
     public async load() {
         await this.updateCSS(false);
+        if (this._destroyed) return;
         const cssProperties = this.compileCSSProperties(this._css);
         this.framePool = new WebPubFramePoolManager(
             this.container,
@@ -186,6 +188,9 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             this._contentProtection,
             this._keyboardPeripherals
         );
+
+        if (this._destroyed) return;
+        this.currentLocation = this.completeLocator(this.currentLocation);
 
         await this.apply();
     }
@@ -429,6 +434,8 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     }
 
     public async destroy() {
+        // Flag synchronously so an in-flight load() bails before attaching frames.
+        this._destroyed = true;
         if (this._suspiciousActivityListener) {
             window.removeEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
         }
@@ -719,7 +726,44 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         cb(done);
     }
 
+    private completeLocator(locator: Locator): Locator {
+        if (!locator.href) {
+            const items = this.pub.readingOrder.items;
+            let fellback = false;
+            if (typeof locator.locations.position === "number") {
+                const link = items[locator.locations.position - 1];
+                if (link) {
+                    locator = (this.pub.manifest.locatorFromLink(link) || new Locator({
+                        href: link.href,
+                        type: link.type || "text/html"
+                    })).copyWithLocations(locator.locations);
+                    fellback = true;
+                }
+            }
+            if (!fellback && typeof locator.locations?.totalProgression === "number") {
+                // WebPub has no per-resource totalProgression like EPUB's position list,
+                // so approximate by spreading the reading order evenly. This is here to
+                // help with conversion from OPDS locators which only require the total
+                // progression in the publication.
+                const targetProgression = locator.locations.totalProgression;
+                const closestIdx = Math.min(
+                    items.length - 1,
+                    Math.max(0, Math.round(targetProgression * (items.length - 1)))
+                );
+                const link = items[closestIdx];
+                if (link) {
+                    locator = (this.pub.manifest.locatorFromLink(link) || new Locator({
+                        href: link.href,
+                        type: link.type || "text/html"
+                    })).copyWithLocations(locator.locations);
+                }
+            }
+        }
+        return locator;
+    }
+
     public go(locator: Locator, _: boolean, cb: (ok: boolean) => void): void {
+        locator = this.completeLocator(locator);
         const href = locator.href.split("#")[0];
         let link = this.pub.readingOrder.findWithHref(href);
         if(!link) {
