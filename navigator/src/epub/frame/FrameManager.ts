@@ -1,7 +1,7 @@
 import { Loader, ModuleName } from "@readium/navigator-html-injectables";
 import { FrameComms } from "./FrameComms.ts";
-import type { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
-import { sML } from "@readium/navigator-html-injectables";
+import type { ReadiumWindow } from "@readium/navigator-html-injectables";
+import { sML } from "@readium/helpers";
 import type { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator.ts";
 import { KeyboardConditionBridge } from "../../peripherals/KeyboardConditionBridge.ts";
 
@@ -15,13 +15,17 @@ export class FrameManager {
     private destroyed: boolean = false;
     private readonly contentProtectionConfig: IContentProtectionConfig;
     private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
+    private resizeWatchSelectors: string[];
+    private pendingUnwatchSelectors: string[] = [];
     private conditionBridge?: KeyboardConditionBridge;
     private currModules: ModuleName[] = [];
 
     constructor(
         source: string,
         contentProtectionConfig: IContentProtectionConfig = {},
-        keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = []
+        keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = [],
+        private readonly timelineFragmentIds: string[] = [],
+        resizeWatchSelectors: string[] = []
     ) {
         this.frame = document.createElement("iframe");
         this.frame.sandbox.value = "allow-same-origin allow-scripts";
@@ -37,6 +41,7 @@ export class FrameManager {
         // Use the provided content protection config directly without overriding defaults
         this.contentProtectionConfig = { ...contentProtectionConfig };
         this.keyboardPeripheralsConfig = [...keyboardPeripheralsConfig];
+        this.resizeWatchSelectors = [...resizeWatchSelectors];
 
     }
 
@@ -98,6 +103,32 @@ export class FrameManager {
         if (this.contentProtectionConfig.protectPrinting?.disable) {
             this.comms!.send("print_protection", this.contentProtectionConfig.protectPrinting);
         }
+
+        // Send resize-watch targets
+        this.resizeWatchSelectors.forEach(selector => {
+            this.comms!.send("decoration_resize", { action: "watch", selector });
+        });
+
+        // Flush unwatches that couldn't be sent while comms was halted
+        this.pendingUnwatchSelectors.forEach(selector => {
+            this.comms!.send("decoration_resize", { action: "unwatch", selector });
+        });
+        this.pendingUnwatchSelectors = [];
+    }
+
+    addResizeTarget(selector: string): void {
+        if (!this.resizeWatchSelectors.includes(selector)) this.resizeWatchSelectors.push(selector);
+        this.pendingUnwatchSelectors = this.pendingUnwatchSelectors.filter(s => s !== selector);
+        if (this.comms?.ready) this.comms.send("decoration_resize", { action: "watch", selector });
+    }
+
+    removeResizeTarget(selector: string): void {
+        this.resizeWatchSelectors = this.resizeWatchSelectors.filter(s => s !== selector);
+        if (this.comms?.ready) {
+            this.comms.send("decoration_resize", { action: "unwatch", selector });
+        } else if (!this.pendingUnwatchSelectors.includes(selector)) {
+            this.pendingUnwatchSelectors.push(selector);
+        }
     }
 
     async destroy() {
@@ -140,6 +171,10 @@ export class FrameManager {
                 this.comms?.send("focus", undefined, () => {
                     // Apply content protection synchronously
                     this.applyContentProtection();
+
+                    // Send timeline fragment IDs so the snapper can set up observers
+                    if (this.timelineFragmentIds.length > 0)
+                        this.comms?.send("timeline_entries", this.timelineFragmentIds);
 
                     const remove = () => {
                         this.frame.style.removeProperty("visibility");

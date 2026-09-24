@@ -4,7 +4,8 @@ module.exports = {
         "shared/src/**/*.ts"
     ],
     moduleNameMapper: {
-        "^src/(.*)$": "<rootDir>/src/$1"
+        "^src/(.*)$": "<rootDir>/src/$1",
+        "^@readium/helpers$": "<rootDir>/../helpers/src/index.ts"
     },
     extensionsToTreatAsEsm: [".ts"],
     transform: {

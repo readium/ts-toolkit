@@ -21,7 +21,9 @@ export type CommsEventKey =
     "media_pause" |
     "content_protection" |
     "keyboard_peripherals" |
-    "decoration_activated";
+    "decoration_activated" |
+    "decoration_pointer_enter" |
+    "decoration_pointer_leave";
 
 export type CommsCommandKey =
     "_ping" |
@@ -39,7 +41,9 @@ export type CommsCommandKey =
     // "exact_progress" |
     "first_visible_locator" |
     "decorate" |
+    "decoration_resize" |
     "decoration_activatable" |
+    "decoration_hoverable" |
     "protect" |
     "unprotect" |
     "unfocus" |
@@ -50,7 +54,8 @@ export type CommsCommandKey =
     "peripherals_protection" |
     "keyboard_peripherals" |
     "scroll_protection" |
-    "print_protection";
+    "print_protection" |
+    "timeline_entries";
 ;
 
 export type SuspiciousActivityType = 

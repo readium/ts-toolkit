@@ -5,6 +5,105 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.3] – 2026-09-23
+
+### Fixed
+
+- Removing a decoration near certain inline elements no longer leaves stale highlight pixels on-screen in WebKit, via updated `@readium/decorator`/`@readium/navigator-html-injectables`
+
+## [2.10.2] – 2026-09-18
+
+### Fixed
+
+- Decorations could render invisible, hidden behind the page's own content, in some layouts, via updated `@readium/decorator`/`@readium/navigator-html-injectables`
+
+## [2.10.1] – 2026-09-15
+
+### Fixed
+
+- Republished against `@readium/decorator@1.2.1`/`@readium/navigator-html-injectables@2.8.1`/`@readium/shared@2.5.1` ([#254](https://github.com/readium/ts-toolkit/pull/254))
+
+## [2.10.0] – 2026-09-10
+
+### Added
+
+- `EpubNavigator` and `WebPubNavigator` now accept `resizeWatchSelectors` (decorator config) and expose `addDecorationResizeTarget`/`removeDecorationResizeTarget`, so decoration overlays relay out when a watched element within the current content document resizes for reasons that don't affect the document's own size — e.g. a sidebar collapsing and the reading pane reflowing inside it, via updated `@readium/decorator`/`@readium/navigator-html-injectables`
+
+### Fixed
+
+- Removing the last `Mask` decoration no longer leaks an orphaned shadow-host element or removes other decorations sharing the same shadow root, via updated `@readium/decorator`/`@readium/navigator-html-injectables`
+
+## [2.9.1] – 2026-09-09
+
+### Fixed
+
+- Decorations rendered via the DOM overlay path no longer stay frozen at their original position when the reader scrolls, and every group is now correctly relaid out on resize, including ones that only use the CSS Highlight API, via updated `@readium/decorator`/`@readium/navigator-html-injectables`
+- `Highlight` decorations with `layout: Bounds` no longer render as an opaque block hiding the underlying text on iPadOS Safari, via updated `@readium/decorator`/`@readium/navigator-html-injectables`
+
+## [2.9.0] – 2026-09-08
+
+### Added
+
+- Decorations positioned by a `Locator`'s `domRange` or a WICG text-fragment directive are now resolved, in addition to `text.highlight`, via updated `@readium/decorator`/`@readium/navigator-html-injectables`/`@readium/shared` ([#249](https://github.com/readium/ts-toolkit/pull/249))
+
+### Changed
+
+- `@readium/helpers` is now bundled as an external dependency instead of being inlined into the build output ([#249](https://github.com/readium/ts-toolkit/pull/249))
+
+## [2.8.2] – 2026-08-03
+
+### Fixed
+
+- `AudioPreferencesEditor`, `WebPubPreferencesEditor`, and `EpubPreferencesEditor` now clone the preferences passed to their constructor instead of aliasing the navigator's live preferences object, so staged edits no longer mutate navigator state before `submitPreferences()` is called
+- `clear()` on all three preferences editors now resets every field to an explicit `null` instead of leaving it `undefined`, so it actually takes effect when submitted through `submitPreferences()`
+
+## [2.8.1] – 2026-07-29
+
+### Fixed
+
+- Republished against `@readium/decorator@1.0.2` — the previous release still pinned `@readium/decorator@1.0.1`, which itself pinned outdated `@readium/shared`/`@readium/navigator-html-injectables` versions, causing installs to resolve two copies of `@readium/shared`
+
+## [2.8.0] – 2026-07-23
+
+### Changed
+
+- **Breaking:** `Timeline.adjacentTo()` (via `@readium/shared`) has been renamed to `navigableFrom()` ([#244](https://github.com/readium/ts-toolkit/pull/244))
+
+### Fixed
+
+- `EpubNavigator`/`WebPubNavigator` now proxy `timeline.navigableFrom()` so that `previous`/`next` skip every fragment currently visible on screen — not just the single resolved current item — anchoring on the ends of that visible run and, at a resource's actual scroll start, on the outermost ancestor still within that resource ([#244](https://github.com/readium/ts-toolkit/pull/244))
+
+## [2.7.3] – 2026-07-22
+
+### Fixed
+
+- Timeline matching no longer matches hrefless toc entries (e.g. `<span>` grouping headings) against every resource (via `@readium/shared`) ([#243](https://github.com/readium/ts-toolkit/pull/243))
+- Snappers now align id monitoring with the actual centering behaviour of `goId`/`goText` (via `@readium/navigator-html-injectables`), so `timeline` stays in sync when navigating to an id ([#243](https://github.com/readium/ts-toolkit/pull/243))
+
+## [2.7.2] – 2026-07-16
+
+### Fixed
+
+- `Timeline.tocEntryFor()` (via `@readium/shared`) now falls back to the nearest preceding resource's toc entry when a resource has no toc entry of its own — the case where one toc entry spans several consecutive reading-order resources ([#242](https://github.com/readium/ts-toolkit/pull/242))
+
+## [2.7.1] – 2026-07-16
+
+### Fixed
+
+- Internal `@readium/*` dependencies were published with an unresolved `workspace:*` version, making the package uninstallable outside the monorepo; they now point to real published versions
+
+## [2.7.0] – 2026-07-16
+
+### Added
+
+- `Timeline` is now available on every navigator (not just audio) via the new abstract `Navigator.timeline` getter; `EpubNavigator` and `WebPubNavigator` expose it and fire a new `timelineItemChanged` listener as the current timeline item changes ([#234](https://github.com/readium/ts-toolkit/pull/234))
+- `ProgressionRange` now carries an optional `fragmentId` for the active timeline anchor ([#234](https://github.com/readium/ts-toolkit/pull/234))
+
+### Changed
+
+- **Breaking:** Decoration-related types and functions (`Decoration`, `DecorationObserver`, `decorationsEqual`, `resolveDecorationForWire`, `supportsDecorationStyle`, etc.) are now re-exported from the new `@readium/decorator` package instead of being defined locally; `DecorationObserver` gains `onDecorationPointerEnter`/`onDecorationPointerLeave` callbacks ([#228](https://github.com/readium/ts-toolkit/pull/228))
+- **Breaking:** Dropped the CommonJS/UMD build; the package is now ESM-only ([#228](https://github.com/readium/ts-toolkit/pull/228))
+
 ## [2.6.1] – 2026-06-23
 
 ### Fixed

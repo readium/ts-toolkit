@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const localesPath = join(__dirname, '..', 'node_modules', '@edrlab', 'thorium-locales', 'publication-metadata');
+const localesPath = join(__dirname, '..', 'src', 'locales', 'publication-metadata');
 
 
 function countKeys(obj) {

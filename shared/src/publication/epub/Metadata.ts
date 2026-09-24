@@ -1,16 +1,10 @@
-import { Metadata } from "../Metadata.ts";
-import { MediaOverlay } from "./MediaOverlay.ts";
+import { Metadata } from '../Metadata.ts';
+import { MediaOverlay } from './MediaOverlay.ts';
 
-declare module '../Metadata' {
-  export interface Metadata {
-    getMediaOverlay(): MediaOverlay | undefined;
-  }
-}
+// EPUB extensions for Metadata.
 
-Metadata.prototype.getMediaOverlay = function(): MediaOverlay | undefined {
-  const mediaOverlay = this.otherMetadata?.['mediaOverlay'];
-
+export function getMediaOverlay(metadata: Metadata): MediaOverlay | undefined {
+  const mediaOverlay = metadata.otherMetadata?.['mediaOverlay'];
   if (!mediaOverlay) return;
-
   return MediaOverlay.deserialize(mediaOverlay);
-};
+}

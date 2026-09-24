@@ -1,0 +1,9 @@
+{
+    "publication": {
+        "format": {
+            "audiobook": "ספר קולי",
+            "audiobookJSON": "תגית: Manifest",
+            "cbz": "ארכיון ספרי קומיקס"
+        }
+    }
+}

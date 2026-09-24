@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.1] – 2026-09-15
+
+### Fixed
+
+- `Accessibility.deserialize` no longer throws when `conformsTo`, `accessMode`, `feature`, `hazard`, `exemption`, or `accessModeSufficient` are serialized as a bare string or another non-array value instead of an array ([#254](https://github.com/readium/ts-toolkit/pull/254))
+
+## [2.5.0] – 2026-09-08
+
+### Added
+
+- `getTextFragment` resolves a WICG Text Fragment directive (`:~:text=...`) from `LocatorLocations.fragments`, via `@readium/helpers`'s new `decodeTextFragmentDirective` ([#249](https://github.com/readium/ts-toolkit/pull/249))
+
+## [2.4.0] – 2026-07-23
+
+### Changed
+
+- **Breaking:** `Timeline.adjacentTo()` has been renamed to `navigableFrom()` to better express its purpose ([#244](https://github.com/readium/ts-toolkit/pull/244))
+
+## [2.3.2] – 2026-07-22
+
+### Fixed
+
+- `Timeline` no longer matches hrefless toc entries (e.g. `<span>` grouping headings, which carry no `href`) against every resource; they are now correctly excluded as candidates ([#243](https://github.com/readium/ts-toolkit/pull/243))
+
+## [2.3.1] – 2026-07-16
+
+### Fixed
+
+- `Timeline.tocEntryFor()` now falls back to the nearest preceding resource's toc entry when a resource has no toc entry of its own — the case where one toc entry spans several consecutive reading-order resources ([#242](https://github.com/readium/ts-toolkit/pull/242))
+
+## [2.3.0] – 2026-07-16
+
+### Added
+
+- `Timeline` can now be built for HTML-based publications, not just audiobooks, via the new `buildTimeline`/`buildHtmlTimeline` helpers ([#234](https://github.com/readium/ts-toolkit/pull/234))
+- Added `formatNptTime()` utility, formatting a duration in seconds as `H:MM:SS`/`M:SS` ([#234](https://github.com/readium/ts-toolkit/pull/234))
+- Added `./html`, `./epub`, `./opds`, and `./encryption` subpath exports, so consumers can import only the format-specific extensions they need ([#228](https://github.com/readium/ts-toolkit/pull/228))
+- Spanish (`es`), Estonian (`et`), Finnish (`fi`), Polish (`pl`), and Greek (`el`) are now supported accessibility metadata display-guide languages, registered in `SUPPORTED_LANGUAGES` and `Localization` ([#228](https://github.com/readium/ts-toolkit/pull/228))
+
+### Changed
+
+- **Breaking:** All format-specific prototype augmentations (on `LocatorLocations`, EPUB/OPDS `Properties`, `Publication`, `Metadata`, etc.) have been replaced with standalone exported functions, e.g. `loc.time()` → `getTime(loc)`. Augmentation modules were side-effect-only and incompatible with the package's new `sideEffects: false`/tree-shakeable build. See [`docs/migration-standalone-extensions.md`](docs/migration-standalone-extensions.md) for the full before/after mapping ([#228](https://github.com/readium/ts-toolkit/pull/228))
+- **Breaking:** As part of the above, `getSpace(loc)` (formerly `loc.space()`) now returns `{ unit: "pixel" | "percent", x, y, width, height }` instead of a `[number, number, number, number]` tuple, to support percentage-based spatial media fragments ([#235](https://github.com/readium/ts-toolkit/pull/235))
+- **Breaking:** Dropped the CommonJS/UMD build; the package is now ESM-only ([#228](https://github.com/readium/ts-toolkit/pull/228))
+- Vendored `@edrlab/thorium-locales` locale files directly under `src/locales/` instead of depending on the package at install time; added an `update-locales` script to refresh them ([#228](https://github.com/readium/ts-toolkit/pull/228))
+
 ## [2.2.3] – 2026-06-23
 
 ### Changed

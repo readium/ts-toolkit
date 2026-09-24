@@ -49,3 +49,22 @@ export function isNptStartOfResource(raw: string): boolean {
     const t = parseNptTime(raw);
     return t !== undefined && t === 0;
 }
+
+/**
+ * Formats a duration in seconds as a human-readable string suitable for
+ * display in a Table of Contents or progress indicator.
+ *
+ * Outputs "H:MM:SS" when hours > 0, otherwise "M:SS".
+ * Minutes and seconds are always zero-padded to two digits.
+ *
+ * Examples: 0 → "0:00", 90 → "1:30", 3661 → "1:01:01"
+ */
+export function formatNptTime(seconds: number): string {
+    const totalSeconds = Math.floor(seconds);
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    const mm = String(m).padStart(2, "0");
+    const ss = String(s).padStart(2, "0");
+    return h > 0 ? `${h}:${mm}:${ss}` : `${m}:${ss}`;
+}

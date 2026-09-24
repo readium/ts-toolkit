@@ -35,7 +35,6 @@ interface BuiltinDecorationStyle {
   tint?: string;                // Any CSS color — "#ffff00", "rgba(255,200,0,0.4)", etc.
   layout?: DecorationLayout;    // Defaults to Boxes
   width?: DecorationWidth;      // Defaults to Wrap
-  isActive?: boolean;           // Set to true to allow the user to click/tap this decoration
   enforceContrast?: boolean;    // When true (default), tint is adjusted for contrast against the background
 }
 ```
@@ -45,7 +44,9 @@ interface BuiltinDecorationStyle {
 | Value | Description |
 |---|---|
 | `DecorationStyleType.Highlight` | Background-color overlay (default). |
+| `DecorationStyleType.HighlightUnderline` | Background-color overlay and underline simultaneously. Use to mark a decoration as selected or focused. |
 | `DecorationStyleType.Underline` | Line drawn beneath the text. |
+| `DecorationStyleType.Strikethrough` | Line drawn through the middle of the text. |
 | `DecorationStyleType.Outline` | Border drawn around each text box. |
 | `DecorationStyleType.TextColor` | Changes the text color directly. Requires CSS Highlight API; invisible in older browsers. **Note**: Due to CSS Highlight API limitations, viewport width behaves as wrap (fits text exactly) instead of stretching to full viewport width. Page and Bounds widths are supported for TextColor. **Vertical Writing**: Due to known browser bugs with `caretPositionFromPoint()` in vertical writing modes, bounds/page width falls back to wrap behavior to ensure reliability. |
 | `DecorationStyleType.Mask` | Dims everything outside the selection rects. Use `width: Page` for block-level behavior. |
@@ -78,13 +79,13 @@ interface HTMLDecorationTemplate {
   width: DecorationWidth;                          // Required
   element: (decoration: Decoration) => string;     // Returns an HTML snippet for each decoration
   stylesheet?: string;                             // CSS injected into the resource
-  isActive?: boolean;
 }
 ```
 
 Because `element` receives the full `Decoration` object, the generated HTML can vary per-decoration — for example to embed the decoration's tint color or extra data as an inline style or attribute. The returned HTML is cloned once per positioned box (or once for `Bounds` layout). Use CSS classes and the injected `stylesheet` to style the elements. Prefix all class names and IDs with your app name to avoid conflicts — `r2-` and `readium-` are reserved.
 
-> **Security** — The HTML returned by `element` is sanitized through an allowlist before injection. Script elements, event-handler attributes (`on*`), and `javascript:`/`data:` URLs are always stripped.
+> [!WARNING]
+> The HTML returned by `element` is sanitized through an allowlist before injection. Script elements, event-handler attributes (`on*`), and `javascript:`/`data:` URLs are always stripped.
 
 ### Groups
 
@@ -97,7 +98,7 @@ Decoration IDs must be **unique within their group**, but the same ID can appear
 Call `applyDecorations` with the **complete desired state** for a group. The navigator diffs the new list against the previous one and sends only the necessary add / update / remove commands to the rendered frames.
 
 ```ts
-import { Decoration, DecorationLayout, DecorationStyleType, DecorationWidth } from "@readium/navigator";
+import { Decoration, DecorationStyleType } from "@readium/navigator";
 
 const highlights: Decoration[] = [
   {
@@ -148,19 +149,19 @@ if (navigator.supportsDecorationStyle("app-sidemark")) {
 }
 ```
 
-`EpubNavigator` returns `true` for all built-in types and for any ID registered in `DecoratorConfig.decorationTemplates`. This method is mainly useful for navigator-agnostic code that may run against non-HTML navigators.
+`EpubNavigator` returns `true` for all built-in types except `TextColor`, which requires the CSS Highlight API and returns `false` in browsers that do not support it. It also returns `true` for any ID registered in `DecoratorConfig.decorationTemplates`. This method is mainly useful for navigator-agnostic code that may run against non-HTML navigators.
 
-**Note**: While TextColor is supported, it has limitations with viewport width due to CSS Highlight API constraints. Page and Bounds widths are supported for TextColor. Use other decoration styles if viewport behavior is required.
+**Note**: `TextColor` has limitations with viewport width due to CSS Highlight API constraints. Page and Bounds widths are supported for TextColor. Use other decoration styles if viewport behavior is required.
 
 ## Activation (Click / Tap)
 
-To make a decoration respond to user interaction, set `isActive: true` in its style and register a `DecorationObserver` for the group.
+To make decorations in a group respond to user interaction, register a `DecorationObserver` for that group. All decorations in the group become tappable once an observer is registered — no per-decoration flag is required.
 
 ```ts
-import { DecorationObserver, DecorationActivationEvent } from "@readium/navigator";
+import { DecorationObserver, OnDecorationActivatedEvent } from "@readium/navigator";
 
 const highlightObserver: DecorationObserver = {
-  onDecorationActivated(event: DecorationActivationEvent): boolean {
+  onDecorationActivated(event: OnDecorationActivatedEvent): boolean {
     console.log("Decoration tapped:", event.decoration.id);
     console.log("Group:", event.group);
     console.log("Bounding rect (navigator coords):", event.rect);
@@ -176,8 +177,6 @@ const highlightObserver: DecorationObserver = {
 navigator.registerDecorationObserver("user-highlights", highlightObserver);
 ```
 
-Then create the decoration with `isActive: true`:
-
 ```ts
 navigator.applyDecorations([
   {
@@ -186,26 +185,25 @@ navigator.applyDecorations([
     style: {
       type: DecorationStyleType.Highlight,
       tint: "#ffff00",
-      isActive: true,        // ← required for activation events
     },
-    extras: { noteId: "note-42" },  // ← passed through to DecorationActivationEvent
+    extras: { noteId: "note-42" },  // ← passed through to OnDecorationActivatedEvent
   },
 ], "user-highlights");
 ```
 
-### `DecorationActivationEvent`
+### `OnDecorationActivatedEvent`
 
 ```ts
-interface DecorationActivationEvent {
+interface OnDecorationActivatedEvent {
   decoration: Decoration;   // The full decoration that was activated
   group: string;            // The group it belongs to
-  rect?: {                  // Bounding rect in navigator container coordinates
+  rect: {                   // Bounding rect in navigator container coordinates
     top: number;
     left: number;
     width: number;
     height: number;
   };
-  point?: {                 // Tap/click point in navigator container coordinates
+  point: {                  // Tap/click point in navigator container coordinates
     x: number;
     y: number;
   };
@@ -215,9 +213,7 @@ interface DecorationActivationEvent {
 `rect` and `point` are in CSS pixels relative to the navigator's container element — you can use them to position a popover:
 
 ```ts
-onDecorationActivated(event: DecorationActivationEvent): boolean {
-  if (!event.rect) return false;
-
+onDecorationActivated(event: OnDecorationActivatedEvent): boolean {
   showPopover({
     content: lookupNote(event.decoration.extras?.noteId as string),
     anchorRect: event.rect,
@@ -232,6 +228,50 @@ onDecorationActivated(event: DecorationActivationEvent): boolean {
 Returning `true` from `onDecorationActivated` tells the navigator that you handled the event. The navigator will **not** process the tap/click further — no page turn, no `miscPointer`, no `tap`/`click` listener call.
 
 Returning `false` (or not having a registered observer) lets the tap/click fall through to normal navigation.
+
+## Hover (Pointer Enter / Leave)
+
+To track pointer hover over decorations in a group, declare `onDecorationPointerEnter` and/or `onDecorationPointerLeave` on the observer. Hover tracking is automatically enabled for the group when either method is present, and disabled when all observers for that group are removed.
+
+```ts
+import { DecorationObserver, OnDecorationPointerEnterEvent, OnDecorationPointerLeaveEvent } from "@readium/navigator";
+
+const observer: DecorationObserver = {
+  onDecorationPointerEnter(event: OnDecorationPointerEnterEvent): void {
+    console.log("Pointer entered:", event.decoration.id);
+    console.log("Rect:", event.rect);
+    console.log("Point:", event.point);
+  },
+  onDecorationPointerLeave(event: OnDecorationPointerLeaveEvent): void {
+    console.log("Pointer left:", event.decoration.id);
+    console.log("Rect:", event.rect); // bounding rect of the decoration that was left
+  },
+};
+
+navigator.registerDecorationObserver("user-highlights", observer);
+```
+
+### `OnDecorationPointerEnterEvent`
+
+```ts
+interface OnDecorationPointerEnterEvent {
+  decoration: Decoration;
+  group: string;
+  rect: { top: number; left: number; width: number; height: number };
+  point: { x: number; y: number };
+}
+```
+
+### `OnDecorationPointerLeaveEvent`
+
+```ts
+interface OnDecorationPointerLeaveEvent {
+  decoration: Decoration;
+  group: string;
+  rect?: { top: number; left: number; width: number; height: number }; // absent if decoration was removed from DOM before leave fired
+  point?: { x: number; y: number };                                    // current pointer position at the moment of leave
+}
+```
 
 ### Unregistering an observer
 
@@ -248,10 +288,8 @@ import {
   EpubNavigator,
   Decoration,
   DecorationObserver,
-  DecorationActivationEvent,
-  DecorationLayout,
+  OnDecorationActivatedEvent,
   DecorationStyleType,
-  DecorationWidth,
 } from "@readium/navigator";
 
 // 1. Keep your highlights in application state
@@ -263,7 +301,7 @@ function syncHighlights() {
 
 // 2. Register an observer before or after load
 const observer: DecorationObserver = {
-  onDecorationActivated(event: DecorationActivationEvent): boolean {
+  onDecorationActivated(event: OnDecorationActivatedEvent): boolean {
     const noteId = event.decoration.extras?.noteId as string | undefined;
     if (noteId && event.rect) {
       showNotePopover(noteId, event.rect);
@@ -285,7 +323,6 @@ function addHighlight(locator: Locator, color: string, noteId: string) {
       style: {
         type: DecorationStyleType.Highlight,
         tint: color,
-        isActive: true,
       },
       extras: { noteId },
     },
@@ -301,7 +338,6 @@ function removeHighlight(id: string) {
 
 // 5. Clean up when done
 navigator.unregisterDecorationObserver(observer);
-await navigator.destroy();
 ```
 
 ## Complete Example — Search Results
@@ -329,7 +365,7 @@ function clearSearch() {
 }
 ```
 
-Because `isActive` is not set, tapping a search result falls through to normal navigation — no observer needed.
+Because no observer is registered for this group, tapping a search result falls through to normal navigation.
 
 ## Complete Example — Custom Template (Sidemark)
 
@@ -376,6 +412,7 @@ navigator.applyDecorations(
 );
 ```
 
+> [!NOTE]
 > Prefix all class names and IDs with your app name. `r2-` and `readium-` are reserved by the toolkit.
 
 ## Custom Named Styles
@@ -437,4 +474,3 @@ navigator.applyDecorations(
 |---|---|---|
 | Template defined | Per decoration | Once at navigator init |
 | Best for | One-off or rare styles | Styles reused across many decorations |
-| `supportsDecorationStyle` | Always true | Checks the registry |

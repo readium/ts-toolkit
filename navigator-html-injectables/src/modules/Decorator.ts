@@ -1,14 +1,13 @@
 import { Locator } from "@readium/shared";
-import { Comms } from "../comms/comms.ts";
+import { IComms } from "../comms/comms.ts";
 import { Module } from "./Module.ts";
 import { rangeFromLocator } from "../helpers/locator.ts";
 import { ModuleName } from "./ModuleLibrary.ts";
-import { Rect, getClientRectsNoOverlap, rectContainsPoint } from "../helpers/rect.ts";
+import { Rect, getClientRectsNoOverlap, getTextClientRects, rectContainsPoint } from "../helpers/rect.ts";
 import { getProperty } from "../helpers/css.ts";
-import { ReadiumWindow } from "../helpers/dom.ts";
-import { isDarkColor, getContrastingTextColor, adjustColorForContrast } from "../helpers/color.ts";
-import { makeWritingContext } from "../helpers/document.ts";
-import { sML } from "../helpers/sML.ts";
+import { isDarkColor, getContrastingTextColor, adjustColorForContrast, colorToRgba } from "@readium/helpers";
+import { makeWritingContext, WritingContext } from "../helpers/document.ts";
+import { sML } from "@readium/helpers";
 import { sanitizeHTML } from "../helpers/sanitize.ts";
 
 function defaultTint(type: DecorationStyleType): string {
@@ -16,6 +15,7 @@ function defaultTint(type: DecorationStyleType): string {
         case DecorationStyleType.Mask:
             return "rgba(255, 255, 255, 0.5)";
         case DecorationStyleType.Highlight:
+        case DecorationStyleType.HighlightUnderline:
             return "#FFFF00";
         default:
             return "#FF0000";
@@ -23,12 +23,14 @@ function defaultTint(type: DecorationStyleType): string {
 }
 
 export const DecorationStyleType = {
-    Highlight: "highlight", // Background color overlay.
-    Underline: "underline", // Underline drawn beneath the text.
-    Outline:   "outline",   // Border drawn around the text boxes.
-    TextColor: "textColor", // Changes the text color directly.
-    Mask:      "mask",      // Dims everything outside the selection rects. Use width: Page for block-level behaviour.
-    Template:  "template",  // Custom HTML template (HTMLDecorationTemplate).
+    Highlight:          "highlight",          // Background color overlay.
+    HighlightUnderline: "highlightUnderline", // Background color overlay + underline (the converged active state from RFC 008).
+    Underline:          "underline",          // Underline drawn beneath the text.
+    Strikethrough:      "strikethrough",      // Line drawn through the vertical centre of the text.
+    Outline:            "outline",            // Border drawn around the text boxes.
+    TextColor:          "textColor",          // Changes the text color directly.
+    Mask:               "mask",               // Dims everything outside the selection rects. Use width: Page for block-level behaviour.
+    Template:           "template",           // Custom HTML template (HTMLDecorationTemplate).
 } as const;
 export type DecorationStyleType = typeof DecorationStyleType[keyof typeof DecorationStyleType];
 
@@ -50,8 +52,8 @@ export interface BuiltinDecorationStyle {
     tint?: string;
     layout?: DecorationLayout;
     width?: DecorationWidth;
-    isActive?: boolean;
     enforceContrast?: boolean; // When true (default), tint is adjusted for contrast against the background.
+    expand?: number; // Inflates each client rect outward by this many CSS pixels on all sides.
 }
 
 /**
@@ -66,7 +68,6 @@ export interface HTMLDecorationTemplate {
     width: DecorationWidth;
     element: string;
     stylesheet?: string;
-    isActive?: boolean;
 }
 
 export type DecorationStyle = BuiltinDecorationStyle | HTMLDecorationTemplate;
@@ -78,38 +79,64 @@ export interface Decoration {
     extras?: Record<string, unknown>; // App-specific context data passed through to DecorationActivationEvent.
 }
 
-export interface DecorationActivatedEvent {
+interface DecorationEventBase {
     decorationId: string;
-    group: string; // Human-readable group name (matches DecoratorRequest.group).
-    rect: { top: number; left: number; width: number; height: number }; // Bounding rect in iframe client coords.
-    point: { x: number; y: number }; // Click point in iframe client coords.
+    group: string;
+    rect?: { top: number; left: number; width: number; height: number };
+    point?: { x: number; y: number };
 }
+
+export interface DecorationActivatedEvent extends DecorationEventBase {
+    rect: { top: number; left: number; width: number; height: number }; // Always present on activation.
+    point: { x: number; y: number }; // Always present on activation.
+}
+
+export interface DecorationPointerEnterData extends DecorationEventBase {
+    rect: { top: number; left: number; width: number; height: number }; // Always present on enter.
+    point: { x: number; y: number }; // Always present on enter.
+}
+
+export type DecorationPointerLeaveData = DecorationEventBase;
 
 export type DecoratorRequest =
     | { group: string; action: "add" | "update"; decoration: Decoration }
     | { group: string; action: "remove"; decoration: Pick<Decoration, "id"> }
     | { group: string; action: "clear" };
 
+export type DecorationResizeRequest =
+    | { action: "watch"; selector: string }
+    | { action: "unwatch"; selector: string };
+
 interface DecorationItem {
     id: string;
     decoration: Decoration;
     range: Range;
-
+    hitRects: Rect[]; // Merged client rects for hit testing; refreshed after each layout.
     clickableElements: HTMLElement[] | undefined;
     container: HTMLElement | undefined;
+    highlightSubKey?: string; // CSS.highlights key shared by all items with the same type+tint.
+    highlightCSS?: string;    // The ::highlight() rule for this item's tint group.
 }
 
 const canNativeHighlight = () => ("Highlight" in window);
 const cannotNativeHighlight = ["IMG", "IMAGE", "AUDIO", "VIDEO", "SVG"];
+// Elements that trigger WebKit's CSS Custom Highlight repaint bug on removal.
+const webkitRepaintProneTags = new Set(["SUP", "SUB", "SMALL", "CODE"]);
 
 class DecorationGroup {
     public readonly items: DecorationItem[] = [];
     private lastItemId = 0;
     private container: HTMLDivElement | undefined = undefined;
     private _activatable = false;
+    private _hoverable = false;
+    private hoveredItem: DecorationItem | undefined = undefined;
     public readonly experimentalHighlights: boolean = false;
     private readonly notTextFlag: Map<string, boolean> | undefined;
+    private readonly _tintSubKeys = new Map<string, string>(); // (type::adjustedTint) → subKey
+    private _subKeyCounter = 0;
+    private pendingWebkitReflow: Set<Element> | null = null;
     private readonly activationHandler: (e: PointerEvent) => void;
+    private readonly hoverHandler: (e: PointerEvent) => void;
     private maskSvg: SVGSVGElement | undefined = undefined;
     private shadowHost: HTMLDivElement | undefined = undefined;
     private shadowRoot: ShadowRoot | undefined = undefined;
@@ -120,8 +147,8 @@ class DecorationGroup {
      * @param name Human-readable name of the group
      */
     constructor(
-        private readonly wnd: ReadiumWindow,
-        private readonly comms: Comms,
+        private readonly wnd: Window,
+        private readonly comms: IComms,
         private readonly id: string,
         private readonly name: string
     ) {
@@ -131,6 +158,8 @@ class DecorationGroup {
         }
         this.activationHandler = this.handleActivation.bind(this);
         this.wnd.document.addEventListener("pointerup", this.activationHandler);
+        this.hoverHandler = this.handleHover.bind(this);
+        this.wnd.document.addEventListener("pointermove", this.hoverHandler);
     }
 
     get activatable() {
@@ -139,6 +168,34 @@ class DecorationGroup {
 
     set activatable(value: boolean) {
         this._activatable = value;
+    }
+
+    get hoverable() {
+        return this._hoverable;
+    }
+
+    /** True if this group has at least one item rendered via the DOM overlay path (not CSS Highlight API). */
+    get hasOverlayItems(): boolean {
+        return !this.experimentalHighlights || (this.notTextFlag?.size ?? 0) > 0;
+    }
+
+    set hoverable(value: boolean) {
+        this._hoverable = value;
+        if (!value && this.hoveredItem) {
+            const leaveRect = this.hoveredItem.range.getBoundingClientRect();
+            const pixelRatio = this.wnd.devicePixelRatio;
+            this.comms.send("decoration_pointer_leave", {
+                decorationId: this.hoveredItem.decoration.id,
+                group: this.name,
+                rect: {
+                    top: leaveRect.top * pixelRatio,
+                    left: leaveRect.left * pixelRatio,
+                    width: leaveRect.width * pixelRatio,
+                    height: leaveRect.height * pixelRatio,
+                },
+            } as DecorationPointerLeaveData);
+            this.hoveredItem = undefined;
+        }
     }
 
     /**
@@ -170,9 +227,23 @@ class DecorationGroup {
                 this.notTextFlag?.set(id, true);
             }
         }
+        // Walk up from both ends of the range to detect inline SVG ancestry (namespace check
+        // catches <text> inside <svg> which tag-name checks above would miss).
+        if(this.experimentalHighlights && !this.notTextFlag?.has(id)) {
+            const hasSvgAncestor = (node: Node | null): boolean => {
+                while (node && node.nodeType === Node.ELEMENT_NODE) {
+                    if ((node as Element).namespaceURI?.includes("svg")) return true;
+                    node = node.parentNode;
+                }
+                return false;
+            };
+            if (hasSvgAncestor(range.startContainer) || hasSvgAncestor(range.endContainer)) {
+                this.notTextFlag?.set(id, true);
+            }
+        }
         if (this.experimentalHighlights) {
             const { type } = decoration.style;
-            const { layout, width } = decoration.style as BuiltinDecorationStyle;
+            const { layout, width, expand } = decoration.style as BuiltinDecorationStyle;
             // CSS Highlight API only handles text-level highlight styling (boxes + wrap).
             // Everything else must go through the DOM overlay path.
             const needsDomOverlay =
@@ -181,7 +252,8 @@ class DecorationGroup {
                     type === DecorationStyleType.Template ||
                     type === DecorationStyleType.Mask ||
                     (layout !== undefined && layout !== DecorationLayout.Boxes) ||
-                    (width  !== undefined && width  !== DecorationWidth.Wrap)
+                    (width  !== undefined && width  !== DecorationWidth.Wrap) ||
+                    !!expand
                 );
             if (needsDomOverlay) this.notTextFlag?.set(id, true);
         }
@@ -190,10 +262,14 @@ class DecorationGroup {
             decoration,
             id,
             range,
+            hitRects: [],
+            clickableElements: undefined,
+            container: undefined,
         } as DecorationItem;
 
         this.items.push(item);
         this.layout(item);
+        item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, ((item.decoration.style as BuiltinDecorationStyle).expand ?? 0) + this.hitGap()));
         this.renderLayout([item]);
     }
 
@@ -214,13 +290,21 @@ class DecorationGroup {
             item.container.remove();
             item.container = undefined;
         }
-        if (this.experimentalHighlights && !this.notTextFlag?.has(item.id)) {
-            // Remove highlight from ranges
-            const mm = ((this.wnd as any).CSS.highlights as Map<string, unknown>).get(this.id) as Set<Range>;
-            mm?.delete(item.range);
+        if (this.experimentalHighlights && !this.notTextFlag?.has(item.id) && item.highlightSubKey) {
+            const cssHighlights = (this.wnd as any).CSS.highlights as Map<string, any>;
+            cssHighlights.get(item.highlightSubKey)?.delete(item.range);
+            if (!this.items.some(i => i.highlightSubKey === item.highlightSubKey)) {
+                cssHighlights.delete(item.highlightSubKey);
+            }
+            const stylesheet = this.wnd.document.getElementById(`${this.id}-style`) as HTMLStyleElement | null;
+            if (stylesheet) this._rebuildHighlightStylesheet(stylesheet);
+            this.scheduleWebkitRepaintFix([item]);
         }
         this.notTextFlag?.delete(item.id);
-        
+        if (this.hoveredItem === item) {
+            this.hoveredItem = undefined;
+        }
+
         // Update shared mask if we removed a mask decoration
         if (wasMask) {
             this.updateSharedMask();
@@ -240,9 +324,13 @@ class DecorationGroup {
      * Removes all decorations from this group.
      */
     clear() {
+        if (this.experimentalHighlights) {
+            this.scheduleWebkitRepaintFix(this.items);
+        }
         this.clearContainer();
         this.items.length = 0;
         this.notTextFlag?.clear();
+        this.hoveredItem = undefined;
         // Clear shared mask
         if (this.maskSvg) {
             this.maskSvg.remove();
@@ -262,17 +350,126 @@ class DecorationGroup {
     destroy() {
         this.clear();
         this.wnd.document.removeEventListener("pointerup", this.activationHandler);
+        this.wnd.document.removeEventListener("pointermove", this.hoverHandler);
+    }
+
+    /** True if the element triggers WebKit's CSS Custom Highlight repaint bug. */
+    private isWebkitRepaintProne(el: Element): boolean {
+        const style = this.wnd.getComputedStyle(el);
+        if (webkitRepaintProneTags.has(el.tagName.toUpperCase()) || style.display === "inline-block" || style.verticalAlign !== "baseline") {
+            return true;
+        }
+        const parentStyle = el.parentElement ? this.wnd.getComputedStyle(el.parentElement) : null;
+        return !!parentStyle && parseFloat(style.fontSize) !== parseFloat(parentStyle.fontSize);
+    }
+
+    /** Finds a repaint-prone element (see isWebkitRepaintProne) intersecting the range, if any. */
+    private findWebkitRepaintProneElement(range: Range): Element | null {
+        let el: Element | null = range.startContainer.nodeType === Node.ELEMENT_NODE
+            ? range.startContainer as Element
+            : range.startContainer.parentElement;
+        while (el) {
+            if (this.isWebkitRepaintProne(el)) return el;
+            if (this.wnd.getComputedStyle(el).display !== "inline") break; // reached the containing block
+            el = el.parentElement;
+        }
+
+        const root = range.commonAncestorContainer;
+        const walkRoot = root.nodeType === Node.ELEMENT_NODE ? root as Element : root.parentElement;
+        if (!walkRoot) return null;
+        // Reject prunes subtrees the range doesn't touch, so a small range under a large
+        // common ancestor (e.g. spanning two paragraphs in a big section) doesn't walk the whole thing.
+        const walker = this.wnd.document.createTreeWalker(walkRoot, NodeFilter.SHOW_ELEMENT, node =>
+            range.intersectsNode(node as Element) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+        );
+        for (let node = walker.nextNode() as Element | null; node; node = walker.nextNode() as Element | null) {
+            if (this.isWebkitRepaintProne(node)) return node;
+        }
+        return null;
+    }
+
+    /** Reflows the containing block of the offending element; its own box isn't enough since inline layout is computed per line. */
+    private forceWebkitBlockReflow(offender: Element) {
+        let el: Element | null = offender;
+        while (el) {
+            const display = this.wnd.getComputedStyle(el).display;
+            if (display !== "inline" && display !== "inline-block") break;
+            el = el.parentElement;
+        }
+        if (!el || !el.isConnected) return;
+        const block = el as HTMLElement;
+        const previousTransform = block.style.getPropertyValue("transform");
+        const previousPriority = block.style.getPropertyPriority("transform");
+        // Paint-only nudge: promotes then repaints the compositing layer without
+        // touching layout, so it can't disturb scroll position, focus, or selection.
+        block.style.setProperty("transform", "translateZ(0.001px)", "important");
+        void block.offsetHeight;
+        block.style.setProperty("transform", "translateZ(0px)", "important");
+        void block.offsetHeight;
+        if (previousTransform) {
+            block.style.setProperty("transform", previousTransform, previousPriority);
+        } else {
+            block.style.removeProperty("transform");
+        }
+    }
+
+    /** Finds WebKit repaint-prone elements among the given items and queues a reflow of their containing blocks. */
+    private scheduleWebkitRepaintFix(items: DecorationItem[]) {
+        if (!sML.UA.WebKit) return;
+        for (const item of items) {
+            if (this.notTextFlag?.has(item.id) || !item.highlightSubKey) continue;
+            const offender = this.findWebkitRepaintProneElement(item.range);
+            if (offender) this.queueWebkitReflow(offender);
+        }
+    }
+
+    /** Batches offenders behind a single animation frame so many decorations removed in the same tick only reflow each block once. */
+    private queueWebkitReflow(offender: Element) {
+        if (!this.pendingWebkitReflow) {
+            this.pendingWebkitReflow = new Set();
+            // Forcing layout synchronously doesn't guarantee a paint; defer to a real frame.
+            this.wnd.requestAnimationFrame(() => {
+                const pending = this.pendingWebkitReflow;
+                this.pendingWebkitReflow = null;
+                pending?.forEach(el => this.forceWebkitBlockReflow(el));
+            });
+        }
+        this.pendingWebkitReflow.add(offender);
+    }
+
+    private clientRectsToDocCoords(rects: Rect[], ctx: WritingContext = makeWritingContext(this.wnd)): Rect[] {
+        const dx = ctx.xDocOffset;
+        const dy = ctx.yDocOffset;
+        if (dx === 0 && dy === 0) return rects;
+        return rects.map(r => ({
+            left: r.left + dx, top: r.top + dy,
+            right: r.right + dx, bottom: r.bottom + dy,
+            width: r.width, height: r.height,
+        }));
+    }
+
+    private pointerToDocCoords(e: PointerEvent): { docX: number; docY: number } {
+        const ctx = makeWritingContext(this.wnd);
+        return { docX: e.clientX + ctx.xDocOffset, docY: e.clientY + ctx.yDocOffset };
+    }
+
+    private effectiveZoom(): number {
+        if (!sML.UA.Blink) return 1;
+        const rootZoom = parseFloat(this.wnd.getComputedStyle(this.wnd.document.documentElement).zoom);
+        const bodyZoom = parseFloat(this.wnd.getComputedStyle(this.wnd.document.body).zoom);
+        return (rootZoom || 1) * (bodyZoom || 1);
+    }
+
+    private hitGap(): number {
+        return 2 * this.effectiveZoom();
     }
 
     private handleActivation(e: PointerEvent) {
         if (!this._activatable) return;
-        const cssX = e.clientX;
-        const cssY = e.clientY;
+        const { docX, docY } = this.pointerToDocCoords(e);
         const pixelRatio = this.wnd.devicePixelRatio;
 
         for (const item of this.items) {
-            if (!item.decoration.style?.isActive) continue;
-
             let hitRect: DOMRect | undefined;
 
             if (item.decoration.style.type === DecorationStyleType.Template) {
@@ -280,18 +477,16 @@ class DecorationGroup {
                 // against the rendered elements rather than the text range rects.
                 for (const el of (item.clickableElements ?? [])) {
                     const r = el.getBoundingClientRect();
-                    if (rectContainsPoint(r as Rect, cssX, cssY, 0)) {
+                    if (rectContainsPoint(r as Rect, e.clientX, e.clientY, 0)) {
                         hitRect = r;
                         break;
                     }
                 }
             } else {
-                // Built-in styles sit over the text. Range.getClientRects() works for both
-                // rendering paths: the CSS Highlight API has no DOM overlay to target, and the
-                // DOM overlay divs have pointer-events: none, so neither intercepts the event.
-                const rects = item.range.getClientRects();
-                for (const rect of rects) {
-                    if (rectContainsPoint(rect as Rect, cssX, cssY, 0)) {
+                // Use pre-merged hit rects stored in document coordinates so they remain
+                // valid across column/scroll navigation.
+                for (const rect of item.hitRects) {
+                    if (rectContainsPoint(rect, docX, docY, 0)) {
                         hitRect = item.range.getBoundingClientRect();
                         break;
                     }
@@ -308,10 +503,76 @@ class DecorationGroup {
                         width: hitRect.width * pixelRatio,
                         height: hitRect.height * pixelRatio,
                     },
-                    point: { x: cssX * pixelRatio, y: cssY * pixelRatio },
+                    point: { x: e.clientX * pixelRatio, y: e.clientY * pixelRatio },
                 } as DecorationActivatedEvent);
                 return;
             }
+        }
+    }
+
+    private handleHover(e: PointerEvent) {
+        if (!this._hoverable) return;
+        const { docX, docY } = this.pointerToDocCoords(e);
+        const pixelRatio = this.wnd.devicePixelRatio;
+
+        let hitItem: DecorationItem | undefined;
+        let hitRect: DOMRect | undefined;
+
+        for (const item of this.items) {
+            if (item.decoration.style.type === DecorationStyleType.Template) {
+                for (const el of (item.clickableElements ?? [])) {
+                    const r = el.getBoundingClientRect();
+                    if (rectContainsPoint(r as Rect, e.clientX, e.clientY, 0)) {
+                        hitItem = item;
+                        hitRect = r;
+                        break;
+                    }
+                }
+            } else {
+                for (const rect of item.hitRects) {
+                    if (rectContainsPoint(rect, docX, docY, 0)) {
+                        hitItem = item;
+                        hitRect = item.range.getBoundingClientRect();
+                        break;
+                    }
+                }
+            }
+
+            if (hitItem) break;
+        }
+
+        if (hitItem === this.hoveredItem) return;
+
+        if (this.hoveredItem) {
+            const connected = this.hoveredItem.range.commonAncestorContainer.isConnected;
+            const leaveRect = connected ? this.hoveredItem.range.getBoundingClientRect() : null;
+            this.comms.send("decoration_pointer_leave", {
+                decorationId: this.hoveredItem.decoration.id,
+                group: this.name,
+                rect: leaveRect ? {
+                    top: leaveRect.top * pixelRatio,
+                    left: leaveRect.left * pixelRatio,
+                    width: leaveRect.width * pixelRatio,
+                    height: leaveRect.height * pixelRatio,
+                } : undefined,
+                point: { x: e.clientX * pixelRatio, y: e.clientY * pixelRatio },
+            } as DecorationPointerLeaveData);
+        }
+
+        this.hoveredItem = hitItem;
+
+        if (hitItem && hitRect) {
+            this.comms.send("decoration_pointer_enter", {
+                decorationId: hitItem.decoration.id,
+                group: this.name,
+                rect: {
+                    top: hitRect.top * pixelRatio,
+                    left: hitRect.left * pixelRatio,
+                    width: hitRect.width * pixelRatio,
+                    height: hitRect.height * pixelRatio,
+                },
+                point: { x: e.clientX * pixelRatio, y: e.clientY * pixelRatio },
+            } as DecorationPointerEnterData);
         }
     }
 
@@ -328,7 +589,10 @@ class DecorationGroup {
         // against stale or fallback-font layout.
         this.wnd.document.fonts.ready.then(() => {
             this.currentRender = this.wnd.requestAnimationFrame(() => {
-                this.items.forEach(i => this.layout(i));
+                this.items.forEach(i => {
+                    this.layout(i);
+                    i.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(i.range, false, false, ((i.decoration.style as BuiltinDecorationStyle).expand ?? 0) + this.hitGap()));
+                });
                 this.renderLayout(this.items);
                 // Update shared mask after layout
                 this.updateSharedMask();
@@ -336,8 +600,35 @@ class DecorationGroup {
         });
     }
 
+    /**
+     * Cheap scroll-driven pass: repositions existing overlay elements in place instead of
+     * requestLayout()'s full destroy-and-rebuild, only falling back to a full layout()
+     * per item when geometry has genuinely changed shape (a real reflow).
+     */
+    repositionOverlays() {
+        let hasMaskItem = false;
+        const relaidOut: DecorationItem[] = [];
+        const ctx = makeWritingContext(this.wnd);
+        this.items.forEach(item => {
+            if (this.experimentalHighlights && !this.notTextFlag?.has(item.id)) return;
+            if (item.decoration.style?.type === DecorationStyleType.Mask) {
+                hasMaskItem = true;
+                return;
+            }
+            if (!this.repositionItem(item, ctx)) {
+                item.container?.remove();
+                this.layout(item);
+                relaidOut.push(item);
+            }
+            item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, ((item.decoration.style as BuiltinDecorationStyle).expand ?? 0) + this.hitGap()), ctx);
+        });
+        if (relaidOut.length) this.renderLayout(relaidOut);
+        if (hasMaskItem) this.updateSharedMask();
+    }
+
     private experimentalLayout(item: DecorationItem) {
-        const [stylesheet, highlighter]: [HTMLStyleElement, any] = this.requireContainer(true) as [HTMLStyleElement, unknown];
+        const stylesheet = this.requireContainer(true) as HTMLStyleElement;
+        const cssHighlights = (this.wnd as any).CSS.highlights as Map<string, any>;
 
         // Template items are always routed to the DOM overlay; only BuiltinDecorationStyle reaches here.
         const style = item.decoration.style as BuiltinDecorationStyle;
@@ -345,6 +636,29 @@ class DecorationGroup {
         const tint = style.tint ?? defaultTint(type);
         const width = style.width;
         const layout = style.layout;
+
+        // Group by (type, tint) — items sharing the same visual style share one sub-highlight and one CSS rule.
+        const subKey = this._getSubKey(type, tint);
+
+        // On update: remove this item's range from its previous sub-highlight.
+        if (item.highlightSubKey) {
+            const oldSub = cssHighlights.get(item.highlightSubKey) as any;
+            oldSub?.delete(item.range);
+            if (item.highlightSubKey !== subKey &&
+                !this.items.some(i => i !== item && i.highlightSubKey === item.highlightSubKey)) {
+                cssHighlights.delete(item.highlightSubKey);
+            }
+        }
+        item.highlightSubKey = subKey;
+
+        // Get or create the shared sub-highlight for this tint group.
+        let sub: any;
+        if (cssHighlights.has(subKey)) {
+            sub = cssHighlights.get(subKey);
+        } else {
+            sub = new (this.wnd as any).Highlight();
+            cssHighlights.set(subKey, sub);
+        }
 
         // Helper for caret position
         const caretPositionFromPoint = (x: number, y: number): CaretPosition | null => {
@@ -360,7 +674,7 @@ class DecorationGroup {
             const ctx = makeWritingContext(this.wnd);
             if (ctx.isVertical) {
                 console.warn('Vertical writing detected: caretPositionFromPoint has known bugs, falling back to original range');
-                highlighter.add(item.range);
+                sub.add(item.range);
             } else {
                 const boundingRect = item.range.getBoundingClientRect();
                 // Page snaps to the full page inline extent; Bounds/layout:Bounds uses the actual bounding rect.
@@ -380,53 +694,215 @@ class DecorationGroup {
                     const expandedRange = this.wnd.document.createRange();
                     expandedRange.setStart(startCaret.offsetNode, startCaret.offset);
                     expandedRange.setEnd(endCaret.offsetNode, endCaret.offset);
-                    highlighter.add(expandedRange);
+                    sub.add(expandedRange);
                     item.range = expandedRange;
                 } else {
-                    highlighter.add(item.range);
+                    sub.add(item.range);
                 }
             }
         } else {
-            highlighter.add(item.range);
+            sub.add(item.range);
         }
 
-        // TODO add caching layer ("vdom") to this so we aren't completely replacing the CSS every time
         const backgroundColor = this.getBackgroundColor();
         const applyContrast = style.enforceContrast !== false;
+        const adjustedTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
+
         let css: string;
         switch (type) {
             case DecorationStyleType.Underline:
-                const adjustedUnderlineTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
-                css = `::highlight(${this.id}) {
+                css = `::highlight(${subKey}) {
                     text-decoration: underline;
-                    text-decoration-color: ${adjustedUnderlineTint};
+                    text-decoration-color: ${adjustedTint};
+                    text-decoration-thickness: 0.1em;
+                }`;
+                break;
+            case DecorationStyleType.Strikethrough:
+                css = `::highlight(${subKey}) {
+                    text-decoration: line-through;
+                    text-decoration-color: ${adjustedTint};
                     text-decoration-thickness: 0.1em;
                 }`;
                 break;
             case DecorationStyleType.Outline:
-                const adjustedOutlineTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
-                css = `::highlight(${this.id}) {
-                    outline: 2px solid ${adjustedOutlineTint};
+                css = `::highlight(${subKey}) {
+                    outline: 2px solid ${adjustedTint};
                     outline-offset: 1px;
                 }`;
                 break;
-            case DecorationStyleType.TextColor: {
-                const adjustedTextTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
-                css = `::highlight(${this.id}) {
-                    color: ${adjustedTextTint};
+            case DecorationStyleType.TextColor:
+                css = `::highlight(${subKey}) {
+                    color: ${adjustedTint};
+                }`;
+                break;
+            case DecorationStyleType.HighlightUnderline: {
+                const { r, g, b } = colorToRgba(adjustedTint);
+                const fillTint = `rgba(${r}, ${g}, ${b}, 0.3)`;
+                css = `::highlight(${subKey}) {
+                    color: ${getContrastingTextColor(adjustedTint, backgroundColor)};
+                    background-color: ${fillTint};
+                    text-decoration: underline;
+                    text-decoration-color: ${adjustedTint};
+                    text-decoration-thickness: 0.1em;
                 }`;
                 break;
             }
             case DecorationStyleType.Highlight:
-            default: {
-                const adjustedHighlightTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
-                css = `::highlight(${this.id}) {
-                    color: ${getContrastingTextColor(adjustedHighlightTint, backgroundColor)};
-                    background-color: ${adjustedHighlightTint};
+            default:
+                css = `::highlight(${subKey}) {
+                    color: ${getContrastingTextColor(adjustedTint, backgroundColor)};
+                    background-color: ${adjustedTint};
                 }`;
+        }
+        item.highlightCSS = css;
+        this._rebuildHighlightStylesheet(stylesheet);
+    }
+
+    private _getSubKey(type: DecorationStyleType | string, tint: string): string {
+        const fingerprint = `${type}::${tint}`;
+        let subKey = this._tintSubKeys.get(fingerprint);
+        if (!subKey) {
+            subKey = `${this.id}--${this._subKeyCounter++}`;
+            this._tintSubKeys.set(fingerprint, subKey);
+        }
+        return subKey;
+    }
+
+    private _rebuildHighlightStylesheet(stylesheet: HTMLStyleElement) {
+        const seen = new Set<string>();
+        const rules: string[] = [];
+        for (const item of this.items) {
+            if (item.highlightSubKey && item.highlightCSS && !seen.has(item.highlightSubKey)) {
+                seen.add(item.highlightSubKey);
+                rules.push(item.highlightCSS);
             }
         }
-        stylesheet.innerHTML = css;
+        stylesheet.innerHTML = rules.join("\n");
+    }
+
+    /**
+     * Positions a single overlay element according to the decoration's width mode.
+     */
+    private positionElement(item: DecorationItem, ctx: WritingContext, iz: number, element: HTMLElement, rect: Rect, boundingRect: DOMRect, inlineInset = 0) {
+        const w = item.decoration?.style?.width;
+        const r = rect;
+        switch (w) {
+            case DecorationWidth.Viewport: {
+                const snap = Math.floor(ctx.inlineStart(r) / ctx.viewportInlineSize) * ctx.viewportInlineSize;
+                ctx.applyPosition(element, snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.viewportInlineSize - 2 * inlineInset, ctx.blockSize(r), iz);
+                break;
+            }
+            case DecorationWidth.Page: {
+                const snap = Math.floor(ctx.inlineStart(r) / ctx.pageInlineSize) * ctx.pageInlineSize;
+                ctx.applyPosition(element, snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.pageInlineSize - 2 * inlineInset, ctx.blockSize(r), iz);
+                break;
+            }
+            case DecorationWidth.Bounds: {
+                ctx.applyPosition(element, ctx.inlineStart(boundingRect) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(boundingRect), ctx.blockSize(r), iz);
+                break;
+            }
+            default: {
+                ctx.applyPosition(element, ctx.inlineStart(r) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(r), ctx.blockSize(r), iz);
+            }
+        }
+    }
+
+    /**
+     * Computes the ordered list of rects an overlay item's elements should occupy
+     * (one rect for Bounds layout, one per merged client rect for Boxes layout).
+     * Shared between the full build path (layout) and the cheap reposition path.
+     */
+    private computeOverlayRects(item: DecorationItem, ctx: WritingContext, boundingRect: DOMRect, expand: number): Rect[] {
+        if (item.decoration?.style?.layout === DecorationLayout.Bounds) {
+            const boundsRect: Rect = expand ? {
+                left:   boundingRect.left   - expand,
+                right:  boundingRect.right  + expand,
+                top:    boundingRect.top    - expand,
+                bottom: boundingRect.bottom + expand,
+                width:  boundingRect.width  + expand * 2,
+                height: boundingRect.height + expand * 2,
+            } : boundingRect;
+            return [boundsRect];
+        }
+
+        // Fall back to "boxes" value for layout.
+        // For underline/strikethrough, pre-filter to text-node rects only so Ruby
+        // (rt/rp) glyphs don't produce a separate decoration segment above the base text.
+        const decoStyle = item.decoration.style;
+        const decoType = (decoStyle as BuiltinDecorationStyle).type;
+        const isLineDecoration = decoType === DecorationStyleType.Underline
+            || decoType === DecorationStyleType.Strikethrough;
+        const isStrikethrough = decoType === DecorationStyleType.Strikethrough;
+        const rectSource = isLineDecoration
+            ? getTextClientRects(item.range, ["rt", "rp"])
+            : item.range;
+        // Line decorations (underline/strikethrough) don't expand in the block axis —
+        // expand extends endpoints along the inline axis only.
+        let clientRects = getClientRectsNoOverlap(
+            rectSource,
+            true,              // doNotMergeHorizontallyAlignedRects
+            ctx.isVertical,    // doNotMergeVerticallyAlignedRects
+            isLineDecoration ? 0 : expand
+        );
+
+        clientRects = clientRects.sort((r1, r2) => {
+            if (ctx.isVertical) {
+                // vertical-rl: rightmost column first; vertical-lr: leftmost first
+                const factor = ctx.isVertLR ? 1 : -1;
+                return factor * (r1.left - r2.left);
+            }
+            return r1.top - r2.top;
+        });
+
+        return clientRects.map(clientRect => {
+            let posRect: Rect = clientRect;
+            if (isStrikethrough) {
+                // Thin the rect to ~10% of block size, centred on the mid-line.
+                const thickness = ctx.blockSize(clientRect) * 0.1;
+                const blockMid  = ctx.blockStart(clientRect) + ctx.blockSize(clientRect) / 2;
+                const bs = blockMid - thickness / 2;
+                posRect = ctx.isVertical
+                    ? { left: bs, right: bs + thickness, top: clientRect.top,    bottom: clientRect.bottom, width: thickness,           height: clientRect.height }
+                    : { top:  bs, bottom: bs + thickness, left: clientRect.left, right: clientRect.right,   height: thickness,           width: clientRect.width  };
+            }
+            if (expand && isLineDecoration) {
+                posRect = ctx.isVertical
+                    ? { ...posRect, top: posRect.top - expand, bottom: posRect.bottom + expand, height: posRect.height + expand * 2 }
+                    : { ...posRect, left: posRect.left - expand, right: posRect.right + expand, width: posRect.width + expand * 2 };
+            }
+            return posRect;
+        });
+    }
+
+    /**
+     * Cheaply repositions an already-rendered overlay item's existing elements in place,
+     * without destroying and rebuilding them. Returns false if the element count no
+     * longer matches the current geometry (a genuine reflow happened), signalling the
+     * caller to fall back to a full layout().
+     */
+    private repositionItem(item: DecorationItem, ctx: WritingContext): boolean {
+        if (!item.container) return true;
+        const decoStyle = item.decoration.style;
+        if (decoStyle.type !== DecorationStyleType.Template) {
+            const type = (decoStyle as BuiltinDecorationStyle).type ?? DecorationStyleType.Highlight;
+            if (type === DecorationStyleType.TextColor || type === DecorationStyleType.Mask) return true;
+        }
+
+        const iz = 1 / this.effectiveZoom();
+        const expand = (decoStyle as BuiltinDecorationStyle).expand ?? 0;
+        const boundingRect = item.range.getBoundingClientRect();
+        const outlineInset = (() => {
+            if ((decoStyle as BuiltinDecorationStyle).type !== DecorationStyleType.Outline) return 0;
+            const w = (decoStyle as BuiltinDecorationStyle).width;
+            return (w === DecorationWidth.Page || w === DecorationWidth.Viewport) ? 3 : 0;
+        })();
+
+        const rects = this.computeOverlayRects(item, ctx, boundingRect, expand);
+        const children = Array.from(item.container.children) as HTMLElement[];
+        if (children.length !== rects.length) return false;
+
+        children.forEach((el, i) => this.positionElement(item, ctx, iz, el, rects[i], boundingRect, outlineInset));
+        return true;
     }
 
     /**
@@ -448,36 +924,9 @@ class DecorationGroup {
 
         const ctx = makeWritingContext(this.wnd);
 
-        let iz = 1;
-        if (sML.UA.Blink) {
-            const rootZoom = parseFloat(this.wnd.getComputedStyle(this.wnd.document.documentElement).zoom);
-            const bodyZoom = parseFloat(this.wnd.getComputedStyle(this.wnd.document.body).zoom);
-            const effectiveZoom = (rootZoom || 1) * (bodyZoom || 1);
-            if (effectiveZoom) iz = 1 / effectiveZoom;
-        }
+        const iz = 1 / this.effectiveZoom();
 
-        const positionElement = (element: HTMLElement, rect: Rect, boundingRect: DOMRect, inlineInset = 0) => {
-            const w = item.decoration?.style?.width;
-            switch (w) {
-                case DecorationWidth.Viewport: {
-                    const snap = Math.floor(ctx.inlineStart(rect) / ctx.viewportInlineSize) * ctx.viewportInlineSize;
-                    ctx.applyPosition(element, snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(rect) + ctx.blockScrollOffset, ctx.viewportInlineSize - 2 * inlineInset, ctx.blockSize(rect), iz);
-                    break;
-                }
-                case DecorationWidth.Page: {
-                    const snap = Math.floor(ctx.inlineStart(rect) / ctx.pageInlineSize) * ctx.pageInlineSize;
-                    ctx.applyPosition(element, snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(rect) + ctx.blockScrollOffset, ctx.pageInlineSize - 2 * inlineInset, ctx.blockSize(rect), iz);
-                    break;
-                }
-                case DecorationWidth.Bounds: {
-                    ctx.applyPosition(element, ctx.inlineStart(boundingRect) + ctx.inlineScrollOffset, ctx.blockStart(rect) + ctx.blockScrollOffset, ctx.inlineSize(boundingRect), ctx.blockSize(rect), iz);
-                    break;
-                }
-                default: {
-                    ctx.applyPosition(element, ctx.inlineStart(rect) + ctx.inlineScrollOffset, ctx.blockStart(rect) + ctx.blockScrollOffset, ctx.inlineSize(rect), ctx.blockSize(rect), iz);
-                }
-            }
-        }
+        const expand = (item.decoration.style as BuiltinDecorationStyle).expand ?? 0;
         const boundingRect = item.range.getBoundingClientRect();
 
         const decoStyle = item.decoration.style;
@@ -534,14 +983,35 @@ class DecorationGroup {
                     case DecorationStyleType.Underline: {
                         const adjustedUnderlineTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
                         const isBounds = style.layout === DecorationLayout.Bounds;
+                        const [underlineSide, overlineSide] = ctx.isVertical
+                            ? ["border-right", "border-left"]
+                            : ["border-bottom", "border-top"];
                         return [
                             isBounds
-                                ? `border-top: 0.1em solid ${adjustedUnderlineTint} !important`
+                                ? `${overlineSide}: 0.1em solid ${adjustedUnderlineTint} !important`
                                 : null,
-                            `border-bottom: 0.1em solid ${adjustedUnderlineTint} !important`,
+                            `${underlineSide}: 0.1em solid ${adjustedUnderlineTint} !important`,
                             "background-color: transparent !important",
                             "box-sizing: border-box !important",
                         ].filter(Boolean).join("; ");
+                    }
+                    case DecorationStyleType.Strikethrough: {
+                        const adjustedStrikeTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
+                        const isBounds = style.layout === DecorationLayout.Bounds;
+                        if (isBounds) {
+                            // Bounds covers the full height of the selection — use diagonal hatch lines
+                            // so the text remains readable (physical "crossing out" appearance).
+                            return [
+                                `background: repeating-linear-gradient(-45deg, transparent, transparent 19px, ${adjustedStrikeTint} 19px, ${adjustedStrikeTint} 20px) !important`,
+                                "background-color: transparent !important",
+                                "box-sizing: border-box !important",
+                            ].join("; ");
+                        }
+                        // Boxes path: the rect is thinned and centred by the boxes loop below; just fill it.
+                        return [
+                            `background-color: ${adjustedStrikeTint} !important`,
+                            "box-sizing: border-box !important",
+                        ].join("; ");
                     }
                     case DecorationStyleType.Outline:
                         const adjustedOutlineTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
@@ -551,6 +1021,21 @@ class DecorationGroup {
                             "background-color: transparent !important",
                             "box-sizing: border-box !important",
                         ].join("; ");
+                    case DecorationStyleType.HighlightUnderline: {
+                        const adjustedHUTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
+                        const { r, g, b } = colorToRgba(adjustedHUTint);
+                        const huFillTint = `rgba(${r}, ${g}, ${b}, 0.3)`;
+                        const isBounds = style.layout === DecorationLayout.Bounds;
+                        const [huUnderlineSide, huOverlineSide] = ctx.isVertical
+                            ? ["border-right", "border-left"]
+                            : ["border-bottom", "border-top"];
+                        return [
+                            `background-color: ${huFillTint} !important`,
+                            isBounds ? `${huOverlineSide}: 0.1em solid ${adjustedHUTint} !important` : null,
+                            `${huUnderlineSide}: 0.1em solid ${adjustedHUTint} !important`,
+                            "box-sizing: border-box !important",
+                        ].filter(Boolean).join("; ");
+                    }
                     case DecorationStyleType.Highlight:
                     default: {
                         const adjustedHighlightTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
@@ -559,6 +1044,8 @@ class DecorationGroup {
                             `mix-blend-mode: ${isDarkMode ? "exclusion" : "multiply"} !important`,
                             "opacity: 1 !important",
                             "box-sizing: border-box !important",
+                            // Works around an iPadOS Safari bug where mix-blend-mode paints opaque instead of blending.
+                            "transform: translateZ(0) !important",
                         ].join("; ");
                     }
                 }
@@ -569,34 +1056,12 @@ class DecorationGroup {
             elementTemplate = template.content.firstElementChild!;
         }
 
-        if(item.decoration?.style?.layout === DecorationLayout.Bounds) {
-            const bounds = elementTemplate.cloneNode(true) as HTMLDivElement;
-            bounds.style.setProperty("pointer-events", "none");
-            positionElement(bounds, boundingRect, boundingRect, outlineInset);
-            itemContainer.append(bounds);
-        } else {
-            // Fall back to "boxes" value for layout
-            let clientRects = getClientRectsNoOverlap(
-              item.range,
-              true,              // doNotMergeHorizontallyAlignedRects
-              ctx.isVertical     // doNotMergeVerticallyAlignedRects
-            );
-
-            clientRects = clientRects.sort((r1, r2) => {
-              if (ctx.isVertical) {
-                // vertical-rl: rightmost column first; vertical-lr: leftmost first
-                const factor = ctx.isVertLR ? 1 : -1;
-                return factor * (r1.left - r2.left);
-              }
-              return r1.top - r2.top;
-            });
-
-            for (let clientRect of clientRects) {
-              const line = elementTemplate.cloneNode(true) as HTMLDivElement;
-              line.style.setProperty("pointer-events", "none");
-              positionElement(line, clientRect, boundingRect, outlineInset);
-              itemContainer.append(line);
-            }
+        const rects = this.computeOverlayRects(item, ctx, boundingRect, expand);
+        for (const posRect of rects) {
+            const el = elementTemplate.cloneNode(true) as HTMLDivElement;
+            el.style.setProperty("pointer-events", "none");
+            this.positionElement(item, ctx, iz, el, posRect, boundingRect, outlineInset);
+            itemContainer.append(el);
         }
 
         item.container = itemContainer;
@@ -623,7 +1088,7 @@ class DecorationGroup {
      * Returns the group container element, after making sure it exists.
      * @returns Group's container
      */
-    private requireContainer(experimental=false): [HTMLStyleElement, any] | HTMLDivElement {
+    private requireContainer(experimental=false): HTMLStyleElement | HTMLDivElement {
         if (experimental) {
             // Setup <style> for highlights
             let d: HTMLStyleElement;
@@ -636,15 +1101,7 @@ class DecorationGroup {
                 this.wnd.document.head.appendChild(d);
             }
 
-            // Setup CSS.highlights
-            let h: unknown;
-            if (((this.wnd as any).CSS.highlights as Map<string, unknown>).has(this.id)) {
-                h = ((this.wnd as any).CSS.highlights as Map<string, unknown>).get(this.id)
-            } else {
-                h = new (this.wnd as any).Highlight();
-                ((this.wnd as any).CSS.highlights as Map<string, unknown>).set(this.id, h);
-            }
-            return [d, h];
+            return d;
         }
 
         if (!this.container) {
@@ -689,21 +1146,18 @@ class DecorationGroup {
                 this.maskSvg.remove();
                 this.maskSvg = undefined;
             }
-            if (this.shadowRoot) {
-                this.shadowRoot.innerHTML = '';
+            // Only tear down the shared shadow host if no other decorations use it
+            if (this.shadowHost && !this.container) {
+                this.shadowHost.remove();
+                this.shadowRoot = undefined;
+                this.shadowHost = undefined;
             }
             return;
         }
 
         const ctx = makeWritingContext(this.wnd);
 
-        let iz = 1;
-        if (sML.UA.Blink) {
-            const rootZoom = parseFloat(this.wnd.getComputedStyle(this.wnd.document.documentElement).zoom);
-            const bodyZoom = parseFloat(this.wnd.getComputedStyle(this.wnd.document.body).zoom);
-            const effectiveZoom = (rootZoom || 1) * (bodyZoom || 1);
-            if (effectiveZoom) iz = 1 / effectiveZoom;
-        }
+        const iz = 1 / this.effectiveZoom();
 
         // Collect all hole rects from mask decorations
         const docEl = this.wnd.document.documentElement;
@@ -714,12 +1168,15 @@ class DecorationGroup {
             const style  = item.decoration.style as BuiltinDecorationStyle;
             const layout = style.layout ?? DecorationLayout.Boxes;
             const width  = style.width  ?? DecorationWidth.Wrap;
+            const ex     = style.expand ?? 0;
 
             const boundingRect = item.range.getBoundingClientRect();
 
-            const baseRects: DOMRect[] = layout === DecorationLayout.Bounds
-                ? [boundingRect]
-                : Array.from(item.range.getClientRects());
+            // For Bounds layout the hole is a single bounding rect; expand it directly.
+            // For Boxes layout, merge rects first with expand baked in (same as highlights).
+            const baseRects: Rect[] = layout === DecorationLayout.Bounds
+                ? [ex ? { left: boundingRect.left - ex, top: boundingRect.top - ex, right: boundingRect.right + ex, bottom: boundingRect.bottom + ex, width: boundingRect.width + ex * 2, height: boundingRect.height + ex * 2 } : boundingRect]
+                : getClientRectsNoOverlap(item.range, false, false, ex);
 
             for (const rect of baseRects) {
                 let hole: DOMRect;
@@ -739,7 +1196,7 @@ class DecorationGroup {
                         break;
                     }
                     default:
-                        hole = rect;
+                        hole = ctx.toRect(ctx.inlineStart(rect), ctx.blockStart(rect), ctx.inlineSize(rect), ctx.blockSize(rect));
                 }
                 allHoleRects.push(hole);
             }
@@ -771,7 +1228,7 @@ class DecorationGroup {
             
             // Create SVG in shared shadow root
             this.maskSvg = this.wnd.document.createElementNS(svgNS, "svg") as SVGSVGElement;
-            this.maskSvg.style.cssText = `position:absolute;top:0;left:0;width:${docW}px;height:${docH}px;pointer-events:none;z-index:9999`;
+            this.maskSvg.style.cssText = `position:absolute;top:0;left:0;width:${docW}px;height:${docH}px;pointer-events:none;z-index:2147483647`;
             this.maskSvg.dataset.readium = "true";
             const defs = this.wnd.document.createElementNS(svgNS, "defs");
             const clipPath = this.wnd.document.createElementNS(svgNS, "clipPath") as SVGClipPathElement;
@@ -839,7 +1296,12 @@ class DecorationGroup {
      */
     private clearContainer() {
         if (this.experimentalHighlights) {
-            ((this.wnd as any).CSS.highlights as Map<string, unknown>).delete(this.id);
+            const cssHighlights = (this.wnd as any).CSS.highlights as Map<string, unknown>;
+            for (const subKey of this._tintSubKeys.values()) {
+                cssHighlights.delete(subKey);
+            }
+            this._tintSubKeys.clear();
+            this._subKeyCounter = 0;
         }
         this.wnd.document.getElementById(`${this.id}-custom-style`)?.remove();
         if (this.container) {
@@ -853,7 +1315,8 @@ export class Decorator extends Module {
     static readonly moduleName: ModuleName = "decorator";
     private resizeObserver!: ResizeObserver;
     private styleObserver!: MutationObserver;
-    private wnd!: ReadiumWindow;
+    private wnd!: Window;
+    private observedResizeTargets = new Map<string, Element>();
     /*private readonly lastSize = {
         width: 0,
         height: 0
@@ -866,6 +1329,7 @@ export class Decorator extends Module {
     private cleanup() {
         this.groups.forEach(g => g.destroy());
         this.groups.clear();
+        this.observedResizeTargets.clear();
     }
 
     private updateHighlightStyles() {
@@ -877,14 +1341,26 @@ export class Decorator extends Module {
     private handleResize() {
         this.wnd.clearTimeout(this.resizeFrame);
         this.resizeFrame = this.wnd.setTimeout(() => {
-            this.groups.forEach(g => {
-                if(!g.experimentalHighlights) g.requestLayout();
-            });
+            this.groups.forEach(g => g.requestLayout());
         }, 50);
     }
     private readonly handleResizer = this.handleResize.bind(this);
 
-    mount(wnd: ReadiumWindow, comms: Comms): boolean {
+    private scrollScheduled = false;
+    private handleScroll() {
+        // rAF-throttled, not debounced: overlays must track every frame, not just settle after scroll stops.
+        if (this.scrollScheduled) return;
+        this.scrollScheduled = true;
+        this.wnd.requestAnimationFrame(() => {
+            this.scrollScheduled = false;
+            this.groups.forEach(g => {
+                if(g.hasOverlayItems) g.repositionOverlays();
+            });
+        });
+    }
+    private readonly handleScroller = this.handleScroll.bind(this);
+
+    mount(wnd: Window, comms: IComms): boolean {
         this.wnd = wnd;
 
         comms.register("decorate", Decorator.moduleName, (data, ack) => {
@@ -921,6 +1397,13 @@ export class Decorator extends Module {
             ack(true);
         });
 
+        comms.register("decoration_resize", Decorator.moduleName, (data, ack) => {
+            const req = data as DecorationResizeRequest;
+            if (req.action === "watch") this.addDecorationResizeTarget(req.selector);
+            else this.removeDecorationResizeTarget(req.selector);
+            ack(true);
+        });
+
         comms.register("decoration_activatable", Decorator.moduleName, (data, ack) => {
             const req = data as { group: string; activatable: boolean };
             const group = this.groups.get(req.group);
@@ -930,10 +1413,23 @@ export class Decorator extends Module {
             ack(true);
         });
 
+        comms.register("decoration_hoverable", Decorator.moduleName, (data, ack) => {
+            const req = data as { group: string; hoverable: boolean };
+            const group = this.groups.get(req.group);
+            if (group) {
+                group.hoverable = req.hoverable;
+            }
+            ack(true);
+        });
+
         this.resizeObserver = new ResizeObserver(() => wnd.requestAnimationFrame(() => this.handleResize()));
         this.resizeObserver.observe(wnd.document.documentElement);
         wnd.addEventListener("orientationchange", this.handleResizer);
         wnd.addEventListener("resize", this.handleResizer);
+        // Capture phase: scroll events don't bubble, so a scrollable descendant
+        // (e.g. an app shell's own reading-pane container) would never reach a
+        // bubble-phase listener on wnd.
+        wnd.addEventListener("scroll", this.handleScroller, { passive: true, capture: true });
 
         // Watch for any style change on <html> — covers appearance, background color,
         // font size, line height, margins, and anything else that reflows text.
@@ -956,9 +1452,10 @@ export class Decorator extends Module {
         return true;
     }
 
-    unmount(wnd: ReadiumWindow, comms: Comms): boolean {
+    unmount(wnd: Window, comms: IComms): boolean {
         wnd.removeEventListener("orientationchange", this.handleResizer);
         wnd.removeEventListener("resize", this.handleResizer);
+        wnd.removeEventListener("scroll", this.handleScroller, { capture: true });
 
         comms.unregisterAll(Decorator.moduleName);
         this.resizeObserver.disconnect();
@@ -967,5 +1464,26 @@ export class Decorator extends Module {
 
         comms.log("Decorator Unmounted");
         return true;
+    }
+
+    private addDecorationResizeTarget(selector: string): void {
+        const existing = this.observedResizeTargets.get(selector);
+        if (existing) this.resizeObserver.unobserve(existing);
+
+        const el = this.wnd.document.querySelector(selector);
+        if (el) {
+            this.resizeObserver.observe(el);
+            this.observedResizeTargets.set(selector, el);
+        } else {
+            this.observedResizeTargets.delete(selector);
+        }
+    }
+
+    private removeDecorationResizeTarget(selector: string): void {
+        const el = this.observedResizeTargets.get(selector);
+        if (el) {
+            this.resizeObserver.unobserve(el);
+            this.observedResizeTargets.delete(selector);
+        }
     }
 }

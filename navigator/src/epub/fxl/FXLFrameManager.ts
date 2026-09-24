@@ -2,7 +2,7 @@ import { Loader, ModuleName } from "@readium/navigator-html-injectables";
 import { Page, ReadingProgression } from "@readium/shared";
 import { FrameComms } from "../frame/FrameComms.ts";
 import { FXLPeripherals, isTypedOMSupported } from "./FXLPeripherals.ts";
-import type { ReadiumWindow } from "../../../../navigator-html-injectables/types/src/helpers/dom";
+import type { ReadiumWindow } from "@readium/navigator-html-injectables";
 import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator.ts";
 import { KeyboardConditionBridge } from "../../peripherals/KeyboardConditionBridge.ts";
 
@@ -15,6 +15,8 @@ export class FXLFrameManager {
     private readonly peripherals: FXLPeripherals;
     private readonly contentProtectionConfig: IContentProtectionConfig;
     private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
+    private resizeWatchSelectors: string[];
+    private pendingUnwatchSelectors: string[] = [];
     private conditionBridge?: KeyboardConditionBridge;
     private currModules: ModuleName[] = [];
 
@@ -30,13 +32,15 @@ export class FXLFrameManager {
         direction: ReadingProgression,
         debugHref: string,
         contentProtectionConfig: IContentProtectionConfig = {},
-        keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = []
+        keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = [],
+        resizeWatchSelectors: string[] = []
     ) {
         this.peripherals = peripherals;
         this.debugHref = debugHref;
         // Use the provided content protection config directly without overriding defaults
         this.contentProtectionConfig = { ...contentProtectionConfig };
         this.keyboardPeripheralsConfig = [...keyboardPeripheralsConfig];
+        this.resizeWatchSelectors = [...resizeWatchSelectors];
         this.frame = document.createElement("iframe");
         this.frame.sandbox.value = "allow-same-origin allow-scripts";
         this.frame.classList.add("readium-navigator-iframe");
@@ -266,6 +270,32 @@ export class FXLFrameManager {
         // Apply print protection if configured
         if (this.contentProtectionConfig.protectPrinting?.disable) {
             this.comms!.send("print_protection", this.contentProtectionConfig.protectPrinting);
+        }
+
+        // Send resize-watch targets
+        this.resizeWatchSelectors.forEach(selector => {
+            this.comms!.send("decoration_resize", { action: "watch", selector });
+        });
+
+        // Flush unwatches that couldn't be sent while comms was halted
+        this.pendingUnwatchSelectors.forEach(selector => {
+            this.comms!.send("decoration_resize", { action: "unwatch", selector });
+        });
+        this.pendingUnwatchSelectors = [];
+    }
+
+    addResizeTarget(selector: string): void {
+        if (!this.resizeWatchSelectors.includes(selector)) this.resizeWatchSelectors.push(selector);
+        this.pendingUnwatchSelectors = this.pendingUnwatchSelectors.filter(s => s !== selector);
+        if (this.comms?.ready) this.comms.send("decoration_resize", { action: "watch", selector });
+    }
+
+    removeResizeTarget(selector: string): void {
+        this.resizeWatchSelectors = this.resizeWatchSelectors.filter(s => s !== selector);
+        if (this.comms?.ready) {
+            this.comms.send("decoration_resize", { action: "unwatch", selector });
+        } else if (!this.pendingUnwatchSelectors.includes(selector)) {
+            this.pendingUnwatchSelectors.push(selector);
         }
     }
 

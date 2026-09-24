@@ -3,6 +3,8 @@
  * available in the LICENSE file present in the Github repository of the project.
  */
 
+import { arrayfromJSON, arrayfromJSONorString } from '../../util/JSONParse.ts';
+
 /**
  * Holds the accessibility metadata of a Publication.
  *
@@ -77,49 +79,57 @@ export class Accessibility {
         if (!json || typeof json !== 'object') return;
 
         type AccessibilityJson = {
-            conformsTo?: string[];
+            conformsTo?: string | string[];
             certification?: {
                 certifiedBy: string;
                 credential: string;
                 report: string;
             };
             summary?: string;
-            accessMode?: string[];
-            accessModeSufficient?: string[][];
-            feature?: string[];
-            hazard?: string[];
-            exemption?: string[];
+            accessMode?: string | string[];
+            accessModeSufficient?: (string | string[])[];
+            feature?: string | string[];
+            hazard?: string | string[];
+            exemption?: string | string[];
         };
 
         const accessibilityJson = json as AccessibilityJson;
 
+        // Per the RWPM a11y schema, these fields may be a bare string or an array of strings.
+        const conformsTo = arrayfromJSONorString(accessibilityJson.conformsTo);
+        const accessMode = arrayfromJSONorString(accessibilityJson.accessMode);
+        const accessModeSufficient = arrayfromJSON(accessibilityJson.accessModeSufficient);
+        const feature = arrayfromJSONorString(accessibilityJson.feature);
+        const hazard = arrayfromJSONorString(accessibilityJson.hazard);
+        const exemption = arrayfromJSONorString(accessibilityJson.exemption);
+
         return new Accessibility({
-            conformsTo: accessibilityJson.conformsTo 
-                ? accessibilityJson.conformsTo.map(uri => AccessibilityProfile.deserialize(uri))
+            conformsTo: conformsTo
+                ? conformsTo.map(uri => AccessibilityProfile.deserialize(uri))
                 .filter((profile): profile is AccessibilityProfile => profile !== undefined)
                 : undefined,
-            certification: accessibilityJson.certification 
+            certification: accessibilityJson.certification
                 ? Certification.deserialize(accessibilityJson.certification)
                 : undefined,
             summary: accessibilityJson.summary,
-            accessMode: accessibilityJson.accessMode 
-                ? accessibilityJson.accessMode.map(value => AccessMode.deserialize(value))
+            accessMode: accessMode
+                ? accessMode.map(value => AccessMode.deserialize(value))
                 .filter((mode): mode is AccessMode => mode !== undefined)
                 : undefined,
-            accessModeSufficient: accessibilityJson.accessModeSufficient 
-                ? accessibilityJson.accessModeSufficient.map(modes => PrimaryAccessMode.deserialize(modes))
-                .filter((mode): mode is PrimaryAccessMode => mode !== undefined) 
+            accessModeSufficient: accessModeSufficient
+                ? accessModeSufficient.map(modes => PrimaryAccessMode.deserialize(modes))
+                .filter((mode): mode is PrimaryAccessMode => mode !== undefined)
                 : undefined,
-            feature: accessibilityJson.feature 
-                ? accessibilityJson.feature.map(value => Feature.deserialize(value))
+            feature: feature
+                ? feature.map(value => Feature.deserialize(value))
                 .filter((feature): feature is Feature => feature !== undefined)
                 : undefined,
-            hazard: accessibilityJson.hazard 
-                ? accessibilityJson.hazard.map(value => Hazard.deserialize(value))
+            hazard: hazard
+                ? hazard.map(value => Hazard.deserialize(value))
                 .filter((hazard): hazard is Hazard => hazard !== undefined)
                 : undefined,
-            exemption: accessibilityJson.exemption 
-                ? accessibilityJson.exemption.map(value => Exemption.deserialize(value))
+            exemption: exemption
+                ? exemption.map(value => Exemption.deserialize(value))
                 .filter((exemption): exemption is Exemption => exemption !== undefined)
                 : undefined
         });
@@ -427,6 +437,9 @@ export class PrimaryAccessMode {
         if (!json) return;
         
         if (typeof json === 'string') {
+            if (!PrimaryAccessMode.VALID_MODES.has(json.toLowerCase())) {
+                return undefined;
+            }
             return new PrimaryAccessMode(json);
         }
 

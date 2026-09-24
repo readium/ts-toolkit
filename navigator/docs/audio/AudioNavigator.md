@@ -144,7 +144,7 @@ navigator.skipBackward(); // Skip backward by skipBackwardInterval
 
 ## Timeline
 
-The `AudioNavigator` exposes a `timeline` property that contextualizes the publication's reading order and table of contents. See [Timeline](./Timeline.md) for full documentation.
+The `AudioNavigator` exposes a `timeline` property that contextualizes the publication's reading order and table of contents. See [Timeline](../Timeline.md) for full documentation.
 
 ## Remote Playback
 

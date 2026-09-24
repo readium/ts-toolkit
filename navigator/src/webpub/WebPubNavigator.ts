@@ -1,11 +1,11 @@
-import { Feature, Link, Locator, LocatorText, Publication, ReadingProgression, LocatorLocations } from "@readium/shared";
+import { Feature, Link, Locator, LocatorText, Publication, ReadingProgression, LocatorLocations, Timeline, TimelineItem, getCssSelector, getHtmlId } from "@readium/shared";
 import { VisualNavigator, VisualNavigatorViewport, ProgressionRange, KeyboardPeripheralEventData } from "../Navigator.ts";
 import { Configurable } from "../preferences/Configurable.ts";
 import { WebPubFramePoolManager } from "./WebPubFramePoolManager.ts";
-import { BasicTextSelection, CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, FrameClickEvent, KeyboardPeripheralEvent, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
+import { BasicTextSelection, CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FrameClickEvent, KeyboardPeripheralEvent, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
 import { WebPubFrameManager } from "./WebPubFrameManager.ts";
-import { Decoration, DecorableNavigator, DecorationActivationEvent, DecorationObserver, DecoratorConfig, decorationsEqual, resolveDecorationForWire, BUILTIN_DECORATION_TYPES } from "../decorations/index.ts";
+import { Decoration, DecorableNavigator, OnDecorationActivatedEvent, OnDecorationPointerEnterEvent, OnDecorationPointerLeaveEvent, DecorationObserver, DecoratorConfig, decorationsEqual, resolveDecorationForWire, supportsDecorationStyle as canRenderDecorationStyle, DecorationStyleType } from "../decorations/index.ts";
 import { ManagerEventKey } from "../epub/EpubNavigator.ts";
 import { getScriptMode } from "../helpers/scriptMode.ts";
 import { WebPubCSS } from "./css/WebPubCSS.ts";
@@ -33,6 +33,7 @@ export interface WebPubNavigatorConfiguration {
 export interface WebPubNavigatorListeners {
     frameLoaded: (wnd: Window) => void;
     positionChanged: (locator: Locator) => void;
+    timelineItemChanged: (item: TimelineItem | undefined) => void;
     tap: (e: FrameClickEvent) => boolean;
     click: (e: FrameClickEvent) => boolean;
     zoom: (scale: number) => void;
@@ -48,6 +49,7 @@ export interface WebPubNavigatorListeners {
 const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorListeners => ({
     frameLoaded: listeners.frameLoaded || (() => {}),
     positionChanged: listeners.positionChanged || (() => {}),
+    timelineItemChanged: listeners.timelineItemChanged || (() => {}),
     tap: listeners.tap || (() => false),
     click: listeners.click || (() => false),
     zoom: listeners.zoom || (() => {}),
@@ -60,6 +62,10 @@ const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorL
     peripheral: listeners.peripheral || (() => {})
 })
 
+function sameIds(a: string[], b: string[]): boolean {
+    return a.length === b.length && a.every((id, i) => id === b[i]);
+}
+
 export class WebPubNavigator extends VisualNavigator implements Configurable<WebPubSettings, WebPubPreferences>, DecorableNavigator {
     private readonly pub: Publication;
     private readonly container: HTMLElement;
@@ -68,6 +74,10 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private currentIndex: number = 0;
     private currentLocation: Locator;
     private _destroyed = false;
+    private _currentTimelineItem: TimelineItem | undefined;
+    private _visibleFragmentIds: string[] = [];
+    private _notifiedVisibleFragmentIds: string[] = [];
+    private _wrappedTimeline: Timeline | undefined;
 
     private _preferences: WebPubPreferences;
     private _defaults: WebPubDefaults;
@@ -87,8 +97,11 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
     private _decorations: Map<string, Decoration[]> = new Map();
     private _decorationObservers: Map<string, Set<DecorationObserver>> = new Map();
+    private _decorationHoveredDecorations: Map<string, Decoration> = new Map();
     private _decorationActivationState: Map<string, boolean> = new Map();
+    private _decorationHoverState: Map<string, boolean> = new Map();
     private _decorationActivationConsumed = false;
+    private _decorationResizeSelectors: Set<string>;
 
     private webViewport: VisualNavigatorViewport = {
         readingOrder: [],
@@ -123,6 +136,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         // Initialize content protection with provided config or default values
         this._contentProtection = configuration.contentProtection || {};
         this._decoratorConfig = configuration.decoratorConfig || {};
+        this._decorationResizeSelectors = new Set(this._decoratorConfig.resizeWatchSelectors ?? []);
 
         // Merge keyboard peripherals
         this._keyboardPeripherals = this.mergeKeyboardPeripherals(
@@ -186,7 +200,12 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             cssProperties,
             this._injector,
             this._contentProtection,
-            this._keyboardPeripherals
+            this._keyboardPeripherals,
+            (href) => this.pub.timeline.segmentsForHref(href)
+                .flatMap(item => item.references)
+                .map(ref => { const h = ref.indexOf('#'); return h >= 0 ? ref.slice(h + 1) : ''; })
+                .filter(Boolean),
+            [...this._decorationResizeSelectors]
         );
 
         if (this._destroyed) return;
@@ -269,6 +288,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             case "_pong":
                 this.listeners.frameLoaded(this.framePool.currentFrames[0]!.iframe.contentWindow!);
                 this.listeners.positionChanged(this.currentLocation);
+                this._notifyTimelineChange(this.currentLocation);
                 this._reapplyDecorationsToCurrentFrame();
                 break;
             case "first_visible_locator":
@@ -282,6 +302,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
                     text: loc?.text
                 });
                 this.listeners.positionChanged(this.currentLocation);
+                this._notifyTimelineChange(this.currentLocation);
                 break;
             case "text_selected": {
                 const selection = data as BasicTextSelection;
@@ -294,6 +315,12 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
                 if (handled) this._decorationActivationConsumed = true;
                 break;
             }
+            case "decoration_pointer_enter":
+                this._handleDecorationPointerEnter(data as DecorationPointerEnterData);
+                break;
+            case "decoration_pointer_leave":
+                this._handleDecorationPointerLeave(data as DecorationPointerLeaveData);
+                break;
             case "click":
             case "tap":
                 if (this._decorationActivationConsumed) {
@@ -447,14 +474,16 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         await this.framePool?.destroy();
         this._decorations.clear();
         this._decorationObservers.clear();
+        this._decorationHoveredDecorations.clear();
         this._decorationActivationState.clear();
+        this._decorationHoverState.clear();
+        this._decorationResizeSelectors.clear();
     }
 
     // DecorableNavigator
 
-    public supportsDecorationStyle(styleTypeId: string): boolean {
-        return BUILTIN_DECORATION_TYPES.has(styleTypeId) ||
-            !!this._decoratorConfig.decorationTemplates?.[styleTypeId];
+    public supportsDecorationStyle(styleTypeId: DecorationStyleType | string): boolean {
+        return canRenderDecorationStyle(styleTypeId, this._decoratorConfig.decorationTemplates);
     }
 
     public registerDecorationObserver(group: string, observer: DecorationObserver): void {
@@ -462,18 +491,32 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             this._decorationObservers.set(group, new Set());
         this._decorationObservers.get(group)!.add(observer);
 
-        this._decorationActivationState.set(group, true);
-        this._sendDecorationActivatable(group, true);
+        if (observer.onDecorationActivated) {
+            this._decorationActivationState.set(group, true);
+            this._sendDecorationActivatable(group, true);
+        }
+
+        if (observer.onDecorationPointerEnter || observer.onDecorationPointerLeave) {
+            this._decorationHoverState.set(group, true);
+            this._sendDecorationHoverable(group, true);
+        }
     }
 
     public unregisterDecorationObserver(observer: DecorationObserver): void {
         this._decorationObservers.forEach((set, group) => {
-            if (set.has(observer)) {
-                set.delete(observer);
-                if (set.size === 0) {
-                    this._decorationActivationState.delete(group);
-                    this._sendDecorationActivatable(group, false);
-                }
+            if (!set.has(observer)) return;
+            set.delete(observer);
+
+            const stillActivatable = [...set].some(o => o.onDecorationActivated);
+            if (this._decorationActivationState.has(group) && !stillActivatable) {
+                this._decorationActivationState.delete(group);
+                this._sendDecorationActivatable(group, false);
+            }
+
+            const stillHoverable = [...set].some(o => o.onDecorationPointerEnter || o.onDecorationPointerLeave);
+            if (this._decorationHoverState.has(group) && !stillHoverable) {
+                this._decorationHoverState.delete(group);
+                this._sendDecorationHoverable(group, false);
             }
         });
     }
@@ -481,6 +524,26 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private _sendDecorationActivatable(group: string, activatable: boolean): void {
         const frame = this.framePool?.currentFrames[0];
         if (frame?.msg) frame.msg.send("decoration_activatable", { group, activatable });
+    }
+
+    private _sendDecorationHoverable(group: string, hoverable: boolean): void {
+        const frame = this.framePool?.currentFrames[0];
+        if (frame?.msg) frame.msg.send("decoration_hoverable", { group, hoverable });
+    }
+
+    // Watches an element within the current content document for resize, so decoration
+    // overlays relay out when it resizes even if the resource's own document size doesn't
+    // change. Forwarded to framePool the same way contentProtectionConfig/
+    // keyboardPeripheralsConfig are — applied on every frame show(), not replayed
+    // reactively off decoration state.
+    public addDecorationResizeTarget(selector: string): void {
+        this._decorationResizeSelectors.add(selector);
+        this.framePool?.addResizeTarget(selector);
+    }
+
+    public removeDecorationResizeTarget(selector: string): void {
+        this._decorationResizeSelectors.delete(selector);
+        this.framePool?.removeResizeTarget(selector);
     }
 
     public applyDecorations(decorations: Decoration[], group: string): void {
@@ -505,6 +568,8 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
         const activatable = this._decorationActivationState.get(group);
         if (activatable !== undefined) this._sendDecorationActivatable(group, activatable);
+        const hoverable = this._decorationHoverState.get(group);
+        if (hoverable !== undefined) this._sendDecorationHoverable(group, hoverable);
     }
 
     private _sendDecorationOps(
@@ -549,6 +614,9 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         for (const [group, activatable] of this._decorationActivationState) {
             frame.msg.send("decoration_activatable", { group, activatable });
         }
+        for (const [group, hoverable] of this._decorationHoverState) {
+            frame.msg.send("decoration_hoverable", { group, hoverable });
+        }
     }
 
     private _handleDecorationActivated(data: DecorationActivatedEvent): boolean {
@@ -558,11 +626,34 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId);
         if (!decoration) return false;
 
-        const event: DecorationActivationEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
+        const event: OnDecorationActivatedEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
         let anyHandled = false;
         for (const obs of observers)
-            if (obs.onDecorationActivated(event)) anyHandled = true;
+            if (obs.onDecorationActivated?.(event)) anyHandled = true;
         return anyHandled;
+    }
+
+    private _handleDecorationPointerEnter(data: DecorationPointerEnterData): void {
+        const observers = this._decorationObservers.get(data.group);
+        if (!observers || observers.size === 0) return;
+        const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId);
+        if (!decoration) return;
+        this._decorationHoveredDecorations.set(data.group, decoration);
+        const event: OnDecorationPointerEnterEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
+        for (const obs of observers)
+            obs.onDecorationPointerEnter?.(event);
+    }
+
+    private _handleDecorationPointerLeave(data: DecorationPointerLeaveData): void {
+        const observers = this._decorationObservers.get(data.group);
+        if (!observers || observers.size === 0) return;
+        const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId)
+            ?? this._decorationHoveredDecorations.get(data.group);
+        this._decorationHoveredDecorations.delete(data.group);
+        if (!decoration) return;
+        const event: OnDecorationPointerLeaveEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
+        for (const obs of observers)
+            obs.onDecorationPointerLeave?.(event);
     }
 
     // End of DecorableNavigator
@@ -611,6 +702,11 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
         this.updateViewport(progression);
         this.listeners.positionChanged(this.currentLocation);
+        const locatorForTimeline = progression.fragmentId
+            ? this.currentLocation.copyWithLocations({ fragments: [`#${progression.fragmentId}`] })
+            : this.currentLocation;
+        this._visibleFragmentIds = progression.visibleFragmentIds ?? [];
+        this._notifyTimelineChange(locatorForTimeline);
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
     }
 
@@ -670,9 +766,53 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         return this.pub;
     }
 
+    get timeline(): Timeline {
+        const t = this.pub.timeline;
+        if (!this._wrappedTimeline) {
+            // Wraps the real, shared Timeline rather than mutating it — publication.timeline
+            // stays plain for every consumer; only navigator.timeline answers navigableFrom()
+            // with visible-range-aware previous/next. Every other member (locate, ancestors,
+            // augment, etc.) passes straight through to the real instance untouched.
+            this._wrappedTimeline = new Proxy(t, {
+                get: (target, prop) => {
+                    if (prop !== 'navigableFrom') {
+                        // Resolve strictly against `target`, never the proxy: Timeline's own
+                        // getters (flat, items) lazily cache onto `this` on first access, and
+                        // forwarding the proxy as receiver would make that caching target the
+                        // wrong object instead of the real Timeline.
+                        const value = Reflect.get(target, prop, target);
+                        return typeof value === 'function' ? value.bind(target) : value;
+                    }
+                    return (item: TimelineItem) => {
+                        // Fragments on screen are always contiguous in the flattened timeline,
+                        // so anchor previous/next on the two ends of the visible run instead of
+                        // on `item` itself.
+                        const ids = this._visibleFragmentIds;
+                        let first = (ids.length ? target.locate(this.currentLocation.copyWithLocations({ fragments: [`#${ids[0]}`] })) : undefined) ?? item;
+                        const last = (ids.length ? target.locate(this.currentLocation.copyWithLocations({ fragments: [`#${ids[ids.length - 1]}`] })) : undefined) ?? item;
+                        // The current resource's own bare-href container(s) have no DOM anchor,
+                        // so they never appear among visible fragment ids. Only when scrollTop is
+                        // actually 0 (untracked content can precede the first fragment, and
+                        // scrolling past it must leave "back to resource start" reachable) walk
+                        // out to the outermost ancestor still within this resource, so previous
+                        // is anchored past all of them at once rather than one guessed step back.
+                        if (this.isScrollStart) {
+                            const outermost = target.ancestors(first).find(a => a.references.includes(this.currentLocation.href));
+                            if (outermost) first = outermost;
+                        }
+                        const previous = target.navigableFrom(first).previous;
+                        const next = target.navigableFrom(last).next;
+                        return { previous, next };
+                    };
+                }
+            });
+        }
+        return this._wrappedTimeline;
+    }
+
     private async loadLocator(locator: Locator, cb: (ok: boolean) => void) {
         let done = false;
-        let cssSelector = (typeof locator.locations.getCssSelector === "function") && locator.locations.getCssSelector();
+        let cssSelector = getCssSelector(locator.locations);
         if(locator.text?.highlight) {
             done = await new Promise<boolean>((res, _) => {
                 // Attempt to go to a highlighted piece of text in the resource
@@ -704,7 +844,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         // This sanity check has to be performed because we're still passing non-locator class
         // locator objects to this function. This is not good and should eventually be forbidden
         // or the locator should be deserialized sometime before this function.
-        const hid = (typeof locator.locations.htmlId === "function") && locator.locations.htmlId();
+        const hid = getHtmlId(locator.locations);
         if(hid)
             done = await new Promise<boolean>((res, _) => {
                 // Attempt to go to an HTML ID in the resource
@@ -821,6 +961,16 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
                 position: this.currentIndex + 1
             })
         });
+    }
+
+    private _notifyTimelineChange(locator: Locator): void {
+        const item = this.timeline.locate(locator);
+        const visibleChanged = !sameIds(this._visibleFragmentIds, this._notifiedVisibleFragmentIds);
+        if (item !== this._currentTimelineItem || visibleChanged) {
+            this._currentTimelineItem = item;
+            this._notifiedVisibleFragmentIds = this._visibleFragmentIds;
+            this.listeners.timelineItemChanged(item);
+        }
     }
 }
 

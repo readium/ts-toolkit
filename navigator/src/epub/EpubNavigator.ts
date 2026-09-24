@@ -1,9 +1,9 @@
-import { Layout, Link, Locator, LocatorText, Profile, Publication, ReadingProgression } from "@readium/shared";
+import { Layout, Link, Locator, LocatorText, Profile, Publication, ReadingProgression, Timeline, TimelineItem, getCssSelector, getHtmlId } from "@readium/shared";
 import { Configurable, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../index.ts";
 import { FramePoolManager } from "./frame/FramePoolManager.ts";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager.ts";
-import { CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, FXLModules, ModuleLibrary, ModuleName, ReflowableModules, BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent, KeyboardPeripheralEvent } from "@readium/navigator-html-injectables";
-import { Decoration, DecorationActivationEvent, DecorationObserver, DecorableNavigator, DecoratorConfig, decorationsEqual, resolveDecorationForWire, BUILTIN_DECORATION_TYPES } from "../decorations/index.ts";
+import { CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FXLModules, ModuleLibrary, ModuleName, ReflowableModules, BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent, KeyboardPeripheralEvent } from "@readium/navigator-html-injectables";
+import { Decoration, OnDecorationActivatedEvent, OnDecorationPointerEnterEvent, OnDecorationPointerLeaveEvent, DecorationObserver, DecorableNavigator, DecoratorConfig, decorationsEqual, resolveDecorationForWire, supportsDecorationStyle as canRenderDecorationStyle, DecorationStyleType } from "../decorations/index.ts";
 import * as path from "path-browserify";
 import { FXLFrameManager } from "./fxl/FXLFrameManager.ts";
 import { isTypedOMSupported } from "./fxl/FXLPeripherals.ts";
@@ -37,6 +37,7 @@ export interface EpubNavigatorConfiguration {
 export interface EpubNavigatorListeners {
     frameLoaded: (wnd: Window) => void;
     positionChanged: (locator: Locator) => void;
+    timelineItemChanged: (item: TimelineItem | undefined) => void;
     tap: (e: FrameClickEvent) => boolean; // Return true to prevent handling here
     click: (e: FrameClickEvent) => boolean;  // Return true to prevent handling here
     zoom: (scale: number) => void;
@@ -54,6 +55,7 @@ export interface EpubNavigatorListeners {
 const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListeners => ({
     frameLoaded: listeners.frameLoaded || (() => {}),
     positionChanged: listeners.positionChanged || (() => {}),
+    timelineItemChanged: listeners.timelineItemChanged || (() => {}),
     tap: listeners.tap || (() => false),
     click: listeners.click || (() => false),
     zoom: listeners.zoom || (() => {}),
@@ -67,6 +69,10 @@ const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListe
     peripheral: listeners.peripheral || (() => {}),
 })
 
+function sameIds(a: string[], b: string[]): boolean {
+    return a.length === b.length && a.every((id, i) => id === b[i]);
+}
+
 export class EpubNavigator extends VisualNavigator implements Configurable<ConfigurableSettings, EpubPreferences>, DecorableNavigator {
     private readonly pub: Publication;
     private readonly container: HTMLElement;
@@ -75,6 +81,11 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private _destroyed = false;
     private positions!: Locator[];
     private currentLocation!: Locator;
+    private _currentTimelineItem: TimelineItem | undefined;
+    private _visibleFragmentIds: string[] = [];
+    private _notifiedVisibleFragmentIds: string[] = [];
+    private _timelineAugmented = false;
+    private _wrappedTimeline: Timeline | undefined;
     private lastLocationInView: Locator | undefined;
     private currentProgression: ReadingProgression;
     private _layout: Layout;
@@ -101,8 +112,11 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
     private _decorations: Map<string, Decoration[]> = new Map();
     private _decorationObservers: Map<string, Set<DecorationObserver>> = new Map();
+    private _decorationHoveredDecorations: Map<string, Decoration> = new Map();
     private _decorationActivationState: Map<string, boolean> = new Map();
+    private _decorationHoverState: Map<string, boolean> = new Map();
     private _decorationActivationConsumed = false;
+    private _decorationResizeSelectors: Set<string>;
 
     private reflowViewport: VisualNavigatorViewport = {
         readingOrder: [],
@@ -164,6 +178,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
         this._contentProtection = configuration.contentProtection || {};
         this._decoratorConfig = configuration.decoratorConfig || {};
+        this._decorationResizeSelectors = new Set(this._decoratorConfig.resizeWatchSelectors ?? []);
 
         // Merge keyboard peripherals
         this._keyboardPeripherals = this.mergeKeyboardPeripherals(
@@ -261,7 +276,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 this._layout,
                 this._injector,
                 this._contentProtection,
-                this._keyboardPeripherals
+                this._keyboardPeripherals,
+                [...this._decorationResizeSelectors]
             );
             this.framePool.listener = (key: CommsEventKey | ManagerEventKey, data: unknown) => {
                 this.eventListener(key, data);
@@ -276,7 +292,12 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 cssProperties,
                 this._injector,
                 this._contentProtection,
-                this._keyboardPeripherals
+                this._keyboardPeripherals,
+                (href) => this.pub.timeline.segmentsForHref(href)
+                    .flatMap(item => item.references)
+                    .map(ref => { const h = ref.indexOf('#'); return h >= 0 ? ref.slice(h + 1) : ''; })
+                    .filter(Boolean),
+                [...this._decorationResizeSelectors]
             );
         }
 
@@ -455,6 +476,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             case "_pong":
                 this.listeners.frameLoaded(this._cframes[0]!.iframe.contentWindow!);
                 this.listeners.positionChanged(this.currentLocation);
+                this._notifyTimelineChange(this.currentLocation);
                 if (sourceFrame) {
                     const frames = this._cframes.filter(f => !!f) as (FrameManager | FXLFrameManager)[];
                     const i = frames.indexOf(sourceFrame);
@@ -475,6 +497,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                     text: loc?.text
                 });
                 this.listeners.positionChanged(this.currentLocation);
+                this._notifyTimelineChange(this.currentLocation);
                 break;
             case "text_selected": {
                 const selection = data as BasicTextSelection;
@@ -495,6 +518,12 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 if (handled) this._decorationActivationConsumed = true;
                 break;
             }
+            case "decoration_pointer_enter":
+                this._handleDecorationPointerEnter(data as DecorationPointerEnterData);
+                break;
+            case "decoration_pointer_leave":
+                this._handleDecorationPointerLeave(data as DecorationPointerLeaveData);
+                break;
             case "click":
             case "tap":
                 if (this._decorationActivationConsumed) {
@@ -664,9 +693,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
     // DecorableNavigator
 
-    public supportsDecorationStyle(styleTypeId: string): boolean {
-        return BUILTIN_DECORATION_TYPES.has(styleTypeId) ||
-            !!this._decoratorConfig.decorationTemplates?.[styleTypeId];
+    public supportsDecorationStyle(styleTypeId: DecorationStyleType | string): boolean {
+        return canRenderDecorationStyle(styleTypeId, this._decoratorConfig.decorationTemplates);
     }
 
     public registerDecorationObserver(group: string, observer: DecorationObserver): void {
@@ -674,19 +702,34 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             this._decorationObservers.set(group, new Set());
         this._decorationObservers.get(group)!.add(observer);
 
-        // Store activation state and send to current frames
-        this._decorationActivationState.set(group, true);
-        this._sendDecorationActivationToFrames(group, true);
+        // Enable activation if the observer handles it
+        if (observer.onDecorationActivated) {
+            this._decorationActivationState.set(group, true);
+            this._sendDecorationActivationToFrames(group, true);
+        }
+
+        // Enable hover if the observer declares hover callbacks
+        if (observer.onDecorationPointerEnter || observer.onDecorationPointerLeave) {
+            this._decorationHoverState.set(group, true);
+            this._sendDecorationHoverToFrames(group, true);
+        }
     }
 
     public unregisterDecorationObserver(observer: DecorationObserver): void {
         this._decorationObservers.forEach((set, group) => {
-            if (set.has(observer)) {
-                set.delete(observer);
-                if (set.size === 0) {
-                    this._decorationActivationState.delete(group);
-                    this._sendDecorationActivationToFrames(group, false);
-                }
+            if (!set.has(observer)) return;
+            set.delete(observer);
+
+            const stillActivatable = [...set].some(o => o.onDecorationActivated);
+            if (this._decorationActivationState.has(group) && !stillActivatable) {
+                this._decorationActivationState.delete(group);
+                this._sendDecorationActivationToFrames(group, false);
+            }
+
+            const stillHoverable = [...set].some(o => o.onDecorationPointerEnter || o.onDecorationPointerLeave);
+            if (this._decorationHoverState.has(group) && !stillHoverable) {
+                this._decorationHoverState.delete(group);
+                this._sendDecorationHoverToFrames(group, false);
             }
         });
     }
@@ -696,6 +739,28 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         frames.forEach(f => {
             if (f.msg) f.msg.send("decoration_activatable", { group, activatable });
         });
+    }
+
+    private _sendDecorationHoverToFrames(group: string, hoverable: boolean): void {
+        const frames = this._cframes.filter(f => !!f) as (FrameManager | FXLFrameManager)[];
+        frames.forEach(f => {
+            if (f.msg) f.msg.send("decoration_hoverable", { group, hoverable });
+        });
+    }
+
+    // Watches an element within the current content document(s) for resize, so decoration
+    // overlays relay out when it resizes even if the resource's own document size doesn't
+    // change. Not resource-scoped: forwarded to every frame, current and future, via
+    // framePool the same way contentProtectionConfig/keyboardPeripheralsConfig are — applied
+    // on every frame show(), not just replayed reactively off decoration state.
+    public addDecorationResizeTarget(selector: string): void {
+        this._decorationResizeSelectors.add(selector);
+        this.framePool?.addResizeTarget(selector);
+    }
+
+    public removeDecorationResizeTarget(selector: string): void {
+        this._decorationResizeSelectors.delete(selector);
+        this.framePool?.removeResizeTarget(selector);
     }
 
     public applyDecorations(decorations: Decoration[], group: string): void {
@@ -724,6 +789,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         const activatable = this._decorationActivationState.get(group);
         if (activatable !== undefined) {
             this._sendDecorationActivationToFrames(group, activatable);
+        }
+        const hoverable = this._decorationHoverState.get(group);
+        if (hoverable !== undefined) {
+            this._sendDecorationHoverToFrames(group, hoverable);
         }
     }
 
@@ -770,6 +839,9 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         for (const [group, activatable] of this._decorationActivationState) {
             frame.msg.send("decoration_activatable", { group, activatable });
         }
+        for (const [group, hoverable] of this._decorationHoverState) {
+            frame.msg.send("decoration_hoverable", { group, hoverable });
+        }
     }
 
     private _reapplyDecorationsToCurrentFrames(): void {
@@ -788,11 +860,34 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId);
         if (!decoration) return false;
 
-        const event: DecorationActivationEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
+        const event: OnDecorationActivatedEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
         let anyHandled = false;
         for (const obs of observers)
-            if (obs.onDecorationActivated(event)) anyHandled = true;
+            if (obs.onDecorationActivated?.(event)) anyHandled = true;
         return anyHandled;
+    }
+
+    private _handleDecorationPointerEnter(data: DecorationPointerEnterData): void {
+        const observers = this._decorationObservers.get(data.group);
+        if (!observers || observers.size === 0) return;
+        const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId);
+        if (!decoration) return;
+        this._decorationHoveredDecorations.set(data.group, decoration);
+        const event: OnDecorationPointerEnterEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
+        for (const obs of observers)
+            obs.onDecorationPointerEnter?.(event);
+    }
+
+    private _handleDecorationPointerLeave(data: DecorationPointerLeaveData): void {
+        const observers = this._decorationObservers.get(data.group);
+        if (!observers || observers.size === 0) return;
+        const decoration = (this._decorations.get(data.group) ?? []).find(d => d.id === data.decorationId)
+            ?? this._decorationHoveredDecorations.get(data.group);
+        this._decorationHoveredDecorations.delete(data.group);
+        if (!decoration) return;
+        const event: OnDecorationPointerLeaveEvent = { decoration, group: data.group, rect: data.rect, point: data.point };
+        for (const obs of observers)
+            obs.onDecorationPointerLeave?.(event);
     }
 
     // End of Decoration
@@ -811,7 +906,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         await this.framePool?.destroy();
         this._decorations.clear();
         this._decorationObservers.clear();
+        this._decorationHoveredDecorations.clear();
         this._decorationActivationState.clear();
+        this._decorationHoverState.clear();
+        this._decorationResizeSelectors.clear();
     }
 
     private async changeResource(relative: number): Promise<boolean> {
@@ -850,6 +948,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             // positionChanged via _pong; on back-then-forward to an
             // already-loaded frame no _pong fires, so dispatch explicitly here.
             this.listeners.positionChanged(this.currentLocation);
+            this._notifyTimelineChange(this.currentLocation);
             return true;
         }
 
@@ -952,6 +1051,11 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this.lastLocationInView = nearestPositions.last;
         this.updateViewport(progression);
         this.listeners.positionChanged(this.currentLocation);
+        const locatorForTimeline = progression.fragmentId
+            ? this.currentLocation.copyWithLocations({ fragments: [`#${progression.fragmentId}`] })
+            : this.currentLocation;
+        this._visibleFragmentIds = progression.visibleFragmentIds ?? [];
+        this._notifyTimelineChange(locatorForTimeline);
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
     }
 
@@ -1054,9 +1158,95 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         return this.pub;
     }
 
+    get timeline(): Timeline {
+        const t = this.pub.timeline;
+        if (!this._timelineAugmented && this.positions?.length) {
+            const positions = this.positions;
+            // We have no way to tell which position within an href corresponds to which
+            // toc entry (fragment ids aren't resolvable against the positions list). So
+            // only the first *leaf* entry for a given href without a fragment match gets
+            // the resource's start position; every other leaf entry sharing that href is
+            // left without a position rather than being given one we can't actually derive.
+            // Container items (chapters with their own toc children) are skipped entirely
+            // here — otherwise the chapter itself would claim the one derivable slot before
+            // any of its displayed children get a turn.
+            const assignedHrefs = new Set<string>();
+            t.augment((item, link) => {
+                if (item.children?.length) return {};
+                const hashIndex = link.href.indexOf('#');
+                const bare = hashIndex >= 0 ? link.href.slice(0, hashIndex) : link.href;
+                const fragment = hashIndex >= 0 ? link.href.slice(hashIndex + 1) : undefined;
+                const entries = positions.filter(p => p.href === bare);
+                if (!entries.length) return {};
+                const atFragment = fragment
+                    ? entries.find(p => p.locations.fragments[0] === fragment)
+                    : undefined;
+                let candidate: Locator | undefined;
+                if (atFragment) {
+                    candidate = atFragment;
+                } else if (!assignedHrefs.has(bare)) {
+                    assignedHrefs.add(bare);
+                    candidate = entries.reduce((min, p) =>
+                        (p.locations.position ?? Infinity) < (min.locations.position ?? Infinity) ? p : min
+                    );
+                } else {
+                    candidate = undefined;
+                }
+                if (!candidate) return {};
+                return {
+                    position: candidate.locations.position,
+                    scroll: atFragment?.locations.progression,
+                };
+            });
+
+            this._timelineAugmented = true;
+        }
+
+        if (!this._wrappedTimeline) {
+            // Wraps the real, shared Timeline rather than mutating it — publication.timeline
+            // stays plain for every consumer; only navigator.timeline answers navigableFrom()
+            // with visible-range-aware previous/next. Every other member (locate, ancestors,
+            // augment, etc.) passes straight through to the real instance untouched.
+            this._wrappedTimeline = new Proxy(t, {
+                get: (target, prop) => {
+                    if (prop !== 'navigableFrom') {
+                        // Resolve strictly against `target`, never the proxy: Timeline's own
+                        // getters (flat, items) lazily cache onto `this` on first access, and
+                        // forwarding the proxy as receiver would make that caching target the
+                        // wrong object instead of the real Timeline.
+                        const value = Reflect.get(target, prop, target);
+                        return typeof value === 'function' ? value.bind(target) : value;
+                    }
+                    return (item: TimelineItem) => {
+                        // Fragments on screen are always contiguous in the flattened timeline,
+                        // so anchor previous/next on the two ends of the visible run instead of
+                        // on `item` itself.
+                        const ids = this._visibleFragmentIds;
+                        let first = (ids.length ? target.locate(this.currentLocation.copyWithLocations({ fragments: [`#${ids[0]}`] })) : undefined) ?? item;
+                        const last = (ids.length ? target.locate(this.currentLocation.copyWithLocations({ fragments: [`#${ids[ids.length - 1]}`] })) : undefined) ?? item;
+                        // The current resource's own bare-href container(s) have no DOM anchor,
+                        // so they never appear among visible fragment ids. Only when scrollTop is
+                        // actually 0 (untracked content can precede the first fragment, and
+                        // scrolling past it must leave "back to resource start" reachable) walk
+                        // out to the outermost ancestor still within this resource, so previous
+                        // is anchored past all of them at once rather than one guessed step back.
+                        if (this.isScrollStart) {
+                            const outermost = target.ancestors(first).find(a => a.references.includes(this.currentLocation.href));
+                            if (outermost) first = outermost;
+                        }
+                        const previous = target.navigableFrom(first).previous;
+                        const next = target.navigableFrom(last).next;
+                        return { previous, next };
+                    };
+                }
+            });
+        }
+        return this._wrappedTimeline;
+    }
+
     private async loadLocator(locator: Locator, cb: (ok: boolean) => void) {
         let done = false;
-        let cssSelector = (typeof locator.locations.getCssSelector === "function") && locator.locations.getCssSelector();
+        let cssSelector = getCssSelector(locator.locations);
         if(locator.text?.highlight) {
             done = await new Promise<boolean>((res, _) => {
                 // Attempt to go to a highlighted piece of text in the resource
@@ -1088,7 +1278,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         // This sanity check has to be performed because we're still passing non-locator class
         // locator objects to this function. This is not good and should eventually be forbidden
         // or the locator should be deserialized sometime before this function.
-        const hid = (typeof locator.locations.htmlId === "function") && locator.locations.htmlId();
+        const hid = getHtmlId(locator.locations);
         if(hid)
             done = await new Promise<boolean>((res, _) => {
                 // Attempt to go to an HTML ID in the resource
@@ -1168,5 +1358,15 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
     public goLink(link: Link, animated: boolean, cb: (ok: boolean) => void): void {
         return this.go(link.locator, animated, cb);
+    }
+
+    private _notifyTimelineChange(locator: Locator): void {
+        const item = this.timeline.locate(locator);
+        const visibleChanged = !sameIds(this._visibleFragmentIds, this._notifiedVisibleFragmentIds);
+        if (item !== this._currentTimelineItem || visibleChanged) {
+            this._currentTimelineItem = item;
+            this._notifiedVisibleFragmentIds = this._visibleFragmentIds;
+            this.listeners.timelineItemChanged(item);
+        }
     }
 }

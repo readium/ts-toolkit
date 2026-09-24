@@ -222,6 +222,18 @@ describe('Accessibility Tests', () => {
         expect(Accessibility.deserialize(json2)).toEqual(expected2);
     });
 
+    it('parse drops invalid bare-string PrimaryAccessMode entries', () => {
+        const json = {
+            accessModeSufficient: ['invalid', 'textual']
+        };
+
+        const expected = new Accessibility({
+            accessModeSufficient: [new PrimaryAccessMode('textual')]
+        });
+
+        expect(Accessibility.deserialize(json)).toEqual(expected);
+    });
+
     it('parse PrimaryAccessMode with multiple arrays', () => {
         const json = {
             accessModeSufficient: [['textual', 'visual'], ['auditory']]
@@ -254,6 +266,72 @@ describe('Accessibility Tests', () => {
         });
 
         expect(Accessibility.deserialize(json2)).toEqual(expected2);
+    });
+
+    it('parse conformsTo serialized as a bare string', () => {
+        const json = {
+            conformsTo: 'https://www.w3.org/TR/epub-a11y-11#wcag-2.0-a'
+        };
+
+        const expected = new Accessibility({
+            conformsTo: [new AccessibilityProfile('https://www.w3.org/TR/epub-a11y-11#wcag-2.0-a')]
+        });
+
+        expect(Accessibility.deserialize(json)).toEqual(expected);
+    });
+
+    it('parses accessMode/feature/hazard/exemption serialized as a bare string', () => {
+        const json = {
+            accessMode: 'textual',
+            feature: 'alternativeText',
+            hazard: 'none',
+            exemption: 'eaa-microenterprise'
+        };
+
+        const expected = new Accessibility({
+            accessMode: [new AccessMode('textual')],
+            feature: [new Feature('alternativeText')],
+            hazard: [new Hazard('none')],
+            exemption: [new Exemption('eaa-microenterprise')]
+        });
+
+        expect(Accessibility.deserialize(json)).toEqual(expected);
+    });
+
+    it('does not throw when accessModeSufficient itself is serialized as a bare string', () => {
+        const json = {
+            accessModeSufficient: 'textual'
+        };
+
+        expect(Accessibility.deserialize(json)).toEqual(new Accessibility());
+    });
+
+    it('does not throw and ignores malformed non-string, non-array values', () => {
+        const json = {
+            conformsTo: 42,
+            accessMode: null,
+            accessModeSufficient: { foo: 'bar' },
+            feature: true,
+            hazard: 42,
+            exemption: {}
+        };
+
+        expect(Accessibility.deserialize(json)).toEqual(new Accessibility());
+    });
+
+    it('still parses accessModeSufficient items as string or array per the spec oneOf', () => {
+        const json = {
+            accessModeSufficient: ['textual', ['visual', 'auditory']]
+        };
+
+        const expected = new Accessibility({
+            accessModeSufficient: [
+                new PrimaryAccessMode('textual'),
+                new PrimaryAccessMode(['visual', 'auditory'])
+            ]
+        });
+
+        expect(Accessibility.deserialize(json)).toEqual(expected);
     });
 
     it('serialize Profile', () => {

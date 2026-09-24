@@ -59,12 +59,20 @@ export class LocatorLocations {
       'progression',
       'totalProgression',
       'position',
+      'otherLocations',
     ]);
     Object.entries(json).forEach(([key, value]) => {
       if (!reservedKeys.has(key)) {
         otherLocations.set(key, value);
       }
     });
+    // json may be a live LocatorLocations instance (e.g. passed through in-memory
+    // rather than round-tripped as RWPM JSON) — its otherLocations is a Map, not
+    // flattened keys, and must be merged in directly rather than treated as an
+    // extension entry itself.
+    if (json.otherLocations instanceof Map) {
+      json.otherLocations.forEach((value: any, key: string) => otherLocations.set(key, value));
+    }
 
     return new LocatorLocations({
       fragments: arrayfromJSONorString(json.fragments || json.fragment),
@@ -176,12 +184,22 @@ export class Locator {
     locations?: LocatorLocations;
     text?: LocatorText;
   }) {
-    this.href = values.href;
+    const hashIndex = values.href.indexOf("#");
+    const hrefFragment = hashIndex >= 0 ? values.href.slice(hashIndex + 1) : undefined;
+    this.href = hashIndex >= 0 ? values.href.slice(0, hashIndex) : values.href;
     this.type = values.type;
     this.title = values.title;
+    // If locations.fragments is already set, it takes precedence over any fragment in the href.
+    // We don't merge both because explicit fragments are considered authoritative.
+    const existingFragments = values.locations?.fragments;
+    const needsFragment = hrefFragment && (!existingFragments || existingFragments.length === 0);
     this.locations = values.locations
-      ? values.locations
-      : new LocatorLocations({});
+      ? needsFragment
+        ? new LocatorLocations({ ...values.locations, fragments: [hrefFragment!] })
+        : values.locations
+      : hrefFragment
+        ? new LocatorLocations({ fragments: [hrefFragment] })
+        : new LocatorLocations({});
     this.text = values.text;
   }
 

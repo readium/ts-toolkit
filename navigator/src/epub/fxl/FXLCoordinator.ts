@@ -1,4 +1,4 @@
-import { sML } from "@readium/navigator-html-injectables";
+import { sML } from "@readium/helpers";
 
 export interface Point {
     X: number;

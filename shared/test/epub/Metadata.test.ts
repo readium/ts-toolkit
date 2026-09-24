@@ -1,9 +1,9 @@
-import { LocalizedString, MediaOverlay, Metadata } from '../../src';
+import { LocalizedString, MediaOverlay, Metadata, getMediaOverlay } from '../../src';
 
 describe('EPUB Metadata Tests', () => {
   it('getMediaOverlay when available', () => {
     expect(
-      new Metadata({
+      getMediaOverlay(new Metadata({
         title: new LocalizedString({ default: 'Test' }),
         otherMetadata: {
           mediaOverlay: {
@@ -11,7 +11,7 @@ describe('EPUB Metadata Tests', () => {
             playbackActiveClass: 'playing'
           }
         }
-      }).getMediaOverlay()
+      }))
     ).toEqual(
       new MediaOverlay({
         activeClass: 'active',
@@ -22,9 +22,9 @@ describe('EPUB Metadata Tests', () => {
 
   it('getMediaOverlay when missing', () => {
     expect(
-      new Metadata({
+      getMediaOverlay(new Metadata({
         title: new LocalizedString({ default: 'Test' })
-      }).getMediaOverlay()
+      }))
     ).toBeUndefined();
   });
 });

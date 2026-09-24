@@ -1,0 +1,329 @@
+{
+    "publication": {
+        "format": {
+            "audiobook": "Audiobook",
+            "audiobookJSON": "Manifesto do livro áudio",
+            "cbz": "Banda desenhada",
+            "divina": "Publicação Divina",
+            "divinaJSON": "Manifesto de publicação Divina",
+            "epub": "EPUB",
+            "pdf": "PDF",
+            "rwp": "Documento Web do Readium",
+            "zab": "Ficheiro Audiobook",
+            "zip": "Ficheiro ZIP"
+        },
+        "kind": {
+            "audiobook_many": "Livros áudio",
+            "audiobook_one": "Livro áudio",
+            "audiobook_other": "Livros áudio",
+            "book_many": "livros",
+            "book_one": "livro",
+            "book_other": "livros",
+            "comic_many": "Bandas desenhadas",
+            "comic_one": "Banda desenhada",
+            "comic_other": "Bandas desenhadas",
+            "document_many": "documentos",
+            "document_one": "documento",
+            "document_other": "documentos"
+        },
+        "metadata": {
+            "accessibility": {
+                "display-guide": {
+                    "accessibility-summary": {
+                        "no-metadata": "Sem informação disponível",
+                        "publisher-contact": "Para mais informações sobre a acessibilidade deste produto, contacte a editora: ",
+                        "title": "Resumo de acessibilidade"
+                    },
+                    "additional-accessibility-information": {
+                        "aria": {
+                            "compact": "Inclui funções ARIA",
+                            "descriptive": "O conteúdo foi otimizado com funções ARIA para melhorar a organização e facilitar a navegação"
+                        },
+                        "audio-descriptions": "Descrições de áudio",
+                        "braille": "Braille",
+                        "color-not-sole-means-of-conveying-information": "A cor não é o único meio de transmitir informação",
+                        "dyslexia-readability": "Otimizado para dislexia",
+                        "full-ruby-annotations": "Anotações Ruby completas",
+                        "high-contrast-between-foreground-and-background-audio": "Alto contraste entre som principal e fundo",
+                        "high-contrast-between-text-and-background": "Alto contraste entre texto e fundo",
+                        "large-print": "Impressão ampliada",
+                        "page-breaks": {
+                            "compact": "Quebras de página incluídas",
+                            "descriptive": "Inclui quebras de página da fonte impressa original"
+                        },
+                        "ruby-annotations": "Algumas anotações Ruby",
+                        "sign-language": "Língua gestual",
+                        "tactile-graphics": {
+                            "compact": "Inclui gráficos táteis",
+                            "descriptive": "Inclui gráficos táteis que facilitam o acesso a elementos visuais para pessoas cegas"
+                        },
+                        "tactile-objects": "Objetos táteis 3D",
+                        "text-to-speech-hinting": "Sugestões para leitura em voz alta",
+                        "title": "Informação adicional de acessibilidade",
+                        "ultra-high-contrast-between-text-and-background": "Contraste muito elevado entre texto e fundo",
+                        "visible-page-numbering": "Numeração de páginas visível",
+                        "without-background-sounds": "Sem sons de fundo"
+                    },
+                    "conformance": {
+                        "a": {
+                            "compact": "Cumpre as normas mínimas de acessibilidade",
+                            "descriptive": "A publicação contém uma declaração de conformidade que indica que cumpre o padrão EPUB Accessibility e WCAG 2 nível A"
+                        },
+                        "aa": {
+                            "compact": "Cumpre as normas aceites de acessibilidade",
+                            "descriptive": "A publicação contém uma declaração de conformidade que indica que cumpre o padrão EPUB Accessibility e WCAG 2 nível AA"
+                        },
+                        "aaa": {
+                            "compact": "Excede as normas aceites de acessibilidade",
+                            "descriptive": "A publicação contém uma declaração de conformidade que indica que cumpre o padrão EPUB Accessibility e WCAG 2 nível AAA"
+                        },
+                        "certifier": "A publicação foi certificada por ",
+                        "certifier-credentials": "As credenciais do certificador são ",
+                        "details": {
+                            "certification-info": "A publicação foi certificada em ",
+                            "certifier-report": "Para mais informações, consulte o relatório do certificador",
+                            "claim": "Esta publicação declara conformidade com",
+                            "epub-accessibility-1-0": "EPUB Accessibility 1.0",
+                            "epub-accessibility-1-1": "EPUB Accessibility 1.1",
+                            "level-a": "Nível A",
+                            "level-aa": "Nível AA",
+                            "level-aaa": "Nível AAA",
+                            "wcag-2-0": {
+                                "compact": "WCAG 2.0",
+                                "descriptive": "Diretrizes de Acessibilidade para Conteúdo Web (WCAG) 2.0"
+                            },
+                            "wcag-2-1": {
+                                "compact": "WCAG 2.1",
+                                "descriptive": "Diretrizes de Acessibilidade para Conteúdo Web (WCAG) 2.1"
+                            },
+                            "wcag-2-2": {
+                                "compact": "WCAG 2.2",
+                                "descriptive": "Diretrizes de Acessibilidade para Conteúdo Web (WCAG) 2.2"
+                            }
+                        },
+                        "details-title": "Detalhes de conformidade",
+                        "no": "Sem informação disponível",
+                        "title": "Conformidade",
+                        "unknown-standard": "Não foi possível determinar a conformidade com as normas de acessibilidade aceites para esta publicação"
+                    },
+                    "hazards": {
+                        "flashing": {
+                            "compact": "Conteúdo intermitente",
+                            "descriptive": "A publicação contém conteúdo intermitente que pode causar crises fotossensíveis"
+                        },
+                        "flashing-none": {
+                            "compact": "Sem perigos de intermitência",
+                            "descriptive": "A publicação não contém conteúdo intermitente que possa causar crises fotossensíveis"
+                        },
+                        "flashing-unknown": {
+                            "compact": "Risco de intermitência desconhecido",
+                            "descriptive": "Não foi possível determinar se existe conteúdo intermitente que possa causar crises fotossensíveis"
+                        },
+                        "motion": {
+                            "compact": "Simulação de movimento",
+                            "descriptive": "A publicação contém simulações de movimento que podem causar enjoo"
+                        },
+                        "motion-none": {
+                            "compact": "Sem simulação de movimento",
+                            "descriptive": "A publicação não contém simulações de movimento que possam causar enjoo"
+                        },
+                        "motion-unknown": {
+                            "compact": "Risco de movimento desconhecido",
+                            "descriptive": "Não foi possível determinar se existem simulações de movimento que possam causar enjoo"
+                        },
+                        "no-metadata": "Sem informação disponível",
+                        "none": {
+                            "compact": "Sem perigos",
+                            "descriptive": "A publicação não contém perigos conhecidos"
+                        },
+                        "sound": {
+                            "compact": "Sons sensíveis",
+                            "descriptive": "A publicação contém sons que podem causar sensibilidade auditiva"
+                        },
+                        "sound-none": {
+                            "compact": "Sem perigos sonoros",
+                            "descriptive": "A publicação não contém sons que possam causar sensibilidade auditiva"
+                        },
+                        "sound-unknown": {
+                            "compact": "Risco sonoro desconhecido",
+                            "descriptive": "Não foi possível determinar se a publicação contém sons que possam causar sensibilidade auditiva"
+                        },
+                        "title": "Perigos",
+                        "unknown": "Presença de perigos não determinada"
+                    },
+                    "legal-considerations": {
+                        "exempt": {
+                            "compact": "Declara isenção de conformidade em algumas jurisdições",
+                            "descriptive": "Esta publicação declara isenção de conformidade em algumas jurisdições"
+                        },
+                        "no-metadata": "Sem informação disponível",
+                        "title": "Considerações legais"
+                    },
+                    "navigation": {
+                        "index": {
+                            "compact": "Índice",
+                            "descriptive": "Índice com ligações para entradas referenciadas"
+                        },
+                        "no-metadata": "Sem informação disponível",
+                        "page-navigation": {
+                            "compact": "Ir para página",
+                            "descriptive": "Lista de páginas que permite aceder às páginas da versão impressa original"
+                        },
+                        "structural": {
+                            "compact": "Títulos e estrutura",
+                            "descriptive": "Elementos como títulos, tabelas, etc., para navegação estruturada"
+                        },
+                        "title": "Navegação",
+                        "toc": {
+                            "compact": "Índice",
+                            "descriptive": "Índice de conteúdos com ligações para todos os capítulos do texto"
+                        }
+                    },
+                    "rich-content": {
+                        "accessible-chemistry-as-latex": {
+                            "compact": "Fórmulas químicas em LaTeX",
+                            "descriptive": "Fórmulas químicas em formato acessível (LaTeX)"
+                        },
+                        "accessible-chemistry-as-mathml": {
+                            "compact": "Fórmulas químicas em MathML",
+                            "descriptive": "Fórmulas químicas em formato acessível (MathML)"
+                        },
+                        "accessible-math-as-latex": {
+                            "compact": "Matemática em LaTeX",
+                            "descriptive": "Fórmulas matemáticas em formato acessível (LaTeX)"
+                        },
+                        "accessible-math-described": "Descrição textual das fórmulas matemáticas",
+                        "closed-captions": {
+                            "compact": "Vídeos com legendas ocultas",
+                            "descriptive": "Os vídeos incluídos na publicação têm legendas ocultas"
+                        },
+                        "extended-descriptions": "Imagens complexas com descrições detalhadas",
+                        "math-as-mathml": {
+                            "compact": "Matemática em MathML",
+                            "descriptive": "Fórmulas matemáticas em formato acessível (MathML)"
+                        },
+                        "open-captions": {
+                            "compact": "Vídeos com legendas abertas",
+                            "descriptive": "Os vídeos incluídos na publicação têm legendas abertas"
+                        },
+                        "title": "Conteúdo rico",
+                        "transcript": "Transcrição fornecida",
+                        "unknown": "Sem informação disponível"
+                    },
+                    "ways-of-reading": {
+                        "nonvisual-reading": {
+                            "alt-text": {
+                                "compact": "Contém texto alternativo",
+                                "descriptive": "Inclui descrições alternativas de texto para imagens"
+                            },
+                            "no-metadata": "Sem informação sobre leitura não visual",
+                            "none": {
+                                "compact": "Não legível em leitura em voz alta ou braille dinâmico",
+                                "descriptive": "O conteúdo não é legível em voz alta ou através de braille dinâmico"
+                            },
+                            "not-fully": {
+                                "compact": "Parcialmente legível em leitura em voz alta ou braille dinâmico",
+                                "descriptive": "Nem todo o conteúdo é legível em voz alta ou através de braille dinâmico"
+                            },
+                            "readable": {
+                                "compact": "Totalmente legível em leitura em voz alta ou braille dinâmico",
+                                "descriptive": "Todo o conteúdo pode ser lido em voz alta ou através de braille dinâmico"
+                            }
+                        },
+                        "prerecorded-audio": {
+                            "complementary": {
+                                "compact": "Contém clipes de áudio pré-gravados",
+                                "descriptive": "O conteúdo contém clipes de áudio pré-gravados incorporados"
+                            },
+                            "no-metadata": "Sem informação sobre áudio pré-gravado",
+                            "only": {
+                                "compact": "Apenas áudio pré-gravado",
+                                "descriptive": "A publicação é apenas áudio e não possui alternativa em texto"
+                            },
+                            "synchronized": {
+                                "compact": "Áudio pré-gravado sincronizado com texto",
+                                "descriptive": "Todo o conteúdo está disponível como áudio pré-gravado sincronizado com texto"
+                            }
+                        },
+                        "title": "Formas de leitura",
+                        "visual-adjustments": {
+                            "modifiable": {
+                                "compact": "Aspeto personalizável",
+                                "descriptive": "O aspeto do texto e o layout da página podem ser modificados de acordo com as capacidades do sistema de leitura (tipo e tamanho de letra, espaçamento entre parágrafos, frases, palavras e letras, bem como a cor de fundo e do texto)"
+                            },
+                            "unknown": "Sem informação sobre personalização do aspeto",
+                            "unmodifiable": {
+                                "compact": "Aspeto não ajustável",
+                                "descriptive": "O texto e o layout da página não podem ser modificados, uma vez que a experiência de leitura é semelhante à versão impressa, mas os sistemas de leitura ainda podem oferecer opções de ampliação"
+                            }
+                        }
+                    }
+                }
+            },
+            "altIdentifier_many": "identificadores alternativos",
+            "altIdentifier_one": "identificador alternativo",
+            "altIdentifier_other": "identificadores alternativos",
+            "artist_many": "artistas",
+            "artist_one": "artista",
+            "artist_other": "artistas",
+            "author_many": "autores",
+            "author_one": "autor",
+            "author_other": "autores",
+            "collection_many": "coleções",
+            "collection_one": "coleção",
+            "collection_other": "coleções",
+            "colorist_many": "coloristas",
+            "colorist_one": "colorista",
+            "colorist_other": "coloristas",
+            "contributor_many": "colaboradores",
+            "contributor_one": "colaborador",
+            "contributor_other": "colaboradores",
+            "description": "descrição",
+            "duration": "duração",
+            "editor_many": "editores",
+            "editor_one": "editor",
+            "editor_other": "editores",
+            "identifier_many": "identificadores",
+            "identifier_one": "identificador",
+            "identifier_other": "identificadores",
+            "illustrator_many": "ilustradores",
+            "illustrator_one": "ilustrador",
+            "illustrator_other": "ilustradores",
+            "imprint_many": "chancelas",
+            "imprint_one": "chancela",
+            "imprint_other": "chancelas",
+            "inker_many": "arte-finalistas",
+            "inker_one": "arte-finalista",
+            "inker_other": "arte-finalistas",
+            "language_many": "idiomas",
+            "language_one": "idioma",
+            "language_other": "idiomas",
+            "letterer_many": "letristas",
+            "letterer_one": "letrista",
+            "letterer_other": "letristas",
+            "modified": "data de modificação",
+            "narrator_many": "narradores",
+            "narrator_one": "narrador",
+            "narrator_other": "narradores",
+            "numberOfPages": "número de páginas",
+            "penciler_many": "desenhadores",
+            "penciler_one": "desenhador",
+            "penciler_other": "desenhadores",
+            "published": "data de publicação",
+            "publisher_many": "editoras",
+            "publisher_one": "editora",
+            "publisher_other": "editoras",
+            "series_many": "séries",
+            "series_one": "série",
+            "series_other": "séries",
+            "subject_many": "temas",
+            "subject_one": "tema",
+            "subject_other": "temas",
+            "subtitle": "subtítulo",
+            "title": "título",
+            "translator_many": "tradutores",
+            "translator_one": "tradutor",
+            "translator_other": "tradutores"
+        }
+    }
+}

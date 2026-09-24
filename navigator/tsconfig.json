@@ -12,11 +12,7 @@
       "dom",
       "dom.iterable"
     ],
-    "plugins": [
-      {
-        "name": "typescript-plugin-css-modules"
-      }
-    ],
+
     "importHelpers": true,
     // output .d.ts declaration files for consumers
     "declaration": true,
@@ -37,6 +33,10 @@
     "noUnusedParameters": true,
     // use Node's module resolution algorithm, instead of the legacy TS one
     "moduleResolution": "bundler",
+    // resolve @readium/* workspace imports to each package's src (no build-before-import)
+    "customConditions": ["ts-toolkit-source"],
+    // needed to compile shared's vendored-locale JSON imports reached via source resolution
+    "resolveJsonModule": true,
     // transpile JSX to React.createElement
     "jsx": "react",
     // interop between ESM and CJS modules. Recommended by TS

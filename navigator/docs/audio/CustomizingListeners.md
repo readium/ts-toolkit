@@ -61,7 +61,7 @@ Fires when the current playback position changes. The frequency is controlled by
 
 Fires when the active `TimelineItem` changes — not on every position tick, only when the item actually changes. Receives `undefined` when no item is active. This listener is optional; omitting it is equivalent to a no-op.
 
-Use this to keep chapter titles, breadcrumbs, or previous/next navigation in sync without polling. See [Timeline](./Timeline.md) for the full API.
+Use this to keep chapter titles, breadcrumbs, or previous/next navigation in sync without polling. See [Timeline](../Timeline.md) for the full API.
 
 ```js
 const listeners = {
@@ -69,7 +69,7 @@ const listeners = {
     chapterTitle.textContent = item?.title ?? '';
 
     if (item) {
-      const { previous, next } = publication.timeline.adjacentTo(item);
+      const { previous, next } = publication.timeline.navigableFrom(item);
       prevButton.disabled = !previous;
       nextButton.disabled = !next;
     }

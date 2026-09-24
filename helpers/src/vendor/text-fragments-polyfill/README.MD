@@ -1,0 +1,8 @@
+The code in this module has been ported from `text-fragments-polyfill@6.7.0` (https://github.com/GoogleChromeLabs/text-fragments-polyfill/tree/v6.7.0/src), released under the Apache License, Version 2.0.
+
+Two files, both converted from JSDoc-typed JavaScript to TypeScript:
+
+- `textFragmentMatcher.ts` (from `text-fragment-utils.js`): resolves a WICG text-fragment directive to `Range`s in a document (`processTextFragmentDirective`). Dropped only the live CSS highlighting/marking exports (not resolution-related) and the closure-compiler/`goog` module-id interop block, which is dead code in this build. The `internal`/`forTesting` export bundles are kept intact, since `textFragmentGenerator.ts` depends on `internal` directly.
+- `textFragmentGenerator.ts` (from `fragment-generation-utils.js`): the inverse direction — generates a WICG text-fragment directive from a `Range` (`generateFragmentFromRange`), verifying uniqueness by calling back into `textFragmentMatcher.ts`'s `processTextFragmentDirective`/`internal`. Dropped only its own `forTesting` bundle (test-only, per its own upstream comment) and the same `goog` interop block. Renamed its `setTimeout` export to `setFragmentGenerationTimeout` to avoid shadowing the global `setTimeout`.
+
+Both files are kept together deliberately: generation is not independent of matching — it calls directly into matching's internals to verify a candidate directive resolves unambiguously before returning it. Splitting them across packages would mean either duplicating matching's internals elsewhere or generation depending on an incomplete/trimmed copy of it.

@@ -1,0 +1,51 @@
+{
+    "publication": {
+        "format": {
+            "audiobook": "Sesli Kitap",
+            "audiobookJSON": "Sesli Kitap Manifest Dosyası",
+            "cbz": "Çizgi Roman Arşivi",
+            "divina": "Divina Yayını",
+            "divinaJSON": "Divina Yayını Manifest Dosyası",
+            "epub": "EPUB",
+            "lcpa": "LCP Korumalı Sesli Kitap",
+            "lcpdf": "LCP Korumalı PDF",
+            "lcpl": "LCP Lisans Belgesi",
+            "pdf": "PDF",
+            "rwp": "Readium Web Yayını",
+            "rwpm": "Readium Web Yayını Manifest Dosyası",
+            "zab": "Sesli Kitap Arşivi",
+            "zip": "ZIP Arşivi"
+        },
+        "kind": {
+            "audiobook_one": "Sesli Kitap",
+            "audiobook_other": "Sesli Kitaplar",
+            "book_one": "kitap",
+            "book_other": "kitaplar",
+            "comic_one": "çizgi roman",
+            "comic_other": "çizgi romanlar",
+            "document_one": "belge",
+            "document_other": "belgeler"
+        },
+        "metadata": {
+            "accessibility": {
+                "display-guide": {
+                    "accessibility-summary": {
+                        "no-metadata": "Bilgi mevcut değil",
+                        "publisher-contact": "Bu ürünün erişilebilirliği hakkında daha fazla bilgi için lütfen yayıncıyla bağlantı kurun: ",
+                        "title": "Erişilebilirlik özeti"
+                    },
+                    "additional-accessibility-information": {
+                        "aria": {
+                            "compact": "ARIA rolleri dahildir",
+                            "descriptive": "İçerik, düzeni en iyi hale getirmek ve gezinmeyi kolaylaştırmak için ARIA rolleriyle iyileştirilmiştir"
+                        },
+                        "audio-descriptions": "Sesli betimlemeler",
+                        "braille": "Braille",
+                        "color-not-sole-means-of-conveying-information": "Renk, bilgi aktarmanın tek yolu değildir",
+                        "dyslexia-readability": "Okuma güçlüğü olanlar için uyarlanmış okunabilirlik"
+                    }
+                }
+            }
+        }
+    }
+}

@@ -20,11 +20,21 @@ export interface Registrant {
 export type CommsAck = (ok: boolean) => void;
 export type CommsCallback = (data: unknown, ack: CommsAck) => void; // TODO: maybe more than void?
 
+export interface IComms {
+    register(key: CommsCommandKey | CommsCommandKey[], module: string, callback: CommsCallback): void;
+    unregister(key: CommsCommandKey | CommsCommandKey[], module: string): void;
+    unregisterAll(module: string): void;
+    send(key: CommsEventKey, data: unknown, id?: unknown, transfer?: Transferable[]): void;
+    log(...data: any[]): void;
+    readonly ready: boolean;
+    destroy(): void;
+}
+
 /**
  * Comms is basically a wrapper around window.postMessage that
  * adds structure to the messages and lets modules register callbacks.
  */
-export class Comms {
+export class Comms implements IComms {
     private readonly wnd: ReadiumWindow;
     private destination: ReadiumWindow | null = null;
     private registrar = new Map<CommsCommandKey, Registrant[]>();

@@ -5,6 +5,75 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.3] – 2026-09-23
+
+### Fixed
+
+- Removing a decoration near `sup`/`sub`/`small`/`code` elements, or other inline elements with non-baseline vertical alignment, mismatched font size, or `inline-block` display, no longer leaves stale highlight pixels on-screen in WebKit
+
+## [2.8.2] – 2026-09-18
+
+### Fixed
+
+- Decorations rendered via the DOM overlay path could render invisible, hidden behind the page's own content, on some layouts; `applyPosition` now sets an explicit `z-index` on every decoration element so it reliably paints above surrounding content
+
+## [2.8.1] – 2026-09-15
+
+### Fixed
+
+- Republished against `@readium/shared@2.5.1` ([#254](https://github.com/readium/ts-toolkit/pull/254))
+
+## [2.8.0] – 2026-09-10
+
+### Added
+
+- `Decorator` can now watch additional elements for resize via `resizeWatchSelectors` (config) and `addDecorationResizeTarget`/`removeDecorationResizeTarget`, so decoration overlays relay out when an element resizes for reasons that don't affect the document's own size — e.g. a sidebar collapsing and the reading pane reflowing inside it
+
+### Fixed
+
+- Removing the last `Mask` decoration in a group no longer leaves an orphaned, unreachable shadow-host element attached to the document, and no longer removes other decorations sharing the same shadow root along with it
+
+## [2.7.1] – 2026-09-09
+
+### Fixed
+
+- Decorations rendered via the DOM overlay path (`Outline`, `Template`, `Mask`, `Bounds`/`Viewport`/`Page` width, `expand`, or any style when the browser lacks `CSS.highlights` support) are now repositioned when the reader scrolls, instead of staying frozen at their original position. `Decorator` also now relayouts every group on resize, including ones that only use the CSS Highlight API — previously skipped entirely, leaving their hit-testing rects stale
+- `rangeFromLocator` now resolves a `domRange`'s `textNodeIndex` against direct-child text nodes only, matching the Locator spec; it previously walked every text-node descendant, so any container with a nested inline element (`<a>`, `<em>`, `<span>`, ...) resolved the wrong node and threw `IndexSizeError`
+- `Highlight` decorations with `layout: Bounds` no longer render as an opaque block hiding the underlying text on iPadOS Safari; `mix-blend-mode` was silently failing to blend there
+
+## [2.7.0] – 2026-09-08
+
+### Added
+
+- `rangeFromLocator` can now resolve a `Locator`'s `domRange` (an exact node/offset selection) or a WICG text-fragment directive found in `locations.fragments`, in addition to `text.highlight` and element/id fallbacks — trying each strategy in turn and falling through safely if one is invalid or unresolvable ([#249](https://github.com/readium/ts-toolkit/pull/249))
+
+## [2.6.3] – 2026-07-23
+
+### Changed
+
+- Scroll-based tracking of the reader's position no longer relies on `IntersectionObserver` at all — current position and everything currently visible are now computed directly from live scroll position instead. As a result, every part of a resource currently on screen can now be reported, not just a single current spot ([#244](https://github.com/readium/ts-toolkit/pull/244))
+
+## [2.6.2] – 2026-07-22
+
+### Fixed
+
+- Snappers now align id monitoring with the actual centering behaviour of `goId`/`goText`, so Timeline stays in sync when navigating to an id ([#243](https://github.com/readium/ts-toolkit/pull/243))
+
+## [2.6.1] – 2026-07-16
+
+### Fixed
+
+- Internal `@readium/*` dependencies were published with an unresolved `workspace:*` version, making the package uninstallable outside the monorepo; they now point to real published versions
+
+## [2.6.0] – 2026-07-16
+
+### Changed
+
+- **Breaking:** Decoration types and equality/style-support logic (`decorationsEqual`, `resolveDecorationForWire`, `supportsDecorationStyle`, etc.) have moved to the new standalone `@readium/decorator` package; the `Decorator` module now delegates rendering to it ([#228](https://github.com/readium/ts-toolkit/pull/228))
+- **Breaking:** `@readium/shared` is now a runtime dependency instead of a dev dependency, and `@readium/helpers` (extracted from `@readium/shared`) is a new dependency ([#228](https://github.com/readium/ts-toolkit/pull/228))
+- **Breaking:** Dropped the CommonJS/UMD build; the package is now ESM-only ([#228](https://github.com/readium/ts-toolkit/pull/228))
+- Snappers now track timeline anchors to support Timeline-driven navigation in HTML publications ([#234](https://github.com/readium/ts-toolkit/pull/234))
+
 ## [2.5.0] – 2026–06–04
 
 ### Added

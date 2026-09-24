@@ -5,6 +5,7 @@ import { IllegalStateError, Iterator } from "../Iterator.ts";
 import { Attribute, AttributeKeys, AudioElement, Body, ContentElement, Footnote, Heading, ImageElement, TextElement, TextQuote, TextRole, TextSegment, VideoElement } from "../element/index.ts";
 import { appendNormalizedWhitespace, elementLanguage, isBlank, isInlineTag, srcRelativeToHref, trimUnicodeSpace, trimUnicodeSpaceEnd, trimUnicodeSpaceStart, trimmingTextLocator } from "./helpers.ts";
 import { getCssSelector } from "css-selector-generator";
+import { getCssSelector as locatorCssSelector } from "../../../html/Locations.ts";
 
 interface ElementWithDelta {
     element: ContentElement;
@@ -93,10 +94,11 @@ export class HTMLResourceContentIterator extends Iterator {
     private async parseElements(): Promise<ParsedElementRecipes> {
         const raw = await this.resource.readAsString();
         const doc = (new DOMParser()).parseFromString(raw!, this.locator.type as DOMParserSupportedType);
+        const startSel = locatorCssSelector(this.locator.locations);
         this.parser = new ContentParser(
             doc,
             this.locator,
-            this.locator.locations.getCssSelector() ? doc.querySelector(this.locator.locations.getCssSelector()!) as Element : null,
+            startSel ? doc.querySelector(startSel) as Element : null,
             this.beforeMaxLength
         );
 
