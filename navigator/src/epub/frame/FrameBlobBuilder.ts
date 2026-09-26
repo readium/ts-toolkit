@@ -12,7 +12,7 @@ import { getScriptMode } from "../../helpers/scriptMode.ts";
  */
 export type UpgradeInsecureRequests = 'always' | 'never' | 'auto';
 
-const csp = (domains: string[], upgrade: UpgradeInsecureRequests = 'auto', root?: string) => {
+const csp = (domains: string[], upgrade: UpgradeInsecureRequests = 'always', root?: string) => {
   const includeUpgrade =
     upgrade === "always" ||
     (upgrade === "never"
@@ -116,7 +116,7 @@ export default class FrameBlobBuider {
         }
     }
 
-    private finalizeDOM(doc: Document, root: string | undefined, base: string | undefined, mediaType: MediaType, fxl = false, cssProperties?: { [key: string]: string }, upgradeInsecureRequests: UpgradeInsecureRequests = 'auto'): string {
+    private finalizeDOM(doc: Document, root: string | undefined, base: string | undefined, mediaType: MediaType, fxl = false, cssProperties?: { [key: string]: string }, upgradeInsecureRequests: UpgradeInsecureRequests = 'always'): string {
         if(!doc) return "";
 
         // Get allowed domains from injector if it exists
