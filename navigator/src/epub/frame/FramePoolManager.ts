@@ -22,6 +22,7 @@ export class FramePoolManager {
     private readonly contentProtectionConfig: IContentProtectionConfig;
     private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
     private updateSequence = 0;
+    private forcedUpdate: Promise<void> | undefined;
     private resizeWatchSelectors: string[];
     private readonly getFragmentIds: (href: string) => string[];
     private readonly upgradeInsecureRequests: UpgradeInsecureRequests;
@@ -98,6 +99,8 @@ export class FramePoolManager {
     }
 
     async update(pub: Publication, locator: Locator, modules: ModuleName[], force=false) {
+        // Updates arriving mid-rebuild must not cancel it, or the old frame is gone with no replacement
+        while (this.forcedUpdate) await this.forcedUpdate;
         const updateSequence = ++this.updateSequence;
         let i = this.positions.findIndex(l => l.locations.position === locator.locations.position);
         if(i < 0) throw Error(`Locator not found in position list: ${locator.locations.position} > ${this.positions.reduce<number>((acc, l) => l.locations.position || 0 > acc ? l.locations.position || 0 : acc, 0)  }`);
@@ -269,6 +272,13 @@ export class FramePoolManager {
         });
 
         this.inprogress.set(newHref, progressPromise); // Add the job to the in progress map
+        if (force) {
+            const forced = progressPromise.catch(() => {});
+            this.forcedUpdate = forced;
+            forced.then(() => {
+                if (this.forcedUpdate === forced) this.forcedUpdate = undefined;
+            });
+        }
         await progressPromise; // Wait on the job to finish...
         this.inprogress.delete(newHref); // Delete it from the in progress map!
     }
