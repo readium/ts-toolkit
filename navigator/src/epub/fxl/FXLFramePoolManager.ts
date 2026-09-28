@@ -634,9 +634,12 @@ export class FXLFramePoolManager {
         for (const s of spread) {
             this.inprogress.set(s.href, progressPromise); // Add the job to the in progress map
         }
-        await progressPromise; // Wait on the job to finish...
-        for (const s of spread) {
-            this.inprogress.delete(s.href); // Delete it from the in progress map!
+        try {
+            await progressPromise; // Wait on the job to finish...
+        } finally {
+            for (const s of spread) {
+                this.inprogress.delete(s.href); // Delete it from the in progress map!
+            }
         }
     }
 

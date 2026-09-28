@@ -213,9 +213,12 @@ export class FramePoolManager {
             Promise.all(creation.filter(href => href !== newHref).map(async href => {
                 const c = creator(href);
                 this.inprogress.set(href, c);
-                await c;
-                this.inprogress.delete(href);
-            }));
+                try {
+                    await c;
+                } finally {
+                    this.inprogress.delete(href);
+                }
+            })).catch(error => console.warn("Failed preloading frame", error));
 
             // Update current frame
             const newFrame = this.pool.get(newHref);
@@ -279,8 +282,11 @@ export class FramePoolManager {
                 if (this.forcedUpdate === forced) this.forcedUpdate = undefined;
             });
         }
-        await progressPromise; // Wait on the job to finish...
-        this.inprogress.delete(newHref); // Delete it from the in progress map!
+        try {
+            await progressPromise; // Wait on the job to finish...
+        } finally {
+            this.inprogress.delete(newHref); // Delete it from the in progress map!
+        }
     }
 
     setCSSProperties(properties: { [key: string]: string }) {
