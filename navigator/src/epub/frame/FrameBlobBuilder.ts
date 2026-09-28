@@ -65,6 +65,7 @@ export default class FrameBlobBuilder {
 
     private currentUrl?: string;
     private currentResource?: Resource;
+    private pendingBuild?: Promise<string>;
 
     constructor(
         private readonly pub: Publication,
@@ -87,11 +88,21 @@ export default class FrameBlobBuilder {
         this.currentUrl = undefined;
         this.currentResource?.close();
         this.currentResource = undefined;
+        this.pendingBuild = undefined;
     }
 
     public async build(fxl = false): Promise<string> {
         if(this.currentUrl) return this.currentUrl;
+        if(this.pendingBuild) return this.pendingBuild;
 
+        const p = this.doBuild(fxl).finally(() => {
+            if(this.pendingBuild === p) this.pendingBuild = undefined;
+        });
+        this.pendingBuild = p;
+        return p;
+    }
+
+    private async doBuild(fxl: boolean): Promise<string> {
         this.currentResource = this.pub.get(this.item);
         const link = await this.currentResource.link();
         if(!this.currentResource) {
