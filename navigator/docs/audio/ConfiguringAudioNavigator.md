@@ -108,6 +108,34 @@ const navigator = new AudioNavigator(
 
 See [Content Protection](./ContentProtection.md) and [Keyboard Peripherals](./KeyboardPeripherals.md) for full details.
 
+## Custom media loading
+
+By default, the navigator plays each track by setting the media element’s `src` to the track’s URL. For encrypted audio (EME), which browsers poorly support through `src`, you can take over loading with two options:
+
+- `mediaElementSetup(element)`: called once, before the first track loads. Use it to attach `MediaKeys` to the element. If it returns a promise, loading waits for it.
+- `mseLoaderFactory(element, href, mimeType)`: called for each track. It returns a loader that feeds the track to the element through [Media Source Extensions](https://developer.mozilla.org/en-US/docs/Web/API/Media_Source_Extensions_API).
+
+The factory must return an object implementing the `AudioMseLoader` interface, exported by `@readium/navigator`. It has two methods: `start()`, called right after the loader is created, and `destroy()`, called when the navigator moves to another track.
+
+```js
+const navigator = new AudioNavigator(
+  publication,
+  listeners,
+  initialPosition,
+  {
+    preferences: {},
+    defaults: {},
+    mediaElementSetup: async (element) => {
+      await element.setMediaKeys(mediaKeys);
+    },
+    mseLoaderFactory: (element, href, mimeType) => ({
+      start() { /* Attach a MediaSource to the element and feed it the track */ },
+      destroy() { /* Stop loading and release the MediaSource */ }
+    })
+  }
+);
+```
+
 ## Building a Settings Interface
 
 TBD.

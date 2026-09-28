@@ -36,7 +36,9 @@ To customize listeners, please refer to the [Customizing Listeners](./Customizin
 
 In the absence of a `positions` argument, `EpubNavigator` will attempt to fetch the `PositionsList` from the EPUB publication. If it does not exist, it will not operate. You can also provide it following the instructions in [Handling Publications > Fetching the Positions List](../HandlingPublications.md#Fetching-the-positions-list).
 
-The `initialPosition` is the position at which the `EpubNavigator` will `load` the EPUB publication. It has to be a `Locator`.
+The `initialPosition` is the position at which the `EpubNavigator` will `load` the EPUB publication. It has to be a `Locator`, but its `href` can be omitted: the navigator then uses `locations.position` or, failing that, `locations.totalProgression` to find the closest position in the positions list. This is useful for progressions that only carry a total progression, such as OPDS progressions. The same applies to locators passed to `go`.
+
+`WebPubNavigator` supports the same, but without a positions list: `locations.position` is the index of the resource in the reading order (starting at 1), and `locations.totalProgression` picks the resource whose index is closest to that fraction of the reading order.
 
 ## Configuration
 
