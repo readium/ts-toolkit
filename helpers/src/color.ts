@@ -75,7 +75,7 @@ const isSpecialColorValue = (color: string): boolean => {
 
 const warnAboutInvalidColor = (color: string, reason: string): void => {
   console.warn(
-    `[Decorator] Could not parse color: "${color}". ${reason} Falling back to ${JSON.stringify(DEFAULT_COLOR)} to compute contrast. Please use a CSS color value that can be computed to RGB(A).`
+    `[@readium/helpers] Could not parse color: "${color}". ${reason} Falling back to ${JSON.stringify(DEFAULT_COLOR)} to compute contrast. Please use a CSS color value that can be computed to RGB(A).`
   );
 };
 
