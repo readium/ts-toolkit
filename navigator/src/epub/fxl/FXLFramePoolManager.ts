@@ -1,7 +1,7 @@
 import { ModuleName } from "@readium/navigator-html-injectables";
 import { Locator, Publication, ReadingProgression, Page, Link } from "@readium/shared";
 import { FrameCommsListener } from "../frame/index.ts";
-import FrameBlobBuider from "../frame/FrameBlobBuilder.ts";
+import FrameBlobBuider, { UpgradeInsecureRequests } from "../frame/FrameBlobBuilder.ts";
 import { FXLFrameManager } from "./FXLFrameManager.ts";
 import { FXLPeripherals } from "./FXLPeripherals.ts";
 import { FXLSpreader, Orientation, Spread } from "./FXLSpreader.ts";
@@ -31,6 +31,7 @@ export class FXLFramePoolManager {
     private readonly contentProtectionConfig: IContentProtectionConfig;
     private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
     private resizeWatchSelectors: string[];
+    private readonly upgradeInsecureRequests: UpgradeInsecureRequests;
 
     // NEW
     private readonly bookElement: HTMLDivElement;
@@ -57,6 +58,7 @@ export class FXLFramePoolManager {
         contentProtectionConfig?: IContentProtectionConfig,
         keyboardPeripheralsConfig?: IKeyboardPeripheralsConfig,
         resizeWatchSelectors: string[] = [],
+        upgradeInsecureRequests?: UpgradeInsecureRequests,
     ) {
         this.container = container;
         this.positions = positions;
@@ -65,6 +67,7 @@ export class FXLFramePoolManager {
         this.contentProtectionConfig = contentProtectionConfig || {};
         this.keyboardPeripheralsConfig = keyboardPeripheralsConfig || [];
         this.resizeWatchSelectors = [...resizeWatchSelectors];
+        this.upgradeInsecureRequests = upgradeInsecureRequests ?? 'always';
         this.spreadPresentation = pub.metadata.otherMetadata?.spread || Spread.auto;
 
         if(this.pub.metadata.effectiveReadingProgression !== ReadingProgression.rtl && this.pub.metadata.effectiveReadingProgression !== ReadingProgression.ltr)
@@ -520,7 +523,8 @@ export class FXLFramePoolManager {
                         this.currentBaseURL || "",
                         itm,
                         {
-                            injector: this.injector
+                            injector: this.injector,
+                            upgradeInsecureRequests: this.upgradeInsecureRequests
                         }
                     );
                     const blobURL = await blobBuilder.build(true);
