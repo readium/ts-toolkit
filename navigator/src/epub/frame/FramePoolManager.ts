@@ -210,13 +210,13 @@ export class FramePoolManager {
                 return;
             }
 
-            Promise.all(creation.filter(href => href !== newHref).map(async href => {
+            Promise.all(creation.filter(href => href !== newHref && !this.inprogress.has(href)).map(async href => {
                 const c = creator(href);
                 this.inprogress.set(href, c);
                 try {
                     await c;
                 } finally {
-                    this.inprogress.delete(href);
+                    if (this.inprogress.get(href) === c) this.inprogress.delete(href);
                 }
             })).catch(error => console.warn("Failed preloading frame", error));
 
