@@ -11,7 +11,7 @@ import { arrayfromJSONorString, numberfromJSON } from '../util/JSONParse.ts';
  */
 export class LocatorLocations {
   /** Contains one or more fragment in the resource referenced by the `Locator`. */
-  public readonly fragments: Array<string>;
+  public readonly fragments?: Array<string>;
 
   /** Progression in the resource expressed as a percentage (between 0 and 1). */
   public readonly progression?: number;

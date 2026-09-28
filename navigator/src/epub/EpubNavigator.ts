@@ -1187,7 +1187,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 const entries = positions.filter(p => p.href === bare);
                 if (!entries.length) return {};
                 const atFragment = fragment
-                    ? entries.find(p => p.locations.fragments[0] === fragment)
+                    ? entries.find(p => p.locations.fragments?.[0] === fragment)
                     : undefined;
                 let candidate: Locator | undefined;
                 if (atFragment) {
