@@ -604,7 +604,7 @@ export class FXLFramePoolManager {
             for (const s of spread) {
                 const newFrame = this.pool.get(s.href)!;
                 const source = this.blobs.get(s.href);
-                if(!source) continue; // Thfis can get destroyed
+                if(!source) continue; // This can get destroyed
 
                 this.cancelShowing(s.href);
                 await newFrame.load(modules, await source.build(true)); // In order to ensure modules match the latest configuration
