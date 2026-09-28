@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rapid navigation or preference changes no longer leave a stale frame displayed, or no frame at all when switching between paginated and scrolled
 - `AudioNavigator` now reports the final position when the last track ends
 - `EpubNavigator` and `WebPubNavigator` now retry loading a resource that previously failed, instead of failing again immediately on every navigation to it
+- `EpubNavigator` and `WebPubNavigator` no longer get stuck on a blank page when CSS properties are updated, e.g. on resize or preference change, while a resource is being shown or hidden
 
 ## [2.10.3] – 2026-09-23
 

@@ -202,14 +202,12 @@ export class FrameManager {
     setCSSProperties(properties: { [key: string]: string }) {
         if(this.destroyed || !this.frame.contentWindow) return;
 
-        // We need to resume and halt postMessage to update the properties
-        // if the frame is hidden since it’s been halted in hide()
-        if (this.hidden) {
-            if (this.comms) this.comms?.resume();
-            else this.comms = new FrameComms(this.frame.contentWindow!, this.source);
+        // A halted comms can still send, so only a never-shown hidden frame needs one created
+        if (this.hidden && !this.comms) {
+            this.comms = new FrameComms(this.frame.contentWindow, this.source);
+            this.comms.halt();
         }
         this.comms?.send("update_properties", properties);
-        if (this.hidden) this.comms?.halt();
     }
 
     get iframe() {
