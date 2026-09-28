@@ -24,11 +24,27 @@ const cspRootSource = (url: string) => {
     }
 };
 
-const csp = (domains: string[]) => {
+/**
+ * A flag to control whether `upgrade-insecure-requests` is included in the Content
+ * Security Policy of each spine-item blob frame:
+ *
+ * - `always` will always upgrade insecure requests
+ * - `never` will never upgrade insecure requests
+ * - `auto` will upgrade insecure requests only when the publication root URL is HTTPS
+ */
+export type UpgradeInsecureRequests = 'always' | 'never' | 'auto';
+
+const csp = (domains: string[], upgrade: UpgradeInsecureRequests = 'always', root?: string) => {
+    const includeUpgrade =
+        upgrade === "always" ||
+        (upgrade === "never"
+            ? false
+            : typeof root === "string" && root.startsWith("https:"));
+
     const d = domains.join(" ");
     return [
         // 'self' is useless because the document is loaded from a blob: URL
-        `upgrade-insecure-requests`,
+        ...(includeUpgrade ? [`upgrade-insecure-requests`] : []),
         `default-src ${d} blob:`,
         `connect-src 'none'`, // No fetches to anywhere. TODO: change?
         `script-src ${d} blob: 'unsafe-inline'`, // JS scripts
@@ -45,6 +61,7 @@ const csp = (domains: string[]) => {
 export default class FrameBlobBuilder {
     private readonly cssProperties?: { [key: string]: string };
     private readonly injector: Injector | null = null;
+    private readonly upgradeInsecureRequests: UpgradeInsecureRequests;
 
     private currentUrl?: string;
     private currentResource?: Resource;
@@ -56,11 +73,13 @@ export default class FrameBlobBuilder {
         options: {
             cssProperties?: { [key: string]: string };
             injector?: Injector | null;
+            upgradeInsecureRequests?: UpgradeInsecureRequests;
         }
     ) {
         this.item = item;
         this.cssProperties = options.cssProperties;
         this.injector = options.injector ?? null;
+        this.upgradeInsecureRequests = options.upgradeInsecureRequests ?? 'always';
     }
 
     public reset() {
@@ -112,7 +131,7 @@ export default class FrameBlobBuilder {
             await this.injector.injectForDocument(doc, link);
         }
 
-        return this.finalizeDOM(doc, this.pub.baseURL, link.toURL(this.baseURL) || "", link.mediaType, fxl, this.cssProperties);
+        return this.finalizeDOM(doc, this.pub.baseURL, link.toURL(this.baseURL) || "", link.mediaType, fxl, this.cssProperties, this.upgradeInsecureRequests);
     }
 
     private async buildImageFrame(): Promise<string> {
@@ -156,7 +175,7 @@ export default class FrameBlobBuilder {
         img { margin: 0; padding: 0; border: 0; }`;
         doc.head.appendChild(sstyle);
 
-        return this.finalizeDOM(doc, this.pub.baseURL, burl, link.mediaType, true);
+        return this.finalizeDOM(doc, this.pub.baseURL, burl, link.mediaType, true, undefined, this.upgradeInsecureRequests);
     }
 
     private setProperties(cssProperties: { [key: string]: string }, doc: Document) {
@@ -166,7 +185,7 @@ export default class FrameBlobBuilder {
         }
     }
 
-    private finalizeDOM(doc: Document, root: string | undefined, base: string | undefined, mediaType: MediaType, fxl = false, cssProperties?: { [key: string]: string }): string {
+    private finalizeDOM(doc: Document, root: string | undefined, base: string | undefined, mediaType: MediaType, fxl = false, cssProperties?: { [key: string]: string }, upgradeInsecureRequests: UpgradeInsecureRequests = 'always'): string {
         if(!doc) return "";
 
         // Get allowed domains from injector if it exists. Host-configured, so
@@ -255,7 +274,7 @@ export default class FrameBlobBuilder {
         // Add CSP with allowed domains
         const meta = doc.createElement("meta");
         meta.httpEquiv = "Content-Security-Policy";
-        meta.content = csp(domains);
+        meta.content = csp(domains, upgradeInsecureRequests, root);
         meta.dataset.readium = "true";
         doc.head.firstChild!.before(meta);
 

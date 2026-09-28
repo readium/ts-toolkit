@@ -1,6 +1,6 @@
 import { ModuleName } from "@readium/navigator-html-injectables";
 import { Locator, Publication } from "@readium/shared";
-import FrameBlobBuilder from "./FrameBlobBuilder.ts";
+import FrameBlobBuilder, { UpgradeInsecureRequests } from "./FrameBlobBuilder.ts";
 import { FrameManager } from "./FrameManager.ts";
 import { Injector } from "../../injection/Injector.ts";
 import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator.ts";
@@ -24,6 +24,7 @@ export class FramePoolManager {
     private updateSequence = 0;
     private resizeWatchSelectors: string[];
     private readonly getFragmentIds: (href: string) => string[];
+    private readonly upgradeInsecureRequests: UpgradeInsecureRequests;
 
     constructor(
         container: HTMLElement,
@@ -33,7 +34,8 @@ export class FramePoolManager {
         contentProtectionConfig?: IContentProtectionConfig,
         keyboardPeripheralsConfig?: IKeyboardPeripheralsConfig,
         getFragmentIds?: (href: string) => string[],
-        resizeWatchSelectors: string[] = []
+        resizeWatchSelectors: string[] = [],
+        upgradeInsecureRequests?: UpgradeInsecureRequests
     ) {
         this.container = container;
         this.positions = positions;
@@ -43,6 +45,7 @@ export class FramePoolManager {
         this.keyboardPeripheralsConfig = keyboardPeripheralsConfig || [];
         this.getFragmentIds = getFragmentIds ?? (() => []);
         this.resizeWatchSelectors = [...resizeWatchSelectors];
+        this.upgradeInsecureRequests = upgradeInsecureRequests ?? 'always';
     }
 
     addResizeTarget(selector: string): void {
@@ -176,7 +179,8 @@ export class FramePoolManager {
                         itm,
                         {
                             cssProperties: this.currentCssProperties,
-                            injector: this.injector
+                            injector: this.injector,
+                            upgradeInsecureRequests: this.upgradeInsecureRequests
                         }
                     ));
                 }
