@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `Resource.read()` accepts an optional `ResourceReadOptions` with an `AbortSignal`, which `HttpResource` forwards to its request
+- `MediaType.essence` returns the media type without its parameters, e.g. `text/html` for `text/html;charset=utf-8`
 
 ### Changed
 

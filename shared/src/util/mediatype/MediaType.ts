@@ -107,6 +107,13 @@ export class MediaType {
     return parts.length > 1 ? `+${parts[parts.length - 1]}` : undefined;
   }
 
+  /** The media type without its parameters, e.g. `text/html` for `text/html;charset=utf-8`.
+   *  See. https://mimesniff.spec.whatwg.org/#mime-type-essence
+   */
+  public get essence(): string {
+    return `${this.type}/${this.subtype}`;
+  }
+
   /** Parameter values might or might not be case-sensitive, depending on the semantics of
    * the parameter name.
    * https://tools.ietf.org/html/rfc2616#section-3.7

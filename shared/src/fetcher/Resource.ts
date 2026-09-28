@@ -35,7 +35,7 @@ export abstract class Resource {
   readAsXML(): Promise<Document | undefined> {
     return this.link().then(l => this.readAsString().then(str => {
       if (str === undefined) return str;
-      return new DOMParser().parseFromString(str, l.mediaType.isHTML ? (l.mediaType.string as 'application/xhtml+xml' | 'text/html') : 'text/xml');
+      return new DOMParser().parseFromString(str, l.mediaType.isHTML ? (l.mediaType.essence as 'application/xhtml+xml' | 'text/html') : 'text/xml');
     }));
   }
   abstract close(): void;

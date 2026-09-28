@@ -116,7 +116,7 @@ export class HttpResource implements Resource {
       ); // TODO
     return new DOMParser().parseFromString(
       await resp.text(),
-      this._link.mediaType.isHTML ? (this._link.mediaType.string as 'application/xhtml+xml' | 'text/html') : 'text/xml'
+      this._link.mediaType.isHTML ? (this._link.mediaType.essence as 'application/xhtml+xml' | 'text/html') : 'text/xml'
     );
   }
 }

@@ -100,6 +100,13 @@ describe('MediaType Tests', () => {
     ).toBe('+zip');
   });
 
+  it('get essence', () => {
+    expect(MediaType.parse({ mediaType: 'text/html' }).essence).toBe('text/html');
+    expect(
+      MediaType.parse({ mediaType: 'Application/XHTML+XML; charset=utf-8; foo=bar' }).essence
+    ).toBe('application/xhtml+xml');
+  });
+
   it('get charset', () => {
     expect(MediaType.parse({ mediaType: 'text/html' }).charset).toBeUndefined();
     expect(
