@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.0] – 2026-09-28
+
+### Added
+
+- `DivinaNavigator`, a new navigator for Divina publications (comics, manga, webtoons), displaying bitmap pages without iframes in paged mode, with optional two-page spreads, or in scrolled mode as a continuous vertical strip. It supports the Timeline API, and its preferences are `backgroundColor`, `constraint`, `quality`, `scrolled`, `spreads`, and `stripWidth`
+- `EpubNavigator` accepts an `upgradeInsecureRequests` configuration option (`"always"`, the default, `"never"`, or `"auto"` to upgrade only when the publication is served over `https:`), controlling whether frames' Content Security Policy includes `upgrade-insecure-requests` ([#256](https://github.com/readium/ts-toolkit/pull/256))
+- `EpubNavigator` and `WebPubNavigator` accept locators without an `href`, in `initialPosition` and `go`, resolving them from `locations.position` or, failing that, `locations.totalProgression` (e.g. OPDS progressions)
+- `AudioNavigator` accepts an `initialPosition` whose `href` isn't in the reading order but that has a `locations.totalProgression`, resolving it from the reading order items' `duration`
+- `AudioNavigator` accepts `mediaElementSetup` and `mseLoaderFactory` configuration options to take over media loading, e.g. for encrypted audio through Media Source Extensions. `AudioMseLoader` and `AudioMseLoaderFactory` are exported, and `AudioEngine.changeSrc()` takes an optional media type
+
+### Changed
+
+- EPUB frame documents are now parsed through `Resource.readAsXML()`, so custom fetchers can control how they are parsed
+- Reflowable EPUB frames are shown as soon as the target resource is ready, with neighboring resources preloaded in the background and more of them kept in the pool
+- Image resources in EPUB frames are decoded before being displayed, and get a viewport matching their dimensions
+- Layout-heavy style updates use the CSS Typed Object Model when supported
+- Images in frames are loaded with `referrerpolicy="origin"`
+- Keyboard peripherals are cleaned up on `pagehide` instead of `unload`, so pages remain eligible for the back/forward cache
+
+### Fixed
+
+- The frame Content Security Policy no longer blocks every publication resource when the manifest's `self` link has a query string, via updated `@readium/shared`
+- `EpubNavigator` and `WebPubNavigator` no longer attach frames when destroyed while `load()` is in progress
+- Frames are now actually hidden from assistive technologies: `aria-hidden` was set as a CSS property instead of an attribute
+- Rapid navigation or preference changes no longer leave a stale frame displayed, or no frame at all when switching between paginated and scrolled
+- `AudioNavigator` now reports the final position when the last track ends
+
 ## [2.10.3] – 2026-09-23
 
 ### Fixed
