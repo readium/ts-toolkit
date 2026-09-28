@@ -316,11 +316,9 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
         await this.resizeHandler();
         if (this._destroyed) return;
-        return new Promise(async res => {
+        return new Promise(res => {
             if (this._destroyed) return res(false);
-            await this.go(this.currentLocation, false, (s) => {
-                res(s);
-            });
+            this.go(this.currentLocation, false, res);
         });
     }
 
