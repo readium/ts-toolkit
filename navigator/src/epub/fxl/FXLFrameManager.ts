@@ -107,7 +107,7 @@ export class FXLFrameManager {
                 try { rej(e.error); this.loadPromise = undefined; } catch (error) {};
             }, { once: true });
             this.frame.style.removeProperty("display");
-            this.frame.contentWindow!.location.replace(this.source);
+            this.frame.src = this.source;
         });
         return this.loadPromise;
     }
@@ -220,7 +220,7 @@ export class FXLFrameManager {
                 try { this.showPromise = undefined; rej(e.error); } catch (error) {};
             }, { once: true });
             this.source = "about:blank";
-            this.frame.contentWindow!.location.replace("about:blank");
+            this.frame.src = this.source;
             this.frame.style.display = "none";
             this.frame.style.width = "0px";
             this.frame.style.height = "0px";
