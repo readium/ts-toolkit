@@ -208,8 +208,11 @@ export class WebPubFramePoolManager {
         });
 
         this.inprogress.set(newHref, progressPromise);
-        await progressPromise;
-        this.inprogress.delete(newHref);
+        try {
+            await progressPromise;
+        } finally {
+            this.inprogress.delete(newHref);
+        }
     }
 
     setCSSProperties(properties: { [key: string]: string }) {

@@ -642,7 +642,7 @@ describe('Timeline – locate()', () => {
       const entries = positionsList.filter(p => p.href === bare);
       if (!entries.length) return {};
       const atFragment = fragment
-        ? entries.find(p => p.locations.fragments[0] === fragment)
+        ? entries.find(p => p.locations.fragments?.[0] === fragment)
         : undefined;
       return { scroll: atFragment?.locations.progression };
     });
@@ -779,7 +779,7 @@ describe('Timeline – contextualizedToc', () => {
     });
     t.augment((_item, link) => {
       const fragment = link.href.split('#')[1];
-      const entry = positions.find(p => p.locations.fragments[0] === fragment);
+      const entry = positions.find(p => p.locations.fragments?.[0] === fragment);
       return { position: entry?.locations.position };
     });
     const entry = t.contextualizedToc[0];

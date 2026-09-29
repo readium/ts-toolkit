@@ -151,7 +151,6 @@ describe('Manifest Tests', () => {
       }).serialize()
     ).toEqual({
       metadata: { title: { und: 'Title' } },
-      links: [],
       readingOrder: [],
     });
   });
@@ -203,6 +202,99 @@ describe('Manifest Tests', () => {
       pageList: {
         links: [{ href: '/page1.html' }],
       },
+    });
+  });
+
+  describe('baseURL', () => {
+    const manifestWithSelf = (href: string) =>
+      new Manifest({
+        metadata: new Metadata({ title: new LocalizedString('Title') }),
+        links: new Links([new Link({ href, rels: new Set(['self']) })]),
+        readingOrder: new Links([]),
+      });
+
+    it('strips the manifest filename', () => {
+      expect(
+        manifestWithSelf('https://provider.com/pub1293/manifest.json').baseURL
+      ).toEqual('https://provider.com/pub1293/');
+    });
+
+    it('strips a query string along with the filename', () => {
+      expect(
+        manifestWithSelf(
+          'https://provider.com/pub1293/manifest.json?token=abc'
+        ).baseURL
+      ).toEqual('https://provider.com/pub1293/');
+    });
+
+    // Regression: the last "/" used to be found inside the query value, so the
+    // manifest filename survived into the base and the frame CSP blocked every
+    // resource in the publication.
+    it('strips a query containing an unencoded URL', () => {
+      expect(
+        manifestWithSelf(
+          'https://provider.com/pub1293/manifest.json?origin=https://provider.com'
+        ).baseURL
+      ).toEqual('https://provider.com/pub1293/');
+    });
+
+    it('strips a fragment along with the filename', () => {
+      expect(
+        manifestWithSelf('https://provider.com/pub1293/manifest.json#frag')
+          .baseURL
+      ).toEqual('https://provider.com/pub1293/');
+    });
+
+    it('keeps nested directories', () => {
+      expect(
+        manifestWithSelf('https://provider.com/a/b/c/manifest.json').baseURL
+      ).toEqual('https://provider.com/a/b/c/');
+    });
+
+    it('returns a trailing slash for a root-level manifest', () => {
+      expect(
+        manifestWithSelf('https://provider.com/manifest.json').baseURL
+      ).toEqual('https://provider.com/');
+    });
+
+    it('returns the origin root when the self link has no path', () => {
+      expect(manifestWithSelf('https://provider.com').baseURL).toEqual(
+        'https://provider.com/'
+      );
+    });
+
+    it('handles a relative self link', () => {
+      expect(manifestWithSelf('/manifest.json').baseURL).toEqual('/');
+    });
+
+    it('handles a relative self link in a subdirectory', () => {
+      expect(manifestWithSelf('/pub1293/manifest.json').baseURL).toEqual(
+        '/pub1293/'
+      );
+    });
+
+    it('is undefined without a self link', () => {
+      expect(
+        new Manifest({
+          metadata: new Metadata({ title: new LocalizedString('Title') }),
+          links: new Links([new Link({ href: '/cover.jpg' })]),
+          readingOrder: new Links([]),
+        }).baseURL
+      ).toBeUndefined();
+    });
+
+    it('is undefined when the self link has an empty href', () => {
+      expect(manifestWithSelf('').baseURL).toBeUndefined();
+    });
+
+    it('always ends in a slash, so a resource resolves beneath it', () => {
+      const base = manifestWithSelf(
+        'https://provider.com/pub1293/manifest.json?origin=https://provider.com'
+      ).baseURL!;
+      expect(base.endsWith('/')).toBe(true);
+      expect(
+        new Link({ href: 'OPS/images/page_000.jpg' }).toURL(base)
+      ).toEqual('https://provider.com/pub1293/OPS/images/page_000.jpg');
     });
   });
 });

@@ -30,7 +30,7 @@ To create a `Publication` object, please refer to the [Handling Publications](..
 
 To customize listeners, please refer to the [Customizing Audio Listeners](./CustomizingListeners.md) document.
 
-The `initialPosition` is the position at which the `AudioNavigator` will start playback. It has to be a `Locator` with time-based locations.
+The `initialPosition` is the position at which the `AudioNavigator` will start playback. It is usually a `Locator` with time-based locations. If its `href` isn’t found in the reading order but it has a `locations.totalProgression`, playback starts at that progression, computed from the `duration` of the reading order items. This is useful for progressions that only carry a total progression, such as OPDS progressions.
 
 Finally, `AudioNavigator` implements a `Configurable` interface, so that it can be configured dynamically through the `configuration` argument. Please refer to [Configuring the AudioNavigator](./ConfiguringAudioNavigator.md) for more information.
 
@@ -38,6 +38,7 @@ Finally, `AudioNavigator` implements a `Configurable` interface, so that it can 
 
 - `contentProtection`: Configures navigator-level protection features (automation detection, dev tools monitoring, print protection, etc.). See [Content Protection](./ContentProtection.md).
 - `keyboardPeripherals`: Configures custom keyboard shortcuts that are intercepted at the navigator level. See [Keyboard Peripherals](./KeyboardPeripherals.md).
+- `mediaElementSetup` and `mseLoaderFactory`: Control how audio reaches the media element, e.g. for encrypted audio. See [Configuring the AudioNavigator > Custom media loading](./ConfiguringAudioNavigator.md#custom-media-loading).
 
 ### Destroy
 

@@ -21,17 +21,13 @@ export function getDomRange(loc: LocatorLocations): DomRange | undefined {
 // A WICG text-fragment directive (":~:text=...") found among fragments, per
 // https://wicg.github.io/scroll-to-text-fragment/.
 export function getTextFragment(loc: LocatorLocations): TextFragmentDirective | undefined {
-  for (const fragment of loc.fragments) {
-    const directive = decodeTextFragmentDirective(fragment);
-    if (directive) return directive;
-  }
-  return undefined;
+  return loc.fragments?.map(f => decodeTextFragmentDirective(f)).find(d => d);
 }
 
 export function getFragmentParameters(loc: LocatorLocations): Map<string, string> {
   return new Map(
     loc.fragments
-      .map(f => f.startsWith('#') ? f.slice(1) : f)
+      ?.map(f => f.startsWith('#') ? f.slice(1) : f)
       .join('&')
       .split('&')
       .filter(f => !f.startsWith('#'))
@@ -46,7 +42,7 @@ export function getHtmlId(loc: LocatorLocations): string | undefined {
   The HTML 5 specification (used for WebPub) allows any character in an HTML ID, except spaces.
   This is an issue to differentiate with named parameters, so we ignore any ID containing `=`.
   */
-  if (!loc.fragments.length) return;
+  if (!loc.fragments?.length) return;
   let f = loc.fragments.find(f => f.length && !f.includes('='));
   if (!f) {
     const fp = getFragmentParameters(loc);

@@ -31,7 +31,7 @@ function buildHtml(
     const entries = positionsList.filter(p => p.href === bare);
     if (!entries.length) return {};
     const atFragment = fragment
-      ? entries.find(p => p.locations.fragments[0] === fragment)
+      ? entries.find(p => p.locations.fragments?.[0] === fragment)
       : undefined;
     const candidate = atFragment ?? entries.reduce((min, p) =>
       (p.locations.position ?? Infinity) < (min.locations.position ?? Infinity) ? p : min

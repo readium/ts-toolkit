@@ -91,6 +91,31 @@ const navigator = new EpubNavigator(
 
 The `defaults` are used as fallback values when the default Navigator settings are not suitable for your application.
 
+## Insecure requests
+
+Each resource frame carries a Content Security Policy that, by default, includes `upgrade-insecure-requests`: every `http:` request made by the resource is rewritten to `https:`. If your publications are served over plain HTTP (e.g. a local or intranet server), these upgraded requests will fail.
+
+The `upgradeInsecureRequests` option controls this behavior:
+
+| Value      | Behavior                                                                  |
+| ---------- | ------------------------------------------------------------------------- |
+| `"always"` | Always upgrade insecure requests (default)                                |
+| `"never"`  | Never upgrade insecure requests                                           |
+| `"auto"`   | Upgrade insecure requests only when the publication URL uses `https:`     |
+
+```js
+const navigator = new EpubNavigator(
+  myHTMLElement,
+  publication,
+  ...
+  configuration: {
+    upgradeInsecureRequests: "auto"
+  }
+);
+```
+
+This applies to both reflowable and fixed-layout publications.
+
 ## Building a Settings Interface
 
 TBD.
