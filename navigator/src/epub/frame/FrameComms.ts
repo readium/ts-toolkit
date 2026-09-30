@@ -14,19 +14,22 @@ interface RegistryValue {
     cb: CommsAck;
 }
 const REGISTRY_EXPIRY = 10000; // 10 seconds max
+const GC_INTERVAL = 5000;
 
 export type FrameCommsListener = (key: CommsEventKey | ManagerEventKey, value: unknown) => void;
 
 export class FrameComms {
     private readonly wnd: Window;
     private readonly registry = new Map<string, RegistryValue>();
-    private readonly gc: ReturnType<typeof setInterval>;
+    private gc: ReturnType<typeof setInterval> | undefined;
     // @ts-ignore
     private readonly origin: string;
     public readonly channelId: string;
     private _ready = false;
     private _listener: FrameCommsListener | undefined;
     private listenerBuffer: [key: CommsEventKey, value: unknown][] = [];
+    private visibleTime = 0;
+    private visibleSince: number | undefined = document.hidden ? undefined : performance.now();
 
     public set listener(listener: FrameCommsListener) {
         if(this.listenerBuffer.length > 0)
@@ -46,28 +49,60 @@ export class FrameComms {
         } catch (error) {
             this.channelId = mid();
         }
-        this.gc = setInterval(() => {
-            this.registry.forEach((v, k) => {
-                if (performance.now() - v.time > REGISTRY_EXPIRY) {
-                    console.warn(k, "event for", v.key, "was never handled!");
-                    this.registry.delete(k);
-                }
-            });
-        }, 5000);
+        this.startGc();
         window.addEventListener("message", this.handler);
         this.send("_ping", undefined);
     }
 
+    private startGc() {
+        if (this.gc !== undefined) return;
+        this.handleVisibility();
+        document.addEventListener("visibilitychange", this.visibilityHandler);
+        this.gc = setInterval(() => {
+            const now = this.visibleNow();
+            this.registry.forEach((v, k) => {
+                if (now - v.time > REGISTRY_EXPIRY) {
+                    console.warn(k, "event for", v.key, "was never handled!");
+                    this.registry.delete(k);
+                }
+            });
+        }, GC_INTERVAL);
+    }
+
+    private stopGc() {
+        this.visibleTime = this.visibleNow();
+        this.visibleSince = undefined;
+        document.removeEventListener("visibilitychange", this.visibilityHandler);
+        clearInterval(this.gc);
+        this.gc = undefined;
+    }
+
+    // Frames ack some commands from requestAnimationFrame, which doesn't run while the page is hidden
+    private visibleNow() {
+        return this.visibleTime + (this.visibleSince === undefined ? 0 : performance.now() - this.visibleSince);
+    }
+
+    private handleVisibility() {
+        if (document.hidden) {
+            this.visibleTime = this.visibleNow();
+            this.visibleSince = undefined;
+        } else if (this.visibleSince === undefined) {
+            this.visibleSince = performance.now();
+        }
+    }
+    private visibilityHandler = this.handleVisibility.bind(this);
+
     public halt() {
         this._ready = false;
         window.removeEventListener("message", this.handler);
-        clearInterval(this.gc);
+        this.stopGc();
         this._listener = undefined;
         this.registry.clear();
     }
 
     public resume() {
         window.addEventListener("message", this.handler);
+        this.startGc();
         this._ready = true;
     }
 
@@ -122,7 +157,7 @@ export class FrameComms {
             this.registry.set(id, {
                 // Add callback to the registry
                 cb: callback,
-                time: performance.now(),
+                time: this.visibleNow(),
                 key,
             });
         this.wnd.postMessage(

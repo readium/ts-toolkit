@@ -5,6 +5,7 @@ import { FXLPeripherals, isTypedOMSupported } from "./FXLPeripherals.ts";
 import type { ReadiumWindow } from "@readium/navigator-html-injectables";
 import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../../Navigator.ts";
 import { KeyboardConditionBridge } from "../../peripherals/KeyboardConditionBridge.ts";
+import { createSerializer } from "../../helpers/serialize.ts";
 
 export class FXLFrameManager {
     private frame: HTMLIFrameElement;
@@ -26,6 +27,8 @@ export class FXLFrameManager {
     private loadPromise: Promise<Window> | undefined;
     private showPromise: Promise<void> | undefined;
     private viewportSize: { width: number, height: number } | undefined = undefined;
+    // Halting comms drops pending acks, so an operation must not start while another awaits one
+    private readonly serialize = createSerializer();
 
     constructor(
         peripherals: FXLPeripherals,
@@ -65,6 +68,10 @@ export class FXLFrameManager {
     }
 
     async load(modules: ModuleName[], source: string): Promise<Window> {
+        return this.serialize(() => this.loadNow(modules, source));
+    }
+
+    private async loadNow(modules: ModuleName[], source: string): Promise<Window> {
         if(!this.frameIsAppended) {
             this.wrapper.appendChild(this.frame);
             this.frameIsAppended = true;
@@ -194,13 +201,19 @@ export class FXLFrameManager {
     }
 
     async destroy() {
-        this.conditionBridge?.destroy();
-        await this.unfocus();
-        this.loader?.destroy();
-        this.wrapper.remove();
+        return this.serialize(async () => {
+            this.conditionBridge?.destroy();
+            await this.unfocusNow();
+            this.loader?.destroy();
+            this.wrapper.remove();
+        });
     }
 
     async unload() {
+        return this.serialize(() => this.unloadNow());
+    }
+
+    private async unloadNow() {
         if(!this.loaded) return;
         this.deselect();
         this.frame.style.visibility = "hidden";
@@ -232,8 +245,13 @@ export class FXLFrameManager {
     }
 
     async unfocus(): Promise<void> {
+        return this.serialize(() => this.unfocusNow());
+    }
+
+    private async unfocusNow(): Promise<void> {
         if(this.frame.parentElement) {
-            if(this.comms === undefined) return;
+            // A halted channel no longer receives acks
+            if(this.comms === undefined || !this.comms.ready) return;
             // Return focus to the parent document so keyboard events aren't silently
             // swallowed by an off-screen iframe whose comms channel has been halted.
             this.frame.blur();
@@ -301,6 +319,10 @@ export class FXLFrameManager {
 
     private cachedPage: Page | undefined = undefined;
     async show(page: Page): Promise<void> {
+        return this.serialize(() => this.showNow(page));
+    }
+
+    private async showNow(page: Page): Promise<void> {
         if(!this.frame.parentElement) {
             console.warn("Trying to show frame that is not attached to the DOM");
             return;
@@ -332,12 +354,12 @@ export class FXLFrameManager {
     }
 
     async activate(): Promise<void> {
-        return new Promise<void>((res, _) => {
-            if(!this.comms) return res(); // TODO: investigate when this is the case
+        return this.serialize(() => new Promise<void>((res, _) => {
+            if(!this.comms?.ready) return res(); // TODO: investigate when this is the case
             this.comms?.send("activate", undefined, () => {
                 res();
             });
-        });
+        }));
     }
 
     get element() {
