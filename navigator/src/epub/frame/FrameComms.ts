@@ -64,8 +64,6 @@ export class FrameComms {
                 if (now - v.time > REGISTRY_EXPIRY) {
                     console.warn(k, "event for", v.key, "was never handled!");
                     this.registry.delete(k);
-                    // Settle it so callers awaiting the ack don't hang forever
-                    v.cb(false);
                 }
             });
         }, GC_INTERVAL);
