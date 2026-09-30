@@ -9,7 +9,7 @@ import {
 import { ManagerEventKey } from "../EpubNavigator.ts";
 
 interface RegistryValue {
-    age: number;
+    time: number;
     key: CommsCommandKey;
     cb: CommsAck;
 }
@@ -28,6 +28,8 @@ export class FrameComms {
     private _ready = false;
     private _listener: FrameCommsListener | undefined;
     private listenerBuffer: [key: CommsEventKey, value: unknown][] = [];
+    private visibleTime = 0;
+    private visibleSince: number | undefined = document.hidden ? undefined : performance.now();
 
     public set listener(listener: FrameCommsListener) {
         if(this.listenerBuffer.length > 0)
@@ -48,23 +50,38 @@ export class FrameComms {
             this.channelId = mid();
         }
         this.gc = setInterval(() => {
-            // Frames ack some commands from requestAnimationFrame, which doesn't run while the page is hidden
-            if (document.hidden) return;
+            const now = this.visibleNow();
             this.registry.forEach((v, k) => {
-                v.age += GC_INTERVAL;
-                if (v.age > REGISTRY_EXPIRY) {
+                if (now - v.time > REGISTRY_EXPIRY) {
                     console.warn(k, "event for", v.key, "was never handled!");
                     this.registry.delete(k);
                 }
             });
         }, GC_INTERVAL);
         window.addEventListener("message", this.handler);
+        document.addEventListener("visibilitychange", this.visibilityHandler);
         this.send("_ping", undefined);
     }
+
+    // Frames ack some commands from requestAnimationFrame, which doesn't run while the page is hidden
+    private visibleNow() {
+        return this.visibleTime + (this.visibleSince === undefined ? 0 : performance.now() - this.visibleSince);
+    }
+
+    private handleVisibility() {
+        if (document.hidden) {
+            this.visibleTime = this.visibleNow();
+            this.visibleSince = undefined;
+        } else if (this.visibleSince === undefined) {
+            this.visibleSince = performance.now();
+        }
+    }
+    private visibilityHandler = this.handleVisibility.bind(this);
 
     public halt() {
         this._ready = false;
         window.removeEventListener("message", this.handler);
+        document.removeEventListener("visibilitychange", this.visibilityHandler);
         clearInterval(this.gc);
         this._listener = undefined;
         this.registry.clear();
@@ -126,7 +143,7 @@ export class FrameComms {
             this.registry.set(id, {
                 // Add callback to the registry
                 cb: callback,
-                age: 0,
+                time: this.visibleNow(),
                 key,
             });
         this.wnd.postMessage(
