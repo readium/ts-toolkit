@@ -4,6 +4,7 @@ import type { ReadiumWindow } from "@readium/navigator-html-injectables";
 import { sML } from "@readium/helpers";
 import { IContentProtectionConfig, IKeyboardPeripheralsConfig } from "../Navigator.ts";
 import { KeyboardConditionBridge } from "../peripherals/KeyboardConditionBridge.ts";
+import { createSerializer } from "../helpers/serialize.ts";
 
 export class WebPubFrameManager {
     private frame: HTMLIFrameElement;
@@ -18,6 +19,8 @@ export class WebPubFrameManager {
     private pendingUnwatchSelectors: string[] = [];
     private conditionBridge?: KeyboardConditionBridge;
     private currModules: ModuleName[] = [];
+    // Halting comms drops pending acks, so an operation must not start while another awaits one
+    private readonly serialize = createSerializer();
 
     constructor(
         source: string,
@@ -45,7 +48,7 @@ export class WebPubFrameManager {
     }
 
     async load(modules: ModuleName[] = []): Promise<Window> {
-        return new Promise((res, rej) => {
+        return this.serialize(() => new Promise((res, rej) => {
             if (this.loader) {
                 const wnd = this.frame.contentWindow!;
                 if ([...this.currModules].sort().join("|") === [...modules].sort().join("|")) {
@@ -70,7 +73,7 @@ export class WebPubFrameManager {
                 try { rej(err); } catch (error) {}
             }
             this.frame.contentWindow!.location.replace(this.source);
-        });
+        }));
     }
 
     private applyContentProtection() {
@@ -130,14 +133,20 @@ export class WebPubFrameManager {
     }
 
     async destroy() {
-        this.conditionBridge?.destroy();
-        await this.hide();
-        this.loader?.destroy();
-        this.frame.remove();
-        this.destroyed = true;
+        return this.serialize(async () => {
+            this.conditionBridge?.destroy();
+            await this.hideNow();
+            this.loader?.destroy();
+            this.frame.remove();
+            this.destroyed = true;
+        });
     }
 
     async hide(): Promise<void> {
+        return this.serialize(() => this.hideNow());
+    }
+
+    private async hideNow(): Promise<void> {
         if(this.destroyed) return;
         this.frame.style.visibility = "hidden";
         this.frame.ariaHidden = "true";
@@ -159,6 +168,10 @@ export class WebPubFrameManager {
     }
 
     async show(atProgress?: number): Promise<void> {
+        return this.serialize(() => this.showNow(atProgress));
+    }
+
+    private async showNow(atProgress?: number): Promise<void> {
         if (this.destroyed) throw Error("Trying to show frame when it doesn't exist");
         if (!this.frame.parentElement) throw Error("Trying to show frame that is not attached to the DOM");
         if (this.comms) this.comms.resume();
