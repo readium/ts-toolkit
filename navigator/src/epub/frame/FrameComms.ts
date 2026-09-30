@@ -9,11 +9,12 @@ import {
 import { ManagerEventKey } from "../EpubNavigator.ts";
 
 interface RegistryValue {
-    time: number;
+    age: number;
     key: CommsCommandKey;
     cb: CommsAck;
 }
 const REGISTRY_EXPIRY = 10000; // 10 seconds max
+const GC_INTERVAL = 5000;
 
 export type FrameCommsListener = (key: CommsEventKey | ManagerEventKey, value: unknown) => void;
 
@@ -47,13 +48,16 @@ export class FrameComms {
             this.channelId = mid();
         }
         this.gc = setInterval(() => {
+            // Frames ack some commands from requestAnimationFrame, which doesn't run while the page is hidden
+            if (document.hidden) return;
             this.registry.forEach((v, k) => {
-                if (performance.now() - v.time > REGISTRY_EXPIRY) {
+                v.age += GC_INTERVAL;
+                if (v.age > REGISTRY_EXPIRY) {
                     console.warn(k, "event for", v.key, "was never handled!");
                     this.registry.delete(k);
                 }
             });
-        }, 5000);
+        }, GC_INTERVAL);
         window.addEventListener("message", this.handler);
         this.send("_ping", undefined);
     }
@@ -122,7 +126,7 @@ export class FrameComms {
             this.registry.set(id, {
                 // Add callback to the registry
                 cb: callback,
-                time: performance.now(),
+                age: 0,
                 key,
             });
         this.wnd.postMessage(
