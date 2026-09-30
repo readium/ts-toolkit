@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Hiding the page for more than 10 seconds while a frame is being shown or navigated no longer blocks all further navigation ([#261](https://github.com/readium/ts-toolkit/issues/261))
+- A frame that never acknowledges a command within 10 seconds of visible time no longer blocks all further navigation: the command is settled as failed
 - Showing, hiding, loading or destroying a frame while another of these operations is still in progress on it no longer drops the pending one, which could leave a blank page and block all further navigation
 - `EpubNavigator.destroy()` no longer hangs with fixed-layout publications after navigating
 

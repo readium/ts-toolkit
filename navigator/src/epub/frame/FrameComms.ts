@@ -21,7 +21,7 @@ export type FrameCommsListener = (key: CommsEventKey | ManagerEventKey, value: u
 export class FrameComms {
     private readonly wnd: Window;
     private readonly registry = new Map<string, RegistryValue>();
-    private readonly gc: ReturnType<typeof setInterval>;
+    private gc: ReturnType<typeof setInterval> | undefined;
     // @ts-ignore
     private readonly origin: string;
     public readonly channelId: string;
@@ -49,18 +49,34 @@ export class FrameComms {
         } catch (error) {
             this.channelId = mid();
         }
+        this.startGc();
+        window.addEventListener("message", this.handler);
+        this.send("_ping", undefined);
+    }
+
+    private startGc() {
+        if (this.gc !== undefined) return;
+        this.handleVisibility();
+        document.addEventListener("visibilitychange", this.visibilityHandler);
         this.gc = setInterval(() => {
             const now = this.visibleNow();
             this.registry.forEach((v, k) => {
                 if (now - v.time > REGISTRY_EXPIRY) {
                     console.warn(k, "event for", v.key, "was never handled!");
                     this.registry.delete(k);
+                    // Settle it so callers awaiting the ack don't hang forever
+                    v.cb(false);
                 }
             });
         }, GC_INTERVAL);
-        window.addEventListener("message", this.handler);
-        document.addEventListener("visibilitychange", this.visibilityHandler);
-        this.send("_ping", undefined);
+    }
+
+    private stopGc() {
+        this.visibleTime = this.visibleNow();
+        this.visibleSince = undefined;
+        document.removeEventListener("visibilitychange", this.visibilityHandler);
+        clearInterval(this.gc);
+        this.gc = undefined;
     }
 
     // Frames ack some commands from requestAnimationFrame, which doesn't run while the page is hidden
@@ -81,14 +97,14 @@ export class FrameComms {
     public halt() {
         this._ready = false;
         window.removeEventListener("message", this.handler);
-        document.removeEventListener("visibilitychange", this.visibilityHandler);
-        clearInterval(this.gc);
+        this.stopGc();
         this._listener = undefined;
         this.registry.clear();
     }
 
     public resume() {
         window.addEventListener("message", this.handler);
+        this.startGc();
         this._ready = true;
     }
 
