@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] – 2026-10-01
+
+### Added
+
+- Text helpers: `ssmlTextEscape` and `ssmlAttrEscape` escape strings for SSML text and attribute values, `startsWithBindingPunct` tests whether a string starts with punctuation that binds to the preceding text, and `BINDING_PUNCT_CLASS` is that punctuation as a regex character class
+
+### Changed
+
+- **Breaking:** requires Node.js 24 or later
+
 ## [1.1.1] – 2026-09-29
 
 ### Fixed

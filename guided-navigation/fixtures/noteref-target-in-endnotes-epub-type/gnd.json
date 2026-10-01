@@ -1,0 +1,72 @@
+{
+  "role": [
+    "body"
+  ],
+  "children": [
+    {
+      "text": {
+        "language": "en",
+        "plain": "This text has a note.",
+        "ssml": "This text has a note <readium:noteref id=\"noteref1\" />."
+      },
+      "role": [
+        "paragraph"
+      ],
+      "children": [
+        {
+          "id": "noteref1",
+          "text": {
+            "plain": "[1]"
+          },
+          "role": [
+            "noteref"
+          ],
+          "children": [
+            {
+              "text": {
+                "plain": "Text of the note."
+              },
+              "role": [
+                "listItem",
+                "footnote"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "role": [
+        "section",
+        "endnotes"
+      ],
+      "children": [
+        {
+          "role": [
+            "heading2"
+          ],
+          "text": {
+            "plain": "Notes"
+          }
+        },
+        {
+          "role": [
+            "list"
+          ],
+          "children": [
+            {
+              "id": "note1",
+              "text": {
+                "plain": "Text of the note."
+              },
+              "role": [
+                "listItem",
+                "footnote"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

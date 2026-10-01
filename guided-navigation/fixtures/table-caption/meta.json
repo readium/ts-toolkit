@@ -1,0 +1,14 @@
+{
+  "id": "table-caption",
+  "description": "A table with an accessible name via aria-label — the {description} branch of table's own announcement template. Uses aria-label rather than a native <caption> element since native <caption>/<figcaption> implicit accessible-name folding is not yet implemented (see CONTEXTUALIZATION_PLAN.md)",
+  "role": "table",
+  "rolesCovered": [
+    "table",
+    "row",
+    "columnheader",
+    "rowheader",
+    "cell"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

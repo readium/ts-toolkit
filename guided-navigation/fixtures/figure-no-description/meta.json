@@ -1,0 +1,11 @@
+{
+  "id": "figure-no-description",
+  "description": "A figure with no accessible name of its own, containing an image that also has no accessible name of its own — the figure's own announcement has nothing to say (no caption/label anywhere), unlike figure-basic-* where the child image still carries a label",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "image"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

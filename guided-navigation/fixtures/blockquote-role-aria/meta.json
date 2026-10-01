@@ -1,0 +1,10 @@
+{
+  "id": "blockquote-role-aria",
+  "description": "blockquote role via explicit ARIA role=\"blockquote\" — the only encoding of this role previously untested; blockquote-html-native covers the native <blockquote> element",
+  "role": "blockquote",
+  "rolesCovered": [
+    "blockquote"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

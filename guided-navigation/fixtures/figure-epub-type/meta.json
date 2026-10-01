@@ -1,0 +1,11 @@
+{
+  "id": "figure-epub-type",
+  "description": "figure role via epub:type=\"figure\" on a neutral <div> (isolating the epub:type code path from the native <figure> tag mapping), containing an image — the only encoding of this role previously untested",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "image"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "document"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "math-no-description",
+  "description": "math role via native MathML <math> markup, with no alttext/aria-label and non-trivial children — no spoken-form description available for read-aloud",
+  "role": "math",
+  "rolesCovered": [
+    "math"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

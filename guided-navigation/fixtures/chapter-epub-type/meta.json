@@ -1,0 +1,11 @@
+{
+  "id": "chapter-epub-type",
+  "description": "chapter role via epub:type=\"chapter\", containing a heading",
+  "role": "chapter",
+  "rolesCovered": [
+    "chapter",
+    "heading1"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud#sections-and-headers",
+  "inputKind": "document"
+}

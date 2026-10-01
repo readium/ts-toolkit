@@ -21,6 +21,8 @@ interface ElementWithDelta {
  * If you want to start from the end of the resource, the [locator] must have a `progression` of 1.0.
  *
  * Locators will contain a `before` context of up to `beforeMaxLength` characters.
+ *
+ * @deprecated Use `@readium/guided-navigation` and `@readium/speech` instead.
  */
 export class HTMLResourceContentIterator extends Iterator {
     private currentElement: ElementWithDelta | null = null;

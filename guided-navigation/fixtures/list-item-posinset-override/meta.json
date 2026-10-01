@@ -1,0 +1,11 @@
+{
+  "id": "list-item-posinset-override",
+  "description": "A native <ol>/<li> where the second <li> carries aria-posinset — it overrides only that item's own baked ordinal; the native counting chain for its siblings continues unaffected (per WAI-ARIA's aria-posinset semantics, meant for lists that don't expose their full membership in the DOM), so the third item stays 3, not 100",
+  "role": "list",
+  "rolesCovered": [
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://www.w3.org/TR/wai-aria-1.2/#aria-posinset",
+  "inputKind": "fragment"
+}

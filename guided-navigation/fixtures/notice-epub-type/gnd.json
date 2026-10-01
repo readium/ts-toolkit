@@ -1,0 +1,15 @@
+{
+  "role": [
+    "body"
+  ],
+  "children": [
+    {
+      "text": {
+        "plain": "Caution: the tower stairs are uneven."
+      },
+      "role": [
+        "notice"
+      ]
+    }
+  ]
+}

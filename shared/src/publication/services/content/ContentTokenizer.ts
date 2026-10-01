@@ -2,9 +2,13 @@ import { DefaultTextContentTokenizer, Range, TextTokenizer, TextUnit, Tokenizer 
 import { Locator, LocatorText } from "../../Locator.ts";
 import { ContentElement, TextElement, TextSegment } from "./element/index.ts";
 
-// A tokenizer splitting a [Content.Element] into smaller pieces.
+/**
+ * A tokenizer splitting a [Content.Element] into smaller pieces.
+ * @deprecated Use `@readium/speech`, which segments text itself.
+ */
 export type ContentTokenizer  = Tokenizer<ContentElement, ContentElement>;
 
+/** @deprecated Use `@readium/speech`, which segments text itself. */
 export class TextContentTokenizer implements ContentTokenizer {
     /**
      *

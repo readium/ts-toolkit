@@ -1,0 +1,23 @@
+{
+  "role": [
+    "body"
+  ],
+  "children": [
+    {
+      "role": [
+        "section",
+        "part"
+      ],
+      "children": [
+        {
+          "text": {
+            "plain": "Title of the part"
+          },
+          "role": [
+            "heading1"
+          ]
+        }
+      ]
+    }
+  ]
+}

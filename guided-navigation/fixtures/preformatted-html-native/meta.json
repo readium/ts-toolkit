@@ -1,0 +1,10 @@
+{
+  "id": "preformatted-html-native",
+  "description": "preformatted role via native <pre> element",
+  "role": "preformatted",
+  "rolesCovered": [
+    "preformatted"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

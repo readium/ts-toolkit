@@ -1,0 +1,10 @@
+{
+  "id": "image-decorative-empty-alt",
+  "description": "A decorative image with empty alt, mapping to the presentation role and producing no utterance",
+  "role": "presentation",
+  "rolesCovered": [
+    "presentation"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "tip-role-aria",
+  "description": "tip role via explicit ARIA role=\"doc-tip\"",
+  "role": "tip",
+  "rolesCovered": [
+    "tip"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

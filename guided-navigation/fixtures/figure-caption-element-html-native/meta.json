@@ -1,0 +1,11 @@
+{
+  "id": "figure-caption-element-html-native",
+  "description": "A native <figure><figcaption> with no explicit aria-labelledby — the figcaption's text folds into the figure's own description (HTML-AAM implicit name), and the figcaption is not spoken as a separate child. Contrast with figure-caption-html-native, which has an explicit aria-labelledby pointing at the same figcaption.",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "caption"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud#images",
+  "inputKind": "fragment"
+}

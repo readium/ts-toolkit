@@ -1,0 +1,15 @@
+{
+  "role": [
+    "body"
+  ],
+  "children": [
+    {
+      "text": {
+        "plain": "The lamp still turns, though no one climbs the stairs anymore."
+      },
+      "role": [
+        "epilogue"
+      ]
+    }
+  ]
+}

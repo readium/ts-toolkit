@@ -1,0 +1,10 @@
+{
+  "id": "glossref-epub-type",
+  "description": "glossref role via epub:type=\"glossref\" on an <a href>",
+  "role": "glossref",
+  "rolesCovered": [
+    "glossref"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

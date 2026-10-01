@@ -1,0 +1,51 @@
+{
+  "role": [
+    "body"
+  ],
+  "children": [
+    {
+      "role": [
+        "credits"
+      ],
+      "children": [
+        {
+          "role": [
+            "list"
+          ],
+          "children": [
+            {
+              "role": [
+                "listItem"
+              ],
+              "children": [
+                {
+                  "text": {
+                    "plain": "Cover photograph by A. Keeper."
+                  },
+                  "role": [
+                    "credit"
+                  ]
+                }
+              ]
+            },
+            {
+              "role": [
+                "listItem"
+              ],
+              "children": [
+                {
+                  "text": {
+                    "plain": "Maps by B. Cartographer."
+                  },
+                  "role": [
+                    "credit"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

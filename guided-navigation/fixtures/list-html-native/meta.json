@@ -1,0 +1,11 @@
+{
+  "id": "list-html-native",
+  "description": "An unordered list via native <ul>/<li> elements",
+  "role": "list",
+  "rolesCovered": [
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud#lists",
+  "inputKind": "fragment"
+}

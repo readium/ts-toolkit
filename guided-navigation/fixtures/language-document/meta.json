@@ -1,0 +1,10 @@
+{
+  "id": "language-document",
+  "description": "A paragraph in a document whose <html lang> differs from the default, with no inline language shift or other SSML trigger",
+  "role": "language",
+  "rolesCovered": [
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud#multilingual-text",
+  "inputKind": "document"
+}

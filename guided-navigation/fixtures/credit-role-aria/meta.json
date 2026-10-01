@@ -1,0 +1,10 @@
+{
+  "id": "credit-role-aria",
+  "description": "credit role via explicit ARIA role=\"doc-credit\"",
+  "role": "credit",
+  "rolesCovered": [
+    "credit"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "foreword-epub-type",
+  "description": "foreword role via epub:type=\"foreword\"",
+  "role": "foreword",
+  "rolesCovered": [
+    "foreword"
+  ],
+  "sourceRef": "https://www.w3.org/TR/epub-ssv-11/#sec-sections",
+  "inputKind": "document"
+}

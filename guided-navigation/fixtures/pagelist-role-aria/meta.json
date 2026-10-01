@@ -1,0 +1,12 @@
+{
+  "id": "pagelist-role-aria",
+  "description": "A page-list navigation list, containing links to pagebreaks, via explicit ARIA role",
+  "role": "pagelist",
+  "rolesCovered": [
+    "pagelist",
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "math-role-aria",
+  "description": "math role via explicit ARIA role=\"math\" on a rendered formula, with an aria-label carrying the spoken form for read-aloud",
+  "role": "math",
+  "rolesCovered": [
+    "math"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

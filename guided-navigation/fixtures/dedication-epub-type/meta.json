@@ -1,0 +1,10 @@
+{
+  "id": "dedication-epub-type",
+  "description": "dedication role via epub:type=\"dedication\"",
+  "role": "dedication",
+  "rolesCovered": [
+    "dedication"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

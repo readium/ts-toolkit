@@ -1,0 +1,14 @@
+{
+  "role": [
+    "math"
+  ],
+  "text": {
+    "plain": "x² + y² = z²"
+  },
+  "textref": "#css(span)",
+  "description": {
+    "text": {
+      "plain": "x squared plus y squared equals z squared"
+    }
+  }
+}

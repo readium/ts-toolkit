@@ -1,0 +1,10 @@
+{
+  "id": "qna-role-aria",
+  "description": "qna role via explicit ARIA role=\"doc-qna\"",
+  "role": "qna",
+  "rolesCovered": [
+    "qna"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

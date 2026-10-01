@@ -1,0 +1,38 @@
+{
+  "role": [
+    "body"
+  ],
+  "children": [
+    {
+      "role": [
+        "section",
+        "bibliography"
+      ],
+      "children": [
+        {
+          "role": [
+            "list"
+          ],
+          "children": [
+            {
+              "text": {
+                "plain": "Smith, J. Lighthouses of the Atlantic. 1988."
+              },
+              "role": [
+                "listItem"
+              ]
+            },
+            {
+              "text": {
+                "plain": "Doe, A. Coastal Illumination. 1975."
+              },
+              "role": [
+                "listItem"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

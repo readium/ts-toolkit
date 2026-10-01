@@ -1,0 +1,14 @@
+{
+  "id": "table-in-role-none-wrapper",
+  "description": "A native <table> inside a <div role=\"none\">: a div has no required owned elements, so presentation doesn't reach the table, which keeps its table/row/columnheader/cell roles",
+  "role": "table",
+  "rolesCovered": [
+    "presentation",
+    "table",
+    "row",
+    "columnheader",
+    "cell"
+  ],
+  "sourceRef": "https://www.w3.org/TR/wai-aria-1.2/#conflict_resolution_presentation_none",
+  "inputKind": "fragment"
+}

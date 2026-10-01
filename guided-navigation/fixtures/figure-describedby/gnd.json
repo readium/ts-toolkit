@@ -1,0 +1,23 @@
+{
+  "role": [
+    "figure"
+  ],
+  "description": {
+    "text": {
+      "plain": "Full audio description: sales grew 12% year over year, driven primarily by the Q4 holiday season."
+    }
+  },
+  "children": [
+    {
+      "role": [
+        "image"
+      ],
+      "imgref": "chart.png",
+      "description": {
+        "text": {
+          "plain": "Sales chart"
+        }
+      }
+    }
+  ]
+}

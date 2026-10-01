@@ -1,0 +1,11 @@
+{
+  "role": [
+    "image"
+  ],
+  "textref": "#css(body%20%3E%20span)",
+  "description": {
+    "text": {
+      "plain": "Rating: 4 out of 5 stars"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "role": [
+    "math"
+  ],
+  "text": {
+    "ssml": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n  <msup><mi>x</mi><mn>2</mn></msup>\n  <mo>+</mo>\n  <msup><mi>y</mi><mn>2</mn></msup>\n  <mo>=</mo>\n  <msup><mi>z</mi><mn>2</mn></msup>\n</math>"
+  },
+  "textref": "#css(math)"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "part-role-aria",
+  "description": "part role via explicit ARIA role=\"doc-part\", containing a heading",
+  "role": "part",
+  "rolesCovered": [
+    "part",
+    "heading1"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

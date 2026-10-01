@@ -1,0 +1,13 @@
+{
+  "id": "credits-role-aria",
+  "description": "A collection of credits, via explicit ARIA role",
+  "role": "credits",
+  "rolesCovered": [
+    "credits",
+    "list",
+    "listItem",
+    "credit"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

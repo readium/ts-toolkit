@@ -4,6 +4,7 @@ packages:
   - 'navigator'
   - 'navigator-html-injectables'
   - 'decorator'
+  - 'guided-navigation'
 
 minimumReleaseAge: 4320 # 3 days
 blockExoticSubdeps: true

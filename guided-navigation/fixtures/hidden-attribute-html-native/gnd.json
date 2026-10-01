@@ -1,0 +1,20 @@
+{
+  "children": [
+    {
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Before the hidden content."
+      }
+    },
+    {
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "After the hidden content."
+      }
+    }
+  ]
+}

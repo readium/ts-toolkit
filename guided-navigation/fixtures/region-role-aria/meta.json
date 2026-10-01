@@ -1,0 +1,10 @@
+{
+  "id": "region-role-aria",
+  "description": "region role via explicit ARIA role=\"region\"",
+  "role": "region",
+  "rolesCovered": [
+    "region"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

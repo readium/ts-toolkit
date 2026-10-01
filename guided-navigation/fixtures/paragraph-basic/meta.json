@@ -1,0 +1,10 @@
+{
+  "id": "paragraph-basic",
+  "description": "A single paragraph, the only encoding pathway for this role",
+  "role": "paragraph",
+  "rolesCovered": [
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud#paragraphs",
+  "inputKind": "fragment"
+}

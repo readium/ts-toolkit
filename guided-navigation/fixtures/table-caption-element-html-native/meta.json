@@ -1,0 +1,14 @@
+{
+  "id": "table-caption-element-html-native",
+  "description": "A native <table><caption> with no explicit aria-labelledby — the caption becomes a separate child node with role \"caption\", not folded into the table's own description field. Directly demonstrates the caption-folding gap noted in CONTEXTUALIZATION_PLAN.md: table.md's spec assumes <caption> \"can end up in description\", but that implicit association isn't implemented. Contrast with table-caption (which uses explicit aria-label and does populate description) and table-caption-role-aria (the same un-folded-caption behavior via role=\"caption\")",
+  "role": "table",
+  "rolesCovered": [
+    "table",
+    "caption",
+    "row",
+    "columnheader",
+    "cell"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

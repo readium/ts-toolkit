@@ -1,0 +1,10 @@
+{
+  "id": "preface-role-aria",
+  "description": "preface role via explicit ARIA role=\"doc-preface\"",
+  "role": "preface",
+  "rolesCovered": [
+    "preface"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

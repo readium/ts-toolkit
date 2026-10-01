@@ -1,0 +1,10 @@
+{
+  "id": "example-epub-type",
+  "description": "example role via epub:type=\"example\"",
+  "role": "example",
+  "rolesCovered": [
+    "example"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

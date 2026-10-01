@@ -1,0 +1,10 @@
+{
+  "id": "navigation-role-aria",
+  "description": "navigation role via explicit ARIA role=\"navigation\"",
+  "role": "navigation",
+  "rolesCovered": [
+    "navigation"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

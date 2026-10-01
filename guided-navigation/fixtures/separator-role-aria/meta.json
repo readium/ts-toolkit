@@ -1,0 +1,10 @@
+{
+  "id": "separator-role-aria",
+  "description": "separator role via explicit ARIA role=\"separator\"; a purely visual divider with no read-aloud content",
+  "role": "separator",
+  "rolesCovered": [
+    "separator"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

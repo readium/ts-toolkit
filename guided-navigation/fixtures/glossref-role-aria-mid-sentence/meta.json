@@ -1,0 +1,11 @@
+{
+  "id": "glossref-role-aria-mid-sentence",
+  "description": "Two glossref links mid-sentence (not the sole content of their block), via explicit ARIA role=\"doc-glossref\" on <a href>",
+  "role": "glossref",
+  "rolesCovered": [
+    "glossref",
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

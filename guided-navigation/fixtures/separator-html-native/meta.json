@@ -1,0 +1,10 @@
+{
+  "id": "separator-html-native",
+  "description": "separator role via native <hr> element; a purely visual divider with no read-aloud content",
+  "role": "separator",
+  "rolesCovered": [
+    "separator"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

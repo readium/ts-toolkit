@@ -1,0 +1,10 @@
+{
+  "id": "body-html-native",
+  "description": "body role via native <body> element",
+  "role": "body",
+  "rolesCovered": [
+    "body"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

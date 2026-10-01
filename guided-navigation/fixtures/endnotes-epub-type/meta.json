@@ -1,0 +1,13 @@
+{
+  "id": "endnotes-epub-type",
+  "description": "A collection of endnotes, via epub:type=\"endnotes\" on a <section>; each entry is an <aside epub:type=\"footnote\">",
+  "role": "endnotes",
+  "rolesCovered": [
+    "endnotes",
+    "list",
+    "listItem",
+    "footnote"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

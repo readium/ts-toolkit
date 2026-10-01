@@ -1,0 +1,10 @@
+{
+  "id": "backlink-role-aria",
+  "description": "backlink role via explicit ARIA role=\"doc-backlink\" on an <a href>",
+  "role": "backlink",
+  "rolesCovered": [
+    "backlink"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

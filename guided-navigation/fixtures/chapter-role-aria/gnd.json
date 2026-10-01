@@ -1,0 +1,16 @@
+{
+  "role": [
+    "section",
+    "chapter"
+  ],
+  "children": [
+    {
+      "role": [
+        "heading1"
+      ],
+      "text": {
+        "plain": "Title of the chapter"
+      }
+    }
+  ]
+}

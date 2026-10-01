@@ -3,16 +3,21 @@ import { Tokenizer } from "./Tokenizer.ts";
 import BasicEnglishTokenizer from "./tokenize-english/index.js";
 import BasicTokenizer, { TextlintSegment } from "./tokenize-text/index.js";
 
-// Start / End
+/**
+ * Start / End
+ * @deprecated Use `@readium/speech`, which segments text itself.
+ */
 export type Range = [number, number];
 
 /**
  * A tokenizer splitting a String into range tokens (e.g. words, sentences, etc.).
+ * @deprecated Use `@readium/speech`, which segments text itself.
  */
 export type TextTokenizer = Tokenizer<string, Range>;
 
 /**
  * A text token unit which can be used with a [TextTokenizer].
+ * @deprecated Use `@readium/speech`, which segments text itself.
  */
 export enum TextUnit {
     Word = "word",
@@ -20,7 +25,10 @@ export enum TextUnit {
     Paragraph = "paragraph",
 }
 
-//  A default cluster [TextTokenizer] taking advantage of the best capabilities of the navigator
+/**
+ * A default cluster [TextTokenizer] taking advantage of the best capabilities of the navigator
+ * @deprecated Use `@readium/speech`, which segments text itself.
+ */
 export const DefaultTextContentTokenizer = (language: Language | null, unit: TextUnit): TextTokenizer => {
     if("Segmenter" in Intl) {
         // Available in any evergreen browser EXCEPT for Firefox.
@@ -35,6 +43,7 @@ export const DefaultTextContentTokenizer = (language: Language | null, unit: Tex
 /**
  * A [TextTokenizer] using the Intl.Segmenter API.
  * Very aware of language-specific rules since it uses ICU behind the scenes.
+ * @deprecated Use `@readium/speech`, which segments text itself.
  */
 export class IntlTextTokenizer implements TextTokenizer {
     private segmenter: Intl.Segmenter;
@@ -68,6 +77,7 @@ export class IntlTextTokenizer implements TextTokenizer {
  * A [TextTokenizer] using a naive approach to splitting text into tokens.
  * This is a fallback for browsers that don't support Intl.Segmenter.
  * It works mainly on English and similar languages. Don't use unless necessary.
+ * @deprecated Use `@readium/speech`, which segments text itself.
  */
 export class NaiveTextTokenizer {
     private tokenizer: BasicTokenizer;
@@ -116,8 +126,11 @@ export class NaiveTextTokenizer {
 
 const trimmedMatcher = new RegExp("[\\p{L}\\p{N}]+", "u");
 
-// Unicode-aware of checking if there's anything that can be spoken in a string
-// "Spoken" in this case means at least one unicode letter or unicode number character
+/**
+ * Unicode-aware of checking if there's anything that can be spoken in a string
+ * "Spoken" in this case means at least one unicode letter or unicode number character
+ * @deprecated Use `@readium/speech`, which segments text itself.
+ */
 export const speakableToken = (token: string): string | null => {
     const trimmedToken = token.trimEnd();
     if(trimmedToken.length === 0) return null;

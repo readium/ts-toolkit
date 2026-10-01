@@ -1,0 +1,10 @@
+{
+  "id": "biblioref-epub-type",
+  "description": "biblioref role via epub:type=\"biblioref\" on an <a href>",
+  "role": "biblioref",
+  "rolesCovered": [
+    "biblioref"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

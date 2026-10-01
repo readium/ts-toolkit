@@ -1,0 +1,52 @@
+{
+  "children": [
+    {
+      "role": [
+        "heading1"
+      ],
+      "text": {
+        "plain": "Chapter One"
+      }
+    },
+    {
+      "role": [
+        "heading2"
+      ],
+      "text": {
+        "plain": "Section A"
+      }
+    },
+    {
+      "role": [
+        "heading3"
+      ],
+      "text": {
+        "plain": "Subsection i"
+      }
+    },
+    {
+      "role": [
+        "heading4"
+      ],
+      "text": {
+        "plain": "Detail heading"
+      }
+    },
+    {
+      "role": [
+        "heading5"
+      ],
+      "text": {
+        "plain": "Note heading"
+      }
+    },
+    {
+      "role": [
+        "heading6"
+      ],
+      "text": {
+        "plain": "Aside heading"
+      }
+    }
+  ]
+}

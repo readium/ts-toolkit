@@ -1,0 +1,10 @@
+{
+  "id": "blockquote-html-native",
+  "description": "blockquote role via native <blockquote> element",
+  "role": "blockquote",
+  "rolesCovered": [
+    "blockquote"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

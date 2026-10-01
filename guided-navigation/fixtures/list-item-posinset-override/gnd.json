@@ -1,0 +1,31 @@
+{
+  "role": [
+    "list"
+  ],
+  "children": [
+    {
+      "text": {
+        "plain": "One"
+      },
+      "role": [
+        "listItem"
+      ]
+    },
+    {
+      "text": {
+        "plain": "Ninety-nine"
+      },
+      "role": [
+        "listItem"
+      ]
+    },
+    {
+      "text": {
+        "plain": "Three"
+      },
+      "role": [
+        "listItem"
+      ]
+    }
+  ]
+}

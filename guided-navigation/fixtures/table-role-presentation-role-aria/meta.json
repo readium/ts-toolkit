@@ -1,0 +1,13 @@
+{
+  "id": "table-role-presentation-role-aria",
+  "description": "role=\"presentation\" on a wrapper doesn't override descendants' explicit role=\"row\"/\"columnheader\"/\"cell\" (ARIA presentational inheritance skips explicit roles)",
+  "role": "presentation",
+  "rolesCovered": [
+    "presentation",
+    "row",
+    "columnheader",
+    "cell"
+  ],
+  "sourceRef": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/presentation_role",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "list-aria-posinset-setsize",
+  "description": "An ARIA listitem with explicit aria-posinset/aria-setsize (for lists that don't expose their full membership in the DOM, e.g. paginated or virtualized ones) — neither attribute is read anywhere in the converter. Per ARIA semantics these should take precedence over any DOM-computed position/count when present, which a future position-numbering implementation needs to account for, not just count DOM siblings",
+  "role": "list",
+  "rolesCovered": [
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-posinset",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "list-ordered-reversed",
+  "description": "An <ol reversed> — the baked ordinal counts down from the list's length instead of counting up from 1",
+  "role": "list",
+  "rolesCovered": [
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/ol#reversed",
+  "inputKind": "fragment"
+}

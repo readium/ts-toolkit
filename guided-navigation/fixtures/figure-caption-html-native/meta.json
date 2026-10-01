@@ -1,0 +1,11 @@
+{
+  "id": "figure-caption-html-native",
+  "description": "A figure with a <pre> body and a <figcaption>, via native <figure>",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "caption"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud#images",
+  "inputKind": "fragment"
+}

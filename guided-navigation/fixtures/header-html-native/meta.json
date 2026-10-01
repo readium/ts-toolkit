@@ -1,0 +1,10 @@
+{
+  "id": "header-html-native",
+  "description": "header role via native <header> element",
+  "role": "header",
+  "rolesCovered": [
+    "header"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

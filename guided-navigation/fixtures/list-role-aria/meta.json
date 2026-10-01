@@ -1,0 +1,11 @@
+{
+  "id": "list-role-aria",
+  "description": "An unordered list via explicit role=\"list\"/\"listitem\"",
+  "role": "list",
+  "rolesCovered": [
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

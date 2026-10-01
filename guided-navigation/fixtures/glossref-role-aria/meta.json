@@ -1,0 +1,10 @@
+{
+  "id": "glossref-role-aria",
+  "description": "glossref role via explicit ARIA role=\"doc-glossref\" on an <a href>",
+  "role": "glossref",
+  "rolesCovered": [
+    "glossref"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "navigation-html-native",
+  "description": "navigation role via native <nav> element",
+  "role": "navigation",
+  "rolesCovered": [
+    "navigation"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "language-inline-nested",
+  "description": "A paragraph with a language switch nested inside another language switch",
+  "role": "language",
+  "rolesCovered": [
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud#multilingual-text",
+  "inputKind": "fragment"
+}

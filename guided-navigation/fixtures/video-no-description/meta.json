@@ -1,0 +1,10 @@
+{
+  "id": "video-no-description",
+  "description": "video role via native <video src> element, with no accessible name at all",
+  "role": "video",
+  "rolesCovered": [
+    "video"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

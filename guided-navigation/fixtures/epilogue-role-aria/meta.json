@@ -1,0 +1,10 @@
+{
+  "id": "epilogue-role-aria",
+  "description": "epilogue role via explicit ARIA role=\"doc-epilogue\"",
+  "role": "epilogue",
+  "rolesCovered": [
+    "epilogue"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

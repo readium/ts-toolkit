@@ -1,0 +1,10 @@
+{
+  "id": "cover-role-aria",
+  "description": "cover role via explicit ARIA role=\"doc-cover\" on an <img>",
+  "role": "cover",
+  "rolesCovered": [
+    "cover"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

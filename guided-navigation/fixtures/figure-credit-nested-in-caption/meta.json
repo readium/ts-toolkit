@@ -1,0 +1,12 @@
+{
+  "id": "figure-credit-nested-in-caption",
+  "description": "A figure with an implicit (figcaption) caption whose credit is nested inside it as a role=\"doc-credit\" span, rather than a sibling",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "image",
+    "credit"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

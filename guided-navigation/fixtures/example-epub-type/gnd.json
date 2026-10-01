@@ -1,0 +1,30 @@
+{
+  "role": [
+    "body"
+  ],
+  "children": [
+    {
+      "role": [
+        "section"
+      ],
+      "children": [
+        {
+          "role": [
+            "article"
+          ],
+          "children": [
+            {
+              "text": {
+                "plain": "For instance, a Fresnel lens focuses light into a narrow beam."
+              },
+              "role": [
+                "paragraph",
+                "example"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

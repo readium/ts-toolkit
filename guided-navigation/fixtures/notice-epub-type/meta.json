@@ -1,0 +1,10 @@
+{
+  "id": "notice-epub-type",
+  "description": "notice role via epub:type=\"notice\"",
+  "role": "notice",
+  "rolesCovered": [
+    "notice"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

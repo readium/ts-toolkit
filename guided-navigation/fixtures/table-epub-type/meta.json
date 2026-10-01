@@ -1,0 +1,12 @@
+{
+  "id": "table-epub-type",
+  "description": "table role via epub:type=\"table\"/\"table-row\"/\"table-cell\" on neutral <div> elements — the only encoding of table previously untested, despite extensive native/ARIA table coverage. epub:type has no columnheader/rowheader equivalent at all (only table/table-row/table-cell are mapped in epubTypeRoles), so this is necessarily a header-less data grid, same shape as table-no-headers",
+  "role": "table",
+  "rolesCovered": [
+    "table",
+    "row",
+    "cell"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "document"
+}

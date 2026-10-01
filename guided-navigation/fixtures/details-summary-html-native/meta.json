@@ -1,0 +1,11 @@
+{
+  "id": "details-summary-html-native",
+  "description": "details role via native <details> element, with its <summary> as the visible disclosure label",
+  "role": "details",
+  "rolesCovered": [
+    "details",
+    "summary"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

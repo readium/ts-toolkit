@@ -1,0 +1,10 @@
+{
+  "id": "term-role-aria",
+  "description": "term role via explicit ARIA role=\"term\"",
+  "role": "term",
+  "rolesCovered": [
+    "term"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

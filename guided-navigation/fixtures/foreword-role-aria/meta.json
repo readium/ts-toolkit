@@ -1,0 +1,10 @@
+{
+  "id": "foreword-role-aria",
+  "description": "foreword role via explicit ARIA role=\"doc-foreword\"",
+  "role": "foreword",
+  "rolesCovered": [
+    "foreword"
+  ],
+  "sourceRef": "https://www.w3.org/TR/dpub-aria-1.0/#doc-foreword",
+  "inputKind": "fragment"
+}

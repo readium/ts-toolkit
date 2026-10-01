@@ -1,0 +1,10 @@
+{
+  "id": "language-inline-repeated",
+  "description": "A paragraph where the same foreign language appears twice, separated by base-language text",
+  "role": "language",
+  "rolesCovered": [
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud#multilingual-text",
+  "inputKind": "fragment"
+}

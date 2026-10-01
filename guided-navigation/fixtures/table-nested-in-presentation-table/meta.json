@@ -1,0 +1,14 @@
+{
+  "id": "table-nested-in-presentation-table",
+  "description": "A data table nested in a layout <table role=\"presentation\">: only the outer table's own rows/cells inherit presentation; the inner table keeps its table/row/columnheader/cell roles",
+  "role": "presentation",
+  "rolesCovered": [
+    "presentation",
+    "table",
+    "row",
+    "columnheader",
+    "cell"
+  ],
+  "sourceRef": "https://www.w3.org/TR/wai-aria-1.2/#conflict_resolution_presentation_none",
+  "inputKind": "fragment"
+}

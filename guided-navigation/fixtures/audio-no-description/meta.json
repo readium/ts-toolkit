@@ -1,0 +1,10 @@
+{
+  "id": "audio-no-description",
+  "description": "audio role via native <audio src> element, with no accessible name at all",
+  "role": "audio",
+  "rolesCovered": [
+    "audio"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

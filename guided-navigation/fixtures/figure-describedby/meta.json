@@ -1,0 +1,11 @@
+{
+  "id": "figure-describedby",
+  "description": "A figure whose extended description comes from aria-describedby rather than a visible caption — an extension beyond the read-aloud examples doc, which only documents figcaption/aria-labelledby",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "image"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

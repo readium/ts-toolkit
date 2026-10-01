@@ -1,0 +1,13 @@
+{
+  "role": [
+    "figure"
+  ],
+  "children": [
+    {
+      "imgref": "unlabeled-chart.png",
+      "role": [
+        "image"
+      ]
+    }
+  ]
+}

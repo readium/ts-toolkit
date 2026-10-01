@@ -1,0 +1,12 @@
+{
+  "id": "table-nested-html-native",
+  "description": "A native <table> nested inside another native table's cell — confirms recursion handles it correctly (the inner table's own row/cell structure resolves independently, nested under the outer cell alongside its own text). See table-nested-role-aria for the ARIA-role equivalent",
+  "role": "table",
+  "rolesCovered": [
+    "table",
+    "row",
+    "cell"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

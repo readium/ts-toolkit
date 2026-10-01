@@ -1,0 +1,11 @@
+{
+  "id": "footnote-epub-type",
+  "description": "A paragraph with one footnote reference and its footnote content, via epub:type",
+  "role": "footnote",
+  "rolesCovered": [
+    "footnote",
+    "noteref"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "document"
+}

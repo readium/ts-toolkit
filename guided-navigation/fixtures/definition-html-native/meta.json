@@ -1,0 +1,10 @@
+{
+  "id": "definition-html-native",
+  "description": "definition role via native <dd> element, nested in a <dl> as its content model requires",
+  "role": "definition",
+  "rolesCovered": [
+    "definition"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

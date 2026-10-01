@@ -1,0 +1,12 @@
+{
+  "id": "figure-credit-role-aria",
+  "description": "A figure with an implicit (figcaption) caption and a sibling credit line, via explicit ARIA role=\"doc-credit\" on a <p>",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "image",
+    "credit"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

@@ -14,5 +14,5 @@ module.exports = {
     testMatch: ["**/*.test.ts"],
     testEnvironment: "node",
     setupFiles: ["<rootDir>/jest.setup.js"],
-    transformIgnorePatterns: ["/node_modules/(?!css-selector-generator)/"]
+    transformIgnorePatterns: ["/node_modules/(?!(\\.pnpm/)?css-selector-generator)"]
 }

@@ -1,0 +1,10 @@
+{
+  "id": "math-html-native",
+  "description": "math role via native MathML <math> markup, with a spoken-form description for read-aloud",
+  "role": "math",
+  "rolesCovered": [
+    "math"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

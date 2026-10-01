@@ -1,0 +1,30 @@
+{
+  "role": [
+    "body"
+  ],
+  "children": [
+    {
+      "role": [
+        "list"
+      ],
+      "children": [
+        {
+          "text": {
+            "plain": "First item"
+          },
+          "role": [
+            "listItem"
+          ]
+        },
+        {
+          "text": {
+            "plain": "Second item"
+          },
+          "role": [
+            "listItem"
+          ]
+        }
+      ]
+    }
+  ]
+}

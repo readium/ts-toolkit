@@ -1,0 +1,10 @@
+{
+  "id": "colophon-role-aria",
+  "description": "colophon role via explicit ARIA role=\"doc-colophon\"",
+  "role": "colophon",
+  "rolesCovered": [
+    "colophon"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "pullquote-epub-type",
+  "description": "pullquote role via epub:type=\"pullquote\" on an <aside>",
+  "role": "pullquote",
+  "rolesCovered": [
+    "pullquote"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

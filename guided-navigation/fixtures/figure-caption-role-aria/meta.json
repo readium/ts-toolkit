@@ -1,0 +1,11 @@
+{
+  "id": "figure-caption-role-aria",
+  "description": "A figure with a <pre> body and a <figcaption>, via explicit role=\"figure\"",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "caption"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

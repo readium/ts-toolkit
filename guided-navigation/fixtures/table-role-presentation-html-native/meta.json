@@ -1,0 +1,13 @@
+{
+  "id": "table-role-presentation-html-native",
+  "description": "A native <table role=\"presentation\">: its rows/cells have no explicit role, so they inherit presentation (ARIA presentational inheritance to required owned elements). See table-role-presentation-role-aria for explicit roles, which don't inherit",
+  "role": "presentation",
+  "rolesCovered": [
+    "presentation",
+    "row",
+    "columnheader",
+    "cell"
+  ],
+  "sourceRef": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/presentation_role",
+  "inputKind": "fragment"
+}

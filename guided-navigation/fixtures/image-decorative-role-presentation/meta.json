@@ -1,0 +1,10 @@
+{
+  "id": "image-decorative-role-presentation",
+  "description": "A decorative image marked with an explicit role=\"presentation\", producing no utterance",
+  "role": "presentation",
+  "rolesCovered": [
+    "presentation"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "list-ordered-start",
+  "description": "An <ol start=\"5\"> — the start attribute shifts the baked ordinal for every item, not just the first",
+  "role": "list",
+  "rolesCovered": [
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/ol#start",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,12 @@
+{
+  "id": "loi-epub-type",
+  "description": "A list-of-illustrations navigation list, containing links to illustrations in the work",
+  "role": "loi",
+  "rolesCovered": [
+    "loi",
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

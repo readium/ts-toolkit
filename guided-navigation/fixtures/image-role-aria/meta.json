@@ -1,0 +1,10 @@
+{
+  "id": "image-role-aria",
+  "description": "A non-<img> element acting as an image via role=\"img\" and aria-label",
+  "role": "image",
+  "rolesCovered": [
+    "image"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud#images",
+  "inputKind": "fragment"
+}

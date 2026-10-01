@@ -1,0 +1,10 @@
+{
+  "id": "biblioref-role-aria",
+  "description": "biblioref role via explicit ARIA role=\"doc-biblioref\" on an <a href>",
+  "role": "biblioref",
+  "rolesCovered": [
+    "biblioref"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,12 @@
+{
+  "id": "index-role-aria",
+  "description": "An index navigation list, containing links to key subjects and names, via explicit ARIA role",
+  "role": "index",
+  "rolesCovered": [
+    "index",
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}
