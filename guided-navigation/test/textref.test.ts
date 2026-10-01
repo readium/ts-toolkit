@@ -106,6 +106,21 @@ test("a lone roleless child with a description is not hoisted into its parent", 
   expect(item.children?.[0].description?.text?.plain).toBe("Sidebar");
 });
 
+test("a descended inline pagebreak stays within its paragraph's flow", () => {
+  const html = '<p>Before <span role="doc-pagebreak" title="5">5</span> after.</p>';
+  const [paragraph] = parseMarkup(html, undefined, { textrefs: ["pagebreak"] });
+  expect(parseMarkup(html).length).toBe(1);
+  expect(paragraph.textref).toBe(undefined);
+  expect(paragraph.children?.some((c) => c.role?.has("pagebreak"))).toBe(true);
+});
+
+test("a descended inline pagebreak doesn't truncate its paragraph's domRange", () => {
+  const html = '<body><p>Before <span role="doc-pagebreak" title="5">5</span> after.</p></body>';
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const [paragraph] = parseMarkup(doc.body, undefined, { textrefs: { roles: true, domRange: true } })[0].children!;
+  expect(decodeTextref(paragraph)?.domRange?.start).toEqual({ cssSelector: "html > body > p", textNodeIndex: 0, charOffset: 0 });
+});
+
 test("MathML is carried as SSML in the MathML namespace, keeping its alttext as description and a textref to its element", () => {
   const [math] = parseMarkup('<math alttext="x squared"><msup><mi>x</mi><mn>2</mn></msup></math>');
   expect(math.text?.ssml).toBe('<math xmlns="http://www.w3.org/1998/Math/MathML" alttext="x squared"><msup><mi>x</mi><mn>2</mn></msup></math>');

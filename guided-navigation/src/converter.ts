@@ -341,6 +341,8 @@ export class Converter {
     if (wasSkip) return;
     const tagName = el.tagName.toLowerCase();
     const roles = extractNodeRoles(el);
+    // A descended pagebreak is a placeholder in its parent's flow; head() never opened a block for it.
+    if (roles.includes("pagebreak")) return;
     if (isBlockNode(tagName, roles)) {
       this.flushText();
       const isLeafText = this.leafTextEnabled && roles.length === 0 && !!this.lastFlowText;
