@@ -63,7 +63,8 @@ function isChildrenOnly(o: ObjBuilder): boolean {
     (!o.text || textIsEmpty(o.text)) &&
     !!(o.children && o.children.length > 0) &&
     !(o.role && o.role.length > 0) &&
-    !o.id
+    !o.id &&
+    !o.description
   );
 }
 
@@ -77,6 +78,7 @@ function isHoistable(o: ObjBuilder): boolean {
   return (
     !(o.role && o.role.length > 0) &&
     !o.id &&
+    !o.description &&
     !o.textref &&
     !o.imgref &&
     !o.audioref &&

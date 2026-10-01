@@ -95,6 +95,17 @@ test("an object with only a role and a description gets a textref to its own ele
   expect(decodeCssSelectorFragment(image.textref)).toBe("span");
 });
 
+test("a roleless wrapper with a description is kept, not spliced into its parent", () => {
+  const [wrapper] = parseMarkup('<div aria-label="Sidebar"><p>One.</p><p>Two.</p></div>');
+  expect(wrapper.description?.text?.plain).toBe("Sidebar");
+  expect(wrapper.children?.length).toBe(2);
+});
+
+test("a lone roleless child with a description is not hoisted into its parent", () => {
+  const [item] = parseMarkup('<ul><li><div aria-label="Sidebar">One.</div></li></ul>')[0].children!;
+  expect(item.children?.[0].description?.text?.plain).toBe("Sidebar");
+});
+
 test("MathML is carried as SSML in the MathML namespace, keeping its alttext as description and a textref to its element", () => {
   const [math] = parseMarkup('<math alttext="x squared"><msup><mi>x</mi><mn>2</mn></msup></math>');
   expect(math.text?.ssml).toBe('<math xmlns="http://www.w3.org/1998/Math/MathML" alttext="x squared"><msup><mi>x</mi><mn>2</mn></msup></math>');
