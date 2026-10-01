@@ -1,0 +1,10 @@
+{
+  "id": "acknowledgments-role-aria",
+  "description": "acknowledgments role via explicit ARIA role=\"doc-acknowledgments\"",
+  "role": "acknowledgments",
+  "rolesCovered": [
+    "acknowledgments"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

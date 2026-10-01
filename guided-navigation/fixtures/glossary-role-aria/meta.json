@@ -1,0 +1,12 @@
+{
+  "id": "glossary-role-aria",
+  "description": "A glossary of term/definition entries via explicit ARIA role=\"doc-glossary\" on a <dl>, with each term wrapped in <dfn id=\"...\"> so a doc-glossref can target it, matching the spec's own worked example",
+  "role": "glossary",
+  "rolesCovered": [
+    "glossary",
+    "term",
+    "definition"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

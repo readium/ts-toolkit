@@ -1,0 +1,13 @@
+{
+  "id": "figure-credit-nested-in-aria-labelledby-caption",
+  "description": "A figure labelled via aria-labelledby pointing at a figcaption whose credit is nested inside it as a role=\"doc-credit\" span",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "image",
+    "credit",
+    "caption"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

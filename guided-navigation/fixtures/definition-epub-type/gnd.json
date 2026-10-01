@@ -1,0 +1,22 @@
+{
+  "role": [
+    "body"
+  ],
+  "children": [
+    {
+      "role": [
+        "glossary"
+      ],
+      "children": [
+        {
+          "text": {
+            "plain": "A structure that contains an enumeration of related content items."
+          },
+          "role": [
+            "definition"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "id": "dedication-role-aria",
+  "description": "dedication role via explicit ARIA role=\"doc-dedication\"",
+  "role": "dedication",
+  "rolesCovered": [
+    "dedication"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

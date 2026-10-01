@@ -1,0 +1,13 @@
+{
+  "id": "table-caption-role-aria",
+  "description": "An ARIA table with an explicit role=\"caption\" child (no aria-labelledby) — same un-folded behavior as table-caption-element-html-native (a separate role \"caption\" child, not folded into the table's own description), confirmed via the explicit-ARIA encoding rather than a native <caption> element",
+  "role": "table",
+  "rolesCovered": [
+    "table",
+    "caption",
+    "row",
+    "columnheader"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

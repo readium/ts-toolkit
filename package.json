@@ -11,7 +11,8 @@
         "navigator",
         "navigator-html-injectables",
         "shared",
-        "decorator"
+        "decorator",
+        "guided-navigation"
     ],
     "packageManager": "pnpm@11.1.0"
 }

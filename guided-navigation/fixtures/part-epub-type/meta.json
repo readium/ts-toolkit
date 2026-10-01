@@ -1,0 +1,11 @@
+{
+  "id": "part-epub-type",
+  "description": "part role via epub:type=\"part\", containing a heading",
+  "role": "part",
+  "rolesCovered": [
+    "part",
+    "heading1"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud#sections-and-headers",
+  "inputKind": "document"
+}

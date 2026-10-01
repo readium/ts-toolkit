@@ -1,0 +1,11 @@
+{
+  "id": "definition-epub-type",
+  "description": "definition role via epub:type=\"glossdef\" on a <dd>, nested in a <dl epub:type=\"glossary\">",
+  "role": "definition",
+  "rolesCovered": [
+    "definition",
+    "glossary"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

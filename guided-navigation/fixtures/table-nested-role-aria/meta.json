@@ -1,0 +1,12 @@
+{
+  "id": "table-nested-role-aria",
+  "description": "An ARIA table (role=\"table\"/role=\"row\"/role=\"cell\") nested inside another ARIA table's cell — same correct recursion as table-nested-html-native, confirmed via the explicit-ARIA encoding",
+  "role": "table",
+  "rolesCovered": [
+    "table",
+    "row",
+    "cell"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

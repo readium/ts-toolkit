@@ -1,0 +1,22 @@
+{
+  "role": [
+    "table"
+  ],
+  "children": [
+    {
+      "role": [
+        "row"
+      ],
+      "children": [
+        {
+          "text": {
+            "plain": "Name"
+          },
+          "role": [
+            "columnheader"
+          ]
+        }
+      ]
+    }
+  ]
+}

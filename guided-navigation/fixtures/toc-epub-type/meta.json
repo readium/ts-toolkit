@@ -1,0 +1,12 @@
+{
+  "id": "toc-epub-type",
+  "description": "A table-of-contents navigation list, containing links to sectional headings, via epub:type",
+  "role": "toc",
+  "rolesCovered": [
+    "toc",
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

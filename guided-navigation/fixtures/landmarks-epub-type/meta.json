@@ -1,0 +1,12 @@
+{
+  "id": "landmarks-epub-type",
+  "description": "A landmarks navigation list, containing links to the cover, table of contents, and start of content",
+  "role": "landmarks",
+  "rolesCovered": [
+    "landmarks",
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

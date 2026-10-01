@@ -1,0 +1,15 @@
+{
+  "role": [
+    "body"
+  ],
+  "children": [
+    {
+      "text": {
+        "plain": "For every keeper who lit the lamp at dusk."
+      },
+      "role": [
+        "dedication"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "id": "summary-html-native",
+  "description": "summary role via native <summary> element",
+  "role": "summary",
+  "rolesCovered": [
+    "summary"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

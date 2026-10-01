@@ -1,0 +1,15 @@
+{
+  "role": [
+    "body"
+  ],
+  "children": [
+    {
+      "text": {
+        "plain": "This work explores the history of coastal lighthouses."
+      },
+      "role": [
+        "introduction"
+      ]
+    }
+  ]
+}

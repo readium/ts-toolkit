@@ -1,0 +1,10 @@
+{
+  "id": "notice-role-aria",
+  "description": "notice role via explicit ARIA role=\"doc-notice\"",
+  "role": "notice",
+  "rolesCovered": [
+    "notice"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

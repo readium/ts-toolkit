@@ -1,0 +1,13 @@
+{
+  "id": "table-role-presentation-role-aria",
+  "description": "An ARIA table (role=\"presentation\" wrapping role=\"row\"/role=\"columnheader\"/role=\"cell\") — same non-cascading behavior as table-role-presentation-html-native, confirmed via the explicit-ARIA encoding rather than a native <table>",
+  "role": "presentation",
+  "rolesCovered": [
+    "presentation",
+    "row",
+    "columnheader",
+    "cell"
+  ],
+  "sourceRef": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/presentation_role",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "term-html-native",
+  "description": "term role via native <dfn> element",
+  "role": "term",
+  "rolesCovered": [
+    "term"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

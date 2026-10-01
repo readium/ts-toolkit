@@ -1,0 +1,10 @@
+{
+  "id": "abstract-role-aria",
+  "description": "abstract role via explicit ARIA role=\"doc-abstract\"",
+  "role": "abstract",
+  "rolesCovered": [
+    "abstract"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,61 @@
+{
+  "role": [
+    "body"
+  ],
+  "children": [
+    {
+      "role": [
+        "navigation",
+        "pagelist"
+      ],
+      "children": [
+        {
+          "role": [
+            "list"
+          ],
+          "children": [
+            {
+              "role": [
+                "listItem"
+              ],
+              "children": [
+                {
+                  "textref": "#pg1",
+                  "text": {
+                    "plain": "Page 1"
+                  }
+                }
+              ]
+            },
+            {
+              "role": [
+                "listItem"
+              ],
+              "children": [
+                {
+                  "textref": "#pg2",
+                  "text": {
+                    "plain": "Page 2"
+                  }
+                }
+              ]
+            },
+            {
+              "role": [
+                "listItem"
+              ],
+              "children": [
+                {
+                  "textref": "#pg3",
+                  "text": {
+                    "plain": "Page 3"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

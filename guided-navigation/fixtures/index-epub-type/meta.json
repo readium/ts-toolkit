@@ -1,0 +1,12 @@
+{
+  "id": "index-epub-type",
+  "description": "An index navigation list, containing links to key subjects and names, via epub:type",
+  "role": "index",
+  "rolesCovered": [
+    "index",
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

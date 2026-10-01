@@ -1,0 +1,25 @@
+{
+  "role": [
+    "body"
+  ],
+  "children": [
+    {
+      "text": {
+        "language": "en",
+        "plain": "Hello."
+      },
+      "role": [
+        "paragraph"
+      ]
+    },
+    {
+      "text": {
+        "language": "fr",
+        "plain": "Bonjour."
+      },
+      "role": [
+        "paragraph"
+      ]
+    }
+  ]
+}

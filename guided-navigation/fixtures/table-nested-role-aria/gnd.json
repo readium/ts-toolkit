@@ -1,0 +1,48 @@
+{
+  "role": [
+    "table"
+  ],
+  "children": [
+    {
+      "role": [
+        "row"
+      ],
+      "children": [
+        {
+          "role": [
+            "cell"
+          ],
+          "children": [
+            {
+              "text": {
+                "plain": "Outer"
+              }
+            },
+            {
+              "role": [
+                "table"
+              ],
+              "children": [
+                {
+                  "role": [
+                    "row"
+                  ],
+                  "children": [
+                    {
+                      "text": {
+                        "plain": "Inner"
+                      },
+                      "role": [
+                        "cell"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

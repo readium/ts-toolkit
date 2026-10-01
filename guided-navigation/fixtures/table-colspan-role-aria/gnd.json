@@ -1,0 +1,45 @@
+{
+  "role": [
+    "table"
+  ],
+  "children": [
+    {
+      "role": [
+        "row"
+      ],
+      "children": [
+        {
+          "text": {
+            "plain": "Name and Role"
+          },
+          "role": [
+            "columnheader"
+          ]
+        }
+      ]
+    },
+    {
+      "role": [
+        "row"
+      ],
+      "children": [
+        {
+          "text": {
+            "plain": "Ada"
+          },
+          "role": [
+            "cell"
+          ]
+        },
+        {
+          "text": {
+            "plain": "Engineer"
+          },
+          "role": [
+            "cell"
+          ]
+        }
+      ]
+    }
+  ]
+}

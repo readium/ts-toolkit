@@ -1,0 +1,12 @@
+{
+  "id": "bibliography-epub-type",
+  "description": "A bibliography list of cited references, via epub:type=\"bibliography\" on a <section>",
+  "role": "bibliography",
+  "rolesCovered": [
+    "bibliography",
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "qna-epub-type",
+  "description": "qna role via epub:type=\"qna\" on a <section>",
+  "role": "qna",
+  "rolesCovered": [
+    "qna"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

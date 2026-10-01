@@ -1,0 +1,11 @@
+{
+  "id": "list-epub-type",
+  "description": "list role via epub:type=\"list\" on neutral <div> elements (isolating the epub:type code path from the native <ul>/<ol> tag mapping), with epub:type=\"list-item\" children — the only encoding of this role previously untested; every other list fixture (including pagelist-epub-type, which nests a plain native <ol>) exercises the list role via the native tag, never epub:type",
+  "role": "list",
+  "rolesCovered": [
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

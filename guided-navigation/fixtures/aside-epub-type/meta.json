@@ -1,0 +1,10 @@
+{
+  "id": "aside-epub-type",
+  "description": "aside role via epub:type=\"aside\" on a neutral <div> (isolating the epub:type code path from the native <aside> tag mapping) — the only encoding of this role previously untested; aside-html-native covers the native element",
+  "role": "aside",
+  "rolesCovered": [
+    "aside"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "image-no-description",
+  "description": "An <img> with no alt attribute at all and no other accessible-name source — distinct from a decorative image (empty alt or role=\"presentation\"), which maps to the presentation role instead",
+  "role": "image",
+  "rolesCovered": [
+    "image"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud#images",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "hidden-aria-hidden-html-native",
+  "description": "An element marked aria-hidden=\"true\" is excluded from the GND tree entirely, producing no node and no utterance",
+  "role": "presentation",
+  "rolesCovered": [
+    "presentation"
+  ],
+  "sourceRef": "https://www.w3.org/TR/accname/#terminology",
+  "inputKind": "fragment"
+}

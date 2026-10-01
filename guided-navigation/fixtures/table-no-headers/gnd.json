@@ -1,0 +1,53 @@
+{
+  "role": [
+    "table"
+  ],
+  "children": [
+    {
+      "role": [
+        "row"
+      ],
+      "children": [
+        {
+          "text": {
+            "plain": "Ada"
+          },
+          "role": [
+            "cell"
+          ]
+        },
+        {
+          "text": {
+            "plain": "Engineer"
+          },
+          "role": [
+            "cell"
+          ]
+        }
+      ]
+    },
+    {
+      "role": [
+        "row"
+      ],
+      "children": [
+        {
+          "text": {
+            "plain": "Grace"
+          },
+          "role": [
+            "cell"
+          ]
+        },
+        {
+          "text": {
+            "plain": "Admiral"
+          },
+          "role": [
+            "cell"
+          ]
+        }
+      ]
+    }
+  ]
+}

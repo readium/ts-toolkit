@@ -1,0 +1,32 @@
+{
+  "role": [
+    "credits"
+  ],
+  "children": [
+    {
+      "role": [
+        "list"
+      ],
+      "children": [
+        {
+          "role": [
+            "listItem",
+            "credit"
+          ],
+          "text": {
+            "plain": "Cover photograph by A. Keeper."
+          }
+        },
+        {
+          "role": [
+            "listItem",
+            "credit"
+          ],
+          "text": {
+            "plain": "Maps by B. Cartographer."
+          }
+        }
+      ]
+    }
+  ]
+}

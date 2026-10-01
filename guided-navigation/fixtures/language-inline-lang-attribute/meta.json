@@ -1,0 +1,10 @@
+{
+  "id": "language-inline-lang-attribute",
+  "description": "An inline foreign-language phrase using the HTML lang attribute (not xml:lang) on a plain, non-semantic span",
+  "role": "language",
+  "rolesCovered": [
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud#multilingual-text",
+  "inputKind": "fragment"
+}

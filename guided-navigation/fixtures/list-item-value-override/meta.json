@@ -1,0 +1,11 @@
+{
+  "id": "list-item-value-override",
+  "description": "An <ol> whose second <li value=\"10\"> resets the running count, so the baked ordinal for the third item is 11, not 3 — HTML's <li value> semantics persist to every following sibling until overridden again",
+  "role": "list",
+  "rolesCovered": [
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/li#value",
+  "inputKind": "fragment"
+}

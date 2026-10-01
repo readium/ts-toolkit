@@ -1,0 +1,10 @@
+{
+  "id": "listitem-role-presentation",
+  "description": "A <li> with role=\"presentation\", stripping its native listItem semantics while its sibling item keeps normal listItem behavior",
+  "role": "presentation",
+  "rolesCovered": [
+    "presentation"
+  ],
+  "sourceRef": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/presentation_role",
+  "inputKind": "fragment"
+}

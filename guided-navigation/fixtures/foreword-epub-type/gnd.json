@@ -1,0 +1,15 @@
+{
+  "role": [
+    "body"
+  ],
+  "children": [
+    {
+      "text": {
+        "plain": "A respected maritime historian introduces this account of the coastline's lighthouses."
+      },
+      "role": [
+        "foreword"
+      ]
+    }
+  ]
+}

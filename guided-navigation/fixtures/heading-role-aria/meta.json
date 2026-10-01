@@ -1,0 +1,15 @@
+{
+  "id": "heading-role-aria",
+  "description": "heading1 through heading6 via role=\"heading\" + aria-level (bundled: same pathway, repeated depth)",
+  "role": "heading",
+  "rolesCovered": [
+    "heading1",
+    "heading2",
+    "heading3",
+    "heading4",
+    "heading5",
+    "heading6"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

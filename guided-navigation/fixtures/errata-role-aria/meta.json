@@ -1,0 +1,10 @@
+{
+  "id": "errata-role-aria",
+  "description": "errata role via explicit ARIA role=\"doc-errata\"",
+  "role": "errata",
+  "rolesCovered": [
+    "errata"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

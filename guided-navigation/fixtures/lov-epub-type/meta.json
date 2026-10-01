@@ -1,0 +1,12 @@
+{
+  "id": "lov-epub-type",
+  "description": "A list-of-video-clips navigation list, containing links to video clips in the work",
+  "role": "lov",
+  "rolesCovered": [
+    "lov",
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

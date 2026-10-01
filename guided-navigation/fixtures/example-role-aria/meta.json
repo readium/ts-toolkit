@@ -1,0 +1,10 @@
+{
+  "id": "example-role-aria",
+  "description": "example role via explicit ARIA role=\"doc-example\"",
+  "role": "example",
+  "rolesCovered": [
+    "example"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

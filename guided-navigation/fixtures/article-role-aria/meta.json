@@ -1,0 +1,10 @@
+{
+  "id": "article-role-aria",
+  "description": "article role via explicit ARIA role=\"article\" — the only encoding of this role previously untested; article-html-native covers the native <article> element",
+  "role": "article",
+  "rolesCovered": [
+    "article"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

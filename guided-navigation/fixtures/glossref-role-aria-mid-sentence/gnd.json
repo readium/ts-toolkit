@@ -1,0 +1,32 @@
+{
+  "text": {
+    "language": "en",
+    "plain": "A text-to-speech system is composed of two parts: a and a.",
+    "ssml": "A text-to-speech system is composed of two parts: a <readium:glossref id=\"glossref1\" /> and a <readium:glossref id=\"glossref2\" />."
+  },
+  "role": [
+    "paragraph"
+  ],
+  "children": [
+    {
+      "id": "glossref1",
+      "textref": "#gloss-front-end",
+      "text": {
+        "plain": "front-end"
+      },
+      "role": [
+        "glossref"
+      ]
+    },
+    {
+      "id": "glossref2",
+      "textref": "#gloss-back-end",
+      "text": {
+        "plain": "back-end"
+      },
+      "role": [
+        "glossref"
+      ]
+    }
+  ]
+}

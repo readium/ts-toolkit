@@ -1,0 +1,10 @@
+{
+  "id": "language-inline-two-languages",
+  "description": "A paragraph with two different inline foreign-language phrases",
+  "role": "language",
+  "rolesCovered": [
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud#multilingual-text",
+  "inputKind": "fragment"
+}

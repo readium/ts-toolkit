@@ -1,0 +1,10 @@
+{
+  "id": "image-alt-html-native",
+  "description": "An image with alt text via native <img alt>",
+  "role": "image",
+  "rolesCovered": [
+    "image"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud#images",
+  "inputKind": "fragment"
+}

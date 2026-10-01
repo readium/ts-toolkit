@@ -1,0 +1,13 @@
+{
+  "id": "table-colspan-html-native",
+  "description": "A native columnheader with colspan=\"2\" spanning two data columns — colspan is not read or tracked at all; the second data row's two cells carry no header-association information reflecting that a single header covers both of them. Relevant to the planned cell/rowheader {header}: {value} template work, which needs real column-index tracking to get this right. See table-colspan-role-aria for the aria-colspan equivalent",
+  "role": "table",
+  "rolesCovered": [
+    "table",
+    "row",
+    "columnheader",
+    "cell"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,12 @@
+{
+  "id": "bibliography-role-aria",
+  "description": "A bibliography list of cited references, via explicit ARIA role",
+  "role": "bibliography",
+  "rolesCovered": [
+    "bibliography",
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,12 @@
+{
+  "id": "table-rowgroup-role-aria",
+  "description": "An ARIA table with an explicit role=\"rowgroup\" wrapper around its rows — rowgroup is not in GND's role vocabulary at all, so the wrapper is treated as an unknown role and spliced away transparently, same as native <thead>/<tbody>/<tfoot> (see table-sectioning). Captured as a baseline confirming this is consistent across both encodings, not a native-only quirk",
+  "role": "table",
+  "rolesCovered": [
+    "table",
+    "row",
+    "columnheader"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

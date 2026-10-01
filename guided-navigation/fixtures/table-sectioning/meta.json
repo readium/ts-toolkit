@@ -1,0 +1,13 @@
+{
+  "id": "table-sectioning",
+  "description": "<thead>/<tbody>/<tfoot> are transparent — their rows flatten directly into the table's children with no rowgroup role or boundary marker of any kind. GND's role vocabulary has no rowgroup role at all (not in roles.md), so this is presumed intentional (grouping is visual-only, not meaningful for read-aloud), but was previously unconfirmed by any fixture — a tfoot row like a totals row is indistinguishable from a tbody row",
+  "role": "table",
+  "rolesCovered": [
+    "table",
+    "row",
+    "columnheader",
+    "cell"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

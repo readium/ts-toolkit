@@ -1,0 +1,10 @@
+{
+  "id": "appendix-role-aria",
+  "description": "appendix role via explicit ARIA role=\"doc-appendix\"",
+  "role": "appendix",
+  "rolesCovered": [
+    "appendix"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

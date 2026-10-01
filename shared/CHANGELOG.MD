@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking:** requires Node.js 24 or later
 - **Breaking:** Guided Navigation models now follow the Guided Navigation JSON schema:
   - `GuidedNavigationObject.level` is removed
   - `GuidedNavigationDocument.links` is removed, and `GuidedNavigationDocument.guided` is required

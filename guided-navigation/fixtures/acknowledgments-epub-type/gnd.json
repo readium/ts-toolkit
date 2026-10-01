@@ -1,0 +1,15 @@
+{
+  "role": [
+    "body"
+  ],
+  "children": [
+    {
+      "text": {
+        "plain": "The author thanks the keepers of Fastnet Rock for their recollections."
+      },
+      "role": [
+        "acknowledgments"
+      ]
+    }
+  ]
+}

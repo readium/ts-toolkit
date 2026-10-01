@@ -1,0 +1,10 @@
+{
+  "id": "subtitle-epub-type",
+  "description": "subtitle role via epub:type=\"subtitle\"",
+  "role": "subtitle",
+  "rolesCovered": [
+    "subtitle"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "table-rowspan-role-aria",
+  "description": "An ARIA rowheader with aria-rowspan=\"2\" spanning two data rows — same as table-rowspan-html-native's native rowspan, aria-rowspan is not read or tracked at all either, confirmed via the explicit-ARIA encoding",
+  "role": "table",
+  "rolesCovered": [
+    "table",
+    "row",
+    "rowheader",
+    "cell"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

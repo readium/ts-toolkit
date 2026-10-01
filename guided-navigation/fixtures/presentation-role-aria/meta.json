@@ -1,0 +1,10 @@
+{
+  "id": "presentation-role-aria",
+  "description": "presentation role via explicit ARIA role=\"presentation\"",
+  "role": "presentation",
+  "rolesCovered": [
+    "presentation"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

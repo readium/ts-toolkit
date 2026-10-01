@@ -1,0 +1,50 @@
+{
+  "children": [
+    {
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "This text has a footnote.",
+        "ssml": "This text has a footnote <readium:noteref id=\"noteref1\" />.",
+        "language": "en"
+      },
+      "children": [
+        {
+          "role": [
+            "noteref"
+          ],
+          "id": "noteref1",
+          "text": {
+            "plain": "[1]"
+          },
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Text of the footnote.",
+                "ssml": "<readium:backlink id=\"backlink1\" /> Text of the footnote.",
+                "language": "en"
+              },
+              "children": [
+                {
+                  "id": "backlink1",
+                  "role": [
+                    "backlink"
+                  ],
+                  "text": {
+                    "plain": "1."
+                  },
+                  "textref": "#noteref1"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

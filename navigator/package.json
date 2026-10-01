@@ -41,7 +41,7 @@
     "types"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=24"
   },
   "scripts": {
     "clean": "rimraf types dist",

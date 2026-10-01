@@ -1,0 +1,81 @@
+{
+  "role": [
+    "table"
+  ],
+  "children": [
+    {
+      "role": [
+        "row"
+      ],
+      "children": [
+        {
+          "text": {
+            "plain": "Name"
+          },
+          "role": [
+            "columnheader"
+          ]
+        },
+        {
+          "text": {
+            "plain": "Role"
+          },
+          "role": [
+            "columnheader"
+          ]
+        }
+      ]
+    },
+    {
+      "role": [
+        "row"
+      ],
+      "children": [
+        {
+          "text": {
+            "plain": "Ada"
+          },
+          "role": [
+            "rowheader"
+          ]
+        },
+        {
+          "text": {
+            "plain": "Engineer"
+          },
+          "role": [
+            "cell"
+          ]
+        }
+      ]
+    },
+    {
+      "role": [
+        "row"
+      ],
+      "children": [
+        {
+          "text": {
+            "plain": "Grace"
+          },
+          "role": [
+            "rowheader"
+          ]
+        },
+        {
+          "text": {
+            "plain": "Admiral"
+          },
+          "role": [
+            "cell"
+          ]
+        }
+      ]
+    }
+  ],
+  "description": {
+    "text": {
+      "plain": "Team roster"
+    }
+  }
+}

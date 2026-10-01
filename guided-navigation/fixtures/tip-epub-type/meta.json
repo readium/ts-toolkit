@@ -1,0 +1,10 @@
+{
+  "id": "tip-epub-type",
+  "description": "tip role via epub:type=\"tip\" on an <aside>",
+  "role": "tip",
+  "rolesCovered": [
+    "tip"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

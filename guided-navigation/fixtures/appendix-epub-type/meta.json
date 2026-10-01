@@ -1,0 +1,10 @@
+{
+  "id": "appendix-epub-type",
+  "description": "appendix role via epub:type=\"appendix\" on a <section>",
+  "role": "appendix",
+  "rolesCovered": [
+    "appendix"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

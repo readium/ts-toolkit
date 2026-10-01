@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Text helpers: `ssmlTextEscape` and `ssmlAttrEscape` escape strings for SSML text and attribute values, `startsWithBindingPunct` tests whether a string starts with punctuation that binds to the preceding text, and `BINDING_PUNCT_CLASS` is that punctuation as a regex character class
 
+### Changed
+
+- **Breaking:** requires Node.js 24 or later
+
 ## [1.1.1] – 2026-09-29
 
 ### Fixed

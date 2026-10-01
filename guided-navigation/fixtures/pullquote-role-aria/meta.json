@@ -1,0 +1,10 @@
+{
+  "id": "pullquote-role-aria",
+  "description": "pullquote role via explicit ARIA role=\"doc-pullquote\"",
+  "role": "pullquote",
+  "rolesCovered": [
+    "pullquote"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

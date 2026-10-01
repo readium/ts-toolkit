@@ -1,0 +1,10 @@
+{
+  "id": "video-html-native",
+  "description": "video role via native <video src> element, with an aria-label as the accessible description",
+  "role": "video",
+  "rolesCovered": [
+    "video"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

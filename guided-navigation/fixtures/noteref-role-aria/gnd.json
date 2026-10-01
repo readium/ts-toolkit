@@ -1,0 +1,13 @@
+{
+  "role": [
+    "noteref"
+  ],
+  "text": {
+    "plain": "12"
+  },
+  "children": [
+    {
+      "textref": "#note12"
+    }
+  ]
+}

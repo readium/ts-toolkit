@@ -1,0 +1,10 @@
+{
+  "id": "complementary-role-aria",
+  "description": "complementary role via explicit ARIA role=\"complementary\"",
+  "role": "complementary",
+  "rolesCovered": [
+    "complementary"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

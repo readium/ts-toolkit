@@ -1,0 +1,10 @@
+{
+  "id": "main-role-aria",
+  "description": "main role via explicit ARIA role=\"main\"",
+  "role": "main",
+  "rolesCovered": [
+    "main"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

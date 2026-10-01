@@ -1,0 +1,10 @@
+{
+  "id": "subtitle-role-aria",
+  "description": "subtitle role via explicit ARIA role=\"doc-subtitle\"",
+  "role": "subtitle",
+  "rolesCovered": [
+    "subtitle"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

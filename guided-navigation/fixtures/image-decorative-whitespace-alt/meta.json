@@ -1,0 +1,10 @@
+{
+  "id": "image-decorative-whitespace-alt",
+  "description": "A decorative image with a whitespace-only alt (not literally empty), still mapping to the presentation role and producing no utterance — exercises the trim() in the decorative-image check rather than a literal empty-string comparison",
+  "role": "presentation",
+  "rolesCovered": [
+    "presentation"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

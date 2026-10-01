@@ -1,0 +1,16 @@
+{
+  "role": [
+    "body"
+  ],
+  "children": [
+    {
+      "textref": "#fresnel-lens",
+      "text": {
+        "plain": "See glossary: Fresnel lens"
+      },
+      "role": [
+        "glossref"
+      ]
+    }
+  ]
+}

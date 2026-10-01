@@ -1,0 +1,10 @@
+{
+  "id": "main-html-native",
+  "description": "main role via native <main> element",
+  "role": "main",
+  "rolesCovered": [
+    "main"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

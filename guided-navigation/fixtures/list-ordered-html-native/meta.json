@@ -1,0 +1,11 @@
+{
+  "id": "list-ordered-html-native",
+  "description": "A plain native <ol> with no start/reversed — produces the exact same GND shape as list-html-native's <ul> (both map to a bare \"list\" role via simpleElementTypeRoles, with no ordered/unordered distinction preserved anywhere in the schema). This is the baseline that any future listItem position-numbering feature has to solve first: whether to speak a number at all depends on knowing the list was ordered, which the GND format currently cannot express",
+  "role": "list",
+  "rolesCovered": [
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

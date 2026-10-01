@@ -1,0 +1,10 @@
+{
+  "id": "aside-html-native",
+  "description": "aside role via native <aside> element",
+  "role": "aside",
+  "rolesCovered": [
+    "aside"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

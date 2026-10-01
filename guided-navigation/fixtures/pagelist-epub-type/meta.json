@@ -1,0 +1,12 @@
+{
+  "id": "pagelist-epub-type",
+  "description": "A page-list navigation list, containing links to pagebreaks, via epub:type",
+  "role": "pagelist",
+  "rolesCovered": [
+    "pagelist",
+    "list",
+    "listItem"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "document"
+}

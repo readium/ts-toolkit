@@ -1,0 +1,10 @@
+{
+  "id": "section-html-native",
+  "description": "section role via native <section> element with no more specific semantic",
+  "role": "section",
+  "rolesCovered": [
+    "section"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}
