@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `GuidedNavigationObject.deserialize` returns `undefined` for an object with none of `audioref`, `imgref`, `textref`, `videoref`, `text` or `children`, and invalid children are dropped
   - `GuidedNavigationText.deserialize` returns `undefined` for an empty string or an object with neither `plain` nor `ssml`
 
+### Deprecated
+
+- `HTMLResourceContentIterator`: use `@readium/guided-navigation` and `@readium/speech` instead
+- `TextContentTokenizer`/`ContentTokenizer` and the text tokenizers (`Tokenizer`, `TextTokenizer`, `TextUnit`, `Range`, `DefaultTextContentTokenizer`, `IntlTextTokenizer`, `NaiveTextTokenizer`, `speakableToken`): `@readium/speech` segments text itself
+
 ## [2.6.0] – 2026-09-29
 
 ### Added
