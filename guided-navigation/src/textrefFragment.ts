@@ -125,6 +125,15 @@ export function combineDomRangeTextrefs(first: DecodedTextref, last: DecodedText
   return { domRange, cssSelector: domRange.container ?? domRange.start.cssSelector };
 }
 
+function decodeIdFragment(base: string): string | undefined {
+  if (!base.startsWith("#")) return undefined;
+  try {
+    return decodeURIComponent(base.slice(1));
+  } catch {
+    return undefined;
+  }
+}
+
 // Decodes a node's own generated textref, distinguishing it from an
 // unrelated navigational textref (link href, pagebreak/noteref reference)
 // that happens to also start with "#" — those are never wrapped in
@@ -151,8 +160,8 @@ export function decodeTextref(node: { id?: string; textref?: string } | undefine
     const decoded = decodeCssSelectorFragment(base);
     if (decoded !== undefined) {
       cssSelector = decoded;
-    } else if (node?.id && base === `#${CSS.escape(node.id)}`) {
-      cssSelector = base;
+    } else if (node?.id && decodeIdFragment(base) === node.id) {
+      cssSelector = `#${CSS.escape(node.id)}`;
     }
   }
 

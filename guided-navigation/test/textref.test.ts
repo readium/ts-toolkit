@@ -25,9 +25,16 @@ test("textrefs prefers a bare #id over a generated selector", () => {
   expect(result.textref).toBe("#par1");
 });
 
-test("textrefs keeps an id containing a space as bare, even though CSS.escape gives it a literal space", () => {
+test("textrefs keeps an id containing a space as a bare, percent-encoded URL fragment", () => {
   const [result] = parseMarkup('<p id="foo bar">Hello.</p>', undefined, { textrefs: true });
-  expect(result.textref).toBe("#foo\\ bar");
+  expect(result.textref).toBe("#foo%20bar");
+  expect(decodeTextref(result)).toEqual({ cssSelector: "#foo\\ bar" });
+});
+
+test("textrefs emits an id needing CSS escaping as a URL fragment, not a CSS-escaped selector", () => {
+  const [result] = parseMarkup('<p id="1intro">Hello.</p>', undefined, { textrefs: true });
+  expect(result.textref).toBe("#1intro");
+  expect(decodeTextref(result)).toEqual({ cssSelector: "#\\31 intro" });
 });
 
 test("textrefs: [roles] restricts generation to the listed roles", () => {

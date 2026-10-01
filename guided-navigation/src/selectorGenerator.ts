@@ -72,16 +72,15 @@ export function selectorForElement(
   return rootAnchor ? `${rootAnchor} > ${parts.join(" > ")}` : parts.join(" > ");
 }
 
-// The base textref every generated node gets: a bare "#id" fragment when
+// The base textref every generated node gets: a bare "#id" URL fragment when
 // the element has one, a "#css(<selector>)" fragment otherwise. Wraps
 // selectorForElement's raw value so callers that already hold that value
 // (e.g. domRangeGenerator.ts, reusing it for the same element) can skip
 // recomputing it.
-// Bare-id iff selector equals this element's own escaped id — mirrors
-// decodeTextref's check, unfooled by CSS.escape's literal spaces (id="foo bar").
+// Bare-id iff selector equals this element's own escaped id, unfooled by CSS.escape's literal spaces (id="foo bar").
 export function textrefForSelector(selector: string | undefined, el: Element): string | undefined {
   if (!selector) return undefined;
   const id = el.getAttribute("id");
   const isBareId = !!id && selector === `#${CSS.escape(id)}`;
-  return isBareId ? selector : encodeCssSelectorFragment(selector);
+  return isBareId ? `#${encodeURIComponent(id)}` : encodeCssSelectorFragment(selector);
 }
