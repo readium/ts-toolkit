@@ -92,6 +92,7 @@ export class NavObject {
   object: ObjBuilder = {};
   children: NavObject[] = [];
   noText = false;
+  hasChildBlock = false;
 
   // `selfTextref` references this object's own element, for objects that would otherwise lack the schema's required content.
   finalize(selfTextref?: (el: Element) => string | undefined): ObjBuilder {

@@ -121,6 +121,27 @@ test("a descended inline pagebreak doesn't truncate its paragraph's domRange", (
   expect(decodeTextref(paragraph)?.domRange?.start).toEqual({ cssSelector: "html > body > p", textNodeIndex: 0, charOffset: 0 });
 });
 
+test("a block with a child block doesn't narrow its textref to the text after that child", () => {
+  const options = { textrefs: { roles: true, textFragment: true } };
+  const [trailing] = parseMarkup("<section>Loose intro <p>Para</p> closing words</section>", "text/html", options);
+  const [leading] = parseMarkup("<section>Loose intro <p>Para</p></section>", "text/html", options);
+  expect(trailing.textref).toBe("#css(section)");
+  expect(leading.textref).toBe("#css(section)");
+});
+
+test("a block with a child block keeps its whole domRange off, not just the trailing flow's", () => {
+  const doc = new DOMParser().parseFromString("<body><section>Loose intro <p>Para</p> closing words</section></body>", "text/html");
+  const [section] = parseMarkup(doc.body, undefined, { textrefs: { roles: true, domRange: true } })[0].children!;
+  expect(decodeTextref(section)?.domRange).toBe(undefined);
+});
+
+test("textrefs: ['leaf-text'] treats a roleless <div> with a child block the same whether or not text follows it", () => {
+  const trailing = parseMarkup("<div>Loose intro <p>Para</p> closing words</div>", "text/html", { textrefs: ["leaf-text"] });
+  const leading = parseMarkup("<div>Loose intro <p>Para</p></div>", "text/html", { textrefs: ["leaf-text"] });
+  expect(trailing.map((o) => o.textref)).toEqual([undefined, undefined, undefined]);
+  expect(leading.map((o) => o.textref)).toEqual([undefined, undefined]);
+});
+
 test("MathML is carried as SSML in the MathML namespace, keeping its alttext as description and a textref to its element", () => {
   const [math] = parseMarkup('<math alttext="x squared"><msup><mi>x</mi><mn>2</mn></msup></math>');
   expect(math.text?.ssml).toBe('<math xmlns="http://www.w3.org/1998/Math/MathML" alttext="x squared"><msup><mi>x</mi><mn>2</mn></msup></math>');

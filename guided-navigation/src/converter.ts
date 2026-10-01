@@ -172,6 +172,7 @@ export class Converter {
     node.noText =
       this.foldedCaptions.has(el) || ((!hasExplicitRole(el) || roles.includes("caption")) && this.current.noText);
     this.current.children.push(node);
+    this.current.hasChildBlock = true;
     this.current = node;
   }
 
@@ -345,6 +346,11 @@ export class Converter {
     if (roles.includes("pagebreak")) return;
     if (isBlockNode(tagName, roles)) {
       this.flushText();
+      // A child block splits el's text into several flows; the last one alone doesn't represent el.
+      if (this.current.hasChildBlock) {
+        this.lastFlowRange = null;
+        this.lastFlowText = null;
+      }
       const isLeafText = this.leafTextEnabled && roles.length === 0 && !!this.lastFlowText;
       if (this.selectorPredicate?.(roles) || isLeafText) {
         this.applyTextref(el);
