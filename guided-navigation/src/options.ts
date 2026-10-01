@@ -31,6 +31,9 @@ export interface GndGenerationOptions {
   // nodes as they're converted. Off by default — selector generation has a
   // real compute cost.
   textrefs?: boolean | GndRole[] | TextrefOptions;
+  // Re-parse string input as text/html when XHTML parsing fails, instead of
+  // throwing.
+  htmlFallback?: boolean;
 }
 
 function normalizeRoles(opt: boolean | GndRole[] | undefined): ((roles: GndRole[]) => boolean) | null {

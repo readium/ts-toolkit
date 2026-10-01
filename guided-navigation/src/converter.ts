@@ -666,7 +666,8 @@ const BODY_TAG_RE = /<body[\s>]/i;
  * real, author-written <body> becomes its own role: ["body"] node like any
  * other element; a <body> synthesized only by text/html parsing around a
  * bodyless fragment is not content and is skipped through; a bodyless XHTML
- * fragment's root element is itself the content.
+ * fragment's root element is itself the content. Malformed XHTML throws,
+ * unless `options.htmlFallback` re-parses it as text/html.
  *
  * Given a live, already-rendered element instead, it's converted in place —
  * no parsing, no detached copy — so `domRange` can pinpoint exact text
@@ -694,8 +695,18 @@ export function parseMarkup(
     return converter.result();
   }
 
-  const mt = mediaType ?? sniffMediaType(input);
-  const doc = new DOMParser().parseFromString(input, mt);
+  let mt = mediaType ?? sniffMediaType(input);
+  let doc = new DOMParser().parseFromString(input, mt);
+  if (mt === "application/xhtml+xml") {
+    const error = doc.getElementsByTagNameNS("*", "parsererror")[0];
+    if (error) {
+      if (!options?.htmlFallback) {
+        throw new Error(`XHTML parsing failed: ${error.textContent?.trim() ?? ""}`);
+      }
+      mt = "text/html";
+      doc = new DOMParser().parseFromString(input, mt);
+    }
+  }
   const converter = new Converter(mt === "application/xhtml+xml");
   converter.selectorPredicate = predicate;
   converter.leafTextEnabled = leafText;

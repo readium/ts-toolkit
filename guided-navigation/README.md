@@ -31,6 +31,8 @@ function parseMarkup(input: string | Element, mediaType?: GndMediaType, options?
 
 `input` is either raw markup, or a live, already-rendered element to convert in place — see `domRange` below for why that distinction matters. `mediaType` is `"text/html" | "application/xhtml+xml"`. Omit it to sniff from `input` (a string: XML declaration, `xmlns:epub`, XHTML doctype → XHTML, else HTML; an element: its own document's content type).
 
+Malformed XHTML (an undeclared `epub:` prefix, an HTML entity like `&nbsp;`…) throws. Pass `{ htmlFallback: true }` in `options` to re-parse it as HTML instead.
+
 `makeGnd` returns `undefined` when the input has no navigable content, since a document's `guided` can't be empty. `parseMarkup` returns the objects without the document wrapper, and an empty array in that case.
 
 Use `serialize()` on the result to get the JSON.
