@@ -5,7 +5,7 @@
   "children": [
     {
       "role": [
-        "presentation"
+        "row"
       ],
       "children": [
         {
@@ -13,14 +13,14 @@
             "plain": "Name"
           },
           "role": [
-            "presentation"
+            "columnheader"
           ]
         }
       ]
     },
     {
       "role": [
-        "presentation"
+        "row"
       ],
       "children": [
         {
@@ -28,7 +28,7 @@
             "plain": "Ada"
           },
           "role": [
-            "presentation"
+            "cell"
           ]
         }
       ]

@@ -1,6 +1,6 @@
 {
   "id": "table-role-presentation-html-native",
-  "description": "A native <table role=\"presentation\"> whose rows/cells still resolve to normal row/columnheader/cell roles — role stripping is per-element only and does not cascade down through a table's structure, unlike the ARIA \"presentational table\" rule (HTML-AAM), which drops the whole subtree's table semantics when the table itself is presentational and nothing else in the subtree carries an explicit table role. Captured as a baseline, not an endorsement. See table-role-presentation-role-aria for the equivalent built entirely from ARIA roles",
+  "description": "A native <table role=\"presentation\">: its rows/cells have no explicit role, so they inherit presentation (ARIA presentational inheritance to required owned elements). See table-role-presentation-role-aria for explicit roles, which don't inherit",
   "role": "presentation",
   "rolesCovered": [
     "presentation",

@@ -1,0 +1,63 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "text": {
+                "plain": "Layout"
+              }
+            },
+            {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "role": [
+                        "columnheader"
+                      ],
+                      "text": {
+                        "plain": "Name"
+                      }
+                    }
+                  ],
+                  "role": [
+                    "row"
+                  ]
+                },
+                {
+                  "children": [
+                    {
+                      "role": [
+                        "cell"
+                      ],
+                      "text": {
+                        "plain": "Ada"
+                      }
+                    }
+                  ],
+                  "role": [
+                    "row"
+                  ]
+                }
+              ],
+              "role": [
+                "table"
+              ]
+            }
+          ],
+          "role": [
+            "presentation"
+          ]
+        }
+      ],
+      "role": [
+        "presentation"
+      ]
+    }
+  ],
+  "role": [
+    "presentation"
+  ]
+}

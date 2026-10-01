@@ -1550,10 +1550,30 @@
     }
   },
   {
+    "id": "table-in-role-none-wrapper",
+    "dir": "table-in-role-none-wrapper",
+    "role": "table",
+    "description": "A native <table> inside a <div role=\"none\">: a div has no required owned elements, so presentation doesn't reach the table, which keeps its table/row/columnheader/cell roles",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "table-nested-html-native",
     "dir": "table-nested-html-native",
     "role": "table",
     "description": "A native <table> nested inside another native table's cell — confirms recursion handles it correctly (the inner table's own row/cell structure resolves independently, nested under the outer cell alongside its own text). See table-nested-role-aria for the ARIA-role equivalent",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "table-nested-in-presentation-table",
+    "dir": "table-nested-in-presentation-table",
+    "role": "presentation",
+    "description": "A data table nested in a layout <table role=\"presentation\">: only the outer table's own rows/cells inherit presentation; the inner table keeps its table/row/columnheader/cell roles",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -1590,10 +1610,20 @@
     }
   },
   {
+    "id": "table-role-presentation-explicit-cell",
+    "dir": "table-role-presentation-explicit-cell",
+    "role": "presentation",
+    "description": "A <td role=\"cell\"> in a <table role=\"presentation\"> keeps its explicit role, while its sibling <td> with no role inherits presentation",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "table-role-presentation-html-native",
     "dir": "table-role-presentation-html-native",
     "role": "presentation",
-    "description": "A native <table role=\"presentation\"> whose rows/cells still resolve to normal row/columnheader/cell roles — role stripping is per-element only and does not cascade down through a table's structure, unlike the ARIA \"presentational table\" rule (HTML-AAM), which drops the whole subtree's table semantics when the table itself is presentational and nothing else in the subtree carries an explicit table role. Captured as a baseline, not an endorsement. See table-role-presentation-role-aria for the equivalent built entirely from ARIA roles",
+    "description": "A native <table role=\"presentation\">: its rows/cells have no explicit role, so they inherit presentation (ARIA presentational inheritance to required owned elements). See table-role-presentation-role-aria for explicit roles, which don't inherit",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -1603,7 +1633,7 @@
     "id": "table-role-presentation-role-aria",
     "dir": "table-role-presentation-role-aria",
     "role": "presentation",
-    "description": "An ARIA table (role=\"presentation\" wrapping role=\"row\"/role=\"columnheader\"/role=\"cell\") — same non-cascading behavior as table-role-presentation-html-native, confirmed via the explicit-ARIA encoding rather than a native <table>",
+    "description": "role=\"presentation\" on a wrapper doesn't override descendants' explicit role=\"row\"/\"columnheader\"/\"cell\" (ARIA presentational inheritance skips explicit roles)",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"

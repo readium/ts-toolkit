@@ -1,0 +1,11 @@
+{
+  "id": "table-role-presentation-explicit-cell",
+  "description": "A <td role=\"cell\"> in a <table role=\"presentation\"> keeps its explicit role, while its sibling <td> with no role inherits presentation",
+  "role": "presentation",
+  "rolesCovered": [
+    "presentation",
+    "cell"
+  ],
+  "sourceRef": "https://www.w3.org/TR/wai-aria-1.2/#conflict_resolution_presentation_none",
+  "inputKind": "fragment"
+}

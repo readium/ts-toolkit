@@ -1,6 +1,6 @@
 {
   "id": "table-role-presentation-role-aria",
-  "description": "An ARIA table (role=\"presentation\" wrapping role=\"row\"/role=\"columnheader\"/role=\"cell\") — same non-cascading behavior as table-role-presentation-html-native, confirmed via the explicit-ARIA encoding rather than a native <table>",
+  "description": "role=\"presentation\" on a wrapper doesn't override descendants' explicit role=\"row\"/\"columnheader\"/\"cell\" (ARIA presentational inheritance skips explicit roles)",
   "role": "presentation",
   "rolesCovered": [
     "presentation",

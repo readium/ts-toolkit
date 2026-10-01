@@ -180,10 +180,10 @@ const simpleElementTypeRoles: Record<string, GndRole> = {
   svg: "image",
 };
 
-// HTML-AAM's presentational table rule: role="presentation"/"none" cascades
-// to the whole subtree, unconditionally, no per-descendant escape hatch.
-const tableStructuralTags = new Set(["table", "tr", "td", "th"]);
-const tableStructuralRoles: ReadonlySet<GndRole> = new Set(["table", "row", "cell", "columnheader", "rowheader"]);
+// ARIA presentational inheritance: only a presentational <table>'s own
+// required owned elements without an explicit role inherit it.
+const tableOwnedTags = new Set(["tr", "td", "th"]);
+const tableOwnedIntermediateTags = new Set(["tr", "thead", "tbody", "tfoot"]);
 
 function isElementPresentational(el: Element): boolean {
   const role = el.getAttribute("role");
@@ -192,17 +192,19 @@ function isElementPresentational(el: Element): boolean {
   return vals.includes("presentation") || vals.includes("none");
 }
 
-// Any presentational ancestor, not just a literal <table> — an ARIA-encoded
-// table has no tag/role saying "table", only its structural descendants.
-function hasPresentationalAncestor(el: Element): boolean {
-  for (let p = el.parentElement; p; p = p.parentElement) {
-    if (isElementPresentational(p)) return true;
-  }
-  return false;
+function hasExplicitAriaRole(el: Element): boolean {
+  return (el.getAttribute("role") ?? "").trim() !== "";
 }
 
-function isTableStructuralCandidate(tagName: string, attrRoles: GndRole[]): boolean {
-  return tableStructuralTags.has(tagName) || attrRoles.some((role) => tableStructuralRoles.has(role));
+function inheritsTablePresentation(el: Element, tagName: string): boolean {
+  if (!tableOwnedTags.has(tagName) || hasExplicitAriaRole(el)) return false;
+  for (let p = el.parentElement; p; p = p.parentElement) {
+    const tag = p.tagName.toLowerCase();
+    if (tag !== "table" && !tableOwnedIntermediateTags.has(tag)) return false;
+    if (isElementPresentational(p)) return true;
+    if (tag === "table" || hasExplicitAriaRole(p)) return false;
+  }
+  return false;
 }
 
 function hasRole(el: Element, role: string): boolean {
@@ -309,7 +311,7 @@ export function extractNodeRoles(el: Element): GndRole[] {
     return ["presentation"];
   }
 
-  if (isTableStructuralCandidate(tagName, attrRoles) && hasPresentationalAncestor(el)) {
+  if (inheritsTablePresentation(el, tagName)) {
     return ["presentation"];
   }
 
