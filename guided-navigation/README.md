@@ -8,7 +8,7 @@ Generates [Guided Navigation](https://github.com/readium/guided-navigation) (GND
 npm install @readium/guided-navigation
 ```
 
-Needs DOM globals (`DOMParser`, `Range`, `CSS.escape`…): a browser, or a DOM implementation such as jsdom installed on `globalThis`. No HTML/XML parser is bundled.
+Needs DOM globals (`DOMParser`, `XMLSerializer`, `Range`, `CSS.escape`…): a browser, or a DOM implementation such as jsdom installed on `globalThis`. No HTML/XML parser is bundled.
 
 ## Building a GND document
 
@@ -56,7 +56,7 @@ makeGnd(html, undefined, { textrefs: true });                       // every rol
 makeGnd(html, undefined, { textrefs: ["heading1", "paragraph"] });  // just these roles
 ```
 
-Whatever the option, a node with no text, children or other ref of its own (e.g. `<hr>`, or `<math>` with only an `alttext`) always gets a `textref` to its element, since the schema requires one of them.
+Whatever the option, a node with no text, children or other ref of its own (e.g. `<hr>`, or `<span role="img" aria-label="…">`) always gets a `textref` to its element, since the schema requires one of them. So does every `math` node, to locate it.
 
 `roles` also accepts `"leaf-text"`, not a real GND role — it matches a roleless block that owns its own text directly (e.g. a `<div>` standing in for `<p>`, no role, no semantic tag). `true` already includes it; in an array, add it explicitly:
 
@@ -102,6 +102,7 @@ The lower-level pieces are exported too: `encodeCssSelectorFragment(selector)`/`
 
 - **`role`** can have multiple entries: tag name, ARIA `role`, `epub:type` all contribute, in that order (e.g. `<section epub:type="chapter">` → `["section", "chapter"]`). `role="presentation"`/`"none"` overrides everything to `["presentation"]`.
 - **`text`** carries `ssml` when the text needs it (inline formatting, a language shift, or an embedded footnote/pagebreak/image mid-sentence). `ssml` marks embedded objects with a `<readium:noteref id="..." />`-style placeholder whose `id` matches a sibling in `children`.
+- **`math`** nodes carry MathML as-is in `text.ssml` (`<math xmlns="http://www.w3.org/1998/Math/MathML">…</math>`), or other `role="math"` markup's content in `text.plain`, with `alttext`/`aria-label` as `description`.
 - **`imgref`/`audioref`/`videoref`** are a media element's `src`. **`textref`** is an `href` — reused for navigational-list items (`toc`, `index`...), `noteref`/`backlink`/`biblioref`/`glossref`, and plain links.
 - **`description`** holds a node's accessible name (`aria-label`, `alt`, `<figcaption>`...) as `description.text` when it differs from its visible text.
 - Empty/presentational/`aria-hidden`/`hidden` content and role-less wrapper `<div>`s are dropped from the tree, not kept as empty nodes.

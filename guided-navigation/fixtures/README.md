@@ -97,8 +97,8 @@ at least one of `audioref`, `imgref`, `textref`, `videoref`, `text` or
 
 `textref` values generated from the markup (`#id`, `#css(...)`) depend on
 each implementation's selector generator, so they aren't compared. They
-only appear in `gnd.json` where the schema requires them, e.g. a
-`separator` or a `math` element with no text of its own.
+only appear in `gnd.json` on `math` objects and where the schema requires
+them, e.g. a `separator`.
 
 ## `epub:type` fixtures are full XHTML documents
 

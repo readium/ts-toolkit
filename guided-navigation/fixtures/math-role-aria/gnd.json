@@ -2,6 +2,9 @@
   "role": [
     "math"
   ],
+  "text": {
+    "plain": "x² + y² = z²"
+  },
   "textref": "#css(span)",
   "description": {
     "text": {

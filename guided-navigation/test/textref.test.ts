@@ -83,9 +83,31 @@ test("an object with only a role gets a textref to its own element even with tex
 });
 
 test("an object with only a role and a description gets a textref to its own element even with textrefs off", () => {
+  const [image] = parseMarkup('<span role="img" aria-label="Four stars">★★★★</span>');
+  expect(image.description?.text?.plain).toBe("Four stars");
+  expect(decodeCssSelectorFragment(image.textref)).toBe("span");
+});
+
+test("MathML is carried as SSML in the MathML namespace, keeping its alttext as description and a textref to its element", () => {
   const [math] = parseMarkup('<math alttext="x squared"><msup><mi>x</mi><mn>2</mn></msup></math>');
+  expect(math.text?.ssml).toBe('<math xmlns="http://www.w3.org/1998/Math/MathML" alttext="x squared"><msup><mi>x</mi><mn>2</mn></msup></math>');
+  expect(math.text?.plain).toBe(undefined);
   expect(math.description?.text?.plain).toBe("x squared");
   expect(decodeCssSelectorFragment(math.textref)).toBe("math");
+});
+
+test("inline MathML becomes a placeholder in its sentence's SSML, with the math object as a child", () => {
+  const [paragraph] = parseMarkup("<p>Since <math><mi>x</mi></math> holds.</p>");
+  const [math] = paragraph.children!;
+  expect(paragraph.text?.ssml).toBe(`Since <readium:math id="${math.id}" /> holds.`);
+  expect(math.text?.ssml).toBe('<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>');
+});
+
+test("role=\"math\" on non-MathML markup carries its content as plain text and its aria-label as description", () => {
+  const [math] = parseMarkup('<span role="math" aria-label="x squared">x²</span>');
+  expect(math.text?.plain).toBe("x²");
+  expect(math.description?.text?.plain).toBe("x squared");
+  expect(decodeCssSelectorFragment(math.textref)).toBe("span");
 });
 
 test("an object with text next to a role-only sibling still gets no textref with textrefs off", () => {

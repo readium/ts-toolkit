@@ -3,6 +3,7 @@ import type { GndRole } from "./types.ts";
 import { extractNodeRoles, hasExplicitRole } from "./roles.ts";
 import {
   extractNodeAria,
+  normalizedNodeText,
   normalizedNodeTextExcludingExplicitRoles,
   convertElementToSSMLTag,
   skippedElements,
@@ -24,6 +25,8 @@ import { type GndGenerationOptions, normalizeTextrefOptions } from "./options.ts
 import { IdAllocator } from "./idAllocator.ts";
 import { prescan as prescanImpl } from "./prescan.ts";
 import { pagebreak, noteref, link } from "./elementHandlers.ts";
+
+const MATHML_NS = "http://www.w3.org/1998/Math/MathML";
 
 const TEXT_NODE = 3;
 const ELEMENT_NODE = 1;
@@ -264,11 +267,20 @@ export class Converter {
       return true;
     }
     if (roles.includes("image") || roles.includes("math")) {
-      // Elements acting as images/math without being one, e.g. <span role="img">
-      // or <span role="math" aria-label="...">: their content is replaced by
-      // their accessible name.
+      // Elements acting as images without being one, e.g. <span role="img">:
+      // their content is replaced by their accessible name.
       const obj: ObjBuilder = { role: roles };
       if (aria) obj.description = aria;
+      if (roles.includes("math")) {
+        // MathML is carried as-is in SSML, other math markup as plain text.
+        if (el.namespaceURI === MATHML_NS) {
+          obj.text = { plain: "", ssml: new XMLSerializer().serializeToString(el), language: "" };
+        } else {
+          const text = normalizedNodeText(el);
+          if (text) obj.text = { plain: text, ssml: "", language: "" };
+        }
+        obj.textref = textrefForSelector(selectorForElement(el, this.selectorRoot, this.selectorRootAnchor), el);
+      }
       this.placeholder(el, roles.includes("math") ? "math" : "image", obj);
       return true;
     }
