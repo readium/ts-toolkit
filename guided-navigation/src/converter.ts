@@ -139,6 +139,7 @@ export class Converter {
   convert(root: Element) {
     this.prescan(root);
     this.walk(root);
+    this.flushText();
   }
 
   // Converts root's children — used at the top level, where root is always
