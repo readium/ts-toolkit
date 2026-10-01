@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `GuidedNavigationObject.id` and `GuidedNavigationObject.videoref`
+- `GuidedNavigationDescription`, the Guided Navigation description object (`audioref`, `imgref`, `textref`, `videoref` and `text`)
+
+### Changed
+
+- **Breaking:** Guided Navigation models now follow the Guided Navigation JSON schema:
+  - `GuidedNavigationObject.level` is removed
+  - `GuidedNavigationDocument.links` is removed, and `GuidedNavigationDocument.guided` is required
+  - `GuidedNavigationObject.description` is a `GuidedNavigationDescription`
+  - `GuidedNavigationDocument.deserialize` returns `undefined` when `guided` has no valid object
+  - `GuidedNavigationObject.deserialize` returns `undefined` for an object with none of `audioref`, `imgref`, `textref`, `videoref`, `text` or `children`, and invalid children are dropped
+  - `GuidedNavigationText.deserialize` returns `undefined` for an empty string or an object with neither `plain` nor `ssml`
+
 ## [2.6.0] – 2026-09-29
 
 ### Added

@@ -1,5 +1,9 @@
-import { Link, Links } from '../src/publication/Link';
-import { GuidedNavigationDocument, GuidedNavigationObject, GuidedNavigationText } from '../src/publication/GuidedNavigation';
+import {
+  GuidedNavigationDescription,
+  GuidedNavigationDocument,
+  GuidedNavigationObject,
+  GuidedNavigationText
+} from '../src/publication/GuidedNavigation';
 
 describe('GuidedNavigation Tests', () => {
   describe('GuidedNavigationText', () => {
@@ -29,6 +33,14 @@ describe('GuidedNavigation Tests', () => {
 
     it('parse undefined JSON', () => {
       expect(GuidedNavigationText.deserialize(undefined)).toBeUndefined();
+    });
+
+    it('rejects an empty string', () => {
+      expect(GuidedNavigationText.deserialize('')).toBeUndefined();
+    });
+
+    it('rejects an object with neither plain nor ssml', () => {
+      expect(GuidedNavigationText.deserialize({ language: 'en' })).toBeUndefined();
     });
 
     it('serialize works fine', () => {
@@ -72,6 +84,45 @@ describe('GuidedNavigation Tests', () => {
     });
   });
 
+  describe('GuidedNavigationDescription', () => {
+    it('handles null input', () => {
+      expect(GuidedNavigationDescription.deserialize(null)).toBeUndefined();
+    });
+
+    it('parse full JSON', () => {
+      const description = GuidedNavigationDescription.deserialize({
+        audioref: 'description.mp3#t=0,5',
+        imgref: 'image.jpg',
+        textref: 'text.html#desc',
+        videoref: 'video.mp4',
+        text: 'A cowboy is looking at the city.'
+      });
+      expect(description?.audioref).toBe('description.mp3#t=0,5');
+      expect(description?.imgref).toBe('image.jpg');
+      expect(description?.textref).toBe('text.html#desc');
+      expect(description?.videoref).toBe('video.mp4');
+      expect(description?.text?.plain).toBe('A cowboy is looking at the city.');
+    });
+
+    it('rejects JSON with none of the refs nor text', () => {
+      expect(GuidedNavigationDescription.deserialize({})).toBeUndefined();
+      expect(GuidedNavigationDescription.deserialize({ role: ['image'] })).toBeUndefined();
+    });
+
+    it('serializes all properties correctly', () => {
+      const description = new GuidedNavigationDescription({
+        audioref: 'description.mp3',
+        videoref: 'video.mp4',
+        text: new GuidedNavigationText({ plain: 'Description' })
+      });
+      expect(description.serialize()).toEqual({
+        audioref: 'description.mp3',
+        videoref: 'video.mp4',
+        text: { plain: 'Description' }
+      });
+    });
+  });
+
   describe('GuidedNavigationObject', () => {
     it('handles null input', () => {
       expect(GuidedNavigationObject.deserialize(null)).toBeUndefined();
@@ -83,16 +134,16 @@ describe('GuidedNavigation Tests', () => {
 
     it('parse minimal JSON', () => {
       const obj = GuidedNavigationObject.deserialize({
-        text: 'Hello',
-        level: 2
+        text: 'Hello'
       });
-      
+
       expect(obj).toBeDefined();
       expect(obj?.text?.plain).toBe('Hello');
-      expect(obj?.level).toBe(2);
+      expect(obj?.id).toBeUndefined();
       expect(obj?.audioref).toBeUndefined();
       expect(obj?.imgref).toBeUndefined();
       expect(obj?.textref).toBeUndefined();
+      expect(obj?.videoref).toBeUndefined();
       expect(obj?.description).toBeUndefined();
       expect(obj?.role).toBeUndefined();
       expect(obj?.children).toBeUndefined();
@@ -100,70 +151,74 @@ describe('GuidedNavigation Tests', () => {
 
     it('parse full JSON', () => {
       const obj = GuidedNavigationObject.deserialize({
+        id: 'p1',
         audioref: 'audio.mp3#t=10,20',
         imgref: 'image.jpg',
         textref: 'text.html#fragment',
+        videoref: 'video.mp4#t=5',
         role: 'section',
-        level: 2,
         text: {
           plain: 'Hello',
           ssml: '<speak>Hello</speak>',
           language: 'en'
         },
-        description: new GuidedNavigationObject({
-          text: new GuidedNavigationText({ plain: 'Description' })
-        }),
+        description: {
+          text: 'Description'
+        },
         children: [{
-          text: 'Child',
-          level: 3
+          text: 'Child'
         }]
       });
-      
+
       expect(obj).toBeDefined();
+      expect(obj?.id).toBe('p1');
       expect(obj?.audioref).toBe('audio.mp3#t=10,20');
       expect(obj?.imgref).toBe('image.jpg');
       expect(obj?.textref).toBe('text.html#fragment');
+      expect(obj?.videoref).toBe('video.mp4#t=5');
       expect(obj?.role).toEqual(new Set(['section']));
-      expect(obj?.level).toBe(2);
       expect(obj?.text?.plain).toBe('Hello');
       expect(obj?.text?.ssml).toBe('<speak>Hello</speak>');
       expect(obj?.text?.language).toBe('en');
       expect(obj?.description?.text?.plain).toBe('Description');
       expect(obj?.children).toHaveLength(1);
       expect(obj?.children?.[0].text?.plain).toBe('Child');
-      expect(obj?.children?.[0].level).toBe(3);
     });
 
-    it('level is clamped between 1 and 6', () => {
-      const tooLow = new GuidedNavigationObject({ 
-        text: new GuidedNavigationText({ plain: 'Test' }), 
-        level: 0 
+    it('rejects JSON with none of the refs, text, nor children', () => {
+      expect(GuidedNavigationObject.deserialize({ id: 'p1', role: ['paragraph'] })).toBeUndefined();
+      expect(GuidedNavigationObject.deserialize({ children: [] })).toBeUndefined();
+    });
+
+    it('accepts JSON with only children', () => {
+      const obj = GuidedNavigationObject.deserialize({ children: [{ text: 'Child' }] });
+      expect(obj?.children).toHaveLength(1);
+    });
+
+    it('drops invalid children', () => {
+      const obj = GuidedNavigationObject.deserialize({
+        text: 'Parent',
+        children: [{ text: 'Child' }, { role: ['paragraph'] }]
       });
-      const tooHigh = new GuidedNavigationObject({ 
-        text: new GuidedNavigationText({ plain: 'Test' }), 
-        level: 7 
-      });
-      
-      expect(tooLow.level).toBe(1);
-      expect(tooHigh.level).toBe(6);
+      expect(obj?.children).toHaveLength(1);
     });
 
     it('audioFile and audioTime work fine', () => {
-      const withTime = new GuidedNavigationObject({ 
+      const withTime = new GuidedNavigationObject({
         audioref: 'audio.mp3#t=10,20',
         text: new GuidedNavigationText({ plain: 'Test' })
       });
-      
+
       expect(withTime.audioFile).toBe('audio.mp3');
       expect(withTime.audioTime).toBe('t=10,20');
     });
 
     it('clip works fine', () => {
-      const withTime = new GuidedNavigationObject({ 
+      const withTime = new GuidedNavigationObject({
         audioref: 'audio.mp3#t=10,20',
         text: new GuidedNavigationText({ plain: 'Test' })
       });
-      
+
       const clip = withTime.clip;
       expect(clip).toBeDefined();
       if (clip) {
@@ -174,129 +229,77 @@ describe('GuidedNavigation Tests', () => {
     });
 
     it('textFile and fragmentId work fine', () => {
-      const withRef = new GuidedNavigationObject({ 
+      const withRef = new GuidedNavigationObject({
         textref: 'text.html#fragment',
         text: new GuidedNavigationText({ plain: 'Test' })
       });
-      
+
       expect(withRef.textFile).toBe('text.html');
       expect(withRef.fragmentId).toBe('fragment');
     });
 
     it('serializes all properties correctly', () => {
       const obj = new GuidedNavigationObject({
+        id: 'p1',
         audioref: 'audio.mp3#t=10,20',
         imgref: 'image.jpg',
         textref: 'text.html#fragment',
-        role: new Set(['section']),
-        level: 2,
-        text: new GuidedNavigationText({
-          plain: 'Hello',
-          ssml: '<speak>Hello</speak>',
-          language: 'en'
-        }),
-        description: new GuidedNavigationObject({
-          text: new GuidedNavigationText({ plain: 'Description' })
-        }),
-        children: [
-          new GuidedNavigationObject({
-            text: new GuidedNavigationText({ plain: 'Child' }),
-            level: 3
-          })
-        ]
-      });
-
-      const serialized = obj.serialize();
-      
-      expect(serialized).toEqual({
-        audioref: 'audio.mp3#t=10,20',
-        imgref: 'image.jpg',
-        textref: 'text.html#fragment',
-        role: ['section'],
-        level: 2,
-        text: {
-          plain: 'Hello',
-          ssml: '<speak>Hello</speak>',
-          language: 'en'
-        },
-        description: new GuidedNavigationObject({
-          text: new GuidedNavigationText({ plain: 'Description' })
-        }),
-        children: [{
-          text: { plain: 'Child' },
-          level: 3
-        }]
-      });
-    });
-
-    it('omits undefined properties during serialization', () => {
-      const obj = new GuidedNavigationObject({
-        text: new GuidedNavigationText({ plain: 'Test' }),
-        level: 1
-      });
-
-      const serialized = obj.serialize();
-      
-      expect(serialized).toEqual({
-        text: { plain: 'Test' },
-        level: 1
-      });
-    });
-
-    it('handles empty text object', () => {
-      const obj = new GuidedNavigationObject({
-        text: new GuidedNavigationText({}),
-        level: 1
-      });
-      
-      const serialized = obj.serialize();
-      expect(serialized).toEqual({
-        level: 1
-      });
-    });
-
-    it('handles all properties together', () => {
-      const obj = new GuidedNavigationObject({
-        audioref: 'audio.mp3',
-        imgref: 'image.jpg',
-        textref: 'text.html',
+        videoref: 'video.mp4',
         role: new Set(['section', 'note']),
-        level: 2,
         text: new GuidedNavigationText({
           plain: 'Hello',
           ssml: '<speak>Hello</speak>',
           language: 'en'
         }),
-        description: new GuidedNavigationObject({
-          text: new GuidedNavigationText({ plain: 'Test description' })
+        description: new GuidedNavigationDescription({
+          text: new GuidedNavigationText({ plain: 'Description' })
         }),
         children: [
           new GuidedNavigationObject({
-            text: new GuidedNavigationText({ plain: 'Child' }),
-            level: 3
+            text: new GuidedNavigationText({ plain: 'Child' })
           })
         ]
       });
 
-      const serialized = obj.serialize();
-      expect(serialized).toEqual({
-        audioref: 'audio.mp3',
+      expect(obj.serialize()).toEqual({
+        id: 'p1',
+        audioref: 'audio.mp3#t=10,20',
         imgref: 'image.jpg',
-        textref: 'text.html',
+        textref: 'text.html#fragment',
+        videoref: 'video.mp4',
         role: ['section', 'note'],
-        level: 2,
         text: {
           plain: 'Hello',
           ssml: '<speak>Hello</speak>',
           language: 'en'
         },
         description: {
-          text: { plain: "Test description" }
+          text: { plain: 'Description' }
         },
         children: [{
-          text: { plain: 'Child' },
-          level: 3
+          text: { plain: 'Child' }
         }]
+      });
+    });
+
+    it('omits undefined properties during serialization', () => {
+      const obj = new GuidedNavigationObject({
+        text: new GuidedNavigationText({ plain: 'Test' })
+      });
+
+      expect(obj.serialize()).toEqual({
+        text: { plain: 'Test' }
+      });
+    });
+
+    it('handles empty text object', () => {
+      const obj = new GuidedNavigationObject({
+        textref: 'text.html',
+        text: new GuidedNavigationText({})
+      });
+
+      expect(obj.serialize()).toEqual({
+        textref: 'text.html'
       });
     });
   });
@@ -313,135 +316,40 @@ describe('GuidedNavigation Tests', () => {
     it('parse minimal JSON', () => {
       const doc = GuidedNavigationDocument.deserialize({
         guided: [{
-          text: 'Hello',
-          level: 1
+          text: 'Hello'
         }]
       });
-      
+
       expect(doc).toBeDefined();
       expect(doc?.guided).toHaveLength(1);
-      expect(doc?.guided?.[0].text?.plain).toBe('Hello');
-      expect(doc?.guided?.[0].level).toBe(1);
+      expect(doc?.guided[0].text?.plain).toBe('Hello');
     });
 
-    it('parse JSON with links', () => {
-      const doc = GuidedNavigationDocument.deserialize({
-        links: [{
-          href: 'http://example.com',
-          rel: ['self']
-        }],
-        guided: [{
-          text: 'Hello',
-          level: 1
-        }]
-      });
-      
-      expect(doc).toBeDefined();
-      expect(doc?.links).toBeDefined();
-      if (doc?.links) {
-        expect(doc.links.items.length).toBe(1);
-        const link = doc.links.items[0];
-        expect(link.href).toBe('http://example.com');
-      }
-      expect(doc?.guided).toHaveLength(1);
+    it('rejects a missing or empty guided array', () => {
+      expect(GuidedNavigationDocument.deserialize({})).toBeUndefined();
+      expect(GuidedNavigationDocument.deserialize({ guided: [] })).toBeUndefined();
+    });
+
+    it('rejects a guided array with no valid object', () => {
+      expect(GuidedNavigationDocument.deserialize({ guided: [{ role: ['paragraph'] }] })).toBeUndefined();
     });
 
     it('serializes with guided navigation objects', () => {
       const doc = new GuidedNavigationDocument({
         guided: [
           new GuidedNavigationObject({
-            text: new GuidedNavigationText({ plain: 'Hello' }),
-            level: 1
+            text: new GuidedNavigationText({ plain: 'Hello' })
           }),
           new GuidedNavigationObject({
-            text: new GuidedNavigationText({ plain: 'World' }),
-            level: 2
-          })
-        ]
-      });
-      
-      const serialized = doc.serialize();
-      expect(serialized).toEqual({
-        guided: [
-          {
-            text: { plain: 'Hello' },
-            level: 1
-          },
-          {
-            text: { plain: 'World' },
-            level: 2
-          }
-        ]
-      });
-    });
-
-    it('serializes with links', () => {
-      const links = new Links([
-        new Link({
-          href: 'http://example.com',
-          rels: new Set(['self'])
-        })
-      ]);
-
-      const doc = new GuidedNavigationDocument({
-        links,
-        guided: [
-          new GuidedNavigationObject({
-            text: new GuidedNavigationText({ plain: 'Test' }),
-            level: 1
-          })
-        ]
-      });
-      
-      const serialized = doc.serialize();
-      expect(serialized).toEqual({
-        links: [
-          { href: 'http://example.com', rel: ['self'] }
-        ],
-        guided: [
-          {
-            text: { plain: 'Test' },
-            level: 1
-          }
-        ]
-      });
-    });
-
-    it('handles empty guided array', () => {
-      const doc = GuidedNavigationDocument.deserialize({
-        guided: []
-      });
-      
-      expect(doc).toBeDefined();
-      expect(doc?.guided).toHaveLength(0);
-    });
-
-    it('handles both links and guided', () => {
-      const doc = new GuidedNavigationDocument({
-        links: new Links([
-          new Link({
-            href: 'http://example.com',
-            rels: new Set(['self'])
-          })
-        ]),
-        guided: [
-          new GuidedNavigationObject({
-            text: new GuidedNavigationText({ plain: 'Test' }),
-            level: 1
+            text: new GuidedNavigationText({ plain: 'World' })
           })
         ]
       });
 
-      const serialized = doc.serialize();
-      expect(serialized).toEqual({
-        links: [
-          { href: 'http://example.com', rel: ['self'] }
-        ],
+      expect(doc.serialize()).toEqual({
         guided: [
-          {
-            text: { plain: 'Test' },
-            level: 1
-          }
+          { text: { plain: 'Hello' } },
+          { text: { plain: 'World' } }
         ]
       });
     });

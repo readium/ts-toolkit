@@ -2,7 +2,6 @@ import {
   arrayfromJSONorString,
   setToArray,
 } from '../util/JSONParse.ts';
-import { Links } from "./Link.ts";
 
 export interface Clip {
     audioResource: string;
@@ -16,35 +15,34 @@ export interface Clip {
  * https://readium.org/guided-navigation/schema/document.schema.json
  */
 export class GuidedNavigationDocument {
-    public readonly links?: Links;
-    public readonly guided?: GuidedNavigationObject[];
+    /** Non-empty sequence of objects meant to be presented sequentially to the user. */
+    public readonly guided: GuidedNavigationObject[];
 
     constructor(values: {
-        links?: Links;
-        guided?: GuidedNavigationObject[];
+        guided: GuidedNavigationObject[];
     }) {
-        this.links = values.links;
         this.guided = values.guided;
     }
 
+    /**
+     * Deserializes a GuidedNavigationDocument from JSON.
+     * Returns undefined if `guided` is missing or has no valid object.
+     */
     public static deserialize(json: any): GuidedNavigationDocument | undefined {
         if (!json) return;
-        return new GuidedNavigationDocument({
-            links: Links.deserialize(json.links),
-            guided: GuidedNavigationObject.deserializeArray(json.guided),
-        });
+        const guided = GuidedNavigationObject.deserializeArray(json.guided);
+        if (!guided || guided.length === 0) return;
+        return new GuidedNavigationDocument({ guided });
     }
 
     public serialize(): any {
-        const json: any = {};
-        if (this.links !== undefined) json.links = this.links.serialize();
-        if (this.guided !== undefined) json.guided = this.guided.map(x => x.serialize());
-        return json;
+        return { guided: this.guided.map(x => x.serialize()) };
     }
 }
 
 /**
  * Represents a text value containing plain text, SSML, and language information.
+ * https://readium.org/guided-navigation/schema/text.schema.json
  */
 export class GuidedNavigationText {
     /** Plain text content */
@@ -76,11 +74,11 @@ export class GuidedNavigationText {
         if (json === undefined || json === null) return undefined;
 
         if (typeof json === 'string') {
-            return new GuidedNavigationText({ plain: json });
+            return json.length > 0 ? new GuidedNavigationText({ plain: json }) : undefined;
         }
 
-        // Only create if there are actual values
-        if (json.plain || json.ssml || json.language) {
+        // The schema requires a non-empty `plain` or `ssml`
+        if (json.plain || json.ssml) {
             return new GuidedNavigationText({
                 plain: json.plain,
                 ssml: json.ssml,
@@ -104,11 +102,82 @@ export class GuidedNavigationText {
 }
 
 /**
- * Guided Navigation Object
- * https://github.com/readium/guided-navigation/blob/main/schema/object.schema.json
+ * Text, audio, image or video description of a Guided Navigation Object.
+ * https://readium.org/guided-navigation/schema/description.schema.json
  */
+export class GuidedNavigationDescription {
+    /** References an audio resource or a fragment of it. */
+    public readonly audioref?: string;
 
+    /** References an image or a fragment of it. */
+    public readonly imgref?: string;
+
+    /** References a textual resource or a fragment of it. */
+    public readonly textref?: string;
+
+    /** References a video resource or a fragment of it. */
+    public readonly videoref?: string;
+
+    /** Textual description. */
+    public readonly text?: GuidedNavigationText;
+
+    constructor(values: {
+        audioref?: string;
+        imgref?: string;
+        textref?: string;
+        videoref?: string;
+        text?: GuidedNavigationText;
+    }) {
+        this.audioref = values.audioref;
+        this.imgref = values.imgref;
+        this.textref = values.textref;
+        this.videoref = values.videoref;
+        this.text = values.text;
+    }
+
+    /**
+     * Deserializes a GuidedNavigationDescription from JSON.
+     * Returns undefined if it has none of the refs nor text.
+     */
+    public static deserialize(json: any): GuidedNavigationDescription | undefined {
+        if (!json) return undefined;
+        const description = new GuidedNavigationDescription({
+            audioref: json.audioref,
+            imgref: json.imgref,
+            textref: json.textref,
+            videoref: json.videoref,
+            text: GuidedNavigationText.deserialize(json.text)
+        });
+        if (
+            description.audioref === undefined &&
+            description.imgref === undefined &&
+            description.textref === undefined &&
+            description.videoref === undefined &&
+            description.text === undefined
+        ) return undefined;
+        return description;
+    }
+
+    public serialize(): any {
+        const json: any = {};
+        if (this.audioref !== undefined) json.audioref = this.audioref;
+        if (this.imgref !== undefined) json.imgref = this.imgref;
+        if (this.textref !== undefined) json.textref = this.textref;
+        if (this.videoref !== undefined) json.videoref = this.videoref;
+        const text = this.text?.serialize();
+        if (text !== undefined) json.text = text;
+        return json;
+    }
+}
+
+/**
+ * Guided Navigation Object
+ * https://readium.org/guided-navigation/schema/document.schema.json
+ */
 export class GuidedNavigationObject {
+  /** Identifier of the object. */
+  public readonly id?: string;
+
   /** References an audio resource or a fragment of it. */
   public readonly audioref?: string;
 
@@ -122,13 +191,6 @@ export class GuidedNavigationObject {
   public readonly role?: Set<string>;
 
   /**
-   * Indicates the heading level (1-6) for the navigation object.
-   * @minimum 1
-   * @maximum 6
-   */
-  public readonly level?: number;
-
-  /**
    * Textual equivalent of the resources or fragment of the resources referenced by the current Guided Navigation Object.
    */
   public readonly text?: GuidedNavigationText;
@@ -136,32 +198,34 @@ export class GuidedNavigationObject {
   /** References a textual resource or a fragment of it. */
   public readonly textref?: string;
 
-  /**
-   * Describes the image referenced by the current Guided Navigation Object.
-   * This is a GuidedNavigationObject that should not contain 'level' or 'children' properties.
-   */
-  public readonly description?: Omit<GuidedNavigationObject, 'level' | 'children'>;
+  /** References a video resource or a fragment of it. */
+  public readonly videoref?: string;
+
+  /** Text, audio, image or video description of the current Guided Navigation Object. */
+  public readonly description?: GuidedNavigationDescription;
 
     /**
      * Creates a [GuidedNavigation] object.
     */
     constructor(values: {
+        id?: string;
         audioref?: string;
         children?: GuidedNavigationObject[];
         imgref?: string;
         role?: Set<string>;
-        level?: number;
         text?: GuidedNavigationText;
         textref?: string;
-        description?: Omit<GuidedNavigationObject, 'level' | 'children'>;
+        videoref?: string;
+        description?: GuidedNavigationDescription;
     }) {
+        this.id = values.id;
         this.audioref = values.audioref;
         this.children = values.children;
         this.imgref = values.imgref;
         this.role = values.role;
-        this.level = values.level !== undefined ? Math.min(6, Math.max(1, values.level)) : undefined;
         this.text = values.text;
         this.textref = values.textref;
+        this.videoref = values.videoref;
         this.description = values.description;
     }
 
@@ -188,23 +252,35 @@ export class GuidedNavigationObject {
     }
 
     /**
-     * Deserializes a GuidedNavigationObject from JSON
+     * Deserializes a GuidedNavigationObject from JSON.
+     * Returns undefined if it has none of the refs, text, nor children.
      */
     public static deserialize(json: any): GuidedNavigationObject | undefined {
         if (!json) return undefined;
 
-        return new GuidedNavigationObject({
+        const children = GuidedNavigationObject.deserializeArray(json.children);
+        const obj = new GuidedNavigationObject({
+            id: typeof json.id === 'string' ? json.id : undefined,
             audioref: json.audioref,
-            children: GuidedNavigationObject.deserializeArray(json.children),
+            children: children && children.length > 0 ? children : undefined,
             imgref: json.imgref,
             role: json.role
                 ? new Set<string>(arrayfromJSONorString(json.role))
                 : undefined,
-            level: typeof json.level === 'number' ? json.level : undefined,
             text: GuidedNavigationText.deserialize(json.text),
             textref: json.textref,
-            description: GuidedNavigationObject.deserialize(json.description)
+            videoref: json.videoref,
+            description: GuidedNavigationDescription.deserialize(json.description)
         });
+        if (
+            obj.audioref === undefined &&
+            obj.imgref === undefined &&
+            obj.textref === undefined &&
+            obj.videoref === undefined &&
+            obj.text === undefined &&
+            obj.children === undefined
+        ) return undefined;
+        return obj;
     }
 
     /**
@@ -213,8 +289,8 @@ export class GuidedNavigationObject {
     public static deserializeArray(json: any): GuidedNavigationObject[] | undefined {
         if (!(Array.isArray(json))) return undefined;
         return json
-            .map<GuidedNavigationObject>((item) => GuidedNavigationObject.deserialize(item) as GuidedNavigationObject)
-            .filter((x) => x !== undefined);
+            .map((item) => GuidedNavigationObject.deserialize(item))
+            .filter((x): x is GuidedNavigationObject => x !== undefined);
     }
 
     /**
@@ -222,11 +298,11 @@ export class GuidedNavigationObject {
      */
     public serialize(): any {
         const json: any = {};
+        if (this.id !== undefined) json.id = this.id;
         if (this.audioref !== undefined) json.audioref = this.audioref;
         if (this.children !== undefined) json.children = this.children.map(x => x.serialize());
         if (this.imgref !== undefined) json.imgref = this.imgref;
         if (this.role !== undefined) json.role = setToArray(this.role);
-        if (this.level !== undefined) json.level = this.level;
         if (this.text !== undefined) {
             const serializedText = this.text.serialize();
             if (serializedText !== undefined) {
@@ -234,9 +310,8 @@ export class GuidedNavigationObject {
             }
         }
         if (this.textref !== undefined) json.textref = this.textref;
-        if (this.description) {
-            json.description = this.description.serialize();
-        }
+        if (this.videoref !== undefined) json.videoref = this.videoref;
+        if (this.description !== undefined) json.description = this.description.serialize();
         return json;
     }
 
