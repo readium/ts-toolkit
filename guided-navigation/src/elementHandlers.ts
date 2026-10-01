@@ -42,7 +42,9 @@ export function noteref(converter: Converter, el: Element, roles: GndRole[]): vo
   const href = el.getAttribute("href") ?? "";
   let candidateID = el.getAttribute("id") ?? "";
   if (!candidateID && href.startsWith("#")) {
-    candidateID = href.slice(1);
+    // A target still output at its own location keeps its id there.
+    const target = converter.ids.get(href.slice(1));
+    if (!target || converter.suppressed.has(target)) candidateID = href.slice(1);
   }
 
   if (href.startsWith("#")) {

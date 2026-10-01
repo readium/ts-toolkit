@@ -116,7 +116,7 @@ When `text` comes from `aria-label`/`aria-labelledby` instead of the element's c
 
 Both are read out of narrative order, so the converter handles them specially:
 
-- **`noteref`** (`<a role="doc-noteref" href="#note1">`) resolves its `href` and embeds the target's whole subtree as `children` — no second lookup needed. Unresolvable hrefs get a plain `textref` child instead. The footnote is suppressed from also appearing at its original location — except when that location is inside an `endnotes` section, where it's kept so the section's own list isn't left silent.
+- **`noteref`** (`<a role="doc-noteref" href="#note1">`) resolves its `href` and embeds the target's whole subtree as `children` — no second lookup needed. Unresolvable hrefs get a plain `textref` child instead. The footnote is suppressed from also appearing at its original location — except when that location is inside an `endnotes` section, where it's kept so the section's own list isn't left silent. The kept footnote keeps its id, and the noteref gets a generated one (`noteref1`…) instead.
 - **`pagebreak`** (`<span epub:type="pagebreak" title="42">`) carries its label as `text`. Mid-sentence, it's a `<readium:pagebreak id="..." />` placeholder in that sentence's `ssml`, with the pagebreak node as a sibling `children` entry.
 
 ## Roles

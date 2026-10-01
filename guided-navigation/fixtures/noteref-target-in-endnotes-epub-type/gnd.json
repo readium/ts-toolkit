@@ -7,14 +7,14 @@
       "text": {
         "language": "en",
         "plain": "This text has a note.",
-        "ssml": "This text has a note <readium:noteref id=\"note1\" />."
+        "ssml": "This text has a note <readium:noteref id=\"noteref1\" />."
       },
       "role": [
         "paragraph"
       ],
       "children": [
         {
-          "id": "note1",
+          "id": "noteref1",
           "text": {
             "plain": "[1]"
           },
