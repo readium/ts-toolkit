@@ -41,7 +41,7 @@
     "types"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=24"
   },
   "scripts": {
     "clean": "rimraf types dist",
@@ -50,6 +50,7 @@
   },
   "dependencies": {
     "@readium/decorator": "workspace:*",
+    "@readium/guided-navigation": "workspace:*",
     "@readium/helpers": "workspace:*",
     "@readium/navigator-html-injectables": "workspace:*",
     "@readium/shared": "workspace:*"

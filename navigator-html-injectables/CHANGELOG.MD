@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+### Changed
 
-- `document_serializer` module, in the FXL, reflowable and WebPub module lists: the `serialize_document` command replies with a `serialize_document` event carrying the live document element and body as a `SerializedDocument` (`markup` and `mediaType`), without the head or the nodes added by the injectables
+- **Breaking:** requires Node.js 24 or later
 
 ## [2.8.5] – 2026-10-01
 

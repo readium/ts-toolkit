@@ -9,7 +9,6 @@ import { isDarkColor, getContrastingTextColor, adjustColorForContrast, colorToRg
 import { makeWritingContext, WritingContext } from "../helpers/document.ts";
 import { sML } from "@readium/helpers";
 import { sanitizeHTML } from "../helpers/sanitize.ts";
-import { markInjected } from "../helpers/injected.ts";
 
 function defaultTint(type: DecorationStyleType): string {
     switch (type) {
@@ -1110,7 +1109,7 @@ class DecorationGroup {
             if (!this.shadowRoot) {
                 this.shadowHost = this.wnd.document.createElement("div");
                 this.shadowHost.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none";
-                this.wnd.document.body.appendChild(markInjected(this.shadowHost));
+                this.wnd.document.body.appendChild(this.shadowHost);
                 this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" });
             }
             
@@ -1223,7 +1222,7 @@ class DecorationGroup {
             if (!this.shadowRoot) {
                 this.shadowHost = this.wnd.document.createElement("div");
                 this.shadowHost.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none";
-                this.wnd.document.body.appendChild(markInjected(this.shadowHost));
+                this.wnd.document.body.appendChild(this.shadowHost);
                 this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" });
             }
             

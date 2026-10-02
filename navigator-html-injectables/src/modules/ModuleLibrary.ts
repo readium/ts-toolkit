@@ -9,7 +9,6 @@ import { Decorator } from "./Decorator.ts";
 import { WebPubSetup } from "./setup/WebPubSetup.ts";
 import { PrintProtector } from "../protection/PrintProtector.ts";
 import { CJKVerticalSnapper } from "./snapper/CJKVerticalSnapper.ts";
-import { DocumentSerializer } from "./DocumentSerializer.ts";
 
 // All the module names. TODO: Come up with a better way of collecting these in a way TS will recognize
 export type ModuleName =
@@ -24,16 +23,14 @@ export type ModuleName =
     "reflowable_setup" |
     "peripherals" |
     "webpub_setup" |
-    "print_protection" |
-    "document_serializer";
+    "print_protection";
 
 // Modules that are valid for FXL publications
 export const FXLModules: ModuleName[] = [
     "fixed_setup",
     "decorator",
     "peripherals",
-    "print_protection",
-    "document_serializer"
+    "print_protection"
 ];
 
 // Modules that are valid for reflowable publications
@@ -44,8 +41,7 @@ export const ReflowableModules: ModuleName[] = [
     "column_snapper",
     "scroll_snapper",
     "cjk_vertical_snapper",
-    "print_protection",
-    "document_serializer"
+    "print_protection"
 ];
 
 // Modules that are valid for WebPub publications (simple scroll-based)
@@ -54,8 +50,7 @@ export const WebPubModules: ModuleName[] = [
     "webpub_snapper",
     "decorator",
     "peripherals",
-    "print_protection",
-    "document_serializer"
+    "print_protection"
 ];
 
 export const ModuleLibrary = new Map<string, ModuleDerived>([
@@ -69,6 +64,5 @@ export const ModuleLibrary = new Map<string, ModuleDerived>([
     ColumnSnapper,
     ScrollSnapper,
     CJKVerticalSnapper,
-    PrintProtector,
-    DocumentSerializer
+    PrintProtector
 ].map(m => [m.moduleName, m])); // Turn module list into K/V list for quick access by name

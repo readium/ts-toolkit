@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `GuidedNavigationSource`, and `PublicationGuidedNavigationSource` implementing it: the Guided Navigation objects of a resource, with textrefs qualified by its href. The publication's Guided Navigation document is used when every object with text can be located in the resource, otherwise one is generated from the resource's markup with `@readium/guided-navigation`
+
+### Changed
+
+- **Breaking:** requires Node.js 24 or later
+
 ## [2.11.1] – 2026-09-30
 
 ### Fixed

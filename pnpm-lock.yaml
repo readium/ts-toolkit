@@ -4,6 +4,13 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@readium/decorator': workspace:*
+  '@readium/guided-navigation': workspace:*
+  '@readium/helpers': workspace:*
+  '@readium/navigator-html-injectables': workspace:*
+  '@readium/shared': workspace:*
+
 importers:
 
   .:
@@ -107,6 +114,9 @@ importers:
       '@readium/decorator':
         specifier: workspace:*
         version: link:../decorator
+      '@readium/guided-navigation':
+        specifier: workspace:*
+        version: link:../guided-navigation
       '@readium/helpers':
         specifier: workspace:*
         version: link:../helpers
@@ -4057,7 +4067,7 @@ snapshots:
 
   '@types/jsdom@30.0.0':
     dependencies:
-      '@types/node': 25.0.9
+      '@types/node': 26.6.3
       '@types/tough-cookie': 4.0.5
       parse5: 8.0.1
       undici-types: 8.11.2

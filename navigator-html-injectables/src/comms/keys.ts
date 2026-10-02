@@ -15,7 +15,6 @@ export type CommsEventKey =
     "scroll" |
     "progress" |
     "first_visible_locator" |
-    "serialize_document" |
     "text_selected" |
     "context_menu" |
     "media_play" |
@@ -41,7 +40,6 @@ export type CommsCommandKey =
     "remove_property" |
     // "exact_progress" |
     "first_visible_locator" |
-    "serialize_document" |
     "decorate" |
     "decoration_resize" |
     "decoration_activatable" |
