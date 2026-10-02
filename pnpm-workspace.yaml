@@ -7,8 +7,18 @@ packages:
   - 'guided-navigation'
 
 minimumReleaseAge: 4320 # 3 days
+minimumReleaseAgeExclude:
+  - "@readium/*"
 blockExoticSubdeps: true
 trustPolicy: no-downgrade
 allowBuilds:
   esbuild: true
   unrs-resolver: true
+
+# Readium packages from npm (e.g. @readium/speech) must resolve to this workspace, not a second published copy.
+overrides:
+  "@readium/decorator": "workspace:*"
+  "@readium/guided-navigation": "workspace:*"
+  "@readium/helpers": "workspace:*"
+  "@readium/navigator-html-injectables": "workspace:*"
+  "@readium/shared": "workspace:*"
