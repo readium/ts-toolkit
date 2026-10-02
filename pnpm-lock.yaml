@@ -126,6 +126,9 @@ importers:
       '@readium/shared':
         specifier: workspace:*
         version: link:../shared
+      '@readium/speech':
+        specifier: ^0.13.0
+        version: 0.13.0(typescript@5.9.3)
     devDependencies:
       '@readium/css':
         specifier: ^2.0.5
@@ -1198,6 +1201,10 @@ packages:
   '@readium/css@2.0.5':
     resolution: {integrity: sha512-rQWeDFSS9UfRTFFdWIhlko0jtkL9dOfNTqFjgMumlguromsyHC9/lGmbWDde7deEeE5ns+yBOSGKixMU0wqZ4A==}
 
+  '@readium/speech@0.13.0':
+    resolution: {integrity: sha512-4FNXq7asczV0X7IsOn+ptoWNDkuToCuV2VRn8Pm98jj0HQo/QK7DQTLE0jDgYpyarlpwtr3Cq88LssO04lr1GQ==}
+    engines: {node: '>=24'}
+
   '@rollup/rollup-android-arm-eabi@4.55.2':
     resolution: {integrity: sha512-21J6xzayjy3O6NdnlO6aXi/urvSRjm6nCI6+nF6ra2YofKruGixN9kfT+dt55HVNwfDmpDHJcaS3JuP/boNnlA==}
     cpu: [arm]
@@ -1876,6 +1883,14 @@ packages:
   human-signals@2.1.0:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
     engines: {node: '>=10.17.0'}
+
+  i18next@26.4.2:
+    resolution: {integrity: sha512-RX+R0VLg13IbvRuJSxnqykUFS9vQZTl8wYpWPCIUDWVrSGjsQywB5Y+pjzrkboxGAuYfJZVH1InFTdgBdxq6ug==}
+    peerDependencies:
+      typescript: ^5 || ^6 || ^7
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   import-local@3.2.0:
     resolution: {integrity: sha512-2SPlun1JUPWoM6t3F0dw0FkCF/jWY8kttcY4f599GLTSjh2OCuuhdTkJQsEcZzBqbXZGKMK2OqW1oZsjtf/gQA==}
@@ -3933,6 +3948,16 @@ snapshots:
 
   '@readium/css@2.0.5': {}
 
+  '@readium/speech@0.13.0(typescript@5.9.3)':
+    dependencies:
+      '@readium/decorator': link:decorator
+      '@readium/guided-navigation': link:guided-navigation
+      '@readium/helpers': link:helpers
+      '@readium/shared': link:shared
+      i18next: 26.4.2(typescript@5.9.3)
+    transitivePeerDependencies:
+      - typescript
+
   '@rollup/rollup-android-arm-eabi@4.55.2':
     optional: true
 
@@ -4541,6 +4566,10 @@ snapshots:
   html-escaper@2.0.2: {}
 
   human-signals@2.1.0: {}
+
+  i18next@26.4.2(typescript@5.9.3):
+    optionalDependencies:
+      typescript: 5.9.3
 
   import-local@3.2.0:
     dependencies:

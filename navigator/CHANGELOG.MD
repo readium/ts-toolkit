@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `GuidedNavigationSource`, and `PublicationGuidedNavigationSource` implementing it: the Guided Navigation objects of a resource, with textrefs qualified by its href. The publication's Guided Navigation document is used when every object with text can be located in the resource, otherwise one is generated from the resource's markup with `@readium/guided-navigation`
-- `readingUnits` and `stitch`: a publication's reading order as reading units, either the whole reading order (`"publication"`, for fixed layouts where sentences continue across pages) or one resource each (`"resource"`). `stitch` concatenates a unit's Guided Navigation objects in reading order, and reports the links whose objects couldn't be obtained
+- `ReadAloudNavigator`: reads a publication aloud with a `@readium/speech` engine alongside the navigator displaying it, from the navigator's current position or a given locator, continuing across reading units. Sentences are reconstructed across resources (e.g. fixed-layout pages), and listeners receive each utterance with one locator per piece, each in its own resource, and each spoken word's locator. Fixed layouts are read as a whole, other publications one resource at a time, which `scope` (`ReadingUnitScope`) overrides. Speech preferences and voices are exposed as-is
 
 ### Changed
 

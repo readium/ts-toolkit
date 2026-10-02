@@ -1,2 +1,3 @@
 export * from './GuidedNavigationSource.ts';
-export * from './ReadingUnit.ts';
+export type { ReadingUnitScope } from './ReadingUnit.ts';
+export * from './ReadAloudNavigator.ts';

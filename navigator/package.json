@@ -53,7 +53,8 @@
     "@readium/guided-navigation": "workspace:*",
     "@readium/helpers": "workspace:*",
     "@readium/navigator-html-injectables": "workspace:*",
-    "@readium/shared": "workspace:*"
+    "@readium/shared": "workspace:*",
+    "@readium/speech": "^0.13.0"
   },
   "devDependencies": {
     "@readium/css": "^2.0.5",
