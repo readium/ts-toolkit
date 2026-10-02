@@ -8,6 +8,7 @@ renaming, or removing a fixture.
 | Role | Fixtures |
 | --- | --- |
 | `abstract` | `abstract-epub-type`, `abstract-role-aria` |
+| `accessible-name` | `accessible-name-labelledby-aria-hidden`, `accessible-name-labelledby-hidden-attribute` |
 | `acknowledgments` | `acknowledgments-epub-type`, `acknowledgments-role-aria` |
 | `afterword` | `afterword-epub-type`, `afterword-role-aria` |
 | `appendix` | `appendix-epub-type`, `appendix-role-aria` |
@@ -77,4 +78,4 @@ renaming, or removing a fixture.
 | `toc` | `toc-epub-type`, `toc-role-aria` |
 | `video` | `video-html-native`, `video-no-description` |
 
-178 fixtures across 69 roles.
+180 fixtures across 70 roles.

@@ -1,0 +1,10 @@
+{
+  "id": "accessible-name-labelledby-aria-hidden",
+  "description": "A link named via aria-labelledby pointing at an element marked aria-hidden=\"true\": the hidden label still names the link, and is not emitted on its own",
+  "role": "accessible-name",
+  "rolesCovered": [
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/accname/#computation-steps",
+  "inputKind": "fragment"
+}

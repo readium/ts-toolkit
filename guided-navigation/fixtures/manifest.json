@@ -20,6 +20,26 @@
     }
   },
   {
+    "id": "accessible-name-labelledby-aria-hidden",
+    "dir": "accessible-name-labelledby-aria-hidden",
+    "role": "accessible-name",
+    "description": "A link named via aria-labelledby pointing at an element marked aria-hidden=\"true\": the hidden label still names the link, and is not emitted on its own",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "accessible-name-labelledby-hidden-attribute",
+    "dir": "accessible-name-labelledby-hidden-attribute",
+    "role": "accessible-name",
+    "description": "A link named via aria-labelledby pointing at an element hidden with the native hidden attribute: the hidden label still names the link, and is not emitted on its own",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "acknowledgments-epub-type",
     "dir": "acknowledgments-epub-type",
     "role": "acknowledgments",
