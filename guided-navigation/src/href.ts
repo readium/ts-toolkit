@@ -12,6 +12,7 @@ export function resolveRef(ref: string, href: string): string {
   const path = hashIndex === -1 ? ref : ref.slice(0, hashIndex);
   const fragment = hashIndex === -1 ? "" : ref.slice(hashIndex);
   if (SCHEME_RE.test(href)) return new URL(path, href).href + fragment;
+  if (href.startsWith("//")) return new URL(path, "https:" + href).href.slice("https:".length) + fragment;
   const resolved = new URL(path, BASE + href.replace(/^\/+/, "")).href;
   return resolved.startsWith(BASE) ? resolved.slice(BASE.length) + fragment : ref;
 }

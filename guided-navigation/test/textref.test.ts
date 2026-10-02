@@ -466,6 +466,8 @@ test("resolveRef resolves fragments, relative paths and keeps absolute URLs", ()
   expect(resolveRef("notes.xhtml#n1", "OEBPS/chapter.xhtml")).toBe("OEBPS/notes.xhtml#n1");
   expect(resolveRef("https://example.com/x", "OEBPS/chapter.xhtml")).toBe("https://example.com/x");
   expect(resolveRef("a.png", "https://example.com/pub/chapter.xhtml")).toBe("https://example.com/pub/a.png");
+  expect(resolveRef("#p1", "//cdn.example/pub/chapter.xhtml")).toBe("//cdn.example/pub/chapter.xhtml#p1");
+  expect(resolveRef("../a.png", "//cdn.example/pub/chapter.xhtml")).toBe("//cdn.example/a.png");
 });
 
 test("resolveRef normalizes the href the same way for #fragment refs and path refs", () => {
