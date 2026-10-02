@@ -141,6 +141,11 @@ export class GuidedNavigationDescription {
      */
     public static deserialize(json: any): GuidedNavigationDescription | undefined {
         if (!json) return undefined;
+        // Temporary: some documents still use a plain-string description, which the schema doesn't allow.
+        if (typeof json === 'string') {
+            const text = GuidedNavigationText.deserialize(json);
+            return text ? new GuidedNavigationDescription({ text }) : undefined;
+        }
         const description = new GuidedNavigationDescription({
             audioref: json.audioref,
             imgref: json.imgref,

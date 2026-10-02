@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `Publication.guideForLink` takes an optional `{ skipAudio }`: a document with `audioref`s is skipped in favour of the manifest's global document, or `undefined` if that one has them too
+
+### Changed
+
+- `GuidedNavigationDescription.deserialize` temporarily accepts a plain string as its text, for documents that don't follow the schema yet
+
+### Fixed
+
+- `Publication.guideForLink` sends the link's href without its fragment as the `ref` template parameter
+
 ## [2.7.0] – 2026-10-01
 
 ### Added
