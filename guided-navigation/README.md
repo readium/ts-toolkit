@@ -35,6 +35,8 @@ Malformed XHTML (an undeclared `epub:` prefix, an HTML entity like `&nbsp;`…) 
 
 `makeGnd` returns `undefined` when the input has no navigable content, since a document's `guided` can't be empty. `parseMarkup` returns the objects without the document wrapper, and an empty array in that case.
 
+Pass the input's own href as `{ href }` to resolve every ref (`textref`, `imgref`, `audioref`, `videoref`) against it: with `OEBPS/text/chapter.xhtml`, `#p1` becomes `OEBPS/text/chapter.xhtml#p1` and `../images/a.png` becomes `OEBPS/images/a.png`. Refs come out URL-encoded (`my chapter.xhtml` becomes `my%20chapter.xhtml`), so pass an encoded href to get it back unchanged.
+
 Use `serialize()` on the result to get the JSON.
 
 ## Text references (`textrefs`)
@@ -90,13 +92,15 @@ If the node's text is too long, the polyfill only keeps the first few words and 
 Use `decodeTextref({ id, textref })` to read a `textref` back. It returns:
 
 ```typescript
-{ cssSelector?, domRange?, text?, fragment? }
+{ href?, cssSelector?, domRange?, text?, fragment? }
 ```
+
+- `href` → the resource named before the fragment, when there is one (`chapter.xhtml#css(...)`)
 
 - Exact match (one quote) → `text: { highlight, before?, after? }`
 - Range (the `textStart`/`textEnd` case above) → `fragment` (the raw `:~:text=...` string)
 
-It returns `undefined` if the `textref` isn't one of ours (e.g. it's a plain link's `href`). `combineDomRangeTextrefs(first, last)` joins two decoded `domRange` references into one spanning both.
+It returns `undefined` if the `textref` is navigational rather than a reference to the node's own content, e.g. a link's `href`. `#css(...)` and `#domrange(...)` are always the node's own. A `#id` is the node's own only when it matches the node's `id`. `combineDomRangeTextrefs(first, last)` joins two decoded `domRange` references into one spanning both, as long as they're in the same resource.
 
 The lower-level pieces are exported too: `encodeCssSelectorFragment(selector)`/`decodeCssSelectorFragment(textref)` for `#css(...)`, and `encodeDomRangeFragment(domRange)`/`decodeDomRangeFragment(textref)` for `#domrange(...)` (a `DomRangeJSON`: `{ start: { cssSelector, textNodeIndex, charOffset? }, end?: {...} }`, the RWPM shape behind `@readium/shared`'s `DomRange`).
 

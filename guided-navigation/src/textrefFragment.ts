@@ -108,6 +108,8 @@ export function decodeTextFragmentDirective(textref: string | undefined): TextFr
 }
 
 export interface DecodedTextref {
+  // The resource the reference points into, when the textref names one.
+  href?: string;
   cssSelector?: string;
   domRange?: DomRangeJSON;
   text?: { highlight?: string; before?: string; after?: string };
@@ -120,9 +122,13 @@ export interface DecodedTextref {
 // `domRange` to combine — a bare selector has no `textNodeIndex` to build one from.
 export function combineDomRangeTextrefs(first: DecodedTextref, last: DecodedTextref): DecodedTextref | undefined {
   if (!first.domRange || !last.domRange) return undefined;
+  // A DOM range can't span two documents.
+  if (first.href !== last.href) return undefined;
   const domRange: DomRangeJSON = { start: first.domRange.start, end: last.domRange.end ?? last.domRange.start };
   if (first.domRange.container !== undefined) domRange.container = first.domRange.container;
-  return { domRange, cssSelector: domRange.container ?? domRange.start.cssSelector };
+  const combined: DecodedTextref = { domRange, cssSelector: domRange.container ?? domRange.start.cssSelector };
+  if (first.href !== undefined) combined.href = first.href;
+  return combined;
 }
 
 function decodeIdFragment(base: string): string | undefined {
@@ -134,33 +140,34 @@ function decodeIdFragment(base: string): string | undefined {
   }
 }
 
-// Decodes a node's own generated textref, distinguishing it from an
-// unrelated navigational textref (link href, pagebreak/noteref reference)
-// that happens to also start with "#" — those are never wrapped in
-// "#css(...)"/"#domrange(...)", and a bare "#id" is only trusted as a
-// self-reference when it matches this same node's own id (the shape
-// Converter.applyTextref produces), not an id belonging elsewhere. A
-// ":~:text=..." suffix is independent of all that — it can accompany any of
-// the above, or stand alone — so it's decoded separately from the rest of
-// the string and merged into the result.
+// Decodes a reference to a node's own content, distinguishing it from a
+// navigational textref (link href, noteref target). A textref is
+// "[href]#fragment", the href naming the resource when present (e.g.
+// "chapter.xhtml#css(...)"). "#css(...)"/"#domrange(...)" fragments are
+// always self-references; a bare "#id" only is when it matches the node's
+// own id. A ":~:text=..." suffix can accompany any of the above, or stand
+// alone, so it's decoded separately and merged into the result.
 export function decodeTextref(node: { id?: string; textref?: string } | undefined): DecodedTextref | undefined {
   const textref = node?.textref;
   if (!textref) return undefined;
 
   const markIndex = textref.indexOf(":~:");
   const base = markIndex === -1 ? textref : textref.slice(0, markIndex);
+  const hashIndex = base.indexOf("#");
+  const href = hashIndex === -1 ? base : base.slice(0, hashIndex);
+  const fragment = hashIndex === -1 ? "" : base.slice(hashIndex);
 
   let cssSelector: string | undefined;
   let domRange: DomRangeJSON | undefined;
-  const baseDomRange = decodeDomRangeFragment(base);
-  if (baseDomRange) {
-    domRange = baseDomRange;
-    cssSelector = baseDomRange.container ?? baseDomRange.start.cssSelector;
+  const fragmentDomRange = decodeDomRangeFragment(fragment);
+  if (fragmentDomRange) {
+    domRange = fragmentDomRange;
+    cssSelector = fragmentDomRange.container ?? fragmentDomRange.start.cssSelector;
   } else {
-    const decoded = decodeCssSelectorFragment(base);
+    const decoded = decodeCssSelectorFragment(fragment);
     if (decoded !== undefined) {
       cssSelector = decoded;
-    } else if (node?.id && decodeIdFragment(base) === node.id) {
+    } else if (node.id && decodeIdFragment(fragment) === node.id) {
       cssSelector = `#${CSS.escape(node.id)}`;
     }
   }
@@ -177,6 +184,7 @@ export function decodeTextref(node: { id?: string; textref?: string } | undefine
   }
 
   const result: DecodedTextref = {};
+  if (href !== "") result.href = href;
   if (cssSelector !== undefined) result.cssSelector = cssSelector;
   if (domRange !== undefined) result.domRange = domRange;
   if (directive?.textEnd !== undefined) {

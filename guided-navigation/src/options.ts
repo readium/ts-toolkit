@@ -34,6 +34,9 @@ export interface GndGenerationOptions {
   // Re-parse string input as text/html when XHTML parsing fails, instead of
   // throwing.
   htmlFallback?: boolean;
+  // The input's own href: every ref (textref, imgref, audioref, videoref) is
+  // resolved against it, e.g. "#p1" becomes "chapter.xhtml#p1".
+  href?: string;
 }
 
 function normalizeRoles(opt: boolean | GndRole[] | undefined): ((roles: GndRole[]) => boolean) | null {
