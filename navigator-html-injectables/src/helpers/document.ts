@@ -1,4 +1,5 @@
 import { ReadiumWindow } from "./dom.ts";
+import { markInjected } from "./injected.ts";
 
 export function isRTL(wnd: Window): boolean {
     // Check documentElement first, then fall back to body.
@@ -203,7 +204,7 @@ export function appendVirtualColumnIfNeeded(wnd: ReadiumWindow): boolean {
                 virtualCol.style.height = getContentHeight(wnd.document.documentElement) + "px";
             }
             virtualCol.innerHTML = "&#8203;"; // zero-width space
-            wnd.document.body.appendChild(virtualCol);
+            wnd.document.body.appendChild(markInjected(virtualCol));
         }
     }
 

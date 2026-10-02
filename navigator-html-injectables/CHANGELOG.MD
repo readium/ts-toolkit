@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `document_serializer` module, in the FXL, reflowable and WebPub module lists: the `serialize_document` command replies with a `serialize_document` event carrying the live document element and body as a `SerializedDocument` (`markup` and `mediaType`), without the head or the nodes added by the injectables
+
 ## [2.8.5] – 2026-10-01
 
 ### Changed
