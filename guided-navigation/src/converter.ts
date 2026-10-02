@@ -18,6 +18,7 @@ import { ssmlAttrEscape, ssmlTextEscape, startsWithBindingPunct } from "@readium
 import { type ObjBuilder, NavObject, isEmptyObj, finalizeToGuidedNavigationObject } from "./object.ts";
 import { type GndMediaType, nodeLanguage, isInlineTag, sniffMediaType } from "./dom.ts";
 import { encodeDomRangeFragment, encodeTextFragmentDirective } from "./textrefFragment.ts";
+import { resolveRefs } from "./href.ts";
 import { rootAnchorSelector, selectorForElement, textrefForSelector } from "./selectorGenerator.ts";
 import { generateDomRange } from "./domRangeGenerator.ts";
 import { textFragmentDirectiveFor } from "./textFragmentGenerator.ts";
@@ -70,6 +71,7 @@ export class Converter {
   // See TextrefOptions.roles' leafTextRoleKeyword in options.ts.
   leafTextEnabled = false;
   docRoot: Document | null = null;
+  baseHref?: string;
   // The live element selectors are climbed relative to — see
   // selectorGenerator.ts's selectorForElement(). Only set when converting a
   // live, already-rendered element (same caveat as domRangeEnabled).
@@ -161,7 +163,9 @@ export class Converter {
   }
 
   result(): GuidedNavigationObject[] {
-    return this.resultBuilders().map(finalizeToGuidedNavigationObject);
+    const builders = this.resultBuilders();
+    if (this.baseHref) builders.forEach((b) => resolveRefs(b, this.baseHref!));
+    return builders.map(finalizeToGuidedNavigationObject);
   }
 
   // An explicit-role descendant is content in its own right and skips
@@ -697,6 +701,7 @@ export function parseMarkup(
     converter.domRangeEnabled = domRange;
     converter.textFragmentEnabled = textFragment;
     converter.docRoot = input.ownerDocument;
+    converter.baseHref = options?.href;
     converter.selectorRoot = input;
     converter.selectorRootAnchor = rootAnchorSelector(input);
     converter.convert(input);
@@ -720,6 +725,7 @@ export function parseMarkup(
   converter.leafTextEnabled = leafText;
   converter.textFragmentEnabled = textFragment;
   converter.docRoot = doc;
+  converter.baseHref = options?.href;
   const body = doc.querySelector("body");
   if (body && !BODY_TAG_RE.test(input)) {
     converter.convertChildren(body);

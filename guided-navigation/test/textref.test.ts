@@ -7,7 +7,9 @@ import {
   encodeTextFragmentDirective,
   decodeTextFragmentDirective,
   decodeTextref,
+  combineDomRangeTextrefs,
 } from "../src/textrefFragment.ts";
+import { resolveRef } from "../src/href.ts";
 
 test("textrefs option is off by default — no textref is generated", () => {
   const [result] = parseMarkup("<p>Hello.</p>");
@@ -422,4 +424,75 @@ test("decodeTextref carries a textStart/textEnd range as fragment, not text.high
     cssSelector: "p",
     fragment: encodeTextFragmentDirective(directive),
   });
+});
+
+test("decodeTextref splits an href from a self-referencing fragment", () => {
+  expect(decodeTextref({ textref: `page3.xhtml${encodeCssSelectorFragment("p")}` })).toEqual({ href: "page3.xhtml", cssSelector: "p" });
+  const domRange = { start: { cssSelector: "p", textNodeIndex: 0 } };
+  expect(decodeTextref({ textref: `page3.xhtml${encodeDomRangeFragment(domRange)}` })).toEqual({ href: "page3.xhtml", cssSelector: "p", domRange });
+  expect(decodeTextref({ id: "p12", textref: "chapter.xhtml#p12" })).toEqual({ href: "chapter.xhtml", cssSelector: "#p12" });
+});
+
+test("decodeTextref ignores href-qualified navigational textrefs", () => {
+  expect(decodeTextref({ textref: "endnotes.xhtml#note2" })).toBe(undefined);
+  expect(decodeTextref({ id: "p1", textref: "chapter.xhtml#p2" })).toBe(undefined);
+  expect(decodeTextref({ textref: "chapter.xhtml" })).toBe(undefined);
+});
+
+test("decodeTextref ignores a link's href even when the link has a role", () => {
+  const [landmarks] = parseMarkup(
+    '<ol xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><li><a epub:type="toc" href="#toc">Contents</a></li><li><a epub:type="bodymatter" href="chapter.xhtml">Start</a></li></ol>',
+    "application/xhtml+xml",
+  );
+  const links = landmarks.children?.flatMap((li) => li.children ?? [li]) ?? [];
+  expect(links.map((l) => l.textref)).toEqual(["#toc", "chapter.xhtml"]);
+  for (const link of links) expect(decodeTextref(link)).toBe(undefined);
+});
+
+test("decodeTextref keeps the href alongside a text-fragment directive", () => {
+  const textref = `page3.xhtml${encodeCssSelectorFragment("p")}${encodeTextFragmentDirective({ textStart: "Hello." })}`;
+  expect(decodeTextref({ textref })).toEqual({ href: "page3.xhtml", cssSelector: "p", text: { highlight: "Hello." } });
+});
+
+test("combineDomRangeTextrefs refuses to span two resources", () => {
+  const start = { cssSelector: "p", textNodeIndex: 0 };
+  expect(combineDomRangeTextrefs({ href: "p1.xhtml", domRange: { start } }, { href: "p2.xhtml", domRange: { start } })).toBe(undefined);
+  expect(combineDomRangeTextrefs({ href: "p1.xhtml", domRange: { start } }, { href: "p1.xhtml", domRange: { start } })?.href).toBe("p1.xhtml");
+});
+
+test("resolveRef resolves fragments, relative paths and keeps absolute URLs", () => {
+  expect(resolveRef("#p1", "OEBPS/chapter.xhtml")).toBe("OEBPS/chapter.xhtml#p1");
+  expect(resolveRef("../images/a.png", "OEBPS/text/chapter.xhtml")).toBe("OEBPS/images/a.png");
+  expect(resolveRef("notes.xhtml#n1", "OEBPS/chapter.xhtml")).toBe("OEBPS/notes.xhtml#n1");
+  expect(resolveRef("https://example.com/x", "OEBPS/chapter.xhtml")).toBe("https://example.com/x");
+  expect(resolveRef("a.png", "https://example.com/pub/chapter.xhtml")).toBe("https://example.com/pub/a.png");
+});
+
+test("resolveRef normalizes the href the same way for #fragment refs and path refs", () => {
+  for (const href of ["/OEBPS/chapter.xhtml", "OEBPS/./text/../chapter.xhtml"]) {
+    expect(resolveRef("#p1", href)).toBe("OEBPS/chapter.xhtml#p1");
+    expect(resolveRef("chapter.xhtml#p2", href)).toBe("OEBPS/chapter.xhtml#p2");
+  }
+  expect(resolveRef("#p1", "OEBPS/my chapter.xhtml")).toBe("OEBPS/my%20chapter.xhtml#p1");
+  expect(resolveRef("my chapter.xhtml#p1", "OEBPS/my chapter.xhtml")).toBe("OEBPS/my%20chapter.xhtml#p1");
+  expect(resolveRef("#p1", "OEBPS/my%20chapter.xhtml")).toBe("OEBPS/my%20chapter.xhtml#p1");
+  const css = encodeCssSelectorFragment("p > span");
+  expect(resolveRef(css, "OEBPS/chapter.xhtml")).toBe(`OEBPS/chapter.xhtml${css}`);
+});
+
+test("parseMarkup with href qualifies every ref, and the textrefs decode back with that href", () => {
+  const nodes = parseMarkup(
+    '<p id="p1">Hello <a href="notes.xhtml#n1">note</a>.</p><p>World.</p><img src="a.png" alt="A"/>',
+    "text/html",
+    { textrefs: true, href: "OEBPS/chapter.xhtml" },
+  );
+  expect(nodes[0].textref).toBe("OEBPS/chapter.xhtml#p1");
+  expect(decodeTextref(nodes[0])).toEqual({ href: "OEBPS/chapter.xhtml", cssSelector: "#p1" });
+  const link = nodes[0].children?.find((c) => c.textref?.includes("notes"));
+  expect(link?.textref).toBe("OEBPS/notes.xhtml#n1");
+  expect(decodeTextref(link)).toBe(undefined);
+  const second = decodeTextref(nodes[1]);
+  expect(second?.href).toBe("OEBPS/chapter.xhtml");
+  expect(second?.cssSelector).toBeTruthy();
+  expect(nodes[2].imgref).toBe("OEBPS/a.png");
 });

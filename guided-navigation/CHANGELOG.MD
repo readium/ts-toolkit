@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] – 2026-10-02
+
+### Added
+
+- `href` option for `makeGnd`/`parseMarkup`: every ref is resolved against the input's own href, e.g. `#p1` becomes `chapter.xhtml#p1`
+- `DecodedTextref.href`: `decodeTextref` reads textrefs naming their resource (`chapter.xhtml#css(...)`, `chapter.xhtml#p1`) instead of ignoring them
+
+### Changed
+
+- `combineDomRangeTextrefs` returns `undefined` for references to two different resources
+
 ## [1.0.1] – 2026-10-02
 
 ### Added
