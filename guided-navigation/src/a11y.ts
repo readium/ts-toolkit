@@ -69,8 +69,8 @@ export function extractNodeAria(el: Element): [string | null, boolean] {
 
     if (labelNodes.length > 0) {
       let text = "";
+      // Directly-referenced label nodes count even when hidden (AccName 2.A).
       labelNodes.forEach((n, i) => {
-        if (nodeIsHidden(n)) return;
         const label = n.getAttribute("aria-label");
         text += label ? label : nodeTextExcludingExplicitRoles(n);
         if (i < labelNodes.length - 1) text += " ";
