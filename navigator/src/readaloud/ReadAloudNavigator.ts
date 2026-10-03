@@ -1,8 +1,6 @@
 import { Layout, Locator, Profile, Publication, getCssSelector } from "@readium/shared";
 import {
     createLocator,
-    ISpeechDefaults,
-    ISpeechPreferences,
     LocatorOptions,
     ReadiumSpeechNavigator,
     ReadiumSpeechPlaybackEngine,
@@ -12,13 +10,21 @@ import {
     ReadiumSpeechVoice,
     resolveUtteranceLocate,
     SpeechPreferences,
-    SpeechPreferencesEditor,
-    SpeechSettings,
 } from "@readium/speech";
-import { Navigator } from "../Navigator.ts";
-import { Decoration, DecorableNavigator, DecorationStyle, DecorationStyleType } from "../decorations/index.ts";
+import { Navigator, VisualNavigatorViewport } from "../Navigator.ts";
+import { Decoration, DecorableNavigator } from "../decorations/index.ts";
 import { GuidedNavigationSource, PublicationGuidedNavigationSource } from "./GuidedNavigationSource.ts";
 import { ReadingUnit, ReadingUnitScope, readingUnits, stitch } from "./ReadingUnit.ts";
+import {
+    IReadAloudDefaults,
+    IReadAloudPreferences,
+    ReadAloudAutoPause,
+    ReadAloudDecorationStyle,
+    ReadAloudDefaults,
+    ReadAloudPreferences,
+    ReadAloudPreferencesEditor,
+    ReadAloudSettings,
+} from "./preferences/index.ts";
 
 export type ReadAloudState = ReadiumSpeechPlaybackState;
 
@@ -39,16 +45,16 @@ export interface ReadAloudConfiguration {
     /** Defaults to "publication" for fixed layouts, "resource" otherwise. */
     scope?: ReadingUnitScope;
     source?: GuidedNavigationSource;
-    preferences?: ISpeechPreferences;
-    defaults?: ISpeechDefaults;
-    /** Style of the utterance being spoken, `null` to not highlight it. */
-    utteranceStyle?: DecorationStyle | null;
-    /** Style of the word being spoken, `null` to not highlight it. */
-    wordStyle?: DecorationStyle | null;
+    preferences?: IReadAloudPreferences;
+    defaults?: IReadAloudDefaults;
 }
 
-// Sentences are only joined across objects, and so across pages, in sentence segmentation.
-const READ_ALOUD_DEFAULTS: ISpeechDefaults = { segmentation: "sentence", skip: ["pagebreak"] };
+interface PausedPosition {
+    unitIndex: number;
+    index: number;
+    /** Whether the utterance at `index` is the current one yet, rather than the one before it. */
+    current: boolean;
+}
 
 const UTTERANCE_GROUP = "readaloud-utterance";
 const WORD_GROUP = "readaloud-word";
@@ -63,8 +69,14 @@ export class ReadAloudNavigator {
     private readonly source: GuidedNavigationSource;
     private readonly units: ReadingUnit[];
     private readonly unsubscribers: (() => void)[] = [];
-    private readonly utteranceStyle: DecorationStyle | null;
-    private readonly wordStyle: DecorationStyle | null;
+    private readonly _defaults: ReadAloudDefaults;
+    private _preferences: ReadAloudPreferences;
+    private _settings: ReadAloudSettings;
+    private _preferencesEditor: ReadAloudPreferencesEditor | null = null;
+    private utteranceLocators: Locator[] = [];
+    private wordLocator?: Locator;
+    // Where playback resumes after pausing at a page or spread, which speech knows nothing about.
+    private pausedBefore?: PausedPosition;
     private pendingFollow?: Locator;
     private followedHref?: string;
     private followTimer?: ReturnType<typeof setTimeout>;
@@ -74,7 +86,7 @@ export class ReadAloudNavigator {
     private lastState: ReadAloudState = "idle";
 
     constructor(
-        private readonly navigator: Navigator & Partial<DecorableNavigator>,
+        private readonly navigator: Navigator & Partial<DecorableNavigator> & { readonly viewport?: VisualNavigatorViewport },
         engine: ReadiumSpeechPlaybackEngine,
         private readonly listeners: ReadAloudListeners = {},
         configuration: ReadAloudConfiguration = {}
@@ -82,17 +94,19 @@ export class ReadAloudNavigator {
         const publication = navigator.publication;
         this.source = configuration.source ?? new PublicationGuidedNavigationSource(publication);
         this.units = readingUnits(publication, configuration.scope ?? ReadAloudNavigator.determineScope(publication));
-        this.utteranceStyle = configuration.utteranceStyle === undefined ? { type: DecorationStyleType.Highlight } : configuration.utteranceStyle;
-        this.wordStyle = configuration.wordStyle === undefined ? { type: DecorationStyleType.Underline } : configuration.wordStyle;
+        this._preferences = new ReadAloudPreferences(configuration.preferences);
+        this._defaults = new ReadAloudDefaults(configuration.defaults);
         this.speech = new ReadiumSpeechNavigator(engine, {
-            preferences: configuration.preferences,
-            defaults: { ...READ_ALOUD_DEFAULTS, ...configuration.defaults },
+            preferences: ReadAloudNavigator.speechPreferences(this._preferences),
+            defaults: ReadAloudNavigator.speechPreferences({ ...this._defaults.speech, autoPause: this._defaults.autoPause }),
         });
+        this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
         this.listen();
     }
 
     get state(): ReadAloudState {
-        return this.loading ? "loading" : this.speech.getState();
+        if (this.loading) return "loading";
+        return this.pausedBefore ? "paused" : this.speech.getState();
     }
 
     /**
@@ -100,6 +114,10 @@ export class ReadAloudNavigator {
      * Without `from`, an idle reader starts from the navigator's current position.
      */
     async play(from?: Locator): Promise<void> {
+        if (!from && this.pausedBefore) {
+            await this.resumePaused(this.pausedBefore);
+            return;
+        }
         const state = this.state;
         if (!from && (state === "paused" || state === "ready")) {
             this.speech.play();
@@ -110,27 +128,30 @@ export class ReadAloudNavigator {
     }
 
     pause(): void {
-        this.speech.pause();
+        if (!this.pausedBefore) this.speech.pause();
     }
 
     stop(): void {
         this.loadToken++;
+        this.pausedBefore = undefined;
         this.setLoading(false);
         this.speech.stop();
     }
 
     /** Moves to the next utterance, continuing into the next reading unit at the end of this one. */
     async next(): Promise<boolean> {
+        if (this.pausedBefore) return this.movePaused(this.pausedBefore, 1);
         if (this.speech.next()) return true;
         if (this.unitIndex + 1 >= this.units.length) return false;
-        return this.loadUnitAndPlay(this.unitIndex + 1, () => 0);
+        return this.loadUnit(this.unitIndex + 1, () => 0);
     }
 
     /** Moves to the previous utterance, continuing into the previous reading unit at the start of this one. */
     async previous(): Promise<boolean> {
+        if (this.pausedBefore) return this.movePaused(this.pausedBefore, -1);
         if (this.speech.previous()) return true;
         if (this.unitIndex <= 0) return false;
-        return this.loadUnitAndPlay(this.unitIndex - 1, queue => queue.length - 1);
+        return this.loadUnit(this.unitIndex - 1, queue => queue.length - 1);
     }
 
     getVoices(): Promise<ReadiumSpeechVoice[]> {
@@ -145,20 +166,30 @@ export class ReadAloudNavigator {
         return this.speech.getCurrentVoice();
     }
 
-    get settings(): SpeechSettings {
-        return this.speech.settings;
+    get settings(): Readonly<ReadAloudSettings> {
+        return Object.freeze({ ...this._settings });
     }
 
-    get preferencesEditor(): SpeechPreferencesEditor {
-        return this.speech.preferencesEditor;
+    get preferencesEditor(): ReadAloudPreferencesEditor {
+        if (this._preferencesEditor === null) {
+            this._preferencesEditor = new ReadAloudPreferencesEditor(this._preferences, this.settings, this.speech.settings);
+        }
+        return this._preferencesEditor;
     }
 
-    submitPreferences(preferences: SpeechPreferences): Promise<void> {
-        return this.speech.submitPreferences(preferences);
+    async submitPreferences(preferences: ReadAloudPreferences): Promise<void> {
+        this._preferences = this._preferences.merging(preferences);
+        await this.speech.submitPreferences(ReadAloudNavigator.speechPreferences(this._preferences));
+        this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
+        if (this._preferencesEditor !== null) {
+            this._preferencesEditor = new ReadAloudPreferencesEditor(this._preferences, this.settings, this.speech.settings);
+        }
+        this.decorate();
     }
 
     async destroy(): Promise<void> {
         this.loadToken++;
+        this.pausedBefore = undefined;
         this.unsubscribers.forEach(unsubscribe => unsubscribe());
         this.unsubscribers.length = 0;
         this.clearHighlights();
@@ -178,21 +209,36 @@ export class ReadAloudNavigator {
             if (event.detail?.name !== "word" || !event.detail.locate) return;
             const locator = this.locatorFor(event.detail.locate as LocatorOptions);
             if (!locator) return;
-            this.decorate(WORD_GROUP, [locator], this.wordStyle);
+            this.wordLocator = locator;
+            this.decorate();
             this.follow(locator);
             this.listeners.wordChanged?.(locator, event.detail.word ?? "");
         });
         on("end", () => {
+            const state = this.speech.getState();
             // Speech goes idle once the last utterance of the queue has been spoken.
-            if (this.speech.getState() !== "idle") return;
-            if (this.unitIndex + 1 < this.units.length) void this.loadUnitAndPlay(this.unitIndex + 1, () => 0);
-            else this.clearHighlights();
+            if (state === "idle") {
+                if (this.unitIndex + 1 >= this.units.length) this.clearHighlights();
+                else if (this.pausesAtPages()) this.pausedBefore = { unitIndex: this.unitIndex + 1, index: 0, current: false };
+                else void this.loadUnit(this.unitIndex + 1, () => 0);
+                return;
+            }
+            // Paused by speech's own auto-pause otherwise.
+            if (state !== "playing") return;
+            const queue = this.speech.getContentQueue();
+            const index = queue.indexOf(this.speech.getCurrentContent()!);
+            if (index < 0 || !this.pausesBetween(queue[index], queue[index + 1])) return;
+            // Stopping, not pausing, cancels the next utterance without a paused engine to resume.
+            this.pausedBefore = { unitIndex: this.unitIndex, index: index + 1, current: false };
+            this.speech.stop();
         });
         on("error", event => {
             this.clearHighlights();
             this.listeners.error?.(event.detail ?? event);
         });
-        on("stop", () => this.clearHighlights());
+        on("stop", () => {
+            if (!this.pausedBefore) this.clearHighlights();
+        });
         for (const type of ["pause", "resume", "idle", "loading", "ready"] as const) on(type, () => {});
     }
 
@@ -200,13 +246,44 @@ export class ReadAloudNavigator {
         const href = from.href.split("#")[0];
         const unitIndex = this.units.findIndex(unit => unit.links.some(link => link.href === href));
         if (unitIndex === -1) return;
-        await this.loadUnitAndPlay(unitIndex, queue => this.startIndex(queue, from));
+        await this.loadUnit(unitIndex, queue => this.startIndex(queue, from));
     }
 
-    private async loadUnitAndPlay(unitIndex: number, indexIn: (queue: ReadiumSpeechUtterance[]) => number): Promise<boolean> {
+    private async resumePaused(paused: PausedPosition): Promise<void> {
+        if (paused.unitIndex !== this.unitIndex) {
+            await this.loadUnit(paused.unitIndex, () => paused.index);
+            return;
+        }
+        this.pausedBefore = undefined;
+        this.speakFrom(paused.index);
+        this.notifyState();
+    }
+
+    // Moves the position playback resumes at by `offset` utterances, staying paused.
+    private async movePaused(paused: PausedPosition, offset: number): Promise<boolean> {
+        const target = (paused.current ? paused.index : paused.index - 1) + offset;
+        if (paused.unitIndex === this.unitIndex) {
+            const queue = this.speech.getContentQueue();
+            if (target >= 0 && target < queue.length) {
+                this.pausedBefore = { unitIndex: paused.unitIndex, index: target, current: true };
+                this.notifyUtterance(queue[target]);
+                return true;
+            }
+            if (target >= queue.length) {
+                if (paused.unitIndex + 1 >= this.units.length) return false;
+                return this.loadUnit(paused.unitIndex + 1, () => target - queue.length, true);
+            }
+        }
+        if (target >= 0) return this.loadUnit(paused.unitIndex, () => target, true);
+        if (paused.unitIndex <= 0) return false;
+        return this.loadUnit(paused.unitIndex - 1, queue => queue.length + target, true);
+    }
+
+    private async loadUnit(unitIndex: number, indexIn: (queue: ReadiumSpeechUtterance[]) => number, paused = false): Promise<boolean> {
         const token = ++this.loadToken;
-        this.speech.stop();
         this.setLoading(true);
+        this.pausedBefore = undefined;
+        this.speech.stop();
         try {
             const { guided, failures } = await stitch(this.units[unitIndex], this.source);
             if (token !== this.loadToken) return false;
@@ -224,7 +301,7 @@ export class ReadAloudNavigator {
             if (queue.length === 0) {
                 this.setLoading(false);
                 // Nothing to read in this unit (e.g. only images): continue with the next one.
-                if (unitIndex + 1 < this.units.length) return this.loadUnitAndPlay(unitIndex + 1, () => 0);
+                if (unitIndex + 1 < this.units.length) return this.loadUnit(unitIndex + 1, () => 0, paused);
                 return false;
             }
             await ready;
@@ -232,8 +309,13 @@ export class ReadAloudNavigator {
             this.setLoading(false);
 
             const index = Math.min(Math.max(indexIn(queue), 0), queue.length - 1);
-            if (index === 0) this.speech.play();
-            else this.speech.jumpTo(index, true);
+            if (paused) {
+                this.pausedBefore = { unitIndex, index, current: true };
+                this.notifyUtterance(queue[index]);
+                this.notifyState();
+            } else {
+                this.speakFrom(index);
+            }
             return true;
         } catch (error) {
             if (token === this.loadToken) this.setLoading(false);
@@ -263,27 +345,63 @@ export class ReadAloudNavigator {
         return resolveUtteranceLocate(utterance, this.speech.settings.segmentation);
     }
 
-    private notifyUtterance() {
-        const utterance = this.speech.getCurrentContent();
+    // Speech can't speak the utterance it's already at, so the first one is played instead.
+    private speakFrom(index: number) {
+        if (index === 0) this.speech.play();
+        else this.speech.jumpTo(index, true);
+    }
+
+    private pausesAtPages(): boolean {
+        const autoPause = this._settings.autoPause;
+        return autoPause === ReadAloudAutoPause.page || autoPause === ReadAloudAutoPause.spread;
+    }
+
+    // Whether `next` starts on another page than `ended` ends on, or outside the displayed spread.
+    private pausesBetween(ended: ReadiumSpeechUtterance, next: ReadiumSpeechUtterance | undefined): boolean {
+        if (!next || !this.pausesAtPages()) return false;
+        const start = this.hrefsOf(next)[0];
+        if (!start) return false;
+        const displayed = this.navigator.viewport?.readingOrder ?? [];
+        if (this._settings.autoPause === ReadAloudAutoPause.spread && displayed.length > 0) {
+            return !displayed.includes(start);
+        }
+        return start !== this.hrefsOf(ended).at(-1);
+    }
+
+    private hrefsOf(utterance: ReadiumSpeechUtterance): string[] {
+        return this.piecesOf(utterance)
+            .map(piece => piece.href && this.navigator.publication.readingOrder.findWithHref(piece.href.split("#")[0])?.href)
+            .filter((href): href is string => !!href);
+    }
+
+    private notifyUtterance(utterance = this.speech.getCurrentContent()) {
         if (!utterance) return;
         const locators = this.piecesOf(utterance)
             .map(piece => this.locatorFor(piece))
             .filter((locator): locator is Locator => locator !== undefined);
-        this.decorate(UTTERANCE_GROUP, locators, this.utteranceStyle);
-        this.decorate(WORD_GROUP, [], this.wordStyle);
+        this.utteranceLocators = locators;
+        this.wordLocator = undefined;
+        this.decorate();
         if (locators.length > 0) this.follow(locators[0]);
         this.listeners.utteranceChanged?.({ text: utterance.plain ?? "", locators });
     }
 
-    private decorate(group: string, locators: Locator[], style: DecorationStyle | null) {
-        if (!style) return;
-        const decorations: Decoration[] = locators.map((locator, i) => ({ id: `${group}-${i}`, locator, style }));
+    private decorate() {
+        this.applyDecorations(UTTERANCE_GROUP, this.utteranceLocators, this._settings.utteranceStyle);
+        this.applyDecorations(WORD_GROUP, this.wordLocator ? [this.wordLocator] : [], this._settings.wordStyle);
+    }
+
+    private applyDecorations(group: string, locators: Locator[], style: ReadAloudDecorationStyle) {
+        const decorations: Decoration[] = style
+            ? locators.map((locator, i) => ({ id: `${group}-${i}`, locator, style }))
+            : [];
         this.navigator.applyDecorations?.(decorations, group);
     }
 
     private clearHighlights() {
-        this.decorate(UTTERANCE_GROUP, [], this.utteranceStyle);
-        this.decorate(WORD_GROUP, [], this.wordStyle);
+        this.utteranceLocators = [];
+        this.wordLocator = undefined;
+        this.decorate();
         clearTimeout(this.followTimer);
         this.followTimer = undefined;
         this.pendingFollow = undefined;
@@ -325,6 +443,13 @@ export class ReadAloudNavigator {
         const fixed = publication.metadata.effectiveLayout === Layout.fixed
             || !!publication.metadata.conformsTo?.includes(Profile.DIVINA);
         return fixed ? "publication" : "resource";
+    }
+
+    // Speech knows nothing of pages and spreads, so it never auto-pauses at them itself.
+    private static speechPreferences(preferences: IReadAloudPreferences): SpeechPreferences {
+        const { autoPause, utteranceStyle, wordStyle, ...speech } = preferences;
+        const ownScope = autoPause === ReadAloudAutoPause.page || autoPause === ReadAloudAutoPause.spread;
+        return new SpeechPreferences({ ...speech, autoPause: ownScope ? ReadAloudAutoPause.none : autoPause });
     }
 
     private setLoading(loading: boolean) {

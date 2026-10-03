@@ -82,6 +82,17 @@ export function ensureValueInRange(value: number | null | undefined, range: [num
   return value >= min && value <= max ? value : undefined;
 }
 
+export function ensureDecorationStyle<T extends object>(value: T | false | null | undefined): T | false | null | undefined {
+  if (value === undefined || value === null || value === false) {
+    return value;
+  }
+  if (typeof value !== "object") {
+    return undefined;
+  }
+  const type = (value as { type?: unknown }).type;
+  return type === undefined || typeof type === "string" ? value : undefined;
+}
+
 export function withFallback<T>(value: T | null | undefined, defaultValue: T | null): T | null {
   return value === undefined ? defaultValue : value;
 }
