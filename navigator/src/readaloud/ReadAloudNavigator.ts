@@ -16,6 +16,7 @@ import {
     SpeechSettings,
 } from "@readium/speech";
 import { Navigator } from "../Navigator.ts";
+import { Decoration, DecorableNavigator, DecorationStyle, DecorationStyleType } from "../decorations/index.ts";
 import { GuidedNavigationSource, PublicationGuidedNavigationSource } from "./GuidedNavigationSource.ts";
 import { ReadingUnit, ReadingUnitScope, readingUnits, stitch } from "./ReadingUnit.ts";
 
@@ -40,26 +41,40 @@ export interface ReadAloudConfiguration {
     source?: GuidedNavigationSource;
     preferences?: ISpeechPreferences;
     defaults?: ISpeechDefaults;
+    /** Style of the utterance being spoken, `null` to not highlight it. */
+    utteranceStyle?: DecorationStyle | null;
+    /** Style of the word being spoken, `null` to not highlight it. */
+    wordStyle?: DecorationStyle | null;
 }
 
 // Sentences are only joined across objects, and so across pages, in sentence segmentation.
 const READ_ALOUD_DEFAULTS: ISpeechDefaults = { segmentation: "sentence", skip: ["pagebreak"] };
 
+const UTTERANCE_GROUP = "readaloud-utterance";
+const WORD_GROUP = "readaloud-word";
+const FOLLOW_INTERVAL = 1000;
+
 /**
  * Reads a publication aloud with a speech engine, alongside the navigator displaying it.
+ * The spoken utterance and word are highlighted, and the navigator follows them.
  */
 export class ReadAloudNavigator {
     private readonly speech: ReadiumSpeechNavigator;
     private readonly source: GuidedNavigationSource;
     private readonly units: ReadingUnit[];
     private readonly unsubscribers: (() => void)[] = [];
+    private readonly utteranceStyle: DecorationStyle | null;
+    private readonly wordStyle: DecorationStyle | null;
+    private pendingFollow?: Locator;
+    private followedHref?: string;
+    private followTimer?: ReturnType<typeof setTimeout>;
     private unitIndex = -1;
     private loading = false;
     private loadToken = 0;
     private lastState: ReadAloudState = "idle";
 
     constructor(
-        private readonly navigator: Navigator,
+        private readonly navigator: Navigator & Partial<DecorableNavigator>,
         engine: ReadiumSpeechPlaybackEngine,
         private readonly listeners: ReadAloudListeners = {},
         configuration: ReadAloudConfiguration = {}
@@ -67,6 +82,8 @@ export class ReadAloudNavigator {
         const publication = navigator.publication;
         this.source = configuration.source ?? new PublicationGuidedNavigationSource(publication);
         this.units = readingUnits(publication, configuration.scope ?? ReadAloudNavigator.determineScope(publication));
+        this.utteranceStyle = configuration.utteranceStyle === undefined ? { type: DecorationStyleType.Highlight } : configuration.utteranceStyle;
+        this.wordStyle = configuration.wordStyle === undefined ? { type: DecorationStyleType.Underline } : configuration.wordStyle;
         this.speech = new ReadiumSpeechNavigator(engine, {
             preferences: configuration.preferences,
             defaults: { ...READ_ALOUD_DEFAULTS, ...configuration.defaults },
@@ -144,6 +161,7 @@ export class ReadAloudNavigator {
         this.loadToken++;
         this.unsubscribers.forEach(unsubscribe => unsubscribe());
         this.unsubscribers.length = 0;
+        this.clearHighlights();
         await this.speech.destroy();
     }
 
@@ -159,16 +177,23 @@ export class ReadAloudNavigator {
         on("boundary", event => {
             if (event.detail?.name !== "word" || !event.detail.locate) return;
             const locator = this.locatorFor(event.detail.locate as LocatorOptions);
-            if (locator) this.listeners.wordChanged?.(locator, event.detail.word ?? "");
+            if (!locator) return;
+            this.decorate(WORD_GROUP, [locator], this.wordStyle);
+            this.follow(locator);
+            this.listeners.wordChanged?.(locator, event.detail.word ?? "");
         });
         on("end", () => {
             // Speech goes idle once the last utterance of the queue has been spoken.
-            if (this.speech.getState() === "idle" && this.unitIndex + 1 < this.units.length) {
-                void this.loadUnitAndPlay(this.unitIndex + 1, () => 0);
-            }
+            if (this.speech.getState() !== "idle") return;
+            if (this.unitIndex + 1 < this.units.length) void this.loadUnitAndPlay(this.unitIndex + 1, () => 0);
+            else this.clearHighlights();
         });
-        on("error", event => this.listeners.error?.(event.detail ?? event));
-        for (const type of ["pause", "resume", "stop", "idle", "loading", "ready"] as const) on(type, () => {});
+        on("error", event => {
+            this.clearHighlights();
+            this.listeners.error?.(event.detail ?? event);
+        });
+        on("stop", () => this.clearHighlights());
+        for (const type of ["pause", "resume", "idle", "loading", "ready"] as const) on(type, () => {});
     }
 
     private async start(from: Locator): Promise<void> {
@@ -244,7 +269,47 @@ export class ReadAloudNavigator {
         const locators = this.piecesOf(utterance)
             .map(piece => this.locatorFor(piece))
             .filter((locator): locator is Locator => locator !== undefined);
+        this.decorate(UTTERANCE_GROUP, locators, this.utteranceStyle);
+        this.decorate(WORD_GROUP, [], this.wordStyle);
+        if (locators.length > 0) this.follow(locators[0]);
         this.listeners.utteranceChanged?.({ text: utterance.plain ?? "", locators });
+    }
+
+    private decorate(group: string, locators: Locator[], style: DecorationStyle | null) {
+        if (!style) return;
+        const decorations: Decoration[] = locators.map((locator, i) => ({ id: `${group}-${i}`, locator, style }));
+        this.navigator.applyDecorations?.(decorations, group);
+    }
+
+    private clearHighlights() {
+        this.decorate(UTTERANCE_GROUP, [], this.utteranceStyle);
+        this.decorate(WORD_GROUP, [], this.wordStyle);
+        clearTimeout(this.followTimer);
+        this.followTimer = undefined;
+        this.pendingFollow = undefined;
+        this.followedHref = undefined;
+    }
+
+    // Moves the navigator to the spoken position at most once per interval, keeping the latest one,
+    // but at once when it moves to another resource.
+    private follow(locator: Locator) {
+        this.pendingFollow = locator;
+        if (this.followTimer === undefined || locator.href !== this.followedHref) {
+            clearTimeout(this.followTimer);
+            this.flushFollow();
+        }
+    }
+
+    private flushFollow() {
+        const locator = this.pendingFollow;
+        this.pendingFollow = undefined;
+        if (!locator) {
+            this.followTimer = undefined;
+            return;
+        }
+        this.followedHref = locator.href;
+        this.navigator.go(locator, false, () => {});
+        this.followTimer = setTimeout(() => this.flushFollow(), FOLLOW_INTERVAL);
     }
 
     private locatorFor(locate: LocatorOptions): Locator | undefined {
