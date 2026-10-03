@@ -42,7 +42,7 @@ export interface ReadAloudListeners {
 }
 
 export interface ReadAloudConfiguration {
-    /** Defaults to "publication" for fixed layouts, "resource" otherwise. */
+    /** Defaults to "publication" for fixed layouts other than Divina, "resource" otherwise. */
     scope?: ReadingUnitScope;
     source?: GuidedNavigationSource;
     preferences?: IReadAloudPreferences;
@@ -219,7 +219,7 @@ export class ReadAloudNavigator {
             // Speech goes idle once the last utterance of the queue has been spoken.
             if (state === "idle") {
                 if (this.unitIndex + 1 >= this.units.length) this.clearHighlights();
-                else if (this.pausesAtPages()) this.pausedBefore = { unitIndex: this.unitIndex + 1, index: 0, current: false };
+                else if (this.pausesBeforeUnit(this.unitIndex + 1)) this.pausedBefore = { unitIndex: this.unitIndex + 1, index: 0, current: false };
                 else void this.loadUnit(this.unitIndex + 1, () => 0);
                 return;
             }
@@ -356,6 +356,14 @@ export class ReadAloudNavigator {
         return autoPause === ReadAloudAutoPause.page || autoPause === ReadAloudAutoPause.spread;
     }
 
+    // The next unit starts on another resource, which may still be in the displayed spread.
+    private pausesBeforeUnit(unitIndex: number): boolean {
+        if (!this.pausesAtPages()) return false;
+        const displayed = this.navigator.viewport?.readingOrder ?? [];
+        if (this._settings.autoPause !== ReadAloudAutoPause.spread || displayed.length === 0) return true;
+        return !displayed.includes(this.units[unitIndex].links[0].href);
+    }
+
     // Whether `next` starts on another page than `ended` ends on, or outside the displayed spread.
     private pausesBetween(ended: ReadiumSpeechUtterance, next: ReadiumSpeechUtterance | undefined): boolean {
         if (!next || !this.pausesAtPages()) return false;
@@ -382,8 +390,23 @@ export class ReadAloudNavigator {
         this.utteranceLocators = locators;
         this.wordLocator = undefined;
         this.decorate();
-        if (locators.length > 0) this.follow(locators[0]);
+        if (locators.length > 0) {
+            this.follow(locators[0]);
+        } else {
+            // Following a whole page again would reset its scroll position.
+            const page = this.pageLocator();
+            if (page) {
+                locators.push(page);
+                if (page.href !== this.followedHref) this.follow(page);
+            }
+        }
         this.listeners.utteranceChanged?.({ text: utterance.plain ?? "", locators });
+    }
+
+    // Image pages (Divina) are read one at a time, and their utterances carry no location of their own.
+    private pageLocator(): Locator | undefined {
+        const links = this.units[this.unitIndex]?.links;
+        return links?.length === 1 && links[0].mediaType.isBitmap ? links[0].locator : undefined;
     }
 
     private decorate() {
@@ -439,10 +462,10 @@ export class ReadAloudNavigator {
     }
 
     // Fixed layouts are read as one sequence, since their sentences continue across pages.
+    // Divina is read page by page, as speech can't tell which page an image's utterance is on.
     private static determineScope(publication: Publication): ReadingUnitScope {
-        const fixed = publication.metadata.effectiveLayout === Layout.fixed
-            || !!publication.metadata.conformsTo?.includes(Profile.DIVINA);
-        return fixed ? "publication" : "resource";
+        if (publication.metadata.conformsTo?.includes(Profile.DIVINA)) return "resource";
+        return publication.metadata.effectiveLayout === Layout.fixed ? "publication" : "resource";
     }
 
     // Speech knows nothing of pages and spreads, so it never auto-pauses at them itself.
