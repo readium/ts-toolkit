@@ -26,16 +26,14 @@ const readAloud = new ReadAloudNavigator(navigator, new WebSpeechEngine(), {
 
 An utterance can run across several resources, for instance a sentence continuing on the next page of a fixed layout, so `utteranceChanged` receives one locator per resource.
 
-The publication is read in units, one after the other, and what is highlighted depends on the navigator:
+What is read at once, and what is highlighted, depends on the navigator:
 
 | Navigator | Read | Highlighting | Following |
 |---|---|---|---|
 | `EpubNavigator`, reflowable | One resource at a time | Utterance and word | Pages turned as needed |
-| `EpubNavigator`, fixed layout | The whole publication, so sentences continue across pages | Utterance and word, on every page they're on | Pages turned as needed |
+| `EpubNavigator`, fixed layout | The displayed spread, then the next one, so sentences continue across its pages but are split at its edges | Utterance and word, on every page they're on | Spreads turned as needed |
 | `WebPubNavigator` | One resource at a time | Utterance and word | Pages turned as needed |
 | `DivinaNavigator` | One page at a time | None | Page by page |
-
-The `scope` configuration overrides how the publication is split, with `"publication"` or `"resource"`.
 
 ## Playback
 

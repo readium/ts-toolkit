@@ -1,4 +1,4 @@
-import { Layout, Locator, Profile, Publication, getCssSelector } from "@readium/shared";
+import { Layout, Locator, Profile, getCssSelector } from "@readium/shared";
 import {
     createLocator,
     LocatorOptions,
@@ -14,7 +14,7 @@ import {
 import { Navigator, VisualNavigatorViewport } from "../Navigator.ts";
 import { Decoration, DecorableNavigator } from "../decorations/index.ts";
 import { GuidedNavigationSource, PublicationGuidedNavigationSource } from "./GuidedNavigationSource.ts";
-import { ReadingUnit, ReadingUnitScope, readingUnits, stitch } from "./ReadingUnit.ts";
+import { ReadingUnit, ReadingUnits, stitch } from "./ReadingUnit.ts";
 import {
     IReadAloudDefaults,
     IReadAloudPreferences,
@@ -42,20 +42,18 @@ export interface ReadAloudListeners {
 }
 
 export interface ReadAloudConfiguration {
-    /** Defaults to "publication" for fixed layouts other than Divina, "resource" otherwise. */
-    scope?: ReadingUnitScope;
     source?: GuidedNavigationSource;
     preferences?: IReadAloudPreferences;
     defaults?: IReadAloudDefaults;
 }
 
 interface TurningPosition {
-    unitIndex: number;
+    unit: ReadingUnit;
     index: number;
 }
 
 interface PausedPosition {
-    unitIndex: number;
+    unit: ReadingUnit;
     index: number;
     /** Whether the utterance at `index` is the current one yet, rather than the one before it. */
     current: boolean;
@@ -72,7 +70,7 @@ const FOLLOW_INTERVAL = 1000;
 export class ReadAloudNavigator {
     private readonly speech: ReadiumSpeechNavigator;
     private readonly source: GuidedNavigationSource;
-    private readonly units: ReadingUnit[];
+    private readonly units: ReadingUnits;
     private readonly unsubscribers: (() => void)[] = [];
     private readonly _defaults: ReadAloudDefaults;
     private _preferences: ReadAloudPreferences;
@@ -87,7 +85,7 @@ export class ReadAloudNavigator {
     private pendingFollow?: Locator;
     private followedHref?: string;
     private followTimer?: ReturnType<typeof setTimeout>;
-    private unitIndex = -1;
+    private unit?: ReadingUnit;
     private loading = false;
     private loadToken = 0;
     private lastState: ReadAloudState = "idle";
@@ -98,9 +96,8 @@ export class ReadAloudNavigator {
         private readonly listeners: ReadAloudListeners = {},
         configuration: ReadAloudConfiguration = {}
     ) {
-        const publication = navigator.publication;
-        this.source = configuration.source ?? new PublicationGuidedNavigationSource(publication);
-        this.units = readingUnits(publication, configuration.scope ?? ReadAloudNavigator.determineScope(publication));
+        this.source = configuration.source ?? new PublicationGuidedNavigationSource(navigator.publication);
+        this.units = new ReadingUnits(navigator);
         this._preferences = new ReadAloudPreferences(configuration.preferences);
         this._defaults = new ReadAloudDefaults(configuration.defaults);
         this.speech = new ReadiumSpeechNavigator(engine, {
@@ -154,8 +151,8 @@ export class ReadAloudNavigator {
         if (this.turning) this.pauseTurning();
         if (this.pausedBefore) return this.movePaused(this.pausedBefore, 1);
         if (this.speech.next()) return true;
-        if (this.unitIndex + 1 >= this.units.length) return false;
-        return this.loadUnit(this.unitIndex + 1, () => 0);
+        if (!this.unit || !this.units.linkAfter(this.unit)) return false;
+        return this.loadUnit(() => this.units.after(this.unit!), () => 0);
     }
 
     /** Moves to the previous utterance, continuing into the previous reading unit at the start of this one. */
@@ -163,8 +160,8 @@ export class ReadAloudNavigator {
         if (this.turning) this.pauseTurning();
         if (this.pausedBefore) return this.movePaused(this.pausedBefore, -1);
         if (this.speech.previous()) return true;
-        if (this.unitIndex <= 0) return false;
-        return this.loadUnit(this.unitIndex - 1, queue => queue.length - 1);
+        if (!this.unit || !this.units.linkBefore(this.unit)) return false;
+        return this.loadUnit(() => this.units.before(this.unit!), queue => queue.length - 1);
     }
 
     getVoices(): Promise<ReadiumSpeechVoice[]> {
@@ -232,8 +229,10 @@ export class ReadAloudNavigator {
             const state = this.speech.getState();
             // Speech goes idle once the last utterance of the queue has been spoken.
             if (state === "idle") {
-                if (this.unitIndex + 1 >= this.units.length) this.clearHighlights();
-                else void this.loadUnit(this.unitIndex + 1, () => 0, this.pausesBeforeUnit(this.unitIndex + 1));
+                const unit = this.unit!;
+                const link = this.units.linkAfter(unit);
+                if (!link) this.clearHighlights();
+                else void this.loadUnit(() => this.units.after(unit), () => 0, this.pausesBeforeUnit(link.href));
                 return;
             }
             // Paused by speech's own auto-pause otherwise.
@@ -243,7 +242,7 @@ export class ReadAloudNavigator {
             if (index < 0 || index + 1 >= queue.length) return;
             if (this.pausesBetween(queue[index], queue[index + 1])) {
                 // Stopping, not pausing, cancels the next utterance without a paused engine to resume.
-                this.pausedBefore = { unitIndex: this.unitIndex, index: index + 1, current: true };
+                this.pausedBefore = { unit: this.unit!, index: index + 1, current: true };
                 this.speech.stop();
                 this.notifyUtterance(queue[index + 1]);
             } else if (this.layout() === Layout.reflowable && this.pausesAtPages()) {
@@ -261,15 +260,12 @@ export class ReadAloudNavigator {
     }
 
     private async start(from: Locator): Promise<void> {
-        const href = from.href.split("#")[0];
-        const unitIndex = this.units.findIndex(unit => unit.links.some(link => link.href === href));
-        if (unitIndex === -1) return;
-        await this.loadUnit(unitIndex, queue => this.startIndex(queue, from));
+        await this.loadUnit(() => this.units.around(from.href.split("#")[0]), queue => this.startIndex(queue, from));
     }
 
     private async resumePaused(paused: PausedPosition): Promise<void> {
-        if (paused.unitIndex !== this.unitIndex) {
-            await this.loadUnit(paused.unitIndex, () => paused.index);
+        if (paused.unit !== this.unit) {
+            await this.loadUnit(() => paused.unit, () => paused.index);
             return;
         }
         this.pausedBefore = undefined;
@@ -280,31 +276,37 @@ export class ReadAloudNavigator {
     // Moves the position playback resumes at by `offset` utterances, staying paused.
     private async movePaused(paused: PausedPosition, offset: number): Promise<boolean> {
         const target = (paused.current ? paused.index : paused.index - 1) + offset;
-        if (paused.unitIndex === this.unitIndex) {
+        if (paused.unit === this.unit) {
             const queue = this.speech.getContentQueue();
             if (target >= 0 && target < queue.length) {
-                this.pausedBefore = { unitIndex: paused.unitIndex, index: target, current: true };
+                this.pausedBefore = { unit: paused.unit, index: target, current: true };
                 this.notifyUtterance(queue[target]);
                 return true;
             }
             if (target >= queue.length) {
-                if (paused.unitIndex + 1 >= this.units.length) return false;
-                return this.loadUnit(paused.unitIndex + 1, () => target - queue.length, true);
+                if (!this.units.linkAfter(paused.unit)) return false;
+                return this.loadUnit(() => this.units.after(paused.unit), () => target - queue.length, true);
             }
         }
-        if (target >= 0) return this.loadUnit(paused.unitIndex, () => target, true);
-        if (paused.unitIndex <= 0) return false;
-        return this.loadUnit(paused.unitIndex - 1, queue => queue.length + target, true);
+        if (target >= 0) return this.loadUnit(() => paused.unit, () => target, true);
+        if (!this.units.linkBefore(paused.unit)) return false;
+        return this.loadUnit(() => this.units.before(paused.unit), queue => queue.length + target, true);
     }
 
-    private async loadUnit(unitIndex: number, indexIn: (queue: ReadiumSpeechUtterance[]) => number, paused = false): Promise<boolean> {
+    // `find` gives the unit once speech is stopped, as finding it may move the navigator.
+    private async loadUnit(find: () => ReadingUnit | undefined, indexIn: (queue: ReadiumSpeechUtterance[]) => number, paused = false): Promise<boolean> {
         const token = ++this.loadToken;
         this.setLoading(true);
         this.pausedBefore = undefined;
         this.turning = undefined;
         this.speech.stop();
         try {
-            const { guided, failures } = await stitch(this.units[unitIndex], this.source);
+            const unit = find();
+            if (!unit) {
+                this.setLoading(false);
+                return false;
+            }
+            const { guided, failures } = await stitch(unit, this.source);
             if (token !== this.loadToken) return false;
             failures.forEach(failure => this.listeners.error?.(failure.error));
 
@@ -314,13 +316,13 @@ export class ReadAloudNavigator {
             });
             await this.speech.loadGndContent(guided);
             if (token !== this.loadToken) return false;
-            this.unitIndex = unitIndex;
+            this.unit = unit;
 
             const queue = this.speech.getContentQueue();
             if (queue.length === 0) {
                 this.setLoading(false);
                 // Nothing to read in this unit (e.g. only images): continue with the next one.
-                if (unitIndex + 1 < this.units.length) return this.loadUnit(unitIndex + 1, () => 0, paused);
+                if (this.units.linkAfter(unit)) return this.loadUnit(() => this.units.after(unit), () => 0, paused);
                 return false;
             }
             await ready;
@@ -329,7 +331,7 @@ export class ReadAloudNavigator {
 
             const index = Math.min(Math.max(indexIn(queue), 0), queue.length - 1);
             if (paused) {
-                this.pausedBefore = { unitIndex, index, current: true };
+                this.pausedBefore = { unit, index, current: true };
                 this.notifyUtterance(queue[index]);
                 this.notifyState();
             } else {
@@ -385,7 +387,7 @@ export class ReadAloudNavigator {
         const locator = this.piecesOf(next).map(piece => this.locatorFor(piece)).find(locator => locator !== undefined);
         // A hidden document doesn't turn pages until shown again.
         if (!locator || document.hidden) return;
-        const turning = { unitIndex: this.unitIndex, index };
+        const turning = { unit: this.unit!, index };
         this.turning = turning;
         this.speech.stop();
         clearTimeout(this.followTimer);
@@ -422,11 +424,11 @@ export class ReadAloudNavigator {
     }
 
     // The next unit starts on another resource, which may still be in the displayed spread.
-    private pausesBeforeUnit(unitIndex: number): boolean {
+    private pausesBeforeUnit(href: string): boolean {
         if (!this.pausesAtPages()) return false;
         const displayed = this.navigator.viewport?.readingOrder ?? [];
         if (this._settings.autoPause !== ReadAloudAutoPause.spread || displayed.length === 0) return true;
-        return !displayed.includes(this.units[unitIndex].links[0].href);
+        return !displayed.includes(href);
     }
 
     // Whether `next` starts on another page than `ended` ends on, or outside the displayed spread.
@@ -470,7 +472,7 @@ export class ReadAloudNavigator {
 
     // Image pages (Divina) are read one at a time, and their utterances carry no location of their own.
     private pageLocator(): Locator | undefined {
-        const links = this.units[this.unitIndex]?.links;
+        const links = this.unit?.links;
         return links?.length === 1 && links[0].mediaType.isBitmap ? links[0].locator : undefined;
     }
 
@@ -499,6 +501,8 @@ export class ReadAloudNavigator {
     // Moves the navigator to the spoken position at most once per interval, keeping the latest one,
     // but at once when it moves to another resource.
     private follow(locator: Locator) {
+        // A fixed-layout page doesn't scroll, and going to one of the displayed spread can display another.
+        if (this.units.displays(locator.href)) return;
         this.pendingFollow = locator;
         if (this.followTimer === undefined || locator.href !== this.followedHref) {
             clearTimeout(this.followTimer);
@@ -531,13 +535,6 @@ export class ReadAloudNavigator {
         const metadata = this.navigator.publication.metadata;
         if (metadata.conformsTo?.includes(Profile.DIVINA) || metadata.effectiveLayout === Layout.fixed) return Layout.fixed;
         return this.navigator.layout === Layout.reflowable ? Layout.reflowable : Layout.scrolled;
-    }
-
-    // Fixed layouts are read as one sequence, since their sentences continue across pages.
-    // Divina is read page by page, as speech can't tell which page an image's utterance is on.
-    private static determineScope(publication: Publication): ReadingUnitScope {
-        if (publication.metadata.conformsTo?.includes(Profile.DIVINA)) return "resource";
-        return publication.metadata.effectiveLayout === Layout.fixed ? "publication" : "resource";
     }
 
     // Speech knows nothing of pages and spreads, so it never auto-pauses at them itself.
