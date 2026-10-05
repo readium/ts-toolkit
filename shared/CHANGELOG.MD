@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `Publication.guideForLink` sends the link's href without its fragment as the `ref` template parameter
+- `Publication.guideForLink` fetches a non-templated Guided Navigation document once, rather than once per resource referencing it
 
 ## [2.7.0] – 2026-10-01
 

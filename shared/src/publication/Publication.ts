@@ -21,6 +21,7 @@ export class Publication {
   public manifest: Manifest;
   private readonly fetcher: Fetcher = new EmptyFetcher();
   private _timeline: Timeline | undefined;
+  private readonly guides = new Map<string, Promise<GuidedNavigationDocument | undefined>>();
 
   // Shortcuts to manifest properties
   public readonly context?: Array<string>;
@@ -172,8 +173,8 @@ export class Publication {
     return document;
   }
 
-  private async fetchGuide(guidedNavigationLink: Link, link: Link): Promise<GuidedNavigationDocument | undefined> {
-    let href = guidedNavigationLink.href;
+  private fetchGuide(guidedNavigationLink: Link, link: Link): Promise<GuidedNavigationDocument | undefined> {
+    const href = guidedNavigationLink.href;
     if(guidedNavigationLink.templated) {
       // The manifest's guided navigation link is templated, expand it
       const template = new URITemplate(href);
@@ -182,10 +183,20 @@ export class Publication {
         // The `ref` parameter must match the resource's href exactly, without a fragment
         params['ref'] = link.href.split('#')[0];
       }
-      href = template.expand(params);
+      return this.loadGuide(template.expand(params));
     }
 
-    // Fetch the guided navigation document
+    // Several resources can share one document, so it's fetched once
+    let guide = this.guides.get(href);
+    if(!guide) {
+      guide = this.loadGuide(href);
+      this.guides.set(href, guide);
+      guide.catch(() => this.guides.delete(href));
+    }
+    return guide;
+  }
+
+  private async loadGuide(href: string): Promise<GuidedNavigationDocument | undefined> {
     const guidedNavigationJSON = (await this.get(new Link({
       href,
     })).readAsJSON());
