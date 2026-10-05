@@ -1,3 +1,4 @@
+import { Layout } from "@readium/shared";
 import { SpeechPreferences, SpeechPreferencesEditor, SpeechSettings } from "@readium/speech";
 import { IPreferencesEditor } from "../../preferences/PreferencesEditor.ts";
 import { EnumPreference, Preference } from "../../preferences/Preference.ts";
@@ -11,8 +12,12 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
   private speech: SpeechPreferencesEditor;
   private own: ReadAloudPreferences;
   private settings: ReadAloudSettings;
+  private layout: Layout;
 
-  constructor(initialPreferences: ReadAloudPreferences, settings: ReadAloudSettings, speechSettings: SpeechSettings) {
+  /**
+   * @param layout How the publication is displayed: `Layout.reflowable` for columns, `Layout.scrolled` when scrolled.
+   */
+  constructor(initialPreferences: ReadAloudPreferences, settings: ReadAloudSettings, speechSettings: SpeechSettings, layout: Layout) {
     this.speech = new SpeechPreferencesEditor(new SpeechPreferences({ ...initialPreferences, autoPause: undefined }), speechSettings);
     this.own = new ReadAloudPreferences({
       autoPause: initialPreferences.autoPause,
@@ -20,6 +25,7 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
       wordStyle: initialPreferences.wordStyle
     });
     this.settings = settings;
+    this.layout = layout;
   }
 
   get preferences(): ReadAloudPreferences {
@@ -60,11 +66,13 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
     return new EnumPreference<ReadAloudAutoPause>({
       initialValue: this.own.autoPause,
       effectiveValue: this.settings.autoPause,
-      isEffective: true,
+      isEffective: this.layout === Layout.fixed || this.settings.autoPause !== ReadAloudAutoPause.spread &&
+        (this.layout === Layout.reflowable || this.settings.autoPause !== ReadAloudAutoPause.page),
       onChange: (newValue) => {
         this.updatePreference("autoPause", newValue ?? null);
       },
       supportedValues: Object.values(ReadAloudAutoPause)
+        .filter(value => value !== ReadAloudAutoPause.spread || this.layout === Layout.fixed)
     });
   }
 

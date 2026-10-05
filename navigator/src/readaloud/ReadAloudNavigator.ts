@@ -49,6 +49,11 @@ export interface ReadAloudConfiguration {
     defaults?: IReadAloudDefaults;
 }
 
+interface TurningPosition {
+    unitIndex: number;
+    index: number;
+}
+
 interface PausedPosition {
     unitIndex: number;
     index: number;
@@ -77,6 +82,8 @@ export class ReadAloudNavigator {
     private wordLocator?: Locator;
     // Where playback resumes after pausing at a page or spread, which speech knows nothing about.
     private pausedBefore?: PausedPosition;
+    // Speech stopped while following the next utterance, to tell whether that reaches new columns.
+    private turning?: TurningPosition;
     private pendingFollow?: Locator;
     private followedHref?: string;
     private followTimer?: ReturnType<typeof setTimeout>;
@@ -86,7 +93,7 @@ export class ReadAloudNavigator {
     private lastState: ReadAloudState = "idle";
 
     constructor(
-        private readonly navigator: Navigator & Partial<DecorableNavigator> & { readonly viewport?: VisualNavigatorViewport },
+        private readonly navigator: Navigator & Partial<DecorableNavigator> & { readonly viewport?: VisualNavigatorViewport; readonly layout?: Layout },
         engine: ReadiumSpeechPlaybackEngine,
         private readonly listeners: ReadAloudListeners = {},
         configuration: ReadAloudConfiguration = {}
@@ -106,6 +113,7 @@ export class ReadAloudNavigator {
 
     get state(): ReadAloudState {
         if (this.loading) return "loading";
+        if (this.turning) return "playing";
         return this.pausedBefore ? "paused" : this.speech.getState();
     }
 
@@ -114,6 +122,7 @@ export class ReadAloudNavigator {
      * Without `from`, an idle reader starts from the navigator's current position.
      */
     async play(from?: Locator): Promise<void> {
+        if (!from && this.turning) return;
         if (!from && this.pausedBefore) {
             await this.resumePaused(this.pausedBefore);
             return;
@@ -128,18 +137,21 @@ export class ReadAloudNavigator {
     }
 
     pause(): void {
-        if (!this.pausedBefore) this.speech.pause();
+        if (this.turning) this.pauseTurning();
+        else if (!this.pausedBefore) this.speech.pause();
     }
 
     stop(): void {
         this.loadToken++;
         this.pausedBefore = undefined;
+        this.turning = undefined;
         this.setLoading(false);
         this.speech.stop();
     }
 
     /** Moves to the next utterance, continuing into the next reading unit at the end of this one. */
     async next(): Promise<boolean> {
+        if (this.turning) this.pauseTurning();
         if (this.pausedBefore) return this.movePaused(this.pausedBefore, 1);
         if (this.speech.next()) return true;
         if (this.unitIndex + 1 >= this.units.length) return false;
@@ -148,6 +160,7 @@ export class ReadAloudNavigator {
 
     /** Moves to the previous utterance, continuing into the previous reading unit at the start of this one. */
     async previous(): Promise<boolean> {
+        if (this.turning) this.pauseTurning();
         if (this.pausedBefore) return this.movePaused(this.pausedBefore, -1);
         if (this.speech.previous()) return true;
         if (this.unitIndex <= 0) return false;
@@ -172,7 +185,7 @@ export class ReadAloudNavigator {
 
     get preferencesEditor(): ReadAloudPreferencesEditor {
         if (this._preferencesEditor === null) {
-            this._preferencesEditor = new ReadAloudPreferencesEditor(this._preferences, this.settings, this.speech.settings);
+            this._preferencesEditor = new ReadAloudPreferencesEditor(this._preferences, this.settings, this.speech.settings, this.layout());
         }
         return this._preferencesEditor;
     }
@@ -182,7 +195,7 @@ export class ReadAloudNavigator {
         await this.speech.submitPreferences(ReadAloudNavigator.speechPreferences(this._preferences));
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
         if (this._preferencesEditor !== null) {
-            this._preferencesEditor = new ReadAloudPreferencesEditor(this._preferences, this.settings, this.speech.settings);
+            this._preferencesEditor = new ReadAloudPreferencesEditor(this._preferences, this.settings, this.speech.settings, this.layout());
         }
         this.decorate();
     }
@@ -190,6 +203,7 @@ export class ReadAloudNavigator {
     async destroy(): Promise<void> {
         this.loadToken++;
         this.pausedBefore = undefined;
+        this.turning = undefined;
         this.unsubscribers.forEach(unsubscribe => unsubscribe());
         this.unsubscribers.length = 0;
         this.clearHighlights();
@@ -219,25 +233,29 @@ export class ReadAloudNavigator {
             // Speech goes idle once the last utterance of the queue has been spoken.
             if (state === "idle") {
                 if (this.unitIndex + 1 >= this.units.length) this.clearHighlights();
-                else if (this.pausesBeforeUnit(this.unitIndex + 1)) this.pausedBefore = { unitIndex: this.unitIndex + 1, index: 0, current: false };
-                else void this.loadUnit(this.unitIndex + 1, () => 0);
+                else void this.loadUnit(this.unitIndex + 1, () => 0, this.pausesBeforeUnit(this.unitIndex + 1));
                 return;
             }
             // Paused by speech's own auto-pause otherwise.
             if (state !== "playing") return;
             const queue = this.speech.getContentQueue();
             const index = queue.indexOf(this.speech.getCurrentContent()!);
-            if (index < 0 || !this.pausesBetween(queue[index], queue[index + 1])) return;
-            // Stopping, not pausing, cancels the next utterance without a paused engine to resume.
-            this.pausedBefore = { unitIndex: this.unitIndex, index: index + 1, current: false };
-            this.speech.stop();
+            if (index < 0 || index + 1 >= queue.length) return;
+            if (this.pausesBetween(queue[index], queue[index + 1])) {
+                // Stopping, not pausing, cancels the next utterance without a paused engine to resume.
+                this.pausedBefore = { unitIndex: this.unitIndex, index: index + 1, current: true };
+                this.speech.stop();
+                this.notifyUtterance(queue[index + 1]);
+            } else if (this.layout() === Layout.reflowable && this.pausesAtPages()) {
+                this.turnTo(index + 1);
+            }
         });
         on("error", event => {
             this.clearHighlights();
             this.listeners.error?.(event.detail ?? event);
         });
         on("stop", () => {
-            if (!this.pausedBefore) this.clearHighlights();
+            if (!this.pausedBefore && !this.turning) this.clearHighlights();
         });
         for (const type of ["pause", "resume", "idle", "loading", "ready"] as const) on(type, () => {});
     }
@@ -283,6 +301,7 @@ export class ReadAloudNavigator {
         const token = ++this.loadToken;
         this.setLoading(true);
         this.pausedBefore = undefined;
+        this.turning = undefined;
         this.speech.stop();
         try {
             const { guided, failures } = await stitch(this.units[unitIndex], this.source);
@@ -353,7 +372,53 @@ export class ReadAloudNavigator {
 
     private pausesAtPages(): boolean {
         const autoPause = this._settings.autoPause;
-        return autoPause === ReadAloudAutoPause.page || autoPause === ReadAloudAutoPause.spread;
+        switch (this.layout()) {
+            case Layout.fixed: return autoPause === ReadAloudAutoPause.page || autoPause === ReadAloudAutoPause.spread;
+            case Layout.reflowable: return autoPause === ReadAloudAutoPause.page;
+            default: return false;
+        }
+    }
+
+    // Columns aren't told apart by hrefs, so the next utterance is followed and the viewport compared.
+    private turnTo(index: number) {
+        const next = this.speech.getContentQueue()[index];
+        const locator = this.piecesOf(next).map(piece => this.locatorFor(piece)).find(locator => locator !== undefined);
+        // A hidden document doesn't turn pages until shown again.
+        if (!locator || document.hidden) return;
+        const turning = { unitIndex: this.unitIndex, index };
+        this.turning = turning;
+        this.speech.stop();
+        clearTimeout(this.followTimer);
+        this.followTimer = undefined;
+        this.pendingFollow = undefined;
+        const before = this.navigator.viewport?.progressions.get(locator.href);
+        const start = before?.start;
+        const end = before?.end;
+        const settle = (turned: boolean) => {
+            clearTimeout(timeout);
+            if (this.turning !== turning) return;
+            this.turning = undefined;
+            if (turned) {
+                this.pausedBefore = { ...turning, current: true };
+                this.notifyUtterance(next);
+            } else {
+                this.speakFrom(index);
+            }
+            this.notifyState();
+        };
+        // Expired comms callbacks are dropped, never called.
+        const timeout = setTimeout(() => settle(false), FOLLOW_INTERVAL);
+        this.followedHref = locator.href;
+        this.navigator.go(locator, false, ok => {
+            const after = this.navigator.viewport?.progressions.get(locator.href);
+            settle(ok && after !== undefined && (after.start !== start || after.end !== end));
+        });
+    }
+
+    private pauseTurning() {
+        this.pausedBefore = { ...this.turning!, current: false };
+        this.turning = undefined;
+        this.notifyState();
     }
 
     // The next unit starts on another resource, which may still be in the displayed spread.
@@ -459,6 +524,13 @@ export class ReadAloudNavigator {
         if (!link) return undefined;
         const { text, locations } = createLocator(locate, { location: { href: link.href } } as Window);
         return new Locator({ href: link.href, type: link.type ?? "text/html", text, locations });
+    }
+
+    // Navigators without a layout of their own (WebPub) scroll.
+    private layout(): Layout {
+        const metadata = this.navigator.publication.metadata;
+        if (metadata.conformsTo?.includes(Profile.DIVINA) || metadata.effectiveLayout === Layout.fixed) return Layout.fixed;
+        return this.navigator.layout === Layout.reflowable ? Layout.reflowable : Layout.scrolled;
     }
 
     // Fixed layouts are read as one sequence, since their sentences continue across pages.

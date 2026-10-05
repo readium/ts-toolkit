@@ -67,7 +67,7 @@ await readAloud.submitPreferences(new ReadAloudPreferences({
 
 It has the preferences of `@readium/speech` (`rate`, `pitch`, `volume`, `verbosity`, `segmentation`, etc.), plus:
 
-- `autoPause`: in addition to speech's `"none"`, `"utterance"` and `"block"`, `"page"` pauses before the first utterance starting on another page, and `"spread"` before the first one starting outside the displayed spread. Reflowable publications have no pages to tell apart, so both pause at the next resource.
+- `autoPause`: in addition to speech's `"none"`, `"utterance"` and `"block"`, `"page"` pauses on reaching another page, and `"spread"` on reaching another spread, with the first utterance there highlighted. In reflowable publications, `"page"` pauses on reaching the next set of columns or the next resource, and `"spread"` doesn't apply. Neither has an effect when scrolled.
 - `utteranceStyle` and `wordStyle`: the [decoration style](./epub/Decorations.md) of the utterance and the word being spoken, `false` to not decorate them. A custom template is used by registering it in the `EpubNavigator` or `WebPubNavigator` configuration's `decoratorConfig.decorationTemplates` and referencing it by name, e.g. `{ type: "myTemplate" }`.
 
 Decorations are applied in the `readaloud-utterance` and `readaloud-word` groups.
