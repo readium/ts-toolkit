@@ -1,4 +1,4 @@
-import { GuidedNavigationObject, Layout, Link, Profile } from "@readium/shared";
+import { GuidedNavigationObject, Layout, Link, Profile, Publication } from "@readium/shared";
 import { Navigator, VisualNavigatorViewport } from "../Navigator.ts";
 import { GuidedNavigationSource } from "./GuidedNavigationSource.ts";
 
@@ -88,28 +88,67 @@ export interface StitchedUnit {
     failures: { link: Link; error: unknown }[];
 }
 
+const UPPER_BOUNDARY = 10;
+const LOWER_BOUNDARY = 5;
+
 /**
- * Concatenates the Guided Navigation objects of every link in the unit, in reading order,
- * fetching at most `concurrency` resources at once.
+ * Keeps the Guided Navigation objects of the resources around the unit being read,
+ * fetching those within LOWER_BOUNDARY reading order items and releasing those beyond UPPER_BOUNDARY.
  */
-export async function stitch(unit: ReadingUnit, source: GuidedNavigationSource, concurrency = 6): Promise<StitchedUnit> {
-    const guides: (GuidedNavigationObject[] | undefined)[] = new Array(unit.links.length);
-    const failures: { index: number; link: Link; error: unknown }[] = [];
-    let next = 0;
-    const worker = async () => {
-        while (next < unit.links.length) {
-            const index = next++;
-            const link = unit.links[index];
-            try {
-                guides[index] = await source.guideFor(link);
-            } catch (error) {
-                failures.push({ index, link, error });
+export class GuidedNavigationPool {
+    private readonly guides = new Map<string, Promise<GuidedNavigationObject[] | undefined>>();
+
+    constructor(private readonly publication: Publication, private readonly source: GuidedNavigationSource) {}
+
+    /**
+     * Concatenates the Guided Navigation objects of every link in the unit, in reading order,
+     * fetching at most `concurrency` resources at once, then fetches the unit's neighbours.
+     */
+    async stitch(unit: ReadingUnit, concurrency = 6): Promise<StitchedUnit> {
+        const guides: (GuidedNavigationObject[] | undefined)[] = new Array(unit.links.length);
+        const failures: { index: number; link: Link; error: unknown }[] = [];
+        let next = 0;
+        const worker = async () => {
+            while (next < unit.links.length) {
+                const index = next++;
+                const link = unit.links[index];
+                try {
+                    guides[index] = await this.guideFor(link);
+                } catch (error) {
+                    failures.push({ index, link, error });
+                }
             }
+        };
+        const stitched = Promise.all(Array.from({ length: Math.min(concurrency, unit.links.length) }, worker));
+        this.update(unit);
+        await stitched;
+        return {
+            guided: guides.flatMap(guide => guide ?? []),
+            failures: failures.sort((a, b) => a.index - b.index).map(({ link, error }) => ({ link, error })),
+        };
+    }
+
+    private update(unit: ReadingUnit) {
+        const items = this.publication.readingOrder.items;
+        const i = this.publication.readingOrder.findIndexWithHref(unit.links[0].href);
+        if (i < 0) return;
+        items.forEach((link, j) => {
+            const href = link.href.split("#")[0];
+            if (j > i + UPPER_BOUNDARY || j < i - UPPER_BOUNDARY) this.guides.delete(href);
+            else if (j < i + LOWER_BOUNDARY && j > i - LOWER_BOUNDARY) this.guideFor(link).catch(() => {});
+        });
+    }
+
+    private guideFor(link: Link): Promise<GuidedNavigationObject[] | undefined> {
+        const href = link.href.split("#")[0];
+        let guide = this.guides.get(href);
+        if (!guide) {
+            guide = this.source.guideFor(link);
+            this.guides.set(href, guide);
+            guide.catch(() => {
+                if (this.guides.get(href) === guide) this.guides.delete(href);
+            });
         }
-    };
-    await Promise.all(Array.from({ length: Math.min(concurrency, unit.links.length) }, worker));
-    return {
-        guided: guides.flatMap(guide => guide ?? []),
-        failures: failures.sort((a, b) => a.index - b.index).map(({ link, error }) => ({ link, error })),
-    };
+        return guide;
+    }
 }

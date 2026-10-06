@@ -14,7 +14,7 @@ import {
 import { Navigator, VisualNavigatorViewport } from "../Navigator.ts";
 import { Decoration, DecorableNavigator } from "../decorations/index.ts";
 import { GuidedNavigationSource, PublicationGuidedNavigationSource } from "./GuidedNavigationSource.ts";
-import { ReadingUnit, ReadingUnits, stitch } from "./ReadingUnit.ts";
+import { GuidedNavigationPool, ReadingUnit, ReadingUnits } from "./ReadingUnit.ts";
 import {
     IReadAloudDefaults,
     IReadAloudPreferences,
@@ -69,7 +69,7 @@ const FOLLOW_INTERVAL = 1000;
  */
 export class ReadAloudNavigator {
     private readonly speech: ReadiumSpeechNavigator;
-    private readonly source: GuidedNavigationSource;
+    private readonly pool: GuidedNavigationPool;
     private readonly units: ReadingUnits;
     private readonly unsubscribers: (() => void)[] = [];
     private readonly _defaults: ReadAloudDefaults;
@@ -96,7 +96,7 @@ export class ReadAloudNavigator {
         private readonly listeners: ReadAloudListeners = {},
         configuration: ReadAloudConfiguration = {}
     ) {
-        this.source = configuration.source ?? new PublicationGuidedNavigationSource(navigator.publication);
+        this.pool = new GuidedNavigationPool(navigator.publication, configuration.source ?? new PublicationGuidedNavigationSource(navigator.publication));
         this.units = new ReadingUnits(navigator);
         this._preferences = new ReadAloudPreferences(configuration.preferences);
         this._defaults = new ReadAloudDefaults(configuration.defaults);
@@ -306,7 +306,7 @@ export class ReadAloudNavigator {
                 this.setLoading(false);
                 return false;
             }
-            const { guided, failures } = await stitch(unit, this.source);
+            const { guided, failures } = await this.pool.stitch(unit);
             if (token !== this.loadToken) return false;
             failures.forEach(failure => this.listeners.error?.(failure.error));
 

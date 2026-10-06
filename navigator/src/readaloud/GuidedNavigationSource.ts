@@ -15,22 +15,10 @@ export interface GuidedNavigationSource {
  * Only the objects of the resource are kept from a document covering the whole publication.
  */
 export class PublicationGuidedNavigationSource implements GuidedNavigationSource {
-    private readonly guides = new Map<string, Promise<GuidedNavigationObject[] | undefined>>();
-
     constructor(private readonly publication: Publication) {}
 
-    guideFor(link: Link): Promise<GuidedNavigationObject[] | undefined> {
+    async guideFor(link: Link): Promise<GuidedNavigationObject[] | undefined> {
         const href = link.href.split("#")[0];
-        let guide = this.guides.get(href);
-        if (!guide) {
-            guide = this.load(link, href);
-            this.guides.set(href, guide);
-            guide.catch(() => this.guides.delete(href));
-        }
-        return guide;
-    }
-
-    private async load(link: Link, href: string): Promise<GuidedNavigationObject[] | undefined> {
         const document = await this.publication.guideForLink(link, { skipAudio: true }).catch(() => undefined);
         if (document) {
             const guided = this.objectsIn(document.guided, href);
