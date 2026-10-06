@@ -7,13 +7,12 @@
 It takes the navigator displaying the publication, an `EpubNavigator`, `WebPubNavigator` or `DivinaNavigator`, once loaded.
 
 ```ts
-import { WebSpeechEngine } from "@readium/speech";
 import { EpubNavigator, ReadAloudNavigator, ReadAloudPreferences } from "@readium/navigator";
 
 const navigator = new EpubNavigator(container, publication, listeners, positions);
 await navigator.load();
 
-const readAloud = new ReadAloudNavigator(navigator, new WebSpeechEngine(), {
+const readAloud = new ReadAloudNavigator(navigator, {
   stateChanged: (state) => {},
   utteranceChanged: ({ text, locators }) => {},
   wordChanged: (locator, word) => {},
@@ -23,6 +22,8 @@ const readAloud = new ReadAloudNavigator(navigator, new WebSpeechEngine(), {
   defaults: { autoPause: "page" }
 });
 ```
+
+It speaks with `@readium/speech`'s `WebSpeechEngine`, with the voices of the publication's languages.
 
 An utterance can run across several resources, for instance a sentence continuing on the next page of a fixed layout, so `utteranceChanged` receives one locator per resource.
 
@@ -34,6 +35,26 @@ What is read at once, and what is highlighted, depends on the navigator:
 | `EpubNavigator`, fixed layout | The displayed spread, then the next one, so sentences continue across its pages but are split at its edges | Utterance and word, on every page they're on | Spreads turned as needed |
 | `WebPubNavigator` | One resource at a time | Utterance and word | Pages turned as needed |
 | `DivinaNavigator` | One page at a time | None | Page by page |
+
+## Using another engine
+
+Any `ReadiumSpeechPlaybackEngine` can be given in the `engine` configuration, for instance a `SpeechServerEngine` speaking with a [Readium Speech Server](https://github.com/readium/speech-server):
+
+```ts
+import { SpeechServerEngine } from "@readium/speech";
+
+const readAloud = new ReadAloudNavigator(navigator, listeners, {
+  engine: new SpeechServerEngine({
+    endpoints: {
+      voices: "https://example.com/voices",
+      synthesize: "https://example.com/synthesize",
+      service: "https://example.com/service"
+    }
+  })
+});
+```
+
+The engine is used as given: its voices aren't limited to the publication's languages. See [`@readium/speech`](https://github.com/readium/speech)'s documentation for its engines and their options, including falling back from one to another.
 
 ## Playback
 
@@ -66,6 +87,7 @@ await readAloud.submitPreferences(new ReadAloudPreferences({
 It has the preferences of `@readium/speech` (`rate`, `pitch`, `volume`, `verbosity`, `segmentation`, etc.), plus:
 
 - `autoPause`: in addition to speech's `"none"`, `"utterance"` and `"block"`, `"page"` pauses on reaching another page, and `"spread"` on reaching another spread, with the first utterance there highlighted. In reflowable publications, `"page"` pauses on reaching the next set of columns or the next resource, and `"spread"` doesn't apply. Neither has an effect when scrolled.
+- `speakInContentLanguage`: whether an utterance in another language than the selected voice's is spoken with a voice of its own language, `false` by default. It has no effect when `language` is `"none"`.
 - `utteranceStyle` and `wordStyle`: the [decoration style](./epub/Decorations.md) of the utterance and the word being spoken, `false` to not decorate them. A custom template is used by registering it in the `EpubNavigator` or `WebPubNavigator` configuration's `decoratorConfig.decorationTemplates` and referencing it by name, e.g. `{ type: "myTemplate" }`.
 
 Decorations are applied in the `readaloud-utterance` and `readaloud-word` groups.

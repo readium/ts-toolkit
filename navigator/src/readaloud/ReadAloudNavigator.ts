@@ -10,6 +10,7 @@ import {
     ReadiumSpeechVoice,
     resolveUtteranceLocate,
     SpeechPreferences,
+    WebSpeechEngine,
 } from "@readium/speech";
 import { Navigator, VisualNavigatorViewport } from "../Navigator.ts";
 import { Decoration, DecorableNavigator } from "../decorations/index.ts";
@@ -42,6 +43,8 @@ export interface ReadAloudListeners {
 }
 
 export interface ReadAloudConfiguration {
+    /** Defaults to a `WebSpeechEngine`. */
+    engine?: ReadiumSpeechPlaybackEngine;
     source?: GuidedNavigationSource;
     preferences?: IReadAloudPreferences;
     defaults?: IReadAloudDefaults;
@@ -57,6 +60,17 @@ interface PausedPosition {
     index: number;
     /** Whether the utterance at `index` is the current one yet, rather than the one before it. */
     current: boolean;
+}
+
+/** A `WebSpeechEngine` whose voices, and default voice, are those of the publication's languages. */
+class PublicationWebSpeechEngine extends WebSpeechEngine {
+    constructor(private readonly languages?: string[]) {
+        super();
+    }
+
+    override initialize(): Promise<boolean> {
+        return super.initialize({ languages: this.languages?.length ? this.languages : undefined });
+    }
 }
 
 const UTTERANCE_GROUP = "readaloud-utterance";
@@ -92,7 +106,6 @@ export class ReadAloudNavigator {
 
     constructor(
         private readonly navigator: Navigator & Partial<DecorableNavigator> & { readonly viewport?: VisualNavigatorViewport; readonly layout?: Layout },
-        engine: ReadiumSpeechPlaybackEngine,
         private readonly listeners: ReadAloudListeners = {},
         configuration: ReadAloudConfiguration = {}
     ) {
@@ -100,11 +113,12 @@ export class ReadAloudNavigator {
         this.units = new ReadingUnits(navigator);
         this._preferences = new ReadAloudPreferences(configuration.preferences);
         this._defaults = new ReadAloudDefaults(configuration.defaults);
-        this.speech = new ReadiumSpeechNavigator(engine, {
+        this.speech = new ReadiumSpeechNavigator(configuration.engine ?? new PublicationWebSpeechEngine(navigator.publication.metadata.languages), {
             preferences: ReadAloudNavigator.speechPreferences(this._preferences),
             defaults: ReadAloudNavigator.speechPreferences({ ...this._defaults.speech, autoPause: this._defaults.autoPause }),
         });
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
+        this.speech.setSpeakInContentLanguage(this._settings.speakInContentLanguage);
         this.listen();
     }
 
@@ -191,6 +205,7 @@ export class ReadAloudNavigator {
         this._preferences = this._preferences.merging(preferences);
         await this.speech.submitPreferences(ReadAloudNavigator.speechPreferences(this._preferences));
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
+        this.speech.setSpeakInContentLanguage(this._settings.speakInContentLanguage);
         if (this._preferencesEditor !== null) {
             this._preferencesEditor = new ReadAloudPreferencesEditor(this._preferences, this.settings, this.speech.settings, this.layout());
         }
@@ -539,7 +554,7 @@ export class ReadAloudNavigator {
 
     // Speech knows nothing of pages and spreads, so it never auto-pauses at them itself.
     private static speechPreferences(preferences: IReadAloudPreferences): SpeechPreferences {
-        const { autoPause, utteranceStyle, wordStyle, ...speech } = preferences;
+        const { autoPause, speakInContentLanguage, utteranceStyle, wordStyle, ...speech } = preferences;
         const ownScope = autoPause === ReadAloudAutoPause.page || autoPause === ReadAloudAutoPause.spread;
         return new SpeechPreferences({ ...speech, autoPause: ownScope ? ReadAloudAutoPause.none : autoPause });
     }

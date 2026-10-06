@@ -1,7 +1,7 @@
 import { Layout } from "@readium/shared";
 import { SpeechPreferences, SpeechPreferencesEditor, SpeechSettings } from "@readium/speech";
 import { IPreferencesEditor } from "../../preferences/PreferencesEditor.ts";
-import { EnumPreference, Preference } from "../../preferences/Preference.ts";
+import { BooleanPreference, EnumPreference, Preference } from "../../preferences/Preference.ts";
 import { ReadAloudAutoPause, ReadAloudDecorationStyle, ReadAloudPreferences } from "./ReadAloudPreferences.ts";
 import { ReadAloudSettings } from "./ReadAloudSettings.ts";
 
@@ -18,9 +18,11 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
    * @param layout How the publication is displayed: `Layout.reflowable` for columns, `Layout.scrolled` when scrolled.
    */
   constructor(initialPreferences: ReadAloudPreferences, settings: ReadAloudSettings, speechSettings: SpeechSettings, layout: Layout) {
-    this.speech = new SpeechPreferencesEditor(new SpeechPreferences({ ...initialPreferences, autoPause: undefined }), speechSettings);
+    const { speakInContentLanguage, ...speechPreferences } = initialPreferences;
+    this.speech = new SpeechPreferencesEditor(new SpeechPreferences({ ...speechPreferences, autoPause: undefined }), speechSettings);
     this.own = new ReadAloudPreferences({
       autoPause: initialPreferences.autoPause,
+      speakInContentLanguage,
       utteranceStyle: initialPreferences.utteranceStyle,
       wordStyle: initialPreferences.wordStyle
     });
@@ -32,6 +34,7 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
     return new ReadAloudPreferences({
       ...this.speech.preferences,
       autoPause: this.own.autoPause,
+      speakInContentLanguage: this.own.speakInContentLanguage,
       utteranceStyle: this.own.utteranceStyle,
       wordStyle: this.own.wordStyle
     });
@@ -41,6 +44,7 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
     this.speech.clear();
     this.own = new ReadAloudPreferences({
       autoPause: null,
+      speakInContentLanguage: null,
       utteranceStyle: null,
       wordStyle: null
     });
@@ -73,6 +77,17 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
       },
       supportedValues: Object.values(ReadAloudAutoPause)
         .filter(value => value !== ReadAloudAutoPause.spread || this.layout === Layout.fixed)
+    });
+  }
+
+  get speakInContentLanguage(): BooleanPreference {
+    return new BooleanPreference({
+      initialValue: this.own.speakInContentLanguage,
+      effectiveValue: this.settings.speakInContentLanguage,
+      isEffective: this.settings.language !== "none",
+      onChange: (newValue) => {
+        this.updatePreference("speakInContentLanguage", newValue ?? null);
+      }
     });
   }
 

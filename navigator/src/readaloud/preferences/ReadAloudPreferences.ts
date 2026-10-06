@@ -1,7 +1,7 @@
 import type { GndRole } from "@readium/guided-navigation";
 import { ExtractionFormat, LanguageMode, Segmentation, SpeechPreferences, VerbosityPreset } from "@readium/speech";
 import { ConfigurablePreferences } from "../../preferences/Configurable.ts";
-import { ensureDecorationStyle, ensureEnumValue } from "../../preferences/guards.ts";
+import { ensureBoolean, ensureDecorationStyle, ensureEnumValue } from "../../preferences/guards.ts";
 import { BuiltinDecorationStyle, NamedDecorationStyle } from "../../decorations/index.ts";
 
 /**
@@ -30,6 +30,7 @@ export interface IReadAloudPreferences {
   segmentation?: Segmentation | null,
   pauseDuration?: number | null,
   autoPause?: ReadAloudAutoPause | null,
+  speakInContentLanguage?: boolean | null,
   rate?: number | null,
   pitch?: number | null,
   volume?: number | null,
@@ -49,6 +50,7 @@ export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPr
   segmentation?: Segmentation | null;
   pauseDuration?: number | null;
   autoPause?: ReadAloudAutoPause | null;
+  speakInContentLanguage?: boolean | null;
   rate?: number | null;
   pitch?: number | null;
   volume?: number | null;
@@ -56,7 +58,8 @@ export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPr
   wordStyle?: ReadAloudDecorationStyle | null;
 
   constructor(preferences: IReadAloudPreferences = {}) {
-    const speech = new SpeechPreferences({ ...preferences, autoPause: undefined });
+    const { speakInContentLanguage, ...speechPreferences } = preferences;
+    const speech = new SpeechPreferences({ ...speechPreferences, autoPause: undefined });
     this.format = speech.format;
     this.inlineContextualization = speech.inlineContextualization;
     this.verbosity = speech.verbosity;
@@ -66,6 +69,7 @@ export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPr
     this.segmentation = speech.segmentation;
     this.pauseDuration = speech.pauseDuration;
     this.autoPause = ensureEnumValue<ReadAloudAutoPause>(preferences.autoPause, ReadAloudAutoPause);
+    this.speakInContentLanguage = ensureBoolean(speakInContentLanguage);
     this.rate = speech.rate;
     this.pitch = speech.pitch;
     this.volume = speech.volume;
