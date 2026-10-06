@@ -1,9 +1,7 @@
-import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
 import { Comms } from "../../comms/index.ts";
 import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/dom.ts";
 import { ModuleName } from "../ModuleLibrary.ts";
 import { Snapper } from "./Snapper.ts";
-import { rangeFromLocator } from "../../helpers/locator.ts";
 import { forceWebkitRecalc } from "../../helpers/document.ts";
 import { PatternAnalyzer } from "../../protection/PatternAnalyzer.ts";
 import { SCROLL_PROTECTION_CONFIG } from "../../protection/config.ts";
@@ -64,13 +62,12 @@ export class ScrollSnapper extends Snapper {
         return overlap / rect.height >= Snapper.CENTER_TOLERANCE;
     }
 
-    /** Document-absolute (scrollTop-independent) leading-edge position. */
-    protected fragmentStart(el: Element): number {
-        return el.getBoundingClientRect().top + this.doc().scrollTop;
-    }
-
     protected currentScrollExtent(): { pos: number; size: number } {
         return { pos: this.doc().scrollTop, size: this.wnd.innerHeight };
+    }
+
+    protected rectStart(rect: DOMRect): number {
+        return rect.top + this.doc().scrollTop;
     }
 
     private reportProgress(forcedFragmentId?: string) {
@@ -90,6 +87,7 @@ export class ScrollSnapper extends Snapper {
             fragmentId: forcedFragmentId !== undefined ? forcedFragmentId : this.currentTimelineFragment(),
             visibleFragmentIds: this.sortedVisibleFragmentIds()
         });
+        this.sendTextLayout();
     }
 
     private handleScroll = (_e: Event) => {
@@ -202,6 +200,7 @@ export class ScrollSnapper extends Snapper {
                 this.resizeDebounce = null;
                 this.refreshFragmentStarts();
                 this.reportProgress();
+                this.sendTextLayout(true);
             }, 50);
         });
         this.resizeObserver.observe(wnd.document.body);
@@ -223,6 +222,8 @@ export class ScrollSnapper extends Snapper {
             }
             this.doc().scrollTop = currentScroll;
         });
+
+        this.registerTextLayout(wnd, comms, ScrollSnapper.moduleName);
 
         comms.register("go_progression", ScrollSnapper.moduleName, (data, ack) => {
             const position = data as number;
@@ -263,24 +264,7 @@ export class ScrollSnapper extends Snapper {
         });
 
         comms.register("go_text", ScrollSnapper.moduleName, (data, ack) => {
-            let cssSelector = undefined;
-            if(Array.isArray(data)) {
-                if(data.length > 1)
-                    // Second element is presumed to be the CSS selector
-                    cssSelector = (data as unknown[])[1] as string;
-                data = data[0]; // First element will always be the locator text object
-            }
-            const text = LocatorText.deserialize(data);
-            const r = rangeFromLocator(this.wnd.document, new Locator({
-                href: wnd.location.href,
-                type: "text/html",
-                text,
-                locations: cssSelector ? new LocatorLocations({
-                    otherLocations: new Map([
-                        ["cssSelector", cssSelector]
-                    ])
-                }) : undefined
-            }));
+            const r = Snapper.rangeOf(wnd, data);
             if(!r) {
                 ack(false);
                 return;
@@ -347,6 +331,7 @@ export class ScrollSnapper extends Snapper {
 
     unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         comms.unregisterAll(ScrollSnapper.moduleName);
+        this.unwatchTextLayout();
         this.resizeObserver.disconnect();
         if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
         wnd.document.getElementById(SCROLL_SNAPPER_STYLE_ID)?.remove();

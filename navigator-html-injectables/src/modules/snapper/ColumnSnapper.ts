@@ -4,8 +4,6 @@ import { getColumnCountPerScreen, isRTL, appendVirtualColumnIfNeeded } from "../
 import { styleChangeAffectsLayout } from "../../helpers/css.ts";
 import { easeInOutQuad } from "../../helpers/animation.ts";
 import { ModuleName } from "../ModuleLibrary.ts";
-import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
-import { rangeFromLocator } from "../../helpers/locator.ts";
 import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/dom.ts";
 import { PatternAnalyzer } from "../../protection/PatternAnalyzer.ts";
 import { BaseSuspiciousActivityEvent } from "../Peripherals.ts";
@@ -73,6 +71,14 @@ export class ColumnSnapper extends Snapper {
         return this.rtl ? Math.abs(raw) : Math.max(0, this.wnd.scrollX > 0 ? this.wnd.scrollX : raw);
     }
 
+    protected currentScrollExtent(): { pos: number; size: number } {
+        return { pos: this.normScroll(), size: this.wnd.innerWidth };
+    }
+
+    protected rectStart(rect: DOMRect): number {
+        return this.normScroll() + (this.rtl ? this.wnd.innerWidth - rect.right : rect.left);
+    }
+
     protected hasScrolledPast(el: Element): boolean {
         const rect = el.getBoundingClientRect();
         return this.rtl ? rect.left >= this.wnd.innerWidth : rect.right <= 0;
@@ -133,6 +139,7 @@ export class ColumnSnapper extends Snapper {
             fragmentId: forcedFragmentId !== undefined ? forcedFragmentId : this.currentTimelineFragment(),
             visibleFragmentIds: this.sortedVisibleFragmentIds()
         });
+        this.sendTextLayout();
     }
 
     private shakeTimeout = 0;
@@ -311,11 +318,13 @@ export class ColumnSnapper extends Snapper {
 
     private onWidthChange() {
         this.cachedScrollWidth = this.doc().scrollWidth!;
-        if(this.comms.ready)
+        if(this.comms.ready) {
             // This function can be called while the frame is still hidden
             // so it should only be snapped if it's actually active because
             // it sends a comms message to update progress.
             this.snapCurrentOffset();
+            this.sendTextLayout(true);
+        }
     }
     private readonly onWidthChanger = this.onWidthChange.bind(this);
 
@@ -504,6 +513,8 @@ export class ColumnSnapper extends Snapper {
         wnd.addEventListener("resize", this.onWidthChanger);
         wnd.requestAnimationFrame(() => this.cachedScrollWidth = this.doc().scrollWidth!);
 
+        this.registerTextLayout(wnd, comms, ColumnSnapper.moduleName);
+
         comms.register("go_progression", ColumnSnapper.moduleName, (data, ack) => {
             const position = data as number;
             if (position < 0 || position > 1) {
@@ -549,25 +560,8 @@ export class ColumnSnapper extends Snapper {
             });
         });
 
-        comms.register("go_text", ColumnSnapper.moduleName, (data: unknown | unknown[], ack) => {
-            let cssSelector = undefined;
-            if(Array.isArray(data)) {
-                if(data.length > 1)
-                    // Second element is presumed to be the CSS selector
-                    cssSelector = (data as unknown[])[1] as string;
-                data = data[0]; // First element will always be the locator text object
-            }
-            const text = LocatorText.deserialize(data);
-            const r = rangeFromLocator(this.wnd.document, new Locator({
-                href: wnd.location.href,
-                type: "text/html",
-                text,
-                locations: cssSelector ? new LocatorLocations({
-                    otherLocations: new Map([
-                        ["cssSelector", cssSelector]
-                    ])
-                }) : undefined
-            }));
+        comms.register("go_text", ColumnSnapper.moduleName, (data, ack) => {
+            const r = Snapper.rangeOf(wnd, data);
             if(!r) {
                 ack(false);
                 return;
@@ -701,6 +695,7 @@ export class ColumnSnapper extends Snapper {
     unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         this.snappingCancelled = true;
         comms.unregisterAll(ColumnSnapper.moduleName);
+        this.unwatchTextLayout();
         this.resizeObserver.disconnect();
         this.mutationObserver.disconnect();
 

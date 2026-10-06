@@ -2,7 +2,7 @@ import { Layout, Link, Locator, LocatorText, Profile, Publication, ReadingProgre
 import { Configurable, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../index.ts";
 import { FramePoolManager } from "./frame/FramePoolManager.ts";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager.ts";
-import { CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FXLModules, ModuleLibrary, ModuleName, ReflowableModules, BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent, KeyboardPeripheralEvent } from "@readium/navigator-html-injectables";
+import { CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FXLModules, ModuleLibrary, ModuleName, ReflowableModules, BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent, KeyboardPeripheralEvent, TextLayout } from "@readium/navigator-html-injectables";
 import { Decoration, OnDecorationActivatedEvent, OnDecorationPointerEnterEvent, OnDecorationPointerLeaveEvent, DecorationObserver, DecorableNavigator, DecoratorConfig, decorationsEqual, resolveDecorationForWire, supportsDecorationStyle as canRenderDecorationStyle, DecorationStyleType } from "../decorations/index.ts";
 import * as path from "path-browserify";
 import { FXLFrameManager } from "./fxl/FXLFrameManager.ts";
@@ -122,6 +122,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private _decorationHoverState: Map<string, boolean> = new Map();
     private _decorationActivationConsumed = false;
     private _decorationResizeSelectors: Set<string>;
+    private _textLayoutWatch?: { href: string; pieces: unknown[]; cb: (layout: TextLayout) => void };
+    private _textLayoutFrame?: FrameManager;
 
     private reflowViewport: VisualNavigatorViewport = {
         readingOrder: [],
@@ -491,6 +493,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 } else {
                     this._reapplyDecorationsToCurrentFrames();
                 }
+                this._watchTextLayoutInCurrentFrame(true);
+                break;
+            case "text_layout":
+                if (sourceFrame && sourceFrame === this._textLayoutFrame) this._textLayoutWatch?.cb(data as TextLayout);
                 break;
             case "first_visible_locator":
                 const loc = Locator.deserialize(data as string);
@@ -685,6 +691,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             }
         })
         this._reapplyDecorationsToCurrentFrames();
+        this._watchTextLayoutInCurrentFrame();
     }
 
     private async apply() {
@@ -857,6 +864,38 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             const href = visibleHrefs[i];
             if (href) this._reapplyDecorationsToFrame(frame, href);
         });
+    }
+
+    /**
+     * Reports where the text of `locators`, all in one reflowable resource, starts each line or column
+     * along the scroll axis, with the viewport. Reported again whenever that resource is scrolled or laid out again.
+     * Replaces any previous watch, and returns a function that stops this one.
+     */
+    public watchTextLayout(locators: Locator[], cb: (layout: TextLayout) => void): () => void {
+        const watch = {
+            href: locators[0]?.href.split("#")[0] ?? "",
+            pieces: locators.map(locator => [locator.text?.serialize(), getCssSelector(locator.locations)]),
+            cb,
+        };
+        this._textLayoutWatch = watch;
+        this._watchTextLayoutInCurrentFrame(true);
+        return () => {
+            if (this._textLayoutWatch !== watch) return;
+            this._textLayoutWatch = undefined;
+            this._watchTextLayoutInCurrentFrame();
+        };
+    }
+
+    // The previous frame stops watching, so only the displayed resource reports its layout.
+    private _watchTextLayoutInCurrentFrame(resend = false): void {
+        const frame = this._cframes[0];
+        const watch = this._textLayoutWatch;
+        const target = watch && frame instanceof FrameManager && this.currentLocation?.href.split("#")[0] === watch.href ? frame : undefined;
+        if (target === this._textLayoutFrame && !resend) return;
+        const previous = this._textLayoutFrame;
+        if (previous && previous !== target && !previous.isDestroyed) previous.msg?.send("watch_text_layout", []);
+        this._textLayoutFrame = target;
+        if (target && watch) target.msg?.send("watch_text_layout", watch.pieces);
     }
 
     private _handleDecorationActivated(data: DecorationActivatedEvent): boolean {

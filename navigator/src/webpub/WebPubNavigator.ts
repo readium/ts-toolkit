@@ -2,7 +2,7 @@ import { Feature, Link, Locator, LocatorText, Publication, ReadingProgression, L
 import { VisualNavigator, VisualNavigatorViewport, ProgressionRange, KeyboardPeripheralEventData } from "../Navigator.ts";
 import { Configurable } from "../preferences/Configurable.ts";
 import { WebPubFramePoolManager } from "./WebPubFramePoolManager.ts";
-import { BasicTextSelection, CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FrameClickEvent, KeyboardPeripheralEvent, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
+import { BasicTextSelection, CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FrameClickEvent, KeyboardPeripheralEvent, ModuleName, SuspiciousActivityEvent, TextLayout, WebPubModules } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
 import { WebPubFrameManager } from "./WebPubFrameManager.ts";
 import { Decoration, DecorableNavigator, OnDecorationActivatedEvent, OnDecorationPointerEnterEvent, OnDecorationPointerLeaveEvent, DecorationObserver, DecoratorConfig, decorationsEqual, resolveDecorationForWire, supportsDecorationStyle as canRenderDecorationStyle, DecorationStyleType } from "../decorations/index.ts";
@@ -102,6 +102,8 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private _decorationHoverState: Map<string, boolean> = new Map();
     private _decorationActivationConsumed = false;
     private _decorationResizeSelectors: Set<string>;
+    private _textLayoutWatch?: { href: string; pieces: unknown[]; cb: (layout: TextLayout) => void };
+    private _textLayoutFrame?: WebPubFrameManager;
 
     private webViewport: VisualNavigatorViewport = {
         readingOrder: [],
@@ -290,6 +292,10 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
                 this.listeners.positionChanged(this.currentLocation);
                 this._notifyTimelineChange(this.currentLocation);
                 this._reapplyDecorationsToCurrentFrame();
+                this._watchTextLayoutInCurrentFrame(true);
+                break;
+            case "text_layout":
+                if (this._textLayoutFrame) this._textLayoutWatch?.cb(data as TextLayout);
                 break;
             case "first_visible_locator":
                 const loc = Locator.deserialize(data as string);
@@ -448,6 +454,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             };
         }
         this._reapplyDecorationsToCurrentFrame();
+        this._watchTextLayoutInCurrentFrame();
     }
 
     private async apply() {
@@ -617,6 +624,38 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         for (const [group, hoverable] of this._decorationHoverState) {
             frame.msg.send("decoration_hoverable", { group, hoverable });
         }
+    }
+
+    /**
+     * Reports where the text of `locators`, all in one resource, starts each line along the scroll axis,
+     * with the viewport. Reported again whenever that resource is scrolled or laid out again.
+     * Replaces any previous watch, and returns a function that stops this one.
+     */
+    public watchTextLayout(locators: Locator[], cb: (layout: TextLayout) => void): () => void {
+        const watch = {
+            href: locators[0]?.href.split("#")[0] ?? "",
+            pieces: locators.map(locator => [locator.text?.serialize(), getCssSelector(locator.locations)]),
+            cb,
+        };
+        this._textLayoutWatch = watch;
+        this._watchTextLayoutInCurrentFrame(true);
+        return () => {
+            if (this._textLayoutWatch !== watch) return;
+            this._textLayoutWatch = undefined;
+            this._watchTextLayoutInCurrentFrame();
+        };
+    }
+
+    // The previous frame stops watching, so only the displayed resource reports its layout.
+    private _watchTextLayoutInCurrentFrame(resend = false): void {
+        const frame = this.framePool?.currentFrames[0];
+        const watch = this._textLayoutWatch;
+        const target = watch && frame && this.currentLocation?.href.split("#")[0] === watch.href ? frame : undefined;
+        if (target === this._textLayoutFrame && !resend) return;
+        const previous = this._textLayoutFrame;
+        if (previous && previous !== target) previous.msg?.send("watch_text_layout", []);
+        this._textLayoutFrame = target;
+        if (target && watch) target.msg?.send("watch_text_layout", watch.pieces);
     }
 
     private _handleDecorationActivated(data: DecorationActivatedEvent): boolean {
