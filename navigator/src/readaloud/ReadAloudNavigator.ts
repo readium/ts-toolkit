@@ -2,6 +2,7 @@ import { Layout, Locator, Profile, getCssSelector } from "@readium/shared";
 import { TextLayout, TextLineStarts } from "@readium/navigator-html-injectables";
 import {
     createLocator,
+    filterByLanguages,
     LocatorOptions,
     ReadiumSpeechNavigator,
     ReadiumSpeechPlaybackEngine,
@@ -10,6 +11,7 @@ import {
     ReadiumSpeechUtterance,
     ReadiumSpeechVoice,
     resolveUtteranceLocate,
+    sortVoicesByRegions,
     SpeechPreferences,
     WebSpeechEngine,
     WebSpeechVoiceManager,
@@ -31,6 +33,11 @@ import {
 } from "./preferences/index.ts";
 
 export type ReadAloudState = ReadiumSpeechPlaybackState;
+
+export interface ReadAloudVoicesOptions {
+    /** BCP 47 tags, matched by base language. */
+    languages?: string[];
+}
 
 export interface ReadAloudUtterance {
     text: string;
@@ -218,8 +225,18 @@ export class ReadAloudNavigator {
         return this.loadUnit(() => this.units.before(this.unit!), queue => queue.length - 1);
     }
 
-    getVoices(): Promise<ReadiumSpeechVoice[]> {
-        return this.speech.getVoices();
+    /**
+     * The available voices, only those of `languages` when given,
+     * ranked the way the default voice is picked: preferred region first, then quality.
+     */
+    async getVoices(options: ReadAloudVoicesOptions = {}): Promise<ReadiumSpeechVoice[]> {
+        const voices = await this.speech.getVoices();
+        const languages = options.languages?.length ? options.languages : undefined;
+        const filtered = languages ? filterByLanguages(voices, languages) : voices;
+        const publicationLanguages = this.navigator.publication.metadata.languages;
+        const preferred = languages
+            ?? (publicationLanguages?.length ? publicationLanguages : [...(navigator.languages ?? ["en"])]);
+        return sortVoicesByRegions(preferred, filtered);
     }
 
     setVoice(voice: ReadiumSpeechVoice | string): void {
