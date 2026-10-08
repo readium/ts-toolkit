@@ -140,6 +140,8 @@ export class ReadAloudNavigator {
     private breakTimer?: ReturnType<typeof setTimeout>;
     private unit?: ReadingUnit;
     private loading = false;
+    // Whether the unit being loaded waits paused once ready, rather than speaking.
+    private loadPaused = false;
     private loadToken = 0;
     private lastState: ReadAloudState = "idle";
 
@@ -177,6 +179,10 @@ export class ReadAloudNavigator {
      * Without `from`, an idle reader starts from the navigator's current position.
      */
     async play(from?: Locator): Promise<void> {
+        if (!from && this.loading) {
+            this.loadPaused = false;
+            return;
+        }
         if (!from && this.turning) return;
         if (!from && this.pausedBefore) {
             await this.resumePaused(this.pausedBefore);
@@ -215,7 +221,8 @@ export class ReadAloudNavigator {
     }
 
     pause(): void {
-        if (this.turning) this.pauseTurning();
+        if (this.loading) this.loadPaused = true;
+        else if (this.turning) this.pauseTurning();
         else if (!this.pausedBefore) this.speech.pause();
     }
 
@@ -235,7 +242,7 @@ export class ReadAloudNavigator {
         if (this.pausedBefore) return this.movePaused(this.pausedBefore, 1);
         if (this.speech.next()) return true;
         if (!this.unit || !this.units.linkAfter(this.unit)) return false;
-        return this.loadUnit(() => this.units.after(this.unit!), () => 0);
+        return this.loadUnit(() => this.units.after(this.unit!), () => 0, this.staysPaused());
     }
 
     /** Moves to the previous utterance, continuing into the previous reading unit at the start of this one. */
@@ -245,7 +252,7 @@ export class ReadAloudNavigator {
         if (this.pausedBefore) return this.movePaused(this.pausedBefore, -1);
         if (this.speech.previous()) return true;
         if (!this.unit || !this.units.linkBefore(this.unit)) return false;
-        return this.loadUnit(() => this.units.before(this.unit!), queue => queue.length - 1);
+        return this.loadUnit(() => this.units.before(this.unit!), queue => queue.length - 1, this.staysPaused());
     }
 
     /**
@@ -423,6 +430,7 @@ export class ReadAloudNavigator {
     // `find` gives the unit once speech is stopped, as finding it may move the navigator.
     private async loadUnit(find: () => ReadingUnit | undefined, indexIn: (queue: ReadiumSpeechUtterance[]) => number | Promise<number>, paused = false): Promise<boolean> {
         const token = ++this.loadToken;
+        this.loadPaused = paused;
         this.setLoading(true);
         this.pausedBefore = undefined;
         this.turning = undefined;
@@ -449,18 +457,18 @@ export class ReadAloudNavigator {
             if (queue.length === 0) {
                 this.setLoading(false);
                 // Nothing to read in this unit (e.g. only images): continue with the next one.
-                if (this.units.linkAfter(unit)) return this.loadUnit(() => this.units.after(unit), () => 0, paused);
+                if (this.units.linkAfter(unit)) return this.loadUnit(() => this.units.after(unit), () => 0, this.loadPaused);
                 return false;
             }
             await ready;
             if (token !== this.loadToken) return false;
-            this.setLoading(false);
 
             const start = await indexIn(queue);
             if (token !== this.loadToken) return false;
+            this.setLoading(false);
             this.watchLayout(queue);
             const index = Math.min(Math.max(start, 0), queue.length - 1);
-            if (paused) {
+            if (this.loadPaused) {
                 this.pausedBefore = { unit, index, current: true };
                 this.notifyUtterance(queue[index]);
                 this.notifyState();
@@ -550,6 +558,11 @@ export class ReadAloudNavigator {
             const after = this.navigator.viewport?.progressions.get(locator.href);
             settle(ok && after !== undefined && (after.start !== start || after.end !== end));
         });
+    }
+
+    // Moving into another unit keeps playback paused, as moving within one does.
+    private staysPaused(): boolean {
+        return this.loading ? this.loadPaused : this.speech.getState() === "paused";
     }
 
     private pauseTurning() {
