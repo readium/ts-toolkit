@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Breaking:** requires Node.js 24 or later
 
+### Fixed
+
+- In reflowable EPUBs, moving to the next or previous resource from the edge of the current one (e.g. by swiping) no longer shows the new resource at the progression the previous one had, unable to move on to another resource
+
 ## [2.11.1] – 2026-09-30
 
 ### Fixed

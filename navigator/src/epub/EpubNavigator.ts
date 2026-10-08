@@ -501,7 +501,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 this._watchTextLayoutInCurrentFrame(true);
                 break;
             case "text_layout":
-                if (sourceFrame && sourceFrame === this._textLayoutFrame) this._textLayoutWatch?.cb(data as TextLayout);
+                // A frame being hidden after moving to another resource lays out again, collapsed.
+                if (sourceFrame && sourceFrame === this._textLayoutFrame && this.currentLocation.href.split("#")[0] === this._textLayoutWatch?.href) this._textLayoutWatch.cb(data as TextLayout);
                 break;
             case "pointed_piece": {
                 const { id, index } = data as PointedPieceResponse;
@@ -624,9 +625,13 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             case "zoom":
                 this.listeners.zoom(data as number);
                 break;
-            case "progress":
+            case "progress": {
+                // The previous resource's frame can still report once moving to another, which would take its progress.
+                const frame = sourceFrame instanceof FrameManager ? (this.framePool as FramePoolManager)._frameFor(this.currentLocation.href.split("#")[0]) : undefined;
+                if (frame && sourceFrame !== frame) break;
                 this.syncLocation(data as ProgressionRange);
                 break;
+            }
             case "content_protection":
                 const activity = data as SuspiciousActivityEvent;
                 this.listeners.contentProtection(activity.type, activity);

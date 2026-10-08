@@ -327,6 +327,11 @@ export class FramePoolManager {
         return [this._currentFrame];
     }
 
+    /** The pooled frame of `href`, whether or not it's shown. */
+    _frameFor(href: string): FrameManager | undefined {
+        return this.pool.get(href);
+    }
+
     get currentBounds(): DOMRect {
         const ret = {
             x: 0,
