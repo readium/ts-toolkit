@@ -6,6 +6,7 @@ import { Module } from "../Module.ts";
 import { ModuleName } from "../ModuleLibrary.ts";
 
 const SNAPPER_STYLE_ID = "readium-snapper-style";
+const NAVIGATION_LOCK_STYLE_ID = "readium-navigation-lock-style";
 
 /** Where a watched piece of text starts anew along the scroll axis: a new line when scrolled, a new page when paginated. */
 export interface TextLineStarts {
@@ -32,6 +33,8 @@ export abstract class Snapper extends Module {
     protected static readonly CENTER_TOLERANCE = 0.01;
 
     private protected = false;
+    // The reader can't scroll or swipe, but the document can still be moved programmatically.
+    protected locked = false;
 
     private watchedRanges: (Range | null)[] = [];
     private textLayoutComms?: Comms;
@@ -120,6 +123,32 @@ export abstract class Snapper extends Module {
             wnd.requestAnimationFrame(() => this.sendTextLayout(true));
             ack(true);
         });
+    }
+
+    /** Registers `lock_navigation`, which subclasses call from `mount` as they don't call `super.mount`. */
+    protected registerNavigationLock(wnd: ReadiumWindow, comms: Comms, moduleName: ModuleName): void {
+        comms.register("lock_navigation", moduleName, (data, ack) => {
+            this.locked = data === true;
+            wnd.document.getElementById(NAVIGATION_LOCK_STYLE_ID)?.remove();
+            if (this.locked) {
+                const style = wnd.document.createElement("style");
+                style.dataset.readium = "true";
+                style.id = NAVIGATION_LOCK_STYLE_ID;
+                // :root outranks the snappers' own overflow rules on html.
+                style.textContent = `
+                :root {
+                    overflow: hidden !important;
+                    touch-action: none !important;
+                }`;
+                wnd.document.head.appendChild(style);
+            }
+            ack(true);
+        });
+    }
+
+    protected unlockNavigation(wnd: ReadiumWindow): void {
+        this.locked = false;
+        wnd.document.getElementById(NAVIGATION_LOCK_STYLE_ID)?.remove();
     }
 
     protected unwatchTextLayout(): void {

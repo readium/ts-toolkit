@@ -107,6 +107,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private _decorationResizeSelectors: Set<string>;
     private _textLayoutWatch?: { href: string; pieces: unknown[]; cb: (layout: TextLayout) => void };
     private _textLayoutFrame?: WebPubFrameManager;
+    private _navigationLocked = false;
     private readonly _pointedPieceRequests = new Map<string, (index: number) => void>();
     private _pointedPieceRequestId = 0;
 
@@ -298,6 +299,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
                 this._notifyTimelineChange(this.currentLocation);
                 this._reapplyDecorationsToCurrentFrame();
                 this._watchTextLayoutInCurrentFrame(true);
+                this._sendNavigationLock();
                 break;
             case "text_layout":
                 // A frame being hidden after moving to another resource lays out again, collapsed.
@@ -357,7 +359,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
                     ) {
                         const origHref = element.attributes.getNamedItem("href")?.value!;
                         if (origHref.startsWith("#")) {
-                            this.go(this.currentLocation.copyWithLocations({
+                            if (!this._navigationLocked) this.go(this.currentLocation.copyWithLocations({
                                 fragments: [origHref.substring(1)]
                             }), false, () => { });
                         } else if(
@@ -391,7 +393,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
                                 const link = this.pub.readingOrder.findWithHref(hrefToCheck);
                                 if (link) {
-                                    this.goLink(link, false, () => { });
+                                    if (!this._navigationLocked) this.goLink(link, false, () => { });
                                 } else {
                                     console.warn(`Internal link not found in readingOrder: ${hrefToCheck}`);
                                     this.listeners.handleLocator(new Link({
@@ -471,6 +473,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         })
         this._reapplyDecorationsToCurrentFrame();
         this._watchTextLayoutInCurrentFrame();
+        this._sendNavigationLock();
     }
 
     private async apply() {
@@ -660,6 +663,19 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             this._textLayoutWatch = undefined;
             this._watchTextLayoutInCurrentFrame();
         };
+    }
+
+    /**
+     * Locks or unlocks navigating in the content: scrolling and following its links.
+     * Calls to the navigator still move it.
+     */
+    public lockNavigation(locked: boolean): void {
+        this._navigationLocked = locked;
+        this._sendNavigationLock();
+    }
+
+    private _sendNavigationLock(): void {
+        this.framePool?.currentFrames[0]?.msg?.send("lock_navigation", this._navigationLocked);
     }
 
     /**

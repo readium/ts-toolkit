@@ -58,6 +58,11 @@ export interface ReadAloudConfiguration {
     provider?: GuidedNavigationProvider;
     preferences?: IReadAloudPreferences;
     defaults?: IReadAloudDefaults;
+    /**
+     * Whether the reader can move away while reading aloud, which then stops following until back.
+     * Otherwise navigating in the content is locked while playing. Defaults to true.
+     */
+    detachable?: boolean;
 }
 
 interface TurningPosition {
@@ -130,6 +135,7 @@ export class ReadAloudNavigator {
     private following?: ReturnType<typeof setTimeout>;
     // The reader moved away from the spoken text, which isn't followed until back in view.
     private detached = false;
+    private navigationLocked = false;
     // The resource the spoken text was last shown in, to tell when the reader moves to another.
     private shownHref?: string;
     // The utterance pieces whose layout the navigator reports, and the latest report.
@@ -155,10 +161,12 @@ export class ReadAloudNavigator {
             readonly layout?: Layout;
             watchTextLayout?(locators: Locator[], cb: (layout: TextLayout) => void): () => void;
             findPointedPiece?(event: FrameClickEvent, pieces: Locator[]): Promise<Locator | undefined>;
+            lockNavigation?(locked: boolean): void;
         },
         private readonly listeners: ReadAloudListeners = {},
         configuration: ReadAloudConfiguration = {}
     ) {
+        this.detachable = configuration.detachable ?? true;
         this.pool = new GuidedNavigationPool(navigator.publication, configuration.provider ?? new PublicationGuidedNavigationProvider(navigator.publication));
         this.units = new ReadingUnits(navigator);
         this._preferences = new ReadAloudPreferences(configuration.preferences);
@@ -171,6 +179,9 @@ export class ReadAloudNavigator {
         this.speech.setSpeakInContentLanguage(this._settings.speakInContentLanguage);
         this.listen();
     }
+
+    /** Whether the reader can move away while reading aloud. Otherwise the app keeps its own navigation from moving while playing. */
+    readonly detachable: boolean;
 
     get state(): ReadAloudState {
         if (this.loading) return "loading";
@@ -326,6 +337,7 @@ export class ReadAloudNavigator {
         this.unwatchLayout?.();
         this.unwatchLayout = undefined;
         this.clearHighlights();
+        this.lockNavigation(false);
         await this.speech.destroy();
     }
 
@@ -722,7 +734,7 @@ export class ReadAloudNavigator {
     // Layout reports stop once the reader moves to another resource, so that is told from the navigator.
     private isDetached(): boolean {
         const href = this.navigator.currentLocator.href.split("#")[0];
-        if (this.shownHref && this.shownHref !== href && this.layout() !== Layout.fixed) this.detached = true;
+        if (this.detachable && this.shownHref && this.shownHref !== href && this.layout() !== Layout.fixed) this.detached = true;
         return this.detached;
     }
 
@@ -757,7 +769,7 @@ export class ReadAloudNavigator {
             // Laid out again, so the spoken text may have moved out of view.
             const locator = this.pointLocator(spoken);
             if (locator) this.follow(locator);
-        } else if (hidden && this.following === undefined && !this.turning) {
+        } else if (hidden && this.detachable && this.following === undefined && !this.turning) {
             // Only scrolling reports the viewport alone, and this one isn't a move made here.
             this.detached = true;
         }
@@ -921,8 +933,15 @@ export class ReadAloudNavigator {
         this.notifyState();
     }
 
+    private lockNavigation(locked: boolean) {
+        if (locked === this.navigationLocked) return;
+        this.navigationLocked = locked;
+        this.navigator.lockNavigation?.(locked);
+    }
+
     private notifyState() {
         const state = this.state;
+        this.lockNavigation(!this.detachable && (state === "playing" || state === "loading"));
         if (state === this.lastState) return;
         this.lastState = state;
         this.listeners.stateChanged?.(state);

@@ -196,6 +196,7 @@ export class WebPubSnapper extends Snapper {
         });
 
         this.registerTextLayout(wnd, comms, WebPubSnapper.moduleName);
+        this.registerNavigationLock(wnd, comms, WebPubSnapper.moduleName);
 
         comms.register("go_progression", WebPubSnapper.moduleName, (data, ack) => {
             const position = data as number;
@@ -303,6 +304,7 @@ export class WebPubSnapper extends Snapper {
     unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         comms.unregisterAll(WebPubSnapper.moduleName);
         this.unwatchTextLayout();
+        this.unlockNavigation(wnd);
         this.resizeObserver.disconnect();
         if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
 

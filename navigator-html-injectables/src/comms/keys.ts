@@ -59,7 +59,8 @@ export type CommsCommandKey =
     "print_protection" |
     "timeline_entries" |
     "watch_text_layout" |
-    "pointed_piece";
+    "pointed_piece" |
+    "lock_navigation";
 ;
 
 export type SuspiciousActivityType = 

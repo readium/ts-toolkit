@@ -224,6 +224,7 @@ export class ScrollSnapper extends Snapper {
         });
 
         this.registerTextLayout(wnd, comms, ScrollSnapper.moduleName);
+        this.registerNavigationLock(wnd, comms, ScrollSnapper.moduleName);
 
         comms.register("go_progression", ScrollSnapper.moduleName, (data, ack) => {
             const position = data as number;
@@ -332,6 +333,7 @@ export class ScrollSnapper extends Snapper {
     unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         comms.unregisterAll(ScrollSnapper.moduleName);
         this.unwatchTextLayout();
+        this.unlockNavigation(wnd);
         this.resizeObserver.disconnect();
         if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
         wnd.document.getElementById(SCROLL_SNAPPER_STYLE_ID)?.remove();

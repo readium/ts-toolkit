@@ -127,6 +127,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private _decorationResizeSelectors: Set<string>;
     private _textLayoutWatch?: { href: string; pieces: unknown[]; cb: (layout: TextLayout) => void };
     private _textLayoutFrame?: FrameManager;
+    private _navigationLocked = false;
     private readonly _pointedPieceRequests = new Map<string, (index: number) => void>();
     private _pointedPieceRequestId = 0;
 
@@ -499,6 +500,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                     this._reapplyDecorationsToCurrentFrames();
                 }
                 this._watchTextLayoutInCurrentFrame(true);
+                this._sendNavigationLock();
                 break;
             case "text_layout":
                 // A frame being hidden after moving to another resource lays out again, collapsed.
@@ -566,7 +568,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                     ) {
                         const origHref = element.attributes.getNamedItem("href")?.value!;
                         if (origHref.startsWith("#")) {
-                            this.go(this.currentLocation.copyWithLocations({
+                            if (!this._navigationLocked) this.go(this.currentLocation.copyWithLocations({
                                 fragments: [origHref.substring(1)]
                             }), false, () => { });
                         } else if(
@@ -578,7 +580,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                             this.listeners.handleLocator(new Link({
                                 href: origHref,
                             }).locator);
-                        } else {
+                        } else if (!this._navigationLocked) {
                             try {
                                 this.goLink(new Link({
                                     href: path.join(path.dirname(this.currentLocation.href), origHref)
@@ -603,6 +605,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                     const oneQuarter = ((this._cframes.length === 2 ? this._cframes[0]!.window.innerWidth + this._cframes[1]!.window.innerWidth : this._cframes[0]!.window.innerWidth) * window.devicePixelRatio) / 4;
                     // open UI if middle screen is clicked/tapped
                     if (edata.x >= oneQuarter && edata.x <= oneQuarter * 3) this.listeners.miscPointer(1);
+                    if (this._navigationLocked) break;
                     if (edata.x < oneQuarter) this.goLeft(false, () => { }); // Go left if left quarter clicked
                     else if (edata.x > oneQuarter * 3) this.goRight(false, () => { }); // Go right if right quarter clicked
                 }
@@ -611,10 +614,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 this.listeners.miscPointer(data as number);
                 break;
             case "no_more":
-                this.changeResource(1);
+                if (!this._navigationLocked) this.changeResource(1);
                 break;
             case "no_less":
-                this.changeResource(-1);
+                if (!this._navigationLocked) this.changeResource(-1);
                 break;
             case "swipe":
                 // Swipe event
@@ -693,6 +696,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         })
         this._reapplyDecorationsToCurrentFrames();
         this._watchTextLayoutInCurrentFrame();
+        this._sendNavigationLock();
     }
 
     private async apply() {
@@ -885,6 +889,22 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             this._textLayoutWatch = undefined;
             this._watchTextLayoutInCurrentFrame();
         };
+    }
+
+    /**
+     * Locks or unlocks navigating in the content: scrolling, swiping, tapping its edges and following its links.
+     * Calls to the navigator still move it.
+     */
+    public lockNavigation(locked: boolean): void {
+        this._navigationLocked = locked;
+        this._sendNavigationLock();
+    }
+
+    // Fixed-layout frames don't scroll, and their swipes are reported as no_more and no_less.
+    private _sendNavigationLock(): void {
+        this._cframes.forEach(frame => {
+            if (frame instanceof FrameManager) frame.msg?.send("lock_navigation", this._navigationLocked);
+        });
     }
 
     /** The left page's width when `targetFrameSrc` is the right page (screen-wise) of a fixed-layout spread, else 0. */

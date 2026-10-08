@@ -270,6 +270,7 @@ export class ColumnSnapper extends Snapper {
 
     onTouchStart(e: TouchEvent) {
         e.stopPropagation();
+        if(this.locked) return;
         this.takeOverSnap();
         switch (e.touches.length) {
             case 1: // Single finger - handle it
@@ -521,6 +522,7 @@ export class ColumnSnapper extends Snapper {
         wnd.requestAnimationFrame(() => this.cachedScrollWidth = this.doc().scrollWidth!);
 
         this.registerTextLayout(wnd, comms, ColumnSnapper.moduleName);
+        this.registerNavigationLock(wnd, comms, ColumnSnapper.moduleName);
 
         comms.register("go_progression", ColumnSnapper.moduleName, (data, ack) => {
             const position = data as number;
@@ -703,6 +705,7 @@ export class ColumnSnapper extends Snapper {
         this.snappingCancelled = true;
         comms.unregisterAll(ColumnSnapper.moduleName);
         this.unwatchTextLayout();
+        this.unlockNavigation(wnd);
         this.resizeObserver.disconnect();
         this.mutationObserver.disconnect();
 
