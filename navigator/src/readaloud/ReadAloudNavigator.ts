@@ -342,7 +342,8 @@ export class ReadAloudNavigator {
             this.notifyUtterance();
         });
         on("boundary", event => {
-            if (event.detail?.name !== "word" || !event.detail.locate) return;
+            // Some voices report zero-length boundaries, which would highlight the whole element.
+            if (event.detail?.name !== "word" || !event.detail.locate || !event.detail.word?.trim()) return;
             const locate = event.detail.locate as LocatorOptions;
             const locator = this.locatorFor(locate);
             if (!locator) return;
