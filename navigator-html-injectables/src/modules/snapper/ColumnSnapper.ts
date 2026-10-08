@@ -79,6 +79,12 @@ export class ColumnSnapper extends Snapper {
         return this.normScroll() + (this.rtl ? this.wnd.innerWidth - rect.right : rect.left);
     }
 
+    // Characters on a line all start apart, so lines are reported per page.
+    protected lineStart(rect: DOMRect): number {
+        const start = this.rectStart(rect);
+        return start - (start % this.wnd.innerWidth);
+    }
+
     protected hasScrolledPast(el: Element): boolean {
         const rect = el.getBoundingClientRect();
         return this.rtl ? rect.left >= this.wnd.innerWidth : rect.right <= 0;

@@ -7,7 +7,7 @@ import { ModuleName } from "../ModuleLibrary.ts";
 
 const SNAPPER_STYLE_ID = "readium-snapper-style";
 
-/** Where a watched piece of text starts anew along the scroll axis: a new line when scrolled, a new column when paginated. */
+/** Where a watched piece of text starts anew along the scroll axis: a new line when scrolled, a new page when paginated. */
 export interface TextLineStarts {
     /** Offsets in the piece's text, counting each run of whitespace as one character. */
     offsets: number[];
@@ -107,6 +107,11 @@ export abstract class Snapper extends Module {
         return 0;
     }
 
+    /** Where the line holding `rect` starts, in the same space as `rectStart`. */
+    protected lineStart(rect: DOMRect): number {
+        return this.rectStart(rect);
+    }
+
     /** Registers `watch_text_layout`, which subclasses call from `mount` as they don't call `super.mount`. */
     protected registerTextLayout(wnd: ReadiumWindow, comms: Comms, moduleName: ModuleName): void {
         this.textLayoutComms = comms;
@@ -173,7 +178,7 @@ export abstract class Snapper extends Module {
                 charRange.setStart(node!, i);
                 charRange.setEnd(node!, i + 1);
                 const rect = charRange.getClientRects()[0];
-                return rect && (rect.width || rect.height) ? Math.round(this.rectStart(rect)) : undefined;
+                return rect && (rect.width || rect.height) ? Math.round(this.lineStart(rect)) : undefined;
             };
             const push = (i: number, start: number) => {
                 if (result.starts.length > 0 && result.starts[result.starts.length - 1] === start) return;
