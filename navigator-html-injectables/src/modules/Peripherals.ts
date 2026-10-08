@@ -21,7 +21,7 @@ export interface FrameClickEvent {
     targetElement: string;
     targetFrameSrc: string;
     // The press is on rendered content (text, image, SVG, media), not on the empty space around it.
-    onContent: boolean;
+    onContent?: boolean;
     x: number;
     y: number;
 }
