@@ -130,6 +130,8 @@ export class ReadAloudNavigator {
     private following?: ReturnType<typeof setTimeout>;
     // The reader moved away from the spoken text, which isn't followed until back in view.
     private detached = false;
+    // The resource the spoken text was last shown in, to tell when the reader moves to another.
+    private shownHref?: string;
     // The utterance pieces whose layout the navigator reports, and the latest report.
     private watchedPieces = new Map<LocatorOptions, number>();
     private unwatchLayout?: () => void;
@@ -196,7 +198,7 @@ export class ReadAloudNavigator {
             return;
         }
         if (!from && state === "playing") return;
-        this.detached = false;
+        this.attach();
         await this.start(from ?? this.navigator.currentLocator);
     }
 
@@ -209,13 +211,13 @@ export class ReadAloudNavigator {
         const unit = this.unit;
         const index = unit ? await this.pointedIndex(event, this.speech.getContentQueue()) : -1;
         if (unit && index >= 0) {
-            this.detached = false;
+            this.attach();
             return this.loadUnit(() => unit, () => index);
         }
         const href = this.navigator.currentLocator.href.split("#")[0];
         // Content of the loaded unit that no utterance covers isn't read aloud.
         if (unit?.links.some(link => link.href.split("#")[0] === href)) return false;
-        this.detached = false;
+        this.attach();
         return this.loadUnit(() => this.units.around(href), async queue => {
             const index = await this.pointedIndex(event, queue);
             return index >= 0 ? index : this.startIndex(queue, this.navigator.currentLocator);
@@ -231,7 +233,7 @@ export class ReadAloudNavigator {
     stop(): void {
         this.loadToken++;
         this.settleReady?.();
-        this.detached = false;
+        this.attach();
         this.pausedBefore = undefined;
         this.turning = undefined;
         this.setLoading(false);
@@ -240,7 +242,7 @@ export class ReadAloudNavigator {
 
     /** Moves to the next utterance, continuing into the next reading unit at the end of this one. */
     async next(): Promise<boolean> {
-        this.detached = false;
+        this.attach();
         if (this.turning) this.pauseTurning();
         if (this.pausedBefore) return this.movePaused(this.pausedBefore, 1);
         if (this.speech.next()) return true;
@@ -250,7 +252,7 @@ export class ReadAloudNavigator {
 
     /** Moves to the previous utterance, continuing into the previous reading unit at the start of this one. */
     async previous(): Promise<boolean> {
-        this.detached = false;
+        this.attach();
         if (this.turning) this.pauseTurning();
         if (this.pausedBefore) return this.movePaused(this.pausedBefore, -1);
         if (this.speech.previous()) return true;
@@ -581,7 +583,7 @@ export class ReadAloudNavigator {
         const next = this.speech.getContentQueue()[index];
         const locator = this.piecesOf(next).map(piece => this.locatorFor(piece)).find(locator => locator !== undefined);
         // A hidden document doesn't turn pages until shown again, nor does a reader looking elsewhere.
-        if (!locator || document.hidden || this.detached) return;
+        if (!locator || document.hidden || this.isDetached()) return;
         const turning = { unit: this.unit!, index };
         this.turning = turning;
         this.speech.stop();
@@ -696,7 +698,7 @@ export class ReadAloudNavigator {
 
     private follow(locator: Locator) {
         // A fixed-layout page doesn't scroll, and going to one of the displayed spread can display another.
-        if (this.units.displays(locator.href) || this.following !== undefined || this.detached) return;
+        if (this.units.displays(locator.href) || this.following !== undefined || this.isDetached()) return;
         this.followedHref = locator.href;
         const done = () => {
             if (this.following !== timeout) return;
@@ -706,7 +708,22 @@ export class ReadAloudNavigator {
         // Expired comms callbacks are dropped, never called.
         const timeout = setTimeout(done, GO_TIMEOUT);
         this.following = timeout;
-        this.navigator.go(locator, false, done);
+        this.navigator.go(locator, false, ok => {
+            if (ok) this.shownHref = locator.href.split("#")[0];
+            done();
+        });
+    }
+
+    private attach() {
+        this.detached = false;
+        this.shownHref = undefined;
+    }
+
+    // Layout reports stop once the reader moves to another resource, so that is told from the navigator.
+    private isDetached(): boolean {
+        const href = this.navigator.currentLocator.href.split("#")[0];
+        if (this.shownHref && this.shownHref !== href && this.layout() !== Layout.fixed) this.detached = true;
+        return this.detached;
     }
 
     // Watches where the pieces of `queue` are laid out, when the navigator reports it.
@@ -729,6 +746,7 @@ export class ReadAloudNavigator {
     }
 
     private laidOut(layout: TextLayout) {
+        this.shownHref = this.navigator.currentLocator.href.split("#")[0];
         this.viewport = layout.viewport;
         if (layout.pieces) this.lines = layout.pieces;
         const spoken = this.spokenPoint();
