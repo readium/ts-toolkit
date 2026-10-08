@@ -1,7 +1,7 @@
 import { GuidedNavigationObject, Link, Publication } from "@readium/shared";
 import { decodeTextref, makeGnd } from "@readium/guided-navigation";
 
-export interface GuidedNavigationSource {
+export interface GuidedNavigationProvider {
     /**
      * Guided Navigation objects of a resource, with every textref qualified by the resource's href.
      * Resolves to undefined when the resource has nothing to read.
@@ -9,20 +9,27 @@ export interface GuidedNavigationSource {
     guideFor(link: Link): Promise<GuidedNavigationObject[] | undefined>;
 }
 
+export interface PublicationGuidedNavigationProviderOptions {
+    /** Generates from the resource's markup without using the publication's Guided Navigation document. */
+    generateFromMarkup?: boolean;
+}
+
 /**
  * Uses the publication's Guided Navigation document when its text can be located in the resource,
- * and generates one from the resource's markup otherwise.
+ * and generates one from the resource's markup otherwise, or always with `generateFromMarkup`.
  * Only the objects of the resource are kept from a document covering the whole publication.
  */
-export class PublicationGuidedNavigationSource implements GuidedNavigationSource {
-    constructor(private readonly publication: Publication) {}
+export class PublicationGuidedNavigationProvider implements GuidedNavigationProvider {
+    constructor(private readonly publication: Publication, private readonly options: PublicationGuidedNavigationProviderOptions = {}) {}
 
     async guideFor(link: Link): Promise<GuidedNavigationObject[] | undefined> {
         const href = link.href.split("#")[0];
-        const document = await this.publication.guideForLink(link, { skipAudio: true }).catch(() => undefined);
-        if (document) {
-            const guided = this.objectsIn(document.guided, href);
-            if (guided.length > 0 && this.isLocatable(guided)) return guided;
+        if (!this.options.generateFromMarkup) {
+            const document = await this.publication.guideForLink(link, { skipAudio: true }).catch(() => undefined);
+            if (document) {
+                const guided = this.objectsIn(document.guided, href);
+                if (guided.length > 0 && this.isLocatable(guided)) return guided;
+            }
         }
         return this.generate(link, href);
     }

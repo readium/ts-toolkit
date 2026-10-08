@@ -18,7 +18,7 @@ import {
 } from "@readium/speech";
 import { Navigator, VisualNavigatorViewport } from "../Navigator.ts";
 import { Decoration, DecorableNavigator } from "../decorations/index.ts";
-import { GuidedNavigationSource, PublicationGuidedNavigationSource } from "./GuidedNavigationSource.ts";
+import { GuidedNavigationProvider, PublicationGuidedNavigationProvider } from "./GuidedNavigationProvider.ts";
 import { GuidedNavigationPool, ReadingUnit, ReadingUnits } from "./ReadingUnit.ts";
 import { SpeechProgress } from "./SpeechProgress.ts";
 import {
@@ -55,7 +55,7 @@ export interface ReadAloudListeners {
 export interface ReadAloudConfiguration {
     /** Defaults to a `WebSpeechEngine`. */
     engine?: ReadiumSpeechPlaybackEngine;
-    source?: GuidedNavigationSource;
+    provider?: GuidedNavigationProvider;
     preferences?: IReadAloudPreferences;
     defaults?: IReadAloudDefaults;
 }
@@ -152,7 +152,7 @@ export class ReadAloudNavigator {
         private readonly listeners: ReadAloudListeners = {},
         configuration: ReadAloudConfiguration = {}
     ) {
-        this.pool = new GuidedNavigationPool(navigator.publication, configuration.source ?? new PublicationGuidedNavigationSource(navigator.publication));
+        this.pool = new GuidedNavigationPool(navigator.publication, configuration.provider ?? new PublicationGuidedNavigationProvider(navigator.publication));
         this.units = new ReadingUnits(navigator);
         this._preferences = new ReadAloudPreferences(configuration.preferences);
         this._defaults = new ReadAloudDefaults(configuration.defaults);

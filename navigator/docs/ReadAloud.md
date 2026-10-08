@@ -100,4 +100,14 @@ For each resource, the publication's [Guided Navigation](https://github.com/read
 
 Divina has no markup, so it's only read when the publication has a Guided Navigation document.
 
-You can provide your own `GuidedNavigationSource` with the `source` configuration.
+To always generate it from the markup, give a `PublicationGuidedNavigationProvider` with `generateFromMarkup` in the `provider` configuration. Divina then has nothing to read.
+
+```ts
+import { PublicationGuidedNavigationProvider } from "@readium/navigator";
+
+const readAloud = new ReadAloudNavigator(navigator, listeners, {
+  provider: new PublicationGuidedNavigationProvider(publication, { generateFromMarkup: true })
+});
+```
+
+You can also provide your own `GuidedNavigationProvider` in the `provider` configuration.

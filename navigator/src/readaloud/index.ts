@@ -1,4 +1,4 @@
-export * from './GuidedNavigationSource.ts';
+export * from './GuidedNavigationProvider.ts';
 export * from './ReadAloudNavigator.ts';
 export * from './preferences/index.ts';
 export {

@@ -1,6 +1,6 @@
 import { GuidedNavigationObject, Layout, Link, Profile, Publication } from "@readium/shared";
 import { Navigator, VisualNavigatorViewport } from "../Navigator.ts";
-import { GuidedNavigationSource } from "./GuidedNavigationSource.ts";
+import { GuidedNavigationProvider } from "./GuidedNavigationProvider.ts";
 
 /** Reading order links whose Guided Navigation objects are read as one sequence. */
 export interface ReadingUnit {
@@ -98,7 +98,7 @@ const LOWER_BOUNDARY = 5;
 export class GuidedNavigationPool {
     private readonly guides = new Map<string, Promise<GuidedNavigationObject[] | undefined>>();
 
-    constructor(private readonly publication: Publication, private readonly source: GuidedNavigationSource) {}
+    constructor(private readonly publication: Publication, private readonly provider: GuidedNavigationProvider) {}
 
     /**
      * Concatenates the Guided Navigation objects of every link in the unit, in reading order,
@@ -143,7 +143,7 @@ export class GuidedNavigationPool {
         const href = link.href.split("#")[0];
         let guide = this.guides.get(href);
         if (!guide) {
-            guide = this.source.guideFor(link);
+            guide = this.provider.guideFor(link);
             this.guides.set(href, guide);
             guide.catch(() => {
                 if (this.guides.get(href) === guide) this.guides.delete(href);
