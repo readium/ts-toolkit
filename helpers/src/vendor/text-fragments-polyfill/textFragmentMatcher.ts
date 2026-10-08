@@ -364,8 +364,10 @@ const isHiddenUntilFound = (elt: Element): boolean => {
 const isNodeVisible = (node: Node): boolean => {
   // Find an HTMLElement (this node or an ancestor) so we can check
   // visibility.
-  let elt: Node | null = node;
-  while (elt != null && !(elt instanceof HTMLElement)) elt = elt.parentNode;
+  let parent: Node | null = node;
+  // nodeType, not instanceof: the document may belong to another realm (e.g. a frame).
+  while (parent != null && parent.nodeType !== Node.ELEMENT_NODE) parent = parent.parentNode;
+  const elt = parent as Element | null;
   // A document parsed via DOMParser (as opposed to one attached to a
   // real browsing context) has no defaultView, and therefore no
   // rendering/layout at all — nothing to check visibility against, so
@@ -455,8 +457,8 @@ const getAllTextNodes = (root: Node, range?: Range): Text[][] => {
     if (node.nodeType === Node.TEXT_NODE) {
       tmp.push(node as Text);
     } else if (
-        node instanceof HTMLElement &&
-        BLOCK_ELEMENTS.includes(node.tagName.toUpperCase()) && tmp.length > 0) {
+        node.nodeType === Node.ELEMENT_NODE &&
+        BLOCK_ELEMENTS.includes((node as Element).tagName.toUpperCase()) && tmp.length > 0) {
       // If this is a block element, the current set of text nodes in |tmp| is
       // complete, and we need to move on to a new one.
       blocks.push(tmp);
