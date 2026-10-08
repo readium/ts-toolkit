@@ -290,9 +290,16 @@ export class ReadAloudNavigator {
 
     async submitPreferences(preferences: ReadAloudPreferences): Promise<void> {
         this._preferences = this._preferences.merging(preferences);
+        const old = this.speech.getContentQueue();
         await this.speech.submitPreferences(ReadAloudNavigator.speechPreferences(this._preferences));
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
         this.speech.setSpeakInContentLanguage(this._settings.speakInContentLanguage);
+        // Speech keeps its place in a rebuilt queue only while playing or paused itself, not while stopped here.
+        const held = this.pausedBefore ?? this.turning;
+        if (held) {
+            held.index = this.indexAfterRebuild(old, held.index);
+            if (this.pausedBefore?.current) this.notifyUtterance(this.speech.getContentQueue()[held.index]);
+        }
         // Segmentation may have split the queue into other pieces.
         if (this.unit) this.watchLayout(this.speech.getContentQueue());
         if (this._preferencesEditor !== null) {
@@ -402,9 +409,26 @@ export class ReadAloudNavigator {
             await this.loadUnit(() => paused.unit, () => paused.index);
             return;
         }
+        // A queue rebuilt by submitted preferences may still be loading, and speech can't play its first utterance until ready.
+        if (this.speech.getState() === "loading" && !await this.speechReady()) return;
+        const resumed = this.pausedBefore ?? paused;
         this.pausedBefore = undefined;
-        this.speakFrom(paused.index);
+        this.speakFrom(resumed.index);
         this.notifyState();
+    }
+
+    // Waits as a load would, so pausing, playing or stopping meanwhile applies. Resolves whether to speak then.
+    private async speechReady(): Promise<boolean> {
+        const token = ++this.loadToken;
+        this.loadPaused = false;
+        this.setLoading(true);
+        await new Promise<void>(resolve => {
+            const off = this.speech.on("ready", () => { off(); resolve(); });
+            this.unsubscribers.push(off);
+        });
+        if (token !== this.loadToken) return false;
+        this.setLoading(false);
+        return !this.loadPaused;
     }
 
     // Moves the position playback resumes at by `offset` utterances, staying paused.
@@ -466,11 +490,12 @@ export class ReadAloudNavigator {
             const start = await indexIn(queue);
             if (token !== this.loadToken) return false;
             this.setLoading(false);
-            this.watchLayout(queue);
-            const index = Math.min(Math.max(start, 0), queue.length - 1);
+            const loaded = this.speech.getContentQueue();
+            this.watchLayout(loaded);
+            const index = Math.max(Math.min(this.indexAfterRebuild(queue, Math.max(start, 0)), loaded.length - 1), 0);
             if (this.loadPaused) {
                 this.pausedBefore = { unit, index, current: true };
-                this.notifyUtterance(queue[index]);
+                this.notifyUtterance(loaded[index]);
                 this.notifyState();
             } else {
                 this.speakFrom(index);
@@ -498,6 +523,15 @@ export class ReadAloudNavigator {
             if (byText === -1 && quote && (queue[i].plain ?? "").includes(quote)) byText = i;
         }
         return byText !== -1 ? byText : Math.max(first, 0);
+    }
+
+    // The index of `old[index]` in speech's queue, which submitted preferences may have rebuilt since `old`.
+    private indexAfterRebuild(old: ReadiumSpeechUtterance[], index: number): number {
+        const queue = this.speech.getContentQueue();
+        if (queue.length === old.length && queue.every((utterance, i) => utterance === old[i])) return index;
+        const piece = old[index] && this.piecesOf(old[index])[0];
+        const locator = piece && this.locatorFor(piece);
+        return locator ? this.startIndex(queue, locator) : 0;
     }
 
     // The index in `queue` of the utterance under the press, or -1.
@@ -545,9 +579,10 @@ export class ReadAloudNavigator {
             this.turning = undefined;
             if (turned) {
                 this.pausedBefore = { ...turning, current: true };
-                this.notifyUtterance(next);
+                this.notifyUtterance(this.speech.getContentQueue()[turning.index]);
             } else {
-                this.speakFrom(index);
+                this.pausedBefore = { ...turning, current: true };
+                void this.resumePaused(this.pausedBefore);
             }
             this.notifyState();
         };
