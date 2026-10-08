@@ -36,6 +36,8 @@ What is read at once, and what is highlighted, depends on the navigator:
 | `WebPubNavigator` | One resource at a time | Utterance and word | Pages turned as needed |
 | `DivinaNavigator` | One page at a time | None | Page by page |
 
+The word is highlighted, and `wordChanged` called, only with voices `@readium/speech` lists as reporting word boundaries. Voices listed without them may still report some, but unreliably, so they're ignored, and pages are turned by timing the speech instead.
+
 ## Using another engine
 
 Any `ReadiumSpeechPlaybackEngine` can be given in the `engine` configuration, for instance a `SpeechServerEngine` speaking with a [Readium Speech Server](https://github.com/readium/speech-server):

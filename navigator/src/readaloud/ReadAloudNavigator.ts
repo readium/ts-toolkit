@@ -342,6 +342,8 @@ export class ReadAloudNavigator {
             this.notifyUtterance();
         });
         on("boundary", event => {
+            // Voices listed without boundaries may still send them, but unreliably (e.g. out of order after a pause).
+            if (!this.sendsBoundaries()) return;
             // Some voices report zero-length boundaries, which would highlight the whole element.
             if (event.detail?.name !== "word" || !event.detail.locate || !event.detail.word?.trim()) return;
             const locate = event.detail.locate as LocatorOptions;
