@@ -143,6 +143,8 @@ export class ReadAloudNavigator {
     // Whether the unit being loaded waits paused once ready, rather than speaking.
     private loadPaused = false;
     private loadToken = 0;
+    // Settles the pending wait for speech's "ready", which never comes once stopped or destroyed.
+    private settleReady?: () => void;
     private lastState: ReadAloudState = "idle";
 
     constructor(
@@ -228,6 +230,7 @@ export class ReadAloudNavigator {
 
     stop(): void {
         this.loadToken++;
+        this.settleReady?.();
         this.detached = false;
         this.pausedBefore = undefined;
         this.turning = undefined;
@@ -310,6 +313,7 @@ export class ReadAloudNavigator {
 
     async destroy(): Promise<void> {
         this.loadToken++;
+        this.settleReady?.();
         this.pausedBefore = undefined;
         this.turning = undefined;
         this.unsubscribers.forEach(unsubscribe => unsubscribe());
@@ -425,13 +429,24 @@ export class ReadAloudNavigator {
         const token = ++this.loadToken;
         this.loadPaused = false;
         this.setLoading(true);
-        await new Promise<void>(resolve => {
-            const off = this.speech.on("ready", () => { off(); resolve(); });
-            this.unsubscribers.push(off);
-        });
+        await this.untilReady();
         if (token !== this.loadToken) return false;
         this.setLoading(false);
         return !this.loadPaused;
+    }
+
+    // Speech's next "ready", or stopping or destroying, which also settles a previous wait.
+    private untilReady(): Promise<void> {
+        this.settleReady?.();
+        return new Promise<void>(resolve => {
+            const settle = () => {
+                off();
+                if (this.settleReady === settle) this.settleReady = undefined;
+                resolve();
+            };
+            const off = this.speech.on("ready", settle);
+            this.settleReady = settle;
+        });
     }
 
     // Moves the position playback resumes at by `offset` utterances, staying paused.
@@ -472,10 +487,7 @@ export class ReadAloudNavigator {
             if (token !== this.loadToken) return false;
             failures.forEach(failure => this.listeners.error?.(failure.error));
 
-            const ready = new Promise<void>(resolve => {
-                const off = this.speech.on("ready", () => { off(); resolve(); });
-                this.unsubscribers.push(off);
-            });
+            const ready = this.untilReady();
             await this.speech.loadGndContent(guided);
             if (token !== this.loadToken) return false;
             this.unit = unit;
