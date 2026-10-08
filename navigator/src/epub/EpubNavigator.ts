@@ -591,21 +591,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                     if(this._layout === Layout.fixed && (this.framePool as FXLFramePoolManager).doNotDisturb)
                         edata.doNotDisturb = true;
 
-                    if(this._layout === Layout.fixed
-                        && (
-                            this.currentProgression === ReadingProgression.rtl ||
-                            this.currentProgression === ReadingProgression.ltr
-                        )
-                    ) {
-                        if(this.framePool.currentFrames.length > 1) {
-                            // Spread page dimensions
-                            const cfs = this.framePool.currentFrames;
-                            if(edata.targetFrameSrc === cfs[this.currentProgression === ReadingProgression.rtl ? 0 : 1]?.source) {
-                                // The right page (screen-wise) was clicked, so we add the left page's width to the click's x
-                                edata.x += (cfs[this.currentProgression === ReadingProgression.rtl ? 1 : 0]?.iframe.contentWindow?.innerWidth ?? 0) * window.devicePixelRatio;
-                            }
-                        }
-                    }
+                    edata.x += this._spreadOffsetX(edata.targetFrameSrc);
 
                     const handled = key === "click" ? this.listeners.click(edata) : this.listeners.tap(edata);
                     if(handled) break;
@@ -893,6 +879,19 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         };
     }
 
+    /** The left page's width when `targetFrameSrc` is the right page (screen-wise) of a fixed-layout spread, else 0. */
+    private _spreadOffsetX(targetFrameSrc: string): number {
+        if (this._layout !== Layout.fixed || (
+            this.currentProgression !== ReadingProgression.rtl &&
+            this.currentProgression !== ReadingProgression.ltr
+        )) return 0;
+        const cfs = this.framePool.currentFrames;
+        if (cfs.length < 2) return 0;
+        const rtl = this.currentProgression === ReadingProgression.rtl;
+        if (targetFrameSrc !== cfs[rtl ? 0 : 1]?.source) return 0;
+        return (cfs[rtl ? 1 : 0]?.iframe.contentWindow?.innerWidth ?? 0) * window.devicePixelRatio;
+    }
+
     /**
      * Returns the first of `pieces` under the point of `event`, else the first containing the element it targets,
      * in the resource of the frame it comes from. Undefined when none does.
@@ -911,7 +910,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             const request: PointedPieceRequest = {
                 id,
                 cssSelector: event.cssSelector!,
-                x: event.x,
+                x: event.x - this._spreadOffsetX(event.targetFrameSrc),
                 y: event.y,
                 pieces: candidates.map(piece => [piece.text?.serialize(), getCssSelector(piece.locations)])
             };
