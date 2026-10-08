@@ -420,7 +420,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             case "progress": {
                 // The previous resource's frame can still report once moving to another, which would take its progress.
                 const frame = sourceFrame && this.framePool._frameFor(this.currentLocation.href.split("#")[0]);
-                if (frame && sourceFrame !== frame) break;
+                if (sourceFrame && sourceFrame !== frame) break;
                 this.syncLocation(data as ProgressionRange);
                 break;
             }

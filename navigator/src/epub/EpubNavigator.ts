@@ -628,7 +628,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             case "progress": {
                 // The previous resource's frame can still report once moving to another, which would take its progress.
                 const frame = sourceFrame instanceof FrameManager ? (this.framePool as FramePoolManager)._frameFor(this.currentLocation.href.split("#")[0]) : undefined;
-                if (frame && sourceFrame !== frame) break;
+                if (sourceFrame instanceof FrameManager && sourceFrame !== frame) break;
                 this.syncLocation(data as ProgressionRange);
                 break;
             }
