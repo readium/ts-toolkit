@@ -67,7 +67,8 @@ export class ColumnSnapper extends Snapper {
      * scrollLeft may be negative depending on the browser — Math.abs() normalizes it.
      */
     private normScroll(): number {
-        const raw = this.doc().scrollLeft || this.alreadyScrollLeft;
+        // The cached value only stands in for scrollLeft while a swipe transforms the document.
+        const raw = this.doc().scrollLeft || (this.doc().style.transform ? this.alreadyScrollLeft : 0);
         return this.rtl ? Math.abs(raw) : Math.max(0, this.wnd.scrollX > 0 ? this.wnd.scrollX : raw);
     }
 

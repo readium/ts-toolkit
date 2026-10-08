@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Breaking:** requires Node.js 24 or later
 
+### Fixed
+
+- In paginated reflowable documents, the progression reported on the first page after a swipe no longer is that of the page swiped from
+
 ## [2.8.5] – 2026-10-01
 
 ### Changed
