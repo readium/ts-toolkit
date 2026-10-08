@@ -709,7 +709,7 @@ export class ReadAloudNavigator {
         const timeout = setTimeout(done, GO_TIMEOUT);
         this.following = timeout;
         this.navigator.go(locator, false, ok => {
-            if (ok) this.shownHref = locator.href.split("#")[0];
+            if (ok && this.following === timeout) this.shownHref = locator.href.split("#")[0];
             done();
         });
     }
