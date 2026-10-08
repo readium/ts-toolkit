@@ -533,7 +533,7 @@ export class ReadAloudNavigator {
         let first = -1;
         let byText = -1;
         for (let i = 0; i < queue.length; i++) {
-            const pieces = this.piecesOf(queue[i]).filter(piece => piece.href === href);
+            const pieces = this.piecesOf(queue[i]).filter(piece => piece.href?.split("#")[0] === href);
             if (pieces.length === 0) continue;
             if (first === -1) first = i;
             if (selector && pieces.some(piece => piece.cssSelector === selector)) return i;
