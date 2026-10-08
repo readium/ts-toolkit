@@ -290,7 +290,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         ) ?? false;
     }
 
-    public eventListener(key: CommsEventKey | ManagerEventKey, data: unknown) {
+    public eventListener(key: CommsEventKey | ManagerEventKey, data: unknown, sourceFrame?: WebPubFrameManager) {
         switch (key) {
             case "_pong":
                 this.listeners.frameLoaded(this.framePool.currentFrames[0]!.iframe.contentWindow!);
@@ -300,7 +300,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
                 this._watchTextLayoutInCurrentFrame(true);
                 break;
             case "text_layout":
-                if (this._textLayoutFrame) this._textLayoutWatch?.cb(data as TextLayout);
+                if (sourceFrame && sourceFrame === this._textLayoutFrame) this._textLayoutWatch?.cb(data as TextLayout);
                 break;
             case "pointed_piece": {
                 const { id, index } = data as PointedPieceResponse;
@@ -458,11 +458,12 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     }
 
     private attachListener() {
-        if (this.framePool.currentFrames[0]?.msg) {
-            this.framePool.currentFrames[0].msg.listener = (key: CommsEventKey | ManagerEventKey, value: unknown) => {
-                this.eventListener(key, value);
-            };
-        }
+        const vframes = this.framePool.currentFrames.filter(f => !!f) as WebPubFrameManager[];
+        vframes.forEach(f => {
+            if(f.msg) f.msg.listener = (key: CommsEventKey | ManagerEventKey, value: unknown) => {
+                this.eventListener(key, value, f);
+            }
+        })
         this._reapplyDecorationsToCurrentFrame();
         this._watchTextLayoutInCurrentFrame();
     }
@@ -696,7 +697,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         const target = watch && frame && this.currentLocation?.href.split("#")[0] === watch.href ? frame : undefined;
         if (target === this._textLayoutFrame && !resend) return;
         const previous = this._textLayoutFrame;
-        if (previous && previous !== target) previous.msg?.send("watch_text_layout", []);
+        if (previous && previous !== target && !previous.isDestroyed) previous.msg?.send("watch_text_layout", []);
         this._textLayoutFrame = target;
         if (target && watch) target.msg?.send("watch_text_layout", watch.pieces);
     }
