@@ -46,6 +46,9 @@ export interface WebPubNavigatorListeners {
     peripheral: (data: KeyboardPeripheralEventData) => void;
 }
 
+// Expired comms callbacks are dropped, never called.
+const POINTED_PIECE_TIMEOUT = 1000;
+
 const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorListeners => ({
     frameLoaded: listeners.frameLoaded || (() => {}),
     positionChanged: listeners.positionChanged || (() => {}),
@@ -666,8 +669,10 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         if (candidates.length === 0) return undefined;
 
         const id = `${++this._pointedPieceRequestId}`;
+        let timeout: ReturnType<typeof setTimeout> | undefined;
         const index = await new Promise<number>(resolve => {
             this._pointedPieceRequests.set(id, resolve);
+            timeout = setTimeout(() => resolve(-1), POINTED_PIECE_TIMEOUT);
             const request: PointedPieceRequest = {
                 id,
                 cssSelector: event.cssSelector!,
@@ -679,6 +684,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             const sent = frames[i].msg?.send("pointed_piece", request, () => resolve(-1));
             if (!sent) resolve(-1);
         });
+        clearTimeout(timeout);
         this._pointedPieceRequests.delete(id);
         return candidates[index];
     }
