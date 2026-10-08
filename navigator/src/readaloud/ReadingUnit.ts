@@ -9,7 +9,8 @@ export interface ReadingUnit {
 
 /**
  * Splits the publication into reading units: the displayed spread for fixed layouts, Divina excepted,
- * and a single resource otherwise. Spreads are only known to the navigator, so it's moved to find them.
+ * and a single resource otherwise. Spreads are only known to the navigator, so it's moved to find them;
+ * FXL navigators update their viewport synchronously, so it's read without waiting for the callback.
  */
 export class ReadingUnits {
     private readonly spreads: boolean;
@@ -60,7 +61,6 @@ export class ReadingUnits {
         return this.spreads && (this.navigator.viewport?.readingOrder ?? []).includes(href);
     }
 
-    // FXL navigators update their viewport synchronously, so it's read without waiting for the callback.
     private move(edge: Link, link: Link, step: (cb: (ok: boolean) => void) => void) {
         if (this.displays(edge.href)) step(() => {});
         else this.navigator.go(link.locator, false, () => {});
