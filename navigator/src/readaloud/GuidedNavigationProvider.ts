@@ -57,7 +57,9 @@ export class PublicationGuidedNavigationProvider implements GuidedNavigationProv
             const children = object.children ? this.objectsIn(object.children, href, objectHref) : [];
             if (objectHref !== undefined && objectHref !== href) return children;
             if (children.length === 0 && !object.text && !object.textref && !object.imgref) return [];
-            return [new GuidedNavigationObject({ ...object, children: children.length > 0 ? children : undefined })];
+            // A fragment-only textref, as a resource's own document may use, is in that resource.
+            const textref = object.textref?.startsWith("#") ? href + object.textref : object.textref;
+            return [new GuidedNavigationObject({ ...object, textref, children: children.length > 0 ? children : undefined })];
         });
     }
 
