@@ -806,8 +806,9 @@ export class ReadAloudNavigator {
     private static rawOffset(text: string, collapsed: number): number {
         let count = 0;
         for (let i = 0; i < text.length; i++) {
+            if (/\s/.test(text[i]) && i > 0 && /\s/.test(text[i - 1])) continue;
             if (count === collapsed) return i;
-            if (!(/\s/.test(text[i]) && i > 0 && /\s/.test(text[i - 1]))) count++;
+            count++;
         }
         return text.length;
     }
