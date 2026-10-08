@@ -24,7 +24,8 @@ export type CommsEventKey =
     "decoration_activated" |
     "decoration_pointer_enter" |
     "decoration_pointer_leave" |
-    "text_layout";
+    "text_layout" |
+    "pointed_piece";
 
 export type CommsCommandKey =
     "_ping" |
@@ -57,7 +58,8 @@ export type CommsCommandKey =
     "scroll_protection" |
     "print_protection" |
     "timeline_entries" |
-    "watch_text_layout";
+    "watch_text_layout" |
+    "pointed_piece";
 ;
 
 export type SuspiciousActivityType = 

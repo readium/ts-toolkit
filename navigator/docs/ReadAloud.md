@@ -71,6 +71,28 @@ await readAloud.destroy();
 
 Voices are listed and set with `getVoices()`, `setVoice()` and `getCurrentVoice()`.
 
+### Reading from a click or tap
+
+`readFromPointer(event)` starts reading from the utterance under a click or tap in a displayed resource. Call it from the navigator's `tap` and `click` listeners while reading aloud is on. It loads the pressed resource when it isn't the one being read, for instance after pausing and turning pages.
+
+It resolves `false`, leaving playback untouched, when the press is on a link or another interactive element, on empty space, or on content that isn't read aloud. Handle the event as usual then:
+
+```ts
+const onPointer = async (event: FrameClickEvent) => {
+  if (readAloudIsOn && await readAloud.readFromPointer(event)) return;
+  handleTapClick(event); // Your own handling, e.g. turning pages
+};
+
+const listeners: EpubNavigatorListeners = {
+  ...
+  tap: (event) => { onPointer(event); return true; },
+  click: (event) => { onPointer(event); return true; },
+  ...
+};
+```
+
+As `readFromPointer` is asynchronous, the listeners return `true` and handle page turns themselves. It is supported by `EpubNavigator` and `WebPubNavigator`.
+
 ## Preferences
 
 `ReadAloudNavigator` follows the same preferences API as the navigators, with `submitPreferences()`, `settings` and `preferencesEditor`.

@@ -1,7 +1,9 @@
-import { Locator } from "@readium/shared";
+import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
 import { Comms } from "../comms/comms.ts";
 import { Module } from "./Module.ts";
 import { ReadiumWindow, nearestInteractiveElement } from "../helpers/dom.ts";
+import { rangeFromLocator } from "../helpers/locator.ts";
+import { getClientRectsNoOverlap, rectContainsPoint } from "../helpers/rect.ts";
 import { BulkCopyProtector, BulkCopyProtectionOptions } from "../protection/BulkCopyProtector.ts";
 import { SelectionAnalyzer, SelectionAnalyzerOptions } from "../protection/SelectionAnalyzer.ts";
 import { SuspiciousActivityType } from "../comms/index.ts";
@@ -18,8 +20,24 @@ export interface FrameClickEvent {
     cssSelector: string | undefined;
     targetElement: string;
     targetFrameSrc: string;
+    // The press is on rendered content (text, image, SVG, media), not on the empty space around it.
+    onContent: boolean;
     x: number;
     y: number;
+}
+
+// A piece is `[text, cssSelector]`, as `go_text` takes it.
+export interface PointedPieceRequest {
+    id: string;
+    cssSelector: string;
+    x: number;
+    y: number;
+    pieces: [unknown, string | undefined][];
+}
+
+export interface PointedPieceResponse {
+    id: string;
+    index: number;
 }
 
 export interface BasicTextSelection {
@@ -444,6 +462,7 @@ export class Peripherals extends Module {
             targetElement: (event.target as Element).outerHTML,
             interactiveElement: nearestInteractiveElement(event.target as Element)?.outerHTML,
             cssSelector: this.wnd._readium_cssSelectorGenerator.getCssSelector(event.target as Element),
+            onContent: this.isOnContent(event.target as Element, event.clientX, event.clientY),
         } as FrameClickEvent);
 
         this.pointerMoved = false;
@@ -486,6 +505,55 @@ export class Peripherals extends Module {
         }
     }
     private readonly onClicker = this.onClick.bind(this);
+
+    private isOnContent(element: Element, x: number, y: number): boolean {
+        if (element.closest("img, svg, video, audio, canvas, object")) return true;
+        // Only the element's own text nodes, as the target is the innermost element under the point.
+        const range = this.wnd.document.createRange();
+        for (const node of Array.from(element.childNodes)) {
+            if (node.nodeType !== Node.TEXT_NODE || !node.textContent?.trim()) continue;
+            range.selectNodeContents(node);
+            if (Array.from(range.getClientRects()).some(rect => rectContainsPoint(rect, x, y, 0))) return true;
+        }
+        return false;
+    }
+
+    // The first piece under the point, else the first one containing the targeted element (e.g. an image).
+    private pointedPiece({ cssSelector, x, y, pieces }: PointedPieceRequest): number {
+        const target = this.wnd.document.querySelector(cssSelector);
+        if (!target) return -1;
+        const targetRange = this.wnd.document.createRange();
+        targetRange.selectNode(target);
+        const pixelRatio = this.wnd.devicePixelRatio;
+        let containing = -1;
+        for (let i = 0; i < pieces.length; i++) {
+            const [text, selector] = pieces[i];
+            const range = rangeFromLocator(this.wnd.document, new Locator({
+                href: this.wnd.location.href,
+                type: "text/html",
+                text: LocatorText.deserialize(text),
+                locations: selector ? new LocatorLocations({
+                    otherLocations: new Map([["cssSelector", selector]])
+                }) : undefined
+            }));
+            if (!range || !range.intersectsNode(target)) continue;
+            if (getClientRectsNoOverlap(range, false).some(rect => rectContainsPoint(rect, x / pixelRatio, y / pixelRatio, 0))) return i;
+            if (
+                containing === -1 &&
+                range.compareBoundaryPoints(Range.START_TO_START, targetRange) <= 0 &&
+                range.compareBoundaryPoints(Range.END_TO_END, targetRange) >= 0
+            ) containing = i;
+        }
+        return containing;
+    }
+
+    private registerPointedPiece() {
+        this.comms.register("pointed_piece", Peripherals.moduleName, (data, ack) => {
+            const request = data as PointedPieceRequest;
+            this.comms.send("pointed_piece", { id: request.id, index: this.pointedPiece(request) } as PointedPieceResponse);
+            ack(true);
+        });
+    }
 
     private registerProtectionHandlers() {
         // Single handler for all content protection features
@@ -568,6 +636,7 @@ export class Peripherals extends Module {
 
         // Register protection handlers
         this.registerProtectionHandlers();
+        this.registerPointedPiece();
 
         // Core event listeners (always active)
         wnd.document.addEventListener("pointerdown", this.onPointerDown);

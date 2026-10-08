@@ -1,5 +1,5 @@
 import { Layout, Locator, Profile, getCssSelector } from "@readium/shared";
-import { TextLayout, TextLineStarts } from "@readium/navigator-html-injectables";
+import { FrameClickEvent, TextLayout, TextLineStarts } from "@readium/navigator-html-injectables";
 import {
     createLocator,
     filterByLanguages,
@@ -148,6 +148,7 @@ export class ReadAloudNavigator {
             readonly viewport?: VisualNavigatorViewport;
             readonly layout?: Layout;
             watchTextLayout?(locators: Locator[], cb: (layout: TextLayout) => void): () => void;
+            findPointedPiece?(event: FrameClickEvent, pieces: Locator[]): Promise<Locator | undefined>;
         },
         private readonly listeners: ReadAloudListeners = {},
         configuration: ReadAloudConfiguration = {}
@@ -189,6 +190,28 @@ export class ReadAloudNavigator {
         if (!from && state === "playing") return;
         this.detached = false;
         await this.start(from ?? this.navigator.currentLocator);
+    }
+
+    /**
+     * Starts reading from the utterance under a click or tap in a displayed resource, loading that resource when needed.
+     * Resolves false when the press isn't on content read aloud, or is on an interactive element, so the caller handles it.
+     */
+    async readFromPointer(event: FrameClickEvent): Promise<boolean> {
+        if (event.interactiveElement || !event.onContent || !this.navigator.findPointedPiece) return false;
+        const unit = this.unit;
+        const index = unit ? await this.pointedIndex(event, this.speech.getContentQueue()) : -1;
+        if (unit && index >= 0) {
+            this.detached = false;
+            return this.loadUnit(() => unit, () => index);
+        }
+        const href = this.navigator.currentLocator.href.split("#")[0];
+        // Content of the loaded unit that no utterance covers isn't read aloud.
+        if (unit?.links.some(link => link.href.split("#")[0] === href)) return false;
+        this.detached = false;
+        return this.loadUnit(() => this.units.around(href), async queue => {
+            const index = await this.pointedIndex(event, queue);
+            return index >= 0 ? index : this.startIndex(queue, this.navigator.currentLocator);
+        });
     }
 
     pause(): void {
@@ -398,7 +421,7 @@ export class ReadAloudNavigator {
     }
 
     // `find` gives the unit once speech is stopped, as finding it may move the navigator.
-    private async loadUnit(find: () => ReadingUnit | undefined, indexIn: (queue: ReadiumSpeechUtterance[]) => number, paused = false): Promise<boolean> {
+    private async loadUnit(find: () => ReadingUnit | undefined, indexIn: (queue: ReadiumSpeechUtterance[]) => number | Promise<number>, paused = false): Promise<boolean> {
         const token = ++this.loadToken;
         this.setLoading(true);
         this.pausedBefore = undefined;
@@ -433,8 +456,10 @@ export class ReadAloudNavigator {
             if (token !== this.loadToken) return false;
             this.setLoading(false);
 
+            const start = await indexIn(queue);
+            if (token !== this.loadToken) return false;
             this.watchLayout(queue);
-            const index = Math.min(Math.max(indexIn(queue), 0), queue.length - 1);
+            const index = Math.min(Math.max(start, 0), queue.length - 1);
             if (paused) {
                 this.pausedBefore = { unit, index, current: true };
                 this.notifyUtterance(queue[index]);
@@ -465,6 +490,14 @@ export class ReadAloudNavigator {
             if (byText === -1 && quote && (queue[i].plain ?? "").includes(quote)) byText = i;
         }
         return byText !== -1 ? byText : Math.max(first, 0);
+    }
+
+    // The index in `queue` of the utterance under the press, or -1.
+    private async pointedIndex(event: FrameClickEvent, queue: ReadiumSpeechUtterance[]): Promise<number> {
+        const pieces = queue.flatMap((utterance, index) => this.piecesOf(utterance).map(piece => ({ index, locator: this.locatorFor(piece) })))
+            .filter((piece): piece is { index: number; locator: Locator } => piece.locator !== undefined);
+        const found = await this.navigator.findPointedPiece?.(event, pieces.map(piece => piece.locator));
+        return pieces.find(piece => piece.locator === found)?.index ?? -1;
     }
 
     private piecesOf(utterance: ReadiumSpeechUtterance): LocatorOptions[] {

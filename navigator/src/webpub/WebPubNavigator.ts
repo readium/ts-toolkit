@@ -2,7 +2,7 @@ import { Feature, Link, Locator, LocatorText, Publication, ReadingProgression, L
 import { VisualNavigator, VisualNavigatorViewport, ProgressionRange, KeyboardPeripheralEventData } from "../Navigator.ts";
 import { Configurable } from "../preferences/Configurable.ts";
 import { WebPubFramePoolManager } from "./WebPubFramePoolManager.ts";
-import { BasicTextSelection, CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FrameClickEvent, KeyboardPeripheralEvent, ModuleName, SuspiciousActivityEvent, TextLayout, WebPubModules } from "@readium/navigator-html-injectables";
+import { BasicTextSelection, CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FrameClickEvent, KeyboardPeripheralEvent, ModuleName, SuspiciousActivityEvent, TextLayout, PointedPieceRequest, PointedPieceResponse, WebPubModules } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
 import { WebPubFrameManager } from "./WebPubFrameManager.ts";
 import { Decoration, DecorableNavigator, OnDecorationActivatedEvent, OnDecorationPointerEnterEvent, OnDecorationPointerLeaveEvent, DecorationObserver, DecoratorConfig, decorationsEqual, resolveDecorationForWire, supportsDecorationStyle as canRenderDecorationStyle, DecorationStyleType } from "../decorations/index.ts";
@@ -104,6 +104,8 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private _decorationResizeSelectors: Set<string>;
     private _textLayoutWatch?: { href: string; pieces: unknown[]; cb: (layout: TextLayout) => void };
     private _textLayoutFrame?: WebPubFrameManager;
+    private readonly _pointedPieceRequests = new Map<string, (index: number) => void>();
+    private _pointedPieceRequestId = 0;
 
     private webViewport: VisualNavigatorViewport = {
         readingOrder: [],
@@ -297,6 +299,11 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             case "text_layout":
                 if (this._textLayoutFrame) this._textLayoutWatch?.cb(data as TextLayout);
                 break;
+            case "pointed_piece": {
+                const { id, index } = data as PointedPieceResponse;
+                this._pointedPieceRequests.get(id)?.(index);
+                break;
+            }
             case "first_visible_locator":
                 const loc = Locator.deserialize(data as string);
                 if(!loc) break;
@@ -644,6 +651,36 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             this._textLayoutWatch = undefined;
             this._watchTextLayoutInCurrentFrame();
         };
+    }
+
+    /**
+     * Returns the first of `pieces` under the point of `event`, else the first containing the element it targets,
+     * in the resource of the frame it comes from. Undefined when none does.
+     */
+    public async findPointedPiece(event: FrameClickEvent, pieces: Locator[]): Promise<Locator | undefined> {
+        const frames = this.framePool.currentFrames.filter(f => !!f) as WebPubFrameManager[];
+        const i = frames.findIndex(frame => frame.source === event.targetFrameSrc);
+        const href = i >= 0 ? this.viewport.readingOrder[i] : undefined;
+        if (!href || !event.cssSelector) return undefined;
+        const candidates = pieces.filter(piece => piece.href.split("#")[0] === href);
+        if (candidates.length === 0) return undefined;
+
+        const id = `${++this._pointedPieceRequestId}`;
+        const index = await new Promise<number>(resolve => {
+            this._pointedPieceRequests.set(id, resolve);
+            const request: PointedPieceRequest = {
+                id,
+                cssSelector: event.cssSelector!,
+                x: event.x,
+                y: event.y,
+                pieces: candidates.map(piece => [piece.text?.serialize(), getCssSelector(piece.locations)])
+            };
+            // The reply is posted before the ack, so a pending request on ack got no reply.
+            const sent = frames[i].msg?.send("pointed_piece", request, () => resolve(-1));
+            if (!sent) resolve(-1);
+        });
+        this._pointedPieceRequests.delete(id);
+        return candidates[index];
     }
 
     // The previous frame stops watching, so only the displayed resource reports its layout.
