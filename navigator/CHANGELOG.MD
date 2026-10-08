@@ -5,12 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.12.0] – 2026-10-08
 
 ### Added
 
 - `GuidedNavigationProvider`, and `PublicationGuidedNavigationProvider` implementing it: the Guided Navigation objects of a resource, with textrefs qualified by its href. The publication's Guided Navigation document is used when every object with text can be located in the resource, by its textref or, for images of the reading order (Divina), its imgref, otherwise one is generated from the resource's markup with `@readium/guided-navigation`. Only the resource's objects are kept from a document covering the whole publication. With `generateFromMarkup`, it is always generated from the markup
 - `ReadAloudNavigator`: reads a publication aloud with a `@readium/speech` engine alongside the navigator displaying it, from the navigator's current position or a given locator, continuing into the next spread or resource. Sentences are reconstructed across resources (e.g. the pages of a fixed-layout spread), and listeners receive each utterance with one locator per piece, each in its own resource, and, with voices `@readium/speech` lists as reporting word boundaries, each spoken word's locator. The utterance and word are highlighted and the navigator follows them, turning pages as needed. Fixed layouts are read a displayed spread at a time, other publications one resource at a time. Divina is read page by page, and its utterances are located on their page. The Guided Navigation of neighbouring resources is fetched ahead, and released once reading moves away
+- `EpubNavigator.watchTextLayout()` and `WebPubNavigator.watchTextLayout()`: report where the text of locators in one reflowable resource starts each line or column along the scroll axis, with the viewport, again whenever that resource is scrolled or laid out again
+- `EpubNavigator.findPointedPiece()` and `WebPubNavigator.findPointedPiece()`: the first of the given locators under the point of a `FrameClickEvent`, else the first containing the element it targets
 - `ReadAloudPreferences`, `ReadAloudDefaults`, `ReadAloudSettings` and `ReadAloudPreferencesEditor`: speech's preferences, plus the utterance and word decoration styles (`false` for none), and `autoPause` also pausing on reaching another page (`page`) or spread (`spread`). In reflowable publications, `page` pauses on reaching the next set of columns or the next resource, and `spread` doesn't apply. Neither has an effect when scrolled
 
 ### Changed

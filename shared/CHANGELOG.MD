@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.8.0] – 2026-10-08
 
 ### Added
 
@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Publication.guideForLink` sends the link's href without its fragment as the `ref` template parameter
 - `Publication.guideForLink` fetches a non-templated Guided Navigation document once, rather than once per resource referencing it
+- `LocatorLocations.deserialize` keeps the `otherLocations` of a `LocatorLocations` from another realm (e.g. a frame), or structured-cloned
 
 ## [2.7.0] – 2026-10-01
 
