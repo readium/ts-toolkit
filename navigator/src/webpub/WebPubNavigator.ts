@@ -2,7 +2,7 @@ import { Feature, Link, Locator, LocatorText, Publication, ReadingProgression, L
 import { VisualNavigator, VisualNavigatorViewport, ProgressionRange, KeyboardPeripheralEventData } from "../Navigator.ts";
 import { Configurable } from "../preferences/Configurable.ts";
 import { WebPubFramePoolManager } from "./WebPubFramePoolManager.ts";
-import { BasicTextSelection, CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FrameClickEvent, KeyboardPeripheralEvent, ModuleName, SuspiciousActivityEvent, WebPubModules } from "@readium/navigator-html-injectables";
+import { BasicTextSelection, CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FrameClickEvent, KeyboardPeripheralEvent, ModuleName, SuspiciousActivityEvent, TextLayout, PointedPieceRequest, PointedPieceResponse, WebPubModules } from "@readium/navigator-html-injectables";
 import * as path from "path-browserify";
 import { WebPubFrameManager } from "./WebPubFrameManager.ts";
 import { Decoration, DecorableNavigator, OnDecorationActivatedEvent, OnDecorationPointerEnterEvent, OnDecorationPointerLeaveEvent, DecorationObserver, DecoratorConfig, decorationsEqual, resolveDecorationForWire, supportsDecorationStyle as canRenderDecorationStyle, DecorationStyleType } from "../decorations/index.ts";
@@ -45,6 +45,9 @@ export interface WebPubNavigatorListeners {
     contextMenu: (data: ContextMenuEvent) => void;
     peripheral: (data: KeyboardPeripheralEventData) => void;
 }
+
+// Expired comms callbacks are dropped, never called.
+const POINTED_PIECE_TIMEOUT = 1000;
 
 const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorListeners => ({
     frameLoaded: listeners.frameLoaded || (() => {}),
@@ -102,6 +105,11 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     private _decorationHoverState: Map<string, boolean> = new Map();
     private _decorationActivationConsumed = false;
     private _decorationResizeSelectors: Set<string>;
+    private _textLayoutWatch?: { href: string; pieces: unknown[]; cb: (layout: TextLayout) => void };
+    private _textLayoutFrame?: WebPubFrameManager;
+    private _navigationLocked = false;
+    private readonly _pointedPieceRequests = new Map<string, (index: number) => void>();
+    private _pointedPieceRequestId = 0;
 
     private webViewport: VisualNavigatorViewport = {
         readingOrder: [],
@@ -283,14 +291,25 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         ) ?? false;
     }
 
-    public eventListener(key: CommsEventKey | ManagerEventKey, data: unknown) {
+    public eventListener(key: CommsEventKey | ManagerEventKey, data: unknown, sourceFrame?: WebPubFrameManager) {
         switch (key) {
             case "_pong":
                 this.listeners.frameLoaded(this.framePool.currentFrames[0]!.iframe.contentWindow!);
                 this.listeners.positionChanged(this.currentLocation);
                 this._notifyTimelineChange(this.currentLocation);
                 this._reapplyDecorationsToCurrentFrame();
+                this._watchTextLayoutInCurrentFrame(true);
+                this._sendNavigationLock();
                 break;
+            case "text_layout":
+                // A frame being hidden after moving to another resource lays out again, collapsed.
+                if (sourceFrame && sourceFrame === this._textLayoutFrame && this.currentLocation.href.split("#")[0] === this._textLayoutWatch?.href) this._textLayoutWatch.cb(data as TextLayout);
+                break;
+            case "pointed_piece": {
+                const { id, index } = data as PointedPieceResponse;
+                this._pointedPieceRequests.get(id)?.(index);
+                break;
+            }
             case "first_visible_locator":
                 const loc = Locator.deserialize(data as string);
                 if(!loc) break;
@@ -340,7 +359,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
                     ) {
                         const origHref = element.attributes.getNamedItem("href")?.value!;
                         if (origHref.startsWith("#")) {
-                            this.go(this.currentLocation.copyWithLocations({
+                            if (!this._navigationLocked) this.go(this.currentLocation.copyWithLocations({
                                 fragments: [origHref.substring(1)]
                             }), false, () => { });
                         } else if(
@@ -374,7 +393,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
                                 const link = this.pub.readingOrder.findWithHref(hrefToCheck);
                                 if (link) {
-                                    this.goLink(link, false, () => { });
+                                    if (!this._navigationLocked) this.goLink(link, false, () => { });
                                 } else {
                                     console.warn(`Internal link not found in readingOrder: ${hrefToCheck}`);
                                     this.listeners.handleLocator(new Link({
@@ -400,9 +419,13 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             case "zoom":
                 this.listeners.zoom(data as number);
                 break;
-            case "progress":
+            case "progress": {
+                // The previous resource's frame can still report once moving to another, which would take its progress.
+                const frame = sourceFrame && this.framePool._frameFor(this.currentLocation.href.split("#")[0]);
+                if (sourceFrame && sourceFrame !== frame) break;
                 this.syncLocation(data as ProgressionRange);
                 break;
+            }
             case "content_protection":
                 const activity = data as SuspiciousActivityEvent;
                 this.listeners.contentProtection(activity.type, activity);
@@ -442,12 +465,15 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     }
 
     private attachListener() {
-        if (this.framePool.currentFrames[0]?.msg) {
-            this.framePool.currentFrames[0].msg.listener = (key: CommsEventKey | ManagerEventKey, value: unknown) => {
-                this.eventListener(key, value);
-            };
-        }
+        const vframes = this.framePool.currentFrames.filter(f => !!f) as WebPubFrameManager[];
+        vframes.forEach(f => {
+            if(f.msg) f.msg.listener = (key: CommsEventKey | ManagerEventKey, value: unknown) => {
+                this.eventListener(key, value, f);
+            }
+        })
         this._reapplyDecorationsToCurrentFrame();
+        this._watchTextLayoutInCurrentFrame();
+        this._sendNavigationLock();
     }
 
     private async apply() {
@@ -617,6 +643,84 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         for (const [group, hoverable] of this._decorationHoverState) {
             frame.msg.send("decoration_hoverable", { group, hoverable });
         }
+    }
+
+    /**
+     * Reports where the text of `locators`, all in one resource, starts each line along the scroll axis,
+     * with the viewport. Reported again whenever that resource is scrolled or laid out again.
+     * Replaces any previous watch, and returns a function that stops this one.
+     */
+    public watchTextLayout(locators: Locator[], cb: (layout: TextLayout) => void): () => void {
+        const watch = {
+            href: locators[0]?.href.split("#")[0] ?? "",
+            pieces: locators.map(locator => [locator.text?.serialize(), getCssSelector(locator.locations)]),
+            cb,
+        };
+        this._textLayoutWatch = watch;
+        this._watchTextLayoutInCurrentFrame(true);
+        return () => {
+            if (this._textLayoutWatch !== watch) return;
+            this._textLayoutWatch = undefined;
+            this._watchTextLayoutInCurrentFrame();
+        };
+    }
+
+    /**
+     * Locks or unlocks navigating in the content: scrolling and following its links.
+     * Calls to the navigator still move it.
+     */
+    public lockNavigation(locked: boolean): void {
+        this._navigationLocked = locked;
+        this._sendNavigationLock();
+    }
+
+    private _sendNavigationLock(): void {
+        this.framePool?.currentFrames[0]?.msg?.send("lock_navigation", this._navigationLocked);
+    }
+
+    /**
+     * Returns the first of `pieces` under the point of `event`, else the first containing the element it targets,
+     * in the resource of the frame it comes from. Undefined when none does.
+     */
+    public async findPointedPiece(event: FrameClickEvent, pieces: Locator[]): Promise<Locator | undefined> {
+        const frames = this.framePool.currentFrames.filter(f => !!f) as WebPubFrameManager[];
+        const i = frames.findIndex(frame => frame.source === event.targetFrameSrc);
+        const href = i >= 0 ? this.viewport.readingOrder[i] : undefined;
+        if (!href || !event.cssSelector) return undefined;
+        const candidates = pieces.filter(piece => piece.href.split("#")[0] === href);
+        if (candidates.length === 0) return undefined;
+
+        const id = `${++this._pointedPieceRequestId}`;
+        let timeout: ReturnType<typeof setTimeout> | undefined;
+        const index = await new Promise<number>(resolve => {
+            this._pointedPieceRequests.set(id, resolve);
+            timeout = setTimeout(() => resolve(-1), POINTED_PIECE_TIMEOUT);
+            const request: PointedPieceRequest = {
+                id,
+                cssSelector: event.cssSelector!,
+                x: event.x,
+                y: event.y,
+                pieces: candidates.map(piece => [piece.text?.serialize(), getCssSelector(piece.locations)])
+            };
+            // The reply is posted before the ack, so a pending request on ack got no reply.
+            const sent = frames[i].msg?.send("pointed_piece", request, () => resolve(-1));
+            if (!sent) resolve(-1);
+        });
+        clearTimeout(timeout);
+        this._pointedPieceRequests.delete(id);
+        return candidates[index];
+    }
+
+    // The previous frame stops watching, so only the displayed resource reports its layout.
+    private _watchTextLayoutInCurrentFrame(resend = false): void {
+        const frame = this.framePool?.currentFrames[0];
+        const watch = this._textLayoutWatch;
+        const target = watch && frame && this.currentLocation?.href.split("#")[0] === watch.href ? frame : undefined;
+        if (target === this._textLayoutFrame && !resend) return;
+        const previous = this._textLayoutFrame;
+        if (previous && previous !== target && !previous.isDestroyed) previous.msg?.send("watch_text_layout", []);
+        this._textLayoutFrame = target;
+        if (target && watch) target.msg?.send("watch_text_layout", watch.pieces);
     }
 
     private _handleDecorationActivated(data: DecorationActivatedEvent): boolean {

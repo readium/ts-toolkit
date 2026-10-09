@@ -349,6 +349,7 @@ export class DivinaNavigator extends VisualNavigator implements Configurable<Con
             cssSelector: undefined,
             targetElement: "",
             targetFrameSrc: "",
+            onContent: false,
             x: e.x,
             y: e.y
         };

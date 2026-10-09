@@ -1,9 +1,28 @@
+import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
 import { Comms } from "../../comms/index.ts";
 import { ReadiumWindow } from "../../helpers/dom.ts";
+import { rangeFromLocator } from "../../helpers/locator.ts";
 import { Module } from "../Module.ts";
 import { ModuleName } from "../ModuleLibrary.ts";
 
 const SNAPPER_STYLE_ID = "readium-snapper-style";
+const NAVIGATION_LOCK_STYLE_ID = "readium-navigation-lock-style";
+
+/** Where a watched piece of text starts anew along the scroll axis: a new line when scrolled, a new page when paginated. */
+export interface TextLineStarts {
+    /** Offsets in the piece's text, counting each run of whitespace as one character. */
+    offsets: number[];
+    /** Document-absolute px of those offsets along the scroll axis. */
+    starts: number[];
+}
+
+/** Payload of the `text_layout` event. */
+export interface TextLayout {
+    /** The viewport, in the same space as `TextLineStarts.starts`. */
+    viewport: { pos: number; size: number };
+    /** One entry per watched piece, `null` when it isn't in the document. Only sent once laid out again. */
+    pieces?: (TextLineStarts | null)[];
+}
 
 export abstract class Snapper extends Module {
     static readonly moduleName: ModuleName = "snapper";
@@ -14,6 +33,11 @@ export abstract class Snapper extends Module {
     protected static readonly CENTER_TOLERANCE = 0.01;
 
     private protected = false;
+    // The reader can't scroll or swipe, but the document can still be moved programmatically.
+    protected locked = false;
+
+    private watchedRanges: (Range | null)[] = [];
+    private textLayoutComms?: Comms;
 
     // Timeline fragment tracking
     protected timelineEntries: Map<string, Element> = new Map();
@@ -64,13 +88,9 @@ export abstract class Snapper extends Module {
         }
     }
 
-    /**
-     * Axis-appropriate, document-absolute leading-edge position of `el`. Subclasses with a
-     * scroll axis override this; `ColumnSnapper` doesn't use the cache (it has its own
-     * rect-based visibility test) so keeps this no-op default.
-     */
-    protected fragmentStart(_el: Element): number {
-        return 0;
+    /** Axis-appropriate, document-absolute leading-edge position of `el`. */
+    protected fragmentStart(el: Element): number {
+        return this.rectStart(el.getBoundingClientRect());
     }
 
     /**
@@ -80,6 +100,141 @@ export abstract class Snapper extends Module {
      */
     protected currentScrollExtent(): { pos: number; size: number } {
         return { pos: 0, size: 0 };
+    }
+
+    /**
+     * Document-absolute position of `rect`'s leading edge along the scroll axis, in the same
+     * space as `currentScrollExtent`.
+     */
+    protected rectStart(_rect: DOMRect): number {
+        return 0;
+    }
+
+    /** Where the line holding `rect` starts, in the same space as `rectStart`. */
+    protected lineStart(rect: DOMRect): number {
+        return this.rectStart(rect);
+    }
+
+    /** Registers `watch_text_layout`, which subclasses call from `mount` as they don't call `super.mount`. */
+    protected registerTextLayout(wnd: ReadiumWindow, comms: Comms, moduleName: ModuleName): void {
+        this.textLayoutComms = comms;
+        comms.register("watch_text_layout", moduleName, (data, ack) => {
+            this.watchedRanges = (Array.isArray(data) ? data : []).map(piece => Snapper.rangeOf(wnd, piece));
+            wnd.requestAnimationFrame(() => this.sendTextLayout(true));
+            ack(true);
+        });
+    }
+
+    /** Registers `lock_navigation`, which subclasses call from `mount` as they don't call `super.mount`. */
+    protected registerNavigationLock(wnd: ReadiumWindow, comms: Comms, moduleName: ModuleName): void {
+        comms.register("lock_navigation", moduleName, (data, ack) => {
+            this.locked = data === true;
+            wnd.document.getElementById(NAVIGATION_LOCK_STYLE_ID)?.remove();
+            if (this.locked) {
+                const style = wnd.document.createElement("style");
+                style.dataset.readium = "true";
+                style.id = NAVIGATION_LOCK_STYLE_ID;
+                // :root outranks the snappers' own overflow rules on html.
+                style.textContent = `
+                :root {
+                    overflow: hidden !important;
+                    touch-action: none !important;
+                }`;
+                wnd.document.head.appendChild(style);
+            }
+            ack(true);
+        });
+    }
+
+    protected unlockNavigation(wnd: ReadiumWindow): void {
+        this.locked = false;
+        wnd.document.getElementById(NAVIGATION_LOCK_STYLE_ID)?.remove();
+    }
+
+    protected unwatchTextLayout(): void {
+        this.watchedRanges = [];
+        this.textLayoutComms = undefined;
+    }
+
+    /** Sends the viewport, and the watched pieces' line starts when `measure`, while pieces are watched. */
+    protected sendTextLayout(measure = false): void {
+        if (!this.textLayoutComms?.ready || this.watchedRanges.length === 0) return;
+        const layout: TextLayout = { viewport: this.currentScrollExtent() };
+        if (measure) layout.pieces = this.watchedRanges.map(range => range ? this.lineStarts(range) : null);
+        this.textLayoutComms.send("text_layout", layout);
+    }
+
+    // A piece is `[text, cssSelector]`, as `go_text` takes it.
+    protected static rangeOf(wnd: ReadiumWindow, piece: unknown): Range | null {
+        const [text, cssSelector] = Array.isArray(piece) ? piece : [piece];
+        return rangeFromLocator(wnd.document, new Locator({
+            href: wnd.location.href,
+            type: "text/html",
+            text: LocatorText.deserialize(text),
+            locations: cssSelector ? new LocatorLocations({
+                otherLocations: new Map([["cssSelector", cssSelector]])
+            }) : undefined
+        })) ?? null;
+    }
+
+    // Starts only grow along the reading order, so bisecting finds every change without measuring each character.
+    private lineStarts(range: Range): TextLineStarts {
+        const doc = range.startContainer.ownerDocument!;
+        const result: TextLineStarts = { offsets: [], starts: [] };
+        const walker = doc.createTreeWalker(range.commonAncestorContainer, NodeFilter.SHOW_TEXT);
+        let node: Node | null = walker.currentNode.nodeType === Node.TEXT_NODE ? walker.currentNode : walker.nextNode();
+        let collapsed = 0;
+        let afterSpace = false;
+        for (; node; node = walker.nextNode()) {
+            if (!range.intersectsNode(node)) {
+                if (collapsed > 0) break;
+                continue;
+            }
+            const text = node.textContent ?? "";
+            const from = node === range.startContainer ? range.startOffset : 0;
+            const to = node === range.endContainer ? range.endOffset : text.length;
+            if (from >= to) continue;
+            // Offsets with each run of whitespace counted once, carried across text nodes.
+            const offsets: number[] = [];
+            for (let i = from; i < to; i++) {
+                offsets.push(collapsed);
+                const space = /\s/.test(text[i]);
+                if (!space || !afterSpace) collapsed++;
+                afterSpace = space;
+            }
+            const measure = (i: number): number | undefined => {
+                const charRange = doc.createRange();
+                charRange.setStart(node!, i);
+                charRange.setEnd(node!, i + 1);
+                const rect = charRange.getClientRects()[0];
+                return rect && (rect.width || rect.height) ? Math.round(this.lineStart(rect)) : undefined;
+            };
+            const push = (i: number, start: number) => {
+                if (result.starts.length > 0 && result.starts[result.starts.length - 1] === start) return;
+                result.offsets.push(offsets[i - from]);
+                result.starts.push(start);
+            };
+            const bisect = (a: number, startA: number, b: number, startB: number) => {
+                if (startA === startB) return;
+                if (b - a === 1) return push(b, startB);
+                let m = (a + b) >> 1;
+                let startM = measure(m);
+                while (startM === undefined && ++m < b) startM = measure(m);
+                if (startM === undefined) return push(b, startB);
+                bisect(a, startA, m, startM);
+                bisect(m, startM, b, startB);
+            };
+            let first = from;
+            let startFirst = measure(first);
+            while (startFirst === undefined && ++first < to) startFirst = measure(first);
+            if (startFirst === undefined) continue;
+            let last = to - 1;
+            let startLast = measure(last);
+            while (startLast === undefined && --last > first) startLast = measure(last);
+            push(first, startFirst);
+            if (startLast !== undefined) bisect(first, startFirst, last, startLast);
+        }
+        return result;
     }
 
     /**

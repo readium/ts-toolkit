@@ -1,9 +1,7 @@
-import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
 import { Comms } from "../../comms/comms.ts";
 import { ReadiumWindow, deselect, findFirstVisibleLocator } from "../../helpers/dom.ts";
 import { ModuleName } from "../ModuleLibrary.ts";
 import { Snapper } from "./Snapper.ts";
-import { rangeFromLocator } from "../../helpers/locator.ts";
 import { forceWebkitRecalc, isVerticalLR } from "../../helpers/document.ts";
 import { PatternAnalyzer } from "../../protection/PatternAnalyzer.ts";
 import { SCROLL_PROTECTION_CONFIG } from "../../protection/config.ts";
@@ -114,6 +112,12 @@ export class CJKVerticalSnapper extends Snapper {
         return { pos: Math.abs(this.doc().scrollLeft), size: this.wnd.innerWidth };
     }
 
+    // Measured from the leading edge, the right one in vertical-rl, so it stays put while scrolling.
+    protected rectStart(rect: DOMRect): number {
+        const scrolled = Math.abs(this.doc().scrollLeft);
+        return this.verticalLR ? rect.left + scrolled : scrolled + this.wnd.innerWidth - rect.right;
+    }
+
     private reportProgress(forcedFragmentId?: string) {
         if (!this.comms.ready) return;
         const scrollWidth = this.doc().scrollWidth;
@@ -132,6 +136,7 @@ export class CJKVerticalSnapper extends Snapper {
             fragmentId: forcedFragmentId !== undefined ? forcedFragmentId : this.currentTimelineFragment(),
             visibleFragmentIds: this.sortedVisibleFragmentIds()
         });
+        this.sendTextLayout();
     }
 
     private handleScroll = (_e: Event) => {
@@ -238,6 +243,7 @@ export class CJKVerticalSnapper extends Snapper {
                 this.resizeDebounce = null;
                 this.refreshFragmentStarts();
                 this.reportProgress();
+                this.sendTextLayout(true);
             }, 50);
         });
         this.resizeObserver.observe(wnd.document.body);
@@ -257,6 +263,9 @@ export class CJKVerticalSnapper extends Snapper {
             }
             this.doc().scrollLeft = current;
         });
+
+        this.registerTextLayout(wnd, comms, CJKVerticalSnapper.moduleName);
+        this.registerNavigationLock(wnd, comms, CJKVerticalSnapper.moduleName);
 
         comms.register("go_progression", CJKVerticalSnapper.moduleName, (data, ack) => {
             const position = data as number;
@@ -295,21 +304,8 @@ export class CJKVerticalSnapper extends Snapper {
             });
         });
 
-        comms.register("go_text", CJKVerticalSnapper.moduleName, (data: unknown | unknown[], ack) => {
-            let cssSelector = undefined;
-            if (Array.isArray(data)) {
-                if (data.length > 1) cssSelector = (data as unknown[])[1] as string;
-                data = data[0];
-            }
-            const text = LocatorText.deserialize(data);
-            const r = rangeFromLocator(this.wnd.document, new Locator({
-                href: wnd.location.href,
-                type: "text/html",
-                text,
-                locations: cssSelector ? new LocatorLocations({
-                    otherLocations: new Map([["cssSelector", cssSelector]])
-                }) : undefined
-            }));
+        comms.register("go_text", CJKVerticalSnapper.moduleName, (data, ack) => {
+            const r = Snapper.rangeOf(wnd, data);
             if (!r) { ack(false); return; }
             this.wnd.requestAnimationFrame(() => {
                 this.doc().scrollLeft += r.getBoundingClientRect().left - wnd.innerWidth / 2;
@@ -379,6 +375,8 @@ export class CJKVerticalSnapper extends Snapper {
 
     unmount(wnd: ReadiumWindow, comms: Comms): boolean {
         comms.unregisterAll(CJKVerticalSnapper.moduleName);
+        this.unwatchTextLayout();
+        this.unlockNavigation(wnd);
         this.resizeObserver.disconnect();
         if (this.handleScroll) wnd.removeEventListener("scroll", this.handleScroll);
         wnd.document.getElementById(CJK_VERTICAL_SNAPPER_STYLE_ID)?.remove();

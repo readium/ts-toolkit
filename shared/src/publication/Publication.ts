@@ -10,7 +10,7 @@ import { Metadata } from './Metadata.ts';
 import { EmptyFetcher, Fetcher } from '../fetcher/Fetcher.ts';
 import { PublicationCollection } from './PublicationCollection.ts';
 import { Resource } from '../fetcher/Resource.ts';
-import { GuidedNavigationDocument } from "./GuidedNavigation.ts";
+import { GuidedNavigationDocument, GuidedNavigationObject } from "./GuidedNavigation.ts";
 import { MediaType, URITemplate } from "../util/index.ts";
 import { Timeline } from './services/timeline/Timeline.ts';
 import { buildTimeline } from './services/timeline/index.ts';
@@ -21,6 +21,7 @@ export class Publication {
   public manifest: Manifest;
   private readonly fetcher: Fetcher = new EmptyFetcher();
   private _timeline: Timeline | undefined;
+  private readonly guides = new Map<string, Promise<GuidedNavigationDocument | undefined>>();
 
   // Shortcuts to manifest properties
   public readonly context?: Array<string>;
@@ -133,7 +134,12 @@ export class Publication {
       .filter(l => l !== undefined) as Locator[]; // Filter out failures
   }
 
-  public async guideForLink(link: Link): Promise<GuidedNavigationDocument | undefined> {
+  /**
+   * Fetches the Guided Navigation document for the given [link].
+   * With `skipAudio`, a document carrying `audioref`s (e.g. from media overlays) is skipped
+   * in favour of the manifest's global document.
+   */
+  public async guideForLink(link: Link, options?: { skipAudio?: boolean }): Promise<GuidedNavigationDocument | undefined> {
     const findGNLink = (l: Link): Link | undefined => l.alternates?.findWithMediaType(
       'application/guided-navigation+json'
     );
@@ -149,29 +155,48 @@ export class Publication {
       }
     }
 
-    if(!guidedNavigationLink) {
-      // Still unable to find a guided navigation link, try to use the manifest's global document
-      guidedNavigationLink = this.manifest.links?.findWithMediaType(
-        'application/guided-navigation+json'
-      );
+    if(guidedNavigationLink) {
+      const document = await this.fetchGuide(guidedNavigationLink, link);
+      if(!options?.skipAudio || !document || !hasAudioref(document.guided)) return document;
     }
 
-    // Unable to find any guided navigation Link, give up
-    if(!guidedNavigationLink) return;
+    // Try to use the manifest's global document
+    const globalLink = this.manifest.links?.findWithMediaType(
+      'application/guided-navigation+json'
+    );
 
-    let href = guidedNavigationLink.href;
+    // Unable to find any guided navigation Link, give up
+    if(!globalLink) return;
+
+    const document = await this.fetchGuide(globalLink, link);
+    if(options?.skipAudio && document && hasAudioref(document.guided)) return;
+    return document;
+  }
+
+  private fetchGuide(guidedNavigationLink: Link, link: Link): Promise<GuidedNavigationDocument | undefined> {
+    const href = guidedNavigationLink.href;
     if(guidedNavigationLink.templated) {
       // The manifest's guided navigation link is templated, expand it
       const template = new URITemplate(href);
       const params: { [param: string]: string } = {};
       if(template.parameters.has('ref')) {
-        // The template has a `ref` parameter that could be used to reduce the returned doc's size
-        params['ref'] = link.href;
+        // The `ref` parameter must match the resource's href exactly, without a fragment
+        params['ref'] = link.href.split('#')[0];
       }
-      href = new URITemplate(href).expand(params);
+      return this.loadGuide(template.expand(params));
     }
 
-    // Fetch the guided navigation document
+    // Several resources can share one document, so it's fetched once
+    let guide = this.guides.get(href);
+    if(!guide) {
+      guide = this.loadGuide(href);
+      this.guides.set(href, guide);
+      guide.catch(() => this.guides.delete(href));
+    }
+    return guide;
+  }
+
+  private async loadGuide(href: string): Promise<GuidedNavigationDocument | undefined> {
     const guidedNavigationJSON = (await this.get(new Link({
       href,
     })).readAsJSON());
@@ -185,4 +210,8 @@ export class Publication {
     // TODO warn about expanding templated links
     return this.fetcher.get(link);
   }
+}
+
+function hasAudioref(objects: GuidedNavigationObject[] | undefined): boolean {
+  return !!objects?.some(o => o.audioref !== undefined || hasAudioref(o.children));
 }

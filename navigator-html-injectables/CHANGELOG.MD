@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0] – 2026-10-09
+
+### Added
+
+- `FrameClickEvent.onContent`: whether the press is on rendered content (text, image, SVG, media), not on the empty space around it
+- `watch_text_layout` command and `text_layout` event (`TextLayout`, `TextLineStarts`): where watched pieces of text start each line when scrolled, or each page when paginated, along the scroll axis, with the viewport. Reported again whenever the document is scrolled or laid out again
+- `pointed_piece` command and event (`PointedPieceRequest`, `PointedPieceResponse`): the first of the given pieces of text under a point, else the first containing the pressed element
+- `lock_navigation` command: with `true`, the reader can no longer scroll or swipe the document, which commands still move; `false` unlocks it
+
+### Changed
+
+- **Breaking:** requires Node.js 24 or later
+
+### Fixed
+
+- In paginated reflowable documents, the progression reported on the first page after a swipe no longer is that of the page swiped from
+
 ## [2.8.5] – 2026-10-01
 
 ### Changed

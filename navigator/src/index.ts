@@ -8,3 +8,4 @@ export * from './helpers/index.ts';
 export * from './preferences/index.ts';
 export * from './css/index.ts';
 export * from './injection/index.ts';
+export * from './readaloud/index.ts';

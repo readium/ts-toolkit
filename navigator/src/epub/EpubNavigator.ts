@@ -2,7 +2,7 @@ import { Layout, Link, Locator, LocatorText, Profile, Publication, ReadingProgre
 import { Configurable, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../index.ts";
 import { FramePoolManager } from "./frame/FramePoolManager.ts";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager.ts";
-import { CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FXLModules, ModuleLibrary, ModuleName, ReflowableModules, BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent, KeyboardPeripheralEvent } from "@readium/navigator-html-injectables";
+import { CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FXLModules, ModuleLibrary, ModuleName, ReflowableModules, BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent, KeyboardPeripheralEvent, TextLayout, PointedPieceRequest, PointedPieceResponse } from "@readium/navigator-html-injectables";
 import { Decoration, OnDecorationActivatedEvent, OnDecorationPointerEnterEvent, OnDecorationPointerLeaveEvent, DecorationObserver, DecorableNavigator, DecoratorConfig, decorationsEqual, resolveDecorationForWire, supportsDecorationStyle as canRenderDecorationStyle, DecorationStyleType } from "../decorations/index.ts";
 import * as path from "path-browserify";
 import { FXLFrameManager } from "./fxl/FXLFrameManager.ts";
@@ -55,6 +55,9 @@ export interface EpubNavigatorListeners {
     peripheral: (data: KeyboardPeripheralEventData) => void;
     // showToc: () => void;
 }
+
+// Expired comms callbacks are dropped, never called.
+const POINTED_PIECE_TIMEOUT = 1000;
 
 const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListeners => ({
     frameLoaded: listeners.frameLoaded || (() => {}),
@@ -122,6 +125,11 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private _decorationHoverState: Map<string, boolean> = new Map();
     private _decorationActivationConsumed = false;
     private _decorationResizeSelectors: Set<string>;
+    private _textLayoutWatch?: { href: string; pieces: unknown[]; cb: (layout: TextLayout) => void };
+    private _textLayoutFrame?: FrameManager;
+    private _navigationLocked = false;
+    private readonly _pointedPieceRequests = new Map<string, (index: number) => void>();
+    private _pointedPieceRequestId = 0;
 
     private reflowViewport: VisualNavigatorViewport = {
         readingOrder: [],
@@ -491,7 +499,18 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 } else {
                     this._reapplyDecorationsToCurrentFrames();
                 }
+                this._watchTextLayoutInCurrentFrame(true);
+                this._sendNavigationLock();
                 break;
+            case "text_layout":
+                // A frame being hidden after moving to another resource lays out again, collapsed.
+                if (sourceFrame && sourceFrame === this._textLayoutFrame && this.currentLocation.href.split("#")[0] === this._textLayoutWatch?.href) this._textLayoutWatch.cb(data as TextLayout);
+                break;
+            case "pointed_piece": {
+                const { id, index } = data as PointedPieceResponse;
+                this._pointedPieceRequests.get(id)?.(index);
+                break;
+            }
             case "first_visible_locator":
                 const loc = Locator.deserialize(data as string);
                 if(!loc) break;
@@ -549,7 +568,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                     ) {
                         const origHref = element.attributes.getNamedItem("href")?.value!;
                         if (origHref.startsWith("#")) {
-                            this.go(this.currentLocation.copyWithLocations({
+                            if (!this._navigationLocked) this.go(this.currentLocation.copyWithLocations({
                                 fragments: [origHref.substring(1)]
                             }), false, () => { });
                         } else if(
@@ -561,7 +580,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                             this.listeners.handleLocator(new Link({
                                 href: origHref,
                             }).locator);
-                        } else {
+                        } else if (!this._navigationLocked) {
                             try {
                                 this.goLink(new Link({
                                     href: path.join(path.dirname(this.currentLocation.href), origHref)
@@ -578,21 +597,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                     if(this._layout === Layout.fixed && (this.framePool as FXLFramePoolManager).doNotDisturb)
                         edata.doNotDisturb = true;
 
-                    if(this._layout === Layout.fixed
-                        && (
-                            this.currentProgression === ReadingProgression.rtl ||
-                            this.currentProgression === ReadingProgression.ltr
-                        )
-                    ) {
-                        if(this.framePool.currentFrames.length > 1) {
-                            // Spread page dimensions
-                            const cfs = this.framePool.currentFrames;
-                            if(edata.targetFrameSrc === cfs[this.currentProgression === ReadingProgression.rtl ? 0 : 1]?.source) {
-                                // The right page (screen-wise) was clicked, so we add the left page's width to the click's x
-                                edata.x += (cfs[this.currentProgression === ReadingProgression.rtl ? 1 : 0]?.iframe.contentWindow?.innerWidth ?? 0) * window.devicePixelRatio;
-                            }
-                        }
-                    }
+                    edata.x += this._spreadOffsetX(edata.targetFrameSrc);
 
                     const handled = key === "click" ? this.listeners.click(edata) : this.listeners.tap(edata);
                     if(handled) break;
@@ -600,6 +605,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                     const oneQuarter = ((this._cframes.length === 2 ? this._cframes[0]!.window.innerWidth + this._cframes[1]!.window.innerWidth : this._cframes[0]!.window.innerWidth) * window.devicePixelRatio) / 4;
                     // open UI if middle screen is clicked/tapped
                     if (edata.x >= oneQuarter && edata.x <= oneQuarter * 3) this.listeners.miscPointer(1);
+                    if (this._navigationLocked) break;
                     if (edata.x < oneQuarter) this.goLeft(false, () => { }); // Go left if left quarter clicked
                     else if (edata.x > oneQuarter * 3) this.goRight(false, () => { }); // Go right if right quarter clicked
                 }
@@ -608,10 +614,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 this.listeners.miscPointer(data as number);
                 break;
             case "no_more":
-                this.changeResource(1);
+                if (!this._navigationLocked) this.changeResource(1);
                 break;
             case "no_less":
-                this.changeResource(-1);
+                if (!this._navigationLocked) this.changeResource(-1);
                 break;
             case "swipe":
                 // Swipe event
@@ -622,9 +628,13 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             case "zoom":
                 this.listeners.zoom(data as number);
                 break;
-            case "progress":
+            case "progress": {
+                // The previous resource's frame can still report once moving to another, which would take its progress.
+                const frame = sourceFrame instanceof FrameManager ? (this.framePool as FramePoolManager)._frameFor(this.currentLocation.href.split("#")[0]) : undefined;
+                if (sourceFrame instanceof FrameManager && sourceFrame !== frame) break;
                 this.syncLocation(data as ProgressionRange);
                 break;
+            }
             case "content_protection":
                 const activity = data as SuspiciousActivityEvent;
                 this.listeners.contentProtection(activity.type, activity);
@@ -685,6 +695,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             }
         })
         this._reapplyDecorationsToCurrentFrames();
+        this._watchTextLayoutInCurrentFrame();
+        this._sendNavigationLock();
     }
 
     private async apply() {
@@ -857,6 +869,100 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             const href = visibleHrefs[i];
             if (href) this._reapplyDecorationsToFrame(frame, href);
         });
+    }
+
+    /**
+     * Reports where the text of `locators`, all in one reflowable resource, starts each line or column
+     * along the scroll axis, with the viewport. Reported again whenever that resource is scrolled or laid out again.
+     * Replaces any previous watch, and returns a function that stops this one.
+     */
+    public watchTextLayout(locators: Locator[], cb: (layout: TextLayout) => void): () => void {
+        const watch = {
+            href: locators[0]?.href.split("#")[0] ?? "",
+            pieces: locators.map(locator => [locator.text?.serialize(), getCssSelector(locator.locations)]),
+            cb,
+        };
+        this._textLayoutWatch = watch;
+        this._watchTextLayoutInCurrentFrame(true);
+        return () => {
+            if (this._textLayoutWatch !== watch) return;
+            this._textLayoutWatch = undefined;
+            this._watchTextLayoutInCurrentFrame();
+        };
+    }
+
+    /**
+     * Locks or unlocks navigating in the content: scrolling, swiping, tapping its edges and following its links.
+     * Calls to the navigator still move it.
+     */
+    public lockNavigation(locked: boolean): void {
+        this._navigationLocked = locked;
+        this._sendNavigationLock();
+    }
+
+    // Fixed-layout frames don't scroll, and their swipes are reported as no_more and no_less.
+    private _sendNavigationLock(): void {
+        this._cframes.forEach(frame => {
+            if (frame instanceof FrameManager) frame.msg?.send("lock_navigation", this._navigationLocked);
+        });
+    }
+
+    /** The left page's width when `targetFrameSrc` is the right page (screen-wise) of a fixed-layout spread, else 0. */
+    private _spreadOffsetX(targetFrameSrc: string): number {
+        if (this._layout !== Layout.fixed || (
+            this.currentProgression !== ReadingProgression.rtl &&
+            this.currentProgression !== ReadingProgression.ltr
+        )) return 0;
+        const cfs = this.framePool.currentFrames;
+        if (cfs.length < 2) return 0;
+        const rtl = this.currentProgression === ReadingProgression.rtl;
+        if (targetFrameSrc !== cfs[rtl ? 0 : 1]?.source) return 0;
+        return (cfs[rtl ? 1 : 0]?.iframe.contentWindow?.innerWidth ?? 0) * window.devicePixelRatio;
+    }
+
+    /**
+     * Returns the first of `pieces` under the point of `event`, else the first containing the element it targets,
+     * in the resource of the frame it comes from. Undefined when none does.
+     */
+    public async findPointedPiece(event: FrameClickEvent, pieces: Locator[]): Promise<Locator | undefined> {
+        const frames = this._cframes.filter(f => !!f) as (FrameManager | FXLFrameManager)[];
+        const i = frames.findIndex(frame => frame.source === event.targetFrameSrc);
+        const href = i >= 0 ? this.viewport.readingOrder[i] : undefined;
+        if (!href || !event.cssSelector) return undefined;
+        const candidates = pieces.filter(piece => piece.href.split("#")[0] === href);
+        if (candidates.length === 0) return undefined;
+
+        const id = `${++this._pointedPieceRequestId}`;
+        let timeout: ReturnType<typeof setTimeout> | undefined;
+        const index = await new Promise<number>(resolve => {
+            this._pointedPieceRequests.set(id, resolve);
+            timeout = setTimeout(() => resolve(-1), POINTED_PIECE_TIMEOUT);
+            const request: PointedPieceRequest = {
+                id,
+                cssSelector: event.cssSelector!,
+                x: event.x - this._spreadOffsetX(event.targetFrameSrc),
+                y: event.y,
+                pieces: candidates.map(piece => [piece.text?.serialize(), getCssSelector(piece.locations)])
+            };
+            // The reply is posted before the ack, so a pending request on ack got no reply.
+            const sent = frames[i].msg?.send("pointed_piece", request, () => resolve(-1));
+            if (!sent) resolve(-1);
+        });
+        clearTimeout(timeout);
+        this._pointedPieceRequests.delete(id);
+        return candidates[index];
+    }
+
+    // The previous frame stops watching, so only the displayed resource reports its layout.
+    private _watchTextLayoutInCurrentFrame(resend = false): void {
+        const frame = this._cframes[0];
+        const watch = this._textLayoutWatch;
+        const target = watch && frame instanceof FrameManager && this.currentLocation?.href.split("#")[0] === watch.href ? frame : undefined;
+        if (target === this._textLayoutFrame && !resend) return;
+        const previous = this._textLayoutFrame;
+        if (previous && previous !== target && !previous.isDestroyed) previous.msg?.send("watch_text_layout", []);
+        this._textLayoutFrame = target;
+        if (target && watch) target.msg?.send("watch_text_layout", watch.pieces);
     }
 
     private _handleDecorationActivated(data: DecorationActivatedEvent): boolean {

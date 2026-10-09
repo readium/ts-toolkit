@@ -4,6 +4,13 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@readium/decorator': workspace:*
+  '@readium/guided-navigation': workspace:*
+  '@readium/helpers': workspace:*
+  '@readium/navigator-html-injectables': workspace:*
+  '@readium/shared': workspace:*
+
 importers:
 
   .:
@@ -107,6 +114,9 @@ importers:
       '@readium/decorator':
         specifier: workspace:*
         version: link:../decorator
+      '@readium/guided-navigation':
+        specifier: workspace:*
+        version: link:../guided-navigation
       '@readium/helpers':
         specifier: workspace:*
         version: link:../helpers
@@ -116,6 +126,9 @@ importers:
       '@readium/shared':
         specifier: workspace:*
         version: link:../shared
+      '@readium/speech':
+        specifier: ^0.14.1
+        version: 0.14.1(typescript@5.9.3)
     devDependencies:
       '@readium/css':
         specifier: ^2.0.5
@@ -1188,6 +1201,10 @@ packages:
   '@readium/css@2.0.5':
     resolution: {integrity: sha512-rQWeDFSS9UfRTFFdWIhlko0jtkL9dOfNTqFjgMumlguromsyHC9/lGmbWDde7deEeE5ns+yBOSGKixMU0wqZ4A==}
 
+  '@readium/speech@0.14.1':
+    resolution: {integrity: sha512-yGqkbs4XtPhgY+cZ9qGFc5JOAPUTGz5a6gfFAdICcJG6E52XmEQCt4+Sl1F/cf4qoSl6vEbfVN01v0z+yR/lxQ==}
+    engines: {node: '>=24'}
+
   '@rollup/rollup-android-arm-eabi@4.55.2':
     resolution: {integrity: sha512-21J6xzayjy3O6NdnlO6aXi/urvSRjm6nCI6+nF6ra2YofKruGixN9kfT+dt55HVNwfDmpDHJcaS3JuP/boNnlA==}
     cpu: [arm]
@@ -1866,6 +1883,14 @@ packages:
   human-signals@2.1.0:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
     engines: {node: '>=10.17.0'}
+
+  i18next@26.4.2:
+    resolution: {integrity: sha512-RX+R0VLg13IbvRuJSxnqykUFS9vQZTl8wYpWPCIUDWVrSGjsQywB5Y+pjzrkboxGAuYfJZVH1InFTdgBdxq6ug==}
+    peerDependencies:
+      typescript: ^5 || ^6 || ^7
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   import-local@3.2.0:
     resolution: {integrity: sha512-2SPlun1JUPWoM6t3F0dw0FkCF/jWY8kttcY4f599GLTSjh2OCuuhdTkJQsEcZzBqbXZGKMK2OqW1oZsjtf/gQA==}
@@ -3923,6 +3948,16 @@ snapshots:
 
   '@readium/css@2.0.5': {}
 
+  '@readium/speech@0.14.1(typescript@5.9.3)':
+    dependencies:
+      '@readium/decorator': link:decorator
+      '@readium/guided-navigation': link:guided-navigation
+      '@readium/helpers': link:helpers
+      '@readium/shared': link:shared
+      i18next: 26.4.2(typescript@5.9.3)
+    transitivePeerDependencies:
+      - typescript
+
   '@rollup/rollup-android-arm-eabi@4.55.2':
     optional: true
 
@@ -4057,7 +4092,7 @@ snapshots:
 
   '@types/jsdom@30.0.0':
     dependencies:
-      '@types/node': 25.0.9
+      '@types/node': 26.6.3
       '@types/tough-cookie': 4.0.5
       parse5: 8.0.1
       undici-types: 8.11.2
@@ -4531,6 +4566,10 @@ snapshots:
   html-escaper@2.0.2: {}
 
   human-signals@2.1.0: {}
+
+  i18next@26.4.2(typescript@5.9.3):
+    optionalDependencies:
+      typescript: 5.9.3
 
   import-local@3.2.0:
     dependencies:

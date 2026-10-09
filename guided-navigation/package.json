@@ -1,6 +1,6 @@
 {
   "name": "@readium/guided-navigation",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "module",
   "description": "Guided Navigation document generation from HTML and XHTML content",
   "author": "readium",

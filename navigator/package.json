@@ -1,6 +1,6 @@
 {
   "name": "@readium/navigator",
-  "version": "2.11.1",
+  "version": "2.12.0",
   "type": "module",
   "description": "Next generation SDK for publications in Web Apps",
   "author": "readium",
@@ -41,7 +41,7 @@
     "types"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=24"
   },
   "scripts": {
     "clean": "rimraf types dist",
@@ -50,9 +50,11 @@
   },
   "dependencies": {
     "@readium/decorator": "workspace:*",
+    "@readium/guided-navigation": "workspace:*",
     "@readium/helpers": "workspace:*",
     "@readium/navigator-html-injectables": "workspace:*",
-    "@readium/shared": "workspace:*"
+    "@readium/shared": "workspace:*",
+    "@readium/speech": "^0.14.1"
   },
   "devDependencies": {
     "@readium/css": "^2.0.5",

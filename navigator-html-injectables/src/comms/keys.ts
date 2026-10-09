@@ -23,7 +23,9 @@ export type CommsEventKey =
     "keyboard_peripherals" |
     "decoration_activated" |
     "decoration_pointer_enter" |
-    "decoration_pointer_leave";
+    "decoration_pointer_leave" |
+    "text_layout" |
+    "pointed_piece";
 
 export type CommsCommandKey =
     "_ping" |
@@ -55,7 +57,10 @@ export type CommsCommandKey =
     "keyboard_peripherals" |
     "scroll_protection" |
     "print_protection" |
-    "timeline_entries";
+    "timeline_entries" |
+    "watch_text_layout" |
+    "pointed_piece" |
+    "lock_navigation";
 ;
 
 export type SuspiciousActivityType = 

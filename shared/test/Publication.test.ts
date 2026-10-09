@@ -8,6 +8,8 @@ import {
   Publication,
   ReadingProgression,
 } from '../src';
+import type { Fetcher } from '../src/fetcher/Fetcher';
+import type { Resource } from '../src/fetcher/Resource';
 
 describe('Publication Tests', () => {
   function createPublication(values?: {
@@ -247,6 +249,71 @@ describe('Publication Tests', () => {
         resources: new Links([new Link({ href: 'chapter.html', type: 'text/html' })]),
       });
       expect(pub.getCover()).toBeUndefined();
+    });
+  });
+  describe('guideForLink', () => {
+    const GN = 'application/guided-navigation+json';
+    const mediaOverlay = { guided: [{ textref: 'c1.xhtml#p1', audioref: 'a.mp3#t=0,1' }] };
+    const html = { guided: [{ textref: 'c1.xhtml#p1', text: 'Hello' }] };
+
+    function createGuidedPublication(documents: { [href: string]: unknown }, withAlternate: boolean) {
+      const requested: string[] = [];
+      const fetcher: Fetcher = {
+        links: () => [],
+        close: () => {},
+        get: (link: Link) => {
+          requested.push(link.href);
+          return { readAsJSON: async () => documents[link.href] } as unknown as Resource;
+        },
+      };
+      const chapter = new Link({
+        href: 'c1.xhtml',
+        type: 'application/xhtml+xml',
+        alternates: withAlternate
+          ? new Links([new Link({ href: 'mo.json?ref=c1.xhtml', type: GN })])
+          : undefined,
+      });
+      const publication = new Publication({
+        manifest: new Manifest({
+          metadata: new Metadata({ title: new LocalizedString('Title') }),
+          links: new Links([new Link({ href: 'gn.json{?ref}', type: GN, templated: true })]),
+          readingOrder: new Links([chapter]),
+        }),
+        fetcher,
+      });
+      return { publication, chapter, requested };
+    }
+
+    it('expands the global link with the href, without its fragment, as ref', async () => {
+      const { publication, chapter, requested } = createGuidedPublication({ 'gn.json?ref=c1.xhtml': html }, false);
+      const doc = await publication.guideForLink(new Link({ href: `${chapter.href}#frag`, type: chapter.type }));
+      expect(requested).toEqual(['gn.json?ref=c1.xhtml']);
+      expect(doc?.guided[0].text?.plain).toBe('Hello');
+    });
+
+    it('returns the alternate document by default, even with audioref', async () => {
+      const { publication, chapter, requested } = createGuidedPublication({ 'mo.json?ref=c1.xhtml': mediaOverlay }, true);
+      const doc = await publication.guideForLink(chapter);
+      expect(requested).toEqual(['mo.json?ref=c1.xhtml']);
+      expect(doc?.guided[0].audioref).toBe('a.mp3#t=0,1');
+    });
+
+    it('falls back to the global document with skipAudio when the alternate has audioref', async () => {
+      const { publication, chapter, requested } = createGuidedPublication({
+        'mo.json?ref=c1.xhtml': mediaOverlay,
+        'gn.json?ref=c1.xhtml': html,
+      }, true);
+      const doc = await publication.guideForLink(chapter, { skipAudio: true });
+      expect(requested).toEqual(['mo.json?ref=c1.xhtml', 'gn.json?ref=c1.xhtml']);
+      expect(doc?.guided[0].text?.plain).toBe('Hello');
+    });
+
+    it('returns undefined with skipAudio when every document has audioref', async () => {
+      const { publication, chapter } = createGuidedPublication({
+        'mo.json?ref=c1.xhtml': mediaOverlay,
+        'gn.json?ref=c1.xhtml': mediaOverlay,
+      }, true);
+      expect(await publication.guideForLink(chapter, { skipAudio: true })).toBeUndefined();
     });
   });
 });

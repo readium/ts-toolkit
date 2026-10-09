@@ -71,6 +71,24 @@ Then, `EpubNavigator` has this logic implemented:
 
 You can disable this second part using `return true` in `tap` and `click` listeners.
 
+The `FrameClickEvent` they receive includes:
+
+```ts
+{
+  x: number; // Multiplied by the device pixel ratio
+  y: number;
+  targetFrameSrc: string; // The source of the frame where the event originated
+  targetElement: string; // outerHTML of the pressed element
+  cssSelector: string | undefined; // CSS selector of the pressed element
+  interactiveElement: string | undefined; // outerHTML of the nearest interactive element (link, form control…), if any
+  onContent: boolean; // Whether the press is on rendered content (text, image, SVG, media), not on the empty space around it
+  defaultPrevented: boolean;
+  doNotDisturb: boolean;
+}
+```
+
+When reading aloud, pass these events to `ReadAloudNavigator.readFromPointer()` to start reading from the pressed content, see [Read Aloud](../ReadAloud.md#reading-from-a-click-or-tap).
+
 ```js
 const handleTapClick = (event) => {
   // Your own implementation

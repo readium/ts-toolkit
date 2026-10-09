@@ -232,6 +232,10 @@ export class WebPubFrameManager {
         return this.frame.getBoundingClientRect();
     }
 
+    get isDestroyed() {
+        return this.destroyed;
+    }
+
     get window() {
         if(this.destroyed || !this.frame.contentWindow) throw Error("Trying to use frame window when it doesn't exist");
         return this.frame.contentWindow;

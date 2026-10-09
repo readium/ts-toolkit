@@ -104,6 +104,11 @@ describe('GuidedNavigation Tests', () => {
       expect(description?.text?.plain).toBe('A cowboy is looking at the city.');
     });
 
+    it('parse a plain string as text', () => {
+      expect(GuidedNavigationDescription.deserialize('A cool image')?.text?.plain).toBe('A cool image');
+      expect(GuidedNavigationDescription.deserialize('')).toBeUndefined();
+    });
+
     it('rejects JSON with none of the refs nor text', () => {
       expect(GuidedNavigationDescription.deserialize({})).toBeUndefined();
       expect(GuidedNavigationDescription.deserialize({ role: ['image'] })).toBeUndefined();
