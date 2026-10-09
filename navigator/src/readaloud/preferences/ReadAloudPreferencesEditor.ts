@@ -1,5 +1,15 @@
 import { Layout } from "@readium/shared";
 import { SpeechPreferences, SpeechPreferencesEditor, SpeechSettings } from "@readium/speech";
+import type {
+  BooleanPreference as SpeechBooleanPreference,
+  EnumPreference as SpeechEnumPreference,
+  ExtractionFormat,
+  LanguageMode,
+  RangePreference as SpeechRangePreference,
+  Segmentation,
+  StringArrayPreference,
+  VerbosityPreset
+} from "@readium/speech";
 import { IPreferencesEditor } from "../../preferences/PreferencesEditor.ts";
 import { BooleanPreference, EnumPreference, Preference } from "../../preferences/Preference.ts";
 import { ReadAloudAutoPause, ReadAloudDecorationStyle, ReadAloudPreferences } from "./ReadAloudPreferences.ts";
@@ -54,17 +64,17 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
     this.own[key] = value;
   }
 
-  get format() { return this.speech.format; }
-  get inlineContextualization() { return this.speech.inlineContextualization; }
-  get verbosity() { return this.speech.verbosity; }
-  get skip() { return this.speech.skip; }
-  get contextualize() { return this.speech.contextualize; }
-  get language() { return this.speech.language; }
-  get segmentation() { return this.speech.segmentation; }
-  get pauseDuration() { return this.speech.pauseDuration; }
-  get rate() { return this.speech.rate; }
-  get pitch() { return this.speech.pitch; }
-  get volume() { return this.speech.volume; }
+  get format(): SpeechEnumPreference<ExtractionFormat> { return this.speech.format; }
+  get inlineContextualization(): SpeechBooleanPreference { return this.speech.inlineContextualization; }
+  get verbosity(): SpeechEnumPreference<VerbosityPreset> { return this.speech.verbosity; }
+  get skip(): StringArrayPreference { return this.speech.skip; }
+  get contextualize(): StringArrayPreference { return this.speech.contextualize; }
+  get language(): SpeechEnumPreference<LanguageMode> { return this.speech.language; }
+  get segmentation(): SpeechEnumPreference<Segmentation> { return this.speech.segmentation; }
+  get pauseDuration(): SpeechRangePreference<number> { return this.speech.pauseDuration; }
+  get rate(): SpeechRangePreference<number> { return this.speech.rate; }
+  get pitch(): SpeechRangePreference<number> { return this.speech.pitch; }
+  get volume(): SpeechRangePreference<number> { return this.speech.volume; }
 
   get autoPause(): EnumPreference<ReadAloudAutoPause> {
     return new EnumPreference<ReadAloudAutoPause>({

@@ -13,5 +13,11 @@ export {
     sortByQuality,
     sortVoicesByRegions
 } from "@readium/speech";
-export type { ExtractionFormat, LanguageMode, ReadiumSpeechPlaybackEngine, ReadiumSpeechVoice, Segmentation, VerbosityPreset } from "@readium/speech";
+export type { ExtractionFormat, LanguageMode, ReadiumSpeechPlaybackEngine, ReadiumSpeechPlaybackState, ReadiumSpeechVoice, Segmentation, SpeechSettings, VerbosityPreset } from "@readium/speech";
+export type {
+    BooleanPreference as SpeechBooleanPreference,
+    EnumPreference as SpeechEnumPreference,
+    RangePreference as SpeechRangePreference,
+    StringArrayPreference
+} from "@readium/speech";
 export type { GndRole } from "@readium/guided-navigation";
