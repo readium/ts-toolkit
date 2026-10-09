@@ -105,6 +105,14 @@ With `detachable: false` in the configuration, the reader can't move away while 
 const readAloud = new ReadAloudNavigator(navigator, listeners, { detachable: false });
 ```
 
+### Keeping the screen awake
+
+While playing, `ReadAloudNavigator` requests a screen wake lock, where the browser grants one, and releases it when paused or stopped. If your app manages the screen itself, disable it with `keepAwake: false`.
+
+```ts
+const readAloud = new ReadAloudNavigator(navigator, listeners, { keepAwake: false });
+```
+
 ## Preferences
 
 `ReadAloudNavigator` follows the same preferences API as the navigators, with `submitPreferences()`, `settings` and `preferencesEditor`.

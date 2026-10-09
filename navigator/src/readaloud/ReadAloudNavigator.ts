@@ -63,6 +63,8 @@ export interface ReadAloudConfiguration {
      * Otherwise navigating in the content is locked while playing. Defaults to true.
      */
     detachable?: boolean;
+    /** Whether the screen is kept awake while playing, where the browser grants a screen wake lock. Defaults to true. */
+    keepAwake?: boolean;
 }
 
 interface TurningPosition {
@@ -136,6 +138,9 @@ export class ReadAloudNavigator {
     // The reader moved away from the spoken text, which isn't followed until back in view.
     private detached = false;
     private navigationLocked = false;
+    private readonly keepAwake: boolean;
+    private wakeLockWanted = false;
+    private wakeLock?: Promise<WakeLockSentinel | undefined>;
     // The resource the spoken text was last shown in, to tell when the reader moves to another.
     private shownHref?: string;
     // The utterance pieces whose layout the navigator reports, and the latest report.
@@ -167,6 +172,7 @@ export class ReadAloudNavigator {
         configuration: ReadAloudConfiguration = {}
     ) {
         this.detachable = configuration.detachable ?? true;
+        this.keepAwake = configuration.keepAwake ?? true;
         this.pool = new GuidedNavigationPool(navigator.publication, configuration.provider ?? new PublicationGuidedNavigationProvider(navigator.publication));
         this.units = new ReadingUnits(navigator);
         this._preferences = new ReadAloudPreferences(configuration.preferences);
@@ -196,6 +202,7 @@ export class ReadAloudNavigator {
     async play(from?: Locator): Promise<void> {
         if (!from && this.loading) {
             this.loadPaused = false;
+            this.notifyState();
             return;
         }
         if (!from && this.turning) return;
@@ -236,8 +243,10 @@ export class ReadAloudNavigator {
     }
 
     pause(): void {
-        if (this.loading) this.loadPaused = true;
-        else if (this.turning) this.pauseTurning();
+        if (this.loading) {
+            this.loadPaused = true;
+            this.notifyState();
+        } else if (this.turning) this.pauseTurning();
         else if (!this.pausedBefore) this.speech.pause();
     }
 
@@ -247,8 +256,8 @@ export class ReadAloudNavigator {
         this.attach();
         this.pausedBefore = undefined;
         this.turning = undefined;
-        this.setLoading(false);
         this.speech.stop();
+        this.setLoading(false);
     }
 
     /** Moves to the next utterance, continuing into the next reading unit at the end of this one. */
@@ -338,6 +347,7 @@ export class ReadAloudNavigator {
         this.unwatchLayout = undefined;
         this.clearHighlights();
         this.lockNavigation(false);
+        this.holdWakeLock(false);
         await this.speech.destroy();
     }
 
@@ -419,6 +429,14 @@ export class ReadAloudNavigator {
             if (!this.pausedBefore && !this.turning) this.clearHighlights();
         });
         for (const type of ["idle", "loading", "ready"] as const) on(type, () => {});
+        if (this.keepAwake) {
+            // Browsers release screen wake locks while the document is hidden.
+            const reacquire = () => {
+                if (document.visibilityState === "visible" && this.wakeLockWanted) this.requestWakeLock();
+            };
+            document.addEventListener("visibilitychange", reacquire);
+            this.unsubscribers.push(() => document.removeEventListener("visibilitychange", reacquire));
+        }
     }
 
     private async start(from: Locator): Promise<void> {
@@ -939,9 +957,38 @@ export class ReadAloudNavigator {
         this.navigator.lockNavigation?.(locked);
     }
 
+    // Unsupported or denied (e.g. insecure context, battery saver) leaves the screen as it is.
+    private holdWakeLock(held: boolean) {
+        if (!this.keepAwake || held === this.wakeLockWanted) return;
+        this.wakeLockWanted = held;
+        if (held) this.requestWakeLock();
+        else this.releaseWakeLock();
+    }
+
+    private requestWakeLock() {
+        this.releaseWakeLock();
+        const request: Promise<WakeLockSentinel | undefined> | undefined = navigator.wakeLock?.request("screen").then(sentinel => {
+            // Browsers may also release it while visible (e.g. battery saver).
+            sentinel.addEventListener("release", () => {
+                if (this.wakeLock === request && document.visibilityState === "visible") this.requestWakeLock();
+            });
+            return sentinel;
+        }).catch(() => undefined);
+        this.wakeLock = request;
+    }
+
+    // Chained on the request, as a pending one can't be cancelled.
+    private releaseWakeLock() {
+        void this.wakeLock?.then(sentinel => sentinel?.release()).catch(() => {});
+        this.wakeLock = undefined;
+    }
+
     private notifyState() {
         const state = this.state;
-        this.lockNavigation(!this.detachable && (state === "playing" || state === "loading"));
+        // Not speech's own "loading", from which it settles paused without an event.
+        // Navigation stays locked through paused loads, as they move the reader once ready.
+        this.lockNavigation(!this.detachable && (this.loading || state === "playing"));
+        this.holdWakeLock(this.loading ? !this.loadPaused : state === "playing");
         if (state === this.lastState) return;
         this.lastState = state;
         this.listeners.stateChanged?.(state);
