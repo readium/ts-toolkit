@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - With `detachable: false`, `ReadAloudNavigator` no longer locks navigating in the content after submitting preferences that change its utterances while paused
+- In right-to-left paginated EPUBs, `ReadAloudNavigator` follows the spoken text past the first page instead of going back to it, as does going to a locator's text or fragment, via updated `@readium/navigator-html-injectables`
 
 ## [2.12.1] – 2026-10-09
 
