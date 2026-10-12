@@ -18,6 +18,9 @@ import {
 } from "@readium/speech";
 import { Navigator, VisualNavigatorViewport } from "../Navigator.ts";
 import { Decoration, DecorableNavigator } from "../decorations/index.ts";
+import type { EpubSettings } from "../epub/preferences/index.ts";
+import type { WebPubSettings } from "../webpub/preferences/index.ts";
+import type { DivinaSettings } from "../divina/preferences/index.ts";
 import { GuidedNavigationProvider, PublicationGuidedNavigationProvider } from "./GuidedNavigationProvider.ts";
 import { GuidedNavigationPool, ReadingUnit, ReadingUnits } from "./ReadingUnit.ts";
 import { SpeechProgress } from "./SpeechProgress.ts";
@@ -164,7 +167,7 @@ export class ReadAloudNavigator {
         private readonly navigator: Navigator & Partial<DecorableNavigator> & {
             readonly viewport?: VisualNavigatorViewport;
             readonly layout?: Layout;
-            readonly settings?: { readonly scrollPaddingTop?: number | null; readonly scrollPaddingBottom?: number | null };
+            readonly settings?: Readonly<EpubSettings> | Readonly<WebPubSettings> | Readonly<DivinaSettings>;
             watchTextLayout?(locators: Locator[], cb: (layout: TextLayout) => void): () => void;
             findPointedPiece?(event: FrameClickEvent, pieces: Locator[]): Promise<Locator | undefined>;
             lockNavigation?(locked: boolean): void;
@@ -807,8 +810,10 @@ export class ReadAloudNavigator {
     // Scroll padding keeps room for the UI overlaying the top and bottom of the content.
     private visibleViewport(): TextLayout["viewport"] | undefined {
         if (!this.viewport || this.layout() !== Layout.scrolled) return this.viewport;
-        const top = this.navigator.settings?.scrollPaddingTop ?? 0;
-        const bottom = this.navigator.settings?.scrollPaddingBottom ?? 0;
+        const settings = this.navigator.settings;
+        if (!settings || !("scrollPaddingTop" in settings)) return this.viewport;
+        const top = settings.scrollPaddingTop ?? 0;
+        const bottom = settings.scrollPaddingBottom ?? 0;
         return { pos: this.viewport.pos + top, size: Math.max(0, this.viewport.size - top - bottom) };
     }
 
