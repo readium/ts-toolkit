@@ -164,6 +164,7 @@ export class ReadAloudNavigator {
         private readonly navigator: Navigator & Partial<DecorableNavigator> & {
             readonly viewport?: VisualNavigatorViewport;
             readonly layout?: Layout;
+            readonly settings?: { readonly scrollPaddingTop?: number | null; readonly scrollPaddingBottom?: number | null };
             watchTextLayout?(locators: Locator[], cb: (layout: TextLayout) => void): () => void;
             findPointedPiece?(event: FrameClickEvent, pieces: Locator[]): Promise<Locator | undefined>;
             lockNavigation?(locked: boolean): void;
@@ -797,9 +798,18 @@ export class ReadAloudNavigator {
     // Whether `point` is out of view, or undefined when its layout isn't known.
     private isHidden(point: SpokenPoint): boolean | undefined {
         const start = this.lineStart(point);
-        if (start === undefined || !this.viewport) return undefined;
-        const { pos, size } = this.viewport;
+        const viewport = this.visibleViewport();
+        if (start === undefined || !viewport) return undefined;
+        const { pos, size } = viewport;
         return start < pos - LAYOUT_TOLERANCE || start >= pos + size - LAYOUT_TOLERANCE;
+    }
+
+    // Scroll padding keeps room for the UI overlaying the top and bottom of the content.
+    private visibleViewport(): TextLayout["viewport"] | undefined {
+        if (!this.viewport || this.layout() !== Layout.scrolled) return this.viewport;
+        const top = this.navigator.settings?.scrollPaddingTop ?? 0;
+        const bottom = this.navigator.settings?.scrollPaddingBottom ?? 0;
+        return { pos: this.viewport.pos + top, size: Math.max(0, this.viewport.size - top - bottom) };
     }
 
     private lineStart(point: SpokenPoint): number | undefined {
@@ -870,8 +880,9 @@ export class ReadAloudNavigator {
     private armBreak() {
         this.clearBreak();
         const utterance = this.speech.getCurrentContent();
-        if (!utterance || this.detached || this.sendsBoundaries() || !this.progress.speaking || !this.viewport) return;
-        const end = this.viewport.pos + this.viewport.size - LAYOUT_TOLERANCE;
+        const viewport = this.visibleViewport();
+        if (!utterance || this.detached || this.sendsBoundaries() || !this.progress.speaking || !viewport) return;
+        const end = viewport.pos + viewport.size - LAYOUT_TOLERANCE;
         let before = 0;
         for (const piece of this.piecesOf(utterance)) {
             const index = this.watchedPieces.get(piece);
