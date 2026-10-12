@@ -102,9 +102,12 @@ export abstract class Navigator {
             peripherals.push(PRINT);
         }
         
+        const protectionPeripherals = [...peripherals];
+
         // Add user peripherals with conflicting combos removed
         for (const userPeripheral of filteredUserPeripherals) {
-            // Filter out combos that conflict with existing peripherals
+            // Filter out combos that conflict with existing peripherals.
+            // User combos can share a key under different conditions; the first active one handles it.
             const filteredCombos = userPeripheral.keyCombos.filter((userCombo: KeyCombo) =>
                 !peripherals.some(existingPeripheral =>
                     existingPeripheral.keyCombos.some((existingCombo: KeyCombo) =>
@@ -112,7 +115,8 @@ export abstract class Navigator {
                         userCombo.ctrl === existingCombo.ctrl &&
                         userCombo.shift === existingCombo.shift &&
                         userCombo.alt === existingCombo.alt &&
-                        userCombo.meta === existingCombo.meta
+                        userCombo.meta === existingCombo.meta &&
+                        (protectionPeripherals.includes(existingPeripheral) || userCombo.condition === existingCombo.condition)
                     )
                 )
             );

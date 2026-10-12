@@ -40,7 +40,7 @@ For example, bare arrow keys or space should set `true` so cursor movement and b
 
 ### `condition`
 
-The `condition` property takes an `ObservableCondition` — a reactive value that the navigator subscribes to. When the condition emits `false`, the combo is removed from the iframe's active set and the browser handles the key natively. When it emits `true` again, the combo is re-registered automatically.
+The `condition` property takes an `ObservableCondition` — a reactive value that the navigator subscribes to. When the condition emits `false`, the combo is removed from the active set, in the content and outside it, and the browser handles the key natively. When it emits `true` again, the combo is re-registered automatically.
 
 ```typescript
 interface ObservableCondition {
@@ -49,7 +49,9 @@ interface ObservableCondition {
 }
 ```
 
-Because keyboard events are handled inside an iframe and `preventDefault()` must be called synchronously there, conditions cannot be plain functions evaluated after the fact — the navigator needs to know about state changes ahead of time and keep the iframe in sync.
+Several combos can share a key under different conditions; the first active one handles the event.
+
+Because `preventDefault()` must be called synchronously, including inside iframes, conditions cannot be plain functions evaluated after the fact — the navigator needs to know about state changes ahead of time and keep every active set in sync.
 
 #### Creating a condition
 
