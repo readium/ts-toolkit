@@ -28,11 +28,12 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
    * @param layout How the publication is displayed: `Layout.reflowable` for columns, `Layout.scrolled` when scrolled.
    */
   constructor(initialPreferences: ReadAloudPreferences, settings: ReadAloudSettings, speechSettings: SpeechSettings, layout: Layout) {
-    const { speakInContentLanguage, ...speechPreferences } = initialPreferences;
+    const { speakInContentLanguage, startInViewport, ...speechPreferences } = initialPreferences;
     this.speech = new SpeechPreferencesEditor(new SpeechPreferences({ ...speechPreferences, autoPause: undefined }), speechSettings);
     this.own = new ReadAloudPreferences({
       autoPause: initialPreferences.autoPause,
       speakInContentLanguage,
+      startInViewport,
       utteranceStyle: initialPreferences.utteranceStyle,
       wordStyle: initialPreferences.wordStyle
     });
@@ -45,6 +46,7 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
       ...this.speech.preferences,
       autoPause: this.own.autoPause,
       speakInContentLanguage: this.own.speakInContentLanguage,
+      startInViewport: this.own.startInViewport,
       utteranceStyle: this.own.utteranceStyle,
       wordStyle: this.own.wordStyle
     });
@@ -55,6 +57,7 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
     this.own = new ReadAloudPreferences({
       autoPause: null,
       speakInContentLanguage: null,
+      startInViewport: null,
       utteranceStyle: null,
       wordStyle: null
     });
@@ -97,6 +100,17 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
       isEffective: this.settings.language !== "none",
       onChange: (newValue) => {
         this.updatePreference("speakInContentLanguage", newValue ?? null);
+      }
+    });
+  }
+
+  get startInViewport(): BooleanPreference {
+    return new BooleanPreference({
+      initialValue: this.own.startInViewport,
+      effectiveValue: this.settings.startInViewport,
+      isEffective: this.layout !== Layout.fixed,
+      onChange: (newValue) => {
+        this.updatePreference("startInViewport", newValue ?? null);
       }
     });
   }

@@ -161,6 +161,9 @@ export class ReadAloudNavigator {
     private loadToken = 0;
     // Settles the pending wait for speech's "ready", which never comes once stopped or destroyed.
     private settleReady?: () => void;
+    // Settles the pending wait for the layout a session starts in view from, false once given up.
+    private settleLayout?: (laidOut: boolean) => void;
+    private watchedQueue: ReadiumSpeechUtterance[] = [];
     private lastState: ReadAloudState = "idle";
 
     constructor(
@@ -221,7 +224,7 @@ export class ReadAloudNavigator {
         }
         if (!from && state === "playing") return;
         this.attach();
-        await this.start(from ?? this.navigator.currentLocator);
+        await this.start(from ?? this.navigator.currentLocator, !from && this._settings.startInViewport);
     }
 
     /**
@@ -257,6 +260,7 @@ export class ReadAloudNavigator {
     stop(): void {
         this.loadToken++;
         this.settleReady?.();
+        this.settleLayout?.(false);
         this.attach();
         this.pausedBefore = undefined;
         this.turning = undefined;
@@ -340,6 +344,7 @@ export class ReadAloudNavigator {
     async destroy(): Promise<void> {
         this.loadToken++;
         this.settleReady?.();
+        this.settleLayout?.(false);
         this.pausedBefore = undefined;
         this.turning = undefined;
         this.unsubscribers.forEach(unsubscribe => unsubscribe());
@@ -443,8 +448,11 @@ export class ReadAloudNavigator {
         }
     }
 
-    private async start(from: Locator): Promise<void> {
-        await this.loadUnit(() => this.units.around(from.href.split("#")[0]), queue => this.startIndex(queue, from));
+    private async start(from: Locator, inViewport = false): Promise<void> {
+        await this.loadUnit(
+            () => this.units.around(from.href.split("#")[0]),
+            queue => inViewport ? this.viewportIndex(queue, from) : this.startIndex(queue, from)
+        );
     }
 
     private async resumePaused(paused: PausedPosition): Promise<void> {
@@ -508,6 +516,7 @@ export class ReadAloudNavigator {
     // `find` gives the unit once speech is stopped, as finding it may move the navigator.
     private async loadUnit(find: () => ReadingUnit | undefined, indexIn: (queue: ReadiumSpeechUtterance[]) => number | Promise<number>, paused = false): Promise<boolean> {
         const token = ++this.loadToken;
+        this.settleLayout?.(false);
         this.loadPaused = paused;
         this.setLoading(true);
         this.pausedBefore = undefined;
@@ -542,7 +551,7 @@ export class ReadAloudNavigator {
             if (token !== this.loadToken) return false;
             this.setLoading(false);
             const loaded = this.speech.getContentQueue();
-            this.watchLayout(loaded);
+            if (!ReadAloudNavigator.sameQueue(loaded, this.watchedQueue)) this.watchLayout(loaded);
             const index = Math.max(Math.min(this.indexAfterRebuild(queue, Math.max(start, 0)), loaded.length - 1), 0);
             if (this.loadPaused) {
                 this.pausedBefore = { unit, index, current: true };
@@ -576,10 +585,42 @@ export class ReadAloudNavigator {
         return byText !== -1 ? byText : Math.max(first, 0);
     }
 
+    // The first utterance starting in view, or else the one going on at its top, once `queue` is laid out.
+    private async viewportIndex(queue: ReadiumSpeechUtterance[], from: Locator): Promise<number> {
+        if (!this.navigator.watchTextLayout || this.layout() === Layout.fixed) return this.startIndex(queue, from);
+        const laidOut = this.untilLaidOut();
+        this.watchLayout(queue);
+        const viewport = await laidOut && this.visibleViewport();
+        if (!viewport) return this.startIndex(queue, from);
+        let above = -1;
+        for (let i = 0; i < queue.length; i++) {
+            const start = this.utteranceStart(queue[i]);
+            if (!start) continue;
+            const hidden = this.isHidden(start);
+            if (hidden === false) return i;
+            if (hidden && this.lineStart(start)! < viewport.pos) above = i;
+        }
+        return above >= 0 ? above : this.startIndex(queue, from);
+    }
+
+    // The next layout report with pieces, or false when none comes in time or the wait is given up.
+    private untilLaidOut(): Promise<boolean> {
+        this.settleLayout?.(false);
+        return new Promise<boolean>(resolve => {
+            const settle = (laidOut: boolean) => {
+                clearTimeout(timeout);
+                if (this.settleLayout === settle) this.settleLayout = undefined;
+                resolve(laidOut);
+            };
+            const timeout = setTimeout(() => settle(false), GO_TIMEOUT);
+            this.settleLayout = settle;
+        });
+    }
+
     // The index of `old[index]` in speech's queue, which submitted preferences may have rebuilt since `old`.
     private indexAfterRebuild(old: ReadiumSpeechUtterance[], index: number): number {
         const queue = this.speech.getContentQueue();
-        if (queue.length === old.length && queue.every((utterance, i) => utterance === old[i])) return index;
+        if (ReadAloudNavigator.sameQueue(queue, old)) return index;
         const piece = old[index] && this.piecesOf(old[index])[0];
         const locator = piece && this.locatorFor(piece);
         return locator ? this.startIndex(queue, locator) : 0;
@@ -765,6 +806,7 @@ export class ReadAloudNavigator {
         this.unwatchLayout?.();
         this.unwatchLayout = undefined;
         this.watchedPieces.clear();
+        this.watchedQueue = queue;
         this.lines = [];
         this.viewport = undefined;
         if (!this.navigator.watchTextLayout || this.layout() === Layout.fixed) return;
@@ -783,6 +825,11 @@ export class ReadAloudNavigator {
         this.shownHref = this.navigator.currentLocator.href.split("#")[0];
         this.viewport = layout.viewport;
         if (layout.pieces) this.lines = layout.pieces;
+        // Nothing is spoken yet while a session waits for the layout it starts from.
+        if (this.settleLayout) {
+            if (layout.pieces) this.settleLayout(true);
+            return;
+        }
         const spoken = this.spokenPoint();
         const hidden = spoken && this.isHidden(spoken);
         if (hidden === false) {
@@ -924,6 +971,10 @@ export class ReadAloudNavigator {
         return this.progress.speed(this.voiceName(), this.speech.settings.rate);
     }
 
+    private static sameQueue(a: ReadiumSpeechUtterance[], b: ReadiumSpeechUtterance[]): boolean {
+        return a.length === b.length && a.every((utterance, i) => utterance === b[i]);
+    }
+
     // The frame counts offsets with each run of whitespace as one character.
     private static collapsed(text: string): string {
         return text.replace(/\s+/g, " ");
@@ -957,7 +1008,7 @@ export class ReadAloudNavigator {
 
     // Speech knows nothing of pages and spreads, so it never auto-pauses at them itself.
     private static speechPreferences(preferences: IReadAloudPreferences): SpeechPreferences {
-        const { autoPause, speakInContentLanguage, utteranceStyle, wordStyle, ...speech } = preferences;
+        const { autoPause, speakInContentLanguage, startInViewport, utteranceStyle, wordStyle, ...speech } = preferences;
         const ownScope = autoPause === ReadAloudAutoPause.page || autoPause === ReadAloudAutoPause.spread;
         return new SpeechPreferences({ ...speech, autoPause: ownScope ? ReadAloudAutoPause.none : autoPause });
     }

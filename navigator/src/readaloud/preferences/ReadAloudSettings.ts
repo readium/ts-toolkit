@@ -15,6 +15,7 @@ export class ReadAloudSettings implements ConfigurableSettings {
   pauseDuration: number;
   autoPause: ReadAloudAutoPause;
   speakInContentLanguage: boolean;
+  startInViewport: boolean;
   rate: number;
   pitch: number;
   volume: number;
@@ -35,6 +36,7 @@ export class ReadAloudSettings implements ConfigurableSettings {
     this.pauseDuration = speech.pauseDuration;
     this.autoPause = preferences.autoPause ?? defaults.autoPause;
     this.speakInContentLanguage = preferences.speakInContentLanguage ?? defaults.speakInContentLanguage;
+    this.startInViewport = preferences.startInViewport ?? defaults.startInViewport;
     this.rate = speech.rate;
     this.pitch = speech.pitch;
     this.volume = speech.volume;

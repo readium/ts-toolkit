@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `ReadAloudNavigator` keeps the screen awake while playing, where the browser grants a screen wake lock. Disable it with `keepAwake: false` in its configuration
+- `startInViewport` read-aloud preference, to start a session at the first utterance starting in view rather than at the start of the resource
 
 ### Fixed
 
