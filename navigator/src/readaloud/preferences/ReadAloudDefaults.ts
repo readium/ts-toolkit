@@ -10,16 +10,18 @@ export class ReadAloudDefaults {
   autoPause: ReadAloudAutoPause;
   speakInContentLanguage: boolean;
   startInViewport: boolean;
+  keepCentered: boolean;
   utteranceStyle: ReadAloudDecorationStyle;
   wordStyle: ReadAloudDecorationStyle;
 
   constructor(defaults: IReadAloudDefaults = {}) {
-    const { autoPause, speakInContentLanguage, startInViewport, utteranceStyle, wordStyle, ...speech } = defaults;
+    const { autoPause, speakInContentLanguage, startInViewport, keepCentered, utteranceStyle, wordStyle, ...speech } = defaults;
     // Sentences are only joined across objects, and so across pages, in sentence segmentation.
     this.speech = { segmentation: "sentence", skip: ["pagebreak"], ...speech };
     this.autoPause = ensureEnumValue<ReadAloudAutoPause>(autoPause, ReadAloudAutoPause) || ReadAloudAutoPause.none;
     this.speakInContentLanguage = ensureBoolean(speakInContentLanguage) ?? false;
     this.startInViewport = ensureBoolean(startInViewport) ?? false;
+    this.keepCentered = ensureBoolean(keepCentered) ?? false;
     this.utteranceStyle = ensureDecorationStyle(utteranceStyle) ?? { type: DecorationStyleType.Highlight };
     this.wordStyle = ensureDecorationStyle(wordStyle) ?? { type: DecorationStyleType.Underline };
   }

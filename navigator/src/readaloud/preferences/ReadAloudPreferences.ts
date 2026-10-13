@@ -32,6 +32,7 @@ export interface IReadAloudPreferences {
   autoPause?: ReadAloudAutoPause | null,
   speakInContentLanguage?: boolean | null,
   startInViewport?: boolean | null,
+  keepCentered?: boolean | null,
   rate?: number | null,
   pitch?: number | null,
   volume?: number | null,
@@ -53,6 +54,7 @@ export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPr
   autoPause?: ReadAloudAutoPause | null;
   speakInContentLanguage?: boolean | null;
   startInViewport?: boolean | null;
+  keepCentered?: boolean | null;
   rate?: number | null;
   pitch?: number | null;
   volume?: number | null;
@@ -60,7 +62,7 @@ export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPr
   wordStyle?: ReadAloudDecorationStyle | null;
 
   constructor(preferences: IReadAloudPreferences = {}) {
-    const { speakInContentLanguage, startInViewport, ...speechPreferences } = preferences;
+    const { speakInContentLanguage, startInViewport, keepCentered, ...speechPreferences } = preferences;
     const speech = new SpeechPreferences({ ...speechPreferences, autoPause: undefined });
     this.format = speech.format;
     this.inlineContextualization = speech.inlineContextualization;
@@ -73,6 +75,7 @@ export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPr
     this.autoPause = ensureEnumValue<ReadAloudAutoPause>(preferences.autoPause, ReadAloudAutoPause);
     this.speakInContentLanguage = ensureBoolean(speakInContentLanguage);
     this.startInViewport = ensureBoolean(startInViewport);
+    this.keepCentered = ensureBoolean(keepCentered);
     this.rate = speech.rate;
     this.pitch = speech.pitch;
     this.volume = speech.volume;

@@ -389,7 +389,7 @@ export class ReadAloudNavigator {
             this.wordLocator = locator;
             this.decorate();
             const word = this.wordPoint(locate);
-            if (word && this.isHidden(word)) this.follow(locator);
+            if (word && this.isBehind(word)) this.follow(locator);
             this.listeners.wordChanged?.(locator, event.detail.word ?? "");
         });
         on("pause", () => {
@@ -734,7 +734,7 @@ export class ReadAloudNavigator {
         this.decorate();
         if (locators.length > 0) {
             const start = this.utteranceStart(utterance);
-            if (!start || this.isHidden(start) !== false) this.follow(locators[0]);
+            if (!start || this.isBehind(start) !== false) this.follow(locators[0]);
         } else {
             // Following a whole page again would reset its scroll position.
             const page = this.pageLocator();
@@ -832,10 +832,9 @@ export class ReadAloudNavigator {
         }
         const spoken = this.spokenPoint();
         const hidden = spoken && this.isHidden(spoken);
-        if (hidden === false) {
-            this.detached = false;
-        } else if (hidden && layout.pieces) {
-            // Laid out again, so the spoken text may have moved out of view.
+        if (hidden === false) this.detached = false;
+        if (spoken && this.isBehind(spoken) && layout.pieces) {
+            // Laid out again, so the spoken text may have moved past where it's followed.
             const locator = this.pointLocator(spoken);
             if (locator) this.follow(locator);
         } else if (hidden && this.detachable && this.following === undefined && !this.turning) {
@@ -852,6 +851,20 @@ export class ReadAloudNavigator {
         if (start === undefined || !viewport) return undefined;
         const { pos, size } = viewport;
         return start < pos - LAYOUT_TOLERANCE || start >= pos + size - LAYOUT_TOLERANCE;
+    }
+
+    // Whether the spoken text at `point` is to be followed: out of view, or below the middle when kept centered.
+    private isBehind(point: SpokenPoint): boolean | undefined {
+        const hidden = this.isHidden(point);
+        const middle = this.middle();
+        if (hidden !== false || middle === undefined) return hidden;
+        return this.lineStart(point)! >= middle;
+    }
+
+    // The line going to text centers when scrolled, where the spoken text is kept when centered.
+    private middle(): number | undefined {
+        if (!this.viewport || !this._settings.keepCentered || this.layout() !== Layout.scrolled) return undefined;
+        return this.viewport.pos + this.viewport.size / 2 + LAYOUT_TOLERANCE;
     }
 
     // Scroll padding keeps room for the UI overlaying the top and bottom of the content.
@@ -928,13 +941,13 @@ export class ReadAloudNavigator {
         });
     }
 
-    // Times the turn to the next line or column out of view, for voices without word boundaries.
+    // Times the turn to the next line or column to follow, for voices without word boundaries.
     private armBreak() {
         this.clearBreak();
         const utterance = this.speech.getCurrentContent();
         const viewport = this.visibleViewport();
         if (!utterance || this.detached || this.sendsBoundaries() || !this.progress.speaking || !viewport) return;
-        const end = viewport.pos + viewport.size - LAYOUT_TOLERANCE;
+        const end = this.middle() ?? viewport.pos + viewport.size - LAYOUT_TOLERANCE;
         let before = 0;
         for (const piece of this.piecesOf(utterance)) {
             const index = this.watchedPieces.get(piece);
@@ -1008,7 +1021,7 @@ export class ReadAloudNavigator {
 
     // Speech knows nothing of pages and spreads, so it never auto-pauses at them itself.
     private static speechPreferences(preferences: IReadAloudPreferences): SpeechPreferences {
-        const { autoPause, speakInContentLanguage, startInViewport, utteranceStyle, wordStyle, ...speech } = preferences;
+        const { autoPause, speakInContentLanguage, startInViewport, keepCentered, utteranceStyle, wordStyle, ...speech } = preferences;
         const ownScope = autoPause === ReadAloudAutoPause.page || autoPause === ReadAloudAutoPause.spread;
         return new SpeechPreferences({ ...speech, autoPause: ownScope ? ReadAloudAutoPause.none : autoPause });
     }
