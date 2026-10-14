@@ -79,7 +79,7 @@ Voices are listed and set with `getVoices()`, `setVoice()` and `getCurrentVoice(
 
 `readFromPointer(event)` starts reading from the utterance under a click or tap in a displayed resource. Call it from the navigator's `tap` and `click` listeners while reading aloud is on. It loads the pressed resource when it isn't the one being read, for instance after pausing and turning pages.
 
-It resolves `false`, leaving playback untouched, when the press is on a link or another interactive element, on empty space, or on content that isn't read aloud. Handle the event as usual then:
+It resolves `false`, leaving playback untouched, when the `readFromPointer` preference is off, or the press is on a link or another interactive element, on empty space, or on content that isn't read aloud. Handle the event as usual then:
 
 ```ts
 const onPointer = async (event: FrameClickEvent) => {
@@ -101,10 +101,10 @@ As `readFromPointer` is asynchronous, the listeners return `true` and handle pag
 
 By default, the reader can scroll, turn pages or follow links while reading aloud. The navigator then stops following the spoken text until the reader is back on it, or plays, moves to the next or previous utterance, or reads from a click or tap.
 
-With `detachable: false` in the configuration, the reader can't move away while playing: scrolling, swiping, tapping the edges and following links in the content are locked, and unlocked when paused or stopped. Read aloud still turns pages, and taps and clicks are still reported. Your own navigation, such as a table of contents or page buttons, isn't locked: check `readAloud.detachable` to disable it while playing. It is supported by `EpubNavigator` and `WebPubNavigator`.
+With the `detachable` preference set to `false`, the reader can't move away while playing: scrolling, swiping, tapping the edges and following links in the content are locked, and unlocked when paused or stopped. Read aloud still turns pages, and taps and clicks are still reported. Your own navigation, such as a table of contents or page buttons, isn't locked: check `readAloud.detachable` to disable it while playing. Changing it applies right away, also while playing. It is supported by `EpubNavigator` and `WebPubNavigator`.
 
 ```ts
-const readAloud = new ReadAloudNavigator(navigator, listeners, { detachable: false });
+const readAloud = new ReadAloudNavigator(navigator, listeners, { defaults: { detachable: false } });
 ```
 
 ### Keeping the screen awake
@@ -134,6 +134,8 @@ It has the preferences of `@readium/speech` (`rate`, `pitch`, `volume`, `verbosi
 - `speakInContentLanguage`: whether an utterance in another language than the selected voice's is spoken with a voice of its own language, `false` by default. It has no effect when `language` is `"none"`.
 - `startInViewport`: whether `play()` without a locator, when idle, starts at the first utterance starting in view rather than at the start of the resource, `false` by default. When none starts in view, it starts at the one going on at the top. It has no effect in fixed-layout publications.
 - `keepCentered`: whether, when scrolled, the spoken line is kept in the middle of the frame rather than followed once it goes out of view, `false` by default.
+- `detachable`: whether the reader can move away while reading aloud, `true` by default. See [Moving away while reading](#moving-away-while-reading).
+- `readFromPointer`: whether `readFromPointer()` starts reading from a click or tap, `true` by default. See [Reading from a click or tap](#reading-from-a-click-or-tap).
 - `utteranceStyle` and `wordStyle`: the [decoration style](./epub/Decorations.md) of the utterance and the word being spoken, `false` to not decorate them. A custom template is used by registering it in the `EpubNavigator` or `WebPubNavigator` configuration's `decoratorConfig.decorationTemplates` and referencing it by name, e.g. `{ type: "myTemplate" }`.
 
 Decorations are applied in the `readaloud-utterance` and `readaloud-word` groups.

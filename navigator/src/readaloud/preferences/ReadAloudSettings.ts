@@ -17,6 +17,8 @@ export class ReadAloudSettings implements ConfigurableSettings {
   speakInContentLanguage: boolean;
   startInViewport: boolean;
   keepCentered: boolean;
+  detachable: boolean;
+  readFromPointer: boolean;
   rate: number;
   pitch: number;
   volume: number;
@@ -39,6 +41,8 @@ export class ReadAloudSettings implements ConfigurableSettings {
     this.speakInContentLanguage = preferences.speakInContentLanguage ?? defaults.speakInContentLanguage;
     this.startInViewport = preferences.startInViewport ?? defaults.startInViewport;
     this.keepCentered = preferences.keepCentered ?? defaults.keepCentered;
+    this.detachable = preferences.detachable ?? defaults.detachable;
+    this.readFromPointer = preferences.readFromPointer ?? defaults.readFromPointer;
     this.rate = speech.rate;
     this.pitch = speech.pitch;
     this.volume = speech.volume;

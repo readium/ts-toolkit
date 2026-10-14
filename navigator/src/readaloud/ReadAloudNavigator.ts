@@ -61,11 +61,6 @@ export interface ReadAloudConfiguration {
     provider?: GuidedNavigationProvider;
     preferences?: IReadAloudPreferences;
     defaults?: IReadAloudDefaults;
-    /**
-     * Whether the reader can move away while reading aloud, which then stops following until back.
-     * Otherwise navigating in the content is locked while playing. Defaults to true.
-     */
-    detachable?: boolean;
     /** Whether the screen is kept awake while playing, where the browser grants a screen wake lock. Defaults to true. */
     keepAwake?: boolean;
 }
@@ -178,7 +173,6 @@ export class ReadAloudNavigator {
         private readonly listeners: ReadAloudListeners = {},
         configuration: ReadAloudConfiguration = {}
     ) {
-        this.detachable = configuration.detachable ?? true;
         this.keepAwake = configuration.keepAwake ?? true;
         this.pool = new GuidedNavigationPool(navigator.publication, configuration.provider ?? new PublicationGuidedNavigationProvider(navigator.publication));
         this.units = new ReadingUnits(navigator);
@@ -194,7 +188,9 @@ export class ReadAloudNavigator {
     }
 
     /** Whether the reader can move away while reading aloud. Otherwise the app keeps its own navigation from moving while playing. */
-    readonly detachable: boolean;
+    get detachable(): boolean {
+        return this._settings.detachable;
+    }
 
     get state(): ReadAloudState {
         if (this.loading) return "loading";
@@ -229,10 +225,10 @@ export class ReadAloudNavigator {
 
     /**
      * Starts reading from the utterance under a click or tap in a displayed resource, loading that resource when needed.
-     * Resolves false when the press isn't on content read aloud, or is on an interactive element, so the caller handles it.
+     * Resolves false when the `readFromPointer` preference is off, or the press isn't on content read aloud, or is on an interactive element, so the caller handles it.
      */
     async readFromPointer(event: FrameClickEvent): Promise<boolean> {
-        if (event.interactiveElement || !event.onContent || !this.navigator.findPointedPiece) return false;
+        if (!this._settings.readFromPointer || event.interactiveElement || !event.onContent || !this.navigator.findPointedPiece) return false;
         const unit = this.unit;
         const index = unit ? await this.pointedIndex(event, this.speech.getContentQueue()) : -1;
         if (unit && index >= 0) {
@@ -327,6 +323,7 @@ export class ReadAloudNavigator {
         await this.speech.submitPreferences(ReadAloudNavigator.speechPreferences(this._preferences));
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
         this.speech.setSpeakInContentLanguage(this._settings.speakInContentLanguage);
+        if (!this._settings.detachable && this.detached) this.attach();
         // Speech keeps its place in a rebuilt queue only while playing or paused itself, not while stopped here.
         const held = this.pausedBefore ?? this.turning;
         if (held) {
@@ -338,6 +335,7 @@ export class ReadAloudNavigator {
         if (this._preferencesEditor !== null) {
             this._preferencesEditor = new ReadAloudPreferencesEditor(this._preferences, this.settings, this.speech.settings, this.layout());
         }
+        this.notifyState();
         this.decorate();
     }
 
@@ -1021,7 +1019,7 @@ export class ReadAloudNavigator {
 
     // Speech knows nothing of pages and spreads, so it never auto-pauses at them itself.
     private static speechPreferences(preferences: IReadAloudPreferences): SpeechPreferences {
-        const { autoPause, speakInContentLanguage, startInViewport, keepCentered, utteranceStyle, wordStyle, ...speech } = preferences;
+        const { autoPause, speakInContentLanguage, startInViewport, keepCentered, detachable, readFromPointer, utteranceStyle, wordStyle, ...speech } = preferences;
         const ownScope = autoPause === ReadAloudAutoPause.page || autoPause === ReadAloudAutoPause.spread;
         return new SpeechPreferences({ ...speech, autoPause: ownScope ? ReadAloudAutoPause.none : autoPause });
     }

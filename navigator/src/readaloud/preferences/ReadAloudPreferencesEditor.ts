@@ -28,13 +28,15 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
    * @param layout How the publication is displayed: `Layout.reflowable` for columns, `Layout.scrolled` when scrolled.
    */
   constructor(initialPreferences: ReadAloudPreferences, settings: ReadAloudSettings, speechSettings: SpeechSettings, layout: Layout) {
-    const { speakInContentLanguage, startInViewport, keepCentered, ...speechPreferences } = initialPreferences;
+    const { speakInContentLanguage, startInViewport, keepCentered, detachable, readFromPointer, ...speechPreferences } = initialPreferences;
     this.speech = new SpeechPreferencesEditor(new SpeechPreferences({ ...speechPreferences, autoPause: undefined }), speechSettings);
     this.own = new ReadAloudPreferences({
       autoPause: initialPreferences.autoPause,
       speakInContentLanguage,
       startInViewport,
       keepCentered,
+      detachable,
+      readFromPointer,
       utteranceStyle: initialPreferences.utteranceStyle,
       wordStyle: initialPreferences.wordStyle
     });
@@ -49,6 +51,8 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
       speakInContentLanguage: this.own.speakInContentLanguage,
       startInViewport: this.own.startInViewport,
       keepCentered: this.own.keepCentered,
+      detachable: this.own.detachable,
+      readFromPointer: this.own.readFromPointer,
       utteranceStyle: this.own.utteranceStyle,
       wordStyle: this.own.wordStyle
     });
@@ -61,6 +65,8 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
       speakInContentLanguage: null,
       startInViewport: null,
       keepCentered: null,
+      detachable: null,
+      readFromPointer: null,
       utteranceStyle: null,
       wordStyle: null
     });
@@ -125,6 +131,28 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
       isEffective: this.layout === Layout.scrolled,
       onChange: (newValue) => {
         this.updatePreference("keepCentered", newValue ?? null);
+      }
+    });
+  }
+
+  get detachable(): BooleanPreference {
+    return new BooleanPreference({
+      initialValue: this.own.detachable,
+      effectiveValue: this.settings.detachable,
+      isEffective: true,
+      onChange: (newValue) => {
+        this.updatePreference("detachable", newValue ?? null);
+      }
+    });
+  }
+
+  get readFromPointer(): BooleanPreference {
+    return new BooleanPreference({
+      initialValue: this.own.readFromPointer,
+      effectiveValue: this.settings.readFromPointer,
+      isEffective: true,
+      onChange: (newValue) => {
+        this.updatePreference("readFromPointer", newValue ?? null);
       }
     });
   }

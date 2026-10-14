@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ReadAloudNavigator` keeps the screen awake while playing, where the browser grants a screen wake lock. Disable it with `keepAwake: false` in its configuration
 - `startInViewport` read-aloud preference, to start a session at the first utterance starting in view rather than at the start of the resource
 - `keepCentered` read-aloud preference, to keep the spoken line in the middle of the frame when scrolled
+- `readFromPointer` read-aloud preference, to turn off reading from a click or tap, `readFromPointer()` then resolving `false`
+
+### Changed
+
+- **Breaking:** `detachable` is a read-aloud preference instead of a `ReadAloudNavigator` configuration option, and can be changed while reading aloud. Set it in `defaults` or `preferences`
 
 ### Fixed
 
