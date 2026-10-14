@@ -89,19 +89,35 @@ interface SpokenPoint {
  * Its default voice sends word boundaries when one can.
  */
 class PublicationWebSpeechEngine extends WebSpeechEngine {
-    constructor(private readonly languages?: string[]) {
+    constructor(private languages: string[]) {
         super();
     }
 
     override async initialize(): Promise<boolean> {
-        const languages = this.languages?.length ? this.languages : undefined;
-        if (!await super.initialize({ languages })) return false;
-        if (this.getCurrentVoice()) return true;
-        const voices = (await this.getAvailableVoices()).filter(voice => voice.controls?.boundary !== false);
-        const manager = await WebSpeechVoiceManager.initialize({ languages });
-        const voice = await manager.getDefaultVoice(languages ?? [...(navigator.languages ?? ["en"])], voices);
-        if (voice) await this.setVoice(voice);
+        if (!await super.initialize({ languages: this.scope() })) return false;
+        if (!this.getCurrentVoice()) await this.setDefaultVoice();
         return true;
+    }
+
+    /** Adds the voices of `languages`, and picks the default voice among them once initialized. */
+    async setLanguages(languages: string[]): Promise<void> {
+        this.languages = languages;
+        if (this.getCurrentVoice()) await this.setDefaultVoice();
+    }
+
+    private scope(): string[] | undefined {
+        return this.languages.length ? this.languages : undefined;
+    }
+
+    private async setDefaultVoice(): Promise<void> {
+        const languages = this.scope();
+        // Loads the voices of languages not loaded yet
+        const manager = await WebSpeechVoiceManager.initialize({ languages });
+        const available = await this.getAvailableVoices();
+        const voices = languages ? filterByLanguages(available, languages) : available;
+        const boundaryVoices = voices.filter(voice => voice.controls?.boundary !== false);
+        const voice = await manager.getDefaultVoice(languages ?? [...(navigator.languages ?? ["en"])], boundaryVoices.length ? boundaryVoices : voices);
+        if (voice) await this.setVoice(voice);
     }
 }
 
@@ -117,6 +133,7 @@ const LAYOUT_TOLERANCE = 1;
  */
 export class ReadAloudNavigator {
     private readonly speech: ReadiumSpeechNavigator;
+    private readonly publicationEngine?: PublicationWebSpeechEngine;
     private readonly pool: GuidedNavigationPool;
     private readonly units: ReadingUnits;
     private readonly unsubscribers: (() => void)[] = [];
@@ -178,9 +195,18 @@ export class ReadAloudNavigator {
         this.units = new ReadingUnits(navigator);
         this._preferences = new ReadAloudPreferences(configuration.preferences);
         this._defaults = new ReadAloudDefaults(configuration.defaults);
-        this.speech = new ReadiumSpeechNavigator(configuration.engine ?? new PublicationWebSpeechEngine(navigator.publication.metadata.languages), {
-            preferences: ReadAloudNavigator.speechPreferences(this._preferences),
-            defaults: ReadAloudNavigator.speechPreferences({ ...this._defaults.speech, autoPause: this._defaults.autoPause }),
+        const metadataLanguage = navigator.publication.metadata.languages?.[0];
+        if (!configuration.engine) {
+            const languageOverride = this._preferences.languageOverride ?? this._defaults.languageOverride;
+            this.publicationEngine = new PublicationWebSpeechEngine(this.publicationLanguages(languageOverride));
+        }
+        this.speech = new ReadiumSpeechNavigator(configuration.engine ?? this.publicationEngine!, {
+            preferences: ReadAloudNavigator.speechPreferences(this._preferences, metadataLanguage),
+            defaults: ReadAloudNavigator.speechPreferences({
+                ...this._defaults.speech,
+                autoPause: this._defaults.autoPause,
+                languageOverride: this._defaults.languageOverride
+            }, metadataLanguage),
         });
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
         this.speech.setSpeakInContentLanguage(this._settings.speakInContentLanguage);
@@ -292,9 +318,9 @@ export class ReadAloudNavigator {
         const voices = await this.speech.getVoices();
         const languages = options.languages?.length ? options.languages : undefined;
         const filtered = languages ? filterByLanguages(voices, languages) : voices;
-        const publicationLanguages = this.navigator.publication.metadata.languages;
+        const publicationLanguages = this.publicationLanguages(this._settings.languageOverride);
         const preferred = languages
-            ?? (publicationLanguages?.length ? publicationLanguages : [...(navigator.languages ?? ["en"])]);
+            ?? (publicationLanguages.length ? publicationLanguages : [...(navigator.languages ?? ["en"])]);
         return sortVoicesByRegions(preferred, filtered);
     }
 
@@ -320,8 +346,12 @@ export class ReadAloudNavigator {
     async submitPreferences(preferences: ReadAloudPreferences): Promise<void> {
         this._preferences = this._preferences.merging(preferences);
         const old = this.speech.getContentQueue();
-        await this.speech.submitPreferences(ReadAloudNavigator.speechPreferences(this._preferences));
+        const previousLanguageOverride = this._settings.languageOverride;
+        await this.speech.submitPreferences(ReadAloudNavigator.speechPreferences(this._preferences, this.navigator.publication.metadata.languages?.[0]));
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
+        if (this._settings.languageOverride !== previousLanguageOverride) {
+            await this.publicationEngine?.setLanguages(this.publicationLanguages(this._settings.languageOverride));
+        }
         this.speech.setSpeakInContentLanguage(this._settings.speakInContentLanguage);
         if (!this._settings.detachable && this.detached) this.attach();
         // Speech keeps its place in a rebuilt queue only while playing or paused itself, not while stopped here.
@@ -1019,11 +1049,21 @@ export class ReadAloudNavigator {
         return this.navigator.layout === Layout.reflowable ? Layout.reflowable : Layout.scrolled;
     }
 
+    // The override comes first, in place of the metadata's primary language it corrects.
+    private publicationLanguages(languageOverride: string | null): string[] {
+        const languages = this.navigator.publication.metadata.languages ?? [];
+        return languageOverride ? [languageOverride, ...languages.slice(1)] : languages;
+    }
+
     // Speech knows nothing of pages and spreads, so it never auto-pauses at them itself.
-    private static speechPreferences(preferences: IReadAloudPreferences): SpeechPreferences {
-        const { autoPause, speakInContentLanguage, startInViewport, keepCentered, detachable, readFromPointer, utteranceStyle, wordStyle, ...speech } = preferences;
+    private static speechPreferences(preferences: IReadAloudPreferences, metadataLanguage?: string): SpeechPreferences {
+        const { autoPause, languageOverride, speakInContentLanguage, startInViewport, keepCentered, detachable, readFromPointer, utteranceStyle, wordStyle, ...speech } = preferences;
         const ownScope = autoPause === ReadAloudAutoPause.page || autoPause === ReadAloudAutoPause.spread;
-        return new SpeechPreferences({ ...speech, autoPause: ownScope ? ReadAloudAutoPause.none : autoPause });
+        return new SpeechPreferences({
+            ...speech,
+            autoPause: ownScope ? ReadAloudAutoPause.none : autoPause,
+            languageOverrides: languageOverride && metadataLanguage ? { [metadataLanguage]: languageOverride } : null
+        });
     }
 
     private setLoading(loading: boolean) {

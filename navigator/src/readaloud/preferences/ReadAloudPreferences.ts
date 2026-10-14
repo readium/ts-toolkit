@@ -1,7 +1,7 @@
 import type { GndRole } from "@readium/guided-navigation";
 import { ExtractionFormat, LanguageMode, Segmentation, SpeechPreferences, VerbosityPreset } from "@readium/speech";
 import { ConfigurablePreferences } from "../../preferences/Configurable.ts";
-import { ensureBoolean, ensureDecorationStyle, ensureEnumValue } from "../../preferences/guards.ts";
+import { ensureBoolean, ensureDecorationStyle, ensureEnumValue, ensureString } from "../../preferences/guards.ts";
 import { BuiltinDecorationStyle, NamedDecorationStyle } from "../../decorations/index.ts";
 
 /**
@@ -30,6 +30,8 @@ export interface IReadAloudPreferences {
   segmentation?: Segmentation | null,
   pauseDuration?: number | null,
   autoPause?: ReadAloudAutoPause | null,
+  /** BCP 47 tag of the language the publication is actually in, when its metadata is wrong */
+  languageOverride?: string | null,
   speakInContentLanguage?: boolean | null,
   startInViewport?: boolean | null,
   keepCentered?: boolean | null,
@@ -54,6 +56,7 @@ export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPr
   segmentation?: Segmentation | null;
   pauseDuration?: number | null;
   autoPause?: ReadAloudAutoPause | null;
+  languageOverride?: string | null;
   speakInContentLanguage?: boolean | null;
   startInViewport?: boolean | null;
   keepCentered?: boolean | null;
@@ -66,7 +69,7 @@ export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPr
   wordStyle?: ReadAloudDecorationStyle | null;
 
   constructor(preferences: IReadAloudPreferences = {}) {
-    const { speakInContentLanguage, startInViewport, keepCentered, detachable, readFromPointer, ...speechPreferences } = preferences;
+    const { languageOverride, speakInContentLanguage, startInViewport, keepCentered, detachable, readFromPointer, ...speechPreferences } = preferences;
     const speech = new SpeechPreferences({ ...speechPreferences, autoPause: undefined });
     this.format = speech.format;
     this.inlineContextualization = speech.inlineContextualization;
@@ -77,6 +80,7 @@ export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPr
     this.segmentation = speech.segmentation;
     this.pauseDuration = speech.pauseDuration;
     this.autoPause = ensureEnumValue<ReadAloudAutoPause>(preferences.autoPause, ReadAloudAutoPause);
+    this.languageOverride = ensureString(languageOverride);
     this.speakInContentLanguage = ensureBoolean(speakInContentLanguage);
     this.startInViewport = ensureBoolean(startInViewport);
     this.keepCentered = ensureBoolean(keepCentered);

@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `startInViewport` read-aloud preference, to start a session at the first utterance starting in view rather than at the start of the resource
 - `keepCentered` read-aloud preference, to keep the spoken line in the middle of the frame when scrolled
 - `readFromPointer` read-aloud preference, to turn off reading from a click or tap, `readFromPointer()` then resolving `false`
+- `languageOverride` read-aloud preference, to speak a publication whose metadata's primary language is wrong in its actual language, which the voices, their `getVoices()` ranking and the default voice follow
 
 ### Changed
 

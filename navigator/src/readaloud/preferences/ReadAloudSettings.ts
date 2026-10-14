@@ -14,6 +14,7 @@ export class ReadAloudSettings implements ConfigurableSettings {
   segmentation: Segmentation;
   pauseDuration: number;
   autoPause: ReadAloudAutoPause;
+  languageOverride: string | null;
   speakInContentLanguage: boolean;
   startInViewport: boolean;
   keepCentered: boolean;
@@ -38,6 +39,7 @@ export class ReadAloudSettings implements ConfigurableSettings {
     this.segmentation = speech.segmentation;
     this.pauseDuration = speech.pauseDuration;
     this.autoPause = preferences.autoPause ?? defaults.autoPause;
+    this.languageOverride = preferences.languageOverride ?? defaults.languageOverride;
     this.speakInContentLanguage = preferences.speakInContentLanguage ?? defaults.speakInContentLanguage;
     this.startInViewport = preferences.startInViewport ?? defaults.startInViewport;
     this.keepCentered = preferences.keepCentered ?? defaults.keepCentered;
