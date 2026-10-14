@@ -1,5 +1,5 @@
 import type { GndRole } from "@readium/guided-navigation";
-import { ExtractionFormat, LanguageMode, Segmentation, SpeechPreferences, VerbosityPreset } from "@readium/speech";
+import { ExtractionFormat, LanguageMode, Segmentation, SpeechPreferences, VerbosityPreset, VoicePreference } from "@readium/speech";
 import { ConfigurablePreferences } from "../../preferences/Configurable.ts";
 import { ensureBoolean, ensureDecorationStyle, ensureEnumValue, ensureString } from "../../preferences/guards.ts";
 import { BuiltinDecorationStyle, NamedDecorationStyle } from "../../decorations/index.ts";
@@ -29,10 +29,11 @@ export interface IReadAloudPreferences {
   language?: LanguageMode | null,
   segmentation?: Segmentation | null,
   pauseDuration?: number | null,
+  /** A voice id for all content, or one per language */
+  voice?: VoicePreference | null,
   autoPause?: ReadAloudAutoPause | null,
   /** BCP 47 tag of the language the publication is actually in, when its metadata is wrong */
   languageOverride?: string | null,
-  speakInContentLanguage?: boolean | null,
   startInViewport?: boolean | null,
   keepCentered?: boolean | null,
   detachable?: boolean | null,
@@ -55,9 +56,9 @@ export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPr
   language?: LanguageMode | null;
   segmentation?: Segmentation | null;
   pauseDuration?: number | null;
+  voice?: VoicePreference | null;
   autoPause?: ReadAloudAutoPause | null;
   languageOverride?: string | null;
-  speakInContentLanguage?: boolean | null;
   startInViewport?: boolean | null;
   keepCentered?: boolean | null;
   detachable?: boolean | null;
@@ -69,7 +70,7 @@ export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPr
   wordStyle?: ReadAloudDecorationStyle | null;
 
   constructor(preferences: IReadAloudPreferences = {}) {
-    const { languageOverride, speakInContentLanguage, startInViewport, keepCentered, detachable, readFromPointer, ...speechPreferences } = preferences;
+    const { languageOverride, startInViewport, keepCentered, detachable, readFromPointer, ...speechPreferences } = preferences;
     const speech = new SpeechPreferences({ ...speechPreferences, autoPause: undefined });
     this.format = speech.format;
     this.inlineContextualization = speech.inlineContextualization;
@@ -79,9 +80,9 @@ export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPr
     this.language = speech.language;
     this.segmentation = speech.segmentation;
     this.pauseDuration = speech.pauseDuration;
+    this.voice = speech.voice;
     this.autoPause = ensureEnumValue<ReadAloudAutoPause>(preferences.autoPause, ReadAloudAutoPause);
     this.languageOverride = ensureString(languageOverride);
-    this.speakInContentLanguage = ensureBoolean(speakInContentLanguage);
     this.startInViewport = ensureBoolean(startInViewport);
     this.keepCentered = ensureBoolean(keepCentered);
     this.detachable = ensureBoolean(detachable);

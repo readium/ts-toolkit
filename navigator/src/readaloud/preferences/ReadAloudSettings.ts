@@ -1,5 +1,5 @@
 import type { GndRole } from "@readium/guided-navigation";
-import { ExtractionFormat, LanguageMode, Segmentation, SpeechSettings, VerbosityPreset } from "@readium/speech";
+import { ExtractionFormat, LanguageMode, Segmentation, SpeechSettings, VerbosityPreset, VoicePreference } from "@readium/speech";
 import { ConfigurableSettings } from "../../preferences/Configurable.ts";
 import { ReadAloudDefaults } from "./ReadAloudDefaults.ts";
 import { ReadAloudAutoPause, ReadAloudDecorationStyle, ReadAloudPreferences } from "./ReadAloudPreferences.ts";
@@ -13,9 +13,9 @@ export class ReadAloudSettings implements ConfigurableSettings {
   language: LanguageMode;
   segmentation: Segmentation;
   pauseDuration: number;
+  voice: VoicePreference | null;
   autoPause: ReadAloudAutoPause;
   languageOverride: string | null;
-  speakInContentLanguage: boolean;
   startInViewport: boolean;
   keepCentered: boolean;
   detachable: boolean;
@@ -38,9 +38,9 @@ export class ReadAloudSettings implements ConfigurableSettings {
     this.language = speech.language;
     this.segmentation = speech.segmentation;
     this.pauseDuration = speech.pauseDuration;
+    this.voice = speech.voice;
     this.autoPause = preferences.autoPause ?? defaults.autoPause;
     this.languageOverride = preferences.languageOverride ?? defaults.languageOverride;
-    this.speakInContentLanguage = preferences.speakInContentLanguage ?? defaults.speakInContentLanguage;
     this.startInViewport = preferences.startInViewport ?? defaults.startInViewport;
     this.keepCentered = preferences.keepCentered ?? defaults.keepCentered;
     this.detachable = preferences.detachable ?? defaults.detachable;

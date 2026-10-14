@@ -176,6 +176,8 @@ export class ReadAloudNavigator {
     // Settles the pending wait for the layout a session starts in view from, false once given up.
     private settleLayout?: (laidOut: boolean) => void;
     private watchedQueue: ReadiumSpeechUtterance[] = [];
+    // The voice the current utterance is spoken with, as the engine reports it.
+    private spokenVoice: ReadiumSpeechVoice | null = null;
     private lastState: ReadAloudState = "idle";
 
     constructor(
@@ -209,7 +211,6 @@ export class ReadAloudNavigator {
             }, metadataLanguage),
         });
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
-        this.speech.setSpeakInContentLanguage(this._settings.speakInContentLanguage);
         this.listen();
     }
 
@@ -324,14 +325,6 @@ export class ReadAloudNavigator {
         return sortVoicesByRegions(preferred, filtered);
     }
 
-    setVoice(voice: ReadiumSpeechVoice | string): void {
-        this.speech.setVoice(voice);
-    }
-
-    getCurrentVoice(): ReadiumSpeechVoice | null {
-        return this.speech.getCurrentVoice();
-    }
-
     get settings(): Readonly<ReadAloudSettings> {
         return Object.freeze({ ...this._settings });
     }
@@ -352,7 +345,6 @@ export class ReadAloudNavigator {
         if (this._settings.languageOverride !== previousLanguageOverride) {
             await this.publicationEngine?.setLanguages(this.publicationLanguages(this._settings.languageOverride));
         }
-        this.speech.setSpeakInContentLanguage(this._settings.speakInContentLanguage);
         if (!this._settings.detachable && this.detached) this.attach();
         // Speech keeps its place in a rebuilt queue only while playing or paused itself, not while stopped here.
         const held = this.pausedBefore ?? this.turning;
@@ -395,7 +387,8 @@ export class ReadAloudNavigator {
                 this.notifyState();
             }));
         };
-        on("start", () => {
+        on("start", event => {
+            this.spokenVoice = event.detail?.voice ?? null;
             const utterance = this.speech.getCurrentContent();
             if (utterance) this.progress.start(utterance);
             this.notifyUtterance();
@@ -1003,11 +996,11 @@ export class ReadAloudNavigator {
     }
 
     private sendsBoundaries(): boolean {
-        return this.speech.getCurrentVoice()?.controls?.boundary !== false;
+        return this.spokenVoice?.controls?.boundary !== false;
     }
 
     private voiceName(): string {
-        return this.speech.getCurrentVoice()?.name ?? "";
+        return this.spokenVoice?.name ?? "";
     }
 
     private speed(): number {
@@ -1057,7 +1050,7 @@ export class ReadAloudNavigator {
 
     // Speech knows nothing of pages and spreads, so it never auto-pauses at them itself.
     private static speechPreferences(preferences: IReadAloudPreferences, metadataLanguage?: string): SpeechPreferences {
-        const { autoPause, languageOverride, speakInContentLanguage, startInViewport, keepCentered, detachable, readFromPointer, utteranceStyle, wordStyle, ...speech } = preferences;
+        const { autoPause, languageOverride, startInViewport, keepCentered, detachable, readFromPointer, utteranceStyle, wordStyle, ...speech } = preferences;
         const ownScope = autoPause === ReadAloudAutoPause.page || autoPause === ReadAloudAutoPause.spread;
         return new SpeechPreferences({
             ...speech,

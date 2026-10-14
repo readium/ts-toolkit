@@ -73,7 +73,7 @@ readAloud.state;               // "idle" | "loading" | "ready" | "playing" | "pa
 await readAloud.destroy();
 ```
 
-Voices are listed and set with `getVoices()`, `setVoice()` and `getCurrentVoice()`.
+Voices are listed with `getVoices()`, and set with the `voice` preference.
 
 ### Reading from a click or tap
 
@@ -132,7 +132,6 @@ It has the preferences of `@readium/speech` (`rate`, `pitch`, `volume`, `verbosi
 
 - `autoPause`: in addition to speech's `"none"`, `"utterance"` and `"block"`, `"page"` pauses on reaching another page, and `"spread"` on reaching another spread, with the first utterance there highlighted. In reflowable publications, `"page"` pauses on reaching the next set of columns or the next resource, and `"spread"` doesn't apply. Neither has an effect when scrolled.
 - `languageOverride`: the BCP 47 tag of the language the publication is actually in, when its metadata's primary language is wrong, `null` by default. Content in the metadata's primary language is spoken in it instead, and the voices, their `getVoices()` ranking and the default voice follow it. Content in other languages is left as is.
-- `speakInContentLanguage`: whether an utterance in another language than the selected voice's is spoken with a voice of its own language, `false` by default. It has no effect when `language` is `"none"`.
 - `startInViewport`: whether `play()` without a locator, when idle, starts at the first utterance starting in view rather than at the start of the resource, `false` by default. When none starts in view, it starts at the one going on at the top. It has no effect in fixed-layout publications.
 - `keepCentered`: whether, when scrolled, the spoken line is kept in the middle of the frame rather than followed once it goes out of view, `false` by default.
 - `detachable`: whether the reader can move away while reading aloud, `true` by default. See [Moving away while reading](#moving-away-while-reading).

@@ -14,10 +14,11 @@ export {
     sortByQuality,
     sortVoicesByRegions
 } from "@readium/speech";
-export type { ExtractionFormat, LanguageMode, ReadiumSpeechPlaybackEngine, ReadiumSpeechPlaybackState, ReadiumSpeechVoice, Segmentation, SpeechSettings, VerbosityPreset } from "@readium/speech";
+export type { ExtractionFormat, LanguageMode, ReadiumSpeechPlaybackEngine, ReadiumSpeechPlaybackState, ReadiumSpeechVoice, Segmentation, SpeechSettings, VerbosityPreset, VoicePreference } from "@readium/speech";
 export type {
     BooleanPreference as SpeechBooleanPreference,
     EnumPreference as SpeechEnumPreference,
+    Preference as SpeechPreference,
     RangePreference as SpeechRangePreference,
     StringArrayPreference
 } from "@readium/speech";
