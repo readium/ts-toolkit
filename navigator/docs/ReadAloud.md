@@ -73,7 +73,7 @@ readAloud.state;               // "idle" | "loading" | "ready" | "playing" | "pa
 await readAloud.destroy();
 ```
 
-Voices are listed with `getVoices()`, and set with the `voice` preference.
+Voices are listed with `getVoices()`, and set with the `voice` preference. `getLanguages()` lists the base languages voices can be had in, for instance to pick a `languageOverride`: with the default engine, those of every voice of the browser, without loading the voices of languages other than the publication's.
 
 ### Reading from a click or tap
 

@@ -3,6 +3,7 @@ export * from './ReadAloudNavigator.ts';
 export * from './preferences/index.ts';
 export {
     defaultContextualizations,
+    extractLangRegionFromBCP47,
     inlineContextualizationRoles,
     skippableRoles,
     filterByLanguages,

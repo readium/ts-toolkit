@@ -331,6 +331,18 @@ export class ReadAloudNavigator {
         return sortVoicesByRegions(preferred, filtered);
     }
 
+    /**
+     * The base languages voices can be had in, e.g. for `languageOverride`, without loading their voices.
+     * With an engine given in the configuration, those of its voices.
+     */
+    async getLanguages(): Promise<string[]> {
+        // Initializes the engine first, so the voice manager is scoped to the publication's languages
+        const voices = await this.speech.getVoices();
+        if (!this.publicationEngine) return [...new Set(voices.map(voice => extractLangRegionFromBCP47(voice.language)[0]))];
+        const manager = await WebSpeechVoiceManager.initialize();
+        return manager.getBrowserLanguages().map(language => language.code);
+    }
+
     get settings(): Readonly<ReadAloudSettings> {
         return Object.freeze({ ...this._settings, voice: this.effectiveVoice() });
     }
