@@ -4,7 +4,6 @@ import type {
   EnumPreference as SpeechEnumPreference,
   ExtractionFormat,
   LanguageMode,
-  Preference as SpeechPreference,
   RangePreference as SpeechRangePreference,
   Segmentation,
   StringArrayPreference,
@@ -85,10 +84,22 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
   get language(): SpeechEnumPreference<LanguageMode> { return this.speech.language; }
   get segmentation(): SpeechEnumPreference<Segmentation> { return this.speech.segmentation; }
   get pauseDuration(): SpeechRangePreference<number> { return this.speech.pauseDuration; }
-  get voice(): SpeechPreference<VoicePreference> { return this.speech.voice; }
   get rate(): SpeechRangePreference<number> { return this.speech.rate; }
   get pitch(): SpeechRangePreference<number> { return this.speech.pitch; }
   get volume(): SpeechRangePreference<number> { return this.speech.volume; }
+
+  // Its effective value is the engine's voice when unset, which speech knows nothing of.
+  get voice(): Preference<VoicePreference> {
+    const speech = this.speech.voice;
+    return new Preference<VoicePreference>({
+      initialValue: speech.value,
+      effectiveValue: this.settings.voice,
+      isEffective: true,
+      onChange: (newValue) => {
+        speech.value = newValue ?? null;
+      }
+    });
+  }
 
   get autoPause(): EnumPreference<ReadAloudAutoPause> {
     return new EnumPreference<ReadAloudAutoPause>({
