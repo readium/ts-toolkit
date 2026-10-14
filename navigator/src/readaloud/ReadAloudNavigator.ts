@@ -851,12 +851,14 @@ export class ReadAloudNavigator {
         return start < pos - LAYOUT_TOLERANCE || start >= pos + size - LAYOUT_TOLERANCE;
     }
 
-    // Whether the spoken text at `point` is to be followed: out of view, or below the middle when kept centered.
+    // Whether the spoken text at `point` is to be followed: out of view, or off the middle when kept centered.
     private isBehind(point: SpokenPoint): boolean | undefined {
         const hidden = this.isHidden(point);
         const middle = this.middle();
         if (hidden !== false || middle === undefined) return hidden;
-        return this.lineStart(point)! >= middle;
+        const start = this.lineStart(point)!;
+        // Text above the middle is only centered while the frame can still scroll up.
+        return start >= middle || (start < middle - 2 * LAYOUT_TOLERANCE && this.viewport!.pos > LAYOUT_TOLERANCE);
     }
 
     // The line going to text centers when scrolled, where the spoken text is kept when centered.
