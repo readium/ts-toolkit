@@ -3,6 +3,7 @@ export * from './ReadAloudNavigator.ts';
 export * from './preferences/index.ts';
 export {
     defaultContextualizations,
+    inlineContextualizationRoles,
     skippableRoles,
     filterByLanguages,
     filterOutNoveltyVoices,

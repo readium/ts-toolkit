@@ -1,7 +1,6 @@
 import { Layout } from "@readium/shared";
 import { SpeechPreferences, SpeechPreferencesEditor, SpeechSettings } from "@readium/speech";
 import type {
-  BooleanPreference as SpeechBooleanPreference,
   EnumPreference as SpeechEnumPreference,
   ExtractionFormat,
   LanguageMode,
@@ -77,7 +76,7 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
   }
 
   get format(): SpeechEnumPreference<ExtractionFormat> { return this.speech.format; }
-  get inlineContextualization(): SpeechBooleanPreference { return this.speech.inlineContextualization; }
+  get inlineContextualization(): StringArrayPreference { return this.speech.inlineContextualization; }
   get verbosity(): SpeechEnumPreference<VerbosityPreset> { return this.speech.verbosity; }
   get skip(): StringArrayPreference { return this.speech.skip; }
   get contextualize(): StringArrayPreference { return this.speech.contextualize; }

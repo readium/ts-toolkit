@@ -6,7 +6,7 @@ import { ReadAloudAutoPause, ReadAloudDecorationStyle, ReadAloudPreferences } fr
 
 export class ReadAloudSettings implements ConfigurableSettings {
   format: ExtractionFormat;
-  inlineContextualization: boolean;
+  inlineContextualization: GndRole[];
   verbosity: VerbosityPreset;
   skip: GndRole[];
   contextualize: GndRole[];

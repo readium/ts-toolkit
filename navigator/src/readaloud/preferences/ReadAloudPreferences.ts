@@ -22,7 +22,7 @@ export type ReadAloudDecorationStyle = BuiltinDecorationStyle | NamedDecorationS
 
 export interface IReadAloudPreferences {
   format?: ExtractionFormat | null,
-  inlineContextualization?: boolean | null,
+  inlineContextualization?: GndRole[] | null,
   verbosity?: VerbosityPreset | null,
   skip?: GndRole[] | null,
   contextualize?: GndRole[] | null,
@@ -46,7 +46,7 @@ export interface IReadAloudPreferences {
 
 export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPreferences> {
   format?: ExtractionFormat | null;
-  inlineContextualization?: boolean | null;
+  inlineContextualization?: GndRole[] | null;
   verbosity?: VerbosityPreset | null;
   skip?: GndRole[] | null;
   contextualize?: GndRole[] | null;

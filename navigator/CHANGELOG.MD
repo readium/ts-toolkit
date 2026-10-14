@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking:** `inlineContextualization` read-aloud preference takes a list of roles instead of a boolean, so notes (`noteref`) and page breaks (`pagebreak`) can be spoken inline separately, following `@readium/speech`. `inlineContextualizationRoles` lists the accepted roles, and `true` becomes `["noteref", "pagebreak"]`
 - **Breaking:** `detachable` is a read-aloud preference instead of a `ReadAloudNavigator` configuration option, and can be changed while reading aloud. Set it in `defaults` or `preferences`
 
 ### Fixed
