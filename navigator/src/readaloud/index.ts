@@ -8,11 +8,14 @@ export {
     filterByLanguages,
     filterOutNoveltyVoices,
     filterOutVeryLowQualityVoices,
+    getLanguageDisplayName,
     getQualityValue,
+    getVoiceId,
     groupVoicesByLanguage,
     sortAlphabetically,
     sortByQuality,
-    sortVoicesByRegions
+    sortVoicesByRegions,
+    valueForLanguage
 } from "@readium/speech";
 export type { ExtractionFormat, LanguageMode, ReadiumSpeechPlaybackEngine, ReadiumSpeechPlaybackState, ReadiumSpeechVoice, Segmentation, SpeechSettings, VerbosityPreset, VoicePreference } from "@readium/speech";
 export type {

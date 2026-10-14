@@ -3,6 +3,7 @@ import { FrameClickEvent, TextLayout, TextLineStarts } from "@readium/navigator-
 import {
     createLocator,
     extractLangRegionFromBCP47,
+    getVoiceId,
     filterByLanguages,
     LocatorOptions,
     ReadiumSpeechNavigator,
@@ -1052,7 +1053,7 @@ export class ReadAloudNavigator {
         const voice = this._settings.voice;
         if (typeof voice === "string") return voice;
         const engineVoice = this.engine.getCurrentVoice();
-        const engineVoiceId = engineVoice ? engineVoice.voiceURI ?? engineVoice.identifier ?? engineVoice.name : null;
+        const engineVoiceId = engineVoice ? getVoiceId(engineVoice) : null;
         if (!voice || !engineVoiceId) return voice ?? engineVoiceId;
         const language = this.publicationLanguages(this._settings.languageOverride)[0];
         if (!language || valueForLanguage(voice, language) !== undefined) return voice;
