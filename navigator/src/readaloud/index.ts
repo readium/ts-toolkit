@@ -22,6 +22,7 @@ export type { ExtractionFormat, LanguageMode, ReadiumSpeechPlaybackEngine, Readi
 export type {
     BooleanPreference as SpeechBooleanPreference,
     EnumPreference as SpeechEnumPreference,
+    Preference as SpeechPreference,
     RangePreference as SpeechRangePreference,
     StringArrayPreference
 } from "@readium/speech";
