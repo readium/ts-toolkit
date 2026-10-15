@@ -1,11 +1,10 @@
 const ELEMENT_NODE = 1;
 
+// An empty declaration (`lang=""`) means the language is unknown, so it isn't inherited past it.
 export function nodeLanguage(el: Element | null): string {
   for (let n: Element | null = el; n; n = n.parentElement) {
-    const xmlLang = n.getAttribute("xml:lang");
-    if (xmlLang) return xmlLang;
-    const lang = n.getAttribute("lang");
-    if (lang) return lang;
+    const language = n.getAttribute("xml:lang") ?? n.getAttribute("lang");
+    if (language !== null) return language.trim();
   }
   return "";
 }

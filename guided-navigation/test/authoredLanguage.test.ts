@@ -51,3 +51,13 @@ test("an aria-describedby description is in its targets' shared language", () =>
   const nodes = parseMarkup('<div lang="fr"><p id="a" lang="de">Eine</p><p id="b" lang="de">Katze</p><figure aria-describedby="a b"><img src="a.png" alt="x"></figure></div>');
   expect(find(nodes, withDescription("Eine Katze"))?.description?.text?.language).toBe("de");
 });
+
+test("an empty language declaration stops inheritance", () => {
+  const nodes = parseMarkup('<div lang="fr"><p>Texte.</p><img lang="" src="a.png" alt="Unknown"></div>');
+  expect(find(nodes, withDescription("Unknown"))?.description?.text?.language).toBeUndefined();
+});
+
+test("xml:lang wins over lang on the same element", () => {
+  const nodes = parseMarkup('<div lang="fr"><p>Texte.</p><img xml:lang="de" lang="en" src="a.png" alt="Katze"></div>');
+  expect(find(nodes, withDescription("Katze"))?.description?.text?.language).toBe("de");
+});
