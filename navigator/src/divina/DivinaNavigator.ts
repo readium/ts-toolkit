@@ -16,7 +16,6 @@ import { Configurable, ConfigurableSettings } from "../preferences/Configurable.
 import { getContentWidth } from "../helpers/dimensions.ts";
 import { NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT } from "../protection/NavigatorProtector.ts";
 import { KeyboardPeripherals, NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT } from "../peripherals/KeyboardPeripherals.ts";
-import { KeyboardConditionBridge } from "../peripherals/KeyboardConditionBridge.ts";
 
 import { DivinaSpreader } from "./DivinaSpreader.ts";
 import { DivinaPageManager } from "./DivinaPageManager.ts";
@@ -97,8 +96,7 @@ export class DivinaNavigator extends VisualNavigator implements Configurable<Con
     private readonly _contentProtection: IContentProtectionConfig;
     private readonly _keyboardPeripherals: IKeyboardPeripheralsConfig;
     private readonly _navigatorProtector: DivinaNavigatorProtector | null = null;
-    private _keyboardPeripheralsManager: KeyboardPeripherals | null = null;
-    private readonly _keyboardConditionBridge: KeyboardConditionBridge | null = null;
+    private readonly _keyboardPeripheralsManager: KeyboardPeripherals | null = null;
     private readonly _suspiciousActivityListener: ((event: Event) => void) | null = null;
     private readonly _keyboardPeripheralListener: ((event: Event) => void) | null = null;
 
@@ -155,21 +153,11 @@ export class DivinaNavigator extends VisualNavigator implements Configurable<Con
             window.addEventListener(NAVIGATOR_SUSPICIOUS_ACTIVITY_EVENT, this._suspiciousActivityListener);
         }
 
-        // Initialize keyboard peripherals separately (works independently of protection).
-        // Unlike the iframe-based navigators (whose frame managers bridge conditions
-        // into the injected modules), divina handles keys host-side, so observable
-        // conditions are resolved here by rebuilding the manager on change.
+        // Initialize keyboard peripherals separately (works independently of protection)
         if (this._keyboardPeripherals.length > 0) {
-            this._keyboardConditionBridge = new KeyboardConditionBridge(
-                this._keyboardPeripherals,
-                (serializable) => {
-                    this._keyboardPeripheralsManager?.destroy();
-                    this._keyboardPeripheralsManager = serializable.length > 0
-                        ? new KeyboardPeripherals({ keyboardPeripherals: serializable })
-                        : null;
-                }
-            );
-            this._keyboardConditionBridge.setup();
+            this._keyboardPeripheralsManager = new KeyboardPeripherals({
+                keyboardPeripherals: this._keyboardPeripherals
+            });
 
             this._keyboardPeripheralListener = (event: Event) => {
                 const activity = (event as CustomEvent).detail;
@@ -692,7 +680,6 @@ export class DivinaNavigator extends VisualNavigator implements Configurable<Con
             window.removeEventListener(NAVIGATOR_KEYBOARD_PERIPHERAL_EVENT, this._keyboardPeripheralListener);
         }
         this._navigatorProtector?.destroy();
-        this._keyboardConditionBridge?.destroy();
         this._keyboardPeripheralsManager?.destroy();
         this.resizeObserver.disconnect();
         await this.destroyPresenter();

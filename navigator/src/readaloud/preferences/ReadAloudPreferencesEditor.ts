@@ -1,14 +1,15 @@
 import { Layout } from "@readium/shared";
-import { SpeechPreferences, SpeechPreferencesEditor, SpeechSettings } from "@readium/speech";
+import { SpeechPreferencesEditor } from "@readium/speech";
 import type {
-  BooleanPreference as SpeechBooleanPreference,
   EnumPreference as SpeechEnumPreference,
   ExtractionFormat,
+  Preference as SpeechPreference,
   LanguageMode,
   RangePreference as SpeechRangePreference,
   Segmentation,
   StringArrayPreference,
-  VerbosityPreset
+  VerbosityPreset,
+  VoicePreference
 } from "@readium/speech";
 import { IPreferencesEditor } from "../../preferences/PreferencesEditor.ts";
 import { BooleanPreference, EnumPreference, Preference } from "../../preferences/Preference.ts";
@@ -19,20 +20,25 @@ import { ReadAloudSettings } from "./ReadAloudSettings.ts";
  * Edits read-aloud preferences, speech's own fields through speech's editor.
  */
 export class ReadAloudPreferencesEditor implements IPreferencesEditor {
-  private speech: SpeechPreferencesEditor;
+  private speechEditor: () => SpeechPreferencesEditor;
   private own: ReadAloudPreferences;
   private settings: ReadAloudSettings;
   private layout: Layout;
 
   /**
+   * @param speechEditor Speech's editor, read each time as speech replaces it.
    * @param layout How the publication is displayed: `Layout.reflowable` for columns, `Layout.scrolled` when scrolled.
    */
-  constructor(initialPreferences: ReadAloudPreferences, settings: ReadAloudSettings, speechSettings: SpeechSettings, layout: Layout) {
-    const { speakInContentLanguage, ...speechPreferences } = initialPreferences;
-    this.speech = new SpeechPreferencesEditor(new SpeechPreferences({ ...speechPreferences, autoPause: undefined }), speechSettings);
+  constructor(initialPreferences: ReadAloudPreferences, settings: ReadAloudSettings, speechEditor: () => SpeechPreferencesEditor, layout: Layout) {
+    const { languageOverride, startInViewport, keepCentered, detachable, readFromPointer } = initialPreferences;
+    this.speechEditor = speechEditor;
     this.own = new ReadAloudPreferences({
       autoPause: initialPreferences.autoPause,
-      speakInContentLanguage,
+      languageOverride,
+      startInViewport,
+      keepCentered,
+      detachable,
+      readFromPointer,
       utteranceStyle: initialPreferences.utteranceStyle,
       wordStyle: initialPreferences.wordStyle
     });
@@ -40,11 +46,19 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
     this.layout = layout;
   }
 
+  private get speech(): SpeechPreferencesEditor {
+    return this.speechEditor();
+  }
+
   get preferences(): ReadAloudPreferences {
     return new ReadAloudPreferences({
       ...this.speech.preferences,
       autoPause: this.own.autoPause,
-      speakInContentLanguage: this.own.speakInContentLanguage,
+      languageOverride: this.own.languageOverride,
+      startInViewport: this.own.startInViewport,
+      keepCentered: this.own.keepCentered,
+      detachable: this.own.detachable,
+      readFromPointer: this.own.readFromPointer,
       utteranceStyle: this.own.utteranceStyle,
       wordStyle: this.own.wordStyle
     });
@@ -54,7 +68,11 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
     this.speech.clear();
     this.own = new ReadAloudPreferences({
       autoPause: null,
-      speakInContentLanguage: null,
+      languageOverride: null,
+      startInViewport: null,
+      keepCentered: null,
+      detachable: null,
+      readFromPointer: null,
       utteranceStyle: null,
       wordStyle: null
     });
@@ -65,7 +83,7 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
   }
 
   get format(): SpeechEnumPreference<ExtractionFormat> { return this.speech.format; }
-  get inlineContextualization(): SpeechBooleanPreference { return this.speech.inlineContextualization; }
+  get inlineContextualization(): StringArrayPreference { return this.speech.inlineContextualization; }
   get verbosity(): SpeechEnumPreference<VerbosityPreset> { return this.speech.verbosity; }
   get skip(): StringArrayPreference { return this.speech.skip; }
   get contextualize(): StringArrayPreference { return this.speech.contextualize; }
@@ -75,6 +93,8 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
   get rate(): SpeechRangePreference<number> { return this.speech.rate; }
   get pitch(): SpeechRangePreference<number> { return this.speech.pitch; }
   get volume(): SpeechRangePreference<number> { return this.speech.volume; }
+
+  get voice(): SpeechPreference<VoicePreference> { return this.speech.voice; }
 
   get autoPause(): EnumPreference<ReadAloudAutoPause> {
     return new EnumPreference<ReadAloudAutoPause>({
@@ -90,13 +110,57 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get speakInContentLanguage(): BooleanPreference {
-    return new BooleanPreference({
-      initialValue: this.own.speakInContentLanguage,
-      effectiveValue: this.settings.speakInContentLanguage,
-      isEffective: this.settings.language !== "none",
+  get languageOverride(): Preference<string> {
+    return new Preference<string>({
+      initialValue: this.own.languageOverride,
+      effectiveValue: this.settings.languageOverride,
+      isEffective: true,
       onChange: (newValue) => {
-        this.updatePreference("speakInContentLanguage", newValue ?? null);
+        this.updatePreference("languageOverride", newValue ?? null);
+      }
+    });
+  }
+
+  get startInViewport(): BooleanPreference {
+    return new BooleanPreference({
+      initialValue: this.own.startInViewport,
+      effectiveValue: this.settings.startInViewport,
+      isEffective: this.layout !== Layout.fixed,
+      onChange: (newValue) => {
+        this.updatePreference("startInViewport", newValue ?? null);
+      }
+    });
+  }
+
+  get keepCentered(): BooleanPreference {
+    return new BooleanPreference({
+      initialValue: this.own.keepCentered,
+      effectiveValue: this.settings.keepCentered,
+      isEffective: this.layout === Layout.scrolled,
+      onChange: (newValue) => {
+        this.updatePreference("keepCentered", newValue ?? null);
+      }
+    });
+  }
+
+  get detachable(): BooleanPreference {
+    return new BooleanPreference({
+      initialValue: this.own.detachable,
+      effectiveValue: this.settings.detachable,
+      isEffective: true,
+      onChange: (newValue) => {
+        this.updatePreference("detachable", newValue ?? null);
+      }
+    });
+  }
+
+  get readFromPointer(): BooleanPreference {
+    return new BooleanPreference({
+      initialValue: this.own.readFromPointer,
+      effectiveValue: this.settings.readFromPointer,
+      isEffective: true,
+      onChange: (newValue) => {
+        this.updatePreference("readFromPointer", newValue ?? null);
       }
     });
   }

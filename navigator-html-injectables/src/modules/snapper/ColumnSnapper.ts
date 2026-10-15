@@ -556,7 +556,7 @@ export class ColumnSnapper extends Snapper {
             }
             this.wnd.requestAnimationFrame(() => {
                 if (this.rtl) {
-                    this.doc().scrollLeft = -this.snapNormOffset(element.getBoundingClientRect().left + wnd.scrollX);
+                    this.doc().scrollLeft = -this.snapNormOffset(this.rectStart(element.getBoundingClientRect()));
                 } else {
                     this.doc().scrollLeft = this.snapOffset(element.getBoundingClientRect().left + wnd.scrollX);
                 }
@@ -577,7 +577,7 @@ export class ColumnSnapper extends Snapper {
             }
             this.wnd.requestAnimationFrame(() => {
                 if (this.rtl) {
-                    this.doc().scrollLeft = -this.snapNormOffset(r.getBoundingClientRect().left + wnd.scrollX);
+                    this.doc().scrollLeft = -this.snapNormOffset(this.rectStart(r.getBoundingClientRect()));
                 } else {
                     this.doc().scrollLeft = this.snapOffset(r.getBoundingClientRect().left + wnd.scrollX);
                 }

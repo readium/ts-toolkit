@@ -38,6 +38,8 @@ What is read at once, and what is highlighted, depends on the navigator:
 
 The word is highlighted, and `wordChanged` called, only with voices `@readium/speech` lists as reporting word boundaries. Voices listed without them may still report some, but unreliably, so they're ignored, and pages are turned by timing the speech instead.
 
+When scrolled, the text is followed once it goes under the `scrollPaddingTop` or `scrollPaddingBottom` of `EpubNavigator`, so set them to the height of the UI overlaying the content.
+
 ## Using another engine
 
 Any `ReadiumSpeechPlaybackEngine` can be given in the `engine` configuration, for instance a `SpeechServerEngine` speaking with a [Readium Speech Server](https://github.com/readium/speech-server):
@@ -71,13 +73,13 @@ readAloud.state;               // "idle" | "loading" | "ready" | "playing" | "pa
 await readAloud.destroy();
 ```
 
-Voices are listed and set with `getVoices()`, `setVoice()` and `getCurrentVoice()`.
+Voices are listed with `getVoices()`, and set with the `voice` preference. `getLanguages()` lists the base languages voices can be had in, for instance to pick a `languageOverride`: with the default engine, those of every voice of the browser, without loading the voices of languages other than the publication's. `getPublicationLanguages()` returns the publication's languages as voices are loaded for them, with `languageOverride` in place of the primary one.
 
 ### Reading from a click or tap
 
 `readFromPointer(event)` starts reading from the utterance under a click or tap in a displayed resource. Call it from the navigator's `tap` and `click` listeners while reading aloud is on. It loads the pressed resource when it isn't the one being read, for instance after pausing and turning pages.
 
-It resolves `false`, leaving playback untouched, when the press is on a link or another interactive element, on empty space, or on content that isn't read aloud. Handle the event as usual then:
+It resolves `false`, leaving playback untouched, when the `readFromPointer` preference is off, or the press is on a link or another interactive element, on empty space, or on content that isn't read aloud. Handle the event as usual then:
 
 ```ts
 const onPointer = async (event: FrameClickEvent) => {
@@ -99,10 +101,18 @@ As `readFromPointer` is asynchronous, the listeners return `true` and handle pag
 
 By default, the reader can scroll, turn pages or follow links while reading aloud. The navigator then stops following the spoken text until the reader is back on it, or plays, moves to the next or previous utterance, or reads from a click or tap.
 
-With `detachable: false` in the configuration, the reader can't move away while playing: scrolling, swiping, tapping the edges and following links in the content are locked, and unlocked when paused or stopped. Read aloud still turns pages, and taps and clicks are still reported. Your own navigation, such as a table of contents or page buttons, isn't locked: check `readAloud.detachable` to disable it while playing. It is supported by `EpubNavigator` and `WebPubNavigator`.
+With the `detachable` preference set to `false`, the reader can't move away while playing: scrolling, swiping, tapping the edges and following links in the content are locked, and unlocked when paused or stopped. Read aloud still turns pages, and taps and clicks are still reported. Your own navigation, such as a table of contents or page buttons, isn't locked: check `readAloud.detachable` to disable it while playing. Changing it applies right away, also while playing. It is supported by `EpubNavigator` and `WebPubNavigator`.
 
 ```ts
-const readAloud = new ReadAloudNavigator(navigator, listeners, { detachable: false });
+const readAloud = new ReadAloudNavigator(navigator, listeners, { defaults: { detachable: false } });
+```
+
+### Keeping the screen awake
+
+While playing, `ReadAloudNavigator` requests a screen wake lock, where the browser grants one, and releases it when paused or stopped. If your app manages the screen itself, disable it with `keepAwake: false`.
+
+```ts
+const readAloud = new ReadAloudNavigator(navigator, listeners, { keepAwake: false });
 ```
 
 ## Preferences
@@ -121,7 +131,12 @@ await readAloud.submitPreferences(new ReadAloudPreferences({
 It has the preferences of `@readium/speech` (`rate`, `pitch`, `volume`, `verbosity`, `segmentation`, etc.), plus:
 
 - `autoPause`: in addition to speech's `"none"`, `"utterance"` and `"block"`, `"page"` pauses on reaching another page, and `"spread"` on reaching another spread, with the first utterance there highlighted. In reflowable publications, `"page"` pauses on reaching the next set of columns or the next resource, and `"spread"` doesn't apply. Neither has an effect when scrolled.
-- `speakInContentLanguage`: whether an utterance in another language than the selected voice's is spoken with a voice of its own language, `false` by default. It has no effect when `language` is `"none"`.
+- `voice`: a voice id (`getVoiceId(voice)`: a voice's `voiceURI`, or `identifier` for a server voice) for all content, or one per language, e.g. `{ en: "…", fr: "…" }`. Content in a language without one is spoken with the engine's voice, which `settings.voice` falls back to, as in `@readium/speech`: unset or a record without the engine voice's language, it gets an entry for it, e.g. `{ en: "…" }`, so submitting it back keeps other languages following their own. The default engine picks its voice in the publication's language, so the publication's voice is always `settings.voice`'s entry for the publication's language.
+- `languageOverride`: the BCP 47 tag of the language the publication is actually in, when its metadata's primary language is wrong, `null` by default. Content in the metadata's primary language is spoken in it instead, and the voices, their `getVoices()` ranking and the default voice follow it. Content in other languages is left as is.
+- `startInViewport`: whether `play()` without a locator, when idle, starts at the first utterance starting in view rather than at the start of the resource, `false` by default. When none starts in view, it starts at the one going on at the top. It has no effect in fixed-layout publications.
+- `keepCentered`: whether, when scrolled, the spoken line is kept in the middle of the frame rather than followed once it goes out of view, `false` by default.
+- `detachable`: whether the reader can move away while reading aloud, `true` by default. See [Moving away while reading](#moving-away-while-reading).
+- `readFromPointer`: whether `readFromPointer()` starts reading from a click or tap, `true` by default. See [Reading from a click or tap](#reading-from-a-click-or-tap).
 - `utteranceStyle` and `wordStyle`: the [decoration style](./epub/Decorations.md) of the utterance and the word being spoken, `false` to not decorate them. A custom template is used by registering it in the `EpubNavigator` or `WebPubNavigator` configuration's `decoratorConfig.decorationTemplates` and referencing it by name, e.g. `{ type: "myTemplate" }`.
 
 Decorations are applied in the `readaloud-utterance` and `readaloud-word` groups.

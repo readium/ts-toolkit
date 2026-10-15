@@ -2,6 +2,7 @@ import { Layout, Locator, Profile, getCssSelector } from "@readium/shared";
 import { FrameClickEvent, TextLayout, TextLineStarts } from "@readium/navigator-html-injectables";
 import {
     createLocator,
+    extractLangRegionFromBCP47,
     filterByLanguages,
     LocatorOptions,
     ReadiumSpeechNavigator,
@@ -18,6 +19,9 @@ import {
 } from "@readium/speech";
 import { Navigator, VisualNavigatorViewport } from "../Navigator.ts";
 import { Decoration, DecorableNavigator } from "../decorations/index.ts";
+import type { EpubSettings } from "../epub/preferences/index.ts";
+import type { WebPubSettings } from "../webpub/preferences/index.ts";
+import type { DivinaSettings } from "../divina/preferences/index.ts";
 import { GuidedNavigationProvider, PublicationGuidedNavigationProvider } from "./GuidedNavigationProvider.ts";
 import { GuidedNavigationPool, ReadingUnit, ReadingUnits } from "./ReadingUnit.ts";
 import { SpeechProgress } from "./SpeechProgress.ts";
@@ -58,11 +62,8 @@ export interface ReadAloudConfiguration {
     provider?: GuidedNavigationProvider;
     preferences?: IReadAloudPreferences;
     defaults?: IReadAloudDefaults;
-    /**
-     * Whether the reader can move away while reading aloud, which then stops following until back.
-     * Otherwise navigating in the content is locked while playing. Defaults to true.
-     */
-    detachable?: boolean;
+    /** Whether the screen is kept awake while playing, where the browser grants a screen wake lock. Defaults to true. */
+    keepAwake?: boolean;
 }
 
 interface TurningPosition {
@@ -89,19 +90,41 @@ interface SpokenPoint {
  * Its default voice sends word boundaries when one can.
  */
 class PublicationWebSpeechEngine extends WebSpeechEngine {
-    constructor(private readonly languages?: string[]) {
+    private ready = false;
+
+    constructor(private languages: string[]) {
         super();
     }
 
     override async initialize(): Promise<boolean> {
-        const languages = this.languages?.length ? this.languages : undefined;
-        if (!await super.initialize({ languages })) return false;
-        if (this.getCurrentVoice()) return true;
-        const voices = (await this.getAvailableVoices()).filter(voice => voice.controls?.boundary !== false);
-        const manager = await WebSpeechVoiceManager.initialize({ languages });
-        const voice = await manager.getDefaultVoice(languages ?? [...(navigator.languages ?? ["en"])], voices);
-        if (voice) await this.setVoice(voice);
+        if (!await super.initialize({ languages: this.scope() })) return false;
+        await this.setDefaultVoice();
+        this.ready = true;
         return true;
+    }
+
+    /** Adds the voices of `languages`, and picks the default voice among them once initialized. */
+    async setLanguages(languages: string[]): Promise<void> {
+        this.languages = languages;
+        if (this.ready) await this.setDefaultVoice();
+    }
+
+    private scope(): string[] | undefined {
+        return this.languages.length ? this.languages : undefined;
+    }
+
+    private async setDefaultVoice(): Promise<void> {
+        const languages = this.scope();
+        // Loads the voices of languages not loaded yet
+        const manager = await WebSpeechVoiceManager.initialize({ languages });
+        const available = await this.getAvailableVoices();
+        // Boundaries are preferred within the first language with voices, not over the language
+        const language = languages?.find(language => filterByLanguages(available, language).length);
+        const scoped = language ?? languages;
+        const voices = scoped ? filterByLanguages(available, scoped) : available;
+        const boundaryVoices = voices.filter(voice => voice.controls?.boundary !== false);
+        const voice = await manager.getDefaultVoice(scoped ?? [...(navigator.languages ?? ["en"])], boundaryVoices.length ? boundaryVoices : voices);
+        if (voice) await this.setVoice(voice);
     }
 }
 
@@ -117,6 +140,8 @@ const LAYOUT_TOLERANCE = 1;
  */
 export class ReadAloudNavigator {
     private readonly speech: ReadiumSpeechNavigator;
+    private readonly engine: ReadiumSpeechPlaybackEngine;
+    private readonly publicationEngine?: PublicationWebSpeechEngine;
     private readonly pool: GuidedNavigationPool;
     private readonly units: ReadingUnits;
     private readonly unsubscribers: (() => void)[] = [];
@@ -136,6 +161,9 @@ export class ReadAloudNavigator {
     // The reader moved away from the spoken text, which isn't followed until back in view.
     private detached = false;
     private navigationLocked = false;
+    private readonly keepAwake: boolean;
+    private wakeLockWanted = false;
+    private wakeLock?: Promise<WakeLockSentinel | undefined>;
     // The resource the spoken text was last shown in, to tell when the reader moves to another.
     private shownHref?: string;
     // The utterance pieces whose layout the navigator reports, and the latest report.
@@ -153,12 +181,18 @@ export class ReadAloudNavigator {
     private loadToken = 0;
     // Settles the pending wait for speech's "ready", which never comes once stopped or destroyed.
     private settleReady?: () => void;
+    // Settles the pending wait for the layout a session starts in view from, false once given up.
+    private settleLayout?: (laidOut: boolean) => void;
+    private watchedQueue: ReadiumSpeechUtterance[] = [];
+    // The voice the current utterance is spoken with, as the engine reports it.
+    private spokenVoice: ReadiumSpeechVoice | null = null;
     private lastState: ReadAloudState = "idle";
 
     constructor(
         private readonly navigator: Navigator & Partial<DecorableNavigator> & {
             readonly viewport?: VisualNavigatorViewport;
             readonly layout?: Layout;
+            readonly settings?: Readonly<EpubSettings> | Readonly<WebPubSettings> | Readonly<DivinaSettings>;
             watchTextLayout?(locators: Locator[], cb: (layout: TextLayout) => void): () => void;
             findPointedPiece?(event: FrameClickEvent, pieces: Locator[]): Promise<Locator | undefined>;
             lockNavigation?(locked: boolean): void;
@@ -166,22 +200,33 @@ export class ReadAloudNavigator {
         private readonly listeners: ReadAloudListeners = {},
         configuration: ReadAloudConfiguration = {}
     ) {
-        this.detachable = configuration.detachable ?? true;
+        this.keepAwake = configuration.keepAwake ?? true;
         this.pool = new GuidedNavigationPool(navigator.publication, configuration.provider ?? new PublicationGuidedNavigationProvider(navigator.publication));
         this.units = new ReadingUnits(navigator);
         this._preferences = new ReadAloudPreferences(configuration.preferences);
         this._defaults = new ReadAloudDefaults(configuration.defaults);
-        this.speech = new ReadiumSpeechNavigator(configuration.engine ?? new PublicationWebSpeechEngine(navigator.publication.metadata.languages), {
-            preferences: ReadAloudNavigator.speechPreferences(this._preferences),
-            defaults: ReadAloudNavigator.speechPreferences({ ...this._defaults.speech, autoPause: this._defaults.autoPause }),
+        const metadataLanguage = navigator.publication.metadata.languages?.[0];
+        if (!configuration.engine) {
+            const languageOverride = this._preferences.languageOverride ?? this._defaults.languageOverride;
+            this.publicationEngine = new PublicationWebSpeechEngine(this.publicationLanguages(languageOverride));
+        }
+        this.engine = configuration.engine ?? this.publicationEngine!;
+        this.speech = new ReadiumSpeechNavigator(this.engine, {
+            preferences: ReadAloudNavigator.speechPreferences(this._preferences, metadataLanguage),
+            defaults: ReadAloudNavigator.speechPreferences({
+                ...this._defaults.speech,
+                autoPause: this._defaults.autoPause,
+                languageOverride: this._defaults.languageOverride
+            }, metadataLanguage),
         });
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
-        this.speech.setSpeakInContentLanguage(this._settings.speakInContentLanguage);
         this.listen();
     }
 
     /** Whether the reader can move away while reading aloud. Otherwise the app keeps its own navigation from moving while playing. */
-    readonly detachable: boolean;
+    get detachable(): boolean {
+        return this._settings.detachable;
+    }
 
     get state(): ReadAloudState {
         if (this.loading) return "loading";
@@ -196,6 +241,7 @@ export class ReadAloudNavigator {
     async play(from?: Locator): Promise<void> {
         if (!from && this.loading) {
             this.loadPaused = false;
+            this.notifyState();
             return;
         }
         if (!from && this.turning) return;
@@ -210,15 +256,15 @@ export class ReadAloudNavigator {
         }
         if (!from && state === "playing") return;
         this.attach();
-        await this.start(from ?? this.navigator.currentLocator);
+        await this.start(from ?? this.navigator.currentLocator, !from && this._settings.startInViewport);
     }
 
     /**
      * Starts reading from the utterance under a click or tap in a displayed resource, loading that resource when needed.
-     * Resolves false when the press isn't on content read aloud, or is on an interactive element, so the caller handles it.
+     * Resolves false when the `readFromPointer` preference is off, or the press isn't on content read aloud, or is on an interactive element, so the caller handles it.
      */
     async readFromPointer(event: FrameClickEvent): Promise<boolean> {
-        if (event.interactiveElement || !event.onContent || !this.navigator.findPointedPiece) return false;
+        if (!this._settings.readFromPointer || event.interactiveElement || !event.onContent || !this.navigator.findPointedPiece) return false;
         const unit = this.unit;
         const index = unit ? await this.pointedIndex(event, this.speech.getContentQueue()) : -1;
         if (unit && index >= 0) {
@@ -236,19 +282,22 @@ export class ReadAloudNavigator {
     }
 
     pause(): void {
-        if (this.loading) this.loadPaused = true;
-        else if (this.turning) this.pauseTurning();
+        if (this.loading) {
+            this.loadPaused = true;
+            this.notifyState();
+        } else if (this.turning) this.pauseTurning();
         else if (!this.pausedBefore) this.speech.pause();
     }
 
     stop(): void {
         this.loadToken++;
         this.settleReady?.();
+        this.settleLayout?.(false);
         this.attach();
         this.pausedBefore = undefined;
         this.turning = undefined;
-        this.setLoading(false);
         this.speech.stop();
+        this.setLoading(false);
     }
 
     /** Moves to the next utterance, continuing into the next reading unit at the end of this one. */
@@ -279,27 +328,36 @@ export class ReadAloudNavigator {
         const voices = await this.speech.getVoices();
         const languages = options.languages?.length ? options.languages : undefined;
         const filtered = languages ? filterByLanguages(voices, languages) : voices;
-        const publicationLanguages = this.navigator.publication.metadata.languages;
+        const publicationLanguages = this.publicationLanguages(this._settings.languageOverride);
         const preferred = languages
-            ?? (publicationLanguages?.length ? publicationLanguages : [...(navigator.languages ?? ["en"])]);
+            ?? (publicationLanguages.length ? publicationLanguages : [...(navigator.languages ?? ["en"])]);
         return sortVoicesByRegions(preferred, filtered);
     }
 
-    setVoice(voice: ReadiumSpeechVoice | string): void {
-        this.speech.setVoice(voice);
+    /**
+     * The base languages voices can be had in, e.g. for `languageOverride`, without loading their voices.
+     * With an engine given in the configuration, those of its voices.
+     */
+    async getLanguages(): Promise<string[]> {
+        // Initializes the engine first, so the voice manager is scoped to the publication's languages
+        const voices = await this.speech.getVoices();
+        if (!this.publicationEngine) return [...new Set(voices.map(voice => extractLangRegionFromBCP47(voice.language)[0]))];
+        const manager = await WebSpeechVoiceManager.initialize();
+        return manager.getBrowserLanguages().map(language => language.code);
     }
 
-    getCurrentVoice(): ReadiumSpeechVoice | null {
-        return this.speech.getCurrentVoice();
+    /** The publication's languages, `languageOverride` in place of the primary one when set. */
+    getPublicationLanguages(): string[] {
+        return this.publicationLanguages(this._settings.languageOverride);
     }
 
     get settings(): Readonly<ReadAloudSettings> {
-        return Object.freeze({ ...this._settings });
+        return Object.freeze(new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults));
     }
 
     get preferencesEditor(): ReadAloudPreferencesEditor {
         if (this._preferencesEditor === null) {
-            this._preferencesEditor = new ReadAloudPreferencesEditor(this._preferences, this.settings, this.speech.settings, this.layout());
+            this._preferencesEditor = new ReadAloudPreferencesEditor(this._preferences, this.settings, () => this.speech.preferencesEditor, this.layout());
         }
         return this._preferencesEditor;
     }
@@ -307,9 +365,18 @@ export class ReadAloudNavigator {
     async submitPreferences(preferences: ReadAloudPreferences): Promise<void> {
         this._preferences = this._preferences.merging(preferences);
         const old = this.speech.getContentQueue();
-        await this.speech.submitPreferences(ReadAloudNavigator.speechPreferences(this._preferences));
+        const previousLanguageOverride = this._settings.languageOverride;
+        const languageOverride = this._preferences.languageOverride ?? this._defaults.languageOverride;
+        // Paused, the rebuilt queue and the new default voice restart the utterance once, on playing again.
+        const pausedForLanguage = !!this.publicationEngine && languageOverride !== previousLanguageOverride && this.speech.getState() === "playing";
+        if (pausedForLanguage) this.speech.pause();
+        await this.speech.submitPreferences(ReadAloudNavigator.speechPreferences(this._preferences, this.navigator.publication.metadata.languages?.[0]));
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
-        this.speech.setSpeakInContentLanguage(this._settings.speakInContentLanguage);
+        if (this._settings.languageOverride !== previousLanguageOverride) {
+            await this.publicationEngine?.setLanguages(this.publicationLanguages(this._settings.languageOverride));
+        }
+        if (pausedForLanguage && this.speech.getState() === "paused") this.speech.play();
+        if (!this._settings.detachable && this.detached) this.attach();
         // Speech keeps its place in a rebuilt queue only while playing or paused itself, not while stopped here.
         const held = this.pausedBefore ?? this.turning;
         if (held) {
@@ -319,14 +386,16 @@ export class ReadAloudNavigator {
         // Segmentation may have split the queue into other pieces.
         if (this.unit) this.watchLayout(this.speech.getContentQueue());
         if (this._preferencesEditor !== null) {
-            this._preferencesEditor = new ReadAloudPreferencesEditor(this._preferences, this.settings, this.speech.settings, this.layout());
+            this._preferencesEditor = new ReadAloudPreferencesEditor(this._preferences, this.settings, () => this.speech.preferencesEditor, this.layout());
         }
+        this.notifyState();
         this.decorate();
     }
 
     async destroy(): Promise<void> {
         this.loadToken++;
         this.settleReady?.();
+        this.settleLayout?.(false);
         this.pausedBefore = undefined;
         this.turning = undefined;
         this.unsubscribers.forEach(unsubscribe => unsubscribe());
@@ -338,6 +407,7 @@ export class ReadAloudNavigator {
         this.unwatchLayout = undefined;
         this.clearHighlights();
         this.lockNavigation(false);
+        this.holdWakeLock(false);
         await this.speech.destroy();
     }
 
@@ -348,7 +418,9 @@ export class ReadAloudNavigator {
                 this.notifyState();
             }));
         };
-        on("start", () => {
+        on("start", event => {
+            // Engines that don't report the voice speaking are taken to use theirs.
+            this.spokenVoice = event.detail?.voice ?? this.engine.getCurrentVoice();
             const utterance = this.speech.getCurrentContent();
             if (utterance) this.progress.start(utterance);
             this.notifyUtterance();
@@ -370,7 +442,7 @@ export class ReadAloudNavigator {
             this.wordLocator = locator;
             this.decorate();
             const word = this.wordPoint(locate);
-            if (word && this.isHidden(word)) this.follow(locator);
+            if (word && this.isBehind(word)) this.follow(locator);
             this.listeners.wordChanged?.(locator, event.detail.word ?? "");
         });
         on("pause", () => {
@@ -419,10 +491,21 @@ export class ReadAloudNavigator {
             if (!this.pausedBefore && !this.turning) this.clearHighlights();
         });
         for (const type of ["idle", "loading", "ready"] as const) on(type, () => {});
+        if (this.keepAwake) {
+            // Browsers release screen wake locks while the document is hidden.
+            const reacquire = () => {
+                if (document.visibilityState === "visible" && this.wakeLockWanted) this.requestWakeLock();
+            };
+            document.addEventListener("visibilitychange", reacquire);
+            this.unsubscribers.push(() => document.removeEventListener("visibilitychange", reacquire));
+        }
     }
 
-    private async start(from: Locator): Promise<void> {
-        await this.loadUnit(() => this.units.around(from.href.split("#")[0]), queue => this.startIndex(queue, from));
+    private async start(from: Locator, inViewport = false): Promise<void> {
+        await this.loadUnit(
+            () => this.units.around(from.href.split("#")[0]),
+            queue => inViewport ? this.viewportIndex(queue, from) : this.startIndex(queue, from)
+        );
     }
 
     private async resumePaused(paused: PausedPosition): Promise<void> {
@@ -486,6 +569,7 @@ export class ReadAloudNavigator {
     // `find` gives the unit once speech is stopped, as finding it may move the navigator.
     private async loadUnit(find: () => ReadingUnit | undefined, indexIn: (queue: ReadiumSpeechUtterance[]) => number | Promise<number>, paused = false): Promise<boolean> {
         const token = ++this.loadToken;
+        this.settleLayout?.(false);
         this.loadPaused = paused;
         this.setLoading(true);
         this.pausedBefore = undefined;
@@ -520,7 +604,7 @@ export class ReadAloudNavigator {
             if (token !== this.loadToken) return false;
             this.setLoading(false);
             const loaded = this.speech.getContentQueue();
-            this.watchLayout(loaded);
+            if (!ReadAloudNavigator.sameQueue(loaded, this.watchedQueue)) this.watchLayout(loaded);
             const index = Math.max(Math.min(this.indexAfterRebuild(queue, Math.max(start, 0)), loaded.length - 1), 0);
             if (this.loadPaused) {
                 this.pausedBefore = { unit, index, current: true };
@@ -554,10 +638,44 @@ export class ReadAloudNavigator {
         return byText !== -1 ? byText : Math.max(first, 0);
     }
 
+    // The first utterance starting in view, or else the one going on at its top, once `queue` is laid out.
+    private async viewportIndex(queue: ReadiumSpeechUtterance[], from: Locator): Promise<number> {
+        if (!this.navigator.watchTextLayout || this.layout() === Layout.fixed) return this.startIndex(queue, from);
+        const laidOut = this.untilLaidOut();
+        this.watchLayout(queue);
+        // Nothing watched reports no layout.
+        if (!this.unwatchLayout) this.settleLayout?.(false);
+        const viewport = await laidOut && this.visibleViewport();
+        if (!viewport) return this.startIndex(queue, from);
+        let above = -1;
+        for (let i = 0; i < queue.length; i++) {
+            const start = this.utteranceStart(queue[i]);
+            if (!start) continue;
+            const hidden = this.isHidden(start);
+            if (hidden === false) return i;
+            if (hidden && this.lineStart(start)! < viewport.pos) above = i;
+        }
+        return above >= 0 ? above : this.startIndex(queue, from);
+    }
+
+    // The next layout report with pieces, or false when none comes in time or the wait is given up.
+    private untilLaidOut(): Promise<boolean> {
+        this.settleLayout?.(false);
+        return new Promise<boolean>(resolve => {
+            const settle = (laidOut: boolean) => {
+                clearTimeout(timeout);
+                if (this.settleLayout === settle) this.settleLayout = undefined;
+                resolve(laidOut);
+            };
+            const timeout = setTimeout(() => settle(false), GO_TIMEOUT);
+            this.settleLayout = settle;
+        });
+    }
+
     // The index of `old[index]` in speech's queue, which submitted preferences may have rebuilt since `old`.
     private indexAfterRebuild(old: ReadiumSpeechUtterance[], index: number): number {
         const queue = this.speech.getContentQueue();
-        if (queue.length === old.length && queue.every((utterance, i) => utterance === old[i])) return index;
+        if (ReadAloudNavigator.sameQueue(queue, old)) return index;
         const piece = old[index] && this.piecesOf(old[index])[0];
         const locator = piece && this.locatorFor(piece);
         return locator ? this.startIndex(queue, locator) : 0;
@@ -671,7 +789,7 @@ export class ReadAloudNavigator {
         this.decorate();
         if (locators.length > 0) {
             const start = this.utteranceStart(utterance);
-            if (!start || this.isHidden(start) !== false) this.follow(locators[0]);
+            if (!start || this.isBehind(start) !== false) this.follow(locators[0]);
         } else {
             // Following a whole page again would reset its scroll position.
             const page = this.pageLocator();
@@ -743,6 +861,7 @@ export class ReadAloudNavigator {
         this.unwatchLayout?.();
         this.unwatchLayout = undefined;
         this.watchedPieces.clear();
+        this.watchedQueue = queue;
         this.lines = [];
         this.viewport = undefined;
         if (!this.navigator.watchTextLayout || this.layout() === Layout.fixed) return;
@@ -761,12 +880,16 @@ export class ReadAloudNavigator {
         this.shownHref = this.navigator.currentLocator.href.split("#")[0];
         this.viewport = layout.viewport;
         if (layout.pieces) this.lines = layout.pieces;
+        // Nothing is spoken yet while a session waits for the layout it starts from.
+        if (this.settleLayout) {
+            if (layout.pieces) this.settleLayout(true);
+            return;
+        }
         const spoken = this.spokenPoint();
         const hidden = spoken && this.isHidden(spoken);
-        if (hidden === false) {
-            this.detached = false;
-        } else if (hidden && layout.pieces) {
-            // Laid out again, so the spoken text may have moved out of view.
+        if (hidden === false) this.detached = false;
+        if (spoken && this.isBehind(spoken) && layout.pieces) {
+            // Laid out again, so the spoken text may have moved past where it's followed.
             const locator = this.pointLocator(spoken);
             if (locator) this.follow(locator);
         } else if (hidden && this.detachable && this.following === undefined && !this.turning) {
@@ -779,9 +902,41 @@ export class ReadAloudNavigator {
     // Whether `point` is out of view, or undefined when its layout isn't known.
     private isHidden(point: SpokenPoint): boolean | undefined {
         const start = this.lineStart(point);
-        if (start === undefined || !this.viewport) return undefined;
-        const { pos, size } = this.viewport;
+        const viewport = this.visibleViewport();
+        if (start === undefined || !viewport) return undefined;
+        const { pos, size } = viewport;
         return start < pos - LAYOUT_TOLERANCE || start >= pos + size - LAYOUT_TOLERANCE;
+    }
+
+    // Whether the spoken text at `point` is to be followed: out of view, or off the middle when kept centered.
+    private isBehind(point: SpokenPoint): boolean | undefined {
+        const hidden = this.isHidden(point);
+        const middle = this.middle();
+        if (hidden !== false || middle === undefined) return hidden;
+        const start = this.lineStart(point)!;
+        // Text off the middle is only centered while the frame can still scroll toward it.
+        return (start >= middle && !this.scrolledToEnd()) || (start < middle - 2 * LAYOUT_TOLERANCE && this.viewport!.pos > LAYOUT_TOLERANCE);
+    }
+
+    private scrolledToEnd(): boolean {
+        const href = this.navigator.currentLocator.href.split("#")[0];
+        return (this.navigator.viewport?.progressions.get(href)?.end ?? 0) >= 1;
+    }
+
+    // The line going to text centers when scrolled, where the spoken text is kept when centered.
+    private middle(): number | undefined {
+        if (!this.viewport || !this._settings.keepCentered || this.layout() !== Layout.scrolled) return undefined;
+        return this.viewport.pos + this.viewport.size / 2 + LAYOUT_TOLERANCE;
+    }
+
+    // Scroll padding keeps room for the UI overlaying the top and bottom of the content.
+    private visibleViewport(): TextLayout["viewport"] | undefined {
+        if (!this.viewport || this.layout() !== Layout.scrolled) return this.viewport;
+        const settings = this.navigator.settings;
+        if (!settings || !("scrollPaddingTop" in settings)) return this.viewport;
+        const top = settings.scrollPaddingTop ?? 0;
+        const bottom = settings.scrollPaddingBottom ?? 0;
+        return { pos: this.viewport.pos + top, size: Math.max(0, this.viewport.size - top - bottom) };
     }
 
     private lineStart(point: SpokenPoint): number | undefined {
@@ -848,12 +1003,14 @@ export class ReadAloudNavigator {
         });
     }
 
-    // Times the turn to the next line or column out of view, for voices without word boundaries.
+    // Times the turn to the next line or column to follow, for voices without word boundaries.
     private armBreak() {
         this.clearBreak();
         const utterance = this.speech.getCurrentContent();
-        if (!utterance || this.detached || this.sendsBoundaries() || !this.progress.speaking || !this.viewport) return;
-        const end = this.viewport.pos + this.viewport.size - LAYOUT_TOLERANCE;
+        const viewport = this.visibleViewport();
+        if (!utterance || this.detached || this.sendsBoundaries() || !this.progress.speaking || !viewport) return;
+        // Lines past the middle stay there once the frame can't scroll farther.
+        const end = (this.scrolledToEnd() ? undefined : this.middle()) ?? viewport.pos + viewport.size - LAYOUT_TOLERANCE;
         let before = 0;
         for (const piece of this.piecesOf(utterance)) {
             const index = this.watchedPieces.get(piece);
@@ -879,15 +1036,19 @@ export class ReadAloudNavigator {
     }
 
     private sendsBoundaries(): boolean {
-        return this.speech.getCurrentVoice()?.controls?.boundary !== false;
+        return this.spokenVoice?.controls?.boundary !== false;
     }
 
     private voiceName(): string {
-        return this.speech.getCurrentVoice()?.name ?? "";
+        return this.spokenVoice?.name ?? "";
     }
 
     private speed(): number {
         return this.progress.speed(this.voiceName(), this.speech.settings.rate);
+    }
+
+    private static sameQueue(a: ReadiumSpeechUtterance[], b: ReadiumSpeechUtterance[]): boolean {
+        return a.length === b.length && a.every((utterance, i) => utterance === b[i]);
     }
 
     // The frame counts offsets with each run of whitespace as one character.
@@ -921,11 +1082,21 @@ export class ReadAloudNavigator {
         return this.navigator.layout === Layout.reflowable ? Layout.reflowable : Layout.scrolled;
     }
 
+    // The override comes first, in place of the metadata's primary language it corrects.
+    private publicationLanguages(languageOverride: string | null): string[] {
+        const languages = this.navigator.publication.metadata.languages ?? [];
+        return languageOverride ? [languageOverride, ...languages.slice(1)] : languages;
+    }
+
     // Speech knows nothing of pages and spreads, so it never auto-pauses at them itself.
-    private static speechPreferences(preferences: IReadAloudPreferences): SpeechPreferences {
-        const { autoPause, speakInContentLanguage, utteranceStyle, wordStyle, ...speech } = preferences;
+    private static speechPreferences(preferences: IReadAloudPreferences, metadataLanguage?: string): SpeechPreferences {
+        const { autoPause, languageOverride, startInViewport, keepCentered, detachable, readFromPointer, utteranceStyle, wordStyle, ...speech } = preferences;
         const ownScope = autoPause === ReadAloudAutoPause.page || autoPause === ReadAloudAutoPause.spread;
-        return new SpeechPreferences({ ...speech, autoPause: ownScope ? ReadAloudAutoPause.none : autoPause });
+        return new SpeechPreferences({
+            ...speech,
+            autoPause: ownScope ? ReadAloudAutoPause.none : autoPause,
+            languageOverrides: languageOverride && metadataLanguage ? { [metadataLanguage]: languageOverride } : null
+        });
     }
 
     private setLoading(loading: boolean) {
@@ -939,9 +1110,38 @@ export class ReadAloudNavigator {
         this.navigator.lockNavigation?.(locked);
     }
 
+    // Unsupported or denied (e.g. insecure context, battery saver) leaves the screen as it is.
+    private holdWakeLock(held: boolean) {
+        if (!this.keepAwake || held === this.wakeLockWanted) return;
+        this.wakeLockWanted = held;
+        if (held) this.requestWakeLock();
+        else this.releaseWakeLock();
+    }
+
+    private requestWakeLock() {
+        this.releaseWakeLock();
+        const request: Promise<WakeLockSentinel | undefined> | undefined = navigator.wakeLock?.request("screen").then(sentinel => {
+            // Browsers may also release it while visible (e.g. battery saver).
+            sentinel.addEventListener("release", () => {
+                if (this.wakeLock === request && document.visibilityState === "visible") this.requestWakeLock();
+            });
+            return sentinel;
+        }).catch(() => undefined);
+        this.wakeLock = request;
+    }
+
+    // Chained on the request, as a pending one can't be cancelled.
+    private releaseWakeLock() {
+        void this.wakeLock?.then(sentinel => sentinel?.release()).catch(() => {});
+        this.wakeLock = undefined;
+    }
+
     private notifyState() {
         const state = this.state;
-        this.lockNavigation(!this.detachable && (state === "playing" || state === "loading"));
+        // Not speech's own "loading", from which it settles paused without an event.
+        // Navigation stays locked through paused loads, as they move the reader once ready.
+        this.lockNavigation(!this.detachable && (this.loading || state === "playing"));
+        this.holdWakeLock(this.loading ? !this.loadPaused : state === "playing");
         if (state === this.lastState) return;
         this.lastState = state;
         this.listeners.stateChanged?.(state);

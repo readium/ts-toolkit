@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.0] – 2026-10-15
+
+### Added
+
+- `ReadAloudNavigator` keeps the screen awake while playing, where the browser grants a screen wake lock. Disable it with `keepAwake: false` in its configuration
+- `startInViewport` read-aloud preference, to start a session at the first utterance starting in view rather than at the start of the resource
+- `keepCentered` read-aloud preference, to keep the spoken line in the middle of the frame when scrolled
+- `readFromPointer` read-aloud preference, to turn off reading from a click or tap, `readFromPointer()` then resolving `false`
+- `voice` read-aloud preference, from `@readium/speech`: a voice id for all content, or one per language (e.g. `{ en: "…", fr: "…" }`), content in a language without one being spoken with the engine's voice. `settings.voice` falls back to the engine's voice, which the default engine picks in the publication's language. `VoicePreference` is exported, as is speech's `Preference` as `SpeechPreference`
+- `extractLangRegionFromBCP47`, `getLanguageDisplayName`, `getVoiceId` and `valueForLanguage` are re-exported from `@readium/speech`, to split and name a language, get the id the `voice` preference takes for a voice, and read a per-language `voice` the way it is applied
+- `ReadAloudNavigator.getLanguages()`: the base languages voices can be had in, e.g. to pick a `languageOverride`. With the default engine, those of every voice of the browser, without loading their voices
+- `ReadAloudNavigator.getPublicationLanguages()`: the publication's languages, with `languageOverride` in place of the primary one
+- `languageOverride` read-aloud preference, to speak a publication whose metadata's primary language is wrong in its actual language, which the voices, their `getVoices()` ranking and the default voice follow
+
+### Changed
+
+- **Breaking:** `inlineContextualization` read-aloud preference takes a list of roles instead of a boolean, so notes (`noteref`) and page breaks (`pagebreak`) can be spoken inline separately, following `@readium/speech`. `inlineContextualizationRoles` lists the accepted roles, and `true` becomes `["noteref", "pagebreak"]`
+- **Breaking:** `ReadAloudNavigator`'s `setVoice()` and `getCurrentVoice()` are removed, set voices with the `voice` preference instead. Word boundaries and timing follow the voice each utterance is actually spoken with
+- **Breaking:** the `speakInContentLanguage` read-aloud preference is removed, as `@readium/speech` always speaks an utterance in its language now, `language: "none"` keeping one voice throughout. Map languages to voices with the `voice` preference
+- **Breaking:** `detachable` is a read-aloud preference instead of a `ReadAloudNavigator` configuration option, and can be changed while reading aloud. Set it in `defaults` or `preferences`
+
+### Fixed
+
+- With `detachable: false`, `ReadAloudNavigator` no longer locks navigating in the content after submitting preferences that change its utterances while paused
+- In right-to-left paginated EPUBs, `ReadAloudNavigator` follows the spoken text past the first page instead of going back to it, as does going to a locator's text or fragment, via updated `@readium/navigator-html-injectables`
+- When scrolled, `ReadAloudNavigator` follows the spoken text once it goes under `EpubNavigator`'s `scrollPaddingTop` or `scrollPaddingBottom`, instead of reading it hidden behind the UI they leave room for
+- Keyboard peripherals can share a key combo under different conditions, instead of only the first being kept
+- Keyboard peripherals' conditions apply when focus is outside the content too, instead of only inside it, in `EpubNavigator`, `WebPubNavigator` and `AudioNavigator`
+
 ## [2.12.1] – 2026-10-09
 
 ### Fixed
