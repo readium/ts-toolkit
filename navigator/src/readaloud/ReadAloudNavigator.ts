@@ -3,7 +3,6 @@ import { FrameClickEvent, TextLayout, TextLineStarts } from "@readium/navigator-
 import {
     createLocator,
     extractLangRegionFromBCP47,
-    getVoiceId,
     filterByLanguages,
     LocatorOptions,
     ReadiumSpeechNavigator,
@@ -15,8 +14,6 @@ import {
     resolveUtteranceLocate,
     sortVoicesByRegions,
     SpeechPreferences,
-    valueForLanguage,
-    VoicePreference,
     WebSpeechEngine,
     WebSpeechVoiceManager,
 } from "@readium/speech";
@@ -140,7 +137,6 @@ const LAYOUT_TOLERANCE = 1;
  */
 export class ReadAloudNavigator {
     private readonly speech: ReadiumSpeechNavigator;
-    private readonly engine: ReadiumSpeechPlaybackEngine;
     private readonly publicationEngine?: PublicationWebSpeechEngine;
     private readonly pool: GuidedNavigationPool;
     private readonly units: ReadingUnits;
@@ -206,12 +202,11 @@ export class ReadAloudNavigator {
         this._preferences = new ReadAloudPreferences(configuration.preferences);
         this._defaults = new ReadAloudDefaults(configuration.defaults);
         const metadataLanguage = navigator.publication.metadata.languages?.[0];
-        if (configuration.engine) this.engine = configuration.engine;
-        else {
+        if (!configuration.engine) {
             const languageOverride = this._preferences.languageOverride ?? this._defaults.languageOverride;
-            this.engine = this.publicationEngine = new PublicationWebSpeechEngine(this.publicationLanguages(languageOverride));
+            this.publicationEngine = new PublicationWebSpeechEngine(this.publicationLanguages(languageOverride));
         }
-        this.speech = new ReadiumSpeechNavigator(this.engine, {
+        this.speech = new ReadiumSpeechNavigator(configuration.engine ?? this.publicationEngine!, {
             preferences: ReadAloudNavigator.speechPreferences(this._preferences, metadataLanguage),
             defaults: ReadAloudNavigator.speechPreferences({
                 ...this._defaults.speech,
@@ -347,7 +342,8 @@ export class ReadAloudNavigator {
     }
 
     get settings(): Readonly<ReadAloudSettings> {
-        return Object.freeze({ ...this._settings, voice: this.effectiveVoice() });
+        // Speech's, which falls back to the engine's voice once it has picked it
+        return Object.freeze({ ...this._settings, voice: this.speech.settings.voice });
     }
 
     get preferencesEditor(): ReadAloudPreferencesEditor {
@@ -1061,18 +1057,6 @@ export class ReadAloudNavigator {
         const metadata = this.navigator.publication.metadata;
         if (metadata.conformsTo?.includes(Profile.DIVINA) || metadata.effectiveLayout === Layout.fixed) return Layout.fixed;
         return this.navigator.layout === Layout.reflowable ? Layout.reflowable : Layout.scrolled;
-    }
-
-    // Read when asked, as the engine picks its voice once it has loaded them.
-    private effectiveVoice(): VoicePreference | null {
-        const voice = this._settings.voice;
-        if (typeof voice === "string") return voice;
-        const engineVoice = this.engine.getCurrentVoice();
-        const engineVoiceId = engineVoice ? getVoiceId(engineVoice) : null;
-        if (!voice || !engineVoiceId) return voice ?? engineVoiceId;
-        const language = this.publicationLanguages(this._settings.languageOverride)[0];
-        if (!language || valueForLanguage(voice, language) !== undefined) return voice;
-        return { ...voice, [extractLangRegionFromBCP47(language)[0]]: engineVoiceId };
     }
 
     // The override comes first, in place of the metadata's primary language it corrects.
