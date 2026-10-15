@@ -12,6 +12,12 @@ export interface ObjBuilder {
   role?: GndRole[];
   children?: ObjBuilder[];
   description?: string;
+  descriptionLanguage?: string;
+}
+
+export function setDescription(o: ObjBuilder, text: string, language: string): void {
+  o.description = text;
+  o.descriptionLanguage = language;
 }
 
 // Roles whose entire information is the role itself, with no ref/text/
@@ -165,7 +171,7 @@ export function finalizeToGuidedNavigationObject(o: ObjBuilder): GuidedNavigatio
     role: o.role && o.role.length > 0 ? new Set(o.role) : undefined,
     children: o.children && o.children.length > 0 ? o.children.map(finalizeToGuidedNavigationObject) : undefined,
     description: o.description
-      ? new GuidedNavigationDescription({ text: new GuidedNavigationText({ plain: o.description }) })
+      ? new GuidedNavigationDescription({ text: new GuidedNavigationText({ plain: o.description, language: o.descriptionLanguage || undefined }) })
       : undefined,
   });
   if (ariaSubstitutedBuilders.has(o)) ariaSubstitutedNodes.add(node);

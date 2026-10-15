@@ -1,15 +1,5 @@
 const ELEMENT_NODE = 1;
 
-export function nodeLanguage(el: Element | null): string {
-  for (let n: Element | null = el; n; n = n.parentElement) {
-    const xmlLang = n.getAttribute("xml:lang");
-    if (xmlLang) return xmlLang;
-    const lang = n.getAttribute("lang");
-    if (lang) return lang;
-  }
-  return "";
-}
-
 export function hasElementChild(el: Element): boolean {
   for (let c = el.firstChild; c; c = c.nextSibling) {
     if (c.nodeType === ELEMENT_NODE) return true;
