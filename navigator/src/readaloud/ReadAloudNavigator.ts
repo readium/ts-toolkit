@@ -341,6 +341,11 @@ export class ReadAloudNavigator {
         return manager.getBrowserLanguages().map(language => language.code);
     }
 
+    /** The publication's languages, `languageOverride` in place of the primary one when set. */
+    getPublicationLanguages(): string[] {
+        return this.publicationLanguages(this._settings.languageOverride);
+    }
+
     get settings(): Readonly<ReadAloudSettings> {
         // Speech's, which falls back to the engine's voice once it has picked it
         return Object.freeze({ ...this._settings, voice: this.speech.settings.voice });

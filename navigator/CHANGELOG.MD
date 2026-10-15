@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `voice` read-aloud preference, from `@readium/speech`: a voice id for all content, or one per language (e.g. `{ en: "…", fr: "…" }`), content in a language without one being spoken with the engine's voice. `settings.voice` falls back to the engine's voice, which the default engine picks in the publication's language. `VoicePreference` is exported
 - `extractLangRegionFromBCP47`, `getLanguageDisplayName`, `getVoiceId` and `valueForLanguage` are re-exported from `@readium/speech`, to split and name a language, get the id the `voice` preference takes for a voice, and read a per-language `voice` the way it is applied
 - `ReadAloudNavigator.getLanguages()`: the base languages voices can be had in, e.g. to pick a `languageOverride`. With the default engine, those of every voice of the browser, without loading their voices
+- `ReadAloudNavigator.getPublicationLanguages()`: the publication's languages, with `languageOverride` in place of the primary one
 - `languageOverride` read-aloud preference, to speak a publication whose metadata's primary language is wrong in its actual language, which the voices, their `getVoices()` ranking and the default voice follow
 
 ### Changed
