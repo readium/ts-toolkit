@@ -1,20 +1,5 @@
 const ELEMENT_NODE = 1;
 
-// An empty declaration (`lang=""`) means the language is unknown, so it isn't inherited past it.
-export function nodeLanguage(el: Element | null): string {
-  for (let n: Element | null = el; n; n = n.parentElement) {
-    const language = n.getAttribute("xml:lang") ?? n.getAttribute("lang");
-    if (language !== null) return language.trim();
-  }
-  return "";
-}
-
-// The language all `nodes` are in, unknown ("") when they differ.
-export function sharedNodeLanguage(nodes: Element[]): string {
-  const languages = new Set(nodes.map(nodeLanguage));
-  return languages.size === 1 ? [...languages][0] : "";
-}
-
 export function hasElementChild(el: Element): boolean {
   for (let c = el.firstChild; c; c = c.nextSibling) {
     if (c.nodeType === ELEMENT_NODE) return true;

@@ -1,6 +1,6 @@
 import { normalizeWhitespace } from "./text.ts";
 import { hasExplicitRole } from "./roles.ts";
-import { nodeLanguage, sharedNodeLanguage } from "./dom.ts";
+import { nodeLanguage, sharedLanguage } from "./language.ts";
 
 function nodeIsHidden(el: Element): boolean {
   if (el.getAttribute("aria-hidden") === "true") return true;
@@ -8,42 +8,44 @@ function nodeIsHidden(el: Element): boolean {
   return false;
 }
 
-function nodeText(el: Node): string {
-  let text = "";
-  const walk = (n: Node) => {
-    if (n.nodeType === 3 /* TEXT_NODE */) {
-      text += n.nodeValue ?? "";
-    }
-    for (let c = n.firstChild; c; c = c.nextSibling) walk(c);
-  };
-  walk(el);
-  return text;
+export interface NodeText {
+  text: string;
+  // Shared by all of the text, unknown ("") when parts of it are in different languages.
+  language: string;
 }
 
-/** Normalized (whitespace-coalesced and trimmed) text content of a node's subtree. */
-export function normalizedNodeText(el: Node): string {
-  return normalizeWhitespace(nodeText(el), true).trim();
-}
-
-// Same as `nodeText`, skipping descendants with an explicit role — those are
-// walked/spoken separately, so folding their text in here would double it up.
-function nodeTextExcludingExplicitRoles(root: Node): string {
+// Raw text of a subtree, adding each non-blank text node's language to `languages`. Explicit-role
+// descendants can be skipped: they're spoken separately, so their text would be doubled up.
+function nodeText(root: Node, excludeExplicitRoles: boolean, languages: Set<string>): string {
   let text = "";
   const walk = (n: Node, isRoot: boolean) => {
     if (n.nodeType === 3 /* TEXT_NODE */) {
-      text += n.nodeValue ?? "";
+      const value = n.nodeValue ?? "";
+      text += value;
+      if (value.trim()) languages.add(nodeLanguage(n.parentElement));
       return;
     }
-    if (n.nodeType === 1 /* ELEMENT_NODE */ && !isRoot && hasExplicitRole(n as Element)) return;
+    if (excludeExplicitRoles && n.nodeType === 1 /* ELEMENT_NODE */ && !isRoot && hasExplicitRole(n as Element)) return;
     for (let c = n.firstChild; c; c = c.nextSibling) walk(c, false);
   };
   walk(root, true);
   return text;
 }
 
+function normalizedText(root: Node, excludeExplicitRoles: boolean): NodeText {
+  const languages = new Set<string>();
+  const text = normalizeWhitespace(nodeText(root, excludeExplicitRoles, languages), true).trim();
+  return { text, language: sharedLanguage(languages) };
+}
+
+/** Normalized (whitespace-coalesced and trimmed) text content of a node's subtree, and its language. */
+export function normalizedNodeText(el: Node): NodeText {
+  return normalizedText(el, false);
+}
+
 /** Same as `normalizedNodeText`, excluding explicitly-role-bearing descendants. */
-export function normalizedNodeTextExcludingExplicitRoles(el: Node): string {
-  return normalizeWhitespace(nodeTextExcludingExplicitRoles(el), true).trim();
+export function normalizedNodeTextExcludingExplicitRoles(el: Node): NodeText {
+  return normalizedText(el, true);
 }
 
 /**
@@ -71,15 +73,21 @@ export function extractNodeAria(el: Element): [string | null, boolean, string] {
 
     if (labelNodes.length > 0) {
       let text = "";
+      const languages = new Set<string>();
       // Directly-referenced label nodes count even when hidden (AccName 2.A).
       labelNodes.forEach((n, i) => {
         const label = n.getAttribute("aria-label");
-        text += label ? label : nodeTextExcludingExplicitRoles(n);
+        if (label) {
+          text += label;
+          languages.add(nodeLanguage(n));
+        } else {
+          text += nodeText(n, true, languages);
+        }
         if (i < labelNodes.length - 1) text += " ";
       });
       const normalized = normalizeWhitespace(text, true).trim();
       if (normalized !== "") {
-        return [normalized, true, sharedNodeLanguage(labelNodes)];
+        return [normalized, true, sharedLanguage(languages)];
       }
     }
   }
@@ -101,10 +109,11 @@ export function extractNodeAria(el: Element): [string | null, boolean, string] {
       .map((id) => el.ownerDocument.getElementById(id))
       .filter((n): n is HTMLElement => n !== null);
     if (nodes.length > 0) {
-      const text = nodes.map((n) => nodeTextExcludingExplicitRoles(n)).join(" ");
+      const languages = new Set<string>();
+      const text = nodes.map((n) => nodeText(n, true, languages)).join(" ");
       const normalized = normalizeWhitespace(text, true).trim();
       if (normalized !== "") {
-        return [normalized, true, sharedNodeLanguage(nodes)];
+        return [normalized, true, sharedLanguage(languages)];
       }
     }
   }
@@ -121,8 +130,8 @@ export function extractNodeAria(el: Element): [string | null, boolean, string] {
     // The accessible name of an SVG comes from its <title> child
     const title = el.querySelector(":scope > title");
     if (title) {
-      const text = normalizedNodeText(title);
-      if (text) return [text, true, nodeLanguage(title)];
+      const { text, language } = normalizedNodeText(title);
+      if (text) return [text, true, language];
     }
   } else if (tagName === "math") {
     // MathML Core's spoken-form fallback (not part of the ARIA AccName algorithm)

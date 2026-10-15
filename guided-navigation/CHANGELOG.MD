@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Descriptions (`alt`, `aria-label`, `aria-labelledby`/`aria-describedby` text, figure and table captions) and the text of page breaks, note references, links and math had no language. They now carry the language of the element they come from, e.g. `<img lang="en" alt="…">` in a French page, and none when they come from several elements in different languages
-- An empty `lang`/`xml:lang` makes the language unknown instead of inheriting the parent's, as `<lang xml:lang="">` in SSML
+- Descriptions (`alt`, `aria-label`, `aria-labelledby`/`aria-describedby` text, figure and table captions) and the text of page breaks, note references, links and math had no language. They now carry the language of the element they come from, e.g. `<img lang="en" alt="…">` in a French page, and none when their text is in several languages
+- An empty `lang` (or `xml:lang` in XHTML) makes the language unknown instead of inheriting the parent's, as `<lang xml:lang="">` in SSML
 
 ## [1.1.2] – 2026-10-13
 

@@ -77,3 +77,68 @@ test("undeclared text isn't tagged when the SSML base defaults to English", () =
   const [node] = parseMarkup('<p>Hello <span lang="fr">monde</span> end.</p>');
   expect(node.text?.ssml).toBe('Hello <lang xml:lang="fr">monde</lang> end.');
 });
+
+test("formatted text only in an empty language declaration has no language", () => {
+  const [node] = parseMarkup('<p lang="fr"><span lang=""><em>xyz</em></span></p>');
+  expect(node.text?.ssml).toBe("<emphasis>xyz</emphasis>");
+  expect(node.text?.language).toBeUndefined();
+});
+
+test("a block in an empty language declaration isn't defaulted to English in SSML", () => {
+  const [node] = parseMarkup('<p lang="">Unknown <span lang="fr">monde</span> end.</p>');
+  expect(node.text?.ssml).toBe('Unknown <lang xml:lang="fr">monde</lang> end.');
+  expect(node.text?.language).toBeUndefined();
+});
+
+test("an empty language declaration is a shift when no language is declared around it", () => {
+  const [node] = parseMarkup('<p>Hello <span lang="">xyz</span> end.</p>');
+  expect(node.text?.ssml).toBe('Hello <lang xml:lang="">xyz</lang> end.');
+});
+
+test("an aria-labelledby description has no language when its text switches language inside a target", () => {
+  const nodes = parseMarkup('<div lang="fr"><p id="l">Un <span lang="en">cat</span></p><img src="a.png" aria-labelledby="l"></div>');
+  expect(find(nodes, withDescription("Un cat"))?.description?.text?.language).toBeUndefined();
+});
+
+test("an aria-labelledby target's own aria-label is in that target's language", () => {
+  const nodes = parseMarkup('<div lang="fr"><p id="l" lang="de" aria-label="Eine Katze">x</p><img src="a.png" aria-labelledby="l"></div>');
+  expect(find(nodes, withDescription("Eine Katze"))?.description?.text?.language).toBe("de");
+});
+
+test("a caption has no language when its text switches language", () => {
+  const nodes = parseMarkup('<div lang="fr"><figure><img src="a.png" alt="x"><figcaption>Le <i lang="en">cat</i> dort</figcaption></figure></div>');
+  expect(find(nodes, withDescription("Le cat dort"))?.description?.text?.language).toBeUndefined();
+});
+
+test("a caption's language ignores descendants spoken separately", () => {
+  const nodes = parseMarkup('<div lang="fr"><figure><img src="a.png" alt="x"><figcaption>Un chat <span role="doc-credit" lang="en">Photo: Jane</span></figcaption></figure></div>');
+  expect(find(nodes, withDescription("Un chat"))?.description?.text?.language).toBe("fr");
+});
+
+test("a caption is in the language its text switches to throughout", () => {
+  const nodes = parseMarkup('<div lang="fr"><figure><img src="a.png" alt="x"><figcaption> <span lang="en">A dog</span> </figcaption></figure></div>');
+  expect(find(nodes, withDescription("A dog"))?.description?.text?.language).toBe("en");
+});
+
+test("a link's text has no language when it switches language", () => {
+  const nodes = parseMarkup('<p lang="fr">Voir <a href="b.html">le <span lang="en">book</span></a> ici.</p>');
+  expect(find(nodes, (node) => node.text?.plain === "le book")?.text?.language).toBeUndefined();
+});
+
+test("an empty xml:lang in HTML has no effect, so lang on the same element applies", () => {
+  const nodes = parseMarkup('<div lang="de"><p>Text.</p><img xml:lang="" lang="fr" src="a.png" alt="Un chat"></div>');
+  expect(find(nodes, withDescription("Un chat"))?.description?.text?.language).toBe("fr");
+});
+
+test("an empty xml:lang in HTML doesn't stop inheritance", () => {
+  const nodes = parseMarkup('<div lang="fr"><p>Texte.</p><img xml:lang="" src="a.png" alt="Un chat"></div>');
+  expect(find(nodes, withDescription("Un chat"))?.description?.text?.language).toBe("fr");
+});
+
+test("an empty xml:lang in XHTML makes the language unknown, over lang", () => {
+  const nodes = parseMarkup(
+    '<div xmlns="http://www.w3.org/1999/xhtml" lang="de"><p>Text.</p><img xml:lang="" lang="fr" src="a.png" alt="Unknown"/></div>',
+    "application/xhtml+xml",
+  );
+  expect(find(nodes, withDescription("Unknown"))?.description?.text?.language).toBeUndefined();
+});

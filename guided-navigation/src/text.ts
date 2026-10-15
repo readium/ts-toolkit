@@ -20,7 +20,8 @@ export function finalizeText(t?: TextBuilder): GuidedNavigationText | undefined 
 }
 
 export interface SSMLContext {
-  lang: string;
+  // `undefined` when no language is declared, "" when it's declared unknown.
+  lang: string | undefined;
   tag: string;
   attrs?: Record<string, string>;
 }

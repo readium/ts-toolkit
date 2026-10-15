@@ -6,7 +6,8 @@ import type { GndRole } from "./types.ts";
 import { normalizedNodeText } from "./a11y.ts";
 import { textIsEmpty } from "./text.ts";
 import { type ObjBuilder, ariaSubstitutedBuilders, substitutedOwnSelectorBuilders } from "./object.ts";
-import { hasElementChild, isAncestorOf, nodeLanguage } from "./dom.ts";
+import { hasElementChild, isAncestorOf } from "./dom.ts";
+import { nodeLanguage } from "./language.ts";
 import { Converter } from "./converter.ts";
 import { selectorForElement, textrefForSelector } from "./selectorGenerator.ts";
 
@@ -24,8 +25,8 @@ export function pagebreak(converter: Converter, el: Element, aria: string | null
   const labelled = !!(obj.text && !textIsEmpty(obj.text));
   const descend = !converter.xmlParsed && (hasElementChild(el) || (labelled && el.firstChild !== null));
   if (!labelled && !descend) {
-    const text = normalizedNodeText(el);
-    if (text) obj.text = { plain: text, ssml: "", language: nodeLanguage(el) };
+    const { text, language } = normalizedNodeText(el);
+    if (text) obj.text = { plain: text, ssml: "", language };
   }
   const selector = selectorForElement(el, converter.selectorRoot, converter.selectorRootAnchor);
   const textref = textrefForSelector(selector, el);
@@ -36,8 +37,8 @@ export function pagebreak(converter: Converter, el: Element, aria: string | null
 
 export function noteref(converter: Converter, el: Element, roles: GndRole[]): void {
   const obj: ObjBuilder = { role: roles };
-  const text = normalizedNodeText(el);
-  if (text) obj.text = { plain: text, ssml: "", language: nodeLanguage(el) };
+  const { text, language } = normalizedNodeText(el);
+  if (text) obj.text = { plain: text, ssml: "", language };
 
   const href = el.getAttribute("href") ?? "";
   let candidateID = el.getAttribute("id") ?? "";
@@ -79,8 +80,8 @@ export function link(converter: Converter, el: Element, roles: GndRole[], aria: 
     const selector = selectorForElement(el, converter.selectorRoot, converter.selectorRootAnchor);
     if (selector) substitutedOwnSelectorBuilders.set(obj, selector);
   } else {
-    const text = normalizedNodeText(el);
-    if (text) obj.text = { plain: text, ssml: "", language: nodeLanguage(el) };
+    const { text, language } = normalizedNodeText(el);
+    if (text) obj.text = { plain: text, ssml: "", language };
   }
   const href = el.getAttribute("href");
   if (href) obj.textref = href;
