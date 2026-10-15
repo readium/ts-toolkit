@@ -93,20 +93,23 @@ interface SpokenPoint {
  * Its default voice sends word boundaries when one can.
  */
 class PublicationWebSpeechEngine extends WebSpeechEngine {
+    private ready = false;
+
     constructor(private languages: string[]) {
         super();
     }
 
     override async initialize(): Promise<boolean> {
         if (!await super.initialize({ languages: this.scope() })) return false;
-        if (!this.getCurrentVoice()) await this.setDefaultVoice();
+        await this.setDefaultVoice();
+        this.ready = true;
         return true;
     }
 
     /** Adds the voices of `languages`, and picks the default voice among them once initialized. */
     async setLanguages(languages: string[]): Promise<void> {
         this.languages = languages;
-        if (this.getCurrentVoice()) await this.setDefaultVoice();
+        if (this.ready) await this.setDefaultVoice();
     }
 
     private scope(): string[] | undefined {
