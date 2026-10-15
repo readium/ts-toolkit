@@ -1,8 +1,9 @@
 import { Layout } from "@readium/shared";
-import { SpeechPreferences, SpeechPreferencesEditor, SpeechSettings } from "@readium/speech";
+import { SpeechPreferencesEditor } from "@readium/speech";
 import type {
   EnumPreference as SpeechEnumPreference,
   ExtractionFormat,
+  Preference as SpeechPreference,
   LanguageMode,
   RangePreference as SpeechRangePreference,
   Segmentation,
@@ -19,17 +20,18 @@ import { ReadAloudSettings } from "./ReadAloudSettings.ts";
  * Edits read-aloud preferences, speech's own fields through speech's editor.
  */
 export class ReadAloudPreferencesEditor implements IPreferencesEditor {
-  private speech: SpeechPreferencesEditor;
+  private speechEditor: () => SpeechPreferencesEditor;
   private own: ReadAloudPreferences;
   private settings: ReadAloudSettings;
   private layout: Layout;
 
   /**
+   * @param speechEditor Speech's editor, read each time as speech replaces it.
    * @param layout How the publication is displayed: `Layout.reflowable` for columns, `Layout.scrolled` when scrolled.
    */
-  constructor(initialPreferences: ReadAloudPreferences, settings: ReadAloudSettings, speechSettings: SpeechSettings, layout: Layout) {
-    const { languageOverride, startInViewport, keepCentered, detachable, readFromPointer, ...speechPreferences } = initialPreferences;
-    this.speech = new SpeechPreferencesEditor(new SpeechPreferences({ ...speechPreferences, autoPause: undefined }), speechSettings);
+  constructor(initialPreferences: ReadAloudPreferences, settings: ReadAloudSettings, speechEditor: () => SpeechPreferencesEditor, layout: Layout) {
+    const { languageOverride, startInViewport, keepCentered, detachable, readFromPointer } = initialPreferences;
+    this.speechEditor = speechEditor;
     this.own = new ReadAloudPreferences({
       autoPause: initialPreferences.autoPause,
       languageOverride,
@@ -42,6 +44,10 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
     });
     this.settings = settings;
     this.layout = layout;
+  }
+
+  private get speech(): SpeechPreferencesEditor {
+    return this.speechEditor();
   }
 
   get preferences(): ReadAloudPreferences {
@@ -88,18 +94,7 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
   get pitch(): SpeechRangePreference<number> { return this.speech.pitch; }
   get volume(): SpeechRangePreference<number> { return this.speech.volume; }
 
-  // Its effective value is the engine's voice when unset, which speech knows nothing of.
-  get voice(): Preference<VoicePreference> {
-    const speech = this.speech.voice;
-    return new Preference<VoicePreference>({
-      initialValue: speech.value,
-      effectiveValue: this.settings.voice,
-      isEffective: true,
-      onChange: (newValue) => {
-        speech.value = newValue ?? null;
-      }
-    });
-  }
+  get voice(): SpeechPreference<VoicePreference> { return this.speech.voice; }
 
   get autoPause(): EnumPreference<ReadAloudAutoPause> {
     return new EnumPreference<ReadAloudAutoPause>({

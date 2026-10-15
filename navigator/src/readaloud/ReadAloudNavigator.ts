@@ -347,13 +347,12 @@ export class ReadAloudNavigator {
     }
 
     get settings(): Readonly<ReadAloudSettings> {
-        // Speech's, which falls back to the engine's voice once it has picked it
-        return Object.freeze({ ...this._settings, voice: this.speech.settings.voice });
+        return Object.freeze(new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults));
     }
 
     get preferencesEditor(): ReadAloudPreferencesEditor {
         if (this._preferencesEditor === null) {
-            this._preferencesEditor = new ReadAloudPreferencesEditor(this._preferences, this.settings, this.speech.settings, this.layout());
+            this._preferencesEditor = new ReadAloudPreferencesEditor(this._preferences, this.settings, () => this.speech.preferencesEditor, this.layout());
         }
         return this._preferencesEditor;
     }
@@ -377,7 +376,7 @@ export class ReadAloudNavigator {
         // Segmentation may have split the queue into other pieces.
         if (this.unit) this.watchLayout(this.speech.getContentQueue());
         if (this._preferencesEditor !== null) {
-            this._preferencesEditor = new ReadAloudPreferencesEditor(this._preferences, this.settings, this.speech.settings, this.layout());
+            this._preferencesEditor = new ReadAloudPreferencesEditor(this._preferences, this.settings, () => this.speech.preferencesEditor, this.layout());
         }
         this.notifyState();
         this.decorate();
