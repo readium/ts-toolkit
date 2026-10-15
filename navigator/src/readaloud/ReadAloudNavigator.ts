@@ -904,8 +904,13 @@ export class ReadAloudNavigator {
         const middle = this.middle();
         if (hidden !== false || middle === undefined) return hidden;
         const start = this.lineStart(point)!;
-        // Text above the middle is only centered while the frame can still scroll up.
-        return start >= middle || (start < middle - 2 * LAYOUT_TOLERANCE && this.viewport!.pos > LAYOUT_TOLERANCE);
+        // Text off the middle is only centered while the frame can still scroll toward it.
+        return (start >= middle && !this.scrolledToEnd()) || (start < middle - 2 * LAYOUT_TOLERANCE && this.viewport!.pos > LAYOUT_TOLERANCE);
+    }
+
+    private scrolledToEnd(): boolean {
+        const href = this.navigator.currentLocator.href.split("#")[0];
+        return (this.navigator.viewport?.progressions.get(href)?.end ?? 0) >= 1;
     }
 
     // The line going to text centers when scrolled, where the spoken text is kept when centered.
@@ -994,7 +999,8 @@ export class ReadAloudNavigator {
         const utterance = this.speech.getCurrentContent();
         const viewport = this.visibleViewport();
         if (!utterance || this.detached || this.sendsBoundaries() || !this.progress.speaking || !viewport) return;
-        const end = this.middle() ?? viewport.pos + viewport.size - LAYOUT_TOLERANCE;
+        // Lines past the middle stay there once the frame can't scroll farther.
+        const end = (this.scrolledToEnd() ? undefined : this.middle()) ?? viewport.pos + viewport.size - LAYOUT_TOLERANCE;
         let before = 0;
         for (const piece of this.piecesOf(utterance)) {
             const index = this.watchedPieces.get(piece);
