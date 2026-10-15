@@ -586,7 +586,7 @@ export class ReadAloudNavigator {
             failures.forEach(failure => this.listeners.error?.(failure.error));
 
             const ready = this.untilReady();
-            await this.speech.loadGndContent(guided);
+            await this.speech.loadGndContent(guided, { language: this.navigator.publication.metadata.languages?.[0] });
             if (token !== this.loadToken) return false;
             this.unit = unit;
 
