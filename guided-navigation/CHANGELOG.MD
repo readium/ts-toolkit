@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] – 2026-10-15
+
+### Fixed
+
+- Descriptions (`alt`, `aria-label`, `aria-labelledby`/`aria-describedby` text, figure and table captions) and the text of page breaks, note references, links and math had no language. They now carry the language of the element they come from, e.g. `<img lang="en" alt="…">` in a French page, and none when their text is in several languages
+- An empty `lang` (or `xml:lang` in XHTML) makes the language unknown instead of inheriting the parent's, as `<lang xml:lang="">` in SSML
+- Language declarations differing only in case (`en`/`EN`, `en-US`/`en-us`) are the same language, instead of a `<lang>` shift in SSML
+
+## [1.1.2] – 2026-10-13
+
+### Changed
+
+- Footnote and endnote fixtures place the noteref mid-sentence, so inline and deferred note reading produce different output
+
 ## [1.1.1] – 2026-10-09
 
 ### Changed

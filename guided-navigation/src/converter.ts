@@ -15,8 +15,9 @@ import {
   normalizeWhitespace,
 } from "./text.ts";
 import { ssmlAttrEscape, ssmlTextEscape, startsWithBindingPunct } from "@readium/helpers";
-import { type ObjBuilder, NavObject, isEmptyObj, finalizeToGuidedNavigationObject } from "./object.ts";
-import { type GndMediaType, nodeLanguage, isInlineTag, sniffMediaType } from "./dom.ts";
+import { type ObjBuilder, NavObject, isEmptyObj, finalizeToGuidedNavigationObject, setDescription } from "./object.ts";
+import { type GndMediaType, isInlineTag, sniffMediaType } from "./dom.ts";
+import { declaredLanguage, nodeLanguage, sameLanguage } from "./language.ts";
 import { encodeDomRangeFragment, encodeTextFragmentDirective } from "./textrefFragment.ts";
 import { resolveRefs } from "./href.ts";
 import { rootAnchorSelector, selectorForElement, textrefForSelector } from "./selectorGenerator.ts";
@@ -89,7 +90,7 @@ export class Converter {
 
   private segments: Segment[] = [];
   private textAcc = "";
-  private currentCtx: SSMLContext = { lang: "", tag: "" };
+  private currentCtx: SSMLContext = { lang: undefined, tag: "" };
   private flowEndsWithSpace = true;
   private pendingChildren: NavObject[] = [];
 
@@ -209,7 +210,7 @@ export class Converter {
     if (skippedElements.has(tagName)) return true;
     if (this.suppressed.has(el) && el !== this.allowNode) return true;
 
-    const [aria, visible] = extractNodeAria(el);
+    const [aria, visible, ariaLanguage] = extractNodeAria(el);
     if (!visible && el !== this.allowNode) return true;
 
     const roles = extractNodeRoles(el);
@@ -232,7 +233,7 @@ export class Converter {
     }
 
     if (roles.includes("pagebreak")) {
-      return !pagebreak(this, el, aria, roles);
+      return !pagebreak(this, el, aria, ariaLanguage, roles);
     }
     if (tagName === "a" && roles.includes("noteref") && el.getAttribute("href")) {
       noteref(this, el, roles);
@@ -245,14 +246,14 @@ export class Converter {
       // case for list items), the hoist rule promotes it onto that block;
       // otherwise it becomes an inline SSML placeholder like any other
       // embedded object.
-      link(this, el, roles, aria);
+      link(this, el, roles, aria, ariaLanguage);
       return true;
     }
     if (tagName === "img") {
       const obj: ObjBuilder = { role: roles };
       const src = el.getAttribute("src");
       if (src) obj.imgref = src;
-      if (aria) obj.description = aria;
+      if (aria) setDescription(obj, aria, ariaLanguage);
       this.placeholder(el, "image", obj);
       return true;
     }
@@ -268,7 +269,7 @@ export class Converter {
       } else if (src) {
         obj.videoref = src;
       }
-      if (aria) obj.description = aria;
+      if (aria) setDescription(obj, aria, ariaLanguage);
       this.placeholder(el, tagName, obj);
       return true;
     }
@@ -276,14 +277,14 @@ export class Converter {
       // Elements acting as images without being one, e.g. <span role="img">:
       // their content is replaced by their accessible name.
       const obj: ObjBuilder = { role: roles };
-      if (aria) obj.description = aria;
+      if (aria) setDescription(obj, aria, ariaLanguage);
       if (roles.includes("math")) {
         // MathML is carried as-is in SSML, other math markup as plain text.
         if (el.namespaceURI === MATHML_NS) {
-          obj.text = { plain: "", ssml: new XMLSerializer().serializeToString(el), language: "" };
+          obj.text = { plain: "", ssml: new XMLSerializer().serializeToString(el), language: nodeLanguage(el) };
         } else {
-          const text = normalizedNodeText(el);
-          if (text) obj.text = { plain: text, ssml: "", language: "" };
+          const { text, language } = normalizedNodeText(el);
+          if (text) obj.text = { plain: text, ssml: "", language };
         }
         obj.textref = textrefForSelector(selectorForElement(el, this.selectorRoot, this.selectorRootAnchor), el);
       }
@@ -301,7 +302,7 @@ export class Converter {
     const cur = this.current.object;
     if (roles.length > 0) cur.role = roles;
     if (aria) {
-      cur.description = aria;
+      setDescription(cur, aria, ariaLanguage);
       if (roles.includes("figure")) {
         this.current.noText = true;
       }
@@ -310,18 +311,18 @@ export class Converter {
       if (caption) {
         // Not suppressed — walked normally so a nested explicit-role
         // descendant (e.g. a credit) still speaks.
-        const text = normalizedNodeTextExcludingExplicitRoles(caption);
+        const { text, language } = normalizedNodeTextExcludingExplicitRoles(caption);
         if (text) {
-          cur.description = text;
+          setDescription(cur, text, language);
           this.current.noText = true;
         }
       }
     } else if (roles.includes("table")) {
       const caption = this.implicitCaptionOf(el);
       if (caption) {
-        const text = normalizedNodeTextExcludingExplicitRoles(caption);
+        const { text, language } = normalizedNodeTextExcludingExplicitRoles(caption);
         if (text) {
-          cur.description = text;
+          setDescription(cur, text, language);
           this.foldedCaptions.add(caption);
         }
       }
@@ -422,7 +423,7 @@ export class Converter {
   }
 
   private textContext(node: Node): SSMLContext {
-    const ctx: SSMLContext = { lang: nodeLanguage(node.parentElement), tag: "" };
+    const ctx: SSMLContext = { lang: declaredLanguage(node.parentElement), tag: "" };
     for (let p = node.parentElement; p && p !== this.current.el; p = p.parentElement) {
       const [tag, attrs] = convertElementToSSMLTag(p.tagName.toLowerCase());
       if (tag && tag !== "break") {
@@ -449,7 +450,7 @@ export class Converter {
   private resetFlow() {
     this.segments = [];
     this.textAcc = "";
-    this.currentCtx = { lang: "", tag: "" };
+    this.currentCtx = { lang: undefined, tag: "" };
     this.flowEndsWithSpace = true;
     this.pendingChildren = [];
     this.flowFirstNode = null;
@@ -532,21 +533,21 @@ export class Converter {
       return;
     }
 
-    const textLangs: string[] = [];
+    const textLangs: (string | undefined)[] = [];
     for (const seg of segments) {
       if (seg.kind === "text" && seg.text!.trim() !== "") {
         const lang = seg.ctx!.lang;
-        if (!textLangs.includes(lang)) textLangs.push(lang);
+        if (!textLangs.some((other) => sameLanguage(other, lang))) textLangs.push(lang);
       }
     }
-    let baseLang = nodeLanguage(this.current.el ?? null);
-    if (textLangs.length === 1 && textLangs[0] !== "") {
+    let baseLang = declaredLanguage(this.current.el ?? null);
+    if (textLangs.length === 1) {
       baseLang = textLangs[0];
     }
 
     let needSSML = false;
     for (const seg of segments) {
-      if (seg.kind !== "text" || seg.ctx!.tag !== "" || seg.ctx!.lang !== baseLang) {
+      if (seg.kind !== "text" || seg.ctx!.tag !== "" || !sameLanguage(seg.ctx!.lang, baseLang)) {
         needSSML = true;
         break;
       }
@@ -555,9 +556,11 @@ export class Converter {
     // Default to English when an SSML representation is required (mixed
     // formatting, embedded objects, or a language shift) but no explicit
     // language was declared anywhere in the document.
-    if (needSSML && baseLang === "") {
+    if (needSSML && baseLang === undefined) {
       baseLang = "en";
     }
+    // Undeclared text is in the base language; an empty declaration is a shift to an unknown one.
+    const shiftsLanguage = (lang: string | undefined): lang is string => lang !== undefined && !sameLanguage(lang, baseLang);
 
     if (needSSML) {
       for (const seg of segments) {
@@ -613,7 +616,7 @@ export class Converter {
     const text: TextBuilder = {
       plain: needSSML && !hasPlaceholder ? "" : plainB.trim(),
       ssml: "",
-      language: baseLang,
+      language: baseLang ?? "",
     };
 
     if (needSSML) {
@@ -622,7 +625,7 @@ export class Converter {
         if (seg.kind === "text") {
           let tag = seg.ctx!.tag;
           let attrs = seg.ctx!.attrs;
-          if (seg.ctx!.lang !== baseLang && seg.ctx!.lang !== "") {
+          if (shiftsLanguage(seg.ctx!.lang)) {
             // A language shift takes priority over whatever SSML tag the
             // shifting element would otherwise map to.
             tag = "lang";
@@ -633,7 +636,7 @@ export class Converter {
             for (const [k, v] of Object.entries(attrs ?? {})) {
               sb += ` ${k}="${ssmlAttrEscape(v)}"`;
             }
-            if (seg.ctx!.lang !== baseLang && seg.ctx!.lang !== "") {
+            if (shiftsLanguage(seg.ctx!.lang)) {
               sb += ` xml:lang="${ssmlAttrEscape(seg.ctx!.lang)}"`;
             }
             sb += `>${ssmlTextEscape(seg.text!)}</${tag}>`;
