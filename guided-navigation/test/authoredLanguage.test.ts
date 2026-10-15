@@ -61,3 +61,19 @@ test("xml:lang wins over lang on the same element", () => {
   const nodes = parseMarkup('<div lang="fr"><p>Texte.</p><img xml:lang="de" lang="en" src="a.png" alt="Katze"></div>');
   expect(find(nodes, withDescription("Katze"))?.description?.text?.language).toBe("de");
 });
+
+test("an empty language declaration inside a known one is an explicit shift in SSML", () => {
+  const [node] = parseMarkup('<p lang="fr">Bonjour <span lang="">xyz</span> fin.</p>');
+  expect(node.text?.ssml).toBe('Bonjour <lang xml:lang="">xyz</lang> fin.');
+  expect(node.text?.language).toBe("fr");
+});
+
+test("text only in an empty language declaration has no language", () => {
+  const [node] = parseMarkup('<p lang="fr"><span lang="">xyz</span></p>');
+  expect(node.text?.language).toBeUndefined();
+});
+
+test("undeclared text isn't tagged when the SSML base defaults to English", () => {
+  const [node] = parseMarkup('<p>Hello <span lang="fr">monde</span> end.</p>');
+  expect(node.text?.ssml).toBe('Hello <lang xml:lang="fr">monde</lang> end.');
+});

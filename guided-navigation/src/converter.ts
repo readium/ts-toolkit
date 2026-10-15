@@ -540,7 +540,7 @@ export class Converter {
       }
     }
     let baseLang = nodeLanguage(this.current.el ?? null);
-    if (textLangs.length === 1 && textLangs[0] !== "") {
+    if (textLangs.length === 1) {
       baseLang = textLangs[0];
     }
 
@@ -555,9 +555,12 @@ export class Converter {
     // Default to English when an SSML representation is required (mixed
     // formatting, embedded objects, or a language shift) but no explicit
     // language was declared anywhere in the document.
+    const declaredBaseLang = baseLang;
     if (needSSML && baseLang === "") {
       baseLang = "en";
     }
+    // An empty language declared inside a known one is an explicit shift to an unknown language.
+    const shiftsLanguage = (lang: string) => lang !== baseLang && (lang !== "" || declaredBaseLang !== "");
 
     if (needSSML) {
       for (const seg of segments) {
@@ -622,7 +625,7 @@ export class Converter {
         if (seg.kind === "text") {
           let tag = seg.ctx!.tag;
           let attrs = seg.ctx!.attrs;
-          if (seg.ctx!.lang !== baseLang && seg.ctx!.lang !== "") {
+          if (shiftsLanguage(seg.ctx!.lang)) {
             // A language shift takes priority over whatever SSML tag the
             // shifting element would otherwise map to.
             tag = "lang";
@@ -633,7 +636,7 @@ export class Converter {
             for (const [k, v] of Object.entries(attrs ?? {})) {
               sb += ` ${k}="${ssmlAttrEscape(v)}"`;
             }
-            if (seg.ctx!.lang !== baseLang && seg.ctx!.lang !== "") {
+            if (shiftsLanguage(seg.ctx!.lang)) {
               sb += ` xml:lang="${ssmlAttrEscape(seg.ctx!.lang)}"`;
             }
             sb += `>${ssmlTextEscape(seg.text!)}</${tag}>`;
