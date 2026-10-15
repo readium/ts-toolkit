@@ -118,9 +118,12 @@ class PublicationWebSpeechEngine extends WebSpeechEngine {
         // Loads the voices of languages not loaded yet
         const manager = await WebSpeechVoiceManager.initialize({ languages });
         const available = await this.getAvailableVoices();
-        const voices = languages ? filterByLanguages(available, languages) : available;
+        // Boundaries are preferred within the first language with voices, not over the language
+        const language = languages?.find(language => filterByLanguages(available, language).length);
+        const scoped = language ?? languages;
+        const voices = scoped ? filterByLanguages(available, scoped) : available;
         const boundaryVoices = voices.filter(voice => voice.controls?.boundary !== false);
-        const voice = await manager.getDefaultVoice(languages ?? [...(navigator.languages ?? ["en"])], boundaryVoices.length ? boundaryVoices : voices);
+        const voice = await manager.getDefaultVoice(scoped ?? [...(navigator.languages ?? ["en"])], boundaryVoices.length ? boundaryVoices : voices);
         if (voice) await this.setVoice(voice);
     }
 }
