@@ -17,7 +17,7 @@ import {
 import { ssmlAttrEscape, ssmlTextEscape, startsWithBindingPunct } from "@readium/helpers";
 import { type ObjBuilder, NavObject, isEmptyObj, finalizeToGuidedNavigationObject, setDescription } from "./object.ts";
 import { type GndMediaType, isInlineTag, sniffMediaType } from "./dom.ts";
-import { declaredLanguage, nodeLanguage } from "./language.ts";
+import { declaredLanguage, nodeLanguage, sameLanguage } from "./language.ts";
 import { encodeDomRangeFragment, encodeTextFragmentDirective } from "./textrefFragment.ts";
 import { resolveRefs } from "./href.ts";
 import { rootAnchorSelector, selectorForElement, textrefForSelector } from "./selectorGenerator.ts";
@@ -537,7 +537,7 @@ export class Converter {
     for (const seg of segments) {
       if (seg.kind === "text" && seg.text!.trim() !== "") {
         const lang = seg.ctx!.lang;
-        if (!textLangs.includes(lang)) textLangs.push(lang);
+        if (!textLangs.some((other) => sameLanguage(other, lang))) textLangs.push(lang);
       }
     }
     let baseLang = declaredLanguage(this.current.el ?? null);
@@ -547,7 +547,7 @@ export class Converter {
 
     let needSSML = false;
     for (const seg of segments) {
-      if (seg.kind !== "text" || seg.ctx!.tag !== "" || seg.ctx!.lang !== baseLang) {
+      if (seg.kind !== "text" || seg.ctx!.tag !== "" || !sameLanguage(seg.ctx!.lang, baseLang)) {
         needSSML = true;
         break;
       }
@@ -560,7 +560,7 @@ export class Converter {
       baseLang = "en";
     }
     // Undeclared text is in the base language; an empty declaration is a shift to an unknown one.
-    const shiftsLanguage = (lang: string | undefined): lang is string => lang !== undefined && lang !== baseLang;
+    const shiftsLanguage = (lang: string | undefined): lang is string => lang !== undefined && !sameLanguage(lang, baseLang);
 
     if (needSSML) {
       for (const seg of segments) {

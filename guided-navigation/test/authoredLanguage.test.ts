@@ -142,3 +142,20 @@ test("an empty xml:lang in XHTML makes the language unknown, over lang", () => {
   );
   expect(find(nodes, withDescription("Unknown"))?.description?.text?.language).toBeUndefined();
 });
+
+test("language declarations differing only in case are the same language in SSML", () => {
+  const [node] = parseMarkup('<p lang="en-us">Hello <span lang="en-US">world</span> <em lang="EN-US">end</em>.</p>');
+  expect(node.text?.ssml).toBe("Hello world <emphasis>end</emphasis>.");
+  expect(node.text?.language).toBe("en-us");
+});
+
+test("a span in a language differing only in case isn't a shift", () => {
+  const [node] = parseMarkup('<p lang="en">Hello <span lang="EN">world</span> end.</p>');
+  expect(node.text?.plain).toBe("Hello world end.");
+  expect(node.text?.ssml).toBeUndefined();
+});
+
+test("an aria-labelledby description is in its targets' language when they differ only in case", () => {
+  const nodes = parseMarkup('<div lang="fr"><p id="a">Un</p><p id="b" lang="FR">chat</p><img src="a.png" aria-labelledby="a b"></div>');
+  expect(find(nodes, withDescription("Un chat"))?.description?.text?.language).toBe("fr");
+});

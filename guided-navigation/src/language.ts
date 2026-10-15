@@ -21,6 +21,17 @@ export function nodeLanguage(el: Element | null): string {
   return declaredLanguage(el) ?? "";
 }
 
-export function sharedLanguage(languages: Set<string>): string {
-  return languages.size === 1 ? [...languages][0] : "";
+// BCP 47 tags are case-insensitive: "en-US" and "en-us" are the same language.
+export function sameLanguage(a: string | undefined, b: string | undefined): boolean {
+  return a === b || (a !== undefined && b !== undefined && a.toLowerCase() === b.toLowerCase());
+}
+
+// The language all of `languages` are in, as first spelled, unknown ("") when they differ.
+export function sharedLanguage(languages: Iterable<string>): string {
+  let shared: string | undefined;
+  for (const language of languages) {
+    if (shared === undefined) shared = language;
+    else if (!sameLanguage(shared, language)) return "";
+  }
+  return shared ?? "";
 }
