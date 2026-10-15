@@ -1,6 +1,7 @@
 import { GuidedNavigationDescription, GuidedNavigationObject, GuidedNavigationText } from "@readium/shared";
 import type { GndRole } from "./types.ts";
 import { type TextBuilder, textIsEmpty, finalizeText } from "./text.ts";
+import { nodeLanguage } from "./dom.ts";
 
 export interface ObjBuilder {
   id?: string;
@@ -12,6 +13,13 @@ export interface ObjBuilder {
   role?: GndRole[];
   children?: ObjBuilder[];
   description?: string;
+  descriptionLanguage?: string;
+}
+
+// The description is in the language of the element its text comes from.
+export function setDescription(o: ObjBuilder, text: string, source: Element): void {
+  o.description = text;
+  o.descriptionLanguage = nodeLanguage(source);
 }
 
 // Roles whose entire information is the role itself, with no ref/text/
@@ -165,7 +173,7 @@ export function finalizeToGuidedNavigationObject(o: ObjBuilder): GuidedNavigatio
     role: o.role && o.role.length > 0 ? new Set(o.role) : undefined,
     children: o.children && o.children.length > 0 ? o.children.map(finalizeToGuidedNavigationObject) : undefined,
     description: o.description
-      ? new GuidedNavigationDescription({ text: new GuidedNavigationText({ plain: o.description }) })
+      ? new GuidedNavigationDescription({ text: new GuidedNavigationText({ plain: o.description, language: o.descriptionLanguage || undefined }) })
       : undefined,
   });
   if (ariaSubstitutedBuilders.has(o)) ariaSubstitutedNodes.add(node);

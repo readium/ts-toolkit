@@ -6,26 +6,26 @@ import type { GndRole } from "./types.ts";
 import { normalizedNodeText } from "./a11y.ts";
 import { textIsEmpty } from "./text.ts";
 import { type ObjBuilder, ariaSubstitutedBuilders, substitutedOwnSelectorBuilders } from "./object.ts";
-import { hasElementChild, isAncestorOf } from "./dom.ts";
+import { hasElementChild, isAncestorOf, nodeLanguage } from "./dom.ts";
 import { Converter } from "./converter.ts";
 import { selectorForElement, textrefForSelector } from "./selectorGenerator.ts";
 
 // Returns true if el's children should still be descended into (a
 // pagebreak with element children of its own, in HTML parsing).
-export function pagebreak(converter: Converter, el: Element, aria: string | null, roles: GndRole[]): boolean {
+export function pagebreak(converter: Converter, el: Element, aria: string | null, ariaSource: Element, roles: GndRole[]): boolean {
   const obj: ObjBuilder = { role: roles };
   const title = (el.getAttribute("title") ?? "").trim();
   if (title) {
-    obj.text = { plain: title, ssml: "", language: "" };
+    obj.text = { plain: title, ssml: "", language: nodeLanguage(el) };
   } else if (aria) {
-    obj.text = { plain: aria, ssml: "", language: "" };
+    obj.text = { plain: aria, ssml: "", language: nodeLanguage(ariaSource) };
     ariaSubstitutedBuilders.add(obj);
   }
   const labelled = !!(obj.text && !textIsEmpty(obj.text));
   const descend = !converter.xmlParsed && (hasElementChild(el) || (labelled && el.firstChild !== null));
   if (!labelled && !descend) {
     const text = normalizedNodeText(el);
-    if (text) obj.text = { plain: text, ssml: "", language: "" };
+    if (text) obj.text = { plain: text, ssml: "", language: nodeLanguage(el) };
   }
   const selector = selectorForElement(el, converter.selectorRoot, converter.selectorRootAnchor);
   const textref = textrefForSelector(selector, el);
@@ -37,7 +37,7 @@ export function pagebreak(converter: Converter, el: Element, aria: string | null
 export function noteref(converter: Converter, el: Element, roles: GndRole[]): void {
   const obj: ObjBuilder = { role: roles };
   const text = normalizedNodeText(el);
-  if (text) obj.text = { plain: text, ssml: "", language: "" };
+  if (text) obj.text = { plain: text, ssml: "", language: nodeLanguage(el) };
 
   const href = el.getAttribute("href") ?? "";
   let candidateID = el.getAttribute("id") ?? "";
@@ -70,17 +70,17 @@ export function noteref(converter: Converter, el: Element, roles: GndRole[]): vo
   converter.placeholder(el, "noteref", obj, candidateID || undefined);
 }
 
-export function link(converter: Converter, el: Element, roles: GndRole[], aria: string | null): void {
+export function link(converter: Converter, el: Element, roles: GndRole[], aria: string | null, ariaSource: Element): void {
   const obj: ObjBuilder = {};
   if (roles.length > 0) obj.role = roles;
   if (aria) {
-    obj.text = { plain: aria, ssml: "", language: "" };
+    obj.text = { plain: aria, ssml: "", language: nodeLanguage(ariaSource) };
     ariaSubstitutedBuilders.add(obj);
     const selector = selectorForElement(el, converter.selectorRoot, converter.selectorRootAnchor);
     if (selector) substitutedOwnSelectorBuilders.set(obj, selector);
   } else {
     const text = normalizedNodeText(el);
-    if (text) obj.text = { plain: text, ssml: "", language: "" };
+    if (text) obj.text = { plain: text, ssml: "", language: nodeLanguage(el) };
   }
   const href = el.getAttribute("href");
   if (href) obj.textref = href;

@@ -51,11 +51,12 @@ export function normalizedNodeTextExcludingExplicitRoles(el: Node): string {
  * precedence order (https://www.w3.org/TR/accname/#terminology, 2.A-2.D)
  * for its accessible-name sources, with a non-AccName `aria-describedby`
  * fallback spliced in between 2.C and 2.D — see that branch below.
+ * Also returns the element that text comes from, whose language it is in.
  */
-export function extractNodeAria(el: Element): [string | null, boolean] {
+export function extractNodeAria(el: Element): [string | null, boolean, Element] {
   // 2.A
   if (nodeIsHidden(el)) {
-    return [null, false];
+    return [null, false, el];
   }
 
   // 2.B
@@ -77,7 +78,7 @@ export function extractNodeAria(el: Element): [string | null, boolean] {
       });
       const normalized = normalizeWhitespace(text, true).trim();
       if (normalized !== "") {
-        return [normalized, true];
+        return [normalized, true, labelNodes[0]];
       }
     }
   }
@@ -85,7 +86,7 @@ export function extractNodeAria(el: Element): [string | null, boolean] {
   // 2.C
   const label = (el.getAttribute("aria-label") ?? "").trim();
   if (label) {
-    return [label, true];
+    return [label, true, el];
   }
 
   // Not part of the AccName algorithm proper (which computes a name, not a
@@ -102,7 +103,7 @@ export function extractNodeAria(el: Element): [string | null, boolean] {
       const text = nodes.map((n) => nodeTextExcludingExplicitRoles(n)).join(" ");
       const normalized = normalizeWhitespace(text, true).trim();
       if (normalized !== "") {
-        return [normalized, true];
+        return [normalized, true, nodes[0]];
       }
     }
   }
@@ -111,24 +112,24 @@ export function extractNodeAria(el: Element): [string | null, boolean] {
   const tagName = el.tagName.toLowerCase();
   if (tagName === "img") {
     const alt = (el.getAttribute("alt") ?? "").trim();
-    if (alt) return [alt, true];
+    if (alt) return [alt, true, el];
     // 2.I fallback for images: the title attribute
     const title = (el.getAttribute("title") ?? "").trim();
-    if (title) return [title, true];
+    if (title) return [title, true, el];
   } else if (tagName === "svg") {
     // The accessible name of an SVG comes from its <title> child
     const title = el.querySelector(":scope > title");
     if (title) {
       const text = normalizedNodeText(title);
-      if (text) return [text, true];
+      if (text) return [text, true, title];
     }
   } else if (tagName === "math") {
     // MathML Core's spoken-form fallback (not part of the ARIA AccName algorithm)
     const alttext = (el.getAttribute("alttext") ?? "").trim();
-    if (alttext) return [alttext, true];
+    if (alttext) return [alttext, true, el];
   }
 
-  return [null, true];
+  return [null, true, el];
 }
 
 const ssmlTags: Record<string, [string, Record<string, string>?]> = {
