@@ -140,6 +140,7 @@ const LAYOUT_TOLERANCE = 1;
  */
 export class ReadAloudNavigator {
     private readonly speech: ReadiumSpeechNavigator;
+    private readonly engine: ReadiumSpeechPlaybackEngine;
     private readonly publicationEngine?: PublicationWebSpeechEngine;
     private readonly pool: GuidedNavigationPool;
     private readonly units: ReadingUnits;
@@ -209,7 +210,8 @@ export class ReadAloudNavigator {
             const languageOverride = this._preferences.languageOverride ?? this._defaults.languageOverride;
             this.publicationEngine = new PublicationWebSpeechEngine(this.publicationLanguages(languageOverride));
         }
-        this.speech = new ReadiumSpeechNavigator(configuration.engine ?? this.publicationEngine!, {
+        this.engine = configuration.engine ?? this.publicationEngine!;
+        this.speech = new ReadiumSpeechNavigator(this.engine, {
             preferences: ReadAloudNavigator.speechPreferences(this._preferences, metadataLanguage),
             defaults: ReadAloudNavigator.speechPreferences({
                 ...this._defaults.speech,
@@ -412,7 +414,8 @@ export class ReadAloudNavigator {
             }));
         };
         on("start", event => {
-            this.spokenVoice = event.detail?.voice ?? null;
+            // Engines that don't report the voice speaking are taken to use theirs.
+            this.spokenVoice = event.detail?.voice ?? this.engine.getCurrentVoice();
             const utterance = this.speech.getCurrentContent();
             if (utterance) this.progress.start(utterance);
             this.notifyUtterance();
