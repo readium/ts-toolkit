@@ -638,6 +638,8 @@ export class ReadAloudNavigator {
         if (!this.navigator.watchTextLayout || this.layout() === Layout.fixed) return this.startIndex(queue, from);
         const laidOut = this.untilLaidOut();
         this.watchLayout(queue);
+        // Nothing watched reports no layout.
+        if (!this.unwatchLayout) this.settleLayout?.(false);
         const viewport = await laidOut && this.visibleViewport();
         if (!viewport) return this.startIndex(queue, from);
         let above = -1;
