@@ -366,11 +366,16 @@ export class ReadAloudNavigator {
         this._preferences = this._preferences.merging(preferences);
         const old = this.speech.getContentQueue();
         const previousLanguageOverride = this._settings.languageOverride;
+        const languageOverride = this._preferences.languageOverride ?? this._defaults.languageOverride;
+        // Paused, the rebuilt queue and the new default voice restart the utterance once, on playing again.
+        const pausedForLanguage = !!this.publicationEngine && languageOverride !== previousLanguageOverride && this.speech.getState() === "playing";
+        if (pausedForLanguage) this.speech.pause();
         await this.speech.submitPreferences(ReadAloudNavigator.speechPreferences(this._preferences, this.navigator.publication.metadata.languages?.[0]));
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
         if (this._settings.languageOverride !== previousLanguageOverride) {
             await this.publicationEngine?.setLanguages(this.publicationLanguages(this._settings.languageOverride));
         }
+        if (pausedForLanguage && this.speech.getState() === "paused") this.speech.play();
         if (!this._settings.detachable && this.detached) this.attach();
         // Speech keeps its place in a rebuilt queue only while playing or paused itself, not while stopped here.
         const held = this.pausedBefore ?? this.turning;
