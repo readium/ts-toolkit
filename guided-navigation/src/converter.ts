@@ -209,7 +209,7 @@ export class Converter {
     if (skippedElements.has(tagName)) return true;
     if (this.suppressed.has(el) && el !== this.allowNode) return true;
 
-    const [aria, visible, ariaSource] = extractNodeAria(el);
+    const [aria, visible, ariaLanguage] = extractNodeAria(el);
     if (!visible && el !== this.allowNode) return true;
 
     const roles = extractNodeRoles(el);
@@ -232,7 +232,7 @@ export class Converter {
     }
 
     if (roles.includes("pagebreak")) {
-      return !pagebreak(this, el, aria, ariaSource, roles);
+      return !pagebreak(this, el, aria, ariaLanguage, roles);
     }
     if (tagName === "a" && roles.includes("noteref") && el.getAttribute("href")) {
       noteref(this, el, roles);
@@ -245,14 +245,14 @@ export class Converter {
       // case for list items), the hoist rule promotes it onto that block;
       // otherwise it becomes an inline SSML placeholder like any other
       // embedded object.
-      link(this, el, roles, aria, ariaSource);
+      link(this, el, roles, aria, ariaLanguage);
       return true;
     }
     if (tagName === "img") {
       const obj: ObjBuilder = { role: roles };
       const src = el.getAttribute("src");
       if (src) obj.imgref = src;
-      if (aria) setDescription(obj, aria, ariaSource);
+      if (aria) setDescription(obj, aria, ariaLanguage);
       this.placeholder(el, "image", obj);
       return true;
     }
@@ -268,7 +268,7 @@ export class Converter {
       } else if (src) {
         obj.videoref = src;
       }
-      if (aria) setDescription(obj, aria, ariaSource);
+      if (aria) setDescription(obj, aria, ariaLanguage);
       this.placeholder(el, tagName, obj);
       return true;
     }
@@ -276,7 +276,7 @@ export class Converter {
       // Elements acting as images without being one, e.g. <span role="img">:
       // their content is replaced by their accessible name.
       const obj: ObjBuilder = { role: roles };
-      if (aria) setDescription(obj, aria, ariaSource);
+      if (aria) setDescription(obj, aria, ariaLanguage);
       if (roles.includes("math")) {
         // MathML is carried as-is in SSML, other math markup as plain text.
         if (el.namespaceURI === MATHML_NS) {
@@ -301,7 +301,7 @@ export class Converter {
     const cur = this.current.object;
     if (roles.length > 0) cur.role = roles;
     if (aria) {
-      setDescription(cur, aria, ariaSource);
+      setDescription(cur, aria, ariaLanguage);
       if (roles.includes("figure")) {
         this.current.noText = true;
       }
@@ -312,7 +312,7 @@ export class Converter {
         // descendant (e.g. a credit) still speaks.
         const text = normalizedNodeTextExcludingExplicitRoles(caption);
         if (text) {
-          setDescription(cur, text, caption);
+          setDescription(cur, text, nodeLanguage(caption));
           this.current.noText = true;
         }
       }
@@ -321,7 +321,7 @@ export class Converter {
       if (caption) {
         const text = normalizedNodeTextExcludingExplicitRoles(caption);
         if (text) {
-          setDescription(cur, text, caption);
+          setDescription(cur, text, nodeLanguage(caption));
           this.foldedCaptions.add(caption);
         }
       }

@@ -10,6 +10,12 @@ export function nodeLanguage(el: Element | null): string {
   return "";
 }
 
+// The language all `nodes` are in, unknown ("") when they differ.
+export function sharedNodeLanguage(nodes: Element[]): string {
+  const languages = new Set(nodes.map(nodeLanguage));
+  return languages.size === 1 ? [...languages][0] : "";
+}
+
 export function hasElementChild(el: Element): boolean {
   for (let c = el.firstChild; c; c = c.nextSibling) {
     if (c.nodeType === ELEMENT_NODE) return true;

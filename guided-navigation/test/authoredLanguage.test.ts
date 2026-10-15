@@ -41,3 +41,13 @@ test("authored text has no language when none is declared", () => {
   const nodes = parseMarkup('<p>Text.</p><img src="a.png" alt="A cat">');
   expect(find(nodes, withDescription("A cat"))?.description?.text?.language).toBeUndefined();
 });
+
+test("an aria-labelledby description has no language when its targets' languages differ", () => {
+  const nodes = parseMarkup('<div lang="fr"><p id="a">Un chat</p><p id="b" lang="en">and a dog</p><img src="a.png" aria-labelledby="a b"></div>');
+  expect(find(nodes, withDescription("Un chat and a dog"))?.description?.text?.language).toBeUndefined();
+});
+
+test("an aria-describedby description is in its targets' shared language", () => {
+  const nodes = parseMarkup('<div lang="fr"><p id="a" lang="de">Eine</p><p id="b" lang="de">Katze</p><figure aria-describedby="a b"><img src="a.png" alt="x"></figure></div>');
+  expect(find(nodes, withDescription("Eine Katze"))?.description?.text?.language).toBe("de");
+});

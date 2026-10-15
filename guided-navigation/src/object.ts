@@ -1,7 +1,6 @@
 import { GuidedNavigationDescription, GuidedNavigationObject, GuidedNavigationText } from "@readium/shared";
 import type { GndRole } from "./types.ts";
 import { type TextBuilder, textIsEmpty, finalizeText } from "./text.ts";
-import { nodeLanguage } from "./dom.ts";
 
 export interface ObjBuilder {
   id?: string;
@@ -16,10 +15,9 @@ export interface ObjBuilder {
   descriptionLanguage?: string;
 }
 
-// The description is in the language of the element its text comes from.
-export function setDescription(o: ObjBuilder, text: string, source: Element): void {
+export function setDescription(o: ObjBuilder, text: string, language: string): void {
   o.description = text;
-  o.descriptionLanguage = nodeLanguage(source);
+  o.descriptionLanguage = language;
 }
 
 // Roles whose entire information is the role itself, with no ref/text/

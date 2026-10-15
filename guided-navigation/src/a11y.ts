@@ -1,5 +1,6 @@
 import { normalizeWhitespace } from "./text.ts";
 import { hasExplicitRole } from "./roles.ts";
+import { nodeLanguage, sharedNodeLanguage } from "./dom.ts";
 
 function nodeIsHidden(el: Element): boolean {
   if (el.getAttribute("aria-hidden") === "true") return true;
@@ -51,12 +52,12 @@ export function normalizedNodeTextExcludingExplicitRoles(el: Node): string {
  * precedence order (https://www.w3.org/TR/accname/#terminology, 2.A-2.D)
  * for its accessible-name sources, with a non-AccName `aria-describedby`
  * fallback spliced in between 2.C and 2.D — see that branch below.
- * Also returns the element that text comes from, whose language it is in.
+ * Also returns that text's language.
  */
-export function extractNodeAria(el: Element): [string | null, boolean, Element] {
+export function extractNodeAria(el: Element): [string | null, boolean, string] {
   // 2.A
   if (nodeIsHidden(el)) {
-    return [null, false, el];
+    return [null, false, ""];
   }
 
   // 2.B
@@ -78,7 +79,7 @@ export function extractNodeAria(el: Element): [string | null, boolean, Element] 
       });
       const normalized = normalizeWhitespace(text, true).trim();
       if (normalized !== "") {
-        return [normalized, true, labelNodes[0]];
+        return [normalized, true, sharedNodeLanguage(labelNodes)];
       }
     }
   }
@@ -86,7 +87,7 @@ export function extractNodeAria(el: Element): [string | null, boolean, Element] 
   // 2.C
   const label = (el.getAttribute("aria-label") ?? "").trim();
   if (label) {
-    return [label, true, el];
+    return [label, true, nodeLanguage(el)];
   }
 
   // Not part of the AccName algorithm proper (which computes a name, not a
@@ -103,7 +104,7 @@ export function extractNodeAria(el: Element): [string | null, boolean, Element] 
       const text = nodes.map((n) => nodeTextExcludingExplicitRoles(n)).join(" ");
       const normalized = normalizeWhitespace(text, true).trim();
       if (normalized !== "") {
-        return [normalized, true, nodes[0]];
+        return [normalized, true, sharedNodeLanguage(nodes)];
       }
     }
   }
@@ -112,24 +113,24 @@ export function extractNodeAria(el: Element): [string | null, boolean, Element] 
   const tagName = el.tagName.toLowerCase();
   if (tagName === "img") {
     const alt = (el.getAttribute("alt") ?? "").trim();
-    if (alt) return [alt, true, el];
+    if (alt) return [alt, true, nodeLanguage(el)];
     // 2.I fallback for images: the title attribute
     const title = (el.getAttribute("title") ?? "").trim();
-    if (title) return [title, true, el];
+    if (title) return [title, true, nodeLanguage(el)];
   } else if (tagName === "svg") {
     // The accessible name of an SVG comes from its <title> child
     const title = el.querySelector(":scope > title");
     if (title) {
       const text = normalizedNodeText(title);
-      if (text) return [text, true, title];
+      if (text) return [text, true, nodeLanguage(title)];
     }
   } else if (tagName === "math") {
     // MathML Core's spoken-form fallback (not part of the ARIA AccName algorithm)
     const alttext = (el.getAttribute("alttext") ?? "").trim();
-    if (alttext) return [alttext, true, el];
+    if (alttext) return [alttext, true, nodeLanguage(el)];
   }
 
-  return [null, true, el];
+  return [null, true, ""];
 }
 
 const ssmlTags: Record<string, [string, Record<string, string>?]> = {

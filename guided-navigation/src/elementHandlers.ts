@@ -12,13 +12,13 @@ import { selectorForElement, textrefForSelector } from "./selectorGenerator.ts";
 
 // Returns true if el's children should still be descended into (a
 // pagebreak with element children of its own, in HTML parsing).
-export function pagebreak(converter: Converter, el: Element, aria: string | null, ariaSource: Element, roles: GndRole[]): boolean {
+export function pagebreak(converter: Converter, el: Element, aria: string | null, ariaLanguage: string, roles: GndRole[]): boolean {
   const obj: ObjBuilder = { role: roles };
   const title = (el.getAttribute("title") ?? "").trim();
   if (title) {
     obj.text = { plain: title, ssml: "", language: nodeLanguage(el) };
   } else if (aria) {
-    obj.text = { plain: aria, ssml: "", language: nodeLanguage(ariaSource) };
+    obj.text = { plain: aria, ssml: "", language: ariaLanguage };
     ariaSubstitutedBuilders.add(obj);
   }
   const labelled = !!(obj.text && !textIsEmpty(obj.text));
@@ -70,11 +70,11 @@ export function noteref(converter: Converter, el: Element, roles: GndRole[]): vo
   converter.placeholder(el, "noteref", obj, candidateID || undefined);
 }
 
-export function link(converter: Converter, el: Element, roles: GndRole[], aria: string | null, ariaSource: Element): void {
+export function link(converter: Converter, el: Element, roles: GndRole[], aria: string | null, ariaLanguage: string): void {
   const obj: ObjBuilder = {};
   if (roles.length > 0) obj.role = roles;
   if (aria) {
-    obj.text = { plain: aria, ssml: "", language: nodeLanguage(ariaSource) };
+    obj.text = { plain: aria, ssml: "", language: ariaLanguage };
     ariaSubstitutedBuilders.add(obj);
     const selector = selectorForElement(el, converter.selectorRoot, converter.selectorRootAnchor);
     if (selector) substitutedOwnSelectorBuilders.set(obj, selector);
