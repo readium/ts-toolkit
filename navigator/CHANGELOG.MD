@@ -5,11 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.13.1] – 2026-10-16
 
 ### Fixed
 
 - With the `language` read-aloud preference set to `none`, a per-language `voice` (e.g. `{ en: "…" }`) applies to the publication's language instead of being replaced by the engine's voice, as `ReadAloudNavigator` gives `@readium/speech` the publication's language with its content
+- In Safari, changing the rate, pitch, volume or voice while reading aloud no longer skips to the next resource
+- In Safari, moving to the previous or next utterance while reading aloud no longer stops it for a moment, which could restart reading from the viewport or load the next resource
+- In Chrome, Edge and Opera, long utterances read with a Google voice are no longer cut off, as `@readium/speech` no longer takes these browsers for Safari
+- With `segmentation: "sentence"`, content without `lang`/`xml:lang` is read in the publication's language instead of English, and a publication language like `en_US` no longer stops reading aloud
+- With `segmentation: "sentence"`, a closing guillemet spaced after the sentence's last mark, as in French (`« Il n’y a rien ! »`), is read with its sentence
+- Word highlights in substituted text (e.g. `100deg` read as `100°`) locate the source text again when a voice applies to the utterance
 
 ## [2.13.0] – 2026-10-15
 
