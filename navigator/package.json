@@ -1,6 +1,6 @@
 {
   "name": "@readium/navigator",
-  "version": "2.13.1",
+  "version": "2.13.2",
   "type": "module",
   "description": "Next generation SDK for publications in Web Apps",
   "author": "readium",
@@ -54,7 +54,7 @@
     "@readium/helpers": "workspace:*",
     "@readium/navigator-html-injectables": "workspace:*",
     "@readium/shared": "workspace:*",
-    "@readium/speech": "^0.16.0"
+    "@readium/speech": "^0.16.1"
   },
   "devDependencies": {
     "@readium/css": "^2.0.5",

@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.2] – 2026-10-19
+
+### Fixed
+
+- In Safari, changing the rate, pitch or volume while reading aloud or paused, including repeatedly while dragging a slider, no longer speaks the restarted utterance twice, first without word highlights, as `@readium/speech` now waits until 250 ms after it last interrupted speech there. Moving to another utterance while reading aloud may thus start it up to 250 ms later
+
 ## [2.13.1] – 2026-10-16
 
 ### Fixed
