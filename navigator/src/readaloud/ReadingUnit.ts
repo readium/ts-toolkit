@@ -40,6 +40,12 @@ export class ReadingUnits {
         return index <= 0 ? undefined : this.navigator.publication.readingOrder.items[index - 1];
     }
 
+    /** The first link of the unit following `unit`, as a unit of its own, without moving the navigator. */
+    pageAfter(unit: ReadingUnit): ReadingUnit | undefined {
+        const link = this.linkAfter(unit);
+        return link ? { links: [link] } : undefined;
+    }
+
     after(unit: ReadingUnit): ReadingUnit | undefined {
         const link = this.linkAfter(unit);
         if (!link) return undefined;
@@ -61,7 +67,9 @@ export class ReadingUnits {
         return this.spreads && (this.navigator.viewport?.readingOrder ?? []).includes(href);
     }
 
+    // A spread resized to show more pages may already display `link`.
     private move(edge: Link, link: Link, step: (cb: (ok: boolean) => void) => void) {
+        if (this.displays(link.href)) return;
         if (this.displays(edge.href)) step(() => {});
         else this.navigator.go(link.locator, false, () => {});
     }

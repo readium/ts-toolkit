@@ -33,6 +33,7 @@ export interface WebPubNavigatorConfiguration {
 export interface WebPubNavigatorListeners {
     frameLoaded: (wnd: Window) => void;
     positionChanged: (locator: Locator) => void;
+    viewportChanged: (viewport: VisualNavigatorViewport) => void;
     timelineItemChanged: (item: TimelineItem | undefined) => void;
     tap: (e: FrameClickEvent) => boolean;
     click: (e: FrameClickEvent) => boolean;
@@ -52,6 +53,7 @@ const POINTED_PIECE_TIMEOUT = 1000;
 const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorListeners => ({
     frameLoaded: listeners.frameLoaded || (() => {}),
     positionChanged: listeners.positionChanged || (() => {}),
+    viewportChanged: listeners.viewportChanged || (() => {}),
     timelineItemChanged: listeners.timelineItemChanged || (() => {}),
     tap: listeners.tap || (() => false),
     click: listeners.click || (() => false),
@@ -805,6 +807,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         }
 
         this.updateViewport(progression);
+        this.notifyViewportChange(this.listeners.viewportChanged);
         this.listeners.positionChanged(this.currentLocation);
         const locatorForTimeline = progression.fragmentId
             ? this.currentLocation.copyWithLocations({ fragments: [`#${progression.fragmentId}`] })

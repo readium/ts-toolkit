@@ -41,6 +41,7 @@ export interface EpubNavigatorConfiguration {
 export interface EpubNavigatorListeners {
     frameLoaded: (wnd: Window) => void;
     positionChanged: (locator: Locator) => void;
+    viewportChanged: (viewport: VisualNavigatorViewport) => void;
     timelineItemChanged: (item: TimelineItem | undefined) => void;
     tap: (e: FrameClickEvent) => boolean; // Return true to prevent handling here
     click: (e: FrameClickEvent) => boolean;  // Return true to prevent handling here
@@ -62,6 +63,7 @@ const POINTED_PIECE_TIMEOUT = 1000;
 const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListeners => ({
     frameLoaded: listeners.frameLoaded || (() => {}),
     positionChanged: listeners.positionChanged || (() => {}),
+    viewportChanged: listeners.viewportChanged || (() => {}),
     timelineItemChanged: listeners.timelineItemChanged || (() => {}),
     tap: listeners.tap || (() => false),
     click: listeners.click || (() => false),
@@ -376,6 +378,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private handleFXLPrefs(from: EpubSettings, to: EpubSettings) {
         if (from.columnCount !== to.columnCount) {
             (this.framePool as FXLFramePoolManager).setPerPage(to.columnCount);
+            // The frame pool lays the new spread out on the next frame.
+            this.ownerWindow.requestAnimationFrame(() => this.notifyViewportChange(this.listeners.viewportChanged));
         }
     }
 
@@ -440,6 +444,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             }
             if (!this.framePool) return;
             (this.framePool as FXLFramePoolManager).resizeHandler();
+            this.notifyViewportChange(this.listeners.viewportChanged);
         } else {
             // for reflow ReadiumCSS gets the width from columns + line-lengths
             // but we need to check whether colCount has changed to commit new CSS
@@ -707,6 +712,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         const idx = this.pub.readingOrder.findIndexWithHref(this.currentLocation.href);
         if (idx < 0)
             throw Error("Link for " + this.currentLocation.href + " not found!");
+        this.notifyViewportChange(this.listeners.viewportChanged);
     }
 
     // DecorableNavigator
@@ -1162,6 +1168,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
         this.lastLocationInView = nearestPositions.last;
         this.updateViewport(progression);
+        this.notifyViewportChange(this.listeners.viewportChanged);
         this.listeners.positionChanged(this.currentLocation);
         const locatorForTimeline = progression.fragmentId
             ? this.currentLocation.copyWithLocations({ fragments: [`#${progression.fragmentId}`] })
