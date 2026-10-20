@@ -442,7 +442,11 @@ export class ReadAloudNavigator {
             this.wordLocator = locator;
             this.decorate();
             const word = this.wordPoint(locate);
-            if (word && this.isBehind(word)) this.follow(locator);
+            if (word && this.isHidden(word)) {
+                const center = this.centerPoint();
+                const target = center ? this.pointLocator(center) : locator;
+                if (target) this.follow(target);
+            }
             this.listeners.wordChanged?.(locator, event.detail.word ?? "");
         });
         on("pause", () => {
@@ -787,9 +791,13 @@ export class ReadAloudNavigator {
         this.utteranceLocators = locators;
         this.wordLocator = undefined;
         this.decorate();
-        if (locators.length > 0) {
+        const center = this.centerPoint(utterance);
+        if (center) {
+            const locator = this.isOffCenter(center) ? this.pointLocator(center) : undefined;
+            if (locator) this.follow(locator);
+        } else if (locators.length > 0) {
             const start = this.utteranceStart(utterance);
-            if (!start || this.isBehind(start) !== false) this.follow(locators[0]);
+            if (!start || this.isHidden(start) !== false) this.follow(locators[0]);
         } else {
             // Following a whole page again would reset its scroll position.
             const page = this.pageLocator();
@@ -888,9 +896,11 @@ export class ReadAloudNavigator {
         const spoken = this.spokenPoint();
         const hidden = spoken && this.isHidden(spoken);
         if (hidden === false) this.detached = false;
-        if (spoken && this.isBehind(spoken) && layout.pieces) {
-            // Laid out again, so the spoken text may have moved past where it's followed.
-            const locator = this.pointLocator(spoken);
+        const center = this.centerPoint();
+        const target = center ? (this.isOffCenter(center) ? center : undefined) : (hidden ? spoken : undefined);
+        if (target && layout.pieces) {
+            // Laid out again, so the spoken text may have moved from where it's followed.
+            const locator = this.pointLocator(target);
             if (locator) this.follow(locator);
         } else if (hidden && this.detachable && this.following === undefined && !this.turning) {
             // Only scrolling reports the viewport alone, and this one isn't a move made here.
@@ -908,8 +918,25 @@ export class ReadAloudNavigator {
         return start < pos - LAYOUT_TOLERANCE || start >= pos + size - LAYOUT_TOLERANCE;
     }
 
-    // Whether the spoken text at `point` is to be followed: out of view, or off the middle when kept centered.
-    private isBehind(point: SpokenPoint): boolean | undefined {
+    // The middle line of the utterance when kept centered, unless its layout is unknown or it doesn't fit in view.
+    private centerPoint(utterance = this.speech.getCurrentContent()): SpokenPoint | undefined {
+        const viewport = this.visibleViewport();
+        if (!utterance || !viewport || this.middle() === undefined) return undefined;
+        const lines = this.piecesOf(utterance).flatMap(piece => {
+            const index = this.watchedPieces.get(piece);
+            const layout = index === undefined ? null : this.lines[index];
+            return layout ? layout.starts.map((start, i) => ({ start, point: { piece: index!, offset: layout.offsets[i] } })) : [];
+        });
+        if (lines.length === 0) return undefined;
+        const top = lines[0].start;
+        const bottom = lines[lines.length - 1].start;
+        if (bottom - top >= viewport.size) return undefined;
+        const middle = (top + bottom) / 2;
+        return lines.reduce((a, b) => Math.abs(b.start - middle) < Math.abs(a.start - middle) ? b : a).point;
+    }
+
+    // Whether the line at `point` is out of view, or off the middle while the frame can still scroll toward it.
+    private isOffCenter(point: SpokenPoint): boolean | undefined {
         const hidden = this.isHidden(point);
         const middle = this.middle();
         if (hidden !== false || middle === undefined) return hidden;
@@ -923,7 +950,7 @@ export class ReadAloudNavigator {
         return (this.navigator.viewport?.progressions.get(href)?.end ?? 0) >= 1;
     }
 
-    // The line going to text centers when scrolled, where the spoken text is kept when centered.
+    // The line going to text centers when scrolled, where the utterance is kept when centered.
     private middle(): number | undefined {
         if (!this.viewport || !this._settings.keepCentered || this.layout() !== Layout.scrolled) return undefined;
         return this.viewport.pos + this.viewport.size / 2 + LAYOUT_TOLERANCE;
@@ -1008,9 +1035,8 @@ export class ReadAloudNavigator {
         this.clearBreak();
         const utterance = this.speech.getCurrentContent();
         const viewport = this.visibleViewport();
-        if (!utterance || this.detached || this.sendsBoundaries() || !this.progress.speaking || !viewport) return;
-        // Lines past the middle stay there once the frame can't scroll farther.
-        const end = (this.scrolledToEnd() ? undefined : this.middle()) ?? viewport.pos + viewport.size - LAYOUT_TOLERANCE;
+        if (!utterance || this.detached || this.sendsBoundaries() || !this.progress.speaking || !viewport || this.centerPoint(utterance)) return;
+        const end = viewport.pos + viewport.size - LAYOUT_TOLERANCE;
         let before = 0;
         for (const piece of this.piecesOf(utterance)) {
             const index = this.watchedPieces.get(piece);
