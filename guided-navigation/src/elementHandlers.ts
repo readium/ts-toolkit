@@ -4,7 +4,7 @@
 // on a sub-Converter of its own.
 import type { GndRole } from "./types.ts";
 import { normalizedNodeText } from "./a11y.ts";
-import { textIsEmpty } from "./text.ts";
+import { normalizeWhitespace, textIsEmpty } from "./text.ts";
 import { type ObjBuilder, ariaSubstitutedBuilders, substitutedOwnSelectorBuilders } from "./object.ts";
 import { hasElementChild, isAncestorOf } from "./dom.ts";
 import { nodeLanguage } from "./language.ts";
@@ -15,7 +15,7 @@ import { selectorForElement, textrefForSelector } from "./selectorGenerator.ts";
 // pagebreak with element children of its own, in HTML parsing).
 export function pagebreak(converter: Converter, el: Element, aria: string | null, ariaLanguage: string, roles: GndRole[]): boolean {
   const obj: ObjBuilder = { role: roles };
-  const title = (el.getAttribute("title") ?? "").trim();
+  const title = normalizeWhitespace(el.getAttribute("title") ?? "", true).trim();
   if (title) {
     obj.text = { plain: title, ssml: "", language: nodeLanguage(el) };
   } else if (aria) {

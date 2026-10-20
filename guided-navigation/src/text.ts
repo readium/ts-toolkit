@@ -24,10 +24,12 @@ export interface SSMLContext {
   lang: string | undefined;
   tag: string;
   attrs?: Record<string, string>;
+  // The abbreviation a `sub` expands, so adjacent identical ones stay separate segments.
+  abbr?: Element;
 }
 
 export function ctxEqual(a: SSMLContext, b: SSMLContext): boolean {
-  if (a.lang !== b.lang || a.tag !== b.tag) return false;
+  if (a.lang !== b.lang || a.tag !== b.tag || a.abbr !== b.abbr) return false;
   const ae = Object.entries(a.attrs ?? {});
   const be = Object.entries(b.attrs ?? {});
   if (ae.length !== be.length) return false;

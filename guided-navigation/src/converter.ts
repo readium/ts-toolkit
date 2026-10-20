@@ -423,6 +423,11 @@ export class Converter {
   }
 
   private textContext(node: Node): SSMLContext {
+    // An abbreviation's text is replaced by its expansion as a whole, so it wins over any formatting inside it.
+    for (let p = node.parentElement; p && p !== this.current.el; p = p.parentElement) {
+      const alias = abbreviationExpansion(p);
+      if (alias) return { lang: declaredLanguage(p), tag: "sub", attrs: { alias }, abbr: p };
+    }
     const ctx: SSMLContext = { lang: declaredLanguage(node.parentElement), tag: "" };
     for (let p = node.parentElement; p && p !== this.current.el; p = p.parentElement) {
       const [tag, attrs] = convertElementToSSMLTag(p.tagName.toLowerCase());
@@ -623,25 +628,13 @@ export class Converter {
       let sb = "";
       for (const seg of segments) {
         if (seg.kind === "text") {
-          let tag = seg.ctx!.tag;
-          let attrs = seg.ctx!.attrs;
-          if (shiftsLanguage(seg.ctx!.lang)) {
-            // A language shift takes priority over whatever SSML tag the
-            // shifting element would otherwise map to.
-            tag = "lang";
-            attrs = undefined;
-          }
-          if (tag) {
-            sb += `<${tag}`;
-            for (const [k, v] of Object.entries(attrs ?? {})) {
-              sb += ` ${k}="${ssmlAttrEscape(v)}"`;
-            }
-            if (shiftsLanguage(seg.ctx!.lang)) {
-              sb += ` xml:lang="${ssmlAttrEscape(seg.ctx!.lang)}"`;
-            }
-            sb += `>${ssmlTextEscape(seg.text!)}</${tag}>`;
+          const { tag, attrs, lang } = seg.ctx!;
+          if (shiftsLanguage(lang)) {
+            // A language shift replaces the element's own tag, except `sub`, which can't carry xml:lang.
+            const inner = tag === "sub" ? ssmlElement(tag, attrs, seg.text!) : ssmlTextEscape(seg.text!);
+            sb += `<lang xml:lang="${ssmlAttrEscape(lang)}">${inner}</lang>`;
           } else {
-            sb += ssmlTextEscape(seg.text!);
+            sb += tag ? ssmlElement(tag, attrs, seg.text!) : ssmlTextEscape(seg.text!);
           }
         } else if (seg.kind === "break") {
           sb += "<break/>";
@@ -663,6 +656,17 @@ export class Converter {
       this.lastFlowRange = { first: [flowFirstNode, flowFirstOffset], last: [flowLastNode, flowLastOffset] };
     }
   }
+}
+
+// An abbreviation's expansion, "" when it has none.
+function abbreviationExpansion(el: Element): string {
+  if (!extractNodeRoles(el).includes("abbreviation")) return "";
+  return normalizeWhitespace(el.getAttribute("title") ?? "", true).trim();
+}
+
+function ssmlElement(tag: string, attrs: Record<string, string> | undefined, text: string): string {
+  const attrString = Object.entries(attrs ?? {}).map(([k, v]) => ` ${k}="${ssmlAttrEscape(v)}"`).join("");
+  return `<${tag}${attrString}>${ssmlTextEscape(text)}</${tag}>`;
 }
 
 // A DOM <body> only counts as real content when the input actually wrote

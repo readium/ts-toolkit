@@ -107,7 +107,7 @@ The lower-level pieces are exported too: `encodeCssSelectorFragment(selector)`/`
 ## Objects
 
 - **`role`** can have multiple entries: tag name, ARIA `role`, `epub:type` all contribute, in that order (e.g. `<section epub:type="chapter">` → `["section", "chapter"]`). `role="presentation"`/`"none"` overrides everything to `["presentation"]`.
-- **`text`** carries `ssml` when the text needs it (inline formatting, a language shift, or an embedded footnote/pagebreak/image mid-sentence). `ssml` marks embedded objects with a `<readium:noteref id="..." />`-style placeholder whose `id` matches a sibling in `children`.
+- **`text`** carries `ssml` when the text needs it (inline formatting, a language shift, an abbreviation, or an embedded footnote/pagebreak/image mid-sentence). `ssml` marks embedded objects with a `<readium:noteref id="..." />`-style placeholder whose `id` matches a sibling in `children`.
 - **`math`** nodes carry MathML as-is in `text.ssml` (`<math xmlns="http://www.w3.org/1998/Math/MathML">…</math>`), or other `role="math"` markup's content in `text.plain`, with `alttext`/`aria-label` as `description`.
 - **`imgref`/`audioref`/`videoref`** are a media element's `src`. **`textref`** is an `href` — reused for navigational-list items (`toc`, `index`...), `noteref`/`backlink`/`biblioref`/`glossref`, and plain links.
 - **`description`** holds a node's accessible name (`aria-label`, `alt`, `<figcaption>`...) as `description.text` when it differs from its visible text.

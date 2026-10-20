@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `abbreviation` role for `<abbr>` and `<acronym>`. With a `title`, an abbreviation becomes `<sub alias="…">` in SSML, with the title as alias, e.g. `<sub alias="World Health Organization">WHO</sub>`. In another language, the `<sub>` is wrapped in `<lang>`, since it can't carry `xml:lang` itself
+- Fixtures for abbreviations
+
+### Fixed
+
+- Text from `title`, `alt`, `aria-label` and `alttext` kept line breaks, runs of spaces, soft hyphens and zero-width spaces. Like the text of the content, it now has them collapsed or removed
+
 ## [1.1.3] – 2026-10-15
 
 ### Fixed
