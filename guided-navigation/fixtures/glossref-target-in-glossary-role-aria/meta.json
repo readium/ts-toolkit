@@ -1,0 +1,14 @@
+{
+  "id": "glossref-target-in-glossary-role-aria",
+  "description": "A mid-sentence glossref to a glossary term in the same document embeds the term's definition",
+  "role": "glossref",
+  "rolesCovered": [
+    "glossary",
+    "glossref",
+    "paragraph",
+    "term",
+    "definition"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

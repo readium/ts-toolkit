@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `abbreviation` role for `<abbr>` and `<acronym>`. With a `title`, an abbreviation becomes `<sub alias="…">` in SSML, with the title as alias, e.g. `<sub alias="World Health Organization">WHO</sub>`. In another language, the `<sub>` is wrapped in `<lang>`, since it can't carry `xml:lang` itself
 - Fixtures for abbreviations
+- A `glossref` or `biblioref` to an element in the same document carries that element's content as its `children`, like a `noteref` its footnote: a glossary term's definitions (`<dd>`), else the element itself. Unlike a footnote, that element is still output at its own location
+- Fixtures for a `glossref` to a glossary and a `biblioref` to a bibliography in the same document
 
 ### Fixed
 

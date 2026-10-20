@@ -18,7 +18,7 @@ renaming, or removing a fixture.
 | `audio` | `audio-html-native`, `audio-no-description` |
 | `backlink` | `backlink-epub-type`, `backlink-role-aria` |
 | `bibliography` | `bibliography-epub-type`, `bibliography-role-aria` |
-| `biblioref` | `biblioref-epub-type`, `biblioref-role-aria` |
+| `biblioref` | `biblioref-epub-type`, `biblioref-role-aria`, `biblioref-target-in-bibliography-role-aria` |
 | `blockquote` | `blockquote-html-native`, `blockquote-role-aria` |
 | `body` | `body-html-native` |
 | `chapter` | `chapter-epub-type`, `chapter-role-aria` |
@@ -40,7 +40,7 @@ renaming, or removing a fixture.
 | `footnote` | `footnote-epub-type`, `footnote-role-aria`, `noteref-target-in-endnotes-epub-type`, `noteref-target-in-endnotes-role-aria` |
 | `foreword` | `foreword-epub-type`, `foreword-role-aria` |
 | `glossary` | `glossary-epub-type`, `glossary-role-aria` |
-| `glossref` | `glossref-epub-type`, `glossref-role-aria`, `glossref-role-aria-mid-sentence` |
+| `glossref` | `glossref-epub-type`, `glossref-role-aria`, `glossref-role-aria-mid-sentence`, `glossref-target-in-glossary-role-aria` |
 | `header` | `header-html-native` |
 | `heading` | `heading-html-native`, `heading-role-aria` |
 | `image` | `image-alt-html-native`, `image-no-description`, `image-role-aria` |
@@ -79,4 +79,4 @@ renaming, or removing a fixture.
 | `toc` | `toc-epub-type`, `toc-role-aria` |
 | `video` | `video-html-native`, `video-no-description` |
 
-185 fixtures across 71 roles.
+187 fixtures across 71 roles.

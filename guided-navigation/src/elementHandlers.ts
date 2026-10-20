@@ -1,6 +1,6 @@
 // Handlers for element kinds that build one placeholder ObjBuilder each
-// (pagebreak/noteref/link), calling back into the converter for
-// placeholder() and, for noteref's footnote embedding, convert()/resultBuilders()
+// (pagebreak/noteref/reference/link), calling back into the converter for
+// placeholder() and, for noteref's and reference's target embedding, convert()/resultBuilders()
 // on a sub-Converter of its own.
 import type { GndRole } from "./types.ts";
 import { normalizedNodeText } from "./a11y.ts";
@@ -72,6 +72,30 @@ export function noteref(converter: Converter, el: Element, roles: GndRole[]): vo
 }
 
 export function link(converter: Converter, el: Element, roles: GndRole[], aria: string | null, ariaLanguage: string): void {
+  converter.placeholder(el, roles[0] ?? "link", linkObject(converter, el, roles, aria, ariaLanguage));
+}
+
+// A glossref or biblioref: a link that also embeds its same-document target, like a noteref its footnote.
+export function reference(converter: Converter, el: Element, roles: GndRole[], aria: string | null, ariaLanguage: string): void {
+  const obj = linkObject(converter, el, roles, aria, ariaLanguage);
+  const href = el.getAttribute("href") ?? "";
+  if (href.startsWith("#")) {
+    const target = converter.ids.get(href.slice(1));
+    if (target && !isAncestorOf(target, el) && converter.noterefDepth < 3) {
+      const children = referencedContent(target).flatMap((content) => {
+        const sub = converter.spawnChild(content);
+        sub.convert(content);
+        return sub.resultBuilders();
+      });
+      // Still output at its own location, which keeps its id.
+      for (const c of children) delete c.id;
+      if (children.length > 0) obj.children = children;
+    }
+  }
+  converter.placeholder(el, roles[0], obj);
+}
+
+function linkObject(converter: Converter, el: Element, roles: GndRole[], aria: string | null, ariaLanguage: string): ObjBuilder {
   const obj: ObjBuilder = {};
   if (roles.length > 0) obj.role = roles;
   if (aria) {
@@ -85,5 +109,16 @@ export function link(converter: Converter, el: Element, roles: GndRole[], aria: 
   }
   const href = el.getAttribute("href");
   if (href) obj.textref = href;
-  converter.placeholder(el, roles[0] ?? "link", obj);
+  return obj;
+}
+
+// A glossary term's definitions, else the target itself.
+function referencedContent(target: Element): Element[] {
+  const term = target.tagName.toLowerCase() === "dt" ? target : target.closest("dt");
+  if (!term) return [target];
+  let n = term.nextElementSibling;
+  while (n && n.tagName.toLowerCase() === "dt") n = n.nextElementSibling;
+  const definitions: Element[] = [];
+  for (; n && n.tagName.toLowerCase() === "dd"; n = n.nextElementSibling) definitions.push(n);
+  return definitions.length > 0 ? definitions : [target];
 }

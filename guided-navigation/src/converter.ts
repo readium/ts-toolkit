@@ -26,7 +26,7 @@ import { textFragmentDirectiveFor } from "./textFragmentGenerator.ts";
 import { type GndGenerationOptions, normalizeTextrefOptions } from "./options.ts";
 import { IdAllocator } from "./idAllocator.ts";
 import { prescan as prescanImpl } from "./prescan.ts";
-import { pagebreak, noteref, link } from "./elementHandlers.ts";
+import { pagebreak, noteref, reference, link } from "./elementHandlers.ts";
 
 const MATHML_NS = "http://www.w3.org/1998/Math/MathML";
 
@@ -239,8 +239,12 @@ export class Converter {
       noteref(this, el, roles);
       return true;
     }
+    if (tagName === "a" && (roles.includes("glossref") || roles.includes("biblioref")) && el.getAttribute("href")) {
+      reference(this, el, roles, aria, ariaLanguage);
+      return true;
+    }
     if (tagName === "a" && el.getAttribute("href")) {
-      // Any other link — backlink/biblioref/glossref, or a plain navigational
+      // Any other link — a backlink, or a plain navigational
       // link with no specific role (e.g. a TOC entry) — carries its href as
       // textref. When it's the sole content of its enclosing block (the usual
       // case for list items), the hoist rule promotes it onto that block;

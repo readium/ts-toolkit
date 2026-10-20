@@ -270,6 +270,16 @@
     }
   },
   {
+    "id": "biblioref-target-in-bibliography-role-aria",
+    "dir": "biblioref-target-in-bibliography-role-aria",
+    "role": "biblioref",
+    "description": "A mid-sentence biblioref to a bibliography entry in the same document embeds the entry",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "blockquote-html-native",
     "dir": "blockquote-html-native",
     "role": "blockquote",
@@ -804,6 +814,16 @@
     "dir": "glossref-role-aria-mid-sentence",
     "role": "glossref",
     "description": "Two glossref links mid-sentence (not the sole content of their block), via explicit ARIA role=\"doc-glossref\" on <a href>",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "glossref-target-in-glossary-role-aria",
+    "dir": "glossref-target-in-glossary-role-aria",
+    "role": "glossref",
+    "description": "A mid-sentence glossref to a glossary term in the same document embeds the term's definition",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
