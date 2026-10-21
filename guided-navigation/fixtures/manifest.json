@@ -20,6 +20,16 @@
     }
   },
   {
+    "id": "abbreviation-before-image",
+    "dir": "abbreviation-before-image",
+    "role": "abbreviation",
+    "description": "Whitespace after an abbr and an image stays plain, rather than in a sub that would speak the expansion again",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "abbreviation-html-native",
     "dir": "abbreviation-html-native",
     "role": "abbreviation",

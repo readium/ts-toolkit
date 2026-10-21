@@ -692,6 +692,11 @@ export class Converter {
           // A `sub` replaces all of its text, so spaces at its edges stay outside it to keep separating words.
           const edges = tag === "sub" ? /^( *)([^]*?)( *)$/.exec(seg.text!)! : null;
           const segText = edges ? edges[2] : seg.text!;
+          // A `sub` around only whitespace would speak its expansion a second time.
+          if (edges && segText === "") {
+            sb += seg.text!;
+            continue;
+          }
           sb += edges?.[1] ?? "";
           if (shiftsLanguage(lang)) {
             // A language shift replaces the element's own tag, except `sub`, which can't carry xml:lang.
