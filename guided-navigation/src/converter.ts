@@ -622,20 +622,25 @@ export class Converter {
         let t = seg.text!.replace(/^ +| +$/g, "");
         let unwrapped = false;
         if (enclosure && sawPlaceholder && t.startsWith(enclosure.closer)) {
-          plainB = plainB.slice(0, enclosure.start).replace(/ +$/, "");
-          t = t.slice(enclosure.closer.length).replace(/^ +/, "");
+          const before = plainB.slice(0, enclosure.start);
+          const after = t.slice(enclosure.closer.length);
+          // Only whitespace outside the removed pair separates what's left around it.
+          midSpace = before.endsWith(" ") || after.startsWith(" ") || (after === "" && seg.text!.endsWith(" "));
+          prevTrail = false;
+          plainB = before.replace(/ +$/, "");
+          t = after.replace(/^ +/, "");
           unwrapped = true;
           enclosure = undefined;
         } else if (!(enclosure && sawPlaceholder && /^[,;\u3001\uFF0C]$/.test(t))) {
           enclosure = undefined;
         }
         if (t === "") {
-          midSpace = true;
+          if (!unwrapped) midSpace = true;
           continue;
         }
         let join = false;
         if (plainB.length > 0) {
-          const spaced = unwrapped || prevTrail || midSpace || lead;
+          const spaced = prevTrail || midSpace || (lead && !unwrapped);
           if (sawBreak) join = true;
           else if (sawPlaceholder) join = spaced && !startsWithBindingPunct(t);
           else join = spaced;

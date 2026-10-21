@@ -1300,6 +1300,26 @@
     }
   },
   {
+    "id": "noteref-enclosed-adjacent-text",
+    "dir": "noteref-enclosed-adjacent-text",
+    "role": "noteref",
+    "description": "Brackets left empty by a noteref are removed from plain text without adding a space the text didn't have",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-enclosed-before-formatting",
+    "dir": "noteref-enclosed-before-formatting",
+    "role": "noteref",
+    "description": "Brackets left empty by a noteref and directly followed by formatted text are removed from plain text without adding a space",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "noteref-role-aria",
     "dir": "noteref-role-aria",
     "role": "noteref",
