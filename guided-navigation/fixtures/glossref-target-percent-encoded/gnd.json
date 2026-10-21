@@ -1,0 +1,68 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "id": "glossref1",
+          "children": [
+            {
+              "role": [
+                "term"
+              ],
+              "text": {
+                "plain": "café"
+              }
+            },
+            {
+              "role": [
+                "definition"
+              ],
+              "text": {
+                "plain": "A coffee shop."
+              }
+            }
+          ],
+          "role": [
+            "glossref"
+          ],
+          "text": {
+            "plain": "café"
+          },
+          "textref": "#caf%C3%A9"
+        }
+      ],
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "A nearby.",
+        "ssml": "A <readium:glossref id=\"glossref1\" /> nearby.",
+        "language": "en"
+      }
+    },
+    {
+      "children": [
+        {
+          "id": "café",
+          "role": [
+            "term"
+          ],
+          "text": {
+            "plain": "café"
+          }
+        },
+        {
+          "role": [
+            "definition"
+          ],
+          "text": {
+            "plain": "A coffee shop."
+          }
+        }
+      ],
+      "role": [
+        "glossary"
+      ]
+    }
+  ]
+}

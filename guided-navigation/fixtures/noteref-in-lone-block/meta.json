@@ -1,0 +1,12 @@
+{
+  "id": "noteref-in-lone-block",
+  "description": "A lone roleless block's text is kept alongside the noteref it embeds",
+  "role": "noteref",
+  "rolesCovered": [
+    "noteref",
+    "footnote",
+    "aside"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

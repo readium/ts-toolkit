@@ -1,0 +1,11 @@
+{
+  "id": "abbreviation-nested-emphasis",
+  "description": "Formatting inside an abbr is dropped: its whole text becomes one sub",
+  "role": "abbreviation",
+  "rolesCovered": [
+    "abbreviation",
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/speech-synthesis11/#S3.1.10",
+  "inputKind": "fragment"
+}

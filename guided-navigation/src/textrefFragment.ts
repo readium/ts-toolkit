@@ -15,6 +15,14 @@ export function encodeCssSelectorFragment(selector: string): string {
   return `${CSS_PREFIX}${encodeURIComponent(selector)}${CSS_SUFFIX}`;
 }
 
+// Without id as its own, node's bare "#id" textref would decode as a link, so it's re-expressed as that id's selector.
+export function detachSelfTextref(node: { textref?: string }, id: string) {
+  const fragment = `#${encodeURIComponent(id)}`;
+  if (node.textref === fragment || node.textref?.startsWith(`${fragment}:~:`)) {
+    node.textref = encodeCssSelectorFragment(`#${CSS.escape(id)}`) + node.textref.slice(fragment.length);
+  }
+}
+
 export function decodeCssSelectorFragment(textref: string | undefined): string | undefined {
   if (!textref || !textref.startsWith(CSS_PREFIX) || !textref.endsWith(CSS_SUFFIX)) return undefined;
   return decodeURIComponent(textref.slice(CSS_PREFIX.length, -CSS_SUFFIX.length));
@@ -131,7 +139,7 @@ export function combineDomRangeTextrefs(first: DecodedTextref, last: DecodedText
   return combined;
 }
 
-function decodeIdFragment(base: string): string | undefined {
+export function decodeIdFragment(base: string): string | undefined {
   if (!base.startsWith("#")) return undefined;
   try {
     return decodeURIComponent(base.slice(1));

@@ -1,0 +1,33 @@
+{
+  "role": [
+    "paragraph"
+  ],
+  "children": [
+    {
+      "role": [
+        "term"
+      ],
+      "text": {
+        "plain": "A"
+      }
+    },
+    {
+      "text": {
+        "plain": "and"
+      }
+    },
+    {
+      "role": [
+        "term"
+      ],
+      "text": {
+        "plain": "B"
+      }
+    },
+    {
+      "text": {
+        "plain": "."
+      }
+    }
+  ]
+}

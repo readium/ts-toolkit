@@ -1,0 +1,13 @@
+{
+  "id": "noteref-enclosed-before-formatting",
+  "description": "Brackets left empty by a noteref and directly followed by formatted text are removed from plain text without adding a space",
+  "role": "noteref",
+  "rolesCovered": [
+    "noteref",
+    "footnote",
+    "aside",
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

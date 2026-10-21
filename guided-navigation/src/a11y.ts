@@ -93,7 +93,7 @@ export function extractNodeAria(el: Element): [string | null, boolean, string] {
   }
 
   // 2.C
-  const label = (el.getAttribute("aria-label") ?? "").trim();
+  const label = normalizeWhitespace(el.getAttribute("aria-label") ?? "", true).trim();
   if (label) {
     return [label, true, nodeLanguage(el)];
   }
@@ -121,10 +121,10 @@ export function extractNodeAria(el: Element): [string | null, boolean, string] {
   // 2.D (partial support)
   const tagName = el.tagName.toLowerCase();
   if (tagName === "img") {
-    const alt = (el.getAttribute("alt") ?? "").trim();
+    const alt = normalizeWhitespace(el.getAttribute("alt") ?? "", true).trim();
     if (alt) return [alt, true, nodeLanguage(el)];
     // 2.I fallback for images: the title attribute
-    const title = (el.getAttribute("title") ?? "").trim();
+    const title = normalizeWhitespace(el.getAttribute("title") ?? "", true).trim();
     if (title) return [title, true, nodeLanguage(el)];
   } else if (tagName === "svg") {
     // The accessible name of an SVG comes from its <title> child
@@ -135,7 +135,7 @@ export function extractNodeAria(el: Element): [string | null, boolean, string] {
     }
   } else if (tagName === "math") {
     // MathML Core's spoken-form fallback (not part of the ARIA AccName algorithm)
-    const alttext = (el.getAttribute("alttext") ?? "").trim();
+    const alttext = normalizeWhitespace(el.getAttribute("alttext") ?? "", true).trim();
     if (alttext) return [alttext, true, nodeLanguage(el)];
   }
 

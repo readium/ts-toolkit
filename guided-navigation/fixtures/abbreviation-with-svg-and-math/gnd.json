@@ -1,0 +1,39 @@
+{
+  "children": [
+    {
+      "id": "image1",
+      "role": [
+        "image"
+      ],
+      "textref": "#css(svg)",
+      "description": {
+        "text": {
+          "plain": "dot"
+        }
+      }
+    },
+    {
+      "id": "math1",
+      "role": [
+        "math"
+      ],
+      "text": {
+        "ssml": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" alttext=\"c\"><mi>c</mi></math>"
+      },
+      "textref": "#css(math)",
+      "description": {
+        "text": {
+          "plain": "c"
+        }
+      }
+    }
+  ],
+  "role": [
+    "paragraph"
+  ],
+  "text": {
+    "plain": "The WHO and OED said.",
+    "ssml": "The <sub alias=\"World Health Organization\">WHO</sub><readium:image id=\"image1\" /> and <sub alias=\"Organisation for Economic Co-operation and Development\">OED</sub><readium:math id=\"math1\" /> said.",
+    "language": "en"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "id": "abbreviation-before-formatting",
+  "description": "The space between an abbr and following formatted text stays outside the sub",
+  "role": "abbreviation",
+  "rolesCovered": [
+    "abbreviation",
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/speech-synthesis11/#S3.1.10",
+  "inputKind": "fragment"
+}

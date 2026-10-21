@@ -1,0 +1,70 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "id": "n",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "1",
+            "language": "sv"
+          }
+        }
+      ],
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Ordet här.",
+        "ssml": "Ordet ”<readium:noteref id=\"n\" />” här.",
+        "language": "sv"
+      }
+    },
+    {
+      "children": [
+        {
+          "id": "m",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "2",
+            "language": "sv"
+          }
+        }
+      ],
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Han sa ”hej” ”nästa”.",
+        "ssml": "Han sa ”hej”<readium:noteref id=\"m\" /> ”nästa”.",
+        "language": "sv"
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "id": "abbreviation-language",
+  "description": "An abbr in another language keeps its sub, wrapped in a lang since sub can't carry xml:lang",
+  "role": "abbreviation",
+  "rolesCovered": [
+    "abbreviation",
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/speech-synthesis11/#S3.1.10",
+  "inputKind": "fragment"
+}

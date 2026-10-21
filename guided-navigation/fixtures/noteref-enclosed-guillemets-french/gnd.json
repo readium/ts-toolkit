@@ -1,0 +1,103 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "id": "n",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "1",
+            "language": "fr"
+          }
+        }
+      ],
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Le mot ici.",
+        "ssml": "Le mot « <readium:noteref id=\"n\" /> » ici.",
+        "language": "fr"
+      }
+    },
+    {
+      "children": [
+        {
+          "id": "m",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "2",
+            "language": "fr"
+          }
+        }
+      ],
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Il dit « bonjour » « suite ».",
+        "ssml": "Il dit « bonjour » <readium:noteref id=\"m\" /> « suite ».",
+        "language": "fr"
+      }
+    },
+    {
+      "children": [
+        {
+          "id": "o",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "3",
+            "language": "fr"
+          }
+        }
+      ],
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Il dit « bonjour » et part.",
+        "ssml": "Il dit « bonjour <readium:noteref id=\"o\" /> » et part.",
+        "language": "fr"
+      }
+    }
+  ]
+}

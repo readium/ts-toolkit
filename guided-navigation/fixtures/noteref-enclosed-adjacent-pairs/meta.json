@@ -1,0 +1,13 @@
+{
+  "id": "noteref-enclosed-adjacent-pairs",
+  "description": "Adjacent brackets each left empty by a noteref are removed with the space between them, before punctuation or a word",
+  "role": "noteref",
+  "rolesCovered": [
+    "noteref",
+    "footnote",
+    "aside",
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}
