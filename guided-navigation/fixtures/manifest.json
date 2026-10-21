@@ -10,6 +10,16 @@
     }
   },
   {
+    "id": "abbreviation-before-formatting",
+    "dir": "abbreviation-before-formatting",
+    "role": "abbreviation",
+    "description": "The space between an abbr and following formatted text stays outside the sub",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "abbreviation-html-native",
     "dir": "abbreviation-html-native",
     "role": "abbreviation",

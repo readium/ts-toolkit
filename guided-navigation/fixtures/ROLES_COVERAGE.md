@@ -7,7 +7,7 @@ renaming, or removing a fixture.
 
 | Role | Fixtures |
 | --- | --- |
-| `abbreviation` | `abbreviation-acronym-html-native`, `abbreviation-html-native`, `abbreviation-language`, `abbreviation-nested-emphasis`, `abbreviation-nested-term`, `abbreviation-nested-term-punctuation`, `abbreviation-no-title`, `abbreviation-spanning-terms` |
+| `abbreviation` | `abbreviation-acronym-html-native`, `abbreviation-before-formatting`, `abbreviation-html-native`, `abbreviation-language`, `abbreviation-nested-emphasis`, `abbreviation-nested-term`, `abbreviation-nested-term-punctuation`, `abbreviation-no-title`, `abbreviation-spanning-terms` |
 | `abstract` | `abstract-epub-type`, `abstract-role-aria` |
 | `accessible-name` | `accessible-name-labelledby-aria-hidden`, `accessible-name-labelledby-hidden-attribute` |
 | `acknowledgments` | `acknowledgments-epub-type`, `acknowledgments-role-aria` |
@@ -79,4 +79,4 @@ renaming, or removing a fixture.
 | `toc` | `toc-epub-type`, `toc-role-aria` |
 | `video` | `video-html-native`, `video-no-description` |
 
-192 fixtures across 71 roles.
+193 fixtures across 71 roles.

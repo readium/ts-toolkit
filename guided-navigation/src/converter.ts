@@ -679,13 +679,18 @@ export class Converter {
       for (const seg of segments) {
         if (seg.kind === "text") {
           const { tag, attrs, lang } = seg.ctx!;
+          // A `sub` replaces all of its text, so spaces at its edges stay outside it to keep separating words.
+          const edges = tag === "sub" ? /^( *)([^]*?)( *)$/.exec(seg.text!)! : null;
+          const segText = edges ? edges[2] : seg.text!;
+          sb += edges?.[1] ?? "";
           if (shiftsLanguage(lang)) {
             // A language shift replaces the element's own tag, except `sub`, which can't carry xml:lang.
-            const inner = tag === "sub" ? ssmlElement(tag, attrs, seg.text!) : ssmlTextEscape(seg.text!);
+            const inner = tag === "sub" ? ssmlElement(tag, attrs, segText) : ssmlTextEscape(segText);
             sb += `<lang xml:lang="${ssmlAttrEscape(lang)}">${inner}</lang>`;
           } else {
-            sb += tag ? ssmlElement(tag, attrs, seg.text!) : ssmlTextEscape(seg.text!);
+            sb += tag ? ssmlElement(tag, attrs, segText) : ssmlTextEscape(segText);
           }
+          sb += edges?.[3] ?? "";
         } else if (seg.kind === "break") {
           sb += "<break/>";
         } else if (seg.kind === "placeholder") {
