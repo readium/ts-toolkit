@@ -1255,6 +1255,7 @@ class DecorationGroup {
             const ex     = style.expand ?? 0;
 
             const boundingRect = item.range.getBoundingClientRect();
+            const itemHoleRects: DOMRect[] = [];
 
             // For Bounds layout the hole is a single bounding rect; expand it directly.
             // For Boxes layout, merge rects first with expand baked in (same as highlights).
@@ -1282,8 +1283,9 @@ class DecorationGroup {
                     default:
                         hole = ctx.toRect(ctx.inlineStart(rect), ctx.blockStart(rect), ctx.inlineSize(rect), ctx.blockSize(rect));
                 }
-                allHoleRects.push(hole);
+                itemHoleRects.push(hole);
             }
+            allHoleRects.push(...this.closeInterlines(ctx, itemHoleRects));
         }
 
         // Build SVG path with all holes (physical coords — always left/top regardless of writing mode)
@@ -1312,7 +1314,7 @@ class DecorationGroup {
             
             // Create SVG in shared shadow root
             this.maskSvg = this.wnd.document.createElementNS(svgNS, "svg") as SVGSVGElement;
-            this.maskSvg.style.cssText = `position:absolute;top:0;left:0;width:${docW}px;height:${docH}px;pointer-events:none;z-index:2147483647`;
+            this.maskSvg.style.cssText = `position:absolute;top:0;left:0;width:${docW}px;height:${docH}px;pointer-events:none;z-index:${OVERLAY_Z_INDEX - 1}`;
             this.maskSvg.dataset.readium = "true";
             const defs = this.wnd.document.createElementNS(svgNS, "defs");
             const clipPath = this.wnd.document.createElementNS(svgNS, "clipPath") as SVGClipPathElement;
@@ -1361,6 +1363,23 @@ class DecorationGroup {
             maskRect.setAttribute("fill", fillColor);
             maskRect.setAttribute("fill-opacity", fillOpacity);
         }
+    }
+
+    /** Stretches the holes of adjacent lines to meet halfway, so the space between them isn't dimmed. */
+    private closeInterlines(ctx: WritingContext, holes: DOMRect[]): DOMRect[] {
+        const boxes = holes.map(hole => ({
+            i0: ctx.inlineStart(hole), i1: ctx.inlineStart(hole) + ctx.inlineSize(hole),
+            b0: ctx.blockStart(hole), b1: ctx.blockStart(hole) + ctx.blockSize(hole),
+        })).sort((r1, r2) => r1.b0 - r2.b0);
+        for (const box of boxes) {
+            // The next line overlaps it inline and starts less than a line after it.
+            const next = boxes.find(other => other.b0 >= box.b1 && other.i0 < box.i1 && other.i1 > box.i0);
+            if (!next || next.b0 - box.b1 >= Math.min(box.b1 - box.b0, next.b1 - next.b0)) continue;
+            const mid = (box.b1 + next.b0) / 2;
+            box.b1 = mid;
+            next.b0 = mid;
+        }
+        return boxes.map(box => ctx.toRect(box.i0, box.b0, box.i1 - box.i0, box.b1 - box.b0));
     }
 
     private injectCustomStylesheet(css: string) {

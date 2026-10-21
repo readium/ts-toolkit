@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - An `outline` decoration spanning several lines is drawn as one shape following the text, instead of one outline per line
+- A `mask` decoration no longer dims the space between its lines, nor other decorations drawn over the document
 
 ## [2.9.1] – 2026-10-12
 
