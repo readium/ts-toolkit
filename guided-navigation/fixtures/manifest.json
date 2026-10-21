@@ -40,6 +40,16 @@
     }
   },
   {
+    "id": "abbreviation-line-break",
+    "dir": "abbreviation-line-break",
+    "role": "abbreviation",
+    "description": "A line break inside an abbr is only visual: its expansion is still one sub, spoken once",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "abbreviation-nested-emphasis",
     "dir": "abbreviation-nested-emphasis",
     "role": "abbreviation",
@@ -84,6 +94,16 @@
     "dir": "abbreviation-spanning-terms",
     "role": "abbreviation",
     "description": "An abbr spanning several terms isn't expanded, rather than repeated in each or spoken over the text between them",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "abbreviation-with-image",
+    "dir": "abbreviation-with-image",
+    "role": "abbreviation",
+    "description": "An image inside an abbr doesn't split its expansion: one sub, followed by the image's placeholder",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"

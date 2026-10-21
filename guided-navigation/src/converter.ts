@@ -16,7 +16,7 @@ import {
 } from "./text.ts";
 import { ssmlAttrEscape, ssmlTextEscape, startsWithBindingPunct } from "@readium/helpers";
 import { type ObjBuilder, NavObject, isEmptyObj, finalizeToGuidedNavigationObject, setDescription } from "./object.ts";
-import { type GndMediaType, isInlineTag, sniffMediaType } from "./dom.ts";
+import { type GndMediaType, isAncestorOf, isInlineTag, sniffMediaType } from "./dom.ts";
 import { declaredLanguage, nodeLanguage, sameLanguage } from "./language.ts";
 import { encodeDomRangeFragment, encodeTextFragmentDirective } from "./textrefFragment.ts";
 import { resolveRefs } from "./href.ts";
@@ -231,7 +231,8 @@ export class Converter {
     }
 
     if (tagName === "br") {
-      if (!this.current.noText) {
+      // Within an abbreviation's expansion, a line break is only visual.
+      if (!this.current.noText && !this.textContext(el).abbr) {
         this.closeSegment();
         this.segments.push({ kind: "break" });
         this.flowEndsWithSpace = true;
@@ -563,6 +564,34 @@ export class Converter {
       }
       break;
     }
+
+    // An abbreviation's expansion is spoken once, so its pieces become one segment, followed by any object within it.
+    const merged: Segment[] = [];
+    for (let i = 0; i < segments.length; i++) {
+      const seg = segments[i];
+      const abbr = seg.kind === "text" ? seg.ctx!.abbr : undefined;
+      if (!abbr) {
+        merged.push(seg);
+        continue;
+      }
+      let text = seg.text!;
+      const within: Segment[] = [];
+      let pending: Segment[] = [];
+      for (let j = i + 1; j < segments.length; j++) {
+        const next = segments[j];
+        if (next.kind === "placeholder" && isAncestorOf(abbr, next.child!.el!)) {
+          pending.push(next);
+          continue;
+        }
+        if (next.kind !== "text" || next.ctx!.abbr !== abbr) break;
+        text += next.text!;
+        within.push(...pending);
+        pending = [];
+        i = j;
+      }
+      merged.push({ ...seg, text }, ...within);
+    }
+    segments = merged;
 
     const hasText = segments.some((s) => s.kind === "text" && s.text!.trim() !== "");
     if (!hasText) {
