@@ -1370,6 +1370,16 @@
     }
   },
   {
+    "id": "noteref-enclosed-across-formatting",
+    "dir": "noteref-enclosed-across-formatting",
+    "role": "noteref",
+    "description": "Brackets left empty by a noteref are removed from plain text even when formatting splits them, as word processors often do",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "noteref-enclosed-adjacent-text",
     "dir": "noteref-enclosed-adjacent-text",
     "role": "noteref",
