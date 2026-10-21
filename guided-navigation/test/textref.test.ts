@@ -533,3 +533,17 @@ test("a pagebreak in an embedded biblioref target decodes as a locator in both t
   expect(decodeTextref(original)).toEqual({ cssSelector: "#pb" });
   expect(decodeTextref(copy)).toEqual({ cssSelector: "#pb" });
 });
+
+test.each([
+  ['<span id="art" role="img" aria-label="illustration"></span>'],
+  ['<svg id="art" aria-label="illustration"></svg>'],
+])("an image whose textref is generated late decodes as a locator in both the copy and the original: %s", (image) => {
+  const html = `<p>See <a role="doc-biblioref" href="#e">1</a>.</p><ul role="doc-bibliography"><li id="e">Entry ${image} text.</li></ul>`;
+  const [p, list] = parseMarkup(html, undefined, { textrefs: true });
+  const copy = p.children![0].children![0].children!.find((c) => c.role?.has("image"))!;
+  const original = list.children![0].children!.find((c) => c.role?.has("image"))!;
+  expect(original.id).toBe("art");
+  expect(copy.id).not.toBe("art");
+  expect(decodeTextref(original)).toEqual({ cssSelector: "#art" });
+  expect(decodeTextref(copy)).toEqual({ cssSelector: "#art" });
+});

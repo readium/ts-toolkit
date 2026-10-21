@@ -26,7 +26,7 @@ import { textFragmentDirectiveFor } from "./textFragmentGenerator.ts";
 import { type GndGenerationOptions, normalizeTextrefOptions } from "./options.ts";
 import { IdAllocator } from "./idAllocator.ts";
 import { prescan as prescanImpl } from "./prescan.ts";
-import { pagebreak, noteref, reference, link, detachSelfTextref } from "./elementHandlers.ts";
+import { pagebreak, noteref, reference, link } from "./elementHandlers.ts";
 import { DROPPED, bindsToPrevious, removeDropped } from "./emptyPairs.ts";
 
 const MATHML_NS = "http://www.w3.org/1998/Math/MathML";
@@ -646,8 +646,6 @@ export class Converter {
           id = this.idAlloc.allocate(seg.tag!, (candidate) => this.ids.has(candidate));
         }
         seg.child!.object.id = id;
-        const ownId = seg.child!.el?.getAttribute("id");
-        if (ownId && ownId !== id) detachSelfTextref(seg.child!.object, ownId);
       }
     }
 

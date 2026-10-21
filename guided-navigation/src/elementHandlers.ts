@@ -11,7 +11,7 @@ import { hasElementChild, isAncestorOf } from "./dom.ts";
 import { nodeLanguage } from "./language.ts";
 import { Converter } from "./converter.ts";
 import { selectorForElement, textrefForSelector } from "./selectorGenerator.ts";
-import { decodeIdFragment, encodeCssSelectorFragment } from "./textrefFragment.ts";
+import { decodeIdFragment, detachSelfTextref } from "./textrefFragment.ts";
 
 // Returns true if el's children should still be descended into (a
 // pagebreak with element children of its own, in HTML parsing).
@@ -120,14 +120,6 @@ function removeId(obj: ObjBuilder) {
   if (id === undefined) return;
   delete obj.id;
   detachSelfTextref(obj, id);
-}
-
-// Without id as its own, obj's bare "#id" textref would decode as a link, so it's re-expressed as that id's selector.
-export function detachSelfTextref(obj: ObjBuilder, id: string) {
-  const fragment = `#${encodeURIComponent(id)}`;
-  if (obj.textref === fragment || obj.textref?.startsWith(`${fragment}:~:`)) {
-    obj.textref = encodeCssSelectorFragment(`#${CSS.escape(id)}`) + obj.textref.slice(fragment.length);
-  }
 }
 
 // Removes the ids a copy repeats from its original, keeping placeholders', allocated unique and referenced by their parent's SSML.

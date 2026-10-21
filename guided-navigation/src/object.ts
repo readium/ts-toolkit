@@ -1,6 +1,7 @@
 import { GuidedNavigationDescription, GuidedNavigationObject, GuidedNavigationText } from "@readium/shared";
 import type { GndRole } from "./types.ts";
 import { type TextBuilder, textIsEmpty, finalizeText } from "./text.ts";
+import { detachSelfTextref } from "./textrefFragment.ts";
 
 export interface ObjBuilder {
   id?: string;
@@ -143,6 +144,9 @@ export class NavObject {
       const textref = selfTextref(this.el);
       if (textref) result.textref = textref;
     }
+    // An object given another id than its element's references that element by selector.
+    const ownId = this.el?.getAttribute("id");
+    if (ownId && result.id !== ownId) detachSelfTextref(result, ownId);
 
     return result;
   }
