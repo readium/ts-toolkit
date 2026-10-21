@@ -498,3 +498,27 @@ test("parseMarkup with href qualifies every ref, and the textrefs decode back wi
   expect(second?.cssSelector).toBeTruthy();
   expect(nodes[2].imgref).toBe("OEBPS/a.png");
 });
+
+test("an embedded biblioref target without its id still decodes as a locator for itself", () => {
+  const html = '<p>See <a role="doc-biblioref" href="#smith1988">Smith</a>.</p><ul role="doc-bibliography"><li id="smith1988">Smith, J. 1988.</li></ul>';
+  const [p] = parseMarkup(html, undefined, { textrefs: true });
+  const entry = p.children![0].children![0];
+  expect(entry.id).toBe(undefined);
+  expect(decodeTextref(entry)).toEqual({ cssSelector: "#smith1988" });
+});
+
+test("an embedded footnote without its id still decodes as a locator for itself", () => {
+  const html = '<p>A<a role="doc-noteref" href="#n">1</a></p><aside id="n" role="doc-footnote"><p>Note</p></aside>';
+  const [p] = parseMarkup(html, undefined, { textrefs: true });
+  const footnote = p.children![0].children![0];
+  expect(footnote.id).toBe(undefined);
+  expect(decodeTextref(footnote)).toEqual({ cssSelector: "#n" });
+});
+
+test("an embedded target without its id keeps its text-fragment suffix", () => {
+  const html = '<p>See <a role="doc-biblioref" href="#smith1988">Smith</a>.</p><ul role="doc-bibliography"><li id="smith1988">Smith, J. 1988.</li></ul>';
+  const [p] = parseMarkup(html, undefined, { textrefs: { roles: true, textFragment: true } });
+  const entry = p.children![0].children![0];
+  expect(entry.textref).toMatch(/^#css\(%23smith1988\):~:text=/);
+  expect(decodeTextref(entry)?.cssSelector).toBe("#smith1988");
+});

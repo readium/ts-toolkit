@@ -10,6 +10,7 @@ import { hasElementChild, isAncestorOf } from "./dom.ts";
 import { nodeLanguage } from "./language.ts";
 import { Converter } from "./converter.ts";
 import { selectorForElement, textrefForSelector } from "./selectorGenerator.ts";
+import { encodeCssSelectorFragment } from "./textrefFragment.ts";
 
 // Returns true if el's children should still be descended into (a
 // pagebreak with element children of its own, in HTML parsing).
@@ -59,7 +60,7 @@ export function noteref(converter: Converter, el: Element, roles: GndRole[]): vo
         // The target's own id already carries its meaning via this
         // noteref's own id — repeating it on the embedded content would
         // be redundant.
-        for (const c of children) delete c.id;
+        for (const c of children) removeId(c);
         obj.children = children;
       }
     }
@@ -88,7 +89,7 @@ export function reference(converter: Converter, el: Element, roles: GndRole[], a
         return sub.resultBuilders();
       });
       // Still output at its own location, which keeps its id.
-      for (const c of children) delete c.id;
+      for (const c of children) removeId(c);
       if (children.length > 0) obj.children = children;
     }
   }
@@ -110,6 +111,17 @@ function linkObject(converter: Converter, el: Element, roles: GndRole[], aria: s
   const href = el.getAttribute("href");
   if (href) obj.textref = href;
   return obj;
+}
+
+// Without its id, a bare "#id" textref would decode as a link, so it's re-expressed as that id's selector.
+function removeId(obj: ObjBuilder) {
+  const id = obj.id;
+  if (id === undefined) return;
+  delete obj.id;
+  const fragment = `#${encodeURIComponent(id)}`;
+  if (obj.textref === fragment || obj.textref?.startsWith(`${fragment}:~:`)) {
+    obj.textref = encodeCssSelectorFragment(`#${CSS.escape(id)}`) + obj.textref.slice(fragment.length);
+  }
 }
 
 // A glossary term and its definitions, else the target itself.
