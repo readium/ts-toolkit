@@ -6,7 +6,7 @@ import { ModuleName } from "./ModuleLibrary.ts";
 import { Rect, getClientRectsNoOverlap, getTextClientRects, rectContainsPoint } from "../helpers/rect.ts";
 import { getProperty } from "../helpers/css.ts";
 import { isDarkColor, getContrastingTextColor, adjustColorForContrast, colorToRgba } from "@readium/helpers";
-import { makeWritingContext, WritingContext } from "../helpers/document.ts";
+import { makeWritingContext, OVERLAY_Z_INDEX, WritingContext } from "../helpers/document.ts";
 import { sML } from "@readium/helpers";
 import { sanitizeHTML } from "../helpers/sanitize.ts";
 
@@ -122,6 +122,10 @@ const canNativeHighlight = () => ("Highlight" in window);
 const cannotNativeHighlight = ["IMG", "IMAGE", "AUDIO", "VIDEO", "SVG"];
 // Elements that trigger WebKit's CSS Custom Highlight repaint bug on removal.
 const webkitRepaintProneTags = new Set(["SUP", "SUB", "SMALL", "CODE"]);
+const outlineStrokeWidth = 2;
+const outlineOffset = 1;
+// SVG centres the stroke on the path, so half of it is added to the outline offset.
+const outlinePathOffset = outlineOffset + outlineStrokeWidth / 2;
 
 class DecorationGroup {
     public readonly items: DecorationItem[] = [];
@@ -784,27 +788,85 @@ class DecorationGroup {
      * Positions a single overlay element according to the decoration's width mode.
      */
     private positionElement(item: DecorationItem, ctx: WritingContext, iz: number, element: HTMLElement, rect: Rect, boundingRect: DOMRect, inlineInset = 0) {
+        const [inlineStart, blockStart, inlineSize, blockSize] = this.overlayBox(item, ctx, rect, boundingRect, inlineInset);
+        ctx.applyPosition(element, inlineStart, blockStart, inlineSize, blockSize, iz);
+    }
+
+    /**
+     * Logical box (inline start, block start, inline size, block size) in document
+     * coordinates that an overlay rect occupies under the decoration's width mode.
+     */
+    private overlayBox(item: DecorationItem, ctx: WritingContext, rect: Rect, boundingRect: DOMRect, inlineInset = 0): [number, number, number, number] {
         const w = item.decoration?.style?.width;
         const r = rect;
         switch (w) {
             case DecorationWidth.Viewport: {
                 const snap = Math.floor(ctx.inlineStart(r) / ctx.viewportInlineSize) * ctx.viewportInlineSize;
-                ctx.applyPosition(element, snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.viewportInlineSize - 2 * inlineInset, ctx.blockSize(r), iz);
-                break;
+                return [snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.viewportInlineSize - 2 * inlineInset, ctx.blockSize(r)];
             }
             case DecorationWidth.Page: {
                 const snap = Math.floor(ctx.inlineStart(r) / ctx.pageInlineSize) * ctx.pageInlineSize;
-                ctx.applyPosition(element, snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.pageInlineSize - 2 * inlineInset, ctx.blockSize(r), iz);
-                break;
+                return [snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.pageInlineSize - 2 * inlineInset, ctx.blockSize(r)];
             }
-            case DecorationWidth.Bounds: {
-                ctx.applyPosition(element, ctx.inlineStart(boundingRect) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(boundingRect), ctx.blockSize(r), iz);
-                break;
-            }
-            default: {
-                ctx.applyPosition(element, ctx.inlineStart(r) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(r), ctx.blockSize(r), iz);
-            }
+            case DecorationWidth.Bounds:
+                return [ctx.inlineStart(boundingRect) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(boundingRect), ctx.blockSize(r)];
+            default:
+                return [ctx.inlineStart(r) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(r), ctx.blockSize(r)];
         }
+    }
+
+    private static isShapeOutline(style: DecorationStyle): boolean {
+        return style.type === DecorationStyleType.Outline && style.layout !== DecorationLayout.Bounds;
+    }
+
+    /**
+     * SVG path data outlining the overlay rects as one shape per run of adjacent lines,
+     * `offset` outside them. Coordinates are in the shadow host's (document) space.
+     */
+    private outlinePath(item: DecorationItem, ctx: WritingContext, iz: number, rects: Rect[], boundingRect: DOMRect, inlineInset: number, offset: number): string {
+        // Block coordinates are negated in vertical-rl so lines always progress towards larger values.
+        const flip = ctx.isVertical && !ctx.isVertLR ? -1 : 1;
+        const boxes = rects.map(rect => {
+            const [inlineStart, blockStart, inlineSize, blockSize] = this.overlayBox(item, ctx, rect, boundingRect, inlineInset).map(v => v * iz);
+            const inlineEnd = inlineStart + inlineSize;
+            const blockEnd = blockStart + blockSize;
+            return flip === 1
+                ? { i0: inlineStart, i1: inlineEnd, b0: blockStart, b1: blockEnd }
+                : { i0: inlineStart, i1: inlineEnd, b0: -blockEnd, b1: -blockStart };
+        }).sort((r1, r2) => r1.b0 - r2.b0);
+
+        // A line joins the previous one when it starts below it, less than a line away, and overlaps it inline.
+        const runs: (typeof boxes)[] = [];
+        for (const box of boxes) {
+            const run = runs.find(run => {
+                const last = run[run.length - 1];
+                return box.b0 > last.b0
+                    && box.b0 - last.b1 < Math.min(last.b1 - last.b0, box.b1 - box.b0)
+                    && box.i0 < last.i1 && box.i1 > last.i0;
+            });
+            if (run) run.push(box);
+            else runs.push([box]);
+        }
+
+        const toPoint = (i: number, b: number) => ctx.isVertical ? `${b * flip} ${i}` : `${i} ${b}`;
+        return runs.map(run => {
+            const n = run.length - 1;
+            const mid = (k: number) => (run[k].b1 + run[k + 1].b0) / 2;
+            // A step between two lines sits on the wider one's side, `offset` into the narrower one's band.
+            const step = (k: number, wider: number) => mid(k) + Math.sign(wider) * offset;
+            const points: string[] = [toPoint(run[0].i1 + offset, run[0].b0 - offset)];
+            for (let k = 0; k < n; k++) {
+                const b = step(k, run[k].i1 - run[k + 1].i1);
+                points.push(toPoint(run[k].i1 + offset, b), toPoint(run[k + 1].i1 + offset, b));
+            }
+            points.push(toPoint(run[n].i1 + offset, run[n].b1 + offset), toPoint(run[n].i0 - offset, run[n].b1 + offset));
+            for (let k = n - 1; k >= 0; k--) {
+                const b = step(k, run[k + 1].i0 - run[k].i0);
+                points.push(toPoint(run[k + 1].i0 - offset, b), toPoint(run[k].i0 - offset, b));
+            }
+            points.push(toPoint(run[0].i0 - offset, run[0].b0 - offset));
+            return `M${points.join(" L")} Z`;
+        }).join(" ");
     }
 
     /**
@@ -894,10 +956,14 @@ class DecorationGroup {
         const outlineInset = (() => {
             if ((decoStyle as BuiltinDecorationStyle).type !== DecorationStyleType.Outline) return 0;
             const w = (decoStyle as BuiltinDecorationStyle).width;
-            return (w === DecorationWidth.Page || w === DecorationWidth.Viewport) ? 3 : 0;
+            return (w === DecorationWidth.Page || w === DecorationWidth.Viewport) ? outlineStrokeWidth + outlineOffset : 0;
         })();
 
         const rects = this.computeOverlayRects(item, ctx, boundingRect, expand);
+        if (DecorationGroup.isShapeOutline(decoStyle)) {
+            item.container.querySelector("path")?.setAttribute("d", this.outlinePath(item, ctx, iz, rects, boundingRect, outlineInset, outlinePathOffset));
+            return true;
+        }
         const children = Array.from(item.container.children) as HTMLElement[];
         if (children.length !== rects.length) return false;
 
@@ -936,7 +1002,7 @@ class DecorationGroup {
         const outlineInset = (() => {
             if ((decoStyle as BuiltinDecorationStyle).type !== DecorationStyleType.Outline) return 0;
             const w = (decoStyle as BuiltinDecorationStyle).width;
-            return (w === DecorationWidth.Page || w === DecorationWidth.Viewport) ? 3 : 0;
+            return (w === DecorationWidth.Page || w === DecorationWidth.Viewport) ? outlineStrokeWidth + outlineOffset : 0;
         })();
         let elementTemplate: Element;
 
@@ -978,6 +1044,24 @@ class DecorationGroup {
             const isDarkMode = this.getCurrentDarkMode();
             const backgroundColor = this.getBackgroundColor();
             const applyContrast = style.enforceContrast !== false;
+
+            if (DecorationGroup.isShapeOutline(style)) {
+                const svgNS = "http://www.w3.org/2000/svg";
+                const svg = this.wnd.document.createElementNS(svgNS, "svg");
+                svg.dataset.readium = "true";
+                svg.style.cssText = `position:absolute;top:0;left:0;width:1px;height:1px;overflow:visible;pointer-events:none;z-index:${OVERLAY_Z_INDEX}`;
+                const path = this.wnd.document.createElementNS(svgNS, "path");
+                path.setAttribute("fill", "none");
+                path.setAttribute("stroke", applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint);
+                path.setAttribute("stroke-width", String(outlineStrokeWidth));
+                path.setAttribute("d", this.outlinePath(item, ctx, iz, this.computeOverlayRects(item, ctx, boundingRect, expand), boundingRect, outlineInset, outlinePathOffset));
+                svg.append(path);
+                itemContainer.append(svg);
+                item.container = itemContainer;
+                item.clickableElements = [];
+                return;
+            }
+
             const styleAttr = (() => {
                 switch (type) {
                     case DecorationStyleType.Underline: {
@@ -1016,8 +1100,8 @@ class DecorationGroup {
                     case DecorationStyleType.Outline:
                         const adjustedOutlineTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
                         return [
-                            `outline: 2px solid ${adjustedOutlineTint} !important`,
-                            "outline-offset: 1px !important",
+                            `outline: ${outlineStrokeWidth}px solid ${adjustedOutlineTint} !important`,
+                            `outline-offset: ${outlineOffset}px !important`,
                             "background-color: transparent !important",
                             "box-sizing: border-box !important",
                         ].join("; ");

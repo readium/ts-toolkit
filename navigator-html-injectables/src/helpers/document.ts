@@ -28,6 +28,8 @@ export function isVerticalWriting(wnd: Window): boolean {
  *   horizontal writing  →  inline = horizontal, block = vertical
  *   vertical writing    →  inline = vertical,   block = horizontal
  */
+export const OVERLAY_Z_INDEX = 2147483646;
+
 export interface WritingContext {
     isVertical: boolean;
     isVertLR: boolean;
@@ -112,7 +114,7 @@ export function makeWritingContext(wnd: Window): WritingContext {
 
         applyPosition(el, inlineStart, blockStart, inlineSize, blockSize, iz) {
             el.style.position = "absolute";
-            el.style.zIndex = "2147483646";
+            el.style.zIndex = String(OVERLAY_Z_INDEX);
             if (isVert) {
                 el.style.top    = `${inlineStart * iz}px`;
                 el.style.left   = `${blockStart  * iz}px`;
