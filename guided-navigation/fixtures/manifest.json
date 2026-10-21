@@ -50,6 +50,16 @@
     }
   },
   {
+    "id": "abbreviation-nested",
+    "dir": "abbreviation-nested",
+    "role": "abbreviation",
+    "description": "An abbr nested in another is covered by the outer one's expansion: one sub, spoken once",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "abbreviation-nested-emphasis",
     "dir": "abbreviation-nested-emphasis",
     "role": "abbreviation",

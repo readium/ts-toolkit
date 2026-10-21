@@ -431,15 +431,18 @@ export class Converter {
   private textContext(node: Node): SSMLContext {
     // An abbreviation's text is replaced by its expansion as a whole, so it wins over any formatting inside it.
     // It applies only if all its text is in one object, so its alias is never repeated or misplaced.
+    // The outermost one wins, its expansion covering any nested inside it.
+    let abbr: SSMLContext | undefined;
     for (let p = node.parentElement, enclosing = false; p; p = p.parentElement) {
       const alias = abbreviationExpansion(p);
       if (alias) {
         if (!enclosing && Converter.containsObject(p)) break;
-        return { lang: declaredLanguage(p), tag: "sub", attrs: { alias }, abbr: p };
+        abbr = { lang: declaredLanguage(p), tag: "sub", attrs: { alias }, abbr: p };
       }
       if (p === this.current.el) enclosing = true;
       if (enclosing && !Converter.isSoleContent(p)) break;
     }
+    if (abbr) return abbr;
     const ctx: SSMLContext = { lang: declaredLanguage(node.parentElement), tag: "" };
     for (let p = node.parentElement; p && p !== this.current.el; p = p.parentElement) {
       const [tag, attrs] = convertElementToSSMLTag(p.tagName.toLowerCase());
