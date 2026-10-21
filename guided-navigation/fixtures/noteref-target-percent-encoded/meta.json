@@ -1,0 +1,13 @@
+{
+  "id": "noteref-target-percent-encoded",
+  "description": "A noteref whose href is percent-encoded still finds and embeds its footnote, which isn't output again at its own location",
+  "role": "noteref",
+  "rolesCovered": [
+    "noteref",
+    "footnote",
+    "aside",
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

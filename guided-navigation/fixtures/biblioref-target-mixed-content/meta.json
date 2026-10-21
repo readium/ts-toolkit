@@ -1,0 +1,11 @@
+{
+  "id": "biblioref-target-mixed-content",
+  "description": "A biblioref to an inline entry mixing text and a link embeds both, not just the link",
+  "role": "biblioref",
+  "rolesCovered": [
+    "biblioref",
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

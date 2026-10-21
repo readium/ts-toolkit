@@ -143,6 +143,8 @@ const epubTypeRoles: Record<string, GndRole> = {
 
 // Elements whose role depends only on their tag name.
 const simpleElementTypeRoles: Record<string, GndRole> = {
+  abbr: "abbreviation",
+  acronym: "abbreviation",
   article: "article",
   aside: "aside",
   audio: "audio",

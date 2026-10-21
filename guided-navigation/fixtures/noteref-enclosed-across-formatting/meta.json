@@ -1,0 +1,13 @@
+{
+  "id": "noteref-enclosed-across-formatting",
+  "description": "Brackets left empty by a noteref are removed from plain text even when formatting splits them, as word processors often do",
+  "role": "noteref",
+  "rolesCovered": [
+    "noteref",
+    "footnote",
+    "aside",
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

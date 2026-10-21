@@ -1,0 +1,12 @@
+{
+  "id": "abbreviation-nested-term",
+  "description": "An abbr wrapping a whole term still expands that term's text",
+  "role": "abbreviation",
+  "rolesCovered": [
+    "abbreviation",
+    "term",
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/speech-synthesis11/#S3.1.10",
+  "inputKind": "fragment"
+}

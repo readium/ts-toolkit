@@ -1,0 +1,124 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "id": "n",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "1",
+            "language": "de"
+          }
+        },
+        {
+          "id": "m",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "2",
+            "language": "de"
+          }
+        }
+      ],
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Das Wort hier, dort.",
+        "ssml": "Das Wort „<readium:noteref id=\"n\" />“ hier, »<readium:noteref id=\"m\" />« dort.",
+        "language": "de"
+      }
+    },
+    {
+      "children": [
+        {
+          "id": "o",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "3",
+            "language": "de"
+          }
+        }
+      ],
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Er sagt «Hallo» «Welt».",
+        "ssml": "Er sagt «Hallo»<readium:noteref id=\"o\" /> «Welt».",
+        "language": "de"
+      }
+    },
+    {
+      "children": [
+        {
+          "id": "p",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "4",
+            "language": "de"
+          }
+        }
+      ],
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Er sagt »Hallo« »Welt«.",
+        "ssml": "Er sagt »Hallo«<readium:noteref id=\"p\" /> »Welt«.",
+        "language": "de"
+      }
+    }
+  ]
+}

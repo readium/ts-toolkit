@@ -1,0 +1,11 @@
+{
+  "id": "abbreviation-html-native",
+  "description": "An abbr with a title becomes an SSML sub whose alias is the title",
+  "role": "abbreviation",
+  "rolesCovered": [
+    "abbreviation",
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/speech-synthesis11/#S3.1.10",
+  "inputKind": "fragment"
+}

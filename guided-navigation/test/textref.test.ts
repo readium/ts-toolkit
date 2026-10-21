@@ -498,3 +498,52 @@ test("parseMarkup with href qualifies every ref, and the textrefs decode back wi
   expect(second?.cssSelector).toBeTruthy();
   expect(nodes[2].imgref).toBe("OEBPS/a.png");
 });
+
+test("an embedded biblioref target without its id still decodes as a locator for itself", () => {
+  const html = '<p>See <a role="doc-biblioref" href="#smith1988">Smith</a>.</p><ul role="doc-bibliography"><li id="smith1988">Smith, J. 1988.</li></ul>';
+  const [p] = parseMarkup(html, undefined, { textrefs: true });
+  const entry = p.children![0].children![0];
+  expect(entry.id).toBe(undefined);
+  expect(decodeTextref(entry)).toEqual({ cssSelector: "#smith1988" });
+});
+
+test("an embedded footnote without its id still decodes as a locator for itself", () => {
+  const html = '<p>A<a role="doc-noteref" href="#n">1</a></p><aside id="n" role="doc-footnote"><p>Note</p></aside>';
+  const [p] = parseMarkup(html, undefined, { textrefs: true });
+  const footnote = p.children![0].children![0];
+  expect(footnote.id).toBe(undefined);
+  expect(decodeTextref(footnote)).toEqual({ cssSelector: "#n" });
+});
+
+test("an embedded target without its id keeps its text-fragment suffix", () => {
+  const html = '<p>See <a role="doc-biblioref" href="#smith1988">Smith</a>.</p><ul role="doc-bibliography"><li id="smith1988">Smith, J. 1988.</li></ul>';
+  const [p] = parseMarkup(html, undefined, { textrefs: { roles: true, textFragment: true } });
+  const entry = p.children![0].children![0];
+  expect(entry.textref).toMatch(/^#css\(%23smith1988\):~:text=/);
+  expect(decodeTextref(entry)?.cssSelector).toBe("#smith1988");
+});
+
+test("a pagebreak in an embedded biblioref target decodes as a locator in both the copy and the original", () => {
+  const html = '<p>See <a role="doc-biblioref" href="#e">1</a>.</p><ul role="doc-bibliography"><li id="e">Entry <span id="pb" role="doc-pagebreak" title="7"></span> text.</li></ul>';
+  const [p, list] = parseMarkup(html, undefined, { textrefs: true });
+  const copy = p.children![0].children![0].children!.find((c) => c.role?.has("pagebreak"))!;
+  const original = list.children![0].children!.find((c) => c.role?.has("pagebreak"))!;
+  expect(original.id).toBe("pb");
+  expect(copy.id).not.toBe("pb");
+  expect(decodeTextref(original)).toEqual({ cssSelector: "#pb" });
+  expect(decodeTextref(copy)).toEqual({ cssSelector: "#pb" });
+});
+
+test.each([
+  ['<span id="art" role="img" aria-label="illustration"></span>'],
+  ['<svg id="art" aria-label="illustration"></svg>'],
+])("an image whose textref is generated late decodes as a locator in both the copy and the original: %s", (image) => {
+  const html = `<p>See <a role="doc-biblioref" href="#e">1</a>.</p><ul role="doc-bibliography"><li id="e">Entry ${image} text.</li></ul>`;
+  const [p, list] = parseMarkup(html, undefined, { textrefs: true });
+  const copy = p.children![0].children![0].children!.find((c) => c.role?.has("image"))!;
+  const original = list.children![0].children!.find((c) => c.role?.has("image"))!;
+  expect(original.id).toBe("art");
+  expect(copy.id).not.toBe("art");
+  expect(decodeTextref(original)).toEqual({ cssSelector: "#art" });
+  expect(decodeTextref(copy)).toEqual({ cssSelector: "#art" });
+});

@@ -1,0 +1,12 @@
+{
+  "id": "abbreviation-nested-term-punctuation",
+  "description": "An abbr wrapping a term and punctuation outside it still expands that term's text",
+  "role": "abbreviation",
+  "rolesCovered": [
+    "abbreviation",
+    "term",
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/speech-synthesis11/#S3.1.10",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "biblioref-target-descendant-ids",
+  "description": "A biblioref's embedded copy drops the ids its original keeps, inner ones included, and gives its placeholders new ones, so no id appears twice",
+  "role": "biblioref",
+  "rolesCovered": [
+    "biblioref",
+    "bibliography",
+    "list",
+    "listItem",
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

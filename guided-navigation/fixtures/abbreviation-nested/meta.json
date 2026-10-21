@@ -1,0 +1,11 @@
+{
+  "id": "abbreviation-nested",
+  "description": "An abbr nested in another is covered by the outer one's expansion: one sub, spoken once",
+  "role": "abbreviation",
+  "rolesCovered": [
+    "abbreviation",
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/speech-synthesis11/#S3.1.10",
+  "inputKind": "fragment"
+}

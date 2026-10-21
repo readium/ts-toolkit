@@ -1,0 +1,12 @@
+{
+  "id": "abbreviation-before-image",
+  "description": "Whitespace after an abbr and an image stays plain, rather than in a sub that would speak the expansion again",
+  "role": "abbreviation",
+  "rolesCovered": [
+    "abbreviation",
+    "image",
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/speech-synthesis11/#S3.1.10",
+  "inputKind": "fragment"
+}

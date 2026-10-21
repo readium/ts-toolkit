@@ -1,0 +1,90 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "id": "biblioref1",
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "id": "link1",
+                      "text": {
+                        "plain": "book"
+                      },
+                      "textref": "book.html"
+                    }
+                  ],
+                  "role": [
+                    "paragraph"
+                  ],
+                  "text": {
+                    "plain": "Entry.",
+                    "ssml": "Entry <readium:link id=\"link1\" />.",
+                    "language": "en"
+                  }
+                }
+              ],
+              "role": [
+                "listItem"
+              ]
+            }
+          ],
+          "role": [
+            "biblioref"
+          ],
+          "text": {
+            "plain": "1"
+          },
+          "textref": "#entry"
+        }
+      ],
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "See.",
+        "ssml": "See <readium:biblioref id=\"biblioref1\" />.",
+        "language": "en"
+      }
+    },
+    {
+      "children": [
+        {
+          "id": "entry",
+          "children": [
+            {
+              "id": "details",
+              "children": [
+                {
+                  "id": "lnk",
+                  "text": {
+                    "plain": "book"
+                  },
+                  "textref": "book.html"
+                }
+              ],
+              "role": [
+                "paragraph"
+              ],
+              "text": {
+                "plain": "Entry.",
+                "ssml": "Entry <readium:link id=\"lnk\" />.",
+                "language": "en"
+              }
+            }
+          ],
+          "role": [
+            "listItem"
+          ]
+        }
+      ],
+      "role": [
+        "list",
+        "bibliography"
+      ]
+    }
+  ]
+}
