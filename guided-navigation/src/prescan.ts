@@ -1,5 +1,6 @@
 import { extractNodeRoles } from "./roles.ts";
 import { isAncestorOf } from "./dom.ts";
+import { decodeIdFragment } from "./textrefFragment.ts";
 
 function hasEndnotesAncestor(el: Element): boolean {
   for (let p: Element | null = el.parentElement; p; p = p.parentElement) {
@@ -22,7 +23,7 @@ export function prescan(root: Element, ids: Map<string, Element>, suppressed: Se
       if (roles.includes("noteref")) {
         const href = n.getAttribute("href") ?? "";
         if (href.startsWith("#")) {
-          noterefTargets.push({ id: href.slice(1), ref: n });
+          noterefTargets.push({ id: decodeIdFragment(href) ?? href.slice(1), ref: n });
         }
       }
     }

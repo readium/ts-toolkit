@@ -10,7 +10,7 @@ import { hasElementChild, isAncestorOf } from "./dom.ts";
 import { nodeLanguage } from "./language.ts";
 import { Converter } from "./converter.ts";
 import { selectorForElement, textrefForSelector } from "./selectorGenerator.ts";
-import { encodeCssSelectorFragment } from "./textrefFragment.ts";
+import { decodeIdFragment, encodeCssSelectorFragment } from "./textrefFragment.ts";
 
 // Returns true if el's children should still be descended into (a
 // pagebreak with element children of its own, in HTML parsing).
@@ -42,15 +42,15 @@ export function noteref(converter: Converter, el: Element, roles: GndRole[]): vo
   if (text) obj.text = { plain: text, ssml: "", language };
 
   const href = el.getAttribute("href") ?? "";
+  const fragment = href.startsWith("#") ? (decodeIdFragment(href) ?? href.slice(1)) : undefined;
   let candidateID = el.getAttribute("id") ?? "";
-  if (!candidateID && href.startsWith("#")) {
+  if (!candidateID && fragment !== undefined) {
     // A target still output at its own location keeps its id there.
-    const target = converter.ids.get(href.slice(1));
-    if (!target || converter.suppressed.has(target)) candidateID = href.slice(1);
+    const target = converter.ids.get(fragment);
+    if (!target || converter.suppressed.has(target)) candidateID = fragment;
   }
 
-  if (href.startsWith("#")) {
-    const fragment = href.slice(1);
+  if (fragment !== undefined) {
     const target = converter.ids.get(fragment);
     if (target && !isAncestorOf(target, el) && converter.noterefDepth < 3) {
       const sub = converter.spawnChild(target);
@@ -81,7 +81,7 @@ export function reference(converter: Converter, el: Element, roles: GndRole[], a
   const obj = linkObject(converter, el, roles, aria, ariaLanguage);
   const href = el.getAttribute("href") ?? "";
   if (href.startsWith("#")) {
-    const target = converter.ids.get(href.slice(1));
+    const target = converter.ids.get(decodeIdFragment(href) ?? href.slice(1));
     if (target && !isAncestorOf(target, el) && converter.noterefDepth < 3) {
       const children = referencedContent(target).flatMap((content) => {
         const sub = converter.spawnChild(content);

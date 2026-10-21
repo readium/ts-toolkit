@@ -131,7 +131,7 @@ export function combineDomRangeTextrefs(first: DecodedTextref, last: DecodedText
   return combined;
 }
 
-function decodeIdFragment(base: string): string | undefined {
+export function decodeIdFragment(base: string): string | undefined {
   if (!base.startsWith("#")) return undefined;
   try {
     return decodeURIComponent(base.slice(1));

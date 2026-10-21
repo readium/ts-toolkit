@@ -870,6 +870,16 @@
     }
   },
   {
+    "id": "glossref-target-percent-encoded",
+    "dir": "glossref-target-percent-encoded",
+    "role": "glossref",
+    "description": "A glossref whose href is percent-encoded still finds its target, and keeps its href as authored",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "header-html-native",
     "dir": "header-html-native",
     "role": "header",
@@ -1354,6 +1364,26 @@
     "dir": "noteref-target-in-endnotes-role-aria",
     "role": "footnote",
     "description": "A noteref's target footnote, nested inside an endnotes section via explicit ARIA roles, still appears at its own location (unlike a footnote outside any endnotes section, which is suppressed there since a noteref already embeds it inline)",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-target-malformed-escape",
+    "dir": "noteref-target-malformed-escape",
+    "role": "noteref",
+    "description": "A noteref whose href has a malformed percent-escape falls back to the fragment as written",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-target-percent-encoded",
+    "dir": "noteref-target-percent-encoded",
+    "role": "noteref",
+    "description": "A noteref whose href is percent-encoded still finds and embeds its footnote, which isn't output again at its own location",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
