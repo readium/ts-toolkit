@@ -23,7 +23,7 @@ import type { EpubSettings } from "../epub/preferences/index.ts";
 import type { WebPubSettings } from "../webpub/preferences/index.ts";
 import type { DivinaSettings } from "../divina/preferences/index.ts";
 import { GuidedNavigationProvider, PublicationGuidedNavigationProvider } from "./GuidedNavigationProvider.ts";
-import { GuidedNavigationPool, ReadingUnit, ReadingUnits } from "./ReadingUnit.ts";
+import { GO_TIMEOUT, GuidedNavigationPool, ReadingUnit, ReadingUnits } from "./ReadingUnit.ts";
 import { SpeechProgress } from "./SpeechProgress.ts";
 import {
     IReadAloudDefaults,
@@ -52,6 +52,8 @@ export interface ReadAloudUtterance {
 export interface ReadAloudListeners {
     stateChanged?: (state: ReadAloudState) => void;
     utteranceChanged?: (utterance: ReadAloudUtterance) => void;
+    /** The reader moved away from the spoken text, or came back to it. */
+    detachedChanged?: (detached: boolean) => void;
     wordChanged?: (locator: Locator, word: string) => void;
     error?: (error: unknown) => void;
 }
@@ -130,7 +132,6 @@ class PublicationWebSpeechEngine extends WebSpeechEngine {
 
 const UTTERANCE_GROUP = "readaloud-utterance";
 const WORD_GROUP = "readaloud-word";
-const GO_TIMEOUT = 1000;
 // Subpixel scrolling and rounding of the reported line starts.
 const LAYOUT_TOLERANCE = 1;
 
@@ -162,7 +163,7 @@ export class ReadAloudNavigator {
     // A move is under way, so layout reports until its acknowledgement show it, not the reader's.
     private following?: ReturnType<typeof setTimeout>;
     // The reader moved away from the spoken text, which isn't followed until back in view.
-    private detached = false;
+    private _detached = false;
     private navigationLocked = false;
     private readonly keepAwake: boolean;
     private wakeLockWanted = false;
@@ -231,6 +232,11 @@ export class ReadAloudNavigator {
     /** Whether the reader can move away while reading aloud. Otherwise the app keeps its own navigation from moving while playing. */
     get detachable(): boolean {
         return this._settings.detachable;
+    }
+
+    /** Whether the reader moved away from the spoken text, which isn't followed until `reattach()` or the reader is back on it. */
+    get detached(): boolean {
+        return this._detached;
     }
 
     get state(): ReadAloudState {
@@ -332,6 +338,27 @@ export class ReadAloudNavigator {
     }
 
     /**
+     * Goes back to the spoken text and follows it again, leaving playback as it is.
+     * Returns false when nothing is being read.
+     */
+    reattach(): boolean {
+        const state = this.state;
+        const queue = this.speech.getContentQueue();
+        const utterance = this.pausedBefore?.current ? queue[this.pausedBefore.index] : this.speech.getCurrentContent();
+        if (state === "idle" || state === "loading" || !utterance) return false;
+        this.attach();
+        // Turning to the awaited page from here isn't the reader's, so it doesn't resume.
+        this.awaitedHref = undefined;
+        this.followedHref = undefined;
+        const locators = this.locatorsOf(utterance);
+        const href = this.navigator.currentLocator.href.split("#")[0];
+        // The layout last reported is the spoken resource's, not the one the reader moved to.
+        if (locators[0] && this.layout() !== Layout.fixed && locators[0].href !== href) this.follow(locators[0]);
+        else this.followUtterance(utterance, locators);
+        return true;
+    }
+
+    /**
      * The available voices, only those of `languages` when given,
      * ranked the way the default voice is picked: preferred region first, then quality.
      */
@@ -387,7 +414,7 @@ export class ReadAloudNavigator {
             await this.publicationEngine?.setLanguages(this.publicationLanguages(this._settings.languageOverride));
         }
         if (pausedForLanguage && this.speech.getState() === "paused") this.speech.play();
-        if (!this._settings.detachable && this.detached) this.attach();
+        if (!this._settings.detachable && this._detached) this.attach();
         // Speech keeps its place in a rebuilt queue only while playing or paused itself, not while stopped here.
         const held = this.pausedBefore ?? this.turning;
         if (held) {
@@ -478,7 +505,7 @@ export class ReadAloudNavigator {
                 const link = this.units.linkAfter(unit);
                 if (!link) this.clearHighlights();
                 else if (this.awaitsTurn(link.href)) void this.awaitTurn(unit);
-                else void this.loadUnit(() => this.units.after(unit), () => 0, this.pausesBeforeUnit(link.href));
+                else void this.loadUnit(() => this.unitAfter(unit), () => 0, this.pausesBeforeUnit(link.href));
                 return;
             }
             const queue = this.speech.getContentQueue();
@@ -618,7 +645,7 @@ export class ReadAloudNavigator {
                 this.setLoading(false);
                 // Nothing to read in this unit (e.g. only images): continue with the next one.
                 if (this.units.linkAfter(unit)) {
-                    return this.awaitedHref ? this.awaitTurn(unit) : this.loadUnit(() => this.units.after(unit), () => 0, this.loadPaused);
+                    return this.awaitedHref ? this.awaitTurn(unit) : this.loadUnit(() => this.unitAfter(unit), () => 0, this.loadPaused);
                 }
                 return false;
             }
@@ -779,17 +806,40 @@ export class ReadAloudNavigator {
         return this.loadUnit(() => this.units.pageAfter(unit), () => 0, true);
     }
 
-    // Turning from the pages just before the awaited one resumes playback, unlike resizing to show it or jumping there.
+    // Turning from the pages just before the awaited one resumes playback,
+    // unlike resizing to show it, jumping there, or coming back to it after moving away.
     private viewportChanged(displayed: string[]) {
         const previous = this.displayed;
         this.displayed = displayed;
+        const wasDetached = this._detached;
+        this.readerMoved(previous, displayed);
         const awaited = this.awaitedHref;
         if (!awaited || !displayed.includes(awaited)) return;
         const readingOrder = this.navigator.publication.readingOrder;
         const first = Math.min(...displayed.map(href => readingOrder.findIndexWithHref(href)));
         const last = Math.max(...previous.map(href => readingOrder.findIndexWithHref(href)));
-        if (first === last + 1) void this.play();
+        if (first === last + 1 && !wasDetached) void this.play();
         else this.awaitedHref = undefined;
+    }
+
+    // Tells from a viewport change, not made here, whether the reader moved away from the spoken text or back to it.
+    private readerMoved(previous: string[], displayed: string[]) {
+        if (!this.detachable || this.loading || this.turning || this.following !== undefined || this.units.moving) return;
+        if (this.layout() !== Layout.fixed) {
+            this.isDetached();
+            return;
+        }
+        const readingOrder = this.navigator.publication.readingOrder;
+        const spoken = this.utteranceLocators.map(locator => readingOrder.findWithHref(locator.href.split("#")[0])?.href);
+        if (spoken.length === 0) return;
+        if (spoken.some(href => href && displayed.includes(href))) this.setDetached(false);
+        // Unless scrolled, pages still displayed after the change were resized, not turned away from.
+        else if (this.navigator.layout === Layout.scrolled || !previous.some(href => displayed.includes(href))) this.setDetached(true);
+    }
+
+    // A reader looking elsewhere isn't moved to find the next spread, so its next page is read on its own.
+    private unitAfter(unit: ReadingUnit): ReadingUnit | undefined {
+        return this._detached && this.layout() === Layout.fixed ? this.units.pageAfter(unit) : this.units.after(unit);
     }
 
     // Moving into another unit keeps playback paused, as moving within one does.
@@ -831,12 +881,25 @@ export class ReadAloudNavigator {
 
     private notifyUtterance(utterance = this.speech.getCurrentContent()) {
         if (!utterance) return;
-        const locators = this.piecesOf(utterance)
-            .map(piece => this.locatorFor(piece))
-            .filter((locator): locator is Locator => locator !== undefined);
+        const locators = this.locatorsOf(utterance);
         this.utteranceLocators = locators;
         this.wordLocator = undefined;
         this.decorate();
+        // Reading on reaches the page the reader turned to.
+        if (this.layout() === Layout.fixed && locators.some(locator => this.displayed.includes(locator.href))) this.setDetached(false);
+        const page = this.followUtterance(utterance, locators);
+        if (page) locators.push(page);
+        this.listeners.utteranceChanged?.({ text: utterance.plain ?? "", locators });
+    }
+
+    private locatorsOf(utterance: ReadiumSpeechUtterance): Locator[] {
+        return this.piecesOf(utterance)
+            .map(piece => this.locatorFor(piece))
+            .filter((locator): locator is Locator => locator !== undefined);
+    }
+
+    // Follows `utterance` out of view or off center, returning the page it's on when `locators` is empty.
+    private followUtterance(utterance: ReadiumSpeechUtterance, locators: Locator[]): Locator | undefined {
         const center = this.centerPoint(utterance);
         if (center) {
             const locator = this.isOffCenter(center) ? this.pointLocator(center) : undefined;
@@ -847,12 +910,10 @@ export class ReadAloudNavigator {
         } else {
             // Following a whole page again would reset its scroll position.
             const page = this.pageLocator();
-            if (page) {
-                locators.push(page);
-                if (page.href !== this.followedHref) this.follow(page);
-            }
+            if (page && page.href !== this.followedHref) this.follow(page);
+            return page;
         }
-        this.listeners.utteranceChanged?.({ text: utterance.plain ?? "", locators });
+        return undefined;
     }
 
     // Image pages (Divina) are read one at a time, and their utterances carry no location of their own.
@@ -898,16 +959,22 @@ export class ReadAloudNavigator {
         });
     }
 
+    private setDetached(detached: boolean) {
+        if (this._detached === detached) return;
+        this._detached = detached;
+        this.listeners.detachedChanged?.(detached);
+    }
+
     private attach() {
-        this.detached = false;
+        this.setDetached(false);
         this.shownHref = undefined;
     }
 
     // Layout reports stop once the reader moves to another resource, so that is told from the navigator.
     private isDetached(): boolean {
         const href = this.navigator.currentLocator.href.split("#")[0];
-        if (this.detachable && this.shownHref && this.shownHref !== href && this.layout() !== Layout.fixed) this.detached = true;
-        return this.detached;
+        if (this.detachable && this.shownHref && this.shownHref !== href && this.layout() !== Layout.fixed) this.setDetached(true);
+        return this._detached;
     }
 
     // Watches where the pieces of `queue` are laid out, when the navigator reports it.
@@ -941,7 +1008,7 @@ export class ReadAloudNavigator {
         }
         const spoken = this.spokenPoint();
         const hidden = spoken && this.isHidden(spoken);
-        if (hidden === false) this.detached = false;
+        if (hidden === false) this.setDetached(false);
         const center = this.centerPoint();
         const target = center ? (this.isOffCenter(center) ? center : undefined) : (hidden ? spoken : undefined);
         if (target && layout.pieces) {
@@ -950,7 +1017,7 @@ export class ReadAloudNavigator {
             if (locator) this.follow(locator);
         } else if (hidden && this.detachable && this.following === undefined && !this.turning) {
             // Only scrolling reports the viewport alone, and this one isn't a move made here.
-            this.detached = true;
+            this.setDetached(true);
         }
         if (this.breakTimer !== undefined || this.progress.speaking) this.armBreak();
     }
@@ -1081,7 +1148,7 @@ export class ReadAloudNavigator {
         this.clearBreak();
         const utterance = this.speech.getCurrentContent();
         const viewport = this.visibleViewport();
-        if (!utterance || this.detached || this.sendsBoundaries() || !this.progress.speaking || !viewport || this.centerPoint(utterance)) return;
+        if (!utterance || this._detached || this.sendsBoundaries() || !this.progress.speaking || !viewport || this.centerPoint(utterance)) return;
         const end = viewport.pos + viewport.size - LAYOUT_TOLERANCE;
         let before = 0;
         for (const piece of this.piecesOf(utterance)) {

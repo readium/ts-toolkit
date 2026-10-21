@@ -99,7 +99,16 @@ As `readFromPointer` is asynchronous, the listeners return `true` and handle pag
 
 ### Moving away while reading
 
-By default, the reader can scroll, turn pages or follow links while reading aloud. The navigator then stops following the spoken text until the reader is back on it, or plays, moves to the next or previous utterance, or reads from a click or tap.
+By default, the reader can scroll, turn pages or follow links while reading aloud. The navigator then stops following the spoken text until the reader is back on it, or plays, moves to the next or previous utterance, or reads from a click or tap. In fixed layouts, reading goes on one page at a time without turning pages.
+
+`readAloud.detached` tells whether the reader moved away, and the `detachedChanged` listener reports it. To offer a way back, call `readAloud.reattach()`: it goes to the spoken text and follows it again, without changing whether it's playing or paused.
+
+```ts
+const readAloud = new ReadAloudNavigator(navigator, {
+  detachedChanged: detached => backButton.hidden = !detached,
+});
+backButton.onclick = () => readAloud.reattach();
+```
 
 With the `detachable` preference set to `false`, the reader can't move away while playing: scrolling, swiping, tapping the edges and following links in the content are locked, and unlocked when paused or stopped. Read aloud still turns pages, and taps and clicks are still reported. Your own navigation, such as a table of contents or page buttons, isn't locked: check `readAloud.detachable` to disable it while playing. Changing it applies right away, also while playing. It is supported by `EpubNavigator` and `WebPubNavigator`.
 
