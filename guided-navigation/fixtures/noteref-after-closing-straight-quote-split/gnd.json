@@ -1,0 +1,38 @@
+{
+  "children": [
+    {
+      "text": {
+        "plain": "He said \"hello"
+      }
+    },
+    {
+      "children": [
+        {
+          "id": "n",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "1"
+          }
+        }
+      ],
+      "text": {
+        "plain": "world\" \"next\"",
+        "ssml": "world\"<readium:noteref id=\"n\" /> \"next\"",
+        "language": "en"
+      }
+    }
+  ]
+}

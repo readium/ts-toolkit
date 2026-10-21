@@ -27,17 +27,11 @@ import { type GndGenerationOptions, normalizeTextrefOptions } from "./options.ts
 import { IdAllocator } from "./idAllocator.ts";
 import { prescan as prescanImpl } from "./prescan.ts";
 import { pagebreak, noteref, reference, link } from "./elementHandlers.ts";
+import { DROPPED, removeDropped } from "./emptyPairs.ts";
 
 const MATHML_NS = "http://www.w3.org/1998/Math/MathML";
 
 const TEXT_NODE = 3;
-
-// Bracket and quote pairs left empty in plain text when all they enclose is placeholders and separators between them.
-const ENCLOSING_PAIRS: Record<string, string> = {
-  "(": ")", "[": "]", "{": "}", "\u201C": "\u201D", "\u2018": "\u2019", "\u00AB": "\u00BB", "\u2039": "\u203A",
-  "\u300C": "\u300D", "\u300E": "\u300F", "\uFF08": "\uFF09", "\"": "\"",
-};
-
 const ELEMENT_NODE = 1;
 
 // These elements are normally treated as inline (text flows through them
@@ -644,32 +638,17 @@ export class Converter {
     let sawBreak = false;
     let sawPlaceholder = false;
     let midSpace = false;
-    let enclosure: { start: number; closer: string } | undefined;
     for (const seg of segments) {
       if (seg.kind === "text") {
         const lead = seg.text!.startsWith(" ");
-        let t = seg.text!.replace(/^ +| +$/g, "");
-        let unwrapped = false;
-        if (enclosure && sawPlaceholder && t.startsWith(enclosure.closer)) {
-          const before = plainB.slice(0, enclosure.start);
-          const after = t.slice(enclosure.closer.length);
-          // Only whitespace outside the removed pair separates what's left around it.
-          midSpace = before.endsWith(" ") || after.startsWith(" ") || (after === "" && seg.text!.endsWith(" "));
-          prevTrail = false;
-          plainB = before.replace(/ +$/, "");
-          t = after.replace(/^ +/, "");
-          unwrapped = true;
-          enclosure = undefined;
-        } else if (!(enclosure && sawPlaceholder && /^[,;\u3001\uFF0C]$/.test(t))) {
-          enclosure = undefined;
-        }
+        const t = seg.text!.replace(/^ +| +$/g, "");
         if (t === "") {
-          if (!unwrapped) midSpace = true;
+          midSpace = true;
           continue;
         }
         let join = false;
         if (plainB.length > 0) {
-          const spaced = prevTrail || midSpace || (lead && !unwrapped);
+          const spaced = prevTrail || midSpace || lead;
           if (sawBreak) join = true;
           else if (sawPlaceholder) join = spaced && !startsWithBindingPunct(t);
           else join = spaced;
@@ -682,13 +661,12 @@ export class Converter {
         midSpace = false;
       } else if (seg.kind === "break") {
         sawBreak = true;
-        enclosure = undefined;
       } else if (seg.kind === "placeholder") {
-        const closer = enclosure ? undefined : ENCLOSING_PAIRS[plainB.at(-1) ?? ""];
-        if (closer !== undefined) enclosure = { start: plainB.length - 1, closer };
+        plainB += DROPPED;
         sawPlaceholder = true;
       }
     }
+    plainB = removeDropped(plainB, baseLang);
 
     // Plain text is only worth keeping alongside SSML when it diverges from
     // what stripping tags from the SSML would produce — i.e. when a

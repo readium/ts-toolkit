@@ -1,0 +1,47 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "id": "n",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "1",
+            "language": "sv"
+          }
+        }
+      ],
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Ordet här.",
+        "ssml": "Ordet ”<readium:noteref id=\"n\" />” här.",
+        "language": "sv"
+      }
+    },
+    {
+      "id": "m",
+      "role": [
+        "aside",
+        "footnote"
+      ],
+      "text": {
+        "plain": "Note."
+      }
+    }
+  ]
+}

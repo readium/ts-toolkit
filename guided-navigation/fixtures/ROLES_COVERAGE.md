@@ -56,7 +56,7 @@ renaming, or removing a fixture.
 | `main` | `main-html-native`, `main-role-aria` |
 | `math` | `math-html-native`, `math-no-description`, `math-role-aria` |
 | `navigation` | `navigation-html-native`, `navigation-role-aria` |
-| `noteref` | `noteref-enclosed-adjacent-text`, `noteref-enclosed-before-formatting`, `noteref-role-aria`, `noteref-target-malformed-escape`, `noteref-target-percent-encoded` |
+| `noteref` | `noteref-after-closing-straight-quote`, `noteref-after-closing-straight-quote-split`, `noteref-enclosed-adjacent-text`, `noteref-enclosed-before-formatting`, `noteref-enclosed-guillemets-french`, `noteref-enclosed-quotes-chinese`, `noteref-enclosed-quotes-german`, `noteref-enclosed-quotes-swedish`, `noteref-enclosed-straight-quotes`, `noteref-role-aria`, `noteref-target-malformed-escape`, `noteref-target-percent-encoded` |
 | `notice` | `notice-epub-type`, `notice-role-aria` |
 | `pagebreak` | `pagebreak-epub-type`, `pagebreak-role-aria` |
 | `pagelist` | `pagelist-epub-type`, `pagelist-role-aria` |
@@ -79,4 +79,4 @@ renaming, or removing a fixture.
 | `toc` | `toc-epub-type`, `toc-role-aria` |
 | `video` | `video-html-native`, `video-no-description` |
 
-198 fixtures across 71 roles.
+205 fixtures across 71 roles.

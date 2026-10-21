@@ -1,0 +1,13 @@
+{
+  "id": "noteref-enclosed-quotes-german",
+  "description": "German „…“ and »…« left empty by a noteref are removed; Swiss «…» quotations either side of one are kept",
+  "role": "noteref",
+  "rolesCovered": [
+    "noteref",
+    "footnote",
+    "aside",
+    "paragraph"
+  ],
+  "sourceRef": "https://cldr.unicode.org/translation/characters/punctuation",
+  "inputKind": "fragment"
+}

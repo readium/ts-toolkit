@@ -1,0 +1,13 @@
+{
+  "id": "noteref-enclosed-guillemets-french",
+  "description": "French guillemets left empty by a noteref are removed with their inner spaces; neighbouring quotations are kept",
+  "role": "noteref",
+  "rolesCovered": [
+    "noteref",
+    "footnote",
+    "aside",
+    "paragraph"
+  ],
+  "sourceRef": "https://cldr.unicode.org/translation/characters/punctuation",
+  "inputKind": "fragment"
+}

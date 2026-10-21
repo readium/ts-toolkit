@@ -1340,6 +1340,26 @@
     }
   },
   {
+    "id": "noteref-after-closing-straight-quote",
+    "dir": "noteref-after-closing-straight-quote",
+    "role": "noteref",
+    "description": "A closing straight quote before a noteref isn't taken for an opening one: both quoted words keep their quotes in plain text",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-after-closing-straight-quote-split",
+    "dir": "noteref-after-closing-straight-quote-split",
+    "role": "noteref",
+    "description": "A straight quote closing a quotation opened in a previous text object, as in fixed layouts, isn't taken for an opening one",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "noteref-enclosed-adjacent-text",
     "dir": "noteref-enclosed-adjacent-text",
     "role": "noteref",
@@ -1354,6 +1374,56 @@
     "dir": "noteref-enclosed-before-formatting",
     "role": "noteref",
     "description": "Brackets left empty by a noteref and directly followed by formatted text are removed from plain text without adding a space",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-enclosed-guillemets-french",
+    "dir": "noteref-enclosed-guillemets-french",
+    "role": "noteref",
+    "description": "French guillemets left empty by a noteref are removed with their inner spaces; neighbouring quotations are kept",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-enclosed-quotes-chinese",
+    "dir": "noteref-enclosed-quotes-chinese",
+    "role": "noteref",
+    "description": "Chinese quotes left empty by a noteref are removed without any space",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-enclosed-quotes-german",
+    "dir": "noteref-enclosed-quotes-german",
+    "role": "noteref",
+    "description": "German „…“ and »…« left empty by a noteref are removed; Swiss «…» quotations either side of one are kept",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-enclosed-quotes-swedish",
+    "dir": "noteref-enclosed-quotes-swedish",
+    "role": "noteref",
+    "description": "Swedish quotes, the same mark at both ends, left empty by a noteref are removed",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-enclosed-straight-quotes",
+    "dir": "noteref-enclosed-straight-quotes",
+    "role": "noteref",
+    "description": "Straight quotes left empty by a noteref are removed from plain text",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"

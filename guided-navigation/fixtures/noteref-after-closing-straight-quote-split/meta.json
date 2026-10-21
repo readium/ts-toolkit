@@ -1,0 +1,12 @@
+{
+  "id": "noteref-after-closing-straight-quote-split",
+  "description": "A straight quote closing a quotation opened in a previous text object, as in fixed layouts, isn't taken for an opening one",
+  "role": "noteref",
+  "rolesCovered": [
+    "noteref",
+    "footnote",
+    "aside"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}
