@@ -424,7 +424,7 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
     }
 
     /**
-     * Waits for the current audio to be ready to play, then seeks to seekTime if > 0.
+     * Waits for the current audio to be ready to play, then seeks to seekTime.
      * Rejects if an error event fires before the audio is ready.
      * When navId is provided, skips the seek if that navigation has been superseded.
      */
@@ -432,10 +432,6 @@ export class AudioNavigator extends MediaNavigator implements Configurable<Audio
         return new Promise<void>((resolve, reject) => {
             const proceed = () => {
                 if (navId !== undefined && navId !== this.navigationId) {
-                    resolve();
-                    return;
-                }
-                if (seekTime <= 0) {
                     resolve();
                     return;
                 }
