@@ -435,9 +435,15 @@ export class Converter {
 
   private textContext(node: Node): SSMLContext {
     // An abbreviation's text is replaced by its expansion as a whole, so it wins over any formatting inside it.
-    for (let p = node.parentElement; p && p !== this.current.el; p = p.parentElement) {
+    // It applies only if all its text is in one object, so its alias is never repeated or misplaced.
+    for (let p = node.parentElement, enclosing = false; p; p = p.parentElement) {
       const alias = abbreviationExpansion(p);
-      if (alias) return { lang: declaredLanguage(p), tag: "sub", attrs: { alias }, abbr: p };
+      if (alias) {
+        if (!enclosing && Converter.containsObject(p)) break;
+        return { lang: declaredLanguage(p), tag: "sub", attrs: { alias }, abbr: p };
+      }
+      if (p === this.current.el) enclosing = true;
+      if (enclosing && !Converter.isSoleContent(p)) break;
     }
     const ctx: SSMLContext = { lang: declaredLanguage(node.parentElement), tag: "" };
     for (let p = node.parentElement; p && p !== this.current.el; p = p.parentElement) {
@@ -449,6 +455,21 @@ export class Converter {
       }
     }
     return ctx;
+  }
+
+  private static containsObject(el: Element): boolean {
+    for (const d of el.querySelectorAll("*")) {
+      if (isBlockNode(d.tagName.toLowerCase(), extractNodeRoles(d))) return true;
+    }
+    return false;
+  }
+
+  // Punctuation alongside doesn't count, e.g. the last period of <abbr><dfn>W.H.O</dfn>.</abbr>.
+  private static isSoleContent(el: Element): boolean {
+    for (let s = el.parentNode?.firstChild; s; s = s.nextSibling) {
+      if (s !== el && (s.nodeType === ELEMENT_NODE || (s.nodeType === TEXT_NODE && !/^[\s\p{P}]*$/u.test(s.nodeValue ?? "")))) return false;
+    }
+    return true;
   }
 
   private updateFlowSpace() {

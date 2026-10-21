@@ -40,10 +40,40 @@
     }
   },
   {
+    "id": "abbreviation-nested-term",
+    "dir": "abbreviation-nested-term",
+    "role": "abbreviation",
+    "description": "An abbr wrapping a whole term still expands that term's text",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "abbreviation-nested-term-punctuation",
+    "dir": "abbreviation-nested-term-punctuation",
+    "role": "abbreviation",
+    "description": "An abbr wrapping a term and punctuation outside it still expands that term's text",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "abbreviation-no-title",
     "dir": "abbreviation-no-title",
     "role": "abbreviation",
     "description": "An abbr without a title has no expansion, so it stays plain text",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "abbreviation-spanning-terms",
+    "dir": "abbreviation-spanning-terms",
+    "role": "abbreviation",
+    "description": "An abbr spanning several terms isn't expanded, rather than repeated in each or spoken over the text between them",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
