@@ -11,11 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `abbreviation` role for `<abbr>` and `<acronym>`. With a `title`, an abbreviation becomes `<sub alias="…">` in SSML, with the title as alias, e.g. `<sub alias="World Health Organization">WHO</sub>`. In another language, the `<sub>` is wrapped in `<lang>`, since it can't carry `xml:lang` itself
 - Fixtures for abbreviations
-- A `glossref` or `biblioref` to an element in the same document carries that element's content as its `children`, like a `noteref` its footnote: a glossary term's definitions (`<dd>`), else the element itself. Unlike a footnote, that element is still output at its own location
+- A `glossref` or `biblioref` to an element in the same document carries that element's content as its `children`, like a `noteref` its footnote: a glossary term (`<dt>`) followed by its definitions (`<dd>`), else the element itself. Unlike a footnote, that element is still output at its own location
 - Fixtures for a `glossref` to a glossary and a `biblioref` to a bibliography in the same document
 
 ### Fixed
 
+- Plain text kept the brackets or quotes around a note reference, page break or other embedded object it leaves out, e.g. "in the 1870s () along the coast". A pair enclosing only such objects, and separators between them, is now left out with them
 - Text from `title`, `alt`, `aria-label` and `alttext` kept line breaks, runs of spaces, soft hyphens and zero-width spaces. Like the text of the content, it now has them collapsed or removed
 
 ## [1.1.3] – 2026-10-15

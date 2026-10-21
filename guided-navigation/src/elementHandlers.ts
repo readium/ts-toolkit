@@ -112,7 +112,7 @@ function linkObject(converter: Converter, el: Element, roles: GndRole[], aria: s
   return obj;
 }
 
-// A glossary term's definitions, else the target itself.
+// A glossary term and its definitions, else the target itself.
 function referencedContent(target: Element): Element[] {
   const term = target.tagName.toLowerCase() === "dt" ? target : target.closest("dt");
   if (!term) return [target];
@@ -120,5 +120,5 @@ function referencedContent(target: Element): Element[] {
   while (n && n.tagName.toLowerCase() === "dt") n = n.nextElementSibling;
   const definitions: Element[] = [];
   for (; n && n.tagName.toLowerCase() === "dd"; n = n.nextElementSibling) definitions.push(n);
-  return definitions.length > 0 ? definitions : [target];
+  return definitions.length > 0 ? [term, ...definitions] : [target];
 }

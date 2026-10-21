@@ -6,6 +6,18 @@
           "id": "glossref1",
           "children": [
             {
+              "children": [
+                {
+                  "role": [
+                    "term"
+                  ],
+                  "text": {
+                    "plain": "Fresnel lens"
+                  }
+                }
+              ]
+            },
+            {
               "role": [
                 "definition"
               ],
