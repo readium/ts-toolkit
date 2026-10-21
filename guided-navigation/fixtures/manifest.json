@@ -360,6 +360,16 @@
     }
   },
   {
+    "id": "biblioref-target-mixed-content",
+    "dir": "biblioref-target-mixed-content",
+    "role": "biblioref",
+    "description": "A biblioref to an inline entry mixing text and a link embeds both, not just the link",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "blockquote-html-native",
     "dir": "blockquote-html-native",
     "role": "blockquote",
@@ -1454,6 +1464,16 @@
     "dir": "noteref-enclosed-straight-quotes",
     "role": "noteref",
     "description": "Straight quotes left empty by a noteref are removed from plain text",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-in-lone-block",
+    "dir": "noteref-in-lone-block",
+    "role": "noteref",
+    "description": "A lone roleless block's text is kept alongside the noteref it embeds",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"

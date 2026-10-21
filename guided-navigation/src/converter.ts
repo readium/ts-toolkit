@@ -157,7 +157,8 @@ export class Converter {
 
   resultBuilders(): ObjBuilder[] {
     const res = this.root.finalize((el) => textrefForSelector(selectorForElement(el, this.selectorRoot, this.selectorRootAnchor), el));
-    if (!res.children || res.children.length === 0) {
+    // Text of its own, from a flow hoisted onto it, makes the root content too, not just a container.
+    if (!res.children || res.children.length === 0 || res.text) {
       if (isEmptyObj(res)) return [];
       return [res];
     }

@@ -18,7 +18,7 @@ renaming, or removing a fixture.
 | `audio` | `audio-html-native`, `audio-no-description` |
 | `backlink` | `backlink-epub-type`, `backlink-role-aria` |
 | `bibliography` | `bibliography-epub-type`, `bibliography-role-aria` |
-| `biblioref` | `biblioref-epub-type`, `biblioref-role-aria`, `biblioref-target-in-bibliography-role-aria` |
+| `biblioref` | `biblioref-epub-type`, `biblioref-role-aria`, `biblioref-target-in-bibliography-role-aria`, `biblioref-target-mixed-content` |
 | `blockquote` | `blockquote-html-native`, `blockquote-role-aria` |
 | `body` | `body-html-native` |
 | `chapter` | `chapter-epub-type`, `chapter-role-aria` |
@@ -56,7 +56,7 @@ renaming, or removing a fixture.
 | `main` | `main-html-native`, `main-role-aria` |
 | `math` | `math-html-native`, `math-no-description`, `math-role-aria` |
 | `navigation` | `navigation-html-native`, `navigation-role-aria` |
-| `noteref` | `noteref-after-closing-straight-quote`, `noteref-after-closing-straight-quote-split`, `noteref-enclosed-across-formatting`, `noteref-enclosed-adjacent-text`, `noteref-enclosed-before-formatting`, `noteref-enclosed-guillemets-french`, `noteref-enclosed-quotes-chinese`, `noteref-enclosed-quotes-german`, `noteref-enclosed-quotes-swedish`, `noteref-enclosed-straight-quotes`, `noteref-role-aria`, `noteref-target-malformed-escape`, `noteref-target-percent-encoded` |
+| `noteref` | `noteref-after-closing-straight-quote`, `noteref-after-closing-straight-quote-split`, `noteref-enclosed-across-formatting`, `noteref-enclosed-adjacent-text`, `noteref-enclosed-before-formatting`, `noteref-enclosed-guillemets-french`, `noteref-enclosed-quotes-chinese`, `noteref-enclosed-quotes-german`, `noteref-enclosed-quotes-swedish`, `noteref-enclosed-straight-quotes`, `noteref-in-lone-block`, `noteref-role-aria`, `noteref-target-malformed-escape`, `noteref-target-percent-encoded` |
 | `notice` | `notice-epub-type`, `notice-role-aria` |
 | `pagebreak` | `pagebreak-epub-type`, `pagebreak-role-aria` |
 | `pagelist` | `pagelist-epub-type`, `pagelist-role-aria` |
@@ -79,4 +79,4 @@ renaming, or removing a fixture.
 | `toc` | `toc-epub-type`, `toc-role-aria` |
 | `video` | `video-html-native`, `video-no-description` |
 
-208 fixtures across 71 roles.
+210 fixtures across 71 roles.
