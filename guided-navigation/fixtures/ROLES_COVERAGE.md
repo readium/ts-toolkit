@@ -18,7 +18,7 @@ renaming, or removing a fixture.
 | `audio` | `audio-html-native`, `audio-no-description` |
 | `backlink` | `backlink-epub-type`, `backlink-role-aria` |
 | `bibliography` | `bibliography-epub-type`, `bibliography-role-aria` |
-| `biblioref` | `biblioref-epub-type`, `biblioref-role-aria`, `biblioref-target-in-bibliography-role-aria`, `biblioref-target-mixed-content` |
+| `biblioref` | `biblioref-epub-type`, `biblioref-role-aria`, `biblioref-target-descendant-ids`, `biblioref-target-in-bibliography-role-aria`, `biblioref-target-mixed-content` |
 | `blockquote` | `blockquote-html-native`, `blockquote-role-aria` |
 | `body` | `body-html-native` |
 | `chapter` | `chapter-epub-type`, `chapter-role-aria` |
@@ -79,4 +79,4 @@ renaming, or removing a fixture.
 | `toc` | `toc-epub-type`, `toc-role-aria` |
 | `video` | `video-html-native`, `video-no-description` |
 
-210 fixtures across 71 roles.
+211 fixtures across 71 roles.

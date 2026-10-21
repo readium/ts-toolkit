@@ -350,6 +350,16 @@
     }
   },
   {
+    "id": "biblioref-target-descendant-ids",
+    "dir": "biblioref-target-descendant-ids",
+    "role": "biblioref",
+    "description": "A biblioref's embedded copy drops the ids its original keeps, inner ones included, so no id appears twice",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "biblioref-target-in-bibliography-role-aria",
     "dir": "biblioref-target-in-bibliography-role-aria",
     "role": "biblioref",

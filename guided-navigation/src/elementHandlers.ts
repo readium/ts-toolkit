@@ -3,6 +3,7 @@
 // placeholder() and, for noteref's and reference's target embedding, convert()/resultBuilders()
 // on a sub-Converter of its own.
 import type { GndRole } from "./types.ts";
+import { ssmlAttrEscape } from "@readium/helpers";
 import { normalizedNodeText } from "./a11y.ts";
 import { normalizeWhitespace, textIsEmpty } from "./text.ts";
 import { type ObjBuilder, ariaSubstitutedBuilders, substitutedOwnSelectorBuilders } from "./object.ts";
@@ -88,8 +89,8 @@ export function reference(converter: Converter, el: Element, roles: GndRole[], a
         sub.convert(content);
         return sub.resultBuilders();
       });
-      // Still output at its own location, which keeps its id.
-      for (const c of children) removeId(c);
+      // Still output at its own location, which keeps its ids.
+      removeCopiedIds(children);
       if (children.length > 0) obj.children = children;
     }
   }
@@ -121,6 +122,14 @@ function removeId(obj: ObjBuilder) {
   const fragment = `#${encodeURIComponent(id)}`;
   if (obj.textref === fragment || obj.textref?.startsWith(`${fragment}:~:`)) {
     obj.textref = encodeCssSelectorFragment(`#${CSS.escape(id)}`) + obj.textref.slice(fragment.length);
+  }
+}
+
+// Removes the ids a copy repeats from its original, keeping placeholders', allocated unique and referenced by their parent's SSML.
+function removeCopiedIds(objs: ObjBuilder[], parent?: ObjBuilder) {
+  for (const obj of objs) {
+    if (obj.id === undefined || !parent?.text?.ssml.includes(`id="${ssmlAttrEscape(obj.id)}"`)) removeId(obj);
+    if (obj.children) removeCopiedIds(obj.children, obj);
   }
 }
 
