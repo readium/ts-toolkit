@@ -26,7 +26,7 @@ import { textFragmentDirectiveFor } from "./textFragmentGenerator.ts";
 import { type GndGenerationOptions, normalizeTextrefOptions } from "./options.ts";
 import { IdAllocator } from "./idAllocator.ts";
 import { prescan as prescanImpl } from "./prescan.ts";
-import { pagebreak, noteref, reference, link } from "./elementHandlers.ts";
+import { pagebreak, noteref, reference, link, detachSelfTextref } from "./elementHandlers.ts";
 import { DROPPED, bindsToPrevious, removeDropped } from "./emptyPairs.ts";
 
 const MATHML_NS = "http://www.w3.org/1998/Math/MathML";
@@ -80,6 +80,8 @@ export class Converter {
   selectorRoot: Element | null = null;
   // Prefixed onto every generated selector — see selectorGenerator.ts's rootAnchorSelector().
   selectorRootAnchor: string | null = null;
+  // Converting a copy of content also output at its own location, which keeps its elements' ids.
+  copy = false;
 
   private root = new NavObject();
   private current = this.root;
@@ -130,6 +132,7 @@ export class Converter {
     child.domRangeEnabled = this.domRangeEnabled;
     child.textFragmentEnabled = this.textFragmentEnabled;
     child.leafTextEnabled = this.leafTextEnabled;
+    child.copy = this.copy;
     return child;
   }
 
@@ -638,11 +641,13 @@ export class Converter {
     if (needSSML) {
       for (const seg of segments) {
         if (seg.kind !== "placeholder") continue;
-        let id = seg.candidateID;
+        let id = this.copy ? undefined : seg.candidateID;
         if (!id || !this.idAlloc.claim(id)) {
           id = this.idAlloc.allocate(seg.tag!, (candidate) => this.ids.has(candidate));
         }
         seg.child!.object.id = id;
+        const ownId = seg.child!.el?.getAttribute("id");
+        if (ownId && ownId !== id) detachSelfTextref(seg.child!.object, ownId);
       }
     }
 

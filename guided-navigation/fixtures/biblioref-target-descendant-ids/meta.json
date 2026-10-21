@@ -1,6 +1,6 @@
 {
   "id": "biblioref-target-descendant-ids",
-  "description": "A biblioref's embedded copy drops the ids its original keeps, inner ones included, so no id appears twice",
+  "description": "A biblioref's embedded copy drops the ids its original keeps, inner ones included, and gives its placeholders new ones, so no id appears twice",
   "role": "biblioref",
   "rolesCovered": [
     "biblioref",

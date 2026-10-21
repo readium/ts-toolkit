@@ -10,7 +10,7 @@
                 {
                   "children": [
                     {
-                      "id": "lnk",
+                      "id": "link1",
                       "text": {
                         "plain": "book"
                       },
@@ -22,7 +22,7 @@
                   ],
                   "text": {
                     "plain": "Entry.",
-                    "ssml": "Entry <readium:link id=\"lnk\" />.",
+                    "ssml": "Entry <readium:link id=\"link1\" />.",
                     "language": "en"
                   }
                 }
@@ -59,7 +59,7 @@
               "id": "details",
               "children": [
                 {
-                  "id": "link1",
+                  "id": "lnk",
                   "text": {
                     "plain": "book"
                   },
@@ -71,7 +71,7 @@
               ],
               "text": {
                 "plain": "Entry.",
-                "ssml": "Entry <readium:link id=\"link1\" />.",
+                "ssml": "Entry <readium:link id=\"lnk\" />.",
                 "language": "en"
               }
             }

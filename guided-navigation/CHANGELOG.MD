@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Plain text kept the brackets or quotes around a note reference, page break or other embedded object it leaves out, e.g. "in the 1870s () along the coast". A pair enclosing only such objects, and separators between them, is now left out with them
 - Content whose text is all one flow around an embedded object, e.g. a lone `<div>` with a noteref, lost that text, keeping only the object
+- An embedded object given a new `id` because its own was taken, e.g. a duplicate `id`, kept a `textref` to its own `id` that didn't decode as its locator
 - Text from `title`, `alt`, `aria-label` and `alttext` kept line breaks, runs of spaces, soft hyphens and zero-width spaces. Like the text of the content, it now has them collapsed or removed
 
 ## [1.1.3] – 2026-10-15

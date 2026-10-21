@@ -522,3 +522,14 @@ test("an embedded target without its id keeps its text-fragment suffix", () => {
   expect(entry.textref).toMatch(/^#css\(%23smith1988\):~:text=/);
   expect(decodeTextref(entry)?.cssSelector).toBe("#smith1988");
 });
+
+test("a pagebreak in an embedded biblioref target decodes as a locator in both the copy and the original", () => {
+  const html = '<p>See <a role="doc-biblioref" href="#e">1</a>.</p><ul role="doc-bibliography"><li id="e">Entry <span id="pb" role="doc-pagebreak" title="7"></span> text.</li></ul>';
+  const [p, list] = parseMarkup(html, undefined, { textrefs: true });
+  const copy = p.children![0].children![0].children!.find((c) => c.role?.has("pagebreak"))!;
+  const original = list.children![0].children!.find((c) => c.role?.has("pagebreak"))!;
+  expect(original.id).toBe("pb");
+  expect(copy.id).not.toBe("pb");
+  expect(decodeTextref(original)).toEqual({ cssSelector: "#pb" });
+  expect(decodeTextref(copy)).toEqual({ cssSelector: "#pb" });
+});

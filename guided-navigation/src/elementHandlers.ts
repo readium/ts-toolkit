@@ -86,6 +86,7 @@ export function reference(converter: Converter, el: Element, roles: GndRole[], a
     if (target && !isAncestorOf(target, el) && converter.noterefDepth < 3) {
       const children = referencedContent(target).flatMap((content) => {
         const sub = converter.spawnChild(content);
+        sub.copy = true;
         sub.convert(content);
         return sub.resultBuilders();
       });
@@ -114,11 +115,15 @@ function linkObject(converter: Converter, el: Element, roles: GndRole[], aria: s
   return obj;
 }
 
-// Without its id, a bare "#id" textref would decode as a link, so it's re-expressed as that id's selector.
 function removeId(obj: ObjBuilder) {
   const id = obj.id;
   if (id === undefined) return;
   delete obj.id;
+  detachSelfTextref(obj, id);
+}
+
+// Without id as its own, obj's bare "#id" textref would decode as a link, so it's re-expressed as that id's selector.
+export function detachSelfTextref(obj: ObjBuilder, id: string) {
   const fragment = `#${encodeURIComponent(id)}`;
   if (obj.textref === fragment || obj.textref?.startsWith(`${fragment}:~:`)) {
     obj.textref = encodeCssSelectorFragment(`#${CSS.escape(id)}`) + obj.textref.slice(fragment.length);
