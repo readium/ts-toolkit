@@ -457,10 +457,19 @@ export class Converter {
   }
 
   private static containsObject(el: Element): boolean {
-    for (const d of el.querySelectorAll("*")) {
-      if (isBlockNode(d.tagName.toLowerCase(), extractNodeRoles(d))) return true;
+    for (let c = el.firstElementChild; c; c = c.nextElementSibling) {
+      const tagName = c.tagName.toLowerCase();
+      const roles = extractNodeRoles(c);
+      if (skippedElements.has(tagName) || Converter.isPlaceholder(c, tagName, roles)) continue;
+      if (isBlockNode(tagName, roles) || Converter.containsObject(c)) return true;
     }
     return false;
+  }
+
+  // What head() embeds as a placeholder in the flow, rather than descending into.
+  private static isPlaceholder(el: Element, tagName: string, roles: GndRole[]): boolean {
+    if (roles.includes("pagebreak") || roles.includes("image") || roles.includes("math")) return true;
+    return ["img", "svg", "audio", "video"].includes(tagName) || (tagName === "a" && !!el.getAttribute("href"));
   }
 
   // Punctuation alongside doesn't count, e.g. the last period of <abbr><dfn>W.H.O</dfn>.</abbr>.

@@ -130,6 +130,16 @@
     }
   },
   {
+    "id": "abbreviation-with-svg-and-math",
+    "dir": "abbreviation-with-svg-and-math",
+    "role": "abbreviation",
+    "description": "An SVG image or math inside an abbr doesn't split its expansion: one sub, followed by the object's placeholder",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "abstract-epub-type",
     "dir": "abstract-epub-type",
     "role": "abstract",
