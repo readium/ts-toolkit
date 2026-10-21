@@ -1,6 +1,6 @@
 {
   "id": "noteref-enclosed-quotes-german",
-  "description": "German „…“ and »…« left empty by a noteref are removed; Swiss «…» quotations either side of one are kept",
+  "description": "German „…“ and »…« left empty by a noteref are removed; quotations either side of one keep their space, in »…« and Swiss «…»",
   "role": "noteref",
   "rolesCovered": [
     "noteref",

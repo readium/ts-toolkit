@@ -65,6 +65,39 @@
         "ssml": "Il dit « bonjour » <readium:noteref id=\"m\" /> « suite ».",
         "language": "fr"
       }
+    },
+    {
+      "children": [
+        {
+          "id": "o",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "3",
+            "language": "fr"
+          }
+        }
+      ],
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Il dit « bonjour » et part.",
+        "ssml": "Il dit « bonjour <readium:noteref id=\"o\" /> » et part.",
+        "language": "fr"
+      }
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "id": "noteref-enclosed-guillemets-french",
-  "description": "French guillemets left empty by a noteref are removed with their inner spaces; neighbouring quotations are kept",
+  "description": "French guillemets left empty by a noteref are removed with their inner spaces; neighbouring quotations, and the space before a closing guillemet, are kept",
   "role": "noteref",
   "rolesCovered": [
     "noteref",

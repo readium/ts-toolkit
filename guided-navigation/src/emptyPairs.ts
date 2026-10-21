@@ -17,18 +17,40 @@ const QUOTE_PAIRS: Record<string, string> = {
 // What may sit between a pair's marks and still leave it empty.
 const FILLER = /[\s​-‍⁠﻿,;、，\u0000]/;
 
+interface Marks {
+  pairs: Set<string>;
+  opening: Set<string>;
+  closing: Set<string>;
+}
+
+const marksByLanguage = new Map<string, Marks>();
+
+function marksFor(lang: string | undefined): Marks {
+  const tag = lang?.toLowerCase() ?? "";
+  let marks = marksByLanguage.get(tag);
+  if (marks) return marks;
+  const chars = BRACKET_PAIRS + STRAIGHT_QUOTE_PAIRS + (QUOTE_PAIRS[tag] ?? QUOTE_PAIRS[tag.split("-")[0]] ?? QUOTE_PAIRS.en);
+  marks = { pairs: new Set(), opening: new Set(), closing: new Set() };
+  for (let i = 0; i < chars.length; i += 2) {
+    marks.pairs.add(chars[i] + chars[i + 1]);
+    marks.opening.add(chars[i]);
+    marks.closing.add(chars[i + 1]);
+  }
+  marksByLanguage.set(tag, marks);
+  return marks;
+}
+
+// Whether text starts with punctuation attaching to what precedes it, unlike a quote it opens, e.g. German »Welt«.
+// French spaces its closing guillemet and high punctuation instead.
+export function bindsToPrevious(text: string, lang: string | undefined): boolean {
+  if (!startsWithBindingPunct(text)) return false;
+  if (lang?.toLowerCase().split("-")[0] === "fr" && "»;:!?".includes(text[0])) return false;
+  return !(marksFor(lang).opening.has(text[0]) && text.length > 1 && !/[\s\p{P}]/u.test(text[1]));
+}
+
 // Takes dropped objects out of plain text, with any bracket or quote pair they leave empty.
 export function removeDropped(plain: string, lang: string | undefined): string {
-  const tag = lang?.toLowerCase() ?? "";
-  const marks = BRACKET_PAIRS + STRAIGHT_QUOTE_PAIRS + (QUOTE_PAIRS[tag] ?? QUOTE_PAIRS[tag.split("-")[0]] ?? QUOTE_PAIRS.en);
-  const pairs = new Set<string>();
-  const opening = new Set<string>();
-  const closing = new Set<string>();
-  for (let i = 0; i < marks.length; i += 2) {
-    pairs.add(marks[i] + marks[i + 1]);
-    opening.add(marks[i]);
-    closing.add(marks[i + 1]);
-  }
+  const { pairs, opening, closing } = marksFor(lang);
   for (let i = plain.indexOf(DROPPED); i !== -1; i = plain.indexOf(DROPPED, i + 1)) {
     let start = i;
     let end = i + 1;
@@ -47,6 +69,6 @@ export function removeDropped(plain: string, lang: string | undefined): string {
   // A space is kept only where there was one around the dropped objects, and never before binding punctuation.
   return plain.replace(/( *)\u0000+( *)/g, (match: string, before: string, after: string, offset: number) => {
     const rest = plain.slice(offset + match.length);
-    return offset > 0 && rest !== "" && (before || after) && !startsWithBindingPunct(rest) ? " " : "";
+    return offset > 0 && rest !== "" && (before || after) && !bindsToPrevious(rest, lang) ? " " : "";
   });
 }

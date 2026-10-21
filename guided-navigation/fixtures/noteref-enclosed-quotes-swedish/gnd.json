@@ -34,13 +34,36 @@
       }
     },
     {
-      "id": "m",
+      "children": [
+        {
+          "id": "m",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "2",
+            "language": "sv"
+          }
+        }
+      ],
       "role": [
-        "aside",
-        "footnote"
+        "paragraph"
       ],
       "text": {
-        "plain": "Note."
+        "plain": "Han sa ”hej” ”nästa”.",
+        "ssml": "Han sa ”hej”<readium:noteref id=\"m\" /> ”nästa”.",
+        "language": "sv"
       }
     }
   ]

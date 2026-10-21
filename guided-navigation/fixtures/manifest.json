@@ -1383,7 +1383,7 @@
     "id": "noteref-enclosed-guillemets-french",
     "dir": "noteref-enclosed-guillemets-french",
     "role": "noteref",
-    "description": "French guillemets left empty by a noteref are removed with their inner spaces; neighbouring quotations are kept",
+    "description": "French guillemets left empty by a noteref are removed with their inner spaces; neighbouring quotations, and the space before a closing guillemet, are kept",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -1403,7 +1403,7 @@
     "id": "noteref-enclosed-quotes-german",
     "dir": "noteref-enclosed-quotes-german",
     "role": "noteref",
-    "description": "German „…“ and »…« left empty by a noteref are removed; Swiss «…» quotations either side of one are kept",
+    "description": "German „…“ and »…« left empty by a noteref are removed; quotations either side of one keep their space, in »…« and Swiss «…»",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -1413,7 +1413,7 @@
     "id": "noteref-enclosed-quotes-swedish",
     "dir": "noteref-enclosed-quotes-swedish",
     "role": "noteref",
-    "description": "Swedish quotes, the same mark at both ends, left empty by a noteref are removed",
+    "description": "Swedish quotes, the same mark at both ends, left empty by a noteref are removed; quotations either side of one keep their space",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"

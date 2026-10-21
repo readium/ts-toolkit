@@ -1,6 +1,6 @@
 {
   "id": "noteref-enclosed-quotes-swedish",
-  "description": "Swedish quotes, the same mark at both ends, left empty by a noteref are removed",
+  "description": "Swedish quotes, the same mark at both ends, left empty by a noteref are removed; quotations either side of one keep their space",
   "role": "noteref",
   "rolesCovered": [
     "noteref",

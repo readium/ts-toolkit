@@ -14,7 +14,7 @@ import {
   ctxEqual,
   normalizeWhitespace,
 } from "./text.ts";
-import { ssmlAttrEscape, ssmlTextEscape, startsWithBindingPunct } from "@readium/helpers";
+import { ssmlAttrEscape, ssmlTextEscape } from "@readium/helpers";
 import { type ObjBuilder, NavObject, isEmptyObj, finalizeToGuidedNavigationObject, setDescription } from "./object.ts";
 import { type GndMediaType, isAncestorOf, isInlineTag, sniffMediaType } from "./dom.ts";
 import { declaredLanguage, nodeLanguage, sameLanguage } from "./language.ts";
@@ -27,7 +27,7 @@ import { type GndGenerationOptions, normalizeTextrefOptions } from "./options.ts
 import { IdAllocator } from "./idAllocator.ts";
 import { prescan as prescanImpl } from "./prescan.ts";
 import { pagebreak, noteref, reference, link } from "./elementHandlers.ts";
-import { DROPPED, removeDropped } from "./emptyPairs.ts";
+import { DROPPED, bindsToPrevious, removeDropped } from "./emptyPairs.ts";
 
 const MATHML_NS = "http://www.w3.org/1998/Math/MathML";
 
@@ -650,7 +650,7 @@ export class Converter {
         if (plainB.length > 0) {
           const spaced = prevTrail || midSpace || lead;
           if (sawBreak) join = true;
-          else if (sawPlaceholder) join = spaced && !startsWithBindingPunct(t);
+          else if (sawPlaceholder) join = spaced && !bindsToPrevious(t, baseLang);
           else join = spaced;
         }
         if (join) plainB += " ";

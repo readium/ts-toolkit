@@ -86,6 +86,39 @@
         "ssml": "Er sagt «Hallo»<readium:noteref id=\"o\" /> «Welt».",
         "language": "de"
       }
+    },
+    {
+      "children": [
+        {
+          "id": "p",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "4",
+            "language": "de"
+          }
+        }
+      ],
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Er sagt »Hallo« »Welt«.",
+        "ssml": "Er sagt »Hallo«<readium:noteref id=\"p\" /> »Welt«.",
+        "language": "de"
+      }
     }
   ]
 }
