@@ -1158,11 +1158,15 @@ class DecorationGroup {
     }
 
     private currentRender = 0;
+    private readonly pendingRender = new Set<DecorationItem>();
     private renderLayout(items: DecorationItem[]) {
+        items.forEach(i => this.pendingRender.add(i));
         this.wnd.cancelAnimationFrame(this.currentRender);
         this.currentRender = this.wnd.requestAnimationFrame(() => {
-            items = items.filter(i => !this.experimentalHighlights || !!this.notTextFlag?.has(i.id));
-            if(!items || items.length === 0) return;
+            // Items removed or cleared since they were queued aren't rendered.
+            items = Array.from(this.pendingRender).filter(i => this.items.includes(i) && (!this.experimentalHighlights || !!this.notTextFlag?.has(i.id)));
+            this.pendingRender.clear();
+            if(items.length === 0) return;
             const groupContainer = this.requireContainer() as HTMLDivElement;
             groupContainer.append(...items.map(i => i.container).filter(c => !!c) as Node[])
         });
