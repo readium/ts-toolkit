@@ -622,6 +622,10 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             frame.msg.send("decorate", { group, action: "add", decoration: resolveDecorationForWire(d, this._decoratorConfig.decorationTemplates) });
         }
         for (const d of toUpdate) {
+            // Moved to another resource, so this frame drops it rather than updating it.
+            if (prevById.get(d.id)?.locator.href === href && d.locator.href !== href) {
+                frame.msg.send("decorate", { group, action: "remove", decoration: { id: d.id } });
+            }
             if (d.locator.href !== href) continue;
             frame.msg.send("decorate", { group, action: "update", decoration: resolveDecorationForWire(d, this._decoratorConfig.decorationTemplates) });
         }
