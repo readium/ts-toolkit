@@ -67,8 +67,8 @@ export function removeDropped(plain: string, lang: string | undefined): string {
     i = start - 2;
   }
   // A space is kept only where there was one around the dropped objects, and never before binding punctuation.
-  return plain.replace(/( *)\u0000+( *)/g, (match: string, before: string, after: string, offset: number) => {
+  return plain.replace(/ *\u0000[\u0000 ]*/g, (match: string, offset: number) => {
     const rest = plain.slice(offset + match.length);
-    return offset > 0 && rest !== "" && (before || after) && !bindsToPrevious(rest, lang) ? " " : "";
+    return offset > 0 && rest !== "" && match.includes(" ") && !bindsToPrevious(rest, lang) ? " " : "";
   });
 }

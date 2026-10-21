@@ -1410,6 +1410,16 @@
     }
   },
   {
+    "id": "noteref-enclosed-adjacent-pairs",
+    "dir": "noteref-enclosed-adjacent-pairs",
+    "role": "noteref",
+    "description": "Adjacent brackets each left empty by a noteref are removed with the space between them, before punctuation or a word",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "noteref-enclosed-adjacent-text",
     "dir": "noteref-enclosed-adjacent-text",
     "role": "noteref",

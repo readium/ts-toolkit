@@ -1,0 +1,108 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "id": "n",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "1"
+          }
+        },
+        {
+          "id": "m",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "2"
+          }
+        }
+      ],
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Text, after.",
+        "ssml": "Text (<readium:noteref id=\"n\" />) (<readium:noteref id=\"m\" />), after.",
+        "language": "en"
+      }
+    },
+    {
+      "children": [
+        {
+          "id": "o",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "3"
+          }
+        },
+        {
+          "id": "p",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "4"
+          }
+        }
+      ],
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Text more.",
+        "ssml": "Text (<readium:noteref id=\"o\" />) (<readium:noteref id=\"p\" />) more.",
+        "language": "en"
+      }
+    }
+  ]
+}
