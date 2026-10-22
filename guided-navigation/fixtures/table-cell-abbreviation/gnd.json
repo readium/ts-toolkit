@@ -4,29 +4,6 @@
       "children": [
         {
           "role": [
-            "columnheader"
-          ],
-          "text": {
-            "plain": "Body"
-          }
-        },
-        {
-          "role": [
-            "columnheader"
-          ],
-          "text": {
-            "plain": "Role"
-          }
-        }
-      ],
-      "role": [
-        "row"
-      ]
-    },
-    {
-      "children": [
-        {
-          "role": [
             "rowheader"
           ],
           "text": {

@@ -5,8 +5,6 @@
   "rolesCovered": [
     "table",
     "row",
-    "columnheader",
-    "rowheader",
     "cell",
     "noteref",
     "footnote"
