@@ -672,8 +672,10 @@ export class ReadAloudNavigator {
             if (queue.length === 0) {
                 this.setLoading(false);
                 // Nothing to read in this unit (e.g. only images): continue with the next one.
-                if (this.units.linkAfter(unit)) {
-                    return this.awaitedHref ? this.awaitTurn(unit) : this.loadUnit(() => this.unitAfter(unit), () => 0, this.loadPaused);
+                const link = this.units.linkAfter(unit);
+                if (link) {
+                    if (this.awaitedHref || this.awaitsTurn(link.href)) return this.awaitTurn(unit);
+                    return this.loadUnit(() => this.unitAfter(unit), () => 0, this.loadPaused);
                 }
                 this.attach();
                 return false;
