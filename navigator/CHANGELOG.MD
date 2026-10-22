@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - A decoration moved to another resource of a spread is removed from the one it was in, instead of staying there
+- Read-aloud highlights stay in place while the content to read next is loaded, for instance when reading from a click or tap, instead of disappearing until it's spoken
 
 ## [2.13.2] – 2026-10-19
 

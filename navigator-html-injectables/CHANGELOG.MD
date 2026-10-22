@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An `outline` decoration spanning several lines is drawn as one shape following the text, instead of one outline per line
 - Decorations added together are all drawn, instead of only the last one, when not drawn with the CSS Highlight API
 - A `mask` decoration no longer dims the space between its lines, nor other decorations drawn over the document
+- Areas that `mask` decorations leave clear no longer get dimmed where they overlap, for instance with lines widened to the page, nor between consecutive lines of different decorations
+- A `mask` decoration without a tint is drawn with the default one when the document has no background color, instead of being invisible
 - The text of a `highlightUnderline` decoration drawn with the CSS Highlight API is black or white depending on its translucent background as displayed, instead of its opaque tint, so that it stays readable on dark backgrounds
 
 ## [2.9.1] – 2026-10-12

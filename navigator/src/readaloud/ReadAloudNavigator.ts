@@ -316,6 +316,7 @@ export class ReadAloudNavigator {
         this.turning = undefined;
         this.speech.stop();
         this.setLoading(false);
+        this.clearHighlights();
     }
 
     /**
@@ -564,7 +565,8 @@ export class ReadAloudNavigator {
         on("stop", () => {
             this.clearBreak();
             this.progress.reset();
-            if (!this.pausedBefore && !this.turning) this.clearHighlights();
+            // A unit being loaded replaces the highlights once ready, so they're kept meanwhile.
+            if (!this.pausedBefore && !this.turning && !this.loading) this.clearHighlights();
         });
         for (const type of ["idle", "loading", "ready"] as const) on(type, () => {});
         const unwatchViewport = this.navigator.watchViewport?.(viewport => this.viewportChanged(viewport.readingOrder));
@@ -657,6 +659,7 @@ export class ReadAloudNavigator {
             const unit = find();
             if (!unit) {
                 this.setLoading(false);
+                this.clearHighlights();
                 return false;
             }
             const { guided, failures } = await this.pool.stitch(unit);
@@ -677,6 +680,7 @@ export class ReadAloudNavigator {
                     if (this.awaitedHref || this.awaitsTurn(link.href)) return this.awaitTurn(unit);
                     return this.loadUnit(() => this.unitAfter(unit), () => 0, this.loadPaused);
                 }
+                this.clearHighlights();
                 this.attach();
                 return false;
             }
@@ -698,7 +702,10 @@ export class ReadAloudNavigator {
             }
             return true;
         } catch (error) {
-            if (token === this.loadToken) this.setLoading(false);
+            if (token === this.loadToken) {
+                this.setLoading(false);
+                this.clearHighlights();
+            }
             this.listeners.error?.(error);
             return false;
         }
