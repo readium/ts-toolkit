@@ -859,8 +859,20 @@ export class ReadAloudNavigator {
         if (awaited && first === last + 1 && Math.max(...indices) < readingOrder.findIndexWithHref(awaited)) return;
         this.userMoved(previous, displayed);
         if (!awaited || !displayed.includes(awaited)) return;
-        if (first === last + 1 && !wasDetached) void this.play();
-        else this.awaitedHref = undefined;
+        if (first !== last + 1 || wasDetached) {
+            this.awaitedHref = undefined;
+            return;
+        }
+        // The awaited page was loaded on its own, so the spread it's displayed in is loaded to resume from the paused utterance.
+        const paused = this.pausedBefore;
+        const unit = this.unit;
+        if (paused && unit && displayed.some(href => !unit.links.some(link => link.href === href))) {
+            const utterance = this.speech.getContentQueue()[paused.index];
+            const piece = utterance && this.piecesOf(utterance)[0];
+            const from = (piece && this.locatorFor(piece)) || readingOrder.findWithHref(awaited)?.locator;
+            this.awaitedHref = undefined;
+            void this.loadUnit(() => this.units.around(awaited), queue => from ? this.startIndex(queue, from) : 0);
+        } else void this.play();
     }
 
     // Tells from a viewport change, not made here, whether the reader moved away from the spoken text or back to it.
