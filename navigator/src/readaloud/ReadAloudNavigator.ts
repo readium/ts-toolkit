@@ -915,7 +915,8 @@ export class ReadAloudNavigator {
         this.wordLocator = undefined;
         this.decorate();
         // Reading on reaches the page the reader turned to.
-        if (this.layout() === Layout.fixed && locators.some(locator => this.displayed.includes(locator.href))) this.setDetached(false);
+        const reached = locators.length > 0 ? locators : [this.pageLocator()];
+        if (this.layout() === Layout.fixed && reached.some(locator => locator && this.displayed.includes(locator.href))) this.setDetached(false);
         const page = this.followUtterance(utterance, locators);
         if (page) locators.push(page);
         this.listeners.utteranceChanged?.({ text: utterance.plain ?? "", locators });
