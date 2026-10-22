@@ -610,8 +610,11 @@ class DecorationGroup {
         const ctx = makeWritingContext(this.wnd);
         this.items.forEach(item => {
             if (this.experimentalHighlights && !this.notTextFlag?.has(item.id)) return;
-            // Mask holes are in document coordinates, which scrolling doesn't change.
-            if (item.decoration.style?.type === DecorationStyleType.Mask) return;
+            // Scrolling inside a container moves the text without scrolling the document.
+            if (item.decoration.style?.type === DecorationStyleType.Mask) {
+                this.scheduleMaskUpdate();
+                return;
+            }
             if (!this.repositionItem(item, ctx)) {
                 item.container?.remove();
                 this.layout(item);
@@ -1231,11 +1234,11 @@ class DecorationGroup {
         this.shadowRoot = undefined;
     }
 
-    // Unset, the background is computed as fully transparent, which would leave a mask invisible.
+    // Unset, the background is computed as fully transparent (e.g. rgba(0, 0, 0, 0)), which would leave a mask invisible.
     private opaqueBackgroundColor(): string | undefined {
         const color = this.getBackgroundColor().trim();
-        if (!color || color === "transparent") return undefined;
-        return colorToRgba(color).a > 0 ? color : undefined;
+        const transparent = /^rgba\(.*,\s*(0|0?\.0+)\s*\)$|\/\s*(0|0?\.0+)\s*\)$/;
+        return !color || color === "transparent" || transparent.test(color) ? undefined : color;
     }
 
     private updateSharedMask() {
