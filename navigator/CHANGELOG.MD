@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.14.0] – 2026-10-23
 
 ### Added
 
@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Breaking:** `interruptions` replaces the `inlineContextualization` read-aloud preference and setting, and `interruptionRoles` replaces `inlineContextualizationRoles`. It applies under every `verbosity`, so reading notes or page breaks never no longer takes `verbosity: "custom"` and `skip`
+- **Breaking:** `interruptions` replaces the `inlineContextualization` read-aloud preference and setting, and `interruptionRoles` replaces `inlineContextualizationRoles`. It applies under every `verbosity`, so reading notes or page breaks no longer takes `verbosity: "custom"` and `skip`
 - `verbosity` presets no longer skip footnotes, note references, page breaks and bibliography references, as `interruptions` decides how they're read
 - In fixed-layout publications, read aloud no longer turns pages: with any `autoPause` but `"none"`, it pauses before reaching a page that isn't displayed, and resumes once the reader turns to the next page or spread. With one page displayed, `"spread"` pauses at every page
 - After any auto-pause, `next()` and `previous()` resume playback, `next()` from the highlighted utterance when it hasn't been spoken yet

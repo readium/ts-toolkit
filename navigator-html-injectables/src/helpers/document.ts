@@ -19,6 +19,8 @@ export function isVerticalWriting(wnd: Window): boolean {
     return writingMode === 'vertical-rl' || writingMode === 'vertical-lr';
 }
 
+export const OVERLAY_Z_INDEX = 2147483646;
+
 /**
  * Axis-normalizing context for decoration layout.
  *
@@ -28,8 +30,6 @@ export function isVerticalWriting(wnd: Window): boolean {
  *   horizontal writing  →  inline = horizontal, block = vertical
  *   vertical writing    →  inline = vertical,   block = horizontal
  */
-export const OVERLAY_Z_INDEX = 2147483646;
-
 export interface WritingContext {
     isVertical: boolean;
     isVertLR: boolean;
