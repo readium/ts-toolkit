@@ -743,7 +743,7 @@ class DecorationGroup {
                 const { r, g, b } = colorToRgba(adjustedTint);
                 const fillTint = `rgba(${r}, ${g}, ${b}, 0.3)`;
                 css = `::highlight(${subKey}) {
-                    color: ${getContrastingTextColor(adjustedTint, backgroundColor)};
+                    color: ${getContrastingTextColor(fillTint, backgroundColor)};
                     background-color: ${fillTint};
                     text-decoration: underline;
                     text-decoration-color: ${adjustedTint};
