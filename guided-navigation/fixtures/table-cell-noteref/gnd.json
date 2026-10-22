@@ -3,44 +3,12 @@
     {
       "children": [
         {
-          "role": [
-            "columnheader"
-          ],
-          "text": {
-            "plain": "Name"
-          }
-        },
-        {
-          "role": [
-            "columnheader"
-          ],
-          "text": {
-            "plain": "Role"
-          }
-        }
-      ],
-      "role": [
-        "row"
-      ]
-    },
-    {
-      "children": [
-        {
-          "role": [
-            "rowheader"
-          ],
-          "text": {
-            "plain": "Ada"
-          }
-        },
-        {
           "children": [
             {
               "id": "n1",
               "children": [
                 {
                   "role": [
-                    "aside",
                     "footnote"
                   ],
                   "text": {
