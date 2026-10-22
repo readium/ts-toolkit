@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `readAloud.detached` tells whether the reader moved away from the spoken text, and the `detachedChanged` read-aloud listener reports it. `readAloud.reattach()` goes back to the spoken text and follows it again, without changing whether it's playing or paused
+- `interruptions` read-aloud preference, from `@readium/speech` 0.17: how note references, page breaks, bibliography and glossary references, and abbreviations are read where they interrupt the text, each `"never"`, `"inline"` or `"after"` (the default). `interruptionRoles` and the `Interruption` type are exported
+- Abbreviations are read with their expansion, and bibliography and glossary references with the entry or definition they point to, following `interruptions`
+- `viewportChanged` listener and `watchViewport()` on visual navigators, reporting the visible portion of the publication whenever it changes
+
+### Changed
+
+- **Breaking:** `interruptions` replaces the `inlineContextualization` read-aloud preference and setting, and `interruptionRoles` replaces `inlineContextualizationRoles`. It applies under every `verbosity`, so reading notes or page breaks never no longer takes `verbosity: "custom"` and `skip`
+- `verbosity` presets no longer skip footnotes, note references, page breaks and bibliography references, as `interruptions` decides how they're read
+- In fixed-layout publications, read aloud no longer turns pages: with any `autoPause` but `"none"`, it pauses before reaching a page that isn't displayed, and resumes once the reader turns to the next page or spread. With one page displayed, `"spread"` pauses at every page
+- After any auto-pause, `next()` and `previous()` resume playback, `next()` from the highlighted utterance when it hasn't been spoken yet
+- With `keepCentered`, the middle of the spoken utterance is kept centered rather than its current line, when it fits in view
+
+### Fixed
+
+- A decoration moved to another resource of a spread is removed from the one it was in, instead of staying there
+
 ## [2.13.2] – 2026-10-19
 
 ### Fixed
