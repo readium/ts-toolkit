@@ -1,0 +1,14 @@
+{
+  "id": "glossref-sole-content",
+  "description": "A glossref that is its block's whole content, with its glossary entry embedded",
+  "role": "glossref",
+  "rolesCovered": [
+    "glossref",
+    "glossary",
+    "term",
+    "definition",
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}
