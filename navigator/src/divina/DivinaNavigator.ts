@@ -669,6 +669,8 @@ export class DivinaNavigator extends VisualNavigator implements Configurable<Con
         }
         if (oldSettings.stripWidth !== this._settings.stripWidth) {
             this.scrolledPresenter?.applyStripWidth(this._settings.stripWidth);
+            // Restoring the position doesn't scroll at the top of the strip, so nothing else reports the relayout.
+            this.ownerWindow.requestAnimationFrame(() => this.notifyViewportChange(this.listeners.viewportChanged));
         }
         if (oldSettings.quality !== this._settings.quality) {
             // Re-pick variants: drop everything and reload the current window
