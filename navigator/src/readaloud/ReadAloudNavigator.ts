@@ -1061,7 +1061,7 @@ export class ReadAloudNavigator {
         return start < pos - LAYOUT_TOLERANCE || start >= pos + size - LAYOUT_TOLERANCE;
     }
 
-    // The middle line of the utterance when kept centered, unless its layout is unknown or it doesn't fit in view.
+    // The middle line of the utterance when kept centered, unless its layout is unknown or centering it leaves a line out of view.
     private centerPoint(utterance = this.speech.getCurrentContent()): SpokenPoint | undefined {
         const viewport = this.visibleViewport();
         if (!utterance || !viewport || this.middle() === undefined) return undefined;
@@ -1073,9 +1073,12 @@ export class ReadAloudNavigator {
         if (lines.length === 0) return undefined;
         const top = lines[0].start;
         const bottom = lines[lines.length - 1].start;
-        if (bottom - top >= viewport.size) return undefined;
         const middle = (top + bottom) / 2;
-        return lines.reduce((a, b) => Math.abs(b.start - middle) < Math.abs(a.start - middle) ? b : a).point;
+        const line = lines.reduce((a, b) => Math.abs(b.start - middle) < Math.abs(a.start - middle) ? b : a);
+        // Going to the line scrolls its start to the middle of the frame.
+        const pos = viewport.pos + line.start - this.viewport!.pos - this.viewport!.size / 2;
+        if (top < pos - LAYOUT_TOLERANCE || bottom >= pos + viewport.size - LAYOUT_TOLERANCE) return undefined;
+        return line.point;
     }
 
     // Whether the line at `point` is out of view, or off the middle while the frame can still scroll toward it.
