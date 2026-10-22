@@ -835,8 +835,8 @@ export class ReadAloudNavigator {
         return this.loadUnit(() => this.units.pageAfter(unit), () => 0, true);
     }
 
-    // Turning from the pages just before the awaited one resumes playback,
-    // unlike resizing to show it, jumping there, or coming back to it after moving away.
+    // Moving on from the pages just before the awaited one resumes playback, however the reader gets there,
+    // unlike resizing to show it or coming back to it after moving away.
     private viewportChanged(displayed: string[]) {
         const previous = this.displayed;
         this.displayed = displayed;
