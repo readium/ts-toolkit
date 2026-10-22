@@ -351,7 +351,8 @@ export class ReadAloudNavigator {
         if (this.turning) this.pauseTurning();
         if (this.pausedBefore) {
             const moved = await this.movePaused(this.pausedBefore, -1);
-            if (moved && resumes && this.pausedBefore) await this.resumePaused(this.pausedBefore);
+            // Pausing while the previous unit loads keeps it paused.
+            if (moved && resumes && !this.pausedByUser && this.pausedBefore) await this.resumePaused(this.pausedBefore);
             return moved;
         }
         if (this.speech.previous()) {
