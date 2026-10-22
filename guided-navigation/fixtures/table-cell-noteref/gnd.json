@@ -1,0 +1,77 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "role": [
+            "columnheader"
+          ],
+          "text": {
+            "plain": "Name"
+          }
+        },
+        {
+          "role": [
+            "columnheader"
+          ],
+          "text": {
+            "plain": "Role"
+          }
+        }
+      ],
+      "role": [
+        "row"
+      ]
+    },
+    {
+      "children": [
+        {
+          "role": [
+            "rowheader"
+          ],
+          "text": {
+            "plain": "Ada"
+          }
+        },
+        {
+          "children": [
+            {
+              "id": "n1",
+              "children": [
+                {
+                  "role": [
+                    "aside",
+                    "footnote"
+                  ],
+                  "text": {
+                    "plain": "First published in 1843."
+                  }
+                }
+              ],
+              "role": [
+                "noteref"
+              ],
+              "text": {
+                "plain": "1"
+              }
+            }
+          ],
+          "role": [
+            "cell"
+          ],
+          "text": {
+            "plain": "Engineer and writer",
+            "ssml": "Engineer<readium:noteref id=\"n1\" /> and writer",
+            "language": "en"
+          }
+        }
+      ],
+      "role": [
+        "row"
+      ]
+    }
+  ],
+  "role": [
+    "table"
+  ]
+}
