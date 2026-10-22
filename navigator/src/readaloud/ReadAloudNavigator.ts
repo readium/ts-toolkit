@@ -850,12 +850,15 @@ export class ReadAloudNavigator {
         const previous = this.displayed;
         this.displayed = displayed;
         const wasDetached = this._detached;
-        this.userMoved(previous, displayed);
         const awaited = this.awaitedHref;
-        if (!awaited || !displayed.includes(awaited)) return;
         const readingOrder = this.navigator.publication.readingOrder;
-        const first = Math.min(...displayed.map(href => readingOrder.findIndexWithHref(href)));
+        const indices = displayed.map(href => readingOrder.findIndexWithHref(href));
+        const first = Math.min(...indices);
         const last = Math.max(...previous.map(href => readingOrder.findIndexWithHref(href)));
+        // Pages with nothing to read are skipped up to the awaited one, so turning through them isn't moving away.
+        if (awaited && first === last + 1 && Math.max(...indices) < readingOrder.findIndexWithHref(awaited)) return;
+        this.userMoved(previous, displayed);
+        if (!awaited || !displayed.includes(awaited)) return;
         if (first === last + 1 && !wasDetached) void this.play();
         else this.awaitedHref = undefined;
     }
