@@ -1375,15 +1375,21 @@ class DecorationGroup {
             i0: ctx.inlineStart(hole), i1: ctx.inlineStart(hole) + ctx.inlineSize(hole),
             b0: ctx.blockStart(hole), b1: ctx.blockStart(hole) + ctx.blockSize(hole),
         })).sort((r1, r2) => r1.b0 - r2.b0);
-        for (const box of boxes) {
+        const ends = boxes.map(box => box.b1);
+        const starts = new Map<number, number>();
+        boxes.forEach((box, i) => {
             // The next line overlaps it inline and starts less than a line after it.
-            const next = boxes.find(other => other.b0 >= box.b1 && other.i0 < box.i1 && other.i1 > box.i0);
-            if (!next || next.b0 - box.b1 >= Math.min(box.b1 - box.b0, next.b1 - next.b0)) continue;
-            const mid = (box.b1 + next.b0) / 2;
-            box.b1 = mid;
-            next.b0 = mid;
-        }
-        return boxes.map(box => ctx.toRect(box.i0, box.b0, box.i1 - box.i0, box.b1 - box.b0));
+            const j = boxes.findIndex(other => other.b0 >= box.b1 && other.i0 < box.i1 && other.i1 > box.i0);
+            if (j < 0 || boxes[j].b0 - box.b1 >= Math.min(box.b1 - box.b0, boxes[j].b1 - boxes[j].b0)) return;
+            const mid = (box.b1 + boxes[j].b0) / 2;
+            ends[i] = mid;
+            // Several fragments can meet the same line: its start is the furthest one so holes never overlap.
+            starts.set(j, Math.max(starts.get(j) ?? -Infinity, mid));
+        });
+        return boxes.map((box, i) => {
+            const b0 = starts.get(i) ?? box.b0;
+            return ctx.toRect(box.i0, b0, box.i1 - box.i0, ends[i] - b0);
+        });
     }
 
     private injectCustomStylesheet(css: string) {
