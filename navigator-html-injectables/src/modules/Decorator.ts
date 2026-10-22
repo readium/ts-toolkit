@@ -1378,13 +1378,14 @@ class DecorationGroup {
         const ends = boxes.map(box => box.b1);
         const starts = new Map<number, number>();
         boxes.forEach((box, i) => {
-            // The next line overlaps it inline and starts less than a line after it.
-            const j = boxes.findIndex(other => other.b0 >= box.b1 && other.i0 < box.i1 && other.i1 > box.i0);
-            if (j < 0 || boxes[j].b0 - box.b1 >= Math.min(box.b1 - box.b0, boxes[j].b1 - boxes[j].b0)) return;
-            const mid = (box.b1 + boxes[j].b0) / 2;
+            // The fragments of the next line overlap it inline and start less than a line after it.
+            const next = boxes.flatMap((other, j) => other.b0 >= box.b1 && other.i0 < box.i1 && other.i1 > box.i0
+                && other.b0 - box.b1 < Math.min(box.b1 - box.b0, other.b1 - other.b0) ? [j] : []);
+            if (next.length === 0) return;
+            const mid = (box.b1 + Math.min(...next.map(j => boxes[j].b0))) / 2;
             ends[i] = mid;
-            // Several fragments can meet the same line: its start is the furthest one so holes never overlap.
-            starts.set(j, Math.max(starts.get(j) ?? -Infinity, mid));
+            // A fragment met by several is stretched to the furthest so holes never overlap.
+            for (const j of next) starts.set(j, Math.max(starts.get(j) ?? -Infinity, mid));
         });
         return boxes.map((box, i) => {
             const b0 = starts.get(i) ?? box.b0;
