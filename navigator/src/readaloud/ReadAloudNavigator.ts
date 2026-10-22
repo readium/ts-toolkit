@@ -529,8 +529,10 @@ export class ReadAloudNavigator {
             if (state === "idle") {
                 const unit = this.unit!;
                 const link = this.units.linkAfter(unit);
-                if (!link) this.clearHighlights();
-                else if (this.awaitsTurn(link.href)) void this.awaitTurn(unit);
+                if (!link) {
+                    this.clearHighlights();
+                    this.attach();
+                } else if (this.awaitsTurn(link.href)) void this.awaitTurn(unit);
                 else void this.loadUnit(() => this.unitAfter(unit), () => 0, this.pausesBeforeUnit(link.href));
                 return;
             }
@@ -673,6 +675,7 @@ export class ReadAloudNavigator {
                 if (this.units.linkAfter(unit)) {
                     return this.awaitedHref ? this.awaitTurn(unit) : this.loadUnit(() => this.unitAfter(unit), () => 0, this.loadPaused);
                 }
+                this.attach();
                 return false;
             }
             await ready;
