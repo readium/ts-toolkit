@@ -182,6 +182,8 @@ export class ReadAloudNavigator {
     private loading = false;
     // Whether the unit being loaded waits paused once ready, rather than speaking.
     private loadPaused = false;
+    // When `pauseDuration` counts from before the unit being loaded speaks, as a page turn during the load sets it.
+    private loadSince?: number;
     private loadToken = 0;
     // Settles the pending wait for speech's "ready", which never comes once stopped or destroyed.
     private settleReady?: () => void;
@@ -669,6 +671,7 @@ export class ReadAloudNavigator {
         const token = ++this.loadToken;
         this.settleLayout?.(false);
         this.loadPaused = paused;
+        this.loadSince = since;
         this.setLoading(true);
         this.pausedBefore = undefined;
         this.turning = undefined;
@@ -696,7 +699,7 @@ export class ReadAloudNavigator {
                 const link = this.units.linkAfter(unit);
                 if (link) {
                     if (this.awaitedHref || this.awaitsTurn(link.href)) return this.awaitTurn(unit);
-                    return this.loadUnit(() => this.unitAfter(unit), () => 0, this.loadPaused, since);
+                    return this.loadUnit(() => this.unitAfter(unit), () => 0, this.loadPaused, this.loadSince);
                 }
                 this.clearHighlights();
                 this.attach();
@@ -707,7 +710,7 @@ export class ReadAloudNavigator {
 
             const start = await indexIn(queue);
             if (token !== this.loadToken) return false;
-            const left = this.loadPaused ? 0 : this.pauseLeft(since);
+            const left = this.loadPaused ? 0 : this.pauseLeft(this.loadSince);
             if (left > 0) {
                 await new Promise(resolve => setTimeout(resolve, left));
                 if (token !== this.loadToken) return false;
@@ -902,7 +905,17 @@ export class ReadAloudNavigator {
         if (paused && unit && displayed.some(href => !unit.links.some(link => link.href === href))) {
             void this.resumeInSpread(paused, awaited, turned);
         } else if (paused) void this.resumePaused(paused, turned);
-        else void this.play();
+        else if (this.loading) {
+            this.loadSince = turned;
+            void this.play();
+        } else void this.resumeSpeech(turned);
+    }
+
+    // Resumes speech paused by its own auto-pause once `pauseDuration` has passed since `since`.
+    private async resumeSpeech(since: number): Promise<void> {
+        const left = this.pauseLeft(since);
+        if (left > 0 && !await this.waitAsLoad(() => new Promise(resolve => setTimeout(resolve, left)))) return;
+        await this.play();
     }
 
     // Loads the spread `href` is a page of, moving the reader to it, and resumes there from the paused utterance.
