@@ -187,6 +187,8 @@ export class ReadAloudNavigator {
     // When `pauseDuration` counts from before the unit being loaded speaks, as a page turn during the load sets it.
     private loadSince?: number;
     private loadToken = 0;
+    // The token of a wait before resuming, during which the reader can still move away, unlike during a load.
+    private waitToken?: number;
     // Settles the pending wait for speech's "ready", which never comes once stopped or destroyed.
     private settleReady?: () => void;
     // Settles the pending wait for the layout a session starts in view from, false once given up.
@@ -612,7 +614,11 @@ export class ReadAloudNavigator {
         // A queue rebuilt by submitted preferences may still be loading, and speech can't play its first utterance until ready.
         if (this.speech.getState() === "loading" && !await this.waitAsLoad(() => this.untilReady())) return;
         const left = this.pauseLeft(since);
-        if (left > 0 && !await this.waitAsLoad(() => new Promise(resolve => setTimeout(resolve, left)))) return;
+        if (left > 0) {
+            const waited = this.waitAsLoad(() => new Promise(resolve => setTimeout(resolve, left)));
+            this.waitToken = this.loadToken;
+            if (!await waited) return;
+        }
         const resumed = this.pausedBefore ?? paused;
         this.pausedBefore = undefined;
         this.speakFrom(resumed.index);
@@ -934,7 +940,8 @@ export class ReadAloudNavigator {
 
     // Tells from a viewport change, not made here, whether the reader moved away from the spoken text or back to it.
     private userMoved(previous: string[], displayed: string[]) {
-        if (!this.detachable || this.loading || this.turning || this.following !== undefined || this.units.moving) return;
+        const loading = this.loading && this.loadToken !== this.waitToken;
+        if (!this.detachable || loading || this.turning || this.following !== undefined || this.units.moving) return;
         if (this.layout() !== Layout.fixed) {
             this.isDetached();
             return;
