@@ -859,7 +859,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         if (!frame.msg) return;
         for (const [group, decorations] of this._decorations) {
             const matching = decorations.filter(d => d.locator.href === href);
-            if (matching.length === 0) continue;
+            // Removals are only sent to visible frames, so a frame shown again may hold stale decorations.
             frame.msg.send("decorate", { group, action: "clear" });
             for (const d of matching)
                 frame.msg.send("decorate", { group, action: "add", decoration: resolveDecorationForWire(d, this._decoratorConfig.decorationTemplates) });
