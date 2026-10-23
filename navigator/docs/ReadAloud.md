@@ -99,7 +99,7 @@ As `readFromPointer` is asynchronous, the listeners return `true` and handle pag
 
 ### Moving away while reading
 
-By default, the reader can scroll, turn pages or follow links while reading aloud. The navigator then stops following the spoken text until the reader is back on it, or plays, moves to the next or previous utterance, or reads from a click or tap. In fixed layouts, reading goes on one page at a time without turning pages.
+By default, the reader can scroll, turn pages or follow links while reading aloud. The navigator then stops following the spoken text until the reader is back on it, or plays, moves to the next or previous utterance, or reads from a click or tap. In fixed layouts, reading goes on one page at a time without turning pages, and with `autoPause: "spread"`, it pauses at the end of the spread being read. Playing again goes back to that spread.
 
 `readAloud.detached` tells whether the reader moved away, and the `detachedChanged` listener reports it. To offer a way back, call `readAloud.reattach()`: it goes to the spoken text and follows it again, without changing whether it's playing or paused.
 

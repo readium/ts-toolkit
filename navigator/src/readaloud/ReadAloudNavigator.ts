@@ -259,12 +259,21 @@ export class ReadAloudNavigator {
             return;
         }
         if (!from && this.turning) return;
+        // A reader looking elsewhere in a fixed layout is taken back to the spread being read.
+        const backToSpread = this._detached && this.layout() === Layout.fixed;
         if (!from && this.pausedBefore) {
-            await this.resumePaused(this.pausedBefore);
+            if (backToSpread) {
+                const paused = this.pausedBefore;
+                const utterance = this.speech.getContentQueue()[paused.index];
+                const href = (utterance && this.hrefsOf(utterance)[0]) || paused.unit.links[0].href;
+                this.attach();
+                await this.resumeInSpread(paused, href);
+            } else await this.resumePaused(this.pausedBefore);
             return;
         }
         const state = this.state;
         if (!from && (state === "paused" || state === "ready")) {
+            if (backToSpread) this.reattach();
             this.speech.play();
             return;
         }
@@ -886,12 +895,17 @@ export class ReadAloudNavigator {
         this.awaitedHref = undefined;
         // The awaited page was loaded on its own, so the spread it's displayed in is loaded to resume from the paused utterance.
         if (paused && unit && displayed.some(href => !unit.links.some(link => link.href === href))) {
-            const utterance = this.speech.getContentQueue()[paused.index];
-            const piece = utterance && this.piecesOf(utterance)[0];
-            const from = (piece && this.locatorFor(piece)) || readingOrder.findWithHref(awaited)?.locator;
-            void this.loadUnit(() => this.units.around(awaited), queue => from ? this.startIndex(queue, from) : 0, false, turned);
+            void this.resumeInSpread(paused, awaited, turned);
         } else if (paused) void this.resumePaused(paused, turned);
         else void this.play();
+    }
+
+    // Loads the spread `href` is a page of, moving the reader to it, and resumes there from the paused utterance.
+    private resumeInSpread(paused: PausedPosition, href: string, since?: number): Promise<boolean> {
+        const utterance = this.speech.getContentQueue()[paused.index];
+        const piece = utterance && this.piecesOf(utterance)[0];
+        const from = (piece && this.locatorFor(piece)) || this.navigator.publication.readingOrder.findWithHref(href)?.locator;
+        return this.loadUnit(() => this.units.around(href), queue => from ? this.startIndex(queue, from) : 0, false, since);
     }
 
     // Tells from a viewport change, not made here, whether the reader moved away from the spoken text or back to it.
@@ -942,7 +956,10 @@ export class ReadAloudNavigator {
         if (!next || !this.pausesAtPages()) return false;
         const start = this.hrefsOf(next)[0];
         if (!start) return false;
-        const displayed = this.navigator.viewport?.readingOrder ?? [];
+        // Detached, the viewport is where the reader moved to, and the loaded unit is the spread being read.
+        const displayed = this._detached && this.layout() === Layout.fixed
+            ? this.unit?.links.map(link => link.href) ?? []
+            : this.navigator.viewport?.readingOrder ?? [];
         if (this._settings.autoPause === ReadAloudAutoPause.spread && displayed.length > 0) {
             return !displayed.includes(start);
         }
