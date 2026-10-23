@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - In fixed-layout publications, read aloud no longer turns pages: with any `autoPause` but `"none"`, it pauses before reaching a page that isn't displayed, and resumes once the reader turns to the next page or spread. With one page displayed, `"spread"` pauses at every page
 - After any auto-pause, `next()` and `previous()` resume playback, `next()` from the highlighted utterance when it hasn't been spoken yet
 - With `keepCentered`, the middle of the spoken utterance is kept centered rather than its current line, when it fits in view
+- `pauseDuration` is also waited when read aloud moves on to the next resource or page, or resumes as the reader turns to it after an auto-pause, counted from the end of the previous utterance or the turn
 
 ### Fixed
 
