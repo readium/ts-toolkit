@@ -734,20 +734,25 @@ export class ReadAloudNavigator {
         }
     }
 
-    // The first utterance in `from`'s resource, refined by its CSS selector, then by its text, when they match one.
+    // The first utterance in `from`'s resource, refined by its CSS selector and text, then by either, when they match one.
     private startIndex(queue: ReadiumSpeechUtterance[], from: Locator): number {
         const href = from.href.split("#")[0];
         const selector = from.locations ? getCssSelector(from.locations) : undefined;
         const quote = from.text?.highlight?.trim().slice(0, 40);
         let first = -1;
+        let bySelector = -1;
         let byText = -1;
         for (let i = 0; i < queue.length; i++) {
             const pieces = this.piecesOf(queue[i]).filter(piece => piece.href?.split("#")[0] === href);
             if (pieces.length === 0) continue;
             if (first === -1) first = i;
-            if (selector && pieces.some(piece => piece.cssSelector === selector)) return i;
+            // Sentences of one element share its selector.
+            const selected = selector ? pieces.filter(piece => piece.cssSelector === selector) : [];
+            if (selected.some(piece => !quote || piece.text?.highlight?.includes(quote))) return i;
+            if (bySelector === -1 && selected.length > 0) bySelector = i;
             if (byText === -1 && quote && (queue[i].plain ?? "").includes(quote)) byText = i;
         }
+        if (bySelector !== -1) return bySelector;
         return byText !== -1 ? byText : Math.max(first, 0);
     }
 
