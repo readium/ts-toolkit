@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A decoration moved to another resource of a spread is removed from the one it was in, instead of staying there
 - Read-aloud highlights stay in place while the content to read next is loaded, for instance when reading from a click or tap, instead of disappearing until it's spoken
+- Read aloud follows and, with `keepCentered`, centers utterances that are a whole element, such as a short paragraph or a heading, instead of leaving them off center or out of view
+- In `WebPubNavigator`, a navigation that fails no longer leaves every later `go()` failing
 
 ## [2.13.2] – 2026-10-19
 

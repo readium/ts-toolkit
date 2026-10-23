@@ -1038,6 +1038,10 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             // Now that we've gone to the right locator, we can attach the listeners.
             // Doing this only at this stage reduces janky UI with multiple locator updates.
             this.attachListener();
+        }).catch((error) => {
+            console.error(error);
+            this._isNavigating = false;
+            cb(false);
         });
     }
 

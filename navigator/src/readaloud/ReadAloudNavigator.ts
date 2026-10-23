@@ -1193,9 +1193,18 @@ export class ReadAloudNavigator {
         const text = locate.text;
         if (!utterance || !text) return undefined;
         const whole = (text.before ?? "") + (text.highlight ?? "") + (text.after ?? "");
-        const piece = this.piecesOf(utterance).find(piece => piece.cssSelector === locate.cssSelector && piece.text?.highlight === whole);
+        const pieces = this.piecesOf(utterance).filter(piece => piece.cssSelector === locate.cssSelector);
+        const piece = pieces.find(piece => piece.text?.highlight === whole) ?? pieces.find(piece => !piece.text?.highlight);
         const index = piece && this.watchedPieces.get(piece);
-        return index === undefined ? undefined : { piece: index, offset: ReadAloudNavigator.collapsed(text.before ?? "").length };
+        if (index === undefined) return undefined;
+        // Speech trims a whole element's text, where the document's may start with whitespace.
+        const lead = piece!.text?.highlight ? 0 : Number(/^\s/.test(this.lines[index]?.text ?? ""));
+        return { piece: index, offset: lead + ReadAloudNavigator.collapsed(text.before ?? "").length };
+    }
+
+    // A piece's text, taken from the document when the piece is a whole element given without it.
+    private pieceText(piece: LocatorOptions, index: number | undefined): string | undefined {
+        return piece.text?.highlight ?? (index === undefined ? undefined : this.lines[index]?.text);
     }
 
     // The point `chars` characters into `utterance`.
@@ -1203,7 +1212,7 @@ export class ReadAloudNavigator {
         let rest = chars;
         for (const piece of this.piecesOf(utterance)) {
             const index = this.watchedPieces.get(piece);
-            const length = ReadAloudNavigator.collapsed(piece.text?.highlight ?? "").length;
+            const length = ReadAloudNavigator.collapsed(this.pieceText(piece, index) ?? "").length;
             if (index !== undefined && rest < length) return { piece: index, offset: Math.max(0, Math.floor(rest)) };
             rest -= length;
         }
@@ -1213,7 +1222,7 @@ export class ReadAloudNavigator {
     // A locator for the character at `point`, which going to shows the line or column it starts.
     private pointLocator(point: SpokenPoint): Locator | undefined {
         const piece = [...this.watchedPieces].find(([, index]) => index === point.piece)?.[0];
-        const highlight = piece?.text?.highlight;
+        const highlight = piece && this.pieceText(piece, point.piece);
         if (!piece || !highlight) return undefined;
         const at = ReadAloudNavigator.rawOffset(highlight, point.offset);
         return this.locatorFor({

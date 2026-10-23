@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.9.2] – 2026-10-23
 
+### Added
+
+- `TextLineStarts.text` in `text_layout`: the text of a piece watched without one (e.g. a whole element), as it is in the document
+
 ### Fixed
 
 - An `outline` decoration spanning several lines is drawn as one shape following the text, instead of one outline per line
