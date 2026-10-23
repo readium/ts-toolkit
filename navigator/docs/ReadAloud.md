@@ -150,7 +150,7 @@ It has the preferences of `@readium/speech` (`rate`, `pitch`, `volume`, `verbosi
 
 Decorations are applied in the `readaloud-utterance` and `readaloud-word` groups.
 
-By default, sentences are reconstructed across elements and pages (`segmentation: "sentence"`). With `"structure"`, every element is read on its own.
+By default, content is read sentence by sentence (`segmentation: "sentence"`), each element on its own. With `reconstruct: true`, a sentence split across elements and pages, e.g. fixed-layout text fragments, is read as one. With `"structure"`, every element is read on its own, whatever its sentence count.
 
 ## Where the text comes from
 

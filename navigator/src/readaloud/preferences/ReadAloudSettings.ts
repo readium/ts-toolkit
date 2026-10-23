@@ -12,6 +12,7 @@ export class ReadAloudSettings implements ConfigurableSettings {
   contextualize: GndRole[];
   language: LanguageMode;
   segmentation: Segmentation;
+  reconstruct: boolean;
   pauseDuration: number;
   voice: VoicePreference | null;
   autoPause: ReadAloudAutoPause;
@@ -37,6 +38,7 @@ export class ReadAloudSettings implements ConfigurableSettings {
     this.contextualize = speech.contextualize;
     this.language = speech.language;
     this.segmentation = speech.segmentation;
+    this.reconstruct = speech.reconstruct;
     this.pauseDuration = speech.pauseDuration;
     this.voice = speech.voice;
     this.autoPause = preferences.autoPause ?? defaults.autoPause;

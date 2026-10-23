@@ -28,6 +28,8 @@ export interface IReadAloudPreferences {
   contextualize?: GndRole[] | null,
   language?: LanguageMode | null,
   segmentation?: Segmentation | null,
+  /** With `segmentation: "sentence"`, joins a sentence split across elements, e.g. fixed-layout text fragments */
+  reconstruct?: boolean | null,
   pauseDuration?: number | null,
   /** A voice id for all content, or one per language */
   voice?: VoicePreference | null,
@@ -55,6 +57,7 @@ export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPr
   contextualize?: GndRole[] | null;
   language?: LanguageMode | null;
   segmentation?: Segmentation | null;
+  reconstruct?: boolean | null;
   pauseDuration?: number | null;
   voice?: VoicePreference | null;
   autoPause?: ReadAloudAutoPause | null;
@@ -79,6 +82,7 @@ export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPr
     this.contextualize = speech.contextualize;
     this.language = speech.language;
     this.segmentation = speech.segmentation;
+    this.reconstruct = speech.reconstruct;
     this.pauseDuration = speech.pauseDuration;
     this.voice = speech.voice;
     this.autoPause = ensureEnumValue<ReadAloudAutoPause>(preferences.autoPause, ReadAloudAutoPause);

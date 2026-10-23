@@ -2,6 +2,7 @@ import type { GndRole } from "@readium/guided-navigation";
 import { Layout } from "@readium/shared";
 import { SpeechPreferencesEditor } from "@readium/speech";
 import type {
+  BooleanPreference as SpeechBooleanPreference,
   EnumPreference as SpeechEnumPreference,
   ExtractionFormat,
   Interruption,
@@ -91,6 +92,7 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
   get contextualize(): StringArrayPreference { return this.speech.contextualize; }
   get language(): SpeechEnumPreference<LanguageMode> { return this.speech.language; }
   get segmentation(): SpeechEnumPreference<Segmentation> { return this.speech.segmentation; }
+  get reconstruct(): SpeechBooleanPreference { return this.speech.reconstruct; }
   get pauseDuration(): SpeechRangePreference<number> { return this.speech.pauseDuration; }
   get rate(): SpeechRangePreference<number> { return this.speech.rate; }
   get pitch(): SpeechRangePreference<number> { return this.speech.pitch; }
