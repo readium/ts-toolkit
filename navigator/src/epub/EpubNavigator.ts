@@ -41,6 +41,7 @@ export interface EpubNavigatorConfiguration {
 export interface EpubNavigatorListeners {
     frameLoaded: (wnd: Window) => void;
     positionChanged: (locator: Locator) => void;
+    viewportChanged: (viewport: VisualNavigatorViewport) => void;
     timelineItemChanged: (item: TimelineItem | undefined) => void;
     tap: (e: FrameClickEvent) => boolean; // Return true to prevent handling here
     click: (e: FrameClickEvent) => boolean;  // Return true to prevent handling here
@@ -62,6 +63,7 @@ const POINTED_PIECE_TIMEOUT = 1000;
 const defaultListeners = (listeners: EpubNavigatorListeners): EpubNavigatorListeners => ({
     frameLoaded: listeners.frameLoaded || (() => {}),
     positionChanged: listeners.positionChanged || (() => {}),
+    viewportChanged: listeners.viewportChanged || (() => {}),
     timelineItemChanged: listeners.timelineItemChanged || (() => {}),
     tap: listeners.tap || (() => false),
     click: listeners.click || (() => false),
@@ -376,6 +378,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private handleFXLPrefs(from: EpubSettings, to: EpubSettings) {
         if (from.columnCount !== to.columnCount) {
             (this.framePool as FXLFramePoolManager).setPerPage(to.columnCount);
+            // The frame pool lays the new spread out on the next frame.
+            this.ownerWindow.requestAnimationFrame(() => this.notifyViewportChange(this.listeners.viewportChanged));
         }
     }
 
@@ -440,6 +444,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             }
             if (!this.framePool) return;
             (this.framePool as FXLFramePoolManager).resizeHandler();
+            this.notifyViewportChange(this.listeners.viewportChanged);
         } else {
             // for reflow ReadiumCSS gets the width from columns + line-lengths
             // but we need to check whether colCount has changed to commit new CSS
@@ -707,6 +712,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         const idx = this.pub.readingOrder.findIndexWithHref(this.currentLocation.href);
         if (idx < 0)
             throw Error("Link for " + this.currentLocation.href + " not found!");
+        this.notifyViewportChange(this.listeners.viewportChanged);
     }
 
     // DecorableNavigator
@@ -839,6 +845,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 frame.msg.send("decorate", { group, action: "add", decoration: resolveDecorationForWire(d, this._decoratorConfig.decorationTemplates) });
             }
             for (const d of toUpdate) {
+                // Moved to another resource, so this frame drops it rather than updating it.
+                if (prevById.get(d.id)?.locator.href === href && d.locator.href !== href) {
+                    frame.msg.send("decorate", { group, action: "remove", decoration: { id: d.id } });
+                }
                 if (d.locator.href !== href) continue;
                 frame.msg.send("decorate", { group, action: "update", decoration: resolveDecorationForWire(d, this._decoratorConfig.decorationTemplates) });
             }
@@ -849,7 +859,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         if (!frame.msg) return;
         for (const [group, decorations] of this._decorations) {
             const matching = decorations.filter(d => d.locator.href === href);
-            if (matching.length === 0) continue;
+            // Removals are only sent to visible frames, so a frame shown again may hold stale decorations.
             frame.msg.send("decorate", { group, action: "clear" });
             for (const d of matching)
                 frame.msg.send("decorate", { group, action: "add", decoration: resolveDecorationForWire(d, this._decoratorConfig.decorationTemplates) });
@@ -1162,6 +1172,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
 
         this.lastLocationInView = nearestPositions.last;
         this.updateViewport(progression);
+        this.notifyViewportChange(this.listeners.viewportChanged);
         this.listeners.positionChanged(this.currentLocation);
         const locatorForTimeline = progression.fragmentId
             ? this.currentLocation.copyWithLocations({ fragments: [`#${progression.fragmentId}`] })

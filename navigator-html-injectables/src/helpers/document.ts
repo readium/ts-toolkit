@@ -19,6 +19,8 @@ export function isVerticalWriting(wnd: Window): boolean {
     return writingMode === 'vertical-rl' || writingMode === 'vertical-lr';
 }
 
+export const OVERLAY_Z_INDEX = 2147483646;
+
 /**
  * Axis-normalizing context for decoration layout.
  *
@@ -112,7 +114,7 @@ export function makeWritingContext(wnd: Window): WritingContext {
 
         applyPosition(el, inlineStart, blockStart, inlineSize, blockSize, iz) {
             el.style.position = "absolute";
-            el.style.zIndex = "2147483646";
+            el.style.zIndex = String(OVERLAY_Z_INDEX);
             if (isVert) {
                 el.style.top    = `${inlineStart * iz}px`;
                 el.style.left   = `${blockStart  * iz}px`;

@@ -135,10 +135,50 @@ export abstract class Navigator {
 }
 
 export abstract class VisualNavigator extends Navigator {
+    private readonly viewportWatchers = new Set<(viewport: VisualNavigatorViewport) => void>();
+    private notifiedViewport?: VisualNavigatorViewport;
+
     /**
      * Current reading progression direction.
      */
      abstract get readingProgression(): ReadingProgression;
+
+    /**
+     * Information about the visible portion of the publication.
+     */
+    abstract get viewport(): VisualNavigatorViewport;
+
+    /**
+     * Reports the viewport whenever it changes, as the `viewportChanged` listener does, to observers other than the app.
+     * Returns a function that stops this watch.
+     */
+    watchViewport(cb: (viewport: VisualNavigatorViewport) => void): () => void {
+        this.viewportWatchers.add(cb);
+        return () => { this.viewportWatchers.delete(cb); };
+    }
+
+    /**
+     * Reports the viewport to `listener` and the watchers when it differs from the one last reported.
+     */
+    protected notifyViewportChange(listener: (viewport: VisualNavigatorViewport) => void) {
+        const current = this.viewport;
+        // Navigators may update their viewport in place, so a copy is kept and reported.
+        const viewport: VisualNavigatorViewport = {
+            readingOrder: [...current.readingOrder],
+            progressions: new Map([...current.progressions].map(([href, range]) => [href, { ...range }])),
+            positions: current.positions ? [...current.positions] : null,
+        };
+        if (this.notifiedViewport && VisualNavigator.sameViewport(this.notifiedViewport, viewport)) return;
+        this.notifiedViewport = viewport;
+        listener(viewport);
+        this.viewportWatchers.forEach(cb => cb(viewport));
+    }
+
+    private static sameViewport(a: VisualNavigatorViewport, b: VisualNavigatorViewport): boolean {
+        const same = <T>(x: T[] | null, y: T[] | null) => x === y || (!!x && !!y && x.length === y.length && x.every((v, i) => v === y[i]));
+        return same(a.readingOrder, b.readingOrder) && same(a.positions, b.positions) &&
+            a.readingOrder.every(href => a.progressions.get(href)?.start === b.progressions.get(href)?.start && a.progressions.get(href)?.end === b.progressions.get(href)?.end);
+    }
 
 
      /**

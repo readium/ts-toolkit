@@ -1,17 +1,18 @@
 import type { GndRole } from "@readium/guided-navigation";
-import { ExtractionFormat, LanguageMode, Segmentation, SpeechSettings, VerbosityPreset, VoicePreference } from "@readium/speech";
+import { ExtractionFormat, Interruption, LanguageMode, Segmentation, SpeechSettings, VerbosityPreset, VoicePreference } from "@readium/speech";
 import { ConfigurableSettings } from "../../preferences/Configurable.ts";
 import { ReadAloudDefaults } from "./ReadAloudDefaults.ts";
 import { ReadAloudAutoPause, ReadAloudDecorationStyle, ReadAloudPreferences } from "./ReadAloudPreferences.ts";
 
 export class ReadAloudSettings implements ConfigurableSettings {
   format: ExtractionFormat;
-  inlineContextualization: GndRole[];
+  interruptions: Partial<Record<GndRole, Interruption>>;
   verbosity: VerbosityPreset;
   skip: GndRole[];
   contextualize: GndRole[];
   language: LanguageMode;
   segmentation: Segmentation;
+  reconstruct: boolean;
   pauseDuration: number;
   voice: VoicePreference | null;
   autoPause: ReadAloudAutoPause;
@@ -31,12 +32,13 @@ export class ReadAloudSettings implements ConfigurableSettings {
    */
   constructor(speech: SpeechSettings, preferences: ReadAloudPreferences, defaults: ReadAloudDefaults) {
     this.format = speech.format;
-    this.inlineContextualization = speech.inlineContextualization;
+    this.interruptions = speech.interruptions;
     this.verbosity = speech.verbosity;
     this.skip = speech.skip;
     this.contextualize = speech.contextualize;
     this.language = speech.language;
     this.segmentation = speech.segmentation;
+    this.reconstruct = speech.reconstruct;
     this.pauseDuration = speech.pauseDuration;
     this.voice = speech.voice;
     this.autoPause = preferences.autoPause ?? defaults.autoPause;

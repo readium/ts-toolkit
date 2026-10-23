@@ -4,7 +4,7 @@ export * from './preferences/index.ts';
 export {
     defaultContextualizations,
     extractLangRegionFromBCP47,
-    inlineContextualizationRoles,
+    interruptionRoles,
     skippableRoles,
     filterByLanguages,
     filterOutNoveltyVoices,
@@ -18,7 +18,7 @@ export {
     sortVoicesByRegions,
     valueForLanguage
 } from "@readium/speech";
-export type { ExtractionFormat, LanguageMode, ReadiumSpeechPlaybackEngine, ReadiumSpeechPlaybackState, ReadiumSpeechVoice, Segmentation, SpeechSettings, VerbosityPreset, VoicePreference } from "@readium/speech";
+export type { ExtractionFormat, Interruption, LanguageMode, ReadiumSpeechPlaybackEngine, ReadiumSpeechPlaybackState, ReadiumSpeechVoice, Segmentation, SpeechSettings, VerbosityPreset, VoicePreference } from "@readium/speech";
 export type {
     BooleanPreference as SpeechBooleanPreference,
     EnumPreference as SpeechEnumPreference,

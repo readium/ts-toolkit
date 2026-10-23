@@ -1,5 +1,5 @@
 import type { GndRole } from "@readium/guided-navigation";
-import { ExtractionFormat, LanguageMode, Segmentation, SpeechPreferences, VerbosityPreset, VoicePreference } from "@readium/speech";
+import { ExtractionFormat, Interruption, LanguageMode, Segmentation, SpeechPreferences, VerbosityPreset, VoicePreference } from "@readium/speech";
 import { ConfigurablePreferences } from "../../preferences/Configurable.ts";
 import { ensureBoolean, ensureDecorationStyle, ensureEnumValue, ensureString } from "../../preferences/guards.ts";
 import { BuiltinDecorationStyle, NamedDecorationStyle } from "../../decorations/index.ts";
@@ -22,12 +22,14 @@ export type ReadAloudDecorationStyle = BuiltinDecorationStyle | NamedDecorationS
 
 export interface IReadAloudPreferences {
   format?: ExtractionFormat | null,
-  inlineContextualization?: GndRole[] | null,
+  interruptions?: Partial<Record<GndRole, Interruption>> | null,
   verbosity?: VerbosityPreset | null,
   skip?: GndRole[] | null,
   contextualize?: GndRole[] | null,
   language?: LanguageMode | null,
   segmentation?: Segmentation | null,
+  /** With `segmentation: "sentence"`, joins a sentence split across elements, e.g. fixed-layout text fragments */
+  reconstruct?: boolean | null,
   pauseDuration?: number | null,
   /** A voice id for all content, or one per language */
   voice?: VoicePreference | null,
@@ -49,12 +51,13 @@ export interface IReadAloudPreferences {
 
 export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPreferences> {
   format?: ExtractionFormat | null;
-  inlineContextualization?: GndRole[] | null;
+  interruptions?: Partial<Record<GndRole, Interruption>> | null;
   verbosity?: VerbosityPreset | null;
   skip?: GndRole[] | null;
   contextualize?: GndRole[] | null;
   language?: LanguageMode | null;
   segmentation?: Segmentation | null;
+  reconstruct?: boolean | null;
   pauseDuration?: number | null;
   voice?: VoicePreference | null;
   autoPause?: ReadAloudAutoPause | null;
@@ -73,12 +76,13 @@ export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPr
     const { languageOverride, startInViewport, keepCentered, detachable, readFromPointer, ...speechPreferences } = preferences;
     const speech = new SpeechPreferences({ ...speechPreferences, autoPause: undefined });
     this.format = speech.format;
-    this.inlineContextualization = speech.inlineContextualization;
+    this.interruptions = speech.interruptions;
     this.verbosity = speech.verbosity;
     this.skip = speech.skip;
     this.contextualize = speech.contextualize;
     this.language = speech.language;
     this.segmentation = speech.segmentation;
+    this.reconstruct = speech.reconstruct;
     this.pauseDuration = speech.pauseDuration;
     this.voice = speech.voice;
     this.autoPause = ensureEnumValue<ReadAloudAutoPause>(preferences.autoPause, ReadAloudAutoPause);

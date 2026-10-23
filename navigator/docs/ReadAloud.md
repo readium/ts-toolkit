@@ -99,7 +99,16 @@ As `readFromPointer` is asynchronous, the listeners return `true` and handle pag
 
 ### Moving away while reading
 
-By default, the reader can scroll, turn pages or follow links while reading aloud. The navigator then stops following the spoken text until the reader is back on it, or plays, moves to the next or previous utterance, or reads from a click or tap.
+By default, the reader can scroll, turn pages or follow links while reading aloud. The navigator then stops following the spoken text until the reader is back on it, or plays, moves to the next or previous utterance, or reads from a click or tap. In fixed layouts, reading goes on one page at a time without turning pages, and with `autoPause: "spread"`, it pauses at the end of the spread being read. Playing again goes back to that spread.
+
+`readAloud.detached` tells whether the reader moved away, and the `detachedChanged` listener reports it. To offer a way back, call `readAloud.reattach()`: it goes to the spoken text and follows it again, without changing whether it's playing or paused.
+
+```ts
+const readAloud = new ReadAloudNavigator(navigator, {
+  detachedChanged: detached => backButton.hidden = !detached,
+});
+backButton.onclick = () => readAloud.reattach();
+```
 
 With the `detachable` preference set to `false`, the reader can't move away while playing: scrolling, swiping, tapping the edges and following links in the content are locked, and unlocked when paused or stopped. Read aloud still turns pages, and taps and clicks are still reported. Your own navigation, such as a table of contents or page buttons, isn't locked: check `readAloud.detachable` to disable it while playing. Changing it applies right away, also while playing. It is supported by `EpubNavigator` and `WebPubNavigator`.
 
@@ -130,7 +139,8 @@ await readAloud.submitPreferences(new ReadAloudPreferences({
 
 It has the preferences of `@readium/speech` (`rate`, `pitch`, `volume`, `verbosity`, `segmentation`, etc.), plus:
 
-- `autoPause`: in addition to speech's `"none"`, `"utterance"` and `"block"`, `"page"` pauses on reaching another page, and `"spread"` on reaching another spread, with the first utterance there highlighted. In reflowable publications, `"page"` pauses on reaching the next set of columns or the next resource, and `"spread"` doesn't apply. Neither has an effect when scrolled.
+- `pauseDuration`: as in `@readium/speech`, the pause between utterances, also kept when playback moves on to the next resource or page, or resumes as the reader turns to it after an auto-pause, counted from the end of the previous utterance or the turn. Resuming with `play()`, `next()` or `previous()` doesn't wait.
+- `autoPause`: in addition to speech's `"none"`, `"utterance"` and `"block"`, `"page"` pauses on reaching another page, and `"spread"` on reaching another spread, with the first utterance there highlighted. In reflowable publications, `"page"` pauses on reaching the next set of columns or the next resource, and `"spread"` doesn't apply. Neither has an effect when scrolled. In fixed-layout publications, with any value but `"none"`, playback pauses before reaching a page that isn't displayed, without turning to it, and resumes once the reader moves on to the next page or spread, however they get there. Other moves leave it paused. With one page displayed, `"spread"` pauses at every page, as `"page"` does. After any auto-pause, `next()` and `previous()` resume playback, `next()` from the highlighted utterance when it hasn't been spoken yet; after `pause()`, they stay paused.
 - `voice`: a voice id (`getVoiceId(voice)`: a voice's `voiceURI`, or `identifier` for a server voice) for all content, or one per language, e.g. `{ en: "…", fr: "…" }`. Content in a language without one is spoken with the engine's voice, which `settings.voice` falls back to, as in `@readium/speech`: unset or a record without the engine voice's language, it gets an entry for it, e.g. `{ en: "…" }`, so submitting it back keeps other languages following their own. The default engine picks its voice in the publication's language, so the publication's voice is always `settings.voice`'s entry for the publication's language.
 - `languageOverride`: the BCP 47 tag of the language the publication is actually in, when its metadata's primary language is wrong, `null` by default. Content in the metadata's primary language is spoken in it instead, and the voices, their `getVoices()` ranking and the default voice follow it. Content in other languages is left as is.
 - `startInViewport`: whether `play()` without a locator, when idle, starts at the first utterance starting in view rather than at the start of the resource, `false` by default. When none starts in view, it starts at the one going on at the top. It has no effect in fixed-layout publications.
@@ -141,7 +151,7 @@ It has the preferences of `@readium/speech` (`rate`, `pitch`, `volume`, `verbosi
 
 Decorations are applied in the `readaloud-utterance` and `readaloud-word` groups.
 
-By default, sentences are reconstructed across elements and pages (`segmentation: "sentence"`). With `"structure"`, every element is read on its own.
+By default, content is read sentence by sentence (`segmentation: "sentence"`), each element on its own. With `reconstruct: true`, a sentence split across elements and pages, e.g. fixed-layout text fragments, is read as one. With `"structure"`, every element is read on its own, whatever its sentence count.
 
 ## Where the text comes from
 

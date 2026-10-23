@@ -14,6 +14,8 @@ export interface TextLineStarts {
     offsets: number[];
     /** Document-absolute px of those offsets along the scroll axis. */
     starts: number[];
+    /** The piece's text in the document, when it was watched without one (e.g. a whole element). */
+    text?: string;
 }
 
 /** Payload of the `text_layout` event. */
@@ -37,6 +39,7 @@ export abstract class Snapper extends Module {
     protected locked = false;
 
     private watchedRanges: (Range | null)[] = [];
+    private watchedWithoutText: boolean[] = [];
     private textLayoutComms?: Comms;
 
     // Timeline fragment tracking
@@ -119,7 +122,9 @@ export abstract class Snapper extends Module {
     protected registerTextLayout(wnd: ReadiumWindow, comms: Comms, moduleName: ModuleName): void {
         this.textLayoutComms = comms;
         comms.register("watch_text_layout", moduleName, (data, ack) => {
-            this.watchedRanges = (Array.isArray(data) ? data : []).map(piece => Snapper.rangeOf(wnd, piece));
+            const pieces = Array.isArray(data) ? data : [];
+            this.watchedRanges = pieces.map(piece => Snapper.rangeOf(wnd, piece));
+            this.watchedWithoutText = pieces.map(piece => !LocatorText.deserialize(Array.isArray(piece) ? piece[0] : piece)?.highlight);
             wnd.requestAnimationFrame(() => this.sendTextLayout(true));
             ack(true);
         });
@@ -153,6 +158,7 @@ export abstract class Snapper extends Module {
 
     protected unwatchTextLayout(): void {
         this.watchedRanges = [];
+        this.watchedWithoutText = [];
         this.textLayoutComms = undefined;
     }
 
@@ -160,7 +166,11 @@ export abstract class Snapper extends Module {
     protected sendTextLayout(measure = false): void {
         if (!this.textLayoutComms?.ready || this.watchedRanges.length === 0) return;
         const layout: TextLayout = { viewport: this.currentScrollExtent() };
-        if (measure) layout.pieces = this.watchedRanges.map(range => range ? this.lineStarts(range) : null);
+        if (measure) layout.pieces = this.watchedRanges.map((range, i) => {
+            if (!range) return null;
+            const lines = this.lineStarts(range);
+            return this.watchedWithoutText[i] ? { ...lines, text: range.toString() } : lines;
+        });
         this.textLayoutComms.send("text_layout", layout);
     }
 
