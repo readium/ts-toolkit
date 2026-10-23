@@ -160,6 +160,8 @@ export class ReadAloudNavigator {
     // Speech stopped while following the next utterance, to tell whether that reaches new columns.
     private turning?: TurningPosition;
     private followedHref?: string;
+    // The spoken utterance was followed onto other columns, so "page" pauses at its end.
+    private turnedInUtterance = false;
     // A move is under way, so layout reports until its acknowledgement show it, not the reader's.
     private following?: ReturnType<typeof setTimeout>;
     // The reader moved away from the spoken text, which isn't followed until back in view.
@@ -499,6 +501,7 @@ export class ReadAloudNavigator {
             this.spokenVoice = event.detail?.voice ?? this.engine.getCurrentVoice();
             const utterance = this.speech.getCurrentContent();
             if (utterance) this.progress.start(utterance);
+            this.turnedInUtterance = false;
             this.notifyUtterance();
             this.armBreak();
         });
@@ -521,7 +524,7 @@ export class ReadAloudNavigator {
             if (word && this.isHidden(word)) {
                 const center = this.centerPoint();
                 const target = center ? this.pointLocator(center) : locator;
-                if (target) this.follow(target);
+                if (target && this.follow(target)) this.turnedInUtterance = true;
             }
             this.listeners.wordChanged?.(locator, event.detail.word ?? "");
         });
@@ -557,7 +560,8 @@ export class ReadAloudNavigator {
                 if (state === "paused" && nextHref && this.awaitsTurn(nextHref)) this.awaitedHref = nextHref;
                 return;
             }
-            if (this.pausesBetween(queue[index], queue[index + 1])) {
+            const turnedIn = this.turnedInUtterance && this.layout() === Layout.reflowable && this.pausesAtPages();
+            if (turnedIn || this.pausesBetween(queue[index], queue[index + 1])) {
                 if (this.awaitsTurn(nextHref)) this.awaitedHref = nextHref;
                 // Stopping, not pausing, cancels the next utterance without a paused engine to resume.
                 this.pausedBefore = { unit: this.unit!, index: index + 1, current: true };
@@ -1053,9 +1057,10 @@ export class ReadAloudNavigator {
         this.followedHref = undefined;
     }
 
-    private follow(locator: Locator) {
+    // Whether the navigator is moved to `locator`.
+    private follow(locator: Locator): boolean {
         // A fixed-layout page doesn't scroll, and going to one of the displayed spread can display another.
-        if (this.units.displays(locator.href) || this.following !== undefined || this.awaitedHref || this.isDetached()) return;
+        if (this.units.displays(locator.href) || this.following !== undefined || this.awaitedHref || this.isDetached()) return false;
         this.followedHref = locator.href;
         const done = () => {
             if (this.following !== timeout) return;
@@ -1069,6 +1074,7 @@ export class ReadAloudNavigator {
             if (ok && this.following === timeout) this.shownHref = locator.href.split("#")[0];
             done();
         });
+        return true;
     }
 
     private setDetached(detached: boolean) {
@@ -1285,7 +1291,7 @@ export class ReadAloudNavigator {
                 this.breakTimer = setTimeout(() => {
                     this.breakTimer = undefined;
                     const locator = this.pointLocator(point);
-                    if (locator) this.follow(locator);
+                    if (locator && this.follow(locator)) this.turnedInUtterance = true;
                 }, Math.max(0, delay * 1000));
                 return;
             }
