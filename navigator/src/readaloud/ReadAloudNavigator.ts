@@ -1271,7 +1271,7 @@ export class ReadAloudNavigator {
                 }, Math.max(0, delay * 1000));
                 return;
             }
-            before += ReadAloudNavigator.collapsed(piece.text?.highlight ?? "").length;
+            before += ReadAloudNavigator.collapsed(this.pieceText(piece, index) ?? "").length;
         }
     }
 
