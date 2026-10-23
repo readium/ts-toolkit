@@ -905,6 +905,8 @@ export class ReadAloudNavigator {
         const paused = this.pausedBefore;
         const unit = this.unit;
         this.awaitedHref = undefined;
+        // Turning on to the awaited page isn't moving away, though the text last spoken is on the page before.
+        this.attach();
         // The awaited page was loaded on its own, so the spread it's displayed in is loaded to resume from the paused utterance.
         if (paused && unit && displayed.some(href => !unit.links.some(link => link.href === href))) {
             void this.resumeInSpread(paused, awaited, turned);
