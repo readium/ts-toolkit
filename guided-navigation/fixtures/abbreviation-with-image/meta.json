@@ -1,0 +1,12 @@
+{
+  "id": "abbreviation-with-image",
+  "description": "An image inside an abbr doesn't split its expansion: one sub, followed by the image's placeholder",
+  "role": "abbreviation",
+  "rolesCovered": [
+    "abbreviation",
+    "image",
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/speech-synthesis11/#S3.1.10",
+  "inputKind": "fragment"
+}

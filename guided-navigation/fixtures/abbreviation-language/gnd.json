@@ -1,0 +1,9 @@
+{
+  "role": [
+    "paragraph"
+  ],
+  "text": {
+    "ssml": "The <lang xml:lang=\"fr\"><sub alias=\"Organisation mondiale de la santé\">OMS</sub></lang> said.",
+    "language": "en"
+  }
+}

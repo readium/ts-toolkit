@@ -38,6 +38,7 @@ export interface DivinaNavigatorConfiguration {
 
 export interface DivinaNavigatorListeners {
     positionChanged: (locator: Locator) => void;
+    viewportChanged: (viewport: VisualNavigatorViewport) => void;
     timelineItemChanged: (item: TimelineItem | undefined) => void;
     tap: (e: FrameClickEvent) => boolean; // Return true to prevent handling here
     click: (e: FrameClickEvent) => boolean; // Return true to prevent handling here
@@ -53,6 +54,7 @@ export interface DivinaNavigatorListeners {
 
 const defaultListeners = (listeners: Partial<DivinaNavigatorListeners>): DivinaNavigatorListeners => ({
     positionChanged: listeners.positionChanged || (() => {}),
+    viewportChanged: listeners.viewportChanged || (() => {}),
     timelineItemChanged: listeners.timelineItemChanged || (() => {}),
     tap: listeners.tap || (() => false),
     click: listeners.click || (() => false),
@@ -368,6 +370,7 @@ export class DivinaNavigator extends VisualNavigator implements Configurable<Con
         if(!moved) return false;
         this.setLocationToIndex(p.currentIndex);
         p.update();
+        this.notifyViewportChange(this.listeners.viewportChanged);
         this.listeners.positionChanged(this.currentLocation);
         this._notifyTimelineChange(this.currentLocation);
         return true;
@@ -391,6 +394,7 @@ export class DivinaNavigator extends VisualNavigator implements Configurable<Con
             progression,
             totalProgression: n > 0 ? Math.min((index + progression) / n, 1) : 0
         });
+        this.notifyViewportChange(this.listeners.viewportChanged);
         this.listeners.positionChanged(this.currentLocation);
         this._notifyTimelineChange(this.currentLocation);
     }
@@ -446,6 +450,7 @@ export class DivinaNavigator extends VisualNavigator implements Configurable<Con
         }
         this.pagedPresenter?.resizeHandler();
         this.scrolledPresenter?.resizeHandler();
+        this.notifyViewportChange(this.listeners.viewportChanged);
     }
 
     // === Navigation ===
@@ -518,6 +523,7 @@ export class DivinaNavigator extends VisualNavigator implements Configurable<Con
                 this.pagedPresenter.update();
             }
             this.setLocationToIndex(this.pagedPresenter ? this.pagedPresenter.currentIndex : index);
+            this.notifyViewportChange(this.listeners.viewportChanged);
             this.listeners.positionChanged(this.currentLocation);
             this._notifyTimelineChange(this.currentLocation);
             cb(true);
@@ -658,9 +664,13 @@ export class DivinaNavigator extends VisualNavigator implements Configurable<Con
 
         if (oldSettings.spreads !== this._settings.spreads) {
             this.pagedPresenter?.setSpreads(this._settings.spreads);
+            // The presenter lays the new spread out on the next frame.
+            this.ownerWindow.requestAnimationFrame(() => this.notifyViewportChange(this.listeners.viewportChanged));
         }
         if (oldSettings.stripWidth !== this._settings.stripWidth) {
             this.scrolledPresenter?.applyStripWidth(this._settings.stripWidth);
+            // Restoring the position doesn't scroll at the top of the strip, so nothing else reports the relayout.
+            this.ownerWindow.requestAnimationFrame(() => this.notifyViewportChange(this.listeners.viewportChanged));
         }
         if (oldSettings.quality !== this._settings.quality) {
             // Re-pick variants: drop everything and reload the current window

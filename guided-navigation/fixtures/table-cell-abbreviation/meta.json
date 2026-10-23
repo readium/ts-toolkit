@@ -1,0 +1,14 @@
+{
+  "id": "table-cell-abbreviation",
+  "description": "An abbr inside a row header and a data cell stays a sub in that cell's own text",
+  "role": "table",
+  "rolesCovered": [
+    "table",
+    "row",
+    "rowheader",
+    "cell",
+    "abbreviation"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

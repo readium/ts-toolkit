@@ -1,0 +1,32 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "role": [
+            "rowheader"
+          ],
+          "text": {
+            "ssml": "<sub alias=\"World Health Organization\">WHO</sub>",
+            "language": "en"
+          }
+        },
+        {
+          "role": [
+            "cell"
+          ],
+          "text": {
+            "ssml": "Leads the <sub alias=\"International Health Regulations\">IHR</sub> work",
+            "language": "en"
+          }
+        }
+      ],
+      "role": [
+        "row"
+      ]
+    }
+  ],
+  "role": [
+    "table"
+  ]
+}

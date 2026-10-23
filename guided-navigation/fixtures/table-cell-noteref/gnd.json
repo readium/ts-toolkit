@@ -1,0 +1,45 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "id": "n1",
+              "children": [
+                {
+                  "role": [
+                    "footnote"
+                  ],
+                  "text": {
+                    "plain": "First published in 1843."
+                  }
+                }
+              ],
+              "role": [
+                "noteref"
+              ],
+              "text": {
+                "plain": "1"
+              }
+            }
+          ],
+          "role": [
+            "cell"
+          ],
+          "text": {
+            "plain": "Engineer and writer",
+            "ssml": "Engineer<readium:noteref id=\"n1\" /> and writer",
+            "language": "en"
+          }
+        }
+      ],
+      "role": [
+        "row"
+      ]
+    }
+  ],
+  "role": [
+    "table"
+  ]
+}

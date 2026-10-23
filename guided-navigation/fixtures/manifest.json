@@ -1,5 +1,145 @@
 [
   {
+    "id": "abbreviation-acronym-html-native",
+    "dir": "abbreviation-acronym-html-native",
+    "role": "abbreviation",
+    "description": "An obsolete acronym with a title becomes an SSML sub, same as abbr",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "abbreviation-before-formatting",
+    "dir": "abbreviation-before-formatting",
+    "role": "abbreviation",
+    "description": "The space between an abbr and following formatted text stays outside the sub",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "abbreviation-before-image",
+    "dir": "abbreviation-before-image",
+    "role": "abbreviation",
+    "description": "Whitespace after an abbr and an image stays plain, rather than in a sub that would speak the expansion again",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "abbreviation-html-native",
+    "dir": "abbreviation-html-native",
+    "role": "abbreviation",
+    "description": "An abbr with a title becomes an SSML sub whose alias is the title",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "abbreviation-language",
+    "dir": "abbreviation-language",
+    "role": "abbreviation",
+    "description": "An abbr in another language keeps its sub, wrapped in a lang since sub can't carry xml:lang",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "abbreviation-line-break",
+    "dir": "abbreviation-line-break",
+    "role": "abbreviation",
+    "description": "A line break inside an abbr is only visual: its expansion is still one sub, spoken once",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "abbreviation-nested",
+    "dir": "abbreviation-nested",
+    "role": "abbreviation",
+    "description": "An abbr nested in another is covered by the outer one's expansion: one sub, spoken once",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "abbreviation-nested-emphasis",
+    "dir": "abbreviation-nested-emphasis",
+    "role": "abbreviation",
+    "description": "Formatting inside an abbr is dropped: its whole text becomes one sub",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "abbreviation-nested-term",
+    "dir": "abbreviation-nested-term",
+    "role": "abbreviation",
+    "description": "An abbr wrapping a whole term still expands that term's text",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "abbreviation-nested-term-punctuation",
+    "dir": "abbreviation-nested-term-punctuation",
+    "role": "abbreviation",
+    "description": "An abbr wrapping a term and punctuation outside it still expands that term's text",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "abbreviation-no-title",
+    "dir": "abbreviation-no-title",
+    "role": "abbreviation",
+    "description": "An abbr without a title has no expansion, so it stays plain text",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "abbreviation-spanning-terms",
+    "dir": "abbreviation-spanning-terms",
+    "role": "abbreviation",
+    "description": "An abbr spanning several terms isn't expanded, rather than repeated in each or spoken over the text between them",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "abbreviation-with-image",
+    "dir": "abbreviation-with-image",
+    "role": "abbreviation",
+    "description": "An image inside an abbr doesn't split its expansion: one sub, followed by the image's placeholder",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "abbreviation-with-svg-and-math",
+    "dir": "abbreviation-with-svg-and-math",
+    "role": "abbreviation",
+    "description": "An SVG image or math inside an abbr doesn't split its expansion: one sub, followed by the object's placeholder",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "abstract-epub-type",
     "dir": "abstract-epub-type",
     "role": "abstract",
@@ -214,6 +354,36 @@
     "dir": "biblioref-role-aria",
     "role": "biblioref",
     "description": "biblioref role via explicit ARIA role=\"doc-biblioref\" on an <a href>",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "biblioref-target-descendant-ids",
+    "dir": "biblioref-target-descendant-ids",
+    "role": "biblioref",
+    "description": "A biblioref's embedded copy drops the ids its original keeps, inner ones included, and gives its placeholders new ones, so no id appears twice",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "biblioref-target-in-bibliography-role-aria",
+    "dir": "biblioref-target-in-bibliography-role-aria",
+    "role": "biblioref",
+    "description": "A mid-sentence biblioref to a bibliography entry in the same document embeds the entry",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "biblioref-target-mixed-content",
+    "dir": "biblioref-target-mixed-content",
+    "role": "biblioref",
+    "description": "A biblioref to an inline entry mixing text and a link embeds both, not just the link",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -760,6 +930,36 @@
     }
   },
   {
+    "id": "glossref-sole-content",
+    "dir": "glossref-sole-content",
+    "role": "glossref",
+    "description": "A glossref that is its block's whole content, with its glossary entry embedded",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "glossref-target-in-glossary-role-aria",
+    "dir": "glossref-target-in-glossary-role-aria",
+    "role": "glossref",
+    "description": "A mid-sentence glossref to a glossary term in the same document embeds the term's definition",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "glossref-target-percent-encoded",
+    "dir": "glossref-target-percent-encoded",
+    "role": "glossref",
+    "description": "A glossref whose href is percent-encoded still finds its target, and keeps its href as authored",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "header-html-native",
     "dir": "header-html-native",
     "role": "header",
@@ -1200,6 +1400,126 @@
     }
   },
   {
+    "id": "noteref-after-closing-straight-quote",
+    "dir": "noteref-after-closing-straight-quote",
+    "role": "noteref",
+    "description": "A closing straight quote before a noteref isn't taken for an opening one: both quoted words keep their quotes in plain text",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-after-closing-straight-quote-split",
+    "dir": "noteref-after-closing-straight-quote-split",
+    "role": "noteref",
+    "description": "A straight quote closing a quotation opened in a previous text object, as in fixed layouts, isn't taken for an opening one",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-enclosed-across-formatting",
+    "dir": "noteref-enclosed-across-formatting",
+    "role": "noteref",
+    "description": "Brackets left empty by a noteref are removed from plain text even when formatting splits them, as word processors often do",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-enclosed-adjacent-pairs",
+    "dir": "noteref-enclosed-adjacent-pairs",
+    "role": "noteref",
+    "description": "Adjacent brackets each left empty by a noteref are removed with the space between them, before punctuation or a word",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-enclosed-adjacent-text",
+    "dir": "noteref-enclosed-adjacent-text",
+    "role": "noteref",
+    "description": "Brackets left empty by a noteref are removed from plain text without adding a space the text didn't have",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-enclosed-before-formatting",
+    "dir": "noteref-enclosed-before-formatting",
+    "role": "noteref",
+    "description": "Brackets left empty by a noteref and directly followed by formatted text are removed from plain text without adding a space",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-enclosed-guillemets-french",
+    "dir": "noteref-enclosed-guillemets-french",
+    "role": "noteref",
+    "description": "French guillemets left empty by a noteref are removed with their inner spaces; neighbouring quotations, and the space before a closing guillemet, are kept",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-enclosed-quotes-chinese",
+    "dir": "noteref-enclosed-quotes-chinese",
+    "role": "noteref",
+    "description": "Chinese quotes left empty by a noteref are removed without any space",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-enclosed-quotes-german",
+    "dir": "noteref-enclosed-quotes-german",
+    "role": "noteref",
+    "description": "German „…“ and »…« left empty by a noteref are removed; quotations either side of one keep their space, in »…« and Swiss «…»",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-enclosed-quotes-swedish",
+    "dir": "noteref-enclosed-quotes-swedish",
+    "role": "noteref",
+    "description": "Swedish quotes, the same mark at both ends, left empty by a noteref are removed; quotations either side of one keep their space",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-enclosed-straight-quotes",
+    "dir": "noteref-enclosed-straight-quotes",
+    "role": "noteref",
+    "description": "Straight quotes left empty by a noteref are removed from plain text",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-in-lone-block",
+    "dir": "noteref-in-lone-block",
+    "role": "noteref",
+    "description": "A lone roleless block's text is kept alongside the noteref it embeds",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "noteref-role-aria",
     "dir": "noteref-role-aria",
     "role": "noteref",
@@ -1224,6 +1544,26 @@
     "dir": "noteref-target-in-endnotes-role-aria",
     "role": "footnote",
     "description": "A noteref's target footnote, nested inside an endnotes section via explicit ARIA roles, still appears at its own location (unlike a footnote outside any endnotes section, which is suppressed there since a noteref already embeds it inline)",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-target-malformed-escape",
+    "dir": "noteref-target-malformed-escape",
+    "role": "noteref",
+    "description": "A noteref whose href has a malformed percent-escape falls back to the fragment as written",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "noteref-target-percent-encoded",
+    "dir": "noteref-target-percent-encoded",
+    "role": "noteref",
+    "description": "A noteref whose href is percent-encoded still finds and embeds its footnote, which isn't output again at its own location",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -1524,6 +1864,26 @@
     "dir": "table-caption-role-aria",
     "role": "table",
     "description": "An ARIA table with an explicit role=\"caption\" child (no aria-labelledby) — same un-folded behavior as table-caption-element-html-native (a separate role \"caption\" child, not folded into the table's own description), confirmed via the explicit-ARIA encoding rather than a native <caption> element",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "table-cell-abbreviation",
+    "dir": "table-cell-abbreviation",
+    "role": "table",
+    "description": "An abbr inside a row header and a data cell stays a sub in that cell's own text",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "table-cell-noteref",
+    "dir": "table-cell-noteref",
+    "role": "table",
+    "description": "A noteref inside a data cell becomes a placeholder in that cell's own text, its footnote embedded",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"

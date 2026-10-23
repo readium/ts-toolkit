@@ -1,0 +1,11 @@
+{
+  "id": "abbreviation-no-title",
+  "description": "An abbr without a title has no expansion, so it stays plain text",
+  "role": "abbreviation",
+  "rolesCovered": [
+    "abbreviation",
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/speech-synthesis11/#S3.1.10",
+  "inputKind": "fragment"
+}

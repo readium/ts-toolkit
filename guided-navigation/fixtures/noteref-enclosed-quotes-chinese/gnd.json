@@ -1,0 +1,47 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "id": "n",
+          "children": [
+            {
+              "role": [
+                "aside",
+                "footnote"
+              ],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ],
+          "role": [
+            "noteref"
+          ],
+          "text": {
+            "plain": "1",
+            "language": "zh"
+          }
+        }
+      ],
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "前后",
+        "ssml": "前“<readium:noteref id=\"n\" />”后",
+        "language": "zh"
+      }
+    },
+    {
+      "id": "m",
+      "role": [
+        "aside",
+        "footnote"
+      ],
+      "text": {
+        "plain": "Note."
+      }
+    }
+  ]
+}

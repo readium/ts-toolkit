@@ -1,0 +1,24 @@
+{
+  "children": [
+    {
+      "id": "image1",
+      "imgref": "dot.png",
+      "role": [
+        "image"
+      ],
+      "description": {
+        "text": {
+          "plain": "dot"
+        }
+      }
+    }
+  ],
+  "role": [
+    "paragraph"
+  ],
+  "text": {
+    "plain": "The WHO said.",
+    "ssml": "The <sub alias=\"World Health Organization\">WHO</sub><readium:image id=\"image1\" /> said.",
+    "language": "en"
+  }
+}

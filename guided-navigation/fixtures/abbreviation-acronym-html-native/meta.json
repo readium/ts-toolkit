@@ -1,0 +1,11 @@
+{
+  "id": "abbreviation-acronym-html-native",
+  "description": "An obsolete acronym with a title becomes an SSML sub, same as abbr",
+  "role": "abbreviation",
+  "rolesCovered": [
+    "abbreviation",
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/speech-synthesis11/#S3.1.10",
+  "inputKind": "fragment"
+}

@@ -2,6 +2,9 @@ import { GuidedNavigationObject, Layout, Link, Profile, Publication } from "@rea
 import { Navigator, VisualNavigatorViewport } from "../Navigator.ts";
 import { GuidedNavigationProvider } from "./GuidedNavigationProvider.ts";
 
+// Expired comms callbacks are dropped, never called.
+export const GO_TIMEOUT = 1000;
+
 /** Reading order links whose Guided Navigation objects are read as one sequence. */
 export interface ReadingUnit {
     links: Link[];
@@ -14,17 +17,23 @@ export interface ReadingUnit {
  */
 export class ReadingUnits {
     private readonly spreads: boolean;
+    private moveTimeout?: ReturnType<typeof setTimeout>;
 
     constructor(private readonly navigator: Navigator & { readonly viewport?: VisualNavigatorViewport }) {
         const metadata = navigator.publication.metadata;
         this.spreads = metadata.effectiveLayout === Layout.fixed && !metadata.conformsTo?.includes(Profile.DIVINA);
     }
 
+    /** Whether a move made to find a spread is still under way. */
+    get moving(): boolean {
+        return this.moveTimeout !== undefined;
+    }
+
     /** The unit containing `href`. */
     around(href: string): ReadingUnit | undefined {
         const link = this.navigator.publication.readingOrder.findWithHref(href);
         if (!link) return undefined;
-        if (this.spreads && !this.displays(link.href)) this.navigator.go(link.locator, false, () => {});
+        if (this.spreads && !this.displays(link.href)) this.track(cb => this.navigator.go(link.locator, false, cb));
         return this.displayedFrom(link, () => true);
     }
 
@@ -38,6 +47,12 @@ export class ReadingUnits {
     linkBefore(unit: ReadingUnit): Link | undefined {
         const index = this.indexOf(unit.links[0]);
         return index <= 0 ? undefined : this.navigator.publication.readingOrder.items[index - 1];
+    }
+
+    /** The first link of the unit following `unit`, as a unit of its own, without moving the navigator. */
+    pageAfter(unit: ReadingUnit): ReadingUnit | undefined {
+        const link = this.linkAfter(unit);
+        return link ? { links: [link] } : undefined;
     }
 
     after(unit: ReadingUnit): ReadingUnit | undefined {
@@ -61,9 +76,23 @@ export class ReadingUnits {
         return this.spreads && (this.navigator.viewport?.readingOrder ?? []).includes(href);
     }
 
+    // A spread resized to show more pages may already display `link`.
     private move(edge: Link, link: Link, step: (cb: (ok: boolean) => void) => void) {
-        if (this.displays(edge.href)) step(() => {});
-        else this.navigator.go(link.locator, false, () => {});
+        if (this.displays(link.href)) return;
+        if (this.displays(edge.href)) this.track(step);
+        else this.track(cb => this.navigator.go(link.locator, false, cb));
+    }
+
+    private track(move: (cb: (ok: boolean) => void) => void) {
+        clearTimeout(this.moveTimeout);
+        const done = () => {
+            if (this.moveTimeout !== timeout) return;
+            clearTimeout(timeout);
+            this.moveTimeout = undefined;
+        };
+        const timeout = setTimeout(done, GO_TIMEOUT);
+        this.moveTimeout = timeout;
+        move(done);
     }
 
     // The displayed pages kept by `keep`, if they include `link`, otherwise `link` alone.

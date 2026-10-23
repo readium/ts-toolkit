@@ -33,6 +33,7 @@ export interface WebPubNavigatorConfiguration {
 export interface WebPubNavigatorListeners {
     frameLoaded: (wnd: Window) => void;
     positionChanged: (locator: Locator) => void;
+    viewportChanged: (viewport: VisualNavigatorViewport) => void;
     timelineItemChanged: (item: TimelineItem | undefined) => void;
     tap: (e: FrameClickEvent) => boolean;
     click: (e: FrameClickEvent) => boolean;
@@ -52,6 +53,7 @@ const POINTED_PIECE_TIMEOUT = 1000;
 const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorListeners => ({
     frameLoaded: listeners.frameLoaded || (() => {}),
     positionChanged: listeners.positionChanged || (() => {}),
+    viewportChanged: listeners.viewportChanged || (() => {}),
     timelineItemChanged: listeners.timelineItemChanged || (() => {}),
     tap: listeners.tap || (() => false),
     click: listeners.click || (() => false),
@@ -620,6 +622,10 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             frame.msg.send("decorate", { group, action: "add", decoration: resolveDecorationForWire(d, this._decoratorConfig.decorationTemplates) });
         }
         for (const d of toUpdate) {
+            // Moved to another resource, so this frame drops it rather than updating it.
+            if (prevById.get(d.id)?.locator.href === href && d.locator.href !== href) {
+                frame.msg.send("decorate", { group, action: "remove", decoration: { id: d.id } });
+            }
             if (d.locator.href !== href) continue;
             frame.msg.send("decorate", { group, action: "update", decoration: resolveDecorationForWire(d, this._decoratorConfig.decorationTemplates) });
         }
@@ -632,7 +638,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
 
         for (const [group, decorations] of this._decorations) {
             const matching = decorations.filter(d => d.locator.href === href);
-            if (matching.length === 0) continue;
+            // Removals are only sent to the current frame, so a frame shown again may hold stale decorations.
             frame.msg.send("decorate", { group, action: "clear" });
             for (const d of matching)
                 frame.msg.send("decorate", { group, action: "add", decoration: resolveDecorationForWire(d, this._decoratorConfig.decorationTemplates) });
@@ -805,6 +811,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
         }
 
         this.updateViewport(progression);
+        this.notifyViewportChange(this.listeners.viewportChanged);
         this.listeners.positionChanged(this.currentLocation);
         const locatorForTimeline = progression.fragmentId
             ? this.currentLocation.copyWithLocations({ fragments: [`#${progression.fragmentId}`] })
@@ -1031,6 +1038,10 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             // Now that we've gone to the right locator, we can attach the listeners.
             // Doing this only at this stage reduces janky UI with multiple locator updates.
             this.attachListener();
+        }).catch((error) => {
+            console.error(error);
+            this._isNavigating = false;
+            cb(false);
         });
     }
 

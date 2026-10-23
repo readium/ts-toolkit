@@ -1,0 +1,63 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "id": "biblioref1",
+          "children": [
+            {
+              "children": [
+                {
+                  "id": "link1",
+                  "text": {
+                    "plain": "Title"
+                  },
+                  "textref": "book.html"
+                }
+              ],
+              "text": {
+                "plain": "Author. Year",
+                "ssml": "Author <readium:link id=\"link1\" />. Year",
+                "language": "en"
+              }
+            }
+          ],
+          "role": [
+            "biblioref"
+          ],
+          "text": {
+            "plain": "1"
+          },
+          "textref": "#entry"
+        }
+      ],
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "See.",
+        "ssml": "See <readium:biblioref id=\"biblioref1\" />.",
+        "language": "en"
+      }
+    },
+    {
+      "children": [
+        {
+          "id": "link2",
+          "text": {
+            "plain": "Title"
+          },
+          "textref": "book.html"
+        }
+      ],
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Author. Year",
+        "ssml": "Author <readium:link id=\"link2\" />. Year",
+        "language": "en"
+      }
+    }
+  ]
+}

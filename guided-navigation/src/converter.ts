@@ -14,9 +14,9 @@ import {
   ctxEqual,
   normalizeWhitespace,
 } from "./text.ts";
-import { ssmlAttrEscape, ssmlTextEscape, startsWithBindingPunct } from "@readium/helpers";
+import { ssmlAttrEscape, ssmlTextEscape } from "@readium/helpers";
 import { type ObjBuilder, NavObject, isEmptyObj, finalizeToGuidedNavigationObject, setDescription } from "./object.ts";
-import { type GndMediaType, isInlineTag, sniffMediaType } from "./dom.ts";
+import { type GndMediaType, isAncestorOf, isInlineTag, sniffMediaType } from "./dom.ts";
 import { declaredLanguage, nodeLanguage, sameLanguage } from "./language.ts";
 import { encodeDomRangeFragment, encodeTextFragmentDirective } from "./textrefFragment.ts";
 import { resolveRefs } from "./href.ts";
@@ -26,7 +26,8 @@ import { textFragmentDirectiveFor } from "./textFragmentGenerator.ts";
 import { type GndGenerationOptions, normalizeTextrefOptions } from "./options.ts";
 import { IdAllocator } from "./idAllocator.ts";
 import { prescan as prescanImpl } from "./prescan.ts";
-import { pagebreak, noteref, link } from "./elementHandlers.ts";
+import { pagebreak, noteref, reference, link } from "./elementHandlers.ts";
+import { DROPPED, bindsToPrevious, removeDropped } from "./emptyPairs.ts";
 
 const MATHML_NS = "http://www.w3.org/1998/Math/MathML";
 
@@ -79,6 +80,8 @@ export class Converter {
   selectorRoot: Element | null = null;
   // Prefixed onto every generated selector — see selectorGenerator.ts's rootAnchorSelector().
   selectorRootAnchor: string | null = null;
+  // Converting a copy of content also output at its own location, which keeps its elements' ids.
+  copy = false;
 
   private root = new NavObject();
   private current = this.root;
@@ -129,6 +132,7 @@ export class Converter {
     child.domRangeEnabled = this.domRangeEnabled;
     child.textFragmentEnabled = this.textFragmentEnabled;
     child.leafTextEnabled = this.leafTextEnabled;
+    child.copy = this.copy;
     return child;
   }
 
@@ -156,7 +160,8 @@ export class Converter {
 
   resultBuilders(): ObjBuilder[] {
     const res = this.root.finalize((el) => textrefForSelector(selectorForElement(el, this.selectorRoot, this.selectorRootAnchor), el));
-    if (!res.children || res.children.length === 0) {
+    // Text of its own, from a flow hoisted onto it, makes the root content too, not just a container.
+    if (!res.children || res.children.length === 0 || res.text) {
       if (isEmptyObj(res)) return [];
       return [res];
     }
@@ -224,7 +229,8 @@ export class Converter {
     }
 
     if (tagName === "br") {
-      if (!this.current.noText) {
+      // Within an abbreviation's expansion, a line break is only visual.
+      if (!this.current.noText && !this.textContext(el).abbr) {
         this.closeSegment();
         this.segments.push({ kind: "break" });
         this.flowEndsWithSpace = true;
@@ -239,8 +245,12 @@ export class Converter {
       noteref(this, el, roles);
       return true;
     }
+    if (tagName === "a" && (roles.includes("glossref") || roles.includes("biblioref")) && el.getAttribute("href")) {
+      reference(this, el, roles, aria, ariaLanguage);
+      return true;
+    }
     if (tagName === "a" && el.getAttribute("href")) {
-      // Any other link — backlink/biblioref/glossref, or a plain navigational
+      // Any other link — a backlink, or a plain navigational
       // link with no specific role (e.g. a TOC entry) — carries its href as
       // textref. When it's the sole content of its enclosing block (the usual
       // case for list items), the hoist rule promotes it onto that block;
@@ -423,6 +433,20 @@ export class Converter {
   }
 
   private textContext(node: Node): SSMLContext {
+    // An abbreviation's text is replaced by its expansion as a whole, so it wins over any formatting inside it.
+    // It applies only if all its text is in one object, so its alias is never repeated or misplaced.
+    // The outermost one wins, its expansion covering any nested inside it.
+    let abbr: SSMLContext | undefined;
+    for (let p = node.parentElement, enclosing = false; p; p = p.parentElement) {
+      const alias = abbreviationExpansion(p);
+      if (alias) {
+        if (!enclosing && Converter.containsObject(p)) break;
+        abbr = { lang: declaredLanguage(p), tag: "sub", attrs: { alias }, abbr: p };
+      }
+      if (p === this.current.el) enclosing = true;
+      if (enclosing && !Converter.isSoleContent(p)) break;
+    }
+    if (abbr) return abbr;
     const ctx: SSMLContext = { lang: declaredLanguage(node.parentElement), tag: "" };
     for (let p = node.parentElement; p && p !== this.current.el; p = p.parentElement) {
       const [tag, attrs] = convertElementToSSMLTag(p.tagName.toLowerCase());
@@ -433,6 +457,30 @@ export class Converter {
       }
     }
     return ctx;
+  }
+
+  private static containsObject(el: Element): boolean {
+    for (let c = el.firstElementChild; c; c = c.nextElementSibling) {
+      const tagName = c.tagName.toLowerCase();
+      const roles = extractNodeRoles(c);
+      if (skippedElements.has(tagName) || Converter.isPlaceholder(c, tagName, roles)) continue;
+      if (isBlockNode(tagName, roles) || Converter.containsObject(c)) return true;
+    }
+    return false;
+  }
+
+  // What head() embeds as a placeholder in the flow, rather than descending into.
+  private static isPlaceholder(el: Element, tagName: string, roles: GndRole[]): boolean {
+    if (roles.includes("pagebreak") || roles.includes("image") || roles.includes("math")) return true;
+    return ["img", "svg", "audio", "video"].includes(tagName) || (tagName === "a" && !!el.getAttribute("href"));
+  }
+
+  // Punctuation alongside doesn't count, e.g. the last period of <abbr><dfn>W.H.O</dfn>.</abbr>.
+  private static isSoleContent(el: Element): boolean {
+    for (let s = el.parentNode?.firstChild; s; s = s.nextSibling) {
+      if (s !== el && (s.nodeType === ELEMENT_NODE || (s.nodeType === TEXT_NODE && !/^[\s\p{P}]*$/u.test(s.nodeValue ?? "")))) return false;
+    }
+    return true;
   }
 
   private updateFlowSpace() {
@@ -527,6 +575,34 @@ export class Converter {
       break;
     }
 
+    // An abbreviation's expansion is spoken once, so its pieces become one segment, followed by any object within it.
+    const merged: Segment[] = [];
+    for (let i = 0; i < segments.length; i++) {
+      const seg = segments[i];
+      const abbr = seg.kind === "text" ? seg.ctx!.abbr : undefined;
+      if (!abbr) {
+        merged.push(seg);
+        continue;
+      }
+      let text = seg.text!;
+      const within: Segment[] = [];
+      let pending: Segment[] = [];
+      for (let j = i + 1; j < segments.length; j++) {
+        const next = segments[j];
+        if (next.kind === "placeholder" && isAncestorOf(abbr, next.child!.el!)) {
+          pending.push(next);
+          continue;
+        }
+        if (next.kind !== "text" || next.ctx!.abbr !== abbr) break;
+        text += next.text!;
+        within.push(...pending);
+        pending = [];
+        i = j;
+      }
+      merged.push({ ...seg, text }, ...within);
+    }
+    segments = merged;
+
     const hasText = segments.some((s) => s.kind === "text" && s.text!.trim() !== "");
     if (!hasText) {
       for (const child of pending) this.appendChild(child);
@@ -565,7 +641,7 @@ export class Converter {
     if (needSSML) {
       for (const seg of segments) {
         if (seg.kind !== "placeholder") continue;
-        let id = seg.candidateID;
+        let id = this.copy ? undefined : seg.candidateID;
         if (!id || !this.idAlloc.claim(id)) {
           id = this.idAlloc.allocate(seg.tag!, (candidate) => this.ids.has(candidate));
         }
@@ -590,7 +666,7 @@ export class Converter {
         if (plainB.length > 0) {
           const spaced = prevTrail || midSpace || lead;
           if (sawBreak) join = true;
-          else if (sawPlaceholder) join = spaced && !startsWithBindingPunct(t);
+          else if (sawPlaceholder) join = spaced && !bindsToPrevious(t, baseLang);
           else join = spaced;
         }
         if (join) plainB += " ";
@@ -602,9 +678,11 @@ export class Converter {
       } else if (seg.kind === "break") {
         sawBreak = true;
       } else if (seg.kind === "placeholder") {
+        plainB += DROPPED;
         sawPlaceholder = true;
       }
     }
+    plainB = removeDropped(plainB, baseLang);
 
     // Plain text is only worth keeping alongside SSML when it diverges from
     // what stripping tags from the SSML would produce — i.e. when a
@@ -623,26 +701,24 @@ export class Converter {
       let sb = "";
       for (const seg of segments) {
         if (seg.kind === "text") {
-          let tag = seg.ctx!.tag;
-          let attrs = seg.ctx!.attrs;
-          if (shiftsLanguage(seg.ctx!.lang)) {
-            // A language shift takes priority over whatever SSML tag the
-            // shifting element would otherwise map to.
-            tag = "lang";
-            attrs = undefined;
+          const { tag, attrs, lang } = seg.ctx!;
+          // A `sub` replaces all of its text, so spaces at its edges stay outside it to keep separating words.
+          const edges = tag === "sub" ? /^( *)([^]*?)( *)$/.exec(seg.text!)! : null;
+          const segText = edges ? edges[2] : seg.text!;
+          // A `sub` around only whitespace would speak its expansion a second time.
+          if (edges && segText === "") {
+            sb += seg.text!;
+            continue;
           }
-          if (tag) {
-            sb += `<${tag}`;
-            for (const [k, v] of Object.entries(attrs ?? {})) {
-              sb += ` ${k}="${ssmlAttrEscape(v)}"`;
-            }
-            if (shiftsLanguage(seg.ctx!.lang)) {
-              sb += ` xml:lang="${ssmlAttrEscape(seg.ctx!.lang)}"`;
-            }
-            sb += `>${ssmlTextEscape(seg.text!)}</${tag}>`;
+          sb += edges?.[1] ?? "";
+          if (shiftsLanguage(lang)) {
+            // A language shift replaces the element's own tag, except `sub`, which can't carry xml:lang.
+            const inner = tag === "sub" ? ssmlElement(tag, attrs, segText) : ssmlTextEscape(segText);
+            sb += `<lang xml:lang="${ssmlAttrEscape(lang)}">${inner}</lang>`;
           } else {
-            sb += ssmlTextEscape(seg.text!);
+            sb += tag ? ssmlElement(tag, attrs, segText) : ssmlTextEscape(segText);
           }
+          sb += edges?.[3] ?? "";
         } else if (seg.kind === "break") {
           sb += "<break/>";
         } else if (seg.kind === "placeholder") {
@@ -663,6 +739,17 @@ export class Converter {
       this.lastFlowRange = { first: [flowFirstNode, flowFirstOffset], last: [flowLastNode, flowLastOffset] };
     }
   }
+}
+
+// An abbreviation's expansion, "" when it has none.
+function abbreviationExpansion(el: Element): string {
+  if (!extractNodeRoles(el).includes("abbreviation")) return "";
+  return normalizeWhitespace(el.getAttribute("title") ?? "", true).trim();
+}
+
+function ssmlElement(tag: string, attrs: Record<string, string> | undefined, text: string): string {
+  const attrString = Object.entries(attrs ?? {}).map(([k, v]) => ` ${k}="${ssmlAttrEscape(v)}"`).join("");
+  return `<${tag}${attrString}>${ssmlTextEscape(text)}</${tag}>`;
 }
 
 // A DOM <body> only counts as real content when the input actually wrote

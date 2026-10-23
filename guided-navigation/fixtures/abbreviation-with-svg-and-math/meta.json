@@ -1,0 +1,13 @@
+{
+  "id": "abbreviation-with-svg-and-math",
+  "description": "An SVG image or math inside an abbr doesn't split its expansion: one sub, followed by the object's placeholder",
+  "role": "abbreviation",
+  "rolesCovered": [
+    "abbreviation",
+    "image",
+    "math",
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/speech-synthesis11/#S3.1.10",
+  "inputKind": "fragment"
+}

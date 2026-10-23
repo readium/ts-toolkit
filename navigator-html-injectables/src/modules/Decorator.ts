@@ -6,7 +6,7 @@ import { ModuleName } from "./ModuleLibrary.ts";
 import { Rect, getClientRectsNoOverlap, getTextClientRects, rectContainsPoint } from "../helpers/rect.ts";
 import { getProperty } from "../helpers/css.ts";
 import { isDarkColor, getContrastingTextColor, adjustColorForContrast, colorToRgba } from "@readium/helpers";
-import { makeWritingContext, WritingContext } from "../helpers/document.ts";
+import { makeWritingContext, OVERLAY_Z_INDEX, WritingContext } from "../helpers/document.ts";
 import { sML } from "@readium/helpers";
 import { sanitizeHTML } from "../helpers/sanitize.ts";
 
@@ -122,6 +122,10 @@ const canNativeHighlight = () => ("Highlight" in window);
 const cannotNativeHighlight = ["IMG", "IMAGE", "AUDIO", "VIDEO", "SVG"];
 // Elements that trigger WebKit's CSS Custom Highlight repaint bug on removal.
 const webkitRepaintProneTags = new Set(["SUP", "SUB", "SMALL", "CODE"]);
+const outlineStrokeWidth = 2;
+const outlineOffset = 1;
+// SVG centres the stroke on the path, so half of it is added to the outline offset.
+const outlinePathOffset = outlineOffset + outlineStrokeWidth / 2;
 
 class DecorationGroup {
     public readonly items: DecorationItem[] = [];
@@ -307,7 +311,7 @@ class DecorationGroup {
 
         // Update shared mask if we removed a mask decoration
         if (wasMask) {
-            this.updateSharedMask();
+            this.scheduleMaskUpdate();
         }
     }
 
@@ -331,16 +335,9 @@ class DecorationGroup {
         this.items.length = 0;
         this.notTextFlag?.clear();
         this.hoveredItem = undefined;
-        // Clear shared mask
-        if (this.maskSvg) {
-            this.maskSvg.remove();
-            this.maskSvg = undefined;
-        }
-        if (this.shadowHost) {
-            this.shadowHost.remove();
-            this.shadowHost = undefined;
-            this.shadowRoot = undefined;
-        }
+        // The shared mask is removed with the next update, so masks added back meanwhile don't flash.
+        if (this.maskSvg) this.scheduleMaskUpdate();
+        else this.removeShadowHost();
     }
 
     /**
@@ -349,6 +346,11 @@ class DecorationGroup {
      */
     destroy() {
         this.clear();
+        this.wnd.cancelAnimationFrame(this.maskFrame);
+        this.maskFrame = 0;
+        this.maskSvg?.remove();
+        this.maskSvg = undefined;
+        this.removeShadowHost();
         this.wnd.document.removeEventListener("pointerup", this.activationHandler);
         this.wnd.document.removeEventListener("pointermove", this.hoverHandler);
     }
@@ -594,8 +596,6 @@ class DecorationGroup {
                     i.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(i.range, false, false, ((i.decoration.style as BuiltinDecorationStyle).expand ?? 0) + this.hitGap()));
                 });
                 this.renderLayout(this.items);
-                // Update shared mask after layout
-                this.updateSharedMask();
             });
         });
     }
@@ -606,13 +606,13 @@ class DecorationGroup {
      * per item when geometry has genuinely changed shape (a real reflow).
      */
     repositionOverlays() {
-        let hasMaskItem = false;
         const relaidOut: DecorationItem[] = [];
         const ctx = makeWritingContext(this.wnd);
         this.items.forEach(item => {
             if (this.experimentalHighlights && !this.notTextFlag?.has(item.id)) return;
+            // Scrolling inside a container moves the text without scrolling the document.
             if (item.decoration.style?.type === DecorationStyleType.Mask) {
-                hasMaskItem = true;
+                this.scheduleMaskUpdate();
                 return;
             }
             if (!this.repositionItem(item, ctx)) {
@@ -623,7 +623,6 @@ class DecorationGroup {
             item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, ((item.decoration.style as BuiltinDecorationStyle).expand ?? 0) + this.hitGap()), ctx);
         });
         if (relaidOut.length) this.renderLayout(relaidOut);
-        if (hasMaskItem) this.updateSharedMask();
     }
 
     private experimentalLayout(item: DecorationItem) {
@@ -739,7 +738,7 @@ class DecorationGroup {
                 const { r, g, b } = colorToRgba(adjustedTint);
                 const fillTint = `rgba(${r}, ${g}, ${b}, 0.3)`;
                 css = `::highlight(${subKey}) {
-                    color: ${getContrastingTextColor(adjustedTint, backgroundColor)};
+                    color: ${getContrastingTextColor(fillTint, backgroundColor)};
                     background-color: ${fillTint};
                     text-decoration: underline;
                     text-decoration-color: ${adjustedTint};
@@ -784,27 +783,85 @@ class DecorationGroup {
      * Positions a single overlay element according to the decoration's width mode.
      */
     private positionElement(item: DecorationItem, ctx: WritingContext, iz: number, element: HTMLElement, rect: Rect, boundingRect: DOMRect, inlineInset = 0) {
+        const [inlineStart, blockStart, inlineSize, blockSize] = this.overlayBox(item, ctx, rect, boundingRect, inlineInset);
+        ctx.applyPosition(element, inlineStart, blockStart, inlineSize, blockSize, iz);
+    }
+
+    /**
+     * Logical box (inline start, block start, inline size, block size) in document
+     * coordinates that an overlay rect occupies under the decoration's width mode.
+     */
+    private overlayBox(item: DecorationItem, ctx: WritingContext, rect: Rect, boundingRect: DOMRect, inlineInset = 0): [number, number, number, number] {
         const w = item.decoration?.style?.width;
         const r = rect;
         switch (w) {
             case DecorationWidth.Viewport: {
                 const snap = Math.floor(ctx.inlineStart(r) / ctx.viewportInlineSize) * ctx.viewportInlineSize;
-                ctx.applyPosition(element, snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.viewportInlineSize - 2 * inlineInset, ctx.blockSize(r), iz);
-                break;
+                return [snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.viewportInlineSize - 2 * inlineInset, ctx.blockSize(r)];
             }
             case DecorationWidth.Page: {
                 const snap = Math.floor(ctx.inlineStart(r) / ctx.pageInlineSize) * ctx.pageInlineSize;
-                ctx.applyPosition(element, snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.pageInlineSize - 2 * inlineInset, ctx.blockSize(r), iz);
-                break;
+                return [snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.pageInlineSize - 2 * inlineInset, ctx.blockSize(r)];
             }
-            case DecorationWidth.Bounds: {
-                ctx.applyPosition(element, ctx.inlineStart(boundingRect) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(boundingRect), ctx.blockSize(r), iz);
-                break;
-            }
-            default: {
-                ctx.applyPosition(element, ctx.inlineStart(r) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(r), ctx.blockSize(r), iz);
-            }
+            case DecorationWidth.Bounds:
+                return [ctx.inlineStart(boundingRect) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(boundingRect), ctx.blockSize(r)];
+            default:
+                return [ctx.inlineStart(r) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(r), ctx.blockSize(r)];
         }
+    }
+
+    private static isShapeOutline(style: DecorationStyle): boolean {
+        return style.type === DecorationStyleType.Outline && style.layout !== DecorationLayout.Bounds;
+    }
+
+    /**
+     * SVG path data outlining the overlay rects as one shape per run of adjacent lines,
+     * `offset` outside them. Coordinates are in the shadow host's (document) space.
+     */
+    private outlinePath(item: DecorationItem, ctx: WritingContext, iz: number, rects: Rect[], boundingRect: DOMRect, inlineInset: number, offset: number): string {
+        // Block coordinates are negated in vertical-rl so lines always progress towards larger values.
+        const flip = ctx.isVertical && !ctx.isVertLR ? -1 : 1;
+        const boxes = rects.map(rect => {
+            const [inlineStart, blockStart, inlineSize, blockSize] = this.overlayBox(item, ctx, rect, boundingRect, inlineInset).map(v => v * iz);
+            const inlineEnd = inlineStart + inlineSize;
+            const blockEnd = blockStart + blockSize;
+            return flip === 1
+                ? { i0: inlineStart, i1: inlineEnd, b0: blockStart, b1: blockEnd }
+                : { i0: inlineStart, i1: inlineEnd, b0: -blockEnd, b1: -blockStart };
+        }).sort((r1, r2) => r1.b0 - r2.b0);
+
+        // A line joins the previous one when it starts below it, less than a line away, and overlaps it inline.
+        const runs: (typeof boxes)[] = [];
+        for (const box of boxes) {
+            const run = runs.find(run => {
+                const last = run[run.length - 1];
+                return box.b0 > last.b0
+                    && box.b0 - last.b1 < Math.min(last.b1 - last.b0, box.b1 - box.b0)
+                    && box.i0 < last.i1 && box.i1 > last.i0;
+            });
+            if (run) run.push(box);
+            else runs.push([box]);
+        }
+
+        const toPoint = (i: number, b: number) => ctx.isVertical ? `${b * flip} ${i}` : `${i} ${b}`;
+        return runs.map(run => {
+            const n = run.length - 1;
+            const mid = (k: number) => (run[k].b1 + run[k + 1].b0) / 2;
+            // A step between two lines sits on the wider one's side, `offset` into the narrower one's band.
+            const step = (k: number, wider: number) => mid(k) + Math.sign(wider) * offset;
+            const points: string[] = [toPoint(run[0].i1 + offset, run[0].b0 - offset)];
+            for (let k = 0; k < n; k++) {
+                const b = step(k, run[k].i1 - run[k + 1].i1);
+                points.push(toPoint(run[k].i1 + offset, b), toPoint(run[k + 1].i1 + offset, b));
+            }
+            points.push(toPoint(run[n].i1 + offset, run[n].b1 + offset), toPoint(run[n].i0 - offset, run[n].b1 + offset));
+            for (let k = n - 1; k >= 0; k--) {
+                const b = step(k, run[k + 1].i0 - run[k].i0);
+                points.push(toPoint(run[k + 1].i0 - offset, b), toPoint(run[k].i0 - offset, b));
+            }
+            points.push(toPoint(run[0].i0 - offset, run[0].b0 - offset));
+            return `M${points.join(" L")} Z`;
+        }).join(" ");
     }
 
     /**
@@ -894,10 +951,14 @@ class DecorationGroup {
         const outlineInset = (() => {
             if ((decoStyle as BuiltinDecorationStyle).type !== DecorationStyleType.Outline) return 0;
             const w = (decoStyle as BuiltinDecorationStyle).width;
-            return (w === DecorationWidth.Page || w === DecorationWidth.Viewport) ? 3 : 0;
+            return (w === DecorationWidth.Page || w === DecorationWidth.Viewport) ? outlineStrokeWidth + outlineOffset : 0;
         })();
 
         const rects = this.computeOverlayRects(item, ctx, boundingRect, expand);
+        if (DecorationGroup.isShapeOutline(decoStyle)) {
+            item.container.querySelector("path")?.setAttribute("d", this.outlinePath(item, ctx, iz, rects, boundingRect, outlineInset, outlinePathOffset));
+            return true;
+        }
         const children = Array.from(item.container.children) as HTMLElement[];
         if (children.length !== rects.length) return false;
 
@@ -936,7 +997,7 @@ class DecorationGroup {
         const outlineInset = (() => {
             if ((decoStyle as BuiltinDecorationStyle).type !== DecorationStyleType.Outline) return 0;
             const w = (decoStyle as BuiltinDecorationStyle).width;
-            return (w === DecorationWidth.Page || w === DecorationWidth.Viewport) ? 3 : 0;
+            return (w === DecorationWidth.Page || w === DecorationWidth.Viewport) ? outlineStrokeWidth + outlineOffset : 0;
         })();
         let elementTemplate: Element;
 
@@ -966,18 +1027,36 @@ class DecorationGroup {
                 return;
             }
 
-            // Mask: dim overlay covering the full document with SVG clip-path holes.
+            // Mask: dim overlay covering the full document with SVG mask holes.
             if (type === DecorationStyleType.Mask) {
-                // Mask decorations use a shared overlay - just mark the item and update the shared mask
+                // Mask decorations use a shared overlay, updated once per frame.
                 item.container = itemContainer;
                 item.clickableElements = [];
-                this.updateSharedMask();
+                this.scheduleMaskUpdate();
                 return;
             }
 
             const isDarkMode = this.getCurrentDarkMode();
             const backgroundColor = this.getBackgroundColor();
             const applyContrast = style.enforceContrast !== false;
+
+            if (DecorationGroup.isShapeOutline(style)) {
+                const svgNS = "http://www.w3.org/2000/svg";
+                const svg = this.wnd.document.createElementNS(svgNS, "svg");
+                svg.dataset.readium = "true";
+                svg.style.cssText = `position:absolute;top:0;left:0;width:1px;height:1px;overflow:visible;pointer-events:none;z-index:${OVERLAY_Z_INDEX}`;
+                const path = this.wnd.document.createElementNS(svgNS, "path");
+                path.setAttribute("fill", "none");
+                path.setAttribute("stroke", applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint);
+                path.setAttribute("stroke-width", String(outlineStrokeWidth));
+                path.setAttribute("d", this.outlinePath(item, ctx, iz, this.computeOverlayRects(item, ctx, boundingRect, expand), boundingRect, outlineInset, outlinePathOffset));
+                svg.append(path);
+                itemContainer.append(svg);
+                item.container = itemContainer;
+                item.clickableElements = [];
+                return;
+            }
+
             const styleAttr = (() => {
                 switch (type) {
                     case DecorationStyleType.Underline: {
@@ -1016,8 +1095,8 @@ class DecorationGroup {
                     case DecorationStyleType.Outline:
                         const adjustedOutlineTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
                         return [
-                            `outline: 2px solid ${adjustedOutlineTint} !important`,
-                            "outline-offset: 1px !important",
+                            `outline: ${outlineStrokeWidth}px solid ${adjustedOutlineTint} !important`,
+                            `outline-offset: ${outlineOffset}px !important`,
                             "background-color: transparent !important",
                             "box-sizing: border-box !important",
                         ].join("; ");
@@ -1074,11 +1153,15 @@ class DecorationGroup {
     }
 
     private currentRender = 0;
+    private readonly pendingRender = new Set<DecorationItem>();
     private renderLayout(items: DecorationItem[]) {
+        items.forEach(i => this.pendingRender.add(i));
         this.wnd.cancelAnimationFrame(this.currentRender);
         this.currentRender = this.wnd.requestAnimationFrame(() => {
-            items = items.filter(i => !this.experimentalHighlights || !!this.notTextFlag?.has(i.id));
-            if(!items || items.length === 0) return;
+            // Items removed or cleared since they were queued aren't rendered.
+            items = Array.from(this.pendingRender).filter(i => this.items.includes(i) && (!this.experimentalHighlights || !!this.notTextFlag?.has(i.id)));
+            this.pendingRender.clear();
+            if(items.length === 0) return;
             const groupContainer = this.requireContainer() as HTMLDivElement;
             groupContainer.append(...items.map(i => i.container).filter(c => !!c) as Node[])
         });
@@ -1135,6 +1218,29 @@ class DecorationGroup {
             this.wnd.getComputedStyle(this.wnd.document.documentElement).getPropertyValue("background-color");
     }
 
+    private maskFrame = 0;
+    // Removing and adding masks in the same frame then goes straight from the old mask to the new one.
+    private scheduleMaskUpdate() {
+        if (this.maskFrame) return;
+        this.maskFrame = this.wnd.requestAnimationFrame(() => {
+            this.maskFrame = 0;
+            this.updateSharedMask();
+        });
+    }
+
+    private removeShadowHost() {
+        this.shadowHost?.remove();
+        this.shadowHost = undefined;
+        this.shadowRoot = undefined;
+    }
+
+    // Unset, the background is computed as fully transparent (e.g. rgba(0, 0, 0, 0)), which would leave a mask invisible.
+    private opaqueBackgroundColor(): string | undefined {
+        const color = this.getBackgroundColor().trim();
+        const transparent = /^rgba\(.*,\s*(0|0?\.0+)\s*\)$|\/\s*(0|0?\.0+)\s*\)$/;
+        return !color || color === "transparent" || transparent.test(color) ? undefined : color;
+    }
+
     private updateSharedMask() {
         const maskItems = this.items.filter(item =>
             item.decoration.style?.type === DecorationStyleType.Mask
@@ -1147,13 +1253,12 @@ class DecorationGroup {
                 this.maskSvg = undefined;
             }
             // Only tear down the shared shadow host if no other decorations use it
-            if (this.shadowHost && !this.container) {
-                this.shadowHost.remove();
-                this.shadowRoot = undefined;
-                this.shadowHost = undefined;
-            }
+            if (!this.container) this.removeShadowHost();
             return;
         }
+
+        // Measured without the mask, which would otherwise keep the document as large as when last drawn.
+        if (this.maskSvg) this.maskSvg.style.display = "none";
 
         const ctx = makeWritingContext(this.wnd);
 
@@ -1161,8 +1266,8 @@ class DecorationGroup {
 
         // Collect all hole rects from mask decorations
         const docEl = this.wnd.document.documentElement;
-        const docW = docEl.scrollWidth;
-        const docH = docEl.scrollHeight;
+        const docW = docEl.scrollWidth * iz;
+        const docH = docEl.scrollHeight * iz;
         const allHoleRects: DOMRect[] = [];
         for (const item of maskItems) {
             const style  = item.decoration.style as BuiltinDecorationStyle;
@@ -1203,16 +1308,14 @@ class DecorationGroup {
         }
 
         // Build SVG path with all holes (physical coords — always left/top regardless of writing mode)
-        const pathData = [
-            `M0 0 H${docW} V${docH} H0 Z`,
-            ...allHoleRects.map(r => {
-                const l  = (r.left   + ctx.xDocOffset) * iz;
-                const t  = (r.top    + ctx.yDocOffset) * iz;
-                const ri = (r.right  + ctx.xDocOffset) * iz;
-                const b  = (r.bottom + ctx.yDocOffset) * iz;
-                return `M${l} ${t} H${ri} V${b} H${l} Z`;
-            }),
-        ].join(" ");
+        // Consecutive lines can belong to different decorations, e.g. the pieces of one utterance.
+        const pathData = this.closeInterlines(ctx, allHoleRects).map(r => {
+            const l  = (r.left   + ctx.xDocOffset) * iz;
+            const t  = (r.top    + ctx.yDocOffset) * iz;
+            const ri = (r.right  + ctx.xDocOffset) * iz;
+            const b  = (r.bottom + ctx.yDocOffset) * iz;
+            return `M${l} ${t} H${ri} V${b} H${l} Z`;
+        }).join(" ");
 
         const svgNS = "http://www.w3.org/2000/svg";
 
@@ -1228,23 +1331,26 @@ class DecorationGroup {
             
             // Create SVG in shared shadow root
             this.maskSvg = this.wnd.document.createElementNS(svgNS, "svg") as SVGSVGElement;
-            this.maskSvg.style.cssText = `position:absolute;top:0;left:0;width:${docW}px;height:${docH}px;pointer-events:none;z-index:2147483647`;
+            this.maskSvg.style.cssText = `position:absolute;top:0;left:0;width:${docW}px;height:${docH}px;pointer-events:none;z-index:${OVERLAY_Z_INDEX - 1}`;
             this.maskSvg.dataset.readium = "true";
             const defs = this.wnd.document.createElementNS(svgNS, "defs");
-            const clipPath = this.wnd.document.createElementNS(svgNS, "clipPath") as SVGClipPathElement;
-            const clipId = `${this.id}-mask-clip`;
-            clipPath.setAttribute("id", clipId);
-            clipPath.setAttribute("clipPathUnits", "userSpaceOnUse");
+            // Holes are painted black on white, so overlapping holes stay holes.
+            const mask = this.wnd.document.createElementNS(svgNS, "mask") as SVGMaskElement;
+            const maskId = `${this.id}-mask-holes`;
+            mask.setAttribute("id", maskId);
+            mask.setAttribute("maskUnits", "userSpaceOnUse");
+            const visible = this.wnd.document.createElementNS(svgNS, "rect") as SVGRectElement;
+            visible.setAttribute("fill", "white");
             const svgPath = this.wnd.document.createElementNS(svgNS, "path") as SVGPathElement;
-            svgPath.setAttribute("clip-rule", "evenodd");
-            clipPath.appendChild(svgPath);
-            defs.appendChild(clipPath);
+            svgPath.setAttribute("fill", "black");
+            mask.append(visible, svgPath);
+            defs.appendChild(mask);
             this.maskSvg.appendChild(defs);
-            
+
             // Add SVG rect for the overlay (bypasses ReadiumCSS)
             const maskRect = this.wnd.document.createElementNS(svgNS, "rect") as SVGRectElement;
             maskRect.setAttribute("id", `${this.id}-mask-rect`);
-            maskRect.setAttribute("clip-path", `url(#${clipId})`);
+            maskRect.setAttribute("mask", `url(#${maskId})`);
             maskRect.style.pointerEvents = "none";
             this.maskSvg.appendChild(maskRect);
             
@@ -1252,24 +1358,29 @@ class DecorationGroup {
         }
 
         // Update SVG dimensions to cover full document
+        this.maskSvg.style.display = "";
         this.maskSvg.style.width = `${docW}px`;
         this.maskSvg.style.height = `${docH}px`;
 
+        const visible = this.maskSvg.querySelector("mask > rect");
+        visible?.setAttribute("width", String(docW));
+        visible?.setAttribute("height", String(docH));
+
         // Update the path data
-        const svgPath = this.maskSvg.querySelector("path") as SVGPathElement;
+        const svgPath = this.maskSvg.querySelector("mask > path") as SVGPathElement;
         if (svgPath) {
             svgPath.setAttribute("d", pathData);
         }
 
         // Update the mask rect
-        const maskRect = this.maskSvg.querySelector("rect") as SVGRectElement;
+        const maskRect = this.maskSvg.querySelector(":scope > rect") as SVGRectElement;
         if (maskRect) {
             const firstMaskStyle = maskItems[0].decoration.style as BuiltinDecorationStyle;
             const userTint = firstMaskStyle.tint;
-            // User-supplied tint: alpha is their responsibility (SVG fill respects rgba natively).
-            // Background color fallback: always fully opaque, so apply default dimming.
-            const fillColor   = userTint ?? this.getBackgroundColor() ?? defaultTint(DecorationStyleType.Mask);
-            const fillOpacity = userTint ? "1" : "0.5";
+            // Tints carry their own alpha; the background is opaque, so it's applied at half opacity.
+            const background  = userTint ? undefined : this.opaqueBackgroundColor();
+            const fillColor   = userTint ?? background ?? defaultTint(DecorationStyleType.Mask);
+            const fillOpacity = background ? "0.5" : "1";
             maskRect.setAttribute("x", "0");
             maskRect.setAttribute("y", "0");
             maskRect.setAttribute("width", String(docW));
@@ -1277,6 +1388,28 @@ class DecorationGroup {
             maskRect.setAttribute("fill", fillColor);
             maskRect.setAttribute("fill-opacity", fillOpacity);
         }
+    }
+
+    /** Stretches the holes of adjacent lines to meet halfway, so the space between them isn't dimmed. */
+    private closeInterlines(ctx: WritingContext, holes: DOMRect[]): DOMRect[] {
+        const boxes = holes.map(hole => ({
+            i0: ctx.inlineStart(hole), i1: ctx.inlineStart(hole) + ctx.inlineSize(hole),
+            b0: ctx.blockStart(hole), b1: ctx.blockStart(hole) + ctx.blockSize(hole),
+        })).sort((r1, r2) => r1.b0 - r2.b0);
+        const ends = boxes.map(box => box.b1);
+        const starts = boxes.map(box => box.b0);
+        boxes.forEach((box, i) => {
+            // Fragments overlapping it inline and starting less than a line after it, nearest first.
+            const after = boxes.flatMap((other, j) => other.b0 >= box.b1 && other.i0 < box.i1 && other.i1 > box.i0
+                && other.b0 - box.b1 < Math.min(box.b1 - box.b0, other.b1 - other.b0) ? [j] : []);
+            if (after.length === 0) return;
+            const nearest = boxes[after[0]];
+            const mid = (box.b1 + nearest.b0) / 2;
+            ends[i] = mid;
+            // The next line is made of the fragments starting before the nearest one ends.
+            for (const j of after) if (boxes[j].b0 < nearest.b1) starts[j] = Math.min(starts[j], mid);
+        });
+        return boxes.map((box, i) => ctx.toRect(box.i0, starts[i], box.i1 - box.i0, ends[i] - starts[i]));
     }
 
     private injectCustomStylesheet(css: string) {

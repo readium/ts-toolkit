@@ -1,0 +1,14 @@
+{
+  "id": "table-cell-noteref",
+  "description": "A noteref inside a data cell becomes a placeholder in that cell's own text, its footnote embedded",
+  "role": "table",
+  "rolesCovered": [
+    "table",
+    "row",
+    "cell",
+    "noteref",
+    "footnote"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

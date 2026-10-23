@@ -1,0 +1,32 @@
+{
+  "children": [
+    {
+      "id": "note-café",
+      "children": [
+        {
+          "role": [
+            "aside",
+            "footnote"
+          ],
+          "text": {
+            "plain": "Note."
+          }
+        }
+      ],
+      "role": [
+        "noteref"
+      ],
+      "text": {
+        "plain": "1"
+      }
+    }
+  ],
+  "role": [
+    "paragraph"
+  ],
+  "text": {
+    "plain": "Text.",
+    "ssml": "Text<readium:noteref id=\"note-café\" />.",
+    "language": "en"
+  }
+}
