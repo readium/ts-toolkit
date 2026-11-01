@@ -36,7 +36,8 @@ export class FXLFrameManager {
         debugHref: string,
         contentProtectionConfig: IContentProtectionConfig = {},
         keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = [],
-        resizeWatchSelectors: string[] = []
+        resizeWatchSelectors: string[] = [],
+        sandbox = "allow-same-origin allow-scripts"
     ) {
         this.peripherals = peripherals;
         this.debugHref = debugHref;
@@ -45,7 +46,7 @@ export class FXLFrameManager {
         this.keyboardPeripheralsConfig = [...keyboardPeripheralsConfig];
         this.resizeWatchSelectors = [...resizeWatchSelectors];
         this.frame = document.createElement("iframe");
-        this.frame.sandbox.value = "allow-same-origin allow-scripts";
+        this.frame.sandbox.value = sandbox;
         this.frame.classList.add("readium-navigator-iframe");
         this.frame.classList.add("blank");
         this.frame.scrolling = "no";

@@ -26,6 +26,7 @@ export class FramePoolManager {
     private resizeWatchSelectors: string[];
     private readonly getFragmentIds: (href: string) => string[];
     private readonly upgradeInsecureRequests: UpgradeInsecureRequests;
+    private readonly frameSandbox?: string;
 
     constructor(
         container: HTMLElement,
@@ -36,7 +37,8 @@ export class FramePoolManager {
         keyboardPeripheralsConfig?: IKeyboardPeripheralsConfig,
         getFragmentIds?: (href: string) => string[],
         resizeWatchSelectors: string[] = [],
-        upgradeInsecureRequests?: UpgradeInsecureRequests
+        upgradeInsecureRequests?: UpgradeInsecureRequests,
+        frameSandbox?: string
     ) {
         this.container = container;
         this.positions = positions;
@@ -47,6 +49,7 @@ export class FramePoolManager {
         this.getFragmentIds = getFragmentIds ?? (() => []);
         this.resizeWatchSelectors = [...resizeWatchSelectors];
         this.upgradeInsecureRequests = upgradeInsecureRequests ?? 'always';
+        this.frameSandbox = frameSandbox;
     }
 
     addResizeTarget(selector: string): void {
@@ -189,7 +192,7 @@ export class FramePoolManager {
                 }
 
                 // Create <iframe>
-                const fm = new FrameManager(await this.blobs.get(href)!.build(), this.contentProtectionConfig, this.keyboardPeripheralsConfig, this.getFragmentIds(href), this.resizeWatchSelectors);
+                const fm = new FrameManager(await this.blobs.get(href)!.build(), this.contentProtectionConfig, this.keyboardPeripheralsConfig, this.getFragmentIds(href), this.resizeWatchSelectors, this.frameSandbox);
                 if(href !== newHref) await fm.hide(); // Avoid unecessary hide
                 this.container.appendChild(fm.iframe);
                 await fm.load(modules);

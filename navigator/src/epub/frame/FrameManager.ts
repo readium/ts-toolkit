@@ -28,10 +28,11 @@ export class FrameManager {
         contentProtectionConfig: IContentProtectionConfig = {},
         keyboardPeripheralsConfig: IKeyboardPeripheralsConfig = [],
         private readonly timelineFragmentIds: string[] = [],
-        resizeWatchSelectors: string[] = []
+        resizeWatchSelectors: string[] = [],
+        sandbox = "allow-same-origin allow-scripts"
     ) {
         this.frame = document.createElement("iframe");
-        this.frame.sandbox.value = "allow-same-origin allow-scripts";
+        this.frame.sandbox.value = sandbox;
         this.frame.classList.add("readium-navigator-iframe");
         this.frame.style.visibility = "hidden";
         this.frame.ariaHidden = "true";
