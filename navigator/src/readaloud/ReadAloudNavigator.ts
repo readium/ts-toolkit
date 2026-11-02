@@ -19,6 +19,7 @@ import {
 } from "@readium/speech";
 import { Navigator, VisualNavigatorViewport } from "../Navigator.ts";
 import { Decoration, DecorableNavigator } from "../decorations/index.ts";
+import { sameVoice } from "../helpers/voice.ts";
 import type { EpubSettings } from "../epub/preferences/index.ts";
 import type { WebPubSettings } from "../webpub/preferences/index.ts";
 import type { DivinaSettings } from "../divina/preferences/index.ts";
@@ -55,6 +56,8 @@ export interface ReadAloudListeners {
     /** The reader moved away from the spoken text, or came back to it. */
     detachedChanged?: (detached: boolean) => void;
     wordChanged?: (locator: Locator, word: string) => void;
+    /** The voices `settings.voice` gives each language changed, e.g. once picked. */
+    voicesChanged?: () => void;
     error?: (error: unknown) => void;
 }
 
@@ -409,8 +412,11 @@ export class ReadAloudNavigator {
     async submitPreferences(preferences: ReadAloudPreferences): Promise<void> {
         this._preferences = this._preferences.merging(preferences);
         const old = this.speech.getContentQueue();
+        const previousVoice = this.speech.settings.voice;
         await this.speech.submitPreferences(ReadAloudNavigator.speechPreferences(this._preferences, this.navigator.publication.metadata.languages?.[0]));
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
+        // Speech picks voices again, without telling, when the main voice or language changes
+        if (!sameVoice(previousVoice, this._settings.voice)) this.listeners.voicesChanged?.();
         if (!this._settings.detachable && this._detached) this.attach();
         // Speech keeps its place in a rebuilt queue only while playing or paused itself, not while stopped here.
         const held = this.pausedBefore ?? this.turning;
@@ -453,6 +459,7 @@ export class ReadAloudNavigator {
                 this.notifyState();
             }));
         };
+        on("voiceschanged", () => this.listeners.voicesChanged?.());
         on("start", event => {
             // Engines that don't report the voice speaking are taken to use theirs.
             this.spokenVoice = event.detail?.voice ?? this.engine.getCurrentVoice();

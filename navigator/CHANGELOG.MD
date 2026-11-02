@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `voicesChanged` read-aloud listener, called when the voices `settings.voice` gives each language change, e.g. once picked
+
 ### Changed
 
 - Read aloud gives content in each of the publication's languages a voice of its own language, picked by `@readium/speech`'s `ReadiumSpeechNavigator`, and `settings.voice` has one for each of them before any is set
