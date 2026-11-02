@@ -172,13 +172,14 @@ interface IComms {
 |------|-------|
 | `Decoration` | `{ id, locator, style, extras? }` — `locator` is a `Locator` from `@readium/shared` |
 | `DecorationStyle` | `BuiltinDecorationStyle \| HTMLDecorationTemplate \| NamedDecorationStyle` |
-| `BuiltinDecorationStyle` | `{ type?, tint?, layout?, width?, enforceContrast?, expand? }` |
+| `BuiltinDecorationStyle` | `{ type?, tint?, layout?, width?, enforceContrast?, expand?, thickness?, lineStyle?, offset? }` — `expand`, `thickness` and `offset` are in CSS pixels; `thickness` on `textColor` has no effect in WebKit |
 | `HTMLDecorationTemplate` | `{ type: "template", layout, width, element, stylesheet? }` — `element` is a function `(decoration) => string`, resolved to HTML per decoration before rendering |
 | `NamedDecorationStyle` | `{ type: string }` — reference to a style registered in `DecoratorConfig.decorationTemplates` |
 | `DecoratorConfig` | `{ decorationTemplates?, resizeWatchSelectors? }` — same shape as `DecorationControllerConfig` (the latter is a type alias of this) |
 | `DecorationStyleType` | `"highlight" \| "highlightUnderline" \| "underline" \| "strikethrough" \| "outline" \| "textColor" \| "mask" \| "template"` |
 | `DecorationLayout` | `"boxes" \| "bounds"` |
 | `DecorationWidth` | `"wrap" \| "viewport" \| "bounds" \| "page"` |
+| `DecorationLineStyle` | `"solid" \| "dashed" \| "dotted"` |
 | `DecorationObserver` | `{ onDecorationActivated?, onDecorationPointerEnter?, onDecorationPointerLeave? }` |
 | `OnDecorationActivatedEvent` | `{ decoration, group, rect, point }` |
 | `OnDecorationPointerEnterEvent` | `{ decoration, group, rect, point }` |

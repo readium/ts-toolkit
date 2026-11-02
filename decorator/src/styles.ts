@@ -113,7 +113,10 @@ function stylesEqual(a: DecorationStyle, b: DecorationStyle): boolean {
         ba.layout === bb.layout &&
         ba.width === bb.width &&
         (ba.enforceContrast ?? true) === (bb.enforceContrast ?? true) &&
-        (ba.expand ?? 0) === (bb.expand ?? 0);
+        (ba.expand ?? 0) === (bb.expand ?? 0) &&
+        ba.thickness === bb.thickness &&
+        ba.lineStyle === bb.lineStyle &&
+        (ba.offset ?? 0) === (bb.offset ?? 0);
 }
 
 export function decorationsEqual(a: Decoration, b: Decoration): boolean {

@@ -8,6 +8,7 @@ export {
     DecorationStyleType,
     DecorationLayout,
     DecorationWidth,
+    DecorationLineStyle,
 } from "@readium/navigator-html-injectables";
 
 export * from "./styles.ts";

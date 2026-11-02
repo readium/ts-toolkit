@@ -17,6 +17,7 @@ export {
     DecorationStyleType,
     DecorationLayout,
     DecorationWidth,
+    DecorationLineStyle,
     BUILTIN_DECORATION_TYPES,
     resolveDecorationForWire,
     decorationsEqual,
