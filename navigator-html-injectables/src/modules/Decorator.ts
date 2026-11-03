@@ -853,13 +853,13 @@ class DecorationGroup {
         el.style.setProperty(ctx.isVertical ? "border-left-width" : "border-top-width", `${ctx.blockSize(rect) * iz}px`, "important");
     }
 
-    /** Outline stroke width and inset needed for Page/Viewport widths, in CSS pixels. */
+    /** Outline stroke width in CSS pixels, and inset needed for Page/Viewport widths in client-rect units. */
     private outlineMetrics(item: DecorationItem): { stroke: number; inset: number } {
         const style = item.decoration.style as BuiltinDecorationStyle;
         if (style.type !== DecorationStyleType.Outline) return { stroke: 0, inset: 0 };
         const stroke = style.thickness ?? outlineStrokeWidth;
         // For Page/Viewport widths the snap edge coincides with the viewport edge, so the outline would be clipped.
-        const inset = style.width === DecorationWidth.Page || style.width === DecorationWidth.Viewport ? stroke + outlineOffset : 0;
+        const inset = style.width === DecorationWidth.Page || style.width === DecorationWidth.Viewport ? (stroke + outlineOffset) * this.effectiveZoom() : 0;
         return { stroke, inset };
     }
 

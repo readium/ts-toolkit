@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `expand` is now applied in CSS pixels when the document is zoomed in Blink, instead of shrinking with the zoom level
+- `outline` decorations with `width: page` or `width: viewport` are no longer clipped at the viewport edges when the document is zoomed in Blink
 
 ## [2.9.2] – 2026-10-23
 
