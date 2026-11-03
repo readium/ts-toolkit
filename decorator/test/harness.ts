@@ -102,6 +102,8 @@ export function applyDocumentParams(params: URLSearchParams) {
         root.style.setProperty("column-gap", "0");
         root.style.setProperty("column-fill", "auto");
     }
+    // A positioned root moves where overlays are positioned from, as reading systems' stylesheets may do.
+    if (params.has("positioned")) root.style.position = "relative";
     const zoom = params.get("zoom");
     if (zoom) root.style.setProperty("zoom", zoom);
 }

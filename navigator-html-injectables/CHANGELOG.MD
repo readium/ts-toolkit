@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.10.0] – 2026-11-03
+## [2.10.0] – 2026-11-04
 
 ### Added
 
@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `outline` and `highlightUnderline` decorations no longer draw a separate box around ruby annotations, as `underline` and `strikethrough` already did
 - `underline` and `strikethrough` decorations drawn over the page include images and other content without text, instead of leaving them out
 - `underline` and `strikethrough` lines drawn over the page keep the position of the surrounding text past raised elements such as `sup`, and images, as CSS text decorations do
+- In vertical-rl pages whose root element isn't positioned, decorations drawn over the page sit on their text instead of being shifted by the document's scrollable width, and `mask` decorations cover the whole document
+- `outline` decorations are drawn in WebKit in vertical-rl
 
 ## [2.9.2] – 2026-10-23
 

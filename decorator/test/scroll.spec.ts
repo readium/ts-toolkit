@@ -4,7 +4,7 @@ import { settle, writingModes } from "./support.ts";
 // The viewport is scrolled halfway, so decorations are positioned with non-zero scroll offsets.
 for (const type of ["outline", "mask"]) {
     test.describe(type, () => {
-        for (const mode of writingModes) {
+        for (const mode of [...writingModes, { name: "vertical-rl-positioned", query: "wm=vertical-rl&positioned" }]) {
             test(mode.name, async ({ page }) => {
                 await page.goto(`/grid.html?type=${type}&${mode.query}`);
                 await settle(page);

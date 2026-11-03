@@ -624,6 +624,7 @@ class DecorationGroup {
     repositionOverlays() {
         const relaidOut: DecorationItem[] = [];
         const ctx = makeWritingContext(this.wnd);
+        let overlayCtx: WritingContext | undefined;
         this.items.forEach(item => {
             if (this.experimentalHighlights && !this.notTextFlag?.has(item.id)) return;
             // Scrolling inside a container moves the text without scrolling the document.
@@ -631,7 +632,7 @@ class DecorationGroup {
                 this.scheduleMaskUpdate();
                 return;
             }
-            if (!this.repositionItem(item, ctx)) {
+            if (!this.repositionItem(item, overlayCtx ??= this.overlayContext())) {
                 item.container?.remove();
                 this.layout(item);
                 relaidOut.push(item);
@@ -1175,7 +1176,7 @@ class DecorationGroup {
         // itemContainer.dataset.style = item.decoration.style; // TODO style
         itemContainer.style.setProperty("pointer-events", "none");
 
-        const ctx = makeWritingContext(this.wnd);
+        const ctx = this.overlayContext();
 
         const iz = 1 / this.effectiveZoom();
 
@@ -1231,7 +1232,8 @@ class DecorationGroup {
                 const svgNS = "http://www.w3.org/2000/svg";
                 const svg = this.wnd.document.createElementNS(svgNS, "svg");
                 svg.dataset.readium = "true";
-                svg.style.cssText = `position:absolute;top:0;left:0;width:1px;height:1px;overflow:visible;pointer-events:none;z-index:${OVERLAY_Z_INDEX}`;
+                // WebKit doesn't paint an SVG's overflow in vertical-rl, so the SVG keeps a horizontal writing mode.
+                svg.style.cssText = `position:absolute;top:0;left:0;width:1px;height:1px;overflow:visible;writing-mode:horizontal-tb;pointer-events:none;z-index:${OVERLAY_Z_INDEX}`;
                 const path = this.wnd.document.createElementNS(svgNS, "path");
                 path.setAttribute("fill", "none");
                 path.setAttribute("stroke", applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint);
@@ -1367,6 +1369,22 @@ class DecorationGroup {
         });
     }
 
+    /** The shared shadow host overlays are drawn in, created on first use. */
+    private requireShadowHost(): HTMLDivElement {
+        if (!this.shadowHost || !this.shadowRoot) {
+            this.shadowHost = this.wnd.document.createElement("div");
+            this.shadowHost.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none";
+            this.wnd.document.body.appendChild(this.shadowHost);
+            this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" });
+        }
+        return this.shadowHost;
+    }
+
+    /** Context for drawing overlays, whose offsets are measured from the shadow host wherever the page positions it. */
+    private overlayContext(): WritingContext {
+        return makeWritingContext(this.wnd, this.requireShadowHost());
+    }
+
     /**
      * Returns the group container element, after making sure it exists.
      * @returns Group's container
@@ -1388,14 +1406,8 @@ class DecorationGroup {
         }
 
         if (!this.container) {
-            // Create shared shadow host if it doesn't exist
-            if (!this.shadowRoot) {
-                this.shadowHost = this.wnd.document.createElement("div");
-                this.shadowHost.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none";
-                this.wnd.document.body.appendChild(this.shadowHost);
-                this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" });
-            }
-            
+            this.requireShadowHost();
+
             // Create container in shared shadow root
             this.container = this.wnd.document.createElement("div");
             this.container.setAttribute("id", this.id);
@@ -1403,7 +1415,7 @@ class DecorationGroup {
             this.container.dataset.readium = "true";
             this.container.style.setProperty("pointer-events", "none");
             this.container.style.display = "contents";
-            this.shadowRoot.appendChild(this.container);
+            this.shadowRoot!.appendChild(this.container);
         }
         return this.container;
     }
@@ -1460,7 +1472,7 @@ class DecorationGroup {
         // Measured without the mask, which would otherwise keep the document as large as when last drawn.
         if (this.maskSvg) this.maskSvg.style.display = "none";
 
-        const ctx = makeWritingContext(this.wnd);
+        const ctx = this.overlayContext();
 
         const iz = 1 / this.effectiveZoom();
 
@@ -1468,6 +1480,11 @@ class DecorationGroup {
         const docEl = this.wnd.document.documentElement;
         const docW = docEl.scrollWidth * iz;
         const docH = docEl.scrollHeight * iz;
+        // The document's top-left corner in overlay coordinates; it extends left of the viewport when scrolling towards negative scrollLeft.
+        const se = this.wnd.document.scrollingElement!;
+        const startsRight = ctx.isVertical ? !ctx.isVertLR : this.wnd.getComputedStyle(docEl).direction === "rtl";
+        const docX = ((startsRight ? se.clientWidth - se.scrollWidth : 0) - se.scrollLeft + ctx.xDocOffset) * iz;
+        const docY = (-se.scrollTop + ctx.yDocOffset) * iz;
         const allHoleRects: DOMRect[] = [];
         for (const item of maskItems) {
             const style  = item.decoration.style as BuiltinDecorationStyle;
@@ -1521,14 +1538,8 @@ class DecorationGroup {
 
         // Create or update SVG
         if (!this.maskSvg) {
-            // Ensure shared shadow host exists
-            if (!this.shadowRoot) {
-                this.shadowHost = this.wnd.document.createElement("div");
-                this.shadowHost.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none";
-                this.wnd.document.body.appendChild(this.shadowHost);
-                this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" });
-            }
-            
+            this.requireShadowHost();
+
             // Create SVG in shared shadow root
             this.maskSvg = this.wnd.document.createElementNS(svgNS, "svg") as SVGSVGElement;
             this.maskSvg.style.cssText = `position:absolute;top:0;left:0;width:${docW}px;height:${docH}px;pointer-events:none;z-index:${OVERLAY_Z_INDEX - 1}`;
@@ -1559,10 +1570,15 @@ class DecorationGroup {
 
         // Update SVG dimensions to cover full document
         this.maskSvg.style.display = "";
+        this.maskSvg.style.left = `${docX}px`;
+        this.maskSvg.style.top = `${docY}px`;
         this.maskSvg.style.width = `${docW}px`;
         this.maskSvg.style.height = `${docH}px`;
+        this.maskSvg.setAttribute("viewBox", `${docX} ${docY} ${docW} ${docH}`);
 
         const visible = this.maskSvg.querySelector("mask > rect");
+        visible?.setAttribute("x", String(docX));
+        visible?.setAttribute("y", String(docY));
         visible?.setAttribute("width", String(docW));
         visible?.setAttribute("height", String(docH));
 
@@ -1581,8 +1597,8 @@ class DecorationGroup {
             const background  = userTint ? undefined : this.opaqueBackgroundColor();
             const fillColor   = userTint ?? background ?? defaultTint(DecorationStyleType.Mask);
             const fillOpacity = background ? "0.5" : "1";
-            maskRect.setAttribute("x", "0");
-            maskRect.setAttribute("y", "0");
+            maskRect.setAttribute("x", String(docX));
+            maskRect.setAttribute("y", String(docY));
             maskRect.setAttribute("width", String(docW));
             maskRect.setAttribute("height", String(docH));
             maskRect.setAttribute("fill", fillColor);
