@@ -176,7 +176,7 @@ interface IComms {
 | `HTMLDecorationTemplate` | `{ type: "template", layout, width, element, stylesheet? }` — `element` is a function `(decoration) => string`, resolved to HTML per decoration before rendering |
 | `NamedDecorationStyle` | `{ type: string }` — reference to a style registered in `DecoratorConfig.decorationTemplates` |
 | `DecoratorConfig` | `{ decorationTemplates?, resizeWatchSelectors? }` — same shape as `DecorationControllerConfig` (the latter is a type alias of this) |
-| `DecorationStyleType` | `"highlight" \| "highlightUnderline" \| "underline" \| "strikethrough" \| "outline" \| "textColor" \| "mask" \| "template"` |
+| `DecorationStyleType` | `"highlight" \| "highlightUnderline" \| "underline" \| "strikethrough" \| "outline" \| "textColor" \| "mask" \| "template"` — in vertical writing, `underline` and `highlightUnderline` lines drawn over the page are on the right, as for CJK text, including on sideways text such as Latin |
 | `DecorationLayout` | `"boxes" \| "bounds"` |
 | `DecorationWidth` | `"wrap" \| "viewport" \| "bounds" \| "page"` |
 | `DecorationLineStyle` | `"solid" \| "dashed" \| "dotted" \| "wavy"` — `wavy` is drawn solid on a `strikethrough` with `layout: bounds` |

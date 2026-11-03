@@ -68,14 +68,28 @@ const rtlFixtures: Fixture[] = [
     },
 ];
 
+const verticalFixtures: Fixture[] = [
+    {
+        html: "灯台守は通り過ぎる船を数え、ずっと前に黄ばんだ帳面の頁にひとつひとつの名を書き留めた。霧が立ちこめると、代わりに汽笛を数え、見えない船体を思い描いた。",
+        highlight: "ずっと前に黄ばんだ帳面の頁にひとつひとつの名を書き留めた。霧が立ちこめると、代わりに汽笛を数え",
+    },
+    {
+        html: "どの記録にも日付<sup>1</sup>、<code>船体</code>の種類、短い<em>天気の覚え書き</em>、そして船が出た<ruby>港<rp>(</rp><rt>みなと</rt><rp>)</rp></ruby>が記され、帳面はとても長い手紙のようになった。",
+        highlight: "日付1、船体の種類、短い天気の覚え書き、そして船が出た港(みなと)",
+    },
+];
+
 export function fixturesFor(params: URLSearchParams): Fixture[] {
-    return params.get("dir") === "rtl" ? rtlFixtures : ltrFixtures;
+    if (params.get("dir") === "rtl") return rtlFixtures;
+    // vertical-lr is mainly used by Mongolian, which CI has no reliable font for.
+    return params.get("wm") === "vertical-rl" ? verticalFixtures : ltrFixtures;
 }
 
 /** Applies the writing mode, direction, columns and zoom requested in the URL to the document. */
 export function applyDocumentParams(params: URLSearchParams) {
     const root = document.documentElement;
     root.style.writingMode = params.get("wm") ?? "horizontal-tb";
+    if (root.style.writingMode === "vertical-rl") root.lang = "ja";
     if (params.get("dir") === "rtl") {
         root.dir = "rtl";
         root.lang = "ar";

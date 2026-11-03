@@ -869,22 +869,47 @@ class DecorationGroup {
     /** Tiling SVG wave for a CSS background, one wavelength long and three stroke widths across. */
     private static waveImage(tint: string, vertical: boolean): string {
         const [viewBox, path] = vertical ? ["0 0 3 6", "M1.5 0Q-0.5 1.5 1.5 3T1.5 6"] : ["0 0 6 3", "M0 1.5Q1.5 -0.5 3 1.5T6 1.5"];
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="${tint}" stroke-width="1"/></svg>`;
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="${tint}" stroke-width="1" stroke-linecap="round"/></svg>`;
         return `url('data:image/svg+xml,${encodeURIComponent(svg)}')`;
     }
 
-    /** Background declarations drawing a wavy underline, plus an overline for Bounds layout. */
-    private wavyUnderline(item: DecorationItem, ctx: WritingContext, tint: string, isBounds: boolean): string[] {
+    /**
+     * Declarations drawing an underline, plus an overline for Bounds layout, outside the element's box so
+     * thickness grows away from the text, with an optional fill kept over the text.
+     */
+    private underlineDeclarations(item: DecorationItem, ctx: WritingContext, tint: string, lineStyle: DecorationLineStyle, isBounds: boolean, fill?: string): string[] {
         const t = this.underlineWidth(item);
+        const [under, over] = ctx.isVertical ? ["right", "left"] : ["bottom", "top"];
+        const sides = isBounds ? [under, over] : [under];
+        // Content-box sizing adds borders and padding outside the positioned box; the overline is pulled back over it.
+        const declarations = ["box-sizing: content-box !important"];
+        if (lineStyle !== DecorationLineStyle.Wavy) {
+            declarations.push(...sides.map(side => `border-${side}: ${t} ${lineStyle} ${tint} !important`));
+            if (isBounds) declarations.push(`margin-${over}: calc(-1 * ${t}) !important`);
+            declarations.push(fill ? `background: ${fill} padding-box !important` : "background-color: transparent !important");
+            return declarations;
+        }
+        const band = `calc(3 * ${t})`;
+        declarations.push(...sides.map(side => `padding-${side}: ${band} !important`));
+        if (isBounds) declarations.push(`margin-${over}: calc(-1 * ${band}) !important`);
         const image = DecorationGroup.waveImage(tint, ctx.isVertical);
-        const [under, over] = ctx.isVertical ? ["right top", "left top"] : ["left bottom", "left top"];
-        const positions = isBounds ? [under, over] : [under];
-        return [
-            `background-image: ${positions.map(() => image).join(", ")} !important`,
-            `background-position: ${positions.join(", ")} !important`,
-            `background-size: ${ctx.isVertical ? `calc(3 * ${t}) calc(6 * ${t})` : `calc(6 * ${t}) calc(3 * ${t})`} !important`,
-            `background-repeat: ${ctx.isVertical ? "no-repeat round" : "round no-repeat"} !important`,
-        ];
+        const waves = sides.map(side => ({
+            position: ctx.isVertical ? `${side} top` : `left ${side}`,
+            size: ctx.isVertical ? `${band} calc(6 * ${t})` : `calc(6 * ${t}) ${band}`,
+            repeat: ctx.isVertical ? "no-repeat round" : "round no-repeat",
+        }));
+        // The fill is a last background layer clipped to the content box, so it stays off the waves' padding.
+        const layers = fill ? [...waves.map(w => ({ ...w, image, clip: "border-box" })), { image: `linear-gradient(${fill}, ${fill})`, position: "0 0", size: "auto", repeat: "no-repeat", clip: "content-box" }]
+            : waves.map(w => ({ ...w, image, clip: "border-box" }));
+        declarations.push(
+            `background-image: ${layers.map(l => l.image).join(", ")} !important`,
+            `background-position: ${layers.map(l => l.position).join(", ")} !important`,
+            `background-size: ${layers.map(l => l.size).join(", ")} !important`,
+            `background-repeat: ${layers.map(l => l.repeat).join(", ")} !important`,
+            `background-clip: ${layers.map(l => l.clip).join(", ")} !important`,
+            "background-color: transparent !important",
+        );
+        return declarations;
     }
 
     private underlineWidth(item: DecorationItem): string {
@@ -1199,25 +1224,7 @@ class DecorationGroup {
                     case DecorationStyleType.Underline: {
                         const adjustedUnderlineTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
                         const isBounds = style.layout === DecorationLayout.Bounds;
-                        const [underlineSide, overlineSide] = ctx.isVertical
-                            ? ["border-right", "border-left"]
-                            : ["border-bottom", "border-top"];
-                        const underlineBorder = `${this.underlineWidth(item)} ${lineStyle} ${adjustedUnderlineTint} !important`;
-                        if (lineStyle === DecorationLineStyle.Wavy) {
-                            return [
-                                ...this.wavyUnderline(item, ctx, adjustedUnderlineTint, isBounds),
-                                "background-color: transparent !important",
-                                "box-sizing: border-box !important",
-                            ].join("; ");
-                        }
-                        return [
-                            isBounds
-                                ? `${overlineSide}: ${underlineBorder}`
-                                : null,
-                            `${underlineSide}: ${underlineBorder}`,
-                            "background-color: transparent !important",
-                            "box-sizing: border-box !important",
-                        ].filter(Boolean).join("; ");
+                        return this.underlineDeclarations(item, ctx, adjustedUnderlineTint, lineStyle, isBounds).join("; ");
                     }
                     case DecorationStyleType.Strikethrough: {
                         const adjustedStrikeTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
@@ -1273,20 +1280,7 @@ class DecorationGroup {
                         const { r, g, b } = colorToRgba(adjustedHUTint);
                         const huFillTint = `rgba(${r}, ${g}, ${b}, 0.3)`;
                         const isBounds = style.layout === DecorationLayout.Bounds;
-                        const [huUnderlineSide, huOverlineSide] = ctx.isVertical
-                            ? ["border-right", "border-left"]
-                            : ["border-bottom", "border-top"];
-                        const huLines = lineStyle === DecorationLineStyle.Wavy
-                            ? this.wavyUnderline(item, ctx, adjustedHUTint, isBounds)
-                            : [
-                                isBounds ? `${huOverlineSide}: ${this.underlineWidth(item)} ${lineStyle} ${adjustedHUTint} !important` : null,
-                                `${huUnderlineSide}: ${this.underlineWidth(item)} ${lineStyle} ${adjustedHUTint} !important`,
-                            ];
-                        return [
-                            `background-color: ${huFillTint} !important`,
-                            ...huLines,
-                            "box-sizing: border-box !important",
-                        ].filter(Boolean).join("; ");
+                        return this.underlineDeclarations(item, ctx, adjustedHUTint, lineStyle, isBounds, huFillTint).join("; ");
                     }
                     case DecorationStyleType.Highlight:
                     default: {

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `expand` on an `underline` decoration also moves the line away from the text, as it already did with `layout: bounds`
+- The lines of `underline` and `highlightUnderline` decorations drawn over the page sit just outside the text instead of inside it, so thicker lines grow away from the text, as with the CSS Highlight API
 
 ### Fixed
 
