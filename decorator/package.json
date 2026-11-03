@@ -33,13 +33,17 @@
   },
   "scripts": {
     "clean": "rimraf types dist",
-    "build": "pnpm clean && tsc && vite build"
+    "build": "pnpm clean && tsc && vite build",
+    "test:serve": "vite --config test/vite.config.js --host",
+    "test": "playwright test",
+    "test:update": "playwright test --update-snapshots"
   },
   "dependencies": {
     "@readium/navigator-html-injectables": "workspace:*",
     "@readium/shared": "workspace:*"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "rimraf": "^6.1.2",
     "tslib": "^2.8.1",
     "typescript": "^5.9.3",
