@@ -1,6 +1,6 @@
 {
   "name": "@readium/decorator",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "type": "module",
   "description": "Standalone decoration controller and renderer for HTML content",
   "author": "readium",
