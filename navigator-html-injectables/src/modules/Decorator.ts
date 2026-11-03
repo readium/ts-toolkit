@@ -1011,8 +1011,6 @@ class DecorationGroup {
         }
 
         // Fall back to "boxes" value for layout.
-        // For underline/strikethrough, pre-filter to text-node rects only so Ruby
-        // (rt/rp) glyphs don't produce a separate decoration segment above the base text.
         const decoStyle = item.decoration.style;
         const decoType = (decoStyle as BuiltinDecorationStyle).type;
         const isLineDecoration = decoType === DecorationStyleType.Underline
@@ -1020,11 +1018,10 @@ class DecorationGroup {
         const isStrikethrough = decoType === DecorationStyleType.Strikethrough;
         const strikeWidth = isStrikethrough ? (decoStyle as BuiltinDecorationStyle).thickness : undefined;
         const isWavyStrike = isStrikethrough && (decoStyle as BuiltinDecorationStyle).lineStyle === DecorationLineStyle.Wavy;
+        // Styles drawing lines or strokes use text-node rects only, so Ruby (rt/rp) doesn't get its own segment
+        // above the base text; content without text, such as images, keeps its own boxes.
         let rectSource: Range | Rect[] = item.range;
-        if (isLineDecoration) {
-            rectSource = getTextClientRects(item.range, ["rt", "rp"]);
-        } else if (decoType === DecorationStyleType.Outline) {
-            // Same for outlines, but content without text, such as images, keeps its own boxes.
+        if (isLineDecoration || decoType === DecorationStyleType.Outline || decoType === DecorationStyleType.HighlightUnderline) {
             const textRects = getTextClientRects(item.range, ["rt", "rp"]);
             if (textRects.length) rectSource = textRects;
         }
