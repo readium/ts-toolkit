@@ -937,7 +937,8 @@ class DecorationGroup {
         const stroke = style.thickness ?? outlineStrokeWidth;
         const wave = style.lineStyle === DecorationLineStyle.Wavy ? stroke : 0;
         // For Page/Viewport widths the snap edge coincides with the viewport edge, so the outline would be clipped.
-        const inset = style.width === DecorationWidth.Page || style.width === DecorationWidth.Viewport ? (stroke + outlineOffset + wave) * this.effectiveZoom() : 0;
+        // A wave adds twice its amplitude: once to the path offset, once for its crests.
+        const inset = style.width === DecorationWidth.Page || style.width === DecorationWidth.Viewport ? (stroke + outlineOffset + wave * 2) * this.effectiveZoom() : 0;
         return { stroke, wave, inset };
     }
 
