@@ -179,7 +179,7 @@ interface IComms {
 | `DecorationStyleType` | `"highlight" \| "highlightUnderline" \| "underline" \| "strikethrough" \| "outline" \| "textColor" \| "mask" \| "template"` |
 | `DecorationLayout` | `"boxes" \| "bounds"` |
 | `DecorationWidth` | `"wrap" \| "viewport" \| "bounds" \| "page"` |
-| `DecorationLineStyle` | `"solid" \| "dashed" \| "dotted"` |
+| `DecorationLineStyle` | `"solid" \| "dashed" \| "dotted" \| "wavy"` — `wavy` is drawn solid on a `strikethrough` with `layout: bounds` |
 | `DecorationObserver` | `{ onDecorationActivated?, onDecorationPointerEnter?, onDecorationPointerLeave? }` |
 | `OnDecorationActivatedEvent` | `{ decoration, group, rect, point }` |
 | `OnDecorationPointerEnterEvent` | `{ decoration, group, rect, point }` |

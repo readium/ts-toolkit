@@ -50,6 +50,7 @@ export enum DecorationLineStyle {
     Solid = "solid",
     Dashed = "dashed",
     Dotted = "dotted",
+    Wavy = "wavy",
 }
 
 /** Built-in decoration styles. layout/width are optional overrides; defaults are Boxes/Wrap. */
@@ -837,7 +838,30 @@ class DecorationGroup {
     }
 
     private static isShapeOutline(style: DecorationStyle): boolean {
-        return style.type === DecorationStyleType.Outline && style.layout !== DecorationLayout.Bounds;
+        // CSS outlines can't be wavy, so a wavy Bounds outline is drawn as a path too.
+        return style.type === DecorationStyleType.Outline &&
+            (style.layout !== DecorationLayout.Bounds || (style as BuiltinDecorationStyle).lineStyle === DecorationLineStyle.Wavy);
+    }
+
+    /** Tiling SVG wave for a CSS background, one wavelength long and three stroke widths across. */
+    private static waveImage(tint: string, vertical: boolean): string {
+        const [viewBox, path] = vertical ? ["0 0 3 6", "M1.5 0Q-0.5 1.5 1.5 3T1.5 6"] : ["0 0 6 3", "M0 1.5Q1.5 -0.5 3 1.5T6 1.5"];
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="${tint}" stroke-width="1"/></svg>`;
+        return `url('data:image/svg+xml,${encodeURIComponent(svg)}')`;
+    }
+
+    /** Background declarations drawing a wavy underline, plus an overline for Bounds layout. */
+    private wavyUnderline(item: DecorationItem, ctx: WritingContext, tint: string, isBounds: boolean): string[] {
+        const t = this.underlineWidth(item);
+        const image = DecorationGroup.waveImage(tint, ctx.isVertical);
+        const [under, over] = ctx.isVertical ? ["right top", "left top"] : ["left bottom", "left top"];
+        const positions = isBounds ? [under, over] : [under];
+        return [
+            `background-image: ${positions.map(() => image).join(", ")} !important`,
+            `background-position: ${positions.join(", ")} !important`,
+            `background-size: ${ctx.isVertical ? `calc(3 * ${t}) calc(6 * ${t})` : `calc(6 * ${t}) calc(3 * ${t})`} !important`,
+            `background-repeat: ${ctx.isVertical ? "no-repeat round" : "round no-repeat"} !important`,
+        ];
     }
 
     private underlineWidth(item: DecorationItem): string {
@@ -845,29 +869,35 @@ class DecorationGroup {
         return thickness === undefined ? `${lineThickness}em` : `${thickness}px`;
     }
 
-    /** Sizes a dashed/dotted strikethrough's border to its thinned box, whose default size varies per line. */
-    private sizeStrikethroughBorder(item: DecorationItem, ctx: WritingContext, iz: number, el: HTMLElement, rect: Rect) {
+    /** Sizes a patterned strikethrough's border or wave to its thinned box, whose default size varies per line. */
+    private sizeStrikethroughPattern(item: DecorationItem, ctx: WritingContext, iz: number, el: HTMLElement, rect: Rect) {
         const { type, layout, lineStyle } = item.decoration.style as BuiltinDecorationStyle;
         if (type !== DecorationStyleType.Strikethrough || layout === DecorationLayout.Bounds) return;
         if (!lineStyle || lineStyle === DecorationLineStyle.Solid) return;
-        el.style.setProperty(ctx.isVertical ? "border-left-width" : "border-top-width", `${ctx.blockSize(rect) * iz}px`, "important");
+        const band = ctx.blockSize(rect) * iz;
+        if (lineStyle === DecorationLineStyle.Wavy) {
+            el.style.setProperty("background-size", ctx.isVertical ? `${band}px ${band * 2}px` : `${band * 2}px ${band}px`, "important");
+            return;
+        }
+        el.style.setProperty(ctx.isVertical ? "border-left-width" : "border-top-width", `${band}px`, "important");
     }
 
-    /** Outline stroke width in CSS pixels, and inset needed for Page/Viewport widths in client-rect units. */
-    private outlineMetrics(item: DecorationItem): { stroke: number; inset: number } {
+    /** Outline stroke width and wave amplitude in CSS pixels, and inset needed for Page/Viewport widths in client-rect units. */
+    private outlineMetrics(item: DecorationItem): { stroke: number; wave: number; inset: number } {
         const style = item.decoration.style as BuiltinDecorationStyle;
-        if (style.type !== DecorationStyleType.Outline) return { stroke: 0, inset: 0 };
+        if (style.type !== DecorationStyleType.Outline) return { stroke: 0, wave: 0, inset: 0 };
         const stroke = style.thickness ?? outlineStrokeWidth;
+        const wave = style.lineStyle === DecorationLineStyle.Wavy ? stroke : 0;
         // For Page/Viewport widths the snap edge coincides with the viewport edge, so the outline would be clipped.
-        const inset = style.width === DecorationWidth.Page || style.width === DecorationWidth.Viewport ? (stroke + outlineOffset) * this.effectiveZoom() : 0;
-        return { stroke, inset };
+        const inset = style.width === DecorationWidth.Page || style.width === DecorationWidth.Viewport ? (stroke + outlineOffset + wave) * this.effectiveZoom() : 0;
+        return { stroke, wave, inset };
     }
 
     /**
      * SVG path data outlining the overlay rects as one shape per run of adjacent lines,
      * `offset` outside them. Coordinates are in the shadow host's (document) space.
      */
-    private outlinePath(item: DecorationItem, ctx: WritingContext, iz: number, rects: Rect[], boundingRect: DOMRect, inlineInset: number, offset: number): string {
+    private outlinePath(item: DecorationItem, ctx: WritingContext, iz: number, rects: Rect[], boundingRect: DOMRect, inlineInset: number, offset: number, wave: number): string {
         // Block coordinates are negated in vertical-rl so lines always progress towards larger values.
         const flip = ctx.isVertical && !ctx.isVertLR ? -1 : 1;
         const boxes = rects.map(rect => {
@@ -898,19 +928,45 @@ class DecorationGroup {
             const mid = (k: number) => (run[k].b1 + run[k + 1].b0) / 2;
             // A step between two lines sits on the wider one's side, `offset` into the narrower one's band.
             const step = (k: number, wider: number) => mid(k) + Math.sign(wider) * offset;
-            const points: string[] = [toPoint(run[0].i1 + offset, run[0].b0 - offset)];
+            const points: [number, number][] = [[run[0].i1 + offset, run[0].b0 - offset]];
             for (let k = 0; k < n; k++) {
                 const b = step(k, run[k].i1 - run[k + 1].i1);
-                points.push(toPoint(run[k].i1 + offset, b), toPoint(run[k + 1].i1 + offset, b));
+                points.push([run[k].i1 + offset, b], [run[k + 1].i1 + offset, b]);
             }
-            points.push(toPoint(run[n].i1 + offset, run[n].b1 + offset), toPoint(run[n].i0 - offset, run[n].b1 + offset));
+            points.push([run[n].i1 + offset, run[n].b1 + offset], [run[n].i0 - offset, run[n].b1 + offset]);
             for (let k = n - 1; k >= 0; k--) {
                 const b = step(k, run[k + 1].i0 - run[k].i0);
-                points.push(toPoint(run[k + 1].i0 - offset, b), toPoint(run[k].i0 - offset, b));
+                points.push([run[k + 1].i0 - offset, b], [run[k].i0 - offset, b]);
             }
-            points.push(toPoint(run[0].i0 - offset, run[0].b0 - offset));
-            return `M${points.join(" L")} Z`;
+            points.push([run[0].i0 - offset, run[0].b0 - offset]);
+            return wave
+                ? DecorationGroup.wavyPolygon(points, wave, toPoint)
+                : `M${points.map(([i, b]) => toPoint(i, b)).join(" L")} Z`;
         }).join(" ");
+    }
+
+    /** Closed path through `points` (inline, block) as a wave with a node on every corner, so edges always join cleanly. */
+    private static wavyPolygon(points: [number, number][], wave: number, toPoint: (i: number, b: number) => string): string {
+        const halfWave = wave * 3;
+        let d = `M${toPoint(...points[0])}`;
+        points.forEach(([i0, b0], k) => {
+            const [i1, b1] = points[(k + 1) % points.length];
+            const length = Math.hypot(i1 - i0, b1 - b0);
+            // Edges shorter than a half-wave, such as small steps between lines, stay straight.
+            if (length < halfWave) {
+                d += ` L${toPoint(i1, b1)}`;
+                return;
+            }
+            const count = Math.round(length / halfWave);
+            const [di, db] = [(i1 - i0) / count, (b1 - b0) / count];
+            // A quadratic control point twice the amplitude off the edge puts the crest `wave` away from it.
+            const [ni, nb] = [-(b1 - b0) / length * wave * 2, (i1 - i0) / length * wave * 2];
+            for (let j = 0; j < count; j++) {
+                const sign = j % 2 ? -1 : 1;
+                d += ` Q${toPoint(i0 + di * (j + 0.5) + ni * sign, b0 + db * (j + 0.5) + nb * sign)} ${toPoint(i0 + di * (j + 1), b0 + db * (j + 1))}`;
+            }
+        });
+        return `${d} Z`;
     }
 
     /**
@@ -940,6 +996,7 @@ class DecorationGroup {
             || decoType === DecorationStyleType.Strikethrough;
         const isStrikethrough = decoType === DecorationStyleType.Strikethrough;
         const strikeWidth = isStrikethrough ? (decoStyle as BuiltinDecorationStyle).thickness : undefined;
+        const isWavyStrike = isStrikethrough && (decoStyle as BuiltinDecorationStyle).lineStyle === DecorationLineStyle.Wavy;
         const rectSource = isLineDecoration
             ? getTextClientRects(item.range, ["rt", "rp"])
             : item.range;
@@ -964,7 +1021,9 @@ class DecorationGroup {
             let posRect: Rect = clientRect;
             if (isStrikethrough) {
                 // Thin the rect to the line width (~10% of block size by default), centred on the mid-line.
-                const thickness = strikeWidth !== undefined ? strikeWidth * this.effectiveZoom() : ctx.blockSize(clientRect) * 0.1;
+                const lineWidth = strikeWidth !== undefined ? strikeWidth * this.effectiveZoom() : ctx.blockSize(clientRect) * 0.1;
+                // A wave tile is three line widths across.
+                const thickness = isWavyStrike ? lineWidth * 3 : lineWidth;
                 const blockMid  = ctx.blockStart(clientRect) + ctx.blockSize(clientRect) / 2;
                 const bs = blockMid - thickness / 2;
                 posRect = ctx.isVertical
@@ -1004,7 +1063,7 @@ class DecorationGroup {
 
         const rects = this.computeOverlayRects(item, ctx, boundingRect, expand);
         if (DecorationGroup.isShapeOutline(decoStyle)) {
-            item.container.querySelector("path")?.setAttribute("d", this.outlinePath(item, ctx, iz, rects, boundingRect, outlineInset, outlineOffset + outline.stroke / 2));
+            item.container.querySelector("path")?.setAttribute("d", this.outlinePath(item, ctx, iz, rects, boundingRect, outlineInset, outlineOffset + outline.stroke / 2 + outline.wave, outline.wave));
             return true;
         }
         const children = Array.from(item.container.children) as HTMLElement[];
@@ -1012,7 +1071,7 @@ class DecorationGroup {
 
         children.forEach((el, i) => {
             this.positionElement(item, ctx, iz, el, rects[i], boundingRect, outlineInset);
-            this.sizeStrikethroughBorder(item, ctx, iz, el, rects[i]);
+            this.sizeStrikethroughPattern(item, ctx, iz, el, rects[i]);
         });
         return true;
     }
@@ -1101,8 +1160,8 @@ class DecorationGroup {
                     path.setAttribute("stroke-dasharray", `0 ${outline.stroke * 2}`);
                     path.setAttribute("stroke-linecap", "round");
                 }
-                // SVG centres the stroke on the path, so half of it is added to the outline offset.
-                path.setAttribute("d", this.outlinePath(item, ctx, iz, this.computeOverlayRects(item, ctx, boundingRect, expand), boundingRect, outlineInset, outlineOffset + outline.stroke / 2));
+                // SVG centres the stroke on the path, so half of it, plus any wave amplitude, is added to the outline offset.
+                path.setAttribute("d", this.outlinePath(item, ctx, iz, this.computeOverlayRects(item, ctx, boundingRect, expand), boundingRect, outlineInset, outlineOffset + outline.stroke / 2 + outline.wave, outline.wave));
                 svg.append(path);
                 itemContainer.append(svg);
                 item.container = itemContainer;
@@ -1119,6 +1178,13 @@ class DecorationGroup {
                             ? ["border-right", "border-left"]
                             : ["border-bottom", "border-top"];
                         const underlineBorder = `${this.underlineWidth(item)} ${lineStyle} ${adjustedUnderlineTint} !important`;
+                        if (lineStyle === DecorationLineStyle.Wavy) {
+                            return [
+                                ...this.wavyUnderline(item, ctx, adjustedUnderlineTint, isBounds),
+                                "background-color: transparent !important",
+                                "box-sizing: border-box !important",
+                            ].join("; ");
+                        }
                         return [
                             isBounds
                                 ? `${overlineSide}: ${underlineBorder}`
@@ -1149,6 +1215,14 @@ class DecorationGroup {
                             ].filter(Boolean).join("; ");
                         }
                         // Boxes path: the rect is thinned and centred by the boxes loop below.
+                        if (lineStyle === DecorationLineStyle.Wavy) {
+                            return [
+                                `background-image: ${DecorationGroup.waveImage(adjustedStrikeTint, ctx.isVertical)} !important`,
+                                `background-repeat: ${ctx.isVertical ? "no-repeat round" : "round no-repeat"} !important`,
+                                "background-color: transparent !important",
+                                "box-sizing: border-box !important",
+                            ].join("; ");
+                        }
                         if (lineStyle !== DecorationLineStyle.Solid) {
                             return [
                                 `${ctx.isVertical ? "border-left" : "border-top"}: 0 ${lineStyle} ${adjustedStrikeTint} !important`,
@@ -1177,10 +1251,15 @@ class DecorationGroup {
                         const [huUnderlineSide, huOverlineSide] = ctx.isVertical
                             ? ["border-right", "border-left"]
                             : ["border-bottom", "border-top"];
+                        const huLines = lineStyle === DecorationLineStyle.Wavy
+                            ? this.wavyUnderline(item, ctx, adjustedHUTint, isBounds)
+                            : [
+                                isBounds ? `${huOverlineSide}: ${this.underlineWidth(item)} ${lineStyle} ${adjustedHUTint} !important` : null,
+                                `${huUnderlineSide}: ${this.underlineWidth(item)} ${lineStyle} ${adjustedHUTint} !important`,
+                            ];
                         return [
                             `background-color: ${huFillTint} !important`,
-                            isBounds ? `${huOverlineSide}: ${this.underlineWidth(item)} ${lineStyle} ${adjustedHUTint} !important` : null,
-                            `${huUnderlineSide}: ${this.underlineWidth(item)} ${lineStyle} ${adjustedHUTint} !important`,
+                            ...huLines,
                             "box-sizing: border-box !important",
                         ].filter(Boolean).join("; ");
                     }
@@ -1209,7 +1288,7 @@ class DecorationGroup {
             const el = elementTemplate.cloneNode(true) as HTMLDivElement;
             el.style.setProperty("pointer-events", "none");
             this.positionElement(item, ctx, iz, el, posRect, boundingRect, outlineInset);
-            this.sizeStrikethroughBorder(item, ctx, iz, el, posRect);
+            this.sizeStrikethroughPattern(item, ctx, iz, el, posRect);
             itemContainer.append(el);
         }
 

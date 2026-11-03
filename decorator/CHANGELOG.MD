@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `thickness` (CSS pixels) and `lineStyle` (`solid`, `dashed`, `dotted`) on built-in decoration styles, so nested decorations of the same type can be told apart without relying on color. On `textColor`, `thickness` thickens the text, except in WebKit
+- `thickness` (CSS pixels) and `lineStyle` (`solid`, `dashed`, `dotted`, `wavy`) on built-in decoration styles, so nested decorations of the same type can be told apart without relying on color. A wavy `strikethrough` with `layout: bounds` is drawn solid. On `textColor`, `thickness` thickens the text, except in WebKit
 
 ### Changed
 
