@@ -837,25 +837,51 @@ class DecorationGroup {
         }
     }
 
-    /** Merges the runs of each line, which inline elements such as sup or code split into rects of different sizes. */
-    private static mergeLineRects(rects: Rect[], ctx: WritingContext): Rect[] {
+    /** Boxes of the images and other replaced content in a range, which text-node rects leave out. */
+    private static replacedContentRects(range: Range): Rect[] {
+        const ancestor = range.commonAncestorContainer;
+        if (ancestor.nodeType !== Node.ELEMENT_NODE) return [];
+        return Array.from((ancestor as Element).querySelectorAll(cannotNativeHighlight.join(", ").toLowerCase()))
+            .filter(element => range.intersectsNode(element))
+            .flatMap(element => Array.from(element.getClientRects()))
+            // Plain objects, since getClientRectsNoOverlap adjusts rects in place.
+            .map(({ left, right, top, bottom, width, height }) => ({ left, right, top, bottom, width, height }));
+    }
+
+    /**
+     * Merges the runs of each line, which inline elements such as sup or code split into rects of different sizes.
+     * With `lengthenOnly`, as for text decorations, a line keeps the block position of its tallest run, and those rects only lengthen it.
+     */
+    private static mergeLineRects(rects: Rect[], ctx: WritingContext, lengthenOnly?: Rect[]): Rect[] {
         const blockEnd = (r: Rect) => ctx.blockStart(r) + ctx.blockSize(r);
         const inlineEnd = (r: Rect) => ctx.inlineStart(r) + ctx.inlineSize(r);
+        const sameLine = (rect: Rect, line: Rect) =>
+            Math.min(blockEnd(rect), blockEnd(line)) - Math.max(ctx.blockStart(rect), ctx.blockStart(line)) > Math.min(ctx.blockSize(rect), ctx.blockSize(line)) / 2 &&
+            Math.max(ctx.inlineStart(rect), ctx.inlineStart(line)) - Math.min(inlineEnd(rect), inlineEnd(line)) <= 1;
+        const union = (a: Rect, b: Rect, blockFrom?: Rect): Rect => {
+            const left = Math.min(a.left, b.left), right = Math.max(a.right, b.right);
+            const top = Math.min(a.top, b.top), bottom = Math.max(a.bottom, b.bottom);
+            const box = { left, right, top, bottom, width: right - left, height: bottom - top };
+            if (!blockFrom) return box;
+            return ctx.isVertical
+                ? { ...box, left: blockFrom.left, right: blockFrom.right, width: blockFrom.width }
+                : { ...box, top: blockFrom.top, bottom: blockFrom.bottom, height: blockFrom.height };
+        };
         const merged: Rect[] = [];
         // Sorted along the inline axis, each run touches the line it extends.
         for (const rect of [...rects].sort((a, b) => ctx.inlineStart(a) - ctx.inlineStart(b))) {
-            const index = merged.findIndex(line =>
-                Math.min(blockEnd(rect), blockEnd(line)) - Math.max(ctx.blockStart(rect), ctx.blockStart(line)) > Math.min(ctx.blockSize(rect), ctx.blockSize(line)) / 2 &&
-                Math.max(ctx.inlineStart(rect), ctx.inlineStart(line)) - Math.min(inlineEnd(rect), inlineEnd(line)) <= 1
-            );
+            const index = merged.findIndex(line => sameLine(rect, line));
             if (index < 0) {
                 merged.push(rect);
                 continue;
             }
             const line = merged[index];
-            const left = Math.min(line.left, rect.left), right = Math.max(line.right, rect.right);
-            const top = Math.min(line.top, rect.top), bottom = Math.max(line.bottom, rect.bottom);
-            merged[index] = { left, right, top, bottom, width: right - left, height: bottom - top };
+            merged[index] = union(line, rect, lengthenOnly && (ctx.blockSize(rect) > ctx.blockSize(line) ? rect : line));
+        }
+        for (const rect of lengthenOnly ?? []) {
+            const index = merged.findIndex(line => sameLine(rect, line));
+            if (index < 0) merged.push(rect);
+            else merged[index] = union(merged[index], rect, merged[index]);
         }
         return merged;
     }
@@ -1044,20 +1070,25 @@ class DecorationGroup {
         const isStrikethrough = decoType === DecorationStyleType.Strikethrough;
         const strikeWidth = isStrikethrough ? (decoStyle as BuiltinDecorationStyle).thickness : undefined;
         const isWavyStrike = isStrikethrough && (decoStyle as BuiltinDecorationStyle).lineStyle === DecorationLineStyle.Wavy;
-        // Styles drawing lines or strokes use text-node rects only, so Ruby (rt/rp) doesn't get its own segment
-        // above the base text; content without text, such as images, keeps its own boxes.
+        // Styles drawing lines or strokes use text-node rects plus images and the like, so Ruby (rt/rp) doesn't
+        // get its own segment above the base text; a range without text keeps its own boxes.
         let rectSource: Range | Rect[] = item.range;
+        let replacedRects: Rect[] = [];
         if (isLineDecoration || decoType === DecorationStyleType.Outline || decoType === DecorationStyleType.HighlightUnderline) {
             const textRects = getTextClientRects(item.range, ["rt", "rp"]);
-            if (textRects.length) rectSource = textRects;
+            if (textRects.length) {
+                replacedRects = DecorationGroup.replacedContentRects(item.range);
+                rectSource = isLineDecoration ? textRects : [...textRects, ...replacedRects];
+            }
         }
         // Line decorations are expanded after thinning below, so expand isn't merged in here.
+        // Like CSS text decorations, their lines keep the base text's position; raised runs and images only lengthen them.
         let clientRects = DecorationGroup.mergeLineRects(getClientRectsNoOverlap(
             rectSource,
             true,              // doNotMergeHorizontallyAlignedRects
             ctx.isVertical,    // doNotMergeVerticallyAlignedRects
             isLineDecoration ? 0 : expand
-        ), ctx);
+        ), ctx, isLineDecoration ? replacedRects : undefined);
 
         clientRects = clientRects.sort((r1, r2) => {
             if (ctx.isVertical) {

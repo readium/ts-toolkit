@@ -22,7 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `outline` decorations with `width: page` or `width: viewport` are no longer clipped at the viewport edges when the document is zoomed in Blink
 - Decorations drawn over the page draw one box per line when the text contains inline elements such as `sup` or `code`, instead of overlapping boxes per element, notably in vertical writing
 - `outline` and `highlightUnderline` decorations no longer draw a separate box around ruby annotations, as `underline` and `strikethrough` already did
-- `underline` and `strikethrough` decorations on content without text, such as images, are drawn instead of being invisible
+- `underline` and `strikethrough` decorations drawn over the page include images and other content without text, instead of leaving them out
+- `underline` and `strikethrough` lines drawn over the page keep the position of the surrounding text past raised elements such as `sup`, and images, as CSS text decorations do
 
 ## [1.3.2] – 2026-10-23
 
