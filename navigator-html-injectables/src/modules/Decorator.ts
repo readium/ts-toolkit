@@ -835,22 +835,17 @@ class DecorationGroup {
         return style.type === DecorationStyleType.Outline && style.layout !== DecorationLayout.Bounds;
     }
 
-    private textFontSize(item: DecorationItem): number {
-        const node = item.range.startContainer;
-        const el = node.nodeType === Node.ELEMENT_NODE ? node as Element : node.parentElement;
-        return (el && parseFloat(this.wnd.getComputedStyle(el).fontSize)) || 16;
-    }
-
     private underlineWidth(item: DecorationItem): string {
         const { thickness } = item.decoration.style as BuiltinDecorationStyle;
         return thickness === undefined ? `${lineThickness}em` : `${thickness}px`;
     }
 
-    /** Strikethrough line width in CSS pixels, or undefined for the default 10% of each line's block size. */
-    private strikethroughWidth(item: DecorationItem): number | undefined {
-        const { thickness, lineStyle } = item.decoration.style as BuiltinDecorationStyle;
-        if (thickness === undefined && (!lineStyle || lineStyle === DecorationLineStyle.Solid)) return undefined;
-        return thickness ?? lineThickness * this.textFontSize(item);
+    /** Sizes a dashed/dotted strikethrough's border to its thinned box, whose default size varies per line. */
+    private sizeStrikethroughBorder(item: DecorationItem, ctx: WritingContext, iz: number, el: HTMLElement, rect: Rect) {
+        const { type, layout, lineStyle } = item.decoration.style as BuiltinDecorationStyle;
+        if (type !== DecorationStyleType.Strikethrough || layout === DecorationLayout.Bounds) return;
+        if (!lineStyle || lineStyle === DecorationLineStyle.Solid) return;
+        el.style.setProperty(ctx.isVertical ? "border-left-width" : "border-top-width", `${ctx.blockSize(rect) * iz}px`, "important");
     }
 
     /** Outline stroke width and inset needed for Page/Viewport widths, in CSS pixels. */
@@ -939,7 +934,7 @@ class DecorationGroup {
         const isLineDecoration = decoType === DecorationStyleType.Underline
             || decoType === DecorationStyleType.Strikethrough;
         const isStrikethrough = decoType === DecorationStyleType.Strikethrough;
-        const strikeWidth = isStrikethrough ? this.strikethroughWidth(item) : undefined;
+        const strikeWidth = isStrikethrough ? (decoStyle as BuiltinDecorationStyle).thickness : undefined;
         const rectSource = isLineDecoration
             ? getTextClientRects(item.range, ["rt", "rp"])
             : item.range;
@@ -1010,7 +1005,10 @@ class DecorationGroup {
         const children = Array.from(item.container.children) as HTMLElement[];
         if (children.length !== rects.length) return false;
 
-        children.forEach((el, i) => this.positionElement(item, ctx, iz, el, rects[i], boundingRect, outlineInset));
+        children.forEach((el, i) => {
+            this.positionElement(item, ctx, iz, el, rects[i], boundingRect, outlineInset);
+            this.sizeStrikethroughBorder(item, ctx, iz, el, rects[i]);
+        });
         return true;
     }
 
@@ -1093,7 +1091,11 @@ class DecorationGroup {
                 path.setAttribute("stroke", applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint);
                 path.setAttribute("stroke-width", String(outline.stroke));
                 if (lineStyle === DecorationLineStyle.Dashed) path.setAttribute("stroke-dasharray", `${outline.stroke * 3} ${outline.stroke * 2}`);
-                if (lineStyle === DecorationLineStyle.Dotted) path.setAttribute("stroke-dasharray", `${outline.stroke} ${outline.stroke}`);
+                if (lineStyle === DecorationLineStyle.Dotted) {
+                    // Zero-length dashes with round caps draw round dots, like dotted borders.
+                    path.setAttribute("stroke-dasharray", `0 ${outline.stroke * 2}`);
+                    path.setAttribute("stroke-linecap", "round");
+                }
                 // SVG centres the stroke on the path, so half of it is added to the outline offset.
                 path.setAttribute("d", this.outlinePath(item, ctx, iz, this.computeOverlayRects(item, ctx, boundingRect, expand), boundingRect, outlineInset, outlineOffset + outline.stroke / 2));
                 svg.append(path);
@@ -1127,17 +1129,24 @@ class DecorationGroup {
                         if (isBounds) {
                             // Bounds covers the full height of the selection — use diagonal hatch lines
                             // so the text remains readable (physical "crossing out" appearance).
-                            const hatchEnd = 19 + (style.thickness ?? 1);
+                            const hatchWidth = style.thickness ?? 1;
+                            // A mask striped across the hatch lines cuts them into dashes or dots.
+                            const [dash, period] = lineStyle === DecorationLineStyle.Dashed ? [hatchWidth * 3, hatchWidth * 5]
+                                : lineStyle === DecorationLineStyle.Dotted ? [hatchWidth, hatchWidth * 2]
+                                : [];
+                            const mask = dash ? `repeating-linear-gradient(45deg, black 0 ${dash}px, transparent ${dash}px ${period}px)` : null;
                             return [
-                                `background: repeating-linear-gradient(-45deg, transparent, transparent 19px, ${adjustedStrikeTint} 19px, ${adjustedStrikeTint} ${hatchEnd}px) !important`,
+                                `background: repeating-linear-gradient(-45deg, transparent, transparent 19px, ${adjustedStrikeTint} 19px, ${adjustedStrikeTint} ${19 + hatchWidth}px) !important`,
                                 "background-color: transparent !important",
+                                mask ? `-webkit-mask-image: ${mask} !important` : null,
+                                mask ? `mask-image: ${mask} !important` : null,
                                 "box-sizing: border-box !important",
-                            ].join("; ");
+                            ].filter(Boolean).join("; ");
                         }
                         // Boxes path: the rect is thinned and centred by the boxes loop below.
                         if (lineStyle !== DecorationLineStyle.Solid) {
                             return [
-                                `${ctx.isVertical ? "border-left" : "border-top"}: ${this.strikethroughWidth(item)}px ${lineStyle} ${adjustedStrikeTint} !important`,
+                                `${ctx.isVertical ? "border-left" : "border-top"}: 0 ${lineStyle} ${adjustedStrikeTint} !important`,
                                 "background-color: transparent !important",
                                 "box-sizing: border-box !important",
                             ].join("; ");
@@ -1195,6 +1204,7 @@ class DecorationGroup {
             const el = elementTemplate.cloneNode(true) as HTMLDivElement;
             el.style.setProperty("pointer-events", "none");
             this.positionElement(item, ctx, iz, el, posRect, boundingRect, outlineInset);
+            this.sizeStrikethroughBorder(item, ctx, iz, el, posRect);
             itemContainer.append(el);
         }
 
