@@ -67,9 +67,27 @@ const decorations = stylesFor(type).flatMap((style, i) => {
         const p = document.createElement("p");
         p.id = `case-${i}-${j}`;
         p.innerHTML = fixture.html;
+        p.dataset.highlight = fixture.highlight;
         section.append(p);
         return decorationFor(p.id, `#${p.id}`, fixture.highlight, style);
     });
 });
 
-createController().applyDecorations(decorations, "grid");
+const controller = createController();
+controller.applyDecorations(decorations, "grid");
+
+declare global {
+    interface Window {
+        activatedDecorations?: string[];
+    }
+}
+
+if (params.has("activatable")) {
+    const activated: string[] = window.activatedDecorations = [];
+    controller.registerDecorationObserver("grid", {
+        onDecorationActivated: ({ decoration }) => {
+            activated.push(decoration.id);
+            return true;
+        },
+    });
+}
