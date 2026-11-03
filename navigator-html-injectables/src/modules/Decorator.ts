@@ -283,7 +283,7 @@ class DecorationGroup {
 
         this.items.push(item);
         this.layout(item);
-        item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, ((item.decoration.style as BuiltinDecorationStyle).expand ?? 0) + this.hitGap()));
+        item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, this.scaledExpand(item.decoration.style) + this.hitGap()));
         this.renderLayout([item]);
     }
 
@@ -476,6 +476,11 @@ class DecorationGroup {
         return 2 * this.effectiveZoom();
     }
 
+    /** The style's expand (CSS pixels) converted to client-rect units. */
+    private scaledExpand(style: DecorationStyle): number {
+        return ((style as BuiltinDecorationStyle).expand ?? 0) * this.effectiveZoom();
+    }
+
     private handleActivation(e: PointerEvent) {
         if (!this._activatable) return;
         const { docX, docY } = this.pointerToDocCoords(e);
@@ -603,7 +608,7 @@ class DecorationGroup {
             this.currentRender = this.wnd.requestAnimationFrame(() => {
                 this.items.forEach(i => {
                     this.layout(i);
-                    i.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(i.range, false, false, ((i.decoration.style as BuiltinDecorationStyle).expand ?? 0) + this.hitGap()));
+                    i.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(i.range, false, false, this.scaledExpand(i.decoration.style) + this.hitGap()));
                 });
                 this.renderLayout(this.items);
             });
@@ -630,7 +635,7 @@ class DecorationGroup {
                 this.layout(item);
                 relaidOut.push(item);
             }
-            item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, ((item.decoration.style as BuiltinDecorationStyle).expand ?? 0) + this.hitGap()), ctx);
+            item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, this.scaledExpand(item.decoration.style) + this.hitGap()), ctx);
         });
         if (relaidOut.length) this.renderLayout(relaidOut);
     }
@@ -992,7 +997,7 @@ class DecorationGroup {
         }
 
         const iz = 1 / this.effectiveZoom();
-        const expand = (decoStyle as BuiltinDecorationStyle).expand ?? 0;
+        const expand = this.scaledExpand(decoStyle);
         const boundingRect = item.range.getBoundingClientRect();
         const outline = this.outlineMetrics(item);
         const outlineInset = outline.inset;
@@ -1033,7 +1038,7 @@ class DecorationGroup {
 
         const iz = 1 / this.effectiveZoom();
 
-        const expand = (item.decoration.style as BuiltinDecorationStyle).expand ?? 0;
+        const expand = this.scaledExpand(item.decoration.style);
         const boundingRect = item.range.getBoundingClientRect();
 
         const decoStyle = item.decoration.style;
@@ -1338,7 +1343,7 @@ class DecorationGroup {
             const style  = item.decoration.style as BuiltinDecorationStyle;
             const layout = style.layout ?? DecorationLayout.Boxes;
             const width  = style.width  ?? DecorationWidth.Wrap;
-            const ex     = style.expand ?? 0;
+            const ex     = this.scaledExpand(style);
 
             const boundingRect = item.range.getBoundingClientRect();
 

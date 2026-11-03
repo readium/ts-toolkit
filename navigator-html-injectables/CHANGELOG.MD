@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `expand` on an `underline` decoration also moves the line away from the text, as it already did with `layout: bounds`
 
+### Fixed
+
+- `expand` is now applied in CSS pixels when the document is zoomed in Blink, instead of shrinking with the zoom level
+
 ## [2.9.2] – 2026-10-23
 
 ### Added
