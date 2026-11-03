@@ -6,7 +6,7 @@ import { ModuleName } from "./ModuleLibrary.ts";
 import { Rect, getClientRectsNoOverlap, getTextClientRects, rectContainsPoint } from "../helpers/rect.ts";
 import { getProperty } from "../helpers/css.ts";
 import { isDarkColor, getContrastingTextColor, adjustColorForContrast, colorToRgba } from "@readium/helpers";
-import { makeWritingContext, OVERLAY_Z_INDEX, WritingContext } from "../helpers/document.ts";
+import { isVerticalWriting, makeWritingContext, OVERLAY_Z_INDEX, WritingContext } from "../helpers/document.ts";
 import { sML } from "@readium/helpers";
 import { sanitizeHTML } from "../helpers/sanitize.ts";
 
@@ -268,7 +268,10 @@ class DecorationGroup {
                     !!expand ||
                     // WebKit parses but doesn't paint text-decoration thickness/style in ::highlight().
                     (!!sML.UA.WebKit && type !== DecorationStyleType.Highlight &&
-                        (thickness !== undefined || (!!lineStyle && lineStyle !== DecorationLineStyle.Solid)))
+                        (thickness !== undefined || (!!lineStyle && lineStyle !== DecorationLineStyle.Solid))) ||
+                    // Blink doesn't paint underlines in ::highlight() in vertical Japanese or Korean documents.
+                    (!!sML.UA.Blink && isVerticalWriting(this.wnd) &&
+                        (type === DecorationStyleType.Underline || type === DecorationStyleType.HighlightUnderline))
                 );
             if (needsDomOverlay) this.notTextFlag?.set(id, true);
         }
