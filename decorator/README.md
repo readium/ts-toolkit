@@ -172,7 +172,7 @@ interface IComms {
 |------|-------|
 | `Decoration` | `{ id, locator, style, extras? }` — `locator` is a `Locator` from `@readium/shared` |
 | `DecorationStyle` | `BuiltinDecorationStyle \| HTMLDecorationTemplate \| NamedDecorationStyle` |
-| `BuiltinDecorationStyle` | `{ type?, tint?, layout?, width?, enforceContrast?, expand?, thickness?, lineStyle?, offset? }` — `expand`, `thickness` and `offset` are in CSS pixels; `thickness` on `textColor` has no effect in WebKit |
+| `BuiltinDecorationStyle` | `{ type?, tint?, layout?, width?, enforceContrast?, expand?, thickness?, lineStyle? }` — `expand` and `thickness` are in CSS pixels; `thickness` on `textColor` has no effect in WebKit |
 | `HTMLDecorationTemplate` | `{ type: "template", layout, width, element, stylesheet? }` — `element` is a function `(decoration) => string`, resolved to HTML per decoration before rendering |
 | `NamedDecorationStyle` | `{ type: string }` — reference to a style registered in `DecoratorConfig.decorationTemplates` |
 | `DecoratorConfig` | `{ decorationTemplates?, resizeWatchSelectors? }` — same shape as `DecorationControllerConfig` (the latter is a type alias of this) |

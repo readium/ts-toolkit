@@ -62,7 +62,6 @@ export interface BuiltinDecorationStyle {
     expand?: number; // Inflates each client rect outward by this many CSS pixels on all sides.
     thickness?: number; // Line/stroke width in CSS pixels; for textColor, extra glyph stroke width (faux bold, not in WebKit).
     lineStyle?: DecorationLineStyle; // Line/stroke pattern of underline, strikethrough, highlightUnderline and outline.
-    offset?: number; // Extra CSS pixels between the text and an underline or outline.
 }
 
 /**
@@ -255,7 +254,7 @@ class DecorationGroup {
         }
         if (this.experimentalHighlights) {
             const { type } = decoration.style;
-            const { layout, width, expand, offset, thickness, lineStyle } = decoration.style as BuiltinDecorationStyle;
+            const { layout, width, expand, thickness, lineStyle } = decoration.style as BuiltinDecorationStyle;
             // CSS Highlight API only handles text-level highlight styling (boxes + wrap).
             // Everything else must go through the DOM overlay path.
             const needsDomOverlay =
@@ -266,8 +265,6 @@ class DecorationGroup {
                     (layout !== undefined && layout !== DecorationLayout.Boxes) ||
                     (width  !== undefined && width  !== DecorationWidth.Wrap) ||
                     !!expand ||
-                    // padding isn't allowed in ::highlight() and text-underline-offset support is unreliable.
-                    !!offset ||
                     // WebKit parses but doesn't paint text-decoration thickness/style in ::highlight().
                     (!!sML.UA.WebKit && type !== DecorationStyleType.Highlight &&
                         (thickness !== undefined || (!!lineStyle && lineStyle !== DecorationLineStyle.Solid)))
@@ -856,15 +853,14 @@ class DecorationGroup {
         return thickness ?? lineThickness * this.textFontSize(item);
     }
 
-    /** Outline stroke width, distance from the text, and inset needed for Page/Viewport widths, in CSS pixels. */
-    private outlineMetrics(item: DecorationItem): { stroke: number; offset: number; inset: number } {
+    /** Outline stroke width and inset needed for Page/Viewport widths, in CSS pixels. */
+    private outlineMetrics(item: DecorationItem): { stroke: number; inset: number } {
         const style = item.decoration.style as BuiltinDecorationStyle;
-        if (style.type !== DecorationStyleType.Outline) return { stroke: 0, offset: 0, inset: 0 };
+        if (style.type !== DecorationStyleType.Outline) return { stroke: 0, inset: 0 };
         const stroke = style.thickness ?? outlineStrokeWidth;
-        const offset = outlineOffset + (style.offset ?? 0);
         // For Page/Viewport widths the snap edge coincides with the viewport edge, so the outline would be clipped.
-        const inset = style.width === DecorationWidth.Page || style.width === DecorationWidth.Viewport ? stroke + offset : 0;
-        return { stroke, offset, inset };
+        const inset = style.width === DecorationWidth.Page || style.width === DecorationWidth.Viewport ? stroke + outlineOffset : 0;
+        return { stroke, inset };
     }
 
     /**
@@ -944,14 +940,10 @@ class DecorationGroup {
             || decoType === DecorationStyleType.Strikethrough;
         const isStrikethrough = decoType === DecorationStyleType.Strikethrough;
         const strikeWidth = isStrikethrough ? this.strikethroughWidth(item) : undefined;
-        const underlineOffset = decoType === DecorationStyleType.Underline || decoType === DecorationStyleType.HighlightUnderline
-            ? (decoStyle as BuiltinDecorationStyle).offset ?? 0
-            : 0;
         const rectSource = isLineDecoration
             ? getTextClientRects(item.range, ["rt", "rp"])
             : item.range;
-        // Line decorations (underline/strikethrough) don't expand in the block axis —
-        // expand extends endpoints along the inline axis only.
+        // Line decorations are expanded after thinning below, so expand isn't merged in here.
         let clientRects = getClientRectsNoOverlap(
             rectSource,
             true,              // doNotMergeHorizontallyAlignedRects
@@ -979,16 +971,12 @@ class DecorationGroup {
                     ? { left: bs, right: bs + thickness, top: clientRect.top,    bottom: clientRect.bottom, width: thickness,           height: clientRect.height }
                     : { top:  bs, bottom: bs + thickness, left: clientRect.left, right: clientRect.right,   height: thickness,           width: clientRect.width  };
             }
-            if (underlineOffset) {
-                // Grows the box on the side its underline border is drawn.
-                posRect = ctx.isVertical
-                    ? { ...posRect, right: posRect.right + underlineOffset, width: posRect.width + underlineOffset }
-                    : { ...posRect, bottom: posRect.bottom + underlineOffset, height: posRect.height + underlineOffset };
-            }
             if (expand && isLineDecoration) {
-                posRect = ctx.isVertical
-                    ? { ...posRect, top: posRect.top - expand, bottom: posRect.bottom + expand, height: posRect.height + expand * 2 }
-                    : { ...posRect, left: posRect.left - expand, right: posRect.right + expand, width: posRect.width + expand * 2 };
+                // A strikethrough stays centred, so only its inline extent grows; an underline moves away from the text.
+                const ie = expand;
+                const be = isStrikethrough ? 0 : expand;
+                const [dx, dy] = ctx.isVertical ? [be, ie] : [ie, be];
+                posRect = { left: posRect.left - dx, right: posRect.right + dx, top: posRect.top - dy, bottom: posRect.bottom + dy, width: posRect.width + dx * 2, height: posRect.height + dy * 2 };
             }
             return posRect;
         });
@@ -1016,7 +1004,7 @@ class DecorationGroup {
 
         const rects = this.computeOverlayRects(item, ctx, boundingRect, expand);
         if (DecorationGroup.isShapeOutline(decoStyle)) {
-            item.container.querySelector("path")?.setAttribute("d", this.outlinePath(item, ctx, iz, rects, boundingRect, outlineInset, outline.offset + outline.stroke / 2));
+            item.container.querySelector("path")?.setAttribute("d", this.outlinePath(item, ctx, iz, rects, boundingRect, outlineInset, outlineOffset + outline.stroke / 2));
             return true;
         }
         const children = Array.from(item.container.children) as HTMLElement[];
@@ -1107,7 +1095,7 @@ class DecorationGroup {
                 if (lineStyle === DecorationLineStyle.Dashed) path.setAttribute("stroke-dasharray", `${outline.stroke * 3} ${outline.stroke * 2}`);
                 if (lineStyle === DecorationLineStyle.Dotted) path.setAttribute("stroke-dasharray", `${outline.stroke} ${outline.stroke}`);
                 // SVG centres the stroke on the path, so half of it is added to the outline offset.
-                path.setAttribute("d", this.outlinePath(item, ctx, iz, this.computeOverlayRects(item, ctx, boundingRect, expand), boundingRect, outlineInset, outline.offset + outline.stroke / 2));
+                path.setAttribute("d", this.outlinePath(item, ctx, iz, this.computeOverlayRects(item, ctx, boundingRect, expand), boundingRect, outlineInset, outlineOffset + outline.stroke / 2));
                 svg.append(path);
                 itemContainer.append(svg);
                 item.container = itemContainer;
@@ -1163,7 +1151,7 @@ class DecorationGroup {
                         const adjustedOutlineTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
                         return [
                             `outline: ${outline.stroke}px ${lineStyle} ${adjustedOutlineTint} !important`,
-                            `outline-offset: ${outline.offset}px !important`,
+                            `outline-offset: ${outlineOffset}px !important`,
                             "background-color: transparent !important",
                             "box-sizing: border-box !important",
                         ].join("; ");

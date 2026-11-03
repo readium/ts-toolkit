@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] – 2026-11-03
+
+### Added
+
+- `thickness` (CSS pixels) and `lineStyle` (`solid`, `dashed`, `dotted`) on built-in decoration styles, so nested decorations of the same type can be told apart without relying on color. On `textColor`, `thickness` thickens the text, except in WebKit
+
+### Changed
+
+- `expand` on an `underline` decoration also moves the line away from the text, as it already did with `layout: bounds`
+
 ## [1.3.2] – 2026-10-23
 
 ### Fixed
