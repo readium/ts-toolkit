@@ -38,7 +38,16 @@ jobs:
 
       - run: pnpm install
       - run: pnpm exec playwright install --with-deps chromium firefox webkit
-      - run: pnpm test
+      # Screenshots without a committed reference are written instead of failing; the others are compared.
+      - run: pnpm test --update-snapshots=missing
+
+      # Includes the references written by this run, to commit them from the runner's own rendering.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: decorator-snapshots
+          path: decorator/test/snapshots/
+          retention-days: 14
 
       - uses: actions/upload-artifact@v4
         if: failure()
