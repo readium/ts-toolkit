@@ -16,6 +16,8 @@ export async function growToDocument(page: Page) {
         height: document.documentElement.scrollHeight,
     }));
     await page.setViewportSize(size);
+    // The decorator redraws 50ms after a resize, which settling alone may not wait for.
+    await page.waitForTimeout(100);
     await settle(page);
 }
 

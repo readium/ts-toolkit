@@ -6,7 +6,7 @@ import { ModuleName } from "./ModuleLibrary.ts";
 import { Rect, getClientRectsNoOverlap, getTextClientRects, rectContainsPoint } from "../helpers/rect.ts";
 import { getProperty } from "../helpers/css.ts";
 import { isDarkColor, getContrastingTextColor, adjustColorForContrast, colorToRgba } from "@readium/helpers";
-import { isVerticalWriting, makeWritingContext, OVERLAY_Z_INDEX, WritingContext } from "../helpers/document.ts";
+import { hasRTLDirection, isVerticalWriting, makeWritingContext, OVERLAY_Z_INDEX, WritingContext } from "../helpers/document.ts";
 import { sML } from "@readium/helpers";
 import { sanitizeHTML } from "../helpers/sanitize.ts";
 
@@ -707,8 +707,13 @@ class DecorationGroup {
                     inlineOrigin = ctx.inlineStart(boundingRect);
                     inlineExtent = ctx.inlineSize(boundingRect);
                 }
-                const startCaret = caretPositionFromPoint(inlineOrigin, ctx.blockStart(boundingRect) + 1);
-                const endCaret = caretPositionFromPoint(inlineOrigin + inlineExtent, ctx.blockStart(boundingRect) + ctx.blockSize(boundingRect) - 1);
+                // Right-to-left lines start on the right; reversed boundaries would collapse the range.
+                const ancestor = item.range.commonAncestorContainer;
+                const textElement = ancestor.nodeType === Node.ELEMENT_NODE ? ancestor as Element : ancestor.parentElement!;
+                const rtl = hasRTLDirection(this.wnd, textElement);
+                const [lineStart, lineEnd] = rtl ? [inlineOrigin + inlineExtent, inlineOrigin] : [inlineOrigin, inlineOrigin + inlineExtent];
+                const startCaret = caretPositionFromPoint(lineStart, ctx.blockStart(boundingRect) + 1);
+                const endCaret = caretPositionFromPoint(lineEnd, ctx.blockStart(boundingRect) + ctx.blockSize(boundingRect) - 1);
                 if (startCaret && endCaret) {
                     const expandedRange = this.wnd.document.createRange();
                     expandedRange.setStart(startCaret.offsetNode, startCaret.offset);
@@ -1501,7 +1506,7 @@ class DecorationGroup {
         const docH = docEl.scrollHeight * iz;
         // The document's top-left corner in overlay coordinates; it extends left of the viewport when scrolling towards negative scrollLeft.
         const se = this.wnd.document.scrollingElement!;
-        const startsRight = ctx.isVertical ? !ctx.isVertLR : this.wnd.getComputedStyle(docEl).direction === "rtl";
+        const startsRight = ctx.isVertical ? !ctx.isVertLR : hasRTLDirection(this.wnd, docEl);
         const docX = ((startsRight ? se.clientWidth - se.scrollWidth : 0) - se.scrollLeft + ctx.xDocOffset) * iz;
         const docY = (-se.scrollTop + ctx.yDocOffset) * iz;
         const allHoleRects: DOMRect[] = [];

@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `outline` decorations are drawn in WebKit in vertical-rl
 - `underline` and `highlightUnderline` decorations are drawn in Chromium in vertical Japanese and Korean documents
 - Dotted lines are drawn dotted in WebKit on high-density screens, where its dotted borders could be painted solid depending on their length
+- `textColor` decorations with Bounds layout or width color their text in right-to-left documents
 
 ## [1.3.2] – 2026-10-23
 

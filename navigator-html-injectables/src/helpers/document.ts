@@ -6,6 +6,11 @@ export function isRTL(wnd: Window): boolean {
     return dir.toLowerCase() === "rtl";
 }
 
+/** Whether the element's computed direction is right-to-left, from its `dir` attribute or CSS. */
+export function hasRTLDirection(wnd: Window, el: Element): boolean {
+    return wnd.getComputedStyle(el).direction === "rtl";
+}
+
 export function isVerticalLR(wnd: Window): boolean {
     // Check documentElement first, then fall back to body.
     const writingMode = wnd.getComputedStyle(wnd.document.documentElement).writingMode
