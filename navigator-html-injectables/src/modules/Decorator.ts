@@ -837,6 +837,29 @@ class DecorationGroup {
         }
     }
 
+    /** Merges the runs of each line, which inline elements such as sup or code split into rects of different sizes. */
+    private static mergeLineRects(rects: Rect[], ctx: WritingContext): Rect[] {
+        const blockEnd = (r: Rect) => ctx.blockStart(r) + ctx.blockSize(r);
+        const inlineEnd = (r: Rect) => ctx.inlineStart(r) + ctx.inlineSize(r);
+        const merged: Rect[] = [];
+        // Sorted along the inline axis, each run touches the line it extends.
+        for (const rect of [...rects].sort((a, b) => ctx.inlineStart(a) - ctx.inlineStart(b))) {
+            const index = merged.findIndex(line =>
+                Math.min(blockEnd(rect), blockEnd(line)) - Math.max(ctx.blockStart(rect), ctx.blockStart(line)) > Math.min(ctx.blockSize(rect), ctx.blockSize(line)) / 2 &&
+                Math.max(ctx.inlineStart(rect), ctx.inlineStart(line)) - Math.min(inlineEnd(rect), inlineEnd(line)) <= 1
+            );
+            if (index < 0) {
+                merged.push(rect);
+                continue;
+            }
+            const line = merged[index];
+            const left = Math.min(line.left, rect.left), right = Math.max(line.right, rect.right);
+            const top = Math.min(line.top, rect.top), bottom = Math.max(line.bottom, rect.bottom);
+            merged[index] = { left, right, top, bottom, width: right - left, height: bottom - top };
+        }
+        return merged;
+    }
+
     private static isShapeOutline(style: DecorationStyle): boolean {
         // CSS outlines can't be wavy, so a wavy Bounds outline is drawn as a path too.
         return style.type === DecorationStyleType.Outline &&
@@ -997,16 +1020,21 @@ class DecorationGroup {
         const isStrikethrough = decoType === DecorationStyleType.Strikethrough;
         const strikeWidth = isStrikethrough ? (decoStyle as BuiltinDecorationStyle).thickness : undefined;
         const isWavyStrike = isStrikethrough && (decoStyle as BuiltinDecorationStyle).lineStyle === DecorationLineStyle.Wavy;
-        const rectSource = isLineDecoration
-            ? getTextClientRects(item.range, ["rt", "rp"])
-            : item.range;
+        let rectSource: Range | Rect[] = item.range;
+        if (isLineDecoration) {
+            rectSource = getTextClientRects(item.range, ["rt", "rp"]);
+        } else if (decoType === DecorationStyleType.Outline) {
+            // Same for outlines, but content without text, such as images, keeps its own boxes.
+            const textRects = getTextClientRects(item.range, ["rt", "rp"]);
+            if (textRects.length) rectSource = textRects;
+        }
         // Line decorations are expanded after thinning below, so expand isn't merged in here.
-        let clientRects = getClientRectsNoOverlap(
+        let clientRects = DecorationGroup.mergeLineRects(getClientRectsNoOverlap(
             rectSource,
             true,              // doNotMergeHorizontallyAlignedRects
             ctx.isVertical,    // doNotMergeVerticallyAlignedRects
             isLineDecoration ? 0 : expand
-        );
+        ), ctx);
 
         clientRects = clientRects.sort((r1, r2) => {
             if (ctx.isVertical) {

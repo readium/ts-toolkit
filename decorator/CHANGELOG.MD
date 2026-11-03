@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `expand` on an `underline` decoration also moves the line away from the text, as it already did with `layout: bounds`
 
+### Fixed
+
+- `expand` is now applied in CSS pixels when the document is zoomed in Blink, instead of shrinking with the zoom level
+- `outline` decorations with `width: page` or `width: viewport` are no longer clipped at the viewport edges when the document is zoomed in Blink
+- Decorations drawn over the page draw one box per line when the text contains inline elements such as `sup` or `code`, instead of overlapping boxes per element, notably in vertical writing
+- `outline` decorations no longer draw a separate box around ruby annotations
+
 ## [1.3.2] – 2026-10-23
 
 ### Fixed
