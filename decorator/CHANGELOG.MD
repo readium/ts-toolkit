@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - In vertical-rl pages whose root element isn't positioned, decorations drawn over the page sit on their text instead of being shifted by the document's scrollable width, and `mask` decorations cover the whole document
 - `outline` decorations are drawn in WebKit in vertical-rl
 - `underline` and `highlightUnderline` decorations are drawn in Chromium in vertical Japanese and Korean documents
+- Dotted lines are drawn dotted in WebKit on high-density screens, where its dotted borders could be painted solid depending on their length
 
 ## [1.3.2] – 2026-10-23
 

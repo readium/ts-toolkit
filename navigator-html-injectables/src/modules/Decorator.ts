@@ -891,9 +891,22 @@ class DecorationGroup {
     }
 
     private static isShapeOutline(style: DecorationStyle): boolean {
-        // CSS outlines can't be wavy, so a wavy Bounds outline is drawn as a path too.
+        // CSS outlines can't be wavy, so a wavy Bounds outline is drawn as a path too, as is a dotted one in WebKit.
+        const { lineStyle } = style as BuiltinDecorationStyle;
         return style.type === DecorationStyleType.Outline &&
-            (style.layout !== DecorationLayout.Bounds || (style as BuiltinDecorationStyle).lineStyle === DecorationLineStyle.Wavy);
+            (style.layout !== DecorationLayout.Bounds || lineStyle === DecorationLineStyle.Wavy || DecorationGroup.drawsOwnDots(lineStyle));
+    }
+
+    /** WebKit sometimes paints dotted borders solid on high-density screens, depending on their length. */
+    private static drawsOwnDots(lineStyle?: DecorationLineStyle): boolean {
+        return !!sML.UA.WebKit && lineStyle === DecorationLineStyle.Dotted;
+    }
+
+    /** Tiling SVG dot for a CSS background, one dot and one gap long and one dot across. */
+    private static dotImage(tint: string, vertical: boolean): string {
+        const viewBox = vertical ? "0 0 1 2" : "0 0 2 1";
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" preserveAspectRatio="none"><circle cx="0.5" cy="0.5" r="0.5" fill="${tint}"/></svg>`;
+        return `url('data:image/svg+xml,${encodeURIComponent(svg)}')`;
     }
 
     /** Tiling SVG wave for a CSS background, one wavelength long and three stroke widths across. */
@@ -913,19 +926,21 @@ class DecorationGroup {
         const sides = isBounds ? [under, over] : [under];
         // Content-box sizing adds borders and padding outside the positioned box; the overline is pulled back over it.
         const declarations = ["box-sizing: content-box !important"];
-        if (lineStyle !== DecorationLineStyle.Wavy) {
+        const wavy = lineStyle === DecorationLineStyle.Wavy;
+        if (!wavy && !DecorationGroup.drawsOwnDots(lineStyle)) {
             declarations.push(...sides.map(side => `border-${side}: ${t} ${lineStyle} ${tint} !important`));
             if (isBounds) declarations.push(`margin-${over}: calc(-1 * ${t}) !important`);
             declarations.push(fill ? `background: ${fill} padding-box !important` : "background-color: transparent !important");
             return declarations;
         }
-        const band = `calc(3 * ${t})`;
+        const band = wavy ? `calc(3 * ${t})` : t;
+        const period = `calc(${wavy ? 6 : 2} * ${t})`;
         declarations.push(...sides.map(side => `padding-${side}: ${band} !important`));
         if (isBounds) declarations.push(`margin-${over}: calc(-1 * ${band}) !important`);
-        const image = DecorationGroup.waveImage(tint, ctx.isVertical);
+        const image = wavy ? DecorationGroup.waveImage(tint, ctx.isVertical) : DecorationGroup.dotImage(tint, ctx.isVertical);
         const waves = sides.map(side => ({
             position: ctx.isVertical ? `${side} top` : `left ${side}`,
-            size: ctx.isVertical ? `${band} calc(6 * ${t})` : `calc(6 * ${t}) ${band}`,
+            size: ctx.isVertical ? `${band} ${period}` : `${period} ${band}`,
             repeat: ctx.isVertical ? "no-repeat round" : "round no-repeat",
         }));
         // The fill is a last background layer clipped to the content box, so it stays off the waves' padding.
@@ -953,7 +968,7 @@ class DecorationGroup {
         if (type !== DecorationStyleType.Strikethrough || layout === DecorationLayout.Bounds) return;
         if (!lineStyle || lineStyle === DecorationLineStyle.Solid) return;
         const band = ctx.blockSize(rect) * iz;
-        if (lineStyle === DecorationLineStyle.Wavy) {
+        if (lineStyle === DecorationLineStyle.Wavy || DecorationGroup.drawsOwnDots(lineStyle)) {
             el.style.setProperty("background-size", ctx.isVertical ? `${band}px ${band * 2}px` : `${band * 2}px ${band}px`, "important");
             return;
         }
@@ -1284,9 +1299,10 @@ class DecorationGroup {
                             ].filter(Boolean).join("; ");
                         }
                         // Boxes path: the rect is thinned and centred by the boxes loop below.
-                        if (lineStyle === DecorationLineStyle.Wavy) {
+                        if (lineStyle === DecorationLineStyle.Wavy || DecorationGroup.drawsOwnDots(lineStyle)) {
+                            const image = lineStyle === DecorationLineStyle.Wavy ? DecorationGroup.waveImage(adjustedStrikeTint, ctx.isVertical) : DecorationGroup.dotImage(adjustedStrikeTint, ctx.isVertical);
                             return [
-                                `background-image: ${DecorationGroup.waveImage(adjustedStrikeTint, ctx.isVertical)} !important`,
+                                `background-image: ${image} !important`,
                                 `background-repeat: ${ctx.isVertical ? "no-repeat round" : "round no-repeat"} !important`,
                                 "background-color: transparent !important",
                                 "box-sizing: border-box !important",
