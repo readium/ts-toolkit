@@ -1609,6 +1609,13 @@ class DecorationGroup {
         this.maskSvg.style.height = `${docH}px`;
         this.maskSvg.setAttribute("viewBox", `${docX} ${docY} ${docW} ${docH}`);
 
+        // A userSpaceOnUse mask clips to its own region, which doesn't follow the viewBox.
+        const maskElement = this.maskSvg.querySelector("mask");
+        maskElement?.setAttribute("x", String(docX));
+        maskElement?.setAttribute("y", String(docY));
+        maskElement?.setAttribute("width", String(docW));
+        maskElement?.setAttribute("height", String(docH));
+
         const visible = this.maskSvg.querySelector("mask > rect");
         visible?.setAttribute("x", String(docX));
         visible?.setAttribute("y", String(docY));
