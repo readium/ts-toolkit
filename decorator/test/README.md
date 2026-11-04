@@ -28,4 +28,4 @@ pnpm test
 
 Reference screenshots in `snapshots/` are only generated and compared in CI, since fonts and antialiasing differ between platforms. Local runs compare against `snapshots/local/` instead, which is ignored by git; run `pnpm test:update` to create or refresh it.
 
-In CI, a screenshot without a reference is written instead of failing, and every run uploads `snapshots/` as the `decorator-snapshots` artifact. To add references, commit the new files from that artifact. To update them after an intentional change, run the “Decorator update snapshots” workflow on the branch.
+In CI, a screenshot without a reference is written instead of failing, and every run uploads `snapshots/` as the `decorator-snapshots` artifact. To add references, commit the new files from that artifact. To update them after an intentional change, run the “Decorator update snapshots” workflow on the branch: it opens a pull request into that branch with the new references.
