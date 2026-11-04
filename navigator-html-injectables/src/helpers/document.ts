@@ -6,6 +6,11 @@ export function isRTL(wnd: Window): boolean {
     return dir.toLowerCase() === "rtl";
 }
 
+/** Whether the element's computed direction is right-to-left, from its `dir` attribute or CSS. */
+export function hasRTLDirection(wnd: Window, el: Element): boolean {
+    return wnd.getComputedStyle(el).direction === "rtl";
+}
+
 export function isVerticalLR(wnd: Window): boolean {
     // Check documentElement first, then fall back to body.
     const writingMode = wnd.getComputedStyle(wnd.document.documentElement).writingMode
@@ -77,7 +82,11 @@ export interface WritingContext {
     toRect(inlineStart: number, blockStart: number, inlineSize: number, blockSize: number): DOMRect;
 }
 
-export function makeWritingContext(wnd: Window): WritingContext {
+/**
+ * With `origin`, the document offsets convert client coordinates into that element's own,
+ * measured wherever the page's CSS positions it, instead of being derived from scrolling.
+ */
+export function makeWritingContext(wnd: Window, origin?: Element): WritingContext {
     const isVert = isVerticalWriting(wnd);
     const isVLR  = isVert && isVerticalLR(wnd);
     const vw     = wnd.innerWidth;
@@ -91,10 +100,11 @@ export function makeWritingContext(wnd: Window): WritingContext {
     // negative as the reader scrolls left. The viewport's left edge in document space
     // is therefore (scrollWidth − viewportWidth + scrollLeft). For vertical-lr and
     // horizontal modes, scrollLeft is non-negative and is the offset directly.
-    const xDocOffset = (isVert && !isVLR)
+    const originRect = origin?.getBoundingClientRect();
+    const xDocOffset = originRect ? -originRect.left : (isVert && !isVLR)
         ? se.scrollWidth - vw + xOff
         : xOff;
-    const yDocOffset = yOff;
+    const yDocOffset = originRect ? -originRect.top : yOff;
 
     return {
         isVertical:          isVert,

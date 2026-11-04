@@ -1,0 +1,36 @@
+name: Decorator update snapshots
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: ./decorator
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: "pnpm"
+
+      - run: pnpm install
+      - run: pnpm exec playwright install --with-deps chromium firefox webkit
+      - run: pnpm test:update
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update decorator snapshots"
+          file_pattern: "decorator/test/snapshots/**/*.png"

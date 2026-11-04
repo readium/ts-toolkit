@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] – 2026-11-04
+
+### Added
+
+- `thickness` (CSS pixels) and `lineStyle` (`solid`, `dashed`, `dotted`, `wavy`) on built-in decoration styles, so nested decorations of the same type can be told apart without relying on color. A wavy `strikethrough` with `layout: bounds` is drawn solid. On `textColor`, `thickness` thickens the text, except in WebKit
+
+### Changed
+
+- `expand` on an `underline` decoration also moves the line away from the text, as it already did with `layout: bounds`
+- The lines of `underline` and `highlightUnderline` decorations drawn over the page sit just outside the text instead of inside it, so thicker lines grow away from the text, as with the CSS Highlight API
+
+### Fixed
+
+- `expand` is now applied in CSS pixels when the document is zoomed in Blink, instead of shrinking with the zoom level
+- `outline` decorations with `width: page` or `width: viewport` are no longer clipped at the viewport edges when the document is zoomed in Blink
+- Decorations drawn over the page draw one box per line when the text contains inline elements such as `sup` or `code`, instead of overlapping boxes per element, notably in vertical writing
+- `outline` and `highlightUnderline` decorations no longer draw a separate box around ruby annotations, as `underline` and `strikethrough` already did
+- `underline` and `strikethrough` decorations drawn over the page include images and other content without text, instead of leaving them out
+- `underline` and `strikethrough` lines drawn over the page keep the position of the surrounding text past raised elements such as `sup`, and images, as CSS text decorations do
+- In vertical-rl pages whose root element isn't positioned, decorations drawn over the page sit on their text instead of being shifted by the document's scrollable width, and `mask` decorations cover the whole document
+- `outline` decorations are drawn in WebKit in vertical-rl
+- `underline` and `highlightUnderline` decorations are drawn in Chromium in vertical Japanese and Korean documents
+- Dotted lines are drawn dotted in WebKit on high-density screens, where its dotted borders could be painted solid depending on their length
+- `textColor` decorations with Bounds layout or width color their text in right-to-left documents
+
 ## [1.3.2] – 2026-10-23
 
 ### Fixed
