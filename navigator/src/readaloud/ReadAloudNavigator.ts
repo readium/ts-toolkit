@@ -667,8 +667,9 @@ export class ReadAloudNavigator {
             if (token !== this.loadToken) return false;
             failures.forEach(failure => this.listeners.error?.(failure.error));
 
+            const language = this.contentLanguage();
             const ready = this.untilReady();
-            await this.speech.loadGndContent(guided, { language: this.contentLanguage() });
+            await this.speech.loadGndContent(guided, { language });
             if (token !== this.loadToken) return false;
             this.unit = unit;
 
@@ -695,6 +696,8 @@ export class ReadAloudNavigator {
                 await new Promise(resolve => setTimeout(resolve, left));
                 if (token !== this.loadToken) return false;
             }
+            // A languageOverride submitted meanwhile; from setLoading(false) on, submitPreferences() reloads.
+            if (language !== this.contentLanguage()) return this.loadUnit(() => unit, () => start, this.loadPaused, this.loadSince);
             this.setLoading(false);
             const loaded = this.speech.getContentQueue();
             if (!ReadAloudNavigator.sameQueue(loaded, this.watchedQueue)) this.watchLayout(loaded);
