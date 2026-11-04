@@ -698,7 +698,7 @@ export class ReadAloudNavigator {
                 if (token !== this.loadToken) return false;
             }
             // A languageOverride submitted meanwhile; from setLoading(false) on, submitPreferences() reloads.
-            if (language !== this.contentLanguage()) return this.loadUnit(() => unit, () => start, this.loadPaused, this.loadSince);
+            if (language !== this.contentLanguage()) return this.loadUnit(() => unit, () => this.indexAfterRebuild(queue, start), this.loadPaused, this.loadSince);
             this.setLoading(false);
             const loaded = this.speech.getContentQueue();
             if (!ReadAloudNavigator.sameQueue(loaded, this.watchedQueue)) this.watchLayout(loaded);
