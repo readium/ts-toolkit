@@ -457,7 +457,11 @@ export class ReadAloudNavigator {
                 this.notifyState();
             }));
         };
-        on("voiceschanged", () => this.listeners.voicesChanged?.());
+        on("voiceschanged", () => {
+            // Speech fires it before its submitPreferences() resolves
+            this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
+            this.listeners.voicesChanged?.();
+        });
         on("languagefallback", event => this.listeners.languageFallback?.(event.detail.language));
         on("start", event => {
             // Engines that don't report the voice speaking are taken to use theirs.
