@@ -373,10 +373,11 @@ export class ReadAloudNavigator {
      * ranked the way the default voice is picked: preferred region first, then quality.
      */
     async getVoices(options: ReadAloudVoicesOptions = {}): Promise<ReadiumSpeechVoice[]> {
-        const voices = await this.speech.getVoices();
+        const publicationLanguages = this.publicationLanguages(this._settings.languageOverride);
+        // Speech only loads an override's voices when the publication has a metadata language
+        const voices = await this.engine.getAvailableVoices(publicationLanguages);
         const languages = options.languages?.length ? options.languages : undefined;
         const filtered = languages ? filterByLanguages(voices, languages) : voices;
-        const publicationLanguages = this.publicationLanguages(this._settings.languageOverride);
         const preferred = languages
             ?? (publicationLanguages.length ? publicationLanguages : [...(navigator.languages ?? ["en"])]);
         return sortVoicesByRegions(preferred, filtered);
