@@ -413,8 +413,10 @@ export class ReadAloudNavigator {
     async submitPreferences(preferences: ReadAloudPreferences): Promise<void> {
         this._preferences = this._preferences.merging(preferences);
         const old = this.speech.getContentQueue();
+        const previousLanguage = this.contentLanguage();
         await this.speech.submitPreferences(ReadAloudNavigator.speechPreferences(this._preferences, this.navigator.publication.metadata.languages?.[0]));
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
+        if (this.unit && !this.loading && this.contentLanguage() !== previousLanguage) await this.reloadLanguage(this.unit);
         if (!this._settings.detachable && this._detached) this.attach();
         // Speech keeps its place in a rebuilt queue only while playing or paused itself, not while stopped here.
         const held = this.pausedBefore ?? this.turning;
@@ -663,7 +665,7 @@ export class ReadAloudNavigator {
             failures.forEach(failure => this.listeners.error?.(failure.error));
 
             const ready = this.untilReady();
-            await this.speech.loadGndContent(guided, { language: this.navigator.publication.metadata.languages?.[0] });
+            await this.speech.loadGndContent(guided, { language: this.contentLanguage() });
             if (token !== this.loadToken) return false;
             this.unit = unit;
 
@@ -1323,6 +1325,19 @@ export class ReadAloudNavigator {
         const metadata = this.navigator.publication.metadata;
         if (metadata.conformsTo?.includes(Profile.DIVINA) || metadata.effectiveLayout === Layout.fixed) return Layout.fixed;
         return this.navigator.layout === Layout.reflowable ? Layout.reflowable : Layout.scrolled;
+    }
+
+    // Speech only takes the content language as content is loaded, so the loaded unit is extracted again.
+    private async reloadLanguage(unit: ReadingUnit): Promise<void> {
+        const token = this.loadToken;
+        const { guided } = await this.pool.stitch(unit);
+        if (token !== this.loadToken || this.loading) return;
+        await this.speech.loadGndContent(guided, { language: this.contentLanguage() });
+    }
+
+    // Without a metadata language, the override is the language of content that doesn't declare one.
+    private contentLanguage(): string | undefined {
+        return this.navigator.publication.metadata.languages?.[0] ?? this._settings.languageOverride ?? undefined;
     }
 
     // The override comes first, in place of the metadata's primary language it corrects.
