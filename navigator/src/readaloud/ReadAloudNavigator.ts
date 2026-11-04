@@ -179,8 +179,7 @@ export class ReadAloudNavigator {
         this.units = new ReadingUnits(navigator);
         this._preferences = new ReadAloudPreferences(configuration.preferences);
         this._defaults = new ReadAloudDefaults(configuration.defaults);
-        const metadataLanguages = navigator.publication.metadata.languages ?? [];
-        const metadataLanguage = metadataLanguages[0];
+        const contentLanguages = this.contentLanguages();
         this.ownsEngine = !configuration.engine;
         if (configuration.engine) {
             this.engine = configuration.engine;
@@ -192,13 +191,13 @@ export class ReadAloudNavigator {
             this.engine = engine;
         }
         this.speech = new ReadiumSpeechNavigator(this.engine, {
-            languages: metadataLanguages,
-            preferences: ReadAloudNavigator.speechPreferences(this._preferences, metadataLanguage),
+            languages: contentLanguages,
+            preferences: ReadAloudNavigator.speechPreferences(this._preferences, contentLanguages[0]),
             defaults: ReadAloudNavigator.speechPreferences({
                 ...this._defaults.speech,
                 autoPause: this._defaults.autoPause,
                 languageOverride: this._defaults.languageOverride
-            }, metadataLanguage),
+            }, contentLanguages[0]),
         });
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
         this.displayed = navigator.viewport?.readingOrder ?? [];
@@ -373,11 +372,10 @@ export class ReadAloudNavigator {
      * ranked the way the default voice is picked: preferred region first, then quality.
      */
     async getVoices(options: ReadAloudVoicesOptions = {}): Promise<ReadiumSpeechVoice[]> {
-        const publicationLanguages = this.publicationLanguages(this._settings.languageOverride);
-        // Speech only loads an override's voices when the publication has a metadata language
-        const voices = await this.engine.getAvailableVoices(publicationLanguages);
+        const voices = await this.speech.getVoices();
         const languages = options.languages?.length ? options.languages : undefined;
         const filtered = languages ? filterByLanguages(voices, languages) : voices;
+        const publicationLanguages = this.publicationLanguages(this._settings.languageOverride);
         const preferred = languages
             ?? (publicationLanguages.length ? publicationLanguages : [...(navigator.languages ?? ["en"])]);
         return sortVoicesByRegions(preferred, filtered);
@@ -414,13 +412,8 @@ export class ReadAloudNavigator {
     async submitPreferences(preferences: ReadAloudPreferences): Promise<void> {
         this._preferences = this._preferences.merging(preferences);
         const old = this.speech.getContentQueue();
-        const previousLanguage = this.contentLanguage();
-        // Idle, the next play() loads in the new language; loading a unit, loadUnit() picks it up.
-        const reloads = !this.loading && this.state !== "idle";
-        const token = this.loadToken;
-        await this.speech.submitPreferences(ReadAloudNavigator.speechPreferences(this._preferences, this.navigator.publication.metadata.languages?.[0]));
+        await this.speech.submitPreferences(ReadAloudNavigator.speechPreferences(this._preferences, this.contentLanguages()[0]));
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
-        if (reloads && this.unit && this.contentLanguage() !== previousLanguage) await this.reloadLanguage(this.unit, token);
         if (!this._settings.detachable && this._detached) this.attach();
         // Speech keeps its place in a rebuilt queue only while playing or paused itself, not while stopped here.
         const held = this.pausedBefore ?? this.turning;
@@ -668,9 +661,8 @@ export class ReadAloudNavigator {
             if (token !== this.loadToken) return false;
             failures.forEach(failure => this.listeners.error?.(failure.error));
 
-            const language = this.contentLanguage();
             const ready = this.untilReady();
-            await this.speech.loadGndContent(guided, { language });
+            await this.speech.loadGndContent(guided, { language: this.contentLanguages()[0] });
             if (token !== this.loadToken) return false;
             this.unit = unit;
 
@@ -697,8 +689,6 @@ export class ReadAloudNavigator {
                 await new Promise(resolve => setTimeout(resolve, left));
                 if (token !== this.loadToken) return false;
             }
-            // A languageOverride submitted meanwhile; from setLoading(false) on, submitPreferences() reloads.
-            if (language !== this.contentLanguage()) return this.loadUnit(() => unit, () => this.indexAfterRebuild(queue, start), this.loadPaused, this.loadSince);
             this.setLoading(false);
             const loaded = this.speech.getContentQueue();
             if (!ReadAloudNavigator.sameQueue(loaded, this.watchedQueue)) this.watchLayout(loaded);
@@ -1334,17 +1324,10 @@ export class ReadAloudNavigator {
         return this.navigator.layout === Layout.reflowable ? Layout.reflowable : Layout.scrolled;
     }
 
-    // Speech only takes the content language as content is loaded, so the loaded unit is extracted again.
-    private async reloadLanguage(unit: ReadingUnit, token: number): Promise<void> {
-        const { guided } = await this.pool.stitch(unit);
-        // Stopped, loading another unit, or done reading meanwhile
-        if (token !== this.loadToken || this.state === "idle") return;
-        await this.speech.loadGndContent(guided, { language: this.contentLanguage() });
-    }
-
-    // Without a metadata language, the override is the language of content that doesn't declare one.
-    private contentLanguage(): string | undefined {
-        return this.navigator.publication.metadata.languages?.[0] ?? this._settings.languageOverride ?? undefined;
+    // The metadata's languages, else the reader's, as voices fall back to it.
+    private contentLanguages(): string[] {
+        const languages = this.navigator.publication.metadata.languages ?? [];
+        return languages.length ? languages : [navigator.languages?.[0] ?? "en"];
     }
 
     // The reader's too, so speech can tell when none of the publication's has a voice.
@@ -1359,13 +1342,13 @@ export class ReadAloudNavigator {
     }
 
     // Speech knows nothing of pages and spreads, so it never auto-pauses at them itself.
-    private static speechPreferences(preferences: IReadAloudPreferences, metadataLanguage?: string): SpeechPreferences {
+    private static speechPreferences(preferences: IReadAloudPreferences, contentLanguage: string): SpeechPreferences {
         const { autoPause, languageOverride, startInViewport, keepCentered, detachable, readFromPointer, utteranceStyle, wordStyle, ...speech } = preferences;
         const ownScope = autoPause === ReadAloudAutoPause.page || autoPause === ReadAloudAutoPause.spread;
         return new SpeechPreferences({
             ...speech,
             autoPause: ownScope ? ReadAloudAutoPause.none : autoPause,
-            languageOverrides: languageOverride && metadataLanguage ? { [metadataLanguage]: languageOverride } : null
+            languageOverrides: languageOverride ? { [contentLanguage]: languageOverride } : null
         });
     }
 

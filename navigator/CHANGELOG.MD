@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Read aloud gives content in each of the publication's languages a voice of its own language, picked by `@readium/speech`'s `ReadiumSpeechNavigator`, and `settings.voice` has one for each of them before any is set
 - The default `WebSpeechEngine` also has the voices of the reader's languages (`navigator.languages`), so `languageFallback` is called when none of the publication's languages has a voice, and `getVoices()` lists them too
+- Read aloud takes the reader's language as the publication's when its metadata has none, so `languageOverride` applies to it as to a metadata language
 
 ## [2.14.0] – 2026-10-23
 
