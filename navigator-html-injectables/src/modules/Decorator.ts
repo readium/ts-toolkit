@@ -129,6 +129,8 @@ interface DecorationItem {
 
 const canNativeHighlight = () => ("Highlight" in window);
 const cannotNativeHighlight = ["IMG", "IMAGE", "AUDIO", "VIDEO", "SVG"];
+// Elements whose boxes text-node rects leave out.
+const replacedContentTags = [...cannotNativeHighlight, "IFRAME", "OBJECT", "EMBED", "CANVAS"];
 // Elements that trigger WebKit's CSS Custom Highlight repaint bug on removal.
 const webkitRepaintProneTags = new Set(["SUP", "SUB", "SMALL", "CODE"]);
 const outlineStrokeWidth = 2;
@@ -857,7 +859,7 @@ class DecorationGroup {
     private static replacedContentRects(range: Range): Rect[] {
         const ancestor = range.commonAncestorContainer;
         if (ancestor.nodeType !== Node.ELEMENT_NODE) return [];
-        return Array.from((ancestor as Element).querySelectorAll(cannotNativeHighlight.join(", ").toLowerCase()))
+        return Array.from((ancestor as Element).querySelectorAll(replacedContentTags.join(", ").toLowerCase()))
             .filter(element => range.intersectsNode(element))
             .flatMap(element => Array.from(element.getClientRects()))
             // Plain objects, since getClientRectsNoOverlap adjusts rects in place.
