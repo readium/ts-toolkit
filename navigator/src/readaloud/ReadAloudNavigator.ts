@@ -58,6 +58,8 @@ export interface ReadAloudListeners {
     wordChanged?: (locator: Locator, word: string) => void;
     /** The voices `settings.voice` gives each language changed, e.g. once picked. */
     voicesChanged?: () => void;
+    /** No voice was found for `language` (BCP 47), so its content is spoken with another; called once per language. */
+    languageFallback?: (language: string) => void;
     error?: (error: unknown) => void;
 }
 
@@ -460,6 +462,7 @@ export class ReadAloudNavigator {
             }));
         };
         on("voiceschanged", () => this.listeners.voicesChanged?.());
+        on("languagefallback", event => this.listeners.languageFallback?.(event.detail.language));
         on("start", event => {
             // Engines that don't report the voice speaking are taken to use theirs.
             this.spokenVoice = event.detail?.voice ?? this.engine.getCurrentVoice();

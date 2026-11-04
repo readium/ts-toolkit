@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `voicesChanged` read-aloud listener, called when the voices `settings.voice` gives each language change, e.g. once picked
+- `languageFallback` read-aloud listener, called once per language without a voice, whose content is then spoken with another
 - `DecorationLineStyle` is exported, for the `lineStyle` of built-in decoration styles from `@readium/decorator` 1.4.0
 
 ### Changed
