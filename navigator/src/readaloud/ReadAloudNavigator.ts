@@ -63,7 +63,7 @@ export interface ReadAloudListeners {
 }
 
 export interface ReadAloudConfiguration {
-    /** Defaults to a `WebSpeechEngine` with the voices of the publication's languages. */
+    /** Defaults to a `WebSpeechEngine` with the voices of the publication's languages and the reader's. */
     engine?: ReadiumSpeechPlaybackEngine;
     provider?: GuidedNavigationProvider;
     preferences?: IReadAloudPreferences;
@@ -187,8 +187,8 @@ export class ReadAloudNavigator {
         } else {
             const engine = new WebSpeechEngine();
             const languages = this.publicationLanguages(this._preferences.languageOverride ?? this._defaults.languageOverride);
-            // Loads only the publication's languages' voices; the speech navigator's own initialize() shares this one
-            void engine.initialize({ languages: languages.length ? languages : undefined }).catch(() => {});
+            // The speech navigator's own initialize() shares this one
+            void engine.initialize({ languages: this.scopedLanguages(languages) }).catch(() => {});
             this.engine = engine;
         }
         this.speech = new ReadiumSpeechNavigator(this.engine, {
@@ -1345,6 +1345,11 @@ export class ReadAloudNavigator {
     // Without a metadata language, the override is the language of content that doesn't declare one.
     private contentLanguage(): string | undefined {
         return this.navigator.publication.metadata.languages?.[0] ?? this._settings.languageOverride ?? undefined;
+    }
+
+    // The reader's too, so speech can tell when none of the publication's has a voice.
+    private scopedLanguages(languages: string[]): string[] | undefined {
+        return languages.length ? [...new Set([...languages, ...(navigator.languages ?? [])])] : undefined;
     }
 
     // The override comes first, in place of the metadata's primary language it corrects.
