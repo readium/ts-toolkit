@@ -4,3 +4,7 @@ node_modules
 dist
 types
 coverage
+test/test-results
+test/playwright-report
+test/snapshots/local
+test/dist

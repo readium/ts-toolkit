@@ -6,7 +6,7 @@ import { ModuleName } from "./ModuleLibrary.ts";
 import { Rect, getClientRectsNoOverlap, getTextClientRects, rectContainsPoint } from "../helpers/rect.ts";
 import { getProperty } from "../helpers/css.ts";
 import { isDarkColor, getContrastingTextColor, adjustColorForContrast, colorToRgba } from "@readium/helpers";
-import { makeWritingContext, OVERLAY_Z_INDEX, WritingContext } from "../helpers/document.ts";
+import { hasRTLDirection, isVerticalWriting, makeWritingContext, OVERLAY_Z_INDEX, WritingContext } from "../helpers/document.ts";
 import { sML } from "@readium/helpers";
 import { sanitizeHTML } from "../helpers/sanitize.ts";
 
@@ -46,6 +46,13 @@ export enum DecorationLayout {
     Bounds = "bounds", // A single HTML element covering the smallest region containing all CSS border boxes.
 }
 
+export enum DecorationLineStyle {
+    Solid = "solid",
+    Dashed = "dashed",
+    Dotted = "dotted",
+    Wavy = "wavy",
+}
+
 /** Built-in decoration styles. layout/width are optional overrides; defaults are Boxes/Wrap. */
 export interface BuiltinDecorationStyle {
     type?: Exclude<DecorationStyleType, "template">;
@@ -54,6 +61,8 @@ export interface BuiltinDecorationStyle {
     width?: DecorationWidth;
     enforceContrast?: boolean; // When true (default), tint is adjusted for contrast against the background.
     expand?: number; // Inflates each client rect outward by this many CSS pixels on all sides.
+    thickness?: number; // Line/stroke width in CSS pixels; for textColor, extra glyph stroke width (faux bold, not in WebKit).
+    lineStyle?: DecorationLineStyle; // Line/stroke pattern of underline, strikethrough, highlightUnderline and outline.
 }
 
 /**
@@ -120,12 +129,13 @@ interface DecorationItem {
 
 const canNativeHighlight = () => ("Highlight" in window);
 const cannotNativeHighlight = ["IMG", "IMAGE", "AUDIO", "VIDEO", "SVG"];
+// Elements whose boxes text-node rects leave out.
+const replacedContentTags = [...cannotNativeHighlight, "IFRAME", "OBJECT", "EMBED", "CANVAS"];
 // Elements that trigger WebKit's CSS Custom Highlight repaint bug on removal.
 const webkitRepaintProneTags = new Set(["SUP", "SUB", "SMALL", "CODE"]);
 const outlineStrokeWidth = 2;
 const outlineOffset = 1;
-// SVG centres the stroke on the path, so half of it is added to the outline offset.
-const outlinePathOffset = outlineOffset + outlineStrokeWidth / 2;
+const lineThickness = 0.1;
 
 class DecorationGroup {
     public readonly items: DecorationItem[] = [];
@@ -247,7 +257,7 @@ class DecorationGroup {
         }
         if (this.experimentalHighlights) {
             const { type } = decoration.style;
-            const { layout, width, expand } = decoration.style as BuiltinDecorationStyle;
+            const { layout, width, expand, thickness, lineStyle } = decoration.style as BuiltinDecorationStyle;
             // CSS Highlight API only handles text-level highlight styling (boxes + wrap).
             // Everything else must go through the DOM overlay path.
             const needsDomOverlay =
@@ -257,7 +267,13 @@ class DecorationGroup {
                     type === DecorationStyleType.Mask ||
                     (layout !== undefined && layout !== DecorationLayout.Boxes) ||
                     (width  !== undefined && width  !== DecorationWidth.Wrap) ||
-                    !!expand
+                    !!expand ||
+                    // WebKit parses but doesn't paint text-decoration thickness/style in ::highlight().
+                    (!!sML.UA.WebKit && type !== DecorationStyleType.Highlight &&
+                        (thickness !== undefined || (!!lineStyle && lineStyle !== DecorationLineStyle.Solid))) ||
+                    // Blink doesn't paint underlines in ::highlight() in vertical Japanese or Korean documents.
+                    (!!sML.UA.Blink && isVerticalWriting(this.wnd) &&
+                        (type === DecorationStyleType.Underline || type === DecorationStyleType.HighlightUnderline))
                 );
             if (needsDomOverlay) this.notTextFlag?.set(id, true);
         }
@@ -273,7 +289,7 @@ class DecorationGroup {
 
         this.items.push(item);
         this.layout(item);
-        item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, ((item.decoration.style as BuiltinDecorationStyle).expand ?? 0) + this.hitGap()));
+        item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, this.scaledExpand(item.decoration.style) + this.hitGap()));
         this.renderLayout([item]);
     }
 
@@ -466,6 +482,11 @@ class DecorationGroup {
         return 2 * this.effectiveZoom();
     }
 
+    /** The style's expand (CSS pixels) converted to client-rect units. */
+    private scaledExpand(style: DecorationStyle): number {
+        return ((style as BuiltinDecorationStyle).expand ?? 0) * this.effectiveZoom();
+    }
+
     private handleActivation(e: PointerEvent) {
         if (!this._activatable) return;
         const { docX, docY } = this.pointerToDocCoords(e);
@@ -593,7 +614,7 @@ class DecorationGroup {
             this.currentRender = this.wnd.requestAnimationFrame(() => {
                 this.items.forEach(i => {
                     this.layout(i);
-                    i.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(i.range, false, false, ((i.decoration.style as BuiltinDecorationStyle).expand ?? 0) + this.hitGap()));
+                    i.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(i.range, false, false, this.scaledExpand(i.decoration.style) + this.hitGap()));
                 });
                 this.renderLayout(this.items);
             });
@@ -608,6 +629,7 @@ class DecorationGroup {
     repositionOverlays() {
         const relaidOut: DecorationItem[] = [];
         const ctx = makeWritingContext(this.wnd);
+        let overlayCtx: WritingContext | undefined;
         this.items.forEach(item => {
             if (this.experimentalHighlights && !this.notTextFlag?.has(item.id)) return;
             // Scrolling inside a container moves the text without scrolling the document.
@@ -615,12 +637,12 @@ class DecorationGroup {
                 this.scheduleMaskUpdate();
                 return;
             }
-            if (!this.repositionItem(item, ctx)) {
+            if (!this.repositionItem(item, overlayCtx ??= this.overlayContext())) {
                 item.container?.remove();
                 this.layout(item);
                 relaidOut.push(item);
             }
-            item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, ((item.decoration.style as BuiltinDecorationStyle).expand ?? 0) + this.hitGap()), ctx);
+            item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, this.scaledExpand(item.decoration.style) + this.hitGap()), ctx);
         });
         if (relaidOut.length) this.renderLayout(relaidOut);
     }
@@ -637,7 +659,7 @@ class DecorationGroup {
         const layout = style.layout;
 
         // Group by (type, tint) — items sharing the same visual style share one sub-highlight and one CSS rule.
-        const subKey = this._getSubKey(type, tint);
+        const subKey = this._getSubKey(type, tint, style.thickness, style.lineStyle);
 
         // On update: remove this item's range from its previous sub-highlight.
         if (item.highlightSubKey) {
@@ -687,12 +709,24 @@ class DecorationGroup {
                     inlineOrigin = ctx.inlineStart(boundingRect);
                     inlineExtent = ctx.inlineSize(boundingRect);
                 }
-                const startCaret = caretPositionFromPoint(inlineOrigin, ctx.blockStart(boundingRect) + 1);
-                const endCaret = caretPositionFromPoint(inlineOrigin + inlineExtent, ctx.blockStart(boundingRect) + ctx.blockSize(boundingRect) - 1);
+                // Right-to-left lines start on the right.
+                const ancestor = item.range.commonAncestorContainer;
+                const textElement = ancestor.nodeType === Node.ELEMENT_NODE ? ancestor as Element : ancestor.parentElement!;
+                const rtl = hasRTLDirection(this.wnd, textElement);
+                const [lineStart, lineEnd] = rtl ? [inlineOrigin + inlineExtent, inlineOrigin] : [inlineOrigin, inlineOrigin + inlineExtent];
+                const startCaret = caretPositionFromPoint(lineStart, ctx.blockStart(boundingRect) + 1);
+                const endCaret = caretPositionFromPoint(lineEnd, ctx.blockStart(boundingRect) + ctx.blockSize(boundingRect) - 1);
+                const expandedRange = this.wnd.document.createRange();
                 if (startCaret && endCaret) {
-                    const expandedRange = this.wnd.document.createRange();
                     expandedRange.setStart(startCaret.offsetNode, startCaret.offset);
-                    expandedRange.setEnd(endCaret.offsetNode, endCaret.offset);
+                    // Text running against the element's direction puts the carets in reverse document order.
+                    if (expandedRange.comparePoint(endCaret.offsetNode, endCaret.offset) < 0) {
+                        expandedRange.setStart(endCaret.offsetNode, endCaret.offset);
+                    } else {
+                        expandedRange.setEnd(endCaret.offsetNode, endCaret.offset);
+                    }
+                }
+                if (!expandedRange.collapsed) {
                     sub.add(expandedRange);
                     item.range = expandedRange;
                 } else {
@@ -707,20 +741,25 @@ class DecorationGroup {
         const applyContrast = style.enforceContrast !== false;
         const adjustedTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
 
+        const lineWidth = style.thickness === undefined ? `${lineThickness}em` : `${style.thickness}px`;
+        const lineStyle = style.lineStyle ?? DecorationLineStyle.Solid;
+
         let css: string;
         switch (type) {
             case DecorationStyleType.Underline:
                 css = `::highlight(${subKey}) {
                     text-decoration: underline;
                     text-decoration-color: ${adjustedTint};
-                    text-decoration-thickness: 0.1em;
+                    text-decoration-thickness: ${lineWidth};
+                    text-decoration-style: ${lineStyle};
                 }`;
                 break;
             case DecorationStyleType.Strikethrough:
                 css = `::highlight(${subKey}) {
                     text-decoration: line-through;
                     text-decoration-color: ${adjustedTint};
-                    text-decoration-thickness: 0.1em;
+                    text-decoration-thickness: ${lineWidth};
+                    text-decoration-style: ${lineStyle};
                 }`;
                 break;
             case DecorationStyleType.Outline:
@@ -729,11 +768,16 @@ class DecorationGroup {
                     outline-offset: 1px;
                 }`;
                 break;
-            case DecorationStyleType.TextColor:
+            case DecorationStyleType.TextColor: {
+                // Faux bold: font-weight isn't allowed in ::highlight() and would reflow anyway.
+                const shift = style.thickness ? style.thickness / 2 : 0;
+                const [x, y] = makeWritingContext(this.wnd).isVertical ? [0, shift] : [shift, 0];
                 css = `::highlight(${subKey}) {
-                    color: ${adjustedTint};
+                    color: ${adjustedTint};${shift ? `
+                    text-shadow: ${x}px ${y}px 0 ${adjustedTint}, ${-x}px ${-y}px 0 ${adjustedTint};` : ""}
                 }`;
                 break;
+            }
             case DecorationStyleType.HighlightUnderline: {
                 const { r, g, b } = colorToRgba(adjustedTint);
                 const fillTint = `rgba(${r}, ${g}, ${b}, 0.3)`;
@@ -742,7 +786,8 @@ class DecorationGroup {
                     background-color: ${fillTint};
                     text-decoration: underline;
                     text-decoration-color: ${adjustedTint};
-                    text-decoration-thickness: 0.1em;
+                    text-decoration-thickness: ${lineWidth};
+                    text-decoration-style: ${lineStyle};
                 }`;
                 break;
             }
@@ -757,8 +802,8 @@ class DecorationGroup {
         this._rebuildHighlightStylesheet(stylesheet);
     }
 
-    private _getSubKey(type: DecorationStyleType | string, tint: string): string {
-        const fingerprint = `${type}::${tint}`;
+    private _getSubKey(type: DecorationStyleType | string, tint: string, thickness?: number, lineStyle?: DecorationLineStyle): string {
+        const fingerprint = `${type}::${tint}::${thickness ?? ""}::${lineStyle ?? ""}`;
         let subKey = this._tintSubKeys.get(fingerprint);
         if (!subKey) {
             subKey = `${this.id}--${this._subKeyCounter++}`;
@@ -810,15 +855,157 @@ class DecorationGroup {
         }
     }
 
+    /** Boxes of the images and other replaced content in a range, which text-node rects leave out. */
+    private static replacedContentRects(range: Range): Rect[] {
+        const ancestor = range.commonAncestorContainer;
+        if (ancestor.nodeType !== Node.ELEMENT_NODE) return [];
+        return Array.from((ancestor as Element).querySelectorAll(replacedContentTags.join(", ").toLowerCase()))
+            .filter(element => range.intersectsNode(element))
+            .flatMap(element => Array.from(element.getClientRects()))
+            // Plain objects, since getClientRectsNoOverlap adjusts rects in place.
+            .map(({ left, right, top, bottom, width, height }) => ({ left, right, top, bottom, width, height }));
+    }
+
+    /**
+     * Merges the runs of each line, which inline elements such as sup or code split into rects of different sizes.
+     * With `lengthenOnly`, as for text decorations, a line keeps the block position of its tallest run, and those rects only lengthen it.
+     */
+    private static mergeLineRects(rects: Rect[], ctx: WritingContext, lengthenOnly?: Rect[]): Rect[] {
+        const blockEnd = (r: Rect) => ctx.blockStart(r) + ctx.blockSize(r);
+        const inlineEnd = (r: Rect) => ctx.inlineStart(r) + ctx.inlineSize(r);
+        const sameLine = (rect: Rect, line: Rect) =>
+            Math.min(blockEnd(rect), blockEnd(line)) - Math.max(ctx.blockStart(rect), ctx.blockStart(line)) > Math.min(ctx.blockSize(rect), ctx.blockSize(line)) / 2 &&
+            Math.max(ctx.inlineStart(rect), ctx.inlineStart(line)) - Math.min(inlineEnd(rect), inlineEnd(line)) <= 1;
+        const union = (a: Rect, b: Rect, blockFrom?: Rect): Rect => {
+            const left = Math.min(a.left, b.left), right = Math.max(a.right, b.right);
+            const top = Math.min(a.top, b.top), bottom = Math.max(a.bottom, b.bottom);
+            const box = { left, right, top, bottom, width: right - left, height: bottom - top };
+            if (!blockFrom) return box;
+            return ctx.isVertical
+                ? { ...box, left: blockFrom.left, right: blockFrom.right, width: blockFrom.width }
+                : { ...box, top: blockFrom.top, bottom: blockFrom.bottom, height: blockFrom.height };
+        };
+        const merged: Rect[] = [];
+        // Sorted along the inline axis, each run touches the line it extends.
+        for (const rect of [...rects].sort((a, b) => ctx.inlineStart(a) - ctx.inlineStart(b))) {
+            const index = merged.findIndex(line => sameLine(rect, line));
+            if (index < 0) {
+                merged.push(rect);
+                continue;
+            }
+            const line = merged[index];
+            merged[index] = union(line, rect, lengthenOnly && (ctx.blockSize(rect) > ctx.blockSize(line) ? rect : line));
+        }
+        for (const rect of lengthenOnly ?? []) {
+            const index = merged.findIndex(line => sameLine(rect, line));
+            if (index < 0) merged.push(rect);
+            else merged[index] = union(merged[index], rect, merged[index]);
+        }
+        return merged;
+    }
+
     private static isShapeOutline(style: DecorationStyle): boolean {
-        return style.type === DecorationStyleType.Outline && style.layout !== DecorationLayout.Bounds;
+        // CSS outlines can't be wavy, so a wavy Bounds outline is drawn as a path too, as is a dotted one in WebKit.
+        const { lineStyle } = style as BuiltinDecorationStyle;
+        return style.type === DecorationStyleType.Outline &&
+            (style.layout !== DecorationLayout.Bounds || lineStyle === DecorationLineStyle.Wavy || DecorationGroup.drawsOwnDots(lineStyle));
+    }
+
+    /** WebKit sometimes paints dotted borders solid on high-density screens, depending on their length. */
+    private static drawsOwnDots(lineStyle?: DecorationLineStyle): boolean {
+        return !!sML.UA.WebKit && lineStyle === DecorationLineStyle.Dotted;
+    }
+
+    /** Tiling SVG dot for a CSS background, one dot and one gap long and one dot across. */
+    private static dotImage(tint: string, vertical: boolean): string {
+        const viewBox = vertical ? "0 0 1 2" : "0 0 2 1";
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" preserveAspectRatio="none"><circle cx="0.5" cy="0.5" r="0.5" fill="${tint}"/></svg>`;
+        return `url('data:image/svg+xml,${encodeURIComponent(svg)}')`;
+    }
+
+    /** Tiling SVG wave for a CSS background, one wavelength long and three stroke widths across. */
+    private static waveImage(tint: string, vertical: boolean): string {
+        const [viewBox, path] = vertical ? ["0 0 3 6", "M1.5 0Q-0.5 1.5 1.5 3T1.5 6"] : ["0 0 6 3", "M0 1.5Q1.5 -0.5 3 1.5T6 1.5"];
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="${tint}" stroke-width="1" stroke-linecap="round"/></svg>`;
+        return `url('data:image/svg+xml,${encodeURIComponent(svg)}')`;
+    }
+
+    /**
+     * Declarations drawing an underline, plus an overline for Bounds layout, outside the element's box so
+     * thickness grows away from the text, with an optional fill kept over the text.
+     */
+    private underlineDeclarations(item: DecorationItem, ctx: WritingContext, tint: string, lineStyle: DecorationLineStyle, isBounds: boolean, fill?: string): string[] {
+        const t = this.underlineWidth(item);
+        const [under, over] = ctx.isVertical ? ["right", "left"] : ["bottom", "top"];
+        const sides = isBounds ? [under, over] : [under];
+        // Content-box sizing adds borders and padding outside the positioned box; the overline is pulled back over it.
+        const declarations = ["box-sizing: content-box !important"];
+        const wavy = lineStyle === DecorationLineStyle.Wavy;
+        if (!wavy && !DecorationGroup.drawsOwnDots(lineStyle)) {
+            declarations.push(...sides.map(side => `border-${side}: ${t} ${lineStyle} ${tint} !important`));
+            if (isBounds) declarations.push(`margin-${over}: calc(-1 * ${t}) !important`);
+            declarations.push(fill ? `background: ${fill} padding-box !important` : "background-color: transparent !important");
+            return declarations;
+        }
+        const band = wavy ? `calc(3 * ${t})` : t;
+        const period = `calc(${wavy ? 6 : 2} * ${t})`;
+        declarations.push(...sides.map(side => `padding-${side}: ${band} !important`));
+        if (isBounds) declarations.push(`margin-${over}: calc(-1 * ${band}) !important`);
+        const image = wavy ? DecorationGroup.waveImage(tint, ctx.isVertical) : DecorationGroup.dotImage(tint, ctx.isVertical);
+        const waves = sides.map(side => ({
+            position: ctx.isVertical ? `${side} top` : `left ${side}`,
+            size: ctx.isVertical ? `${band} ${period}` : `${period} ${band}`,
+            repeat: ctx.isVertical ? "no-repeat round" : "round no-repeat",
+        }));
+        // The fill is a last background layer clipped to the content box, so it stays off the waves' padding.
+        const layers = fill ? [...waves.map(w => ({ ...w, image, clip: "border-box" })), { image: `linear-gradient(${fill}, ${fill})`, position: "0 0", size: "auto", repeat: "no-repeat", clip: "content-box" }]
+            : waves.map(w => ({ ...w, image, clip: "border-box" }));
+        declarations.push(
+            `background-image: ${layers.map(l => l.image).join(", ")} !important`,
+            `background-position: ${layers.map(l => l.position).join(", ")} !important`,
+            `background-size: ${layers.map(l => l.size).join(", ")} !important`,
+            `background-repeat: ${layers.map(l => l.repeat).join(", ")} !important`,
+            `background-clip: ${layers.map(l => l.clip).join(", ")} !important`,
+            "background-color: transparent !important",
+        );
+        return declarations;
+    }
+
+    private underlineWidth(item: DecorationItem): string {
+        const { thickness } = item.decoration.style as BuiltinDecorationStyle;
+        return thickness === undefined ? `${lineThickness}em` : `${thickness}px`;
+    }
+
+    /** Sizes a patterned strikethrough's border or wave to its thinned box, whose default size varies per line. */
+    private sizeStrikethroughPattern(item: DecorationItem, ctx: WritingContext, iz: number, el: HTMLElement, rect: Rect) {
+        const { type, layout, lineStyle } = item.decoration.style as BuiltinDecorationStyle;
+        if (type !== DecorationStyleType.Strikethrough || layout === DecorationLayout.Bounds) return;
+        if (!lineStyle || lineStyle === DecorationLineStyle.Solid) return;
+        const band = ctx.blockSize(rect) * iz;
+        if (lineStyle === DecorationLineStyle.Wavy || DecorationGroup.drawsOwnDots(lineStyle)) {
+            el.style.setProperty("background-size", ctx.isVertical ? `${band}px ${band * 2}px` : `${band * 2}px ${band}px`, "important");
+            return;
+        }
+        el.style.setProperty(ctx.isVertical ? "border-left-width" : "border-top-width", `${band}px`, "important");
+    }
+
+    /** Outline stroke width and wave amplitude in CSS pixels, and inset needed for Page/Viewport widths in client-rect units. */
+    private outlineMetrics(item: DecorationItem): { stroke: number; wave: number; inset: number } {
+        const style = item.decoration.style as BuiltinDecorationStyle;
+        if (style.type !== DecorationStyleType.Outline) return { stroke: 0, wave: 0, inset: 0 };
+        const stroke = style.thickness ?? outlineStrokeWidth;
+        const wave = style.lineStyle === DecorationLineStyle.Wavy ? stroke : 0;
+        // For Page/Viewport widths the snap edge coincides with the viewport edge, so the outline would be clipped.
+        // A wave adds twice its amplitude: once to the path offset, once for its crests.
+        const inset = style.width === DecorationWidth.Page || style.width === DecorationWidth.Viewport ? (stroke + outlineOffset + wave * 2) * this.effectiveZoom() : 0;
+        return { stroke, wave, inset };
     }
 
     /**
      * SVG path data outlining the overlay rects as one shape per run of adjacent lines,
      * `offset` outside them. Coordinates are in the shadow host's (document) space.
      */
-    private outlinePath(item: DecorationItem, ctx: WritingContext, iz: number, rects: Rect[], boundingRect: DOMRect, inlineInset: number, offset: number): string {
+    private outlinePath(item: DecorationItem, ctx: WritingContext, iz: number, rects: Rect[], boundingRect: DOMRect, inlineInset: number, offset: number, wave: number): string {
         // Block coordinates are negated in vertical-rl so lines always progress towards larger values.
         const flip = ctx.isVertical && !ctx.isVertLR ? -1 : 1;
         const boxes = rects.map(rect => {
@@ -849,19 +1036,45 @@ class DecorationGroup {
             const mid = (k: number) => (run[k].b1 + run[k + 1].b0) / 2;
             // A step between two lines sits on the wider one's side, `offset` into the narrower one's band.
             const step = (k: number, wider: number) => mid(k) + Math.sign(wider) * offset;
-            const points: string[] = [toPoint(run[0].i1 + offset, run[0].b0 - offset)];
+            const points: [number, number][] = [[run[0].i1 + offset, run[0].b0 - offset]];
             for (let k = 0; k < n; k++) {
                 const b = step(k, run[k].i1 - run[k + 1].i1);
-                points.push(toPoint(run[k].i1 + offset, b), toPoint(run[k + 1].i1 + offset, b));
+                points.push([run[k].i1 + offset, b], [run[k + 1].i1 + offset, b]);
             }
-            points.push(toPoint(run[n].i1 + offset, run[n].b1 + offset), toPoint(run[n].i0 - offset, run[n].b1 + offset));
+            points.push([run[n].i1 + offset, run[n].b1 + offset], [run[n].i0 - offset, run[n].b1 + offset]);
             for (let k = n - 1; k >= 0; k--) {
                 const b = step(k, run[k + 1].i0 - run[k].i0);
-                points.push(toPoint(run[k + 1].i0 - offset, b), toPoint(run[k].i0 - offset, b));
+                points.push([run[k + 1].i0 - offset, b], [run[k].i0 - offset, b]);
             }
-            points.push(toPoint(run[0].i0 - offset, run[0].b0 - offset));
-            return `M${points.join(" L")} Z`;
+            points.push([run[0].i0 - offset, run[0].b0 - offset]);
+            return wave
+                ? DecorationGroup.wavyPolygon(points, wave, toPoint)
+                : `M${points.map(([i, b]) => toPoint(i, b)).join(" L")} Z`;
         }).join(" ");
+    }
+
+    /** Closed path through `points` (inline, block) as a wave with a node on every corner, so edges always join cleanly. */
+    private static wavyPolygon(points: [number, number][], wave: number, toPoint: (i: number, b: number) => string): string {
+        const halfWave = wave * 3;
+        let d = `M${toPoint(...points[0])}`;
+        points.forEach(([i0, b0], k) => {
+            const [i1, b1] = points[(k + 1) % points.length];
+            const length = Math.hypot(i1 - i0, b1 - b0);
+            // Edges shorter than a half-wave, such as small steps between lines, stay straight.
+            if (length < halfWave) {
+                d += ` L${toPoint(i1, b1)}`;
+                return;
+            }
+            const count = Math.round(length / halfWave);
+            const [di, db] = [(i1 - i0) / count, (b1 - b0) / count];
+            // A quadratic control point twice the amplitude off the edge puts the crest `wave` away from it.
+            const [ni, nb] = [-(b1 - b0) / length * wave * 2, (i1 - i0) / length * wave * 2];
+            for (let j = 0; j < count; j++) {
+                const sign = j % 2 ? -1 : 1;
+                d += ` Q${toPoint(i0 + di * (j + 0.5) + ni * sign, b0 + db * (j + 0.5) + nb * sign)} ${toPoint(i0 + di * (j + 1), b0 + db * (j + 1))}`;
+            }
+        });
+        return `${d} Z`;
     }
 
     /**
@@ -883,24 +1096,32 @@ class DecorationGroup {
         }
 
         // Fall back to "boxes" value for layout.
-        // For underline/strikethrough, pre-filter to text-node rects only so Ruby
-        // (rt/rp) glyphs don't produce a separate decoration segment above the base text.
         const decoStyle = item.decoration.style;
         const decoType = (decoStyle as BuiltinDecorationStyle).type;
         const isLineDecoration = decoType === DecorationStyleType.Underline
             || decoType === DecorationStyleType.Strikethrough;
         const isStrikethrough = decoType === DecorationStyleType.Strikethrough;
-        const rectSource = isLineDecoration
-            ? getTextClientRects(item.range, ["rt", "rp"])
-            : item.range;
-        // Line decorations (underline/strikethrough) don't expand in the block axis —
-        // expand extends endpoints along the inline axis only.
-        let clientRects = getClientRectsNoOverlap(
+        const strikeWidth = isStrikethrough ? (decoStyle as BuiltinDecorationStyle).thickness : undefined;
+        const isWavyStrike = isStrikethrough && (decoStyle as BuiltinDecorationStyle).lineStyle === DecorationLineStyle.Wavy;
+        // Styles drawing lines or strokes use text-node rects plus images and the like, so Ruby (rt/rp) doesn't
+        // get its own segment above the base text; a range without text keeps its own boxes.
+        let rectSource: Range | Rect[] = item.range;
+        let replacedRects: Rect[] = [];
+        if (isLineDecoration || decoType === DecorationStyleType.Outline || decoType === DecorationStyleType.HighlightUnderline) {
+            const textRects = getTextClientRects(item.range, ["rt", "rp"]);
+            if (textRects.length) {
+                replacedRects = DecorationGroup.replacedContentRects(item.range);
+                rectSource = isLineDecoration ? textRects : [...textRects, ...replacedRects];
+            }
+        }
+        // Line decorations are expanded after thinning below, so expand isn't merged in here.
+        // Like CSS text decorations, their lines keep the base text's position; raised runs and images only lengthen them.
+        let clientRects = DecorationGroup.mergeLineRects(getClientRectsNoOverlap(
             rectSource,
             true,              // doNotMergeHorizontallyAlignedRects
             ctx.isVertical,    // doNotMergeVerticallyAlignedRects
             isLineDecoration ? 0 : expand
-        );
+        ), ctx, isLineDecoration ? replacedRects : undefined);
 
         clientRects = clientRects.sort((r1, r2) => {
             if (ctx.isVertical) {
@@ -914,8 +1135,10 @@ class DecorationGroup {
         return clientRects.map(clientRect => {
             let posRect: Rect = clientRect;
             if (isStrikethrough) {
-                // Thin the rect to ~10% of block size, centred on the mid-line.
-                const thickness = ctx.blockSize(clientRect) * 0.1;
+                // Thin the rect to the line width (~10% of block size by default), centred on the mid-line.
+                const lineWidth = strikeWidth !== undefined ? strikeWidth * this.effectiveZoom() : ctx.blockSize(clientRect) * 0.1;
+                // A wave tile is three line widths across.
+                const thickness = isWavyStrike ? lineWidth * 3 : lineWidth;
                 const blockMid  = ctx.blockStart(clientRect) + ctx.blockSize(clientRect) / 2;
                 const bs = blockMid - thickness / 2;
                 posRect = ctx.isVertical
@@ -923,9 +1146,11 @@ class DecorationGroup {
                     : { top:  bs, bottom: bs + thickness, left: clientRect.left, right: clientRect.right,   height: thickness,           width: clientRect.width  };
             }
             if (expand && isLineDecoration) {
-                posRect = ctx.isVertical
-                    ? { ...posRect, top: posRect.top - expand, bottom: posRect.bottom + expand, height: posRect.height + expand * 2 }
-                    : { ...posRect, left: posRect.left - expand, right: posRect.right + expand, width: posRect.width + expand * 2 };
+                // A strikethrough stays centred, so only its inline extent grows; an underline moves away from the text.
+                const ie = expand;
+                const be = isStrikethrough ? 0 : expand;
+                const [dx, dy] = ctx.isVertical ? [be, ie] : [ie, be];
+                posRect = { left: posRect.left - dx, right: posRect.right + dx, top: posRect.top - dy, bottom: posRect.bottom + dy, width: posRect.width + dx * 2, height: posRect.height + dy * 2 };
             }
             return posRect;
         });
@@ -946,23 +1171,23 @@ class DecorationGroup {
         }
 
         const iz = 1 / this.effectiveZoom();
-        const expand = (decoStyle as BuiltinDecorationStyle).expand ?? 0;
+        const expand = this.scaledExpand(decoStyle);
         const boundingRect = item.range.getBoundingClientRect();
-        const outlineInset = (() => {
-            if ((decoStyle as BuiltinDecorationStyle).type !== DecorationStyleType.Outline) return 0;
-            const w = (decoStyle as BuiltinDecorationStyle).width;
-            return (w === DecorationWidth.Page || w === DecorationWidth.Viewport) ? outlineStrokeWidth + outlineOffset : 0;
-        })();
+        const outline = this.outlineMetrics(item);
+        const outlineInset = outline.inset;
 
         const rects = this.computeOverlayRects(item, ctx, boundingRect, expand);
         if (DecorationGroup.isShapeOutline(decoStyle)) {
-            item.container.querySelector("path")?.setAttribute("d", this.outlinePath(item, ctx, iz, rects, boundingRect, outlineInset, outlinePathOffset));
+            item.container.querySelector("path")?.setAttribute("d", this.outlinePath(item, ctx, iz, rects, boundingRect, outlineInset, outlineOffset + outline.stroke / 2 + outline.wave, outline.wave));
             return true;
         }
         const children = Array.from(item.container.children) as HTMLElement[];
         if (children.length !== rects.length) return false;
 
-        children.forEach((el, i) => this.positionElement(item, ctx, iz, el, rects[i], boundingRect, outlineInset));
+        children.forEach((el, i) => {
+            this.positionElement(item, ctx, iz, el, rects[i], boundingRect, outlineInset);
+            this.sizeStrikethroughPattern(item, ctx, iz, el, rects[i]);
+        });
         return true;
     }
 
@@ -983,22 +1208,16 @@ class DecorationGroup {
         // itemContainer.dataset.style = item.decoration.style; // TODO style
         itemContainer.style.setProperty("pointer-events", "none");
 
-        const ctx = makeWritingContext(this.wnd);
+        const ctx = this.overlayContext();
 
         const iz = 1 / this.effectiveZoom();
 
-        const expand = (item.decoration.style as BuiltinDecorationStyle).expand ?? 0;
+        const expand = this.scaledExpand(item.decoration.style);
         const boundingRect = item.range.getBoundingClientRect();
 
         const decoStyle = item.decoration.style;
-        // outline: 2px + outline-offset: 1px = 3px bleed outside the box on each side.
-        // For Page/Viewport widths the snap edge coincides with the viewport edge, so the
-        // outline would be clipped. Inset the element to give that bleed room to render.
-        const outlineInset = (() => {
-            if ((decoStyle as BuiltinDecorationStyle).type !== DecorationStyleType.Outline) return 0;
-            const w = (decoStyle as BuiltinDecorationStyle).width;
-            return (w === DecorationWidth.Page || w === DecorationWidth.Viewport) ? outlineStrokeWidth + outlineOffset : 0;
-        })();
+        const outline = this.outlineMetrics(item);
+        const outlineInset = outline.inset;
         let elementTemplate: Element;
 
         if (decoStyle.type === DecorationStyleType.Template) {
@@ -1039,17 +1258,26 @@ class DecorationGroup {
             const isDarkMode = this.getCurrentDarkMode();
             const backgroundColor = this.getBackgroundColor();
             const applyContrast = style.enforceContrast !== false;
+            const lineStyle = style.lineStyle ?? DecorationLineStyle.Solid;
 
             if (DecorationGroup.isShapeOutline(style)) {
                 const svgNS = "http://www.w3.org/2000/svg";
                 const svg = this.wnd.document.createElementNS(svgNS, "svg");
                 svg.dataset.readium = "true";
-                svg.style.cssText = `position:absolute;top:0;left:0;width:1px;height:1px;overflow:visible;pointer-events:none;z-index:${OVERLAY_Z_INDEX}`;
+                // WebKit doesn't paint an SVG's overflow in vertical-rl, so the SVG keeps a horizontal writing mode.
+                svg.style.cssText = `position:absolute;top:0;left:0;width:1px;height:1px;overflow:visible;writing-mode:horizontal-tb;pointer-events:none;z-index:${OVERLAY_Z_INDEX}`;
                 const path = this.wnd.document.createElementNS(svgNS, "path");
                 path.setAttribute("fill", "none");
                 path.setAttribute("stroke", applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint);
-                path.setAttribute("stroke-width", String(outlineStrokeWidth));
-                path.setAttribute("d", this.outlinePath(item, ctx, iz, this.computeOverlayRects(item, ctx, boundingRect, expand), boundingRect, outlineInset, outlinePathOffset));
+                path.setAttribute("stroke-width", String(outline.stroke));
+                if (lineStyle === DecorationLineStyle.Dashed) path.setAttribute("stroke-dasharray", `${outline.stroke * 3} ${outline.stroke * 2}`);
+                if (lineStyle === DecorationLineStyle.Dotted) {
+                    // Zero-length dashes with round caps draw round dots, like dotted borders.
+                    path.setAttribute("stroke-dasharray", `0 ${outline.stroke * 2}`);
+                    path.setAttribute("stroke-linecap", "round");
+                }
+                // SVG centres the stroke on the path, so half of it, plus any wave amplitude, is added to the outline offset.
+                path.setAttribute("d", this.outlinePath(item, ctx, iz, this.computeOverlayRects(item, ctx, boundingRect, expand), boundingRect, outlineInset, outlineOffset + outline.stroke / 2 + outline.wave, outline.wave));
                 svg.append(path);
                 itemContainer.append(svg);
                 item.container = itemContainer;
@@ -1062,17 +1290,7 @@ class DecorationGroup {
                     case DecorationStyleType.Underline: {
                         const adjustedUnderlineTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
                         const isBounds = style.layout === DecorationLayout.Bounds;
-                        const [underlineSide, overlineSide] = ctx.isVertical
-                            ? ["border-right", "border-left"]
-                            : ["border-bottom", "border-top"];
-                        return [
-                            isBounds
-                                ? `${overlineSide}: 0.1em solid ${adjustedUnderlineTint} !important`
-                                : null,
-                            `${underlineSide}: 0.1em solid ${adjustedUnderlineTint} !important`,
-                            "background-color: transparent !important",
-                            "box-sizing: border-box !important",
-                        ].filter(Boolean).join("; ");
+                        return this.underlineDeclarations(item, ctx, adjustedUnderlineTint, lineStyle, isBounds).join("; ");
                     }
                     case DecorationStyleType.Strikethrough: {
                         const adjustedStrikeTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
@@ -1080,13 +1298,37 @@ class DecorationGroup {
                         if (isBounds) {
                             // Bounds covers the full height of the selection — use diagonal hatch lines
                             // so the text remains readable (physical "crossing out" appearance).
+                            const hatchWidth = style.thickness ?? 1;
+                            // A mask striped across the hatch lines cuts them into dashes or dots.
+                            const [dash, period] = lineStyle === DecorationLineStyle.Dashed ? [hatchWidth * 3, hatchWidth * 5]
+                                : lineStyle === DecorationLineStyle.Dotted ? [hatchWidth, hatchWidth * 2]
+                                : [];
+                            const mask = dash ? `repeating-linear-gradient(45deg, black 0 ${dash}px, transparent ${dash}px ${period}px)` : null;
                             return [
-                                `background: repeating-linear-gradient(-45deg, transparent, transparent 19px, ${adjustedStrikeTint} 19px, ${adjustedStrikeTint} 20px) !important`,
+                                `background: repeating-linear-gradient(-45deg, transparent, transparent 19px, ${adjustedStrikeTint} 19px, ${adjustedStrikeTint} ${19 + hatchWidth}px) !important`,
+                                "background-color: transparent !important",
+                                mask ? `-webkit-mask-image: ${mask} !important` : null,
+                                mask ? `mask-image: ${mask} !important` : null,
+                                "box-sizing: border-box !important",
+                            ].filter(Boolean).join("; ");
+                        }
+                        // Boxes path: the rect is thinned and centred by the boxes loop below.
+                        if (lineStyle === DecorationLineStyle.Wavy || DecorationGroup.drawsOwnDots(lineStyle)) {
+                            const image = lineStyle === DecorationLineStyle.Wavy ? DecorationGroup.waveImage(adjustedStrikeTint, ctx.isVertical) : DecorationGroup.dotImage(adjustedStrikeTint, ctx.isVertical);
+                            return [
+                                `background-image: ${image} !important`,
+                                `background-repeat: ${ctx.isVertical ? "no-repeat round" : "round no-repeat"} !important`,
                                 "background-color: transparent !important",
                                 "box-sizing: border-box !important",
                             ].join("; ");
                         }
-                        // Boxes path: the rect is thinned and centred by the boxes loop below; just fill it.
+                        if (lineStyle !== DecorationLineStyle.Solid) {
+                            return [
+                                `${ctx.isVertical ? "border-left" : "border-top"}: 0 ${lineStyle} ${adjustedStrikeTint} !important`,
+                                "background-color: transparent !important",
+                                "box-sizing: border-box !important",
+                            ].join("; ");
+                        }
                         return [
                             `background-color: ${adjustedStrikeTint} !important`,
                             "box-sizing: border-box !important",
@@ -1095,7 +1337,7 @@ class DecorationGroup {
                     case DecorationStyleType.Outline:
                         const adjustedOutlineTint = applyContrast ? adjustColorForContrast(tint, backgroundColor) : tint;
                         return [
-                            `outline: ${outlineStrokeWidth}px solid ${adjustedOutlineTint} !important`,
+                            `outline: ${outline.stroke}px ${lineStyle} ${adjustedOutlineTint} !important`,
                             `outline-offset: ${outlineOffset}px !important`,
                             "background-color: transparent !important",
                             "box-sizing: border-box !important",
@@ -1105,15 +1347,7 @@ class DecorationGroup {
                         const { r, g, b } = colorToRgba(adjustedHUTint);
                         const huFillTint = `rgba(${r}, ${g}, ${b}, 0.3)`;
                         const isBounds = style.layout === DecorationLayout.Bounds;
-                        const [huUnderlineSide, huOverlineSide] = ctx.isVertical
-                            ? ["border-right", "border-left"]
-                            : ["border-bottom", "border-top"];
-                        return [
-                            `background-color: ${huFillTint} !important`,
-                            isBounds ? `${huOverlineSide}: 0.1em solid ${adjustedHUTint} !important` : null,
-                            `${huUnderlineSide}: 0.1em solid ${adjustedHUTint} !important`,
-                            "box-sizing: border-box !important",
-                        ].filter(Boolean).join("; ");
+                        return this.underlineDeclarations(item, ctx, adjustedHUTint, lineStyle, isBounds, huFillTint).join("; ");
                     }
                     case DecorationStyleType.Highlight:
                     default: {
@@ -1140,6 +1374,7 @@ class DecorationGroup {
             const el = elementTemplate.cloneNode(true) as HTMLDivElement;
             el.style.setProperty("pointer-events", "none");
             this.positionElement(item, ctx, iz, el, posRect, boundingRect, outlineInset);
+            this.sizeStrikethroughPattern(item, ctx, iz, el, posRect);
             itemContainer.append(el);
         }
 
@@ -1167,6 +1402,22 @@ class DecorationGroup {
         });
     }
 
+    /** The shared shadow host overlays are drawn in, created on first use. */
+    private requireShadowHost(): HTMLDivElement {
+        if (!this.shadowHost || !this.shadowRoot) {
+            this.shadowHost = this.wnd.document.createElement("div");
+            this.shadowHost.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none";
+            this.wnd.document.body.appendChild(this.shadowHost);
+            this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" });
+        }
+        return this.shadowHost;
+    }
+
+    /** Context for drawing overlays, whose offsets are measured from the shadow host wherever the page positions it. */
+    private overlayContext(): WritingContext {
+        return makeWritingContext(this.wnd, this.requireShadowHost());
+    }
+
     /**
      * Returns the group container element, after making sure it exists.
      * @returns Group's container
@@ -1188,14 +1439,8 @@ class DecorationGroup {
         }
 
         if (!this.container) {
-            // Create shared shadow host if it doesn't exist
-            if (!this.shadowRoot) {
-                this.shadowHost = this.wnd.document.createElement("div");
-                this.shadowHost.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none";
-                this.wnd.document.body.appendChild(this.shadowHost);
-                this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" });
-            }
-            
+            this.requireShadowHost();
+
             // Create container in shared shadow root
             this.container = this.wnd.document.createElement("div");
             this.container.setAttribute("id", this.id);
@@ -1203,7 +1448,7 @@ class DecorationGroup {
             this.container.dataset.readium = "true";
             this.container.style.setProperty("pointer-events", "none");
             this.container.style.display = "contents";
-            this.shadowRoot.appendChild(this.container);
+            this.shadowRoot!.appendChild(this.container);
         }
         return this.container;
     }
@@ -1260,7 +1505,7 @@ class DecorationGroup {
         // Measured without the mask, which would otherwise keep the document as large as when last drawn.
         if (this.maskSvg) this.maskSvg.style.display = "none";
 
-        const ctx = makeWritingContext(this.wnd);
+        const ctx = this.overlayContext();
 
         const iz = 1 / this.effectiveZoom();
 
@@ -1268,12 +1513,17 @@ class DecorationGroup {
         const docEl = this.wnd.document.documentElement;
         const docW = docEl.scrollWidth * iz;
         const docH = docEl.scrollHeight * iz;
+        // The document's top-left corner in overlay coordinates; it extends left of the viewport when scrolling towards negative scrollLeft.
+        const se = this.wnd.document.scrollingElement!;
+        const startsRight = ctx.isVertical ? !ctx.isVertLR : hasRTLDirection(this.wnd, docEl);
+        const docX = ((startsRight ? se.clientWidth - se.scrollWidth : 0) - se.scrollLeft + ctx.xDocOffset) * iz;
+        const docY = (-se.scrollTop + ctx.yDocOffset) * iz;
         const allHoleRects: DOMRect[] = [];
         for (const item of maskItems) {
             const style  = item.decoration.style as BuiltinDecorationStyle;
             const layout = style.layout ?? DecorationLayout.Boxes;
             const width  = style.width  ?? DecorationWidth.Wrap;
-            const ex     = style.expand ?? 0;
+            const ex     = this.scaledExpand(style);
 
             const boundingRect = item.range.getBoundingClientRect();
 
@@ -1321,14 +1571,8 @@ class DecorationGroup {
 
         // Create or update SVG
         if (!this.maskSvg) {
-            // Ensure shared shadow host exists
-            if (!this.shadowRoot) {
-                this.shadowHost = this.wnd.document.createElement("div");
-                this.shadowHost.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none";
-                this.wnd.document.body.appendChild(this.shadowHost);
-                this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" });
-            }
-            
+            this.requireShadowHost();
+
             // Create SVG in shared shadow root
             this.maskSvg = this.wnd.document.createElementNS(svgNS, "svg") as SVGSVGElement;
             this.maskSvg.style.cssText = `position:absolute;top:0;left:0;width:${docW}px;height:${docH}px;pointer-events:none;z-index:${OVERLAY_Z_INDEX - 1}`;
@@ -1359,10 +1603,22 @@ class DecorationGroup {
 
         // Update SVG dimensions to cover full document
         this.maskSvg.style.display = "";
+        this.maskSvg.style.left = `${docX}px`;
+        this.maskSvg.style.top = `${docY}px`;
         this.maskSvg.style.width = `${docW}px`;
         this.maskSvg.style.height = `${docH}px`;
+        this.maskSvg.setAttribute("viewBox", `${docX} ${docY} ${docW} ${docH}`);
+
+        // A userSpaceOnUse mask clips to its own region, which doesn't follow the viewBox.
+        const maskElement = this.maskSvg.querySelector("mask");
+        maskElement?.setAttribute("x", String(docX));
+        maskElement?.setAttribute("y", String(docY));
+        maskElement?.setAttribute("width", String(docW));
+        maskElement?.setAttribute("height", String(docH));
 
         const visible = this.maskSvg.querySelector("mask > rect");
+        visible?.setAttribute("x", String(docX));
+        visible?.setAttribute("y", String(docY));
         visible?.setAttribute("width", String(docW));
         visible?.setAttribute("height", String(docH));
 
@@ -1381,8 +1637,8 @@ class DecorationGroup {
             const background  = userTint ? undefined : this.opaqueBackgroundColor();
             const fillColor   = userTint ?? background ?? defaultTint(DecorationStyleType.Mask);
             const fillOpacity = background ? "0.5" : "1";
-            maskRect.setAttribute("x", "0");
-            maskRect.setAttribute("y", "0");
+            maskRect.setAttribute("x", String(docX));
+            maskRect.setAttribute("y", String(docY));
             maskRect.setAttribute("width", String(docW));
             maskRect.setAttribute("height", String(docH));
             maskRect.setAttribute("fill", fillColor);

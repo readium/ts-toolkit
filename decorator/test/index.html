@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Decorations explorer</title>
+  <style>
+    html { background: #fff; color: #000; }
+    body { margin: 0; padding: 24px 48px; font: 18px/1.5 serif; }
+    form, nav { writing-mode: horizontal-tb; font: 13px/1.4 sans-serif; }
+    form { display: flex; flex-wrap: wrap; gap: 8px 16px; padding-block-end: 16px; border-block-end: 1px solid #ccc; margin-block-end: 24px; }
+    label { display: flex; gap: 4px; align-items: center; }
+    input[type="number"] { width: 4em; }
+    nav { margin-block-start: 32px; color: #555; }
+    nav a { margin-inline-end: 8px; }
+    article p { max-inline-size: 28em; }
+  </style>
+</head>
+<body>
+  <form id="controls">
+    <label>type <select name="type"></select></label>
+    <label>layout <select name="layout"></select></label>
+    <label>width <select name="width"></select></label>
+    <label>lineStyle <select name="lineStyle"></select></label>
+    <label>thickness <input type="number" name="thickness" min="0" step="0.5"></label>
+    <label>expand <input type="number" name="expand" min="0" step="1"></label>
+    <label>tint <input type="color" name="tint"></label>
+    <label>writing mode <select name="wm"></select></label>
+    <label>direction <select name="dir"></select></label>
+    <label>columns <input type="number" name="cols" min="1" max="3" step="1"></label>
+    <label>zoom <input type="number" name="zoom" min="0.5" max="3" step="0.25"></label>
+  </form>
+  <article></article>
+  <nav id="grids"></nav>
+  <script type="module" src="./index.ts"></script>
+</body>
+</html>

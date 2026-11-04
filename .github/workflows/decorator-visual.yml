@@ -1,0 +1,57 @@
+name: Decorator visual regression
+
+on:
+  push:
+    branches: ["develop"]
+    paths:
+      - "decorator/**"
+      - "navigator-html-injectables/**"
+      - "helpers/**"
+      - "shared/**"
+      - ".github/workflows/decorator-visual.yml"
+  pull_request:
+    branches: ["develop"]
+    paths:
+      - "decorator/**"
+      - "navigator-html-injectables/**"
+      - "helpers/**"
+      - "shared/**"
+      - ".github/workflows/decorator-visual.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./decorator
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: "pnpm"
+
+      - run: pnpm install
+      - run: pnpm exec playwright install --with-deps chromium firefox webkit
+      # Screenshots without a committed reference are written instead of failing; the others are compared.
+      - run: pnpm test --update-snapshots=missing
+
+      # Includes the references written by this run, to commit them from the runner's own rendering.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: decorator-snapshots
+          path: decorator/test/snapshots/
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: decorator/test/playwright-report/
+          retention-days: 14
