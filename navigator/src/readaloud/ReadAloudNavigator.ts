@@ -415,8 +415,8 @@ export class ReadAloudNavigator {
         this._preferences = this._preferences.merging(preferences);
         const old = this.speech.getContentQueue();
         const previousLanguage = this.contentLanguage();
-        // Idle, the next play() loads in the new language; loading, loadUnit() picks it up.
-        const reloads = this.state === "playing" || this.state === "paused";
+        // Idle, the next play() loads in the new language; loading a unit, loadUnit() picks it up.
+        const reloads = !this.loading && this.state !== "idle";
         const token = this.loadToken;
         await this.speech.submitPreferences(ReadAloudNavigator.speechPreferences(this._preferences, this.navigator.publication.metadata.languages?.[0]));
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
