@@ -414,9 +414,12 @@ export class ReadAloudNavigator {
         this._preferences = this._preferences.merging(preferences);
         const old = this.speech.getContentQueue();
         const previousLanguage = this.contentLanguage();
+        // Idle, the next play() loads in the new language; loading, loadUnit() picks it up.
+        const reloads = this.state === "playing" || this.state === "paused";
+        const token = this.loadToken;
         await this.speech.submitPreferences(ReadAloudNavigator.speechPreferences(this._preferences, this.navigator.publication.metadata.languages?.[0]));
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
-        if (this.unit && !this.loading && this.contentLanguage() !== previousLanguage) await this.reloadLanguage(this.unit);
+        if (reloads && this.unit && this.contentLanguage() !== previousLanguage) await this.reloadLanguage(this.unit, token);
         if (!this._settings.detachable && this._detached) this.attach();
         // Speech keeps its place in a rebuilt queue only while playing or paused itself, not while stopped here.
         const held = this.pausedBefore ?? this.turning;
@@ -1328,10 +1331,10 @@ export class ReadAloudNavigator {
     }
 
     // Speech only takes the content language as content is loaded, so the loaded unit is extracted again.
-    private async reloadLanguage(unit: ReadingUnit): Promise<void> {
-        const token = this.loadToken;
+    private async reloadLanguage(unit: ReadingUnit, token: number): Promise<void> {
         const { guided } = await this.pool.stitch(unit);
-        if (token !== this.loadToken || this.loading) return;
+        // Stopped, loading another unit, or done reading meanwhile
+        if (token !== this.loadToken || this.state === "idle") return;
         await this.speech.loadGndContent(guided, { language: this.contentLanguage() });
     }
 
