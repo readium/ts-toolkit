@@ -707,17 +707,24 @@ class DecorationGroup {
                     inlineOrigin = ctx.inlineStart(boundingRect);
                     inlineExtent = ctx.inlineSize(boundingRect);
                 }
-                // Right-to-left lines start on the right; reversed boundaries would collapse the range.
+                // Right-to-left lines start on the right.
                 const ancestor = item.range.commonAncestorContainer;
                 const textElement = ancestor.nodeType === Node.ELEMENT_NODE ? ancestor as Element : ancestor.parentElement!;
                 const rtl = hasRTLDirection(this.wnd, textElement);
                 const [lineStart, lineEnd] = rtl ? [inlineOrigin + inlineExtent, inlineOrigin] : [inlineOrigin, inlineOrigin + inlineExtent];
                 const startCaret = caretPositionFromPoint(lineStart, ctx.blockStart(boundingRect) + 1);
                 const endCaret = caretPositionFromPoint(lineEnd, ctx.blockStart(boundingRect) + ctx.blockSize(boundingRect) - 1);
+                const expandedRange = this.wnd.document.createRange();
                 if (startCaret && endCaret) {
-                    const expandedRange = this.wnd.document.createRange();
                     expandedRange.setStart(startCaret.offsetNode, startCaret.offset);
-                    expandedRange.setEnd(endCaret.offsetNode, endCaret.offset);
+                    // Text running against the element's direction puts the carets in reverse document order.
+                    if (expandedRange.comparePoint(endCaret.offsetNode, endCaret.offset) < 0) {
+                        expandedRange.setStart(endCaret.offsetNode, endCaret.offset);
+                    } else {
+                        expandedRange.setEnd(endCaret.offsetNode, endCaret.offset);
+                    }
+                }
+                if (!expandedRange.collapsed) {
                     sub.add(expandedRange);
                     item.range = expandedRange;
                 } else {
