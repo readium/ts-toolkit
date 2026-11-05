@@ -1,3 +1,4 @@
+import { getCssSelector } from "css-selector-generator";
 import { Comms } from "./comms/comms.ts";
 import { ReadiumWindow } from "./helpers/dom.ts";
 import { Module, ModuleDerived, ModuleLibrary, ModuleName } from "./modules/index.ts";
@@ -17,6 +18,8 @@ export class Loader<T extends string = ModuleName> {
      */
     constructor(wnd: ReadiumWindow = window as Window as ReadiumWindow, initialModules: string[] = []) {
         this.wnd = wnd; // Window instance
+        // Fallback for frames where the injected generator script cannot run (no allow-scripts, or a CSP)
+        wnd._readium_cssSelectorGenerator ??= { getCssSelector };
         this.comms = new Comms(wnd);
 
         const uniqueModules = [...new Set(initialModules)]; // Deduplicate initial module list
