@@ -1189,6 +1189,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             this.changeResource(-1).then((ok) => {
                 this._isNavigating = false;
                 cb(ok);
+            }).catch((error) => {
+                console.error(error);
+                this._isNavigating = false;
+                cb(false);
             });
         } else {
             this._cframes[0]?.msg?.send("go_prev", undefined, async (ack) => {
@@ -1211,6 +1215,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
             this.changeResource(1).then((ok) => {
                 this._isNavigating = false;
                 cb(ok);
+            }).catch((error) => {
+                console.error(error);
+                this._isNavigating = false;
+                cb(false);
             });
         } else {
             this._cframes[0]?.msg?.send("go_next", undefined, async (ack) => {
