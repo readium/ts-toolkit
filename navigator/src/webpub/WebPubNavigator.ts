@@ -818,7 +818,10 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
             : this.currentLocation;
         this._visibleFragmentIds = progression.visibleFragmentIds ?? [];
         this._notifyTimelineChange(locatorForTimeline);
+        const previousFrames = this._cframes;
         await this.framePool.update(this.pub, this.currentLocation, this.determineModules());
+        // The pool can rebuild the shown frame, e.g. when CSS changed while it was loading
+        if (this._cframes.some((f, i) => f && f !== previousFrames[i])) this.attachListener();
     }
 
     goBackward(_animated: boolean, cb: (ok: boolean) => void): void {
