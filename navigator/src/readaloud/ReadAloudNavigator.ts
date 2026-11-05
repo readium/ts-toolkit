@@ -55,11 +55,15 @@ export interface ReadAloudListeners {
     /** The reader moved away from the spoken text, or came back to it. */
     detachedChanged?: (detached: boolean) => void;
     wordChanged?: (locator: Locator, word: string) => void;
+    /** The voices `settings.voice` gives each language changed, e.g. once picked. */
+    voicesChanged?: () => void;
+    /** No voice was found for `language` (BCP 47), so its content is spoken with another; called once per language. */
+    languageFallback?: (language: string) => void;
     error?: (error: unknown) => void;
 }
 
 export interface ReadAloudConfiguration {
-    /** Defaults to a `WebSpeechEngine`. */
+    /** Defaults to a `WebSpeechEngine` with the voices of the publication's languages and the reader's. */
     engine?: ReadiumSpeechPlaybackEngine;
     provider?: GuidedNavigationProvider;
     preferences?: IReadAloudPreferences;
@@ -87,49 +91,6 @@ interface SpokenPoint {
     offset: number;
 }
 
-/**
- * A `WebSpeechEngine` whose voices, and default voice, are those of the publication's languages.
- * Its default voice sends word boundaries when one can.
- */
-class PublicationWebSpeechEngine extends WebSpeechEngine {
-    private ready = false;
-
-    constructor(private languages: string[]) {
-        super();
-    }
-
-    override async initialize(): Promise<boolean> {
-        if (!await super.initialize({ languages: this.scope() })) return false;
-        await this.setDefaultVoice();
-        this.ready = true;
-        return true;
-    }
-
-    /** Adds the voices of `languages`, and picks the default voice among them once initialized. */
-    async setLanguages(languages: string[]): Promise<void> {
-        this.languages = languages;
-        if (this.ready) await this.setDefaultVoice();
-    }
-
-    private scope(): string[] | undefined {
-        return this.languages.length ? this.languages : undefined;
-    }
-
-    private async setDefaultVoice(): Promise<void> {
-        const languages = this.scope();
-        // Loads the voices of languages not loaded yet
-        const manager = await WebSpeechVoiceManager.initialize({ languages });
-        const available = await this.getAvailableVoices();
-        // Boundaries are preferred within the first language with voices, not over the language
-        const language = languages?.find(language => filterByLanguages(available, language).length);
-        const scoped = language ?? languages;
-        const voices = scoped ? filterByLanguages(available, scoped) : available;
-        const boundaryVoices = voices.filter(voice => voice.controls?.boundary !== false);
-        const voice = await manager.getDefaultVoice(scoped ?? [...(navigator.languages ?? ["en"])], boundaryVoices.length ? boundaryVoices : voices);
-        if (voice) await this.setVoice(voice);
-    }
-}
-
 const UTTERANCE_GROUP = "readaloud-utterance";
 const WORD_GROUP = "readaloud-word";
 // Subpixel scrolling and rounding of the reported line starts.
@@ -142,7 +103,7 @@ const LAYOUT_TOLERANCE = 1;
 export class ReadAloudNavigator {
     private readonly speech: ReadiumSpeechNavigator;
     private readonly engine: ReadiumSpeechPlaybackEngine;
-    private readonly publicationEngine?: PublicationWebSpeechEngine;
+    private readonly ownsEngine: boolean;
     private readonly pool: GuidedNavigationPool;
     private readonly units: ReadingUnits;
     private readonly unsubscribers: (() => void)[] = [];
@@ -218,19 +179,25 @@ export class ReadAloudNavigator {
         this.units = new ReadingUnits(navigator);
         this._preferences = new ReadAloudPreferences(configuration.preferences);
         this._defaults = new ReadAloudDefaults(configuration.defaults);
-        const metadataLanguage = navigator.publication.metadata.languages?.[0];
-        if (!configuration.engine) {
-            const languageOverride = this._preferences.languageOverride ?? this._defaults.languageOverride;
-            this.publicationEngine = new PublicationWebSpeechEngine(this.publicationLanguages(languageOverride));
+        const contentLanguages = this.contentLanguages();
+        this.ownsEngine = !configuration.engine;
+        if (configuration.engine) {
+            this.engine = configuration.engine;
+        } else {
+            const engine = new WebSpeechEngine();
+            const languages = this.publicationLanguages(this._preferences.languageOverride ?? this._defaults.languageOverride);
+            // The speech navigator's own initialize() shares this one
+            void engine.initialize({ languages: this.scopedLanguages(languages) }).catch(() => {});
+            this.engine = engine;
         }
-        this.engine = configuration.engine ?? this.publicationEngine!;
         this.speech = new ReadiumSpeechNavigator(this.engine, {
-            preferences: ReadAloudNavigator.speechPreferences(this._preferences, metadataLanguage),
+            languages: contentLanguages,
+            preferences: ReadAloudNavigator.speechPreferences(this._preferences, contentLanguages[0]),
             defaults: ReadAloudNavigator.speechPreferences({
                 ...this._defaults.speech,
                 autoPause: this._defaults.autoPause,
                 languageOverride: this._defaults.languageOverride
-            }, metadataLanguage),
+            }, contentLanguages[0]),
         });
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
         this.displayed = navigator.viewport?.readingOrder ?? [];
@@ -421,7 +388,7 @@ export class ReadAloudNavigator {
     async getLanguages(): Promise<string[]> {
         // Initializes the engine first, so the voice manager is scoped to the publication's languages
         const voices = await this.speech.getVoices();
-        if (!this.publicationEngine) return [...new Set(voices.map(voice => extractLangRegionFromBCP47(voice.language)[0]))];
+        if (!this.ownsEngine) return [...new Set(voices.map(voice => extractLangRegionFromBCP47(voice.language)[0]))];
         const manager = await WebSpeechVoiceManager.initialize();
         return manager.getBrowserLanguages().map(language => language.code);
     }
@@ -445,17 +412,8 @@ export class ReadAloudNavigator {
     async submitPreferences(preferences: ReadAloudPreferences): Promise<void> {
         this._preferences = this._preferences.merging(preferences);
         const old = this.speech.getContentQueue();
-        const previousLanguageOverride = this._settings.languageOverride;
-        const languageOverride = this._preferences.languageOverride ?? this._defaults.languageOverride;
-        // Paused, the rebuilt queue and the new default voice restart the utterance once, on playing again.
-        const pausedForLanguage = !!this.publicationEngine && languageOverride !== previousLanguageOverride && this.speech.getState() === "playing";
-        if (pausedForLanguage) this.speech.pause();
-        await this.speech.submitPreferences(ReadAloudNavigator.speechPreferences(this._preferences, this.navigator.publication.metadata.languages?.[0]));
+        await this.speech.submitPreferences(ReadAloudNavigator.speechPreferences(this._preferences, this.contentLanguages()[0]));
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
-        if (this._settings.languageOverride !== previousLanguageOverride) {
-            await this.publicationEngine?.setLanguages(this.publicationLanguages(this._settings.languageOverride));
-        }
-        if (pausedForLanguage && this.speech.getState() === "paused") this.speech.play();
         if (!this._settings.detachable && this._detached) this.attach();
         // Speech keeps its place in a rebuilt queue only while playing or paused itself, not while stopped here.
         const held = this.pausedBefore ?? this.turning;
@@ -498,6 +456,12 @@ export class ReadAloudNavigator {
                 this.notifyState();
             }));
         };
+        on("voiceschanged", () => {
+            // Speech fires it before its submitPreferences() resolves
+            this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
+            this.listeners.voicesChanged?.();
+        });
+        on("languagefallback", event => this.listeners.languageFallback?.(event.detail.language));
         on("start", event => {
             // Engines that don't report the voice speaking are taken to use theirs.
             this.spokenVoice = event.detail?.voice ?? this.engine.getCurrentVoice();
@@ -698,7 +662,7 @@ export class ReadAloudNavigator {
             failures.forEach(failure => this.listeners.error?.(failure.error));
 
             const ready = this.untilReady();
-            await this.speech.loadGndContent(guided, { language: this.navigator.publication.metadata.languages?.[0] });
+            await this.speech.loadGndContent(guided, { language: this.contentLanguages()[0] });
             if (token !== this.loadToken) return false;
             this.unit = unit;
 
@@ -1360,6 +1324,17 @@ export class ReadAloudNavigator {
         return this.navigator.layout === Layout.reflowable ? Layout.reflowable : Layout.scrolled;
     }
 
+    // The metadata's languages, else the reader's, as voices fall back to it.
+    private contentLanguages(): string[] {
+        const languages = this.navigator.publication.metadata.languages ?? [];
+        return languages.length ? languages : [navigator.languages?.[0] ?? "en"];
+    }
+
+    // The reader's too, so speech can tell when none of the publication's has a voice.
+    private scopedLanguages(languages: string[]): string[] | undefined {
+        return languages.length ? [...new Set([...languages, ...(navigator.languages ?? [])])] : undefined;
+    }
+
     // The override comes first, in place of the metadata's primary language it corrects.
     private publicationLanguages(languageOverride: string | null): string[] {
         const languages = this.navigator.publication.metadata.languages ?? [];
@@ -1367,13 +1342,13 @@ export class ReadAloudNavigator {
     }
 
     // Speech knows nothing of pages and spreads, so it never auto-pauses at them itself.
-    private static speechPreferences(preferences: IReadAloudPreferences, metadataLanguage?: string): SpeechPreferences {
+    private static speechPreferences(preferences: IReadAloudPreferences, contentLanguage: string): SpeechPreferences {
         const { autoPause, languageOverride, startInViewport, keepCentered, detachable, readFromPointer, utteranceStyle, wordStyle, ...speech } = preferences;
         const ownScope = autoPause === ReadAloudAutoPause.page || autoPause === ReadAloudAutoPause.spread;
         return new SpeechPreferences({
             ...speech,
             autoPause: ownScope ? ReadAloudAutoPause.none : autoPause,
-            languageOverrides: languageOverride && metadataLanguage ? { [metadataLanguage]: languageOverride } : null
+            languageOverrides: languageOverride ? { [contentLanguage]: languageOverride } : null
         });
     }
 
