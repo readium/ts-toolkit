@@ -573,7 +573,7 @@ export class Timeline {
             // Fragment-only reference (e.g. "#t=60") has no resource of its own — use the queried href.
             const effectiveHref = refHref || href;
             if (effectiveHref !== href) continue;
-            if (!refFragment) return undefined;
+            if (!refFragment) return 0;
             const match = refFragment.match(/(?:^|&)t=([^&]+)/);
             return match ? parseNptTime(match[1]) : undefined;
         }

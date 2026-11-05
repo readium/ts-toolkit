@@ -707,6 +707,20 @@ describe('Timeline – locate()', () => {
     );
     expect(customTimeline.locate(locator('track2.mp3', { fragments: ['t=30'] }))?.title).toBe('Spanning Part');
   });
+
+  it('8.10 audio: a reference without t= starts at the beginning of the track', () => {
+    const t = build(
+      ro({ href: 'book.m4b', title: 'Audiobook' }),
+      toc(
+        { href: 'book.m4b',        title: 'Part 1' },
+        { href: 'book.m4b#t=60',   title: 'Part 2' },
+        { href: 'book.m4b#t=120',  title: 'Part 3' },
+      ),
+    );
+    expect(t.locate(locator('book.m4b', { fragments: ['t=0'], progression: 0 }))?.title).toBe('Audiobook');
+    expect(t.locate(locator('book.m4b', { fragments: ['t=30'], progression: 0.1 }))?.title).toBe('Audiobook');
+    expect(t.locate(locator('book.m4b', { fragments: ['t=90'], progression: 0.5 }))?.title).toBe('Part 2');
+  });
 });
 
 // ---------------------------------------------------------------------------
