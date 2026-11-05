@@ -721,6 +721,21 @@ describe('Timeline – locate()', () => {
     expect(t.locate(locator('book.m4b', { fragments: ['t=30'], progression: 0.1 }))?.title).toBe('Audiobook');
     expect(t.locate(locator('book.m4b', { fragments: ['t=90'], progression: 0.5 }))?.title).toBe('Part 2');
   });
+
+  it('8.11 audio multi-track: the start of the next track is located in that track', () => {
+    const t = build(
+      ro({ href: 'track1.mp3', title: 'Track 1' }, { href: 'track2.mp3', title: 'Track 2' }),
+      toc(
+        { href: 'track1.mp3',       title: 'Chapter 1' },
+        { href: 'track1.mp3#t=60',  title: 'Chapter 1, Part 2' },
+        { href: 'track2.mp3',       title: 'Chapter 2' },
+        { href: 'track2.mp3#t=60',  title: 'Chapter 2, Part 2' },
+      ),
+    );
+    expect(t.locate(locator('track1.mp3', { fragments: ['t=599'], progression: 0.99 }))?.title).toBe('Chapter 1, Part 2');
+    expect(t.locate(locator('track2.mp3', { fragments: ['t=0'], progression: 0 }))?.title).toBe('Track 2');
+    expect(t.locate(locator('track2.mp3', { fragments: ['t=5'], progression: 0.01 }))?.title).toBe('Track 2');
+  });
 });
 
 // ---------------------------------------------------------------------------
