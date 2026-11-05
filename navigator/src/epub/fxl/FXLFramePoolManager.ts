@@ -597,21 +597,33 @@ export class FXLFramePoolManager {
                 await Promise.all(creation.map(href => creator(href)));
             } catch (error) {
                 reject(error);
+                return;
             }
 
             // Update current frame(s)
             const newFrames: FXLFrameManager[] = [];
+            let spreadError: unknown;
             for (const s of spread) {
                 const newFrame = this.pool.get(s.href)!;
                 const source = this.blobs.get(s.href);
                 if(!source) continue; // This can get destroyed
 
                 this.cancelShowing(s.href);
-                await newFrame.load(modules, await source.build(true)); // In order to ensure modules match the latest configuration
-                await newFrame.show(this.spreadPosition(spread, s)); // Show/activate new frame
-                this.previousFrames.push(newFrame);
-                await newFrame.activate();
-                newFrames.push(newFrame);
+                try {
+                    await newFrame.load(modules, await source.build(true)); // In order to ensure modules match the latest configuration
+                    await newFrame.show(this.spreadPosition(spread, s)); // Show/activate new frame
+                    this.previousFrames.push(newFrame);
+                    await newFrame.activate();
+                    newFrames.push(newFrame);
+                } catch (error) {
+                    // A broken page must not keep the rest of its spread from showing
+                    console.warn(`Failed showing ${s.href}`, error);
+                    spreadError = error;
+                }
+            }
+            if(spreadError !== undefined && newFrames.length === 0) {
+                reject(spreadError);
+                return;
             }
 
             // Unfocus previous frame(s)
