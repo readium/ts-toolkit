@@ -603,6 +603,7 @@ export class FXLFramePoolManager {
             // Update current frame(s)
             const newFrames: FXLFrameManager[] = [];
             const spreadErrors: unknown[] = [];
+            const failedPages: typeof spread = [];
             for (const s of spread) {
                 const newFrame = this.pool.get(s.href)!;
                 const source = this.blobs.get(s.href);
@@ -616,12 +617,30 @@ export class FXLFramePoolManager {
                     await newFrame.activate();
                     newFrames.push(newFrame);
                 } catch (error) {
-                    // A broken page must not keep the rest of its spread from showing
                     console.warn(`Failed showing ${s.href}`, error);
                     spreadErrors.push(error);
+                    failedPages.push(s);
                 }
             }
-            if(spreadErrors.length > 0 && newFrames.length === 0) {
+            if(newFrames.length > 0) {
+                // A broken page is shown blank, sized like the rest of its spread, so the spread keeps its geometry
+                const size = newFrames[0].loadPageSize();
+                for (const s of failedPages) {
+                    const newFrame = this.pool.get(s.href)!;
+                    const source = this.blobs.get(s.href);
+                    if(!source) continue; // This can get destroyed
+
+                    try {
+                        await newFrame.load(modules, source.buildBlankFrame(size.width, size.height));
+                        await newFrame.show(this.spreadPosition(spread, s));
+                        this.previousFrames.push(newFrame);
+                        await newFrame.activate();
+                        newFrames.push(newFrame);
+                    } catch (error) {
+                        console.warn(`Failed showing a blank page for ${s.href}`, error);
+                    }
+                }
+            } else if(spreadErrors.length > 0) {
                 reject(spreadErrors[0]);
                 return;
             }

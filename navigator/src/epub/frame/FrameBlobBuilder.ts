@@ -189,6 +189,21 @@ export default class FrameBlobBuilder {
         return this.finalizeDOM(doc, this.pub.baseURL, burl, link.mediaType, true, undefined, this.upgradeInsecureRequests);
     }
 
+    /** Empty page of the given size, shown in place of a page that cannot be built */
+    public buildBlankFrame(width: number, height: number): string {
+        if(this.currentUrl) return this.currentUrl;
+        const doc = document.implementation.createHTMLDocument(this.item.title || this.item.href);
+
+        const viewportMeta = doc.createElement("meta");
+        viewportMeta.name = "viewport";
+        viewportMeta.content = `width=${width}, height=${height}`;
+        viewportMeta.dataset.readium = "true";
+        doc.head.appendChild(viewportMeta);
+
+        this.currentUrl = this.finalizeDOM(doc, this.pub.baseURL, this.item.toURL(this.baseURL) || "", MediaType.XHTML, true, undefined, this.upgradeInsecureRequests);
+        return this.currentUrl;
+    }
+
     private setProperties(cssProperties: { [key: string]: string }, doc: Document) {
         for (const key in cssProperties) {
             const value = cssProperties[key];
