@@ -56,6 +56,7 @@ describe('Locator Tests', () => {
     expect(htmlId('#caf%C3%A9%20noir')).toEqual('café noir');
     expect(htmlId('#café noir')).toEqual('café noir');
     expect(htmlId('100%done')).toEqual('100%done');
+    expect(htmlId('caf%C3%A9%done')).toEqual('café%done');
     expect(htmlId('id=caf%C3%A9')).toEqual('café');
   });
 
