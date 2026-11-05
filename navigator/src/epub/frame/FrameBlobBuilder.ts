@@ -191,7 +191,7 @@ export default class FrameBlobBuilder {
 
     /** Empty page of the given size, shown in place of a page that cannot be built */
     public buildBlankFrame(width: number, height: number): string {
-        if(this.currentUrl) return this.currentUrl;
+        this.reset();
         const doc = document.implementation.createHTMLDocument(this.item.title || this.item.href);
 
         const viewportMeta = doc.createElement("meta");
