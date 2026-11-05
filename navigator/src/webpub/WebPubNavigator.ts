@@ -50,6 +50,8 @@ export interface WebPubNavigatorListeners {
 
 // Expired comms callbacks are dropped, never called.
 const POINTED_PIECE_TIMEOUT = 1000;
+// Placeholder origin so URL can normalize in-document link fragments.
+const BASE = "https://navigator.invalid/";
 
 const defaultListeners = (listeners: WebPubNavigatorListeners): WebPubNavigatorListeners => ({
     frameLoaded: listeners.frameLoaded || (() => {}),
@@ -363,7 +365,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
                         const origHref = element.attributes.getNamedItem("href")?.value!;
                         if (origHref.startsWith("#")) {
                             if (!this._navigationLocked) this.go(this.currentLocation.copyWithLocations({
-                                fragments: [encodeURIComponent(decodeFragmentComponent(origHref.substring(1)))]
+                                fragments: [new URL(origHref, BASE).hash.slice(1)]
                             }), false, () => { });
                         } else if(
                             origHref.startsWith("mailto:") ||
