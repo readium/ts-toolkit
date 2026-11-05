@@ -201,7 +201,10 @@ export default class FrameBlobBuilder {
 
         // Injected like the page it replaces, so taps on it reach the navigator
         if (this.injector) {
-            await this.injector.injectForDocument(doc, this.item);
+            await this.injector.injectForDocument(doc, this.item.mediaType.isHTML ? this.item : new Link({
+                href: "readium-image-frame.xhtml",
+                type: MediaType.XHTML.string
+            }));
         }
 
         this.reset();
