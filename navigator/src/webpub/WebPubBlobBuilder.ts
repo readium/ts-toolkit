@@ -35,7 +35,7 @@ export class WebPubBlobBuilder {
     private async buildHtmlFrame(): Promise<string> {
         // Load the HTML resource
         const txt = await this.pub.get(this.item).readAsString();
-        if(!txt) throw new Error(`Failed reading item ${this.item.href}`);
+        if(txt === undefined) throw new Error(`Failed reading item ${this.item.href}`);
         const doc = new DOMParser().parseFromString(
             txt,
             this.item.mediaType.string as DOMParserSupportedType
