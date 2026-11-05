@@ -11,6 +11,8 @@ Following [readium/architecture#198](https://github.com/readium/architecture/pul
 
 Nothing to do. Fragments that are percent-encoded, decoded (`café noir`) or `#`-prefixed (`#café noir`) all resolve to the same element.
 
+The exception is an id that itself contains a valid percent escape: a stored `part%20one` now targets `part one`. Re-encode such ids from your stored, decoded value (`part%2520one`), and leave already-encoded fragments as they are.
+
 ## `getHtmlId`
 
 `getHtmlId` now returns the decoded id.
