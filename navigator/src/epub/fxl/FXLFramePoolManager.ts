@@ -577,12 +577,17 @@ export class FXLFramePoolManager {
                         let done = false;
                         const t = window.setTimeout(async () => {
                             this.delayedTimeout.set(href, 0);
-                            const spread = this.makeSpread(this.reAlign(index));
-                            const page = this.spreadPosition(spread, itm);
-                            const fm = this.pool.get(href)!;
-                            await fm.load(modules, await this.blobs.get(href)!.build(true));
-                            if(!this.peripherals.isScaled) // When scaled, positioning is screwed up, so wait to show
-                                await fm.show(page); // Show/activate new frame
+                            try {
+                                const spread = this.makeSpread(this.reAlign(index));
+                                const page = this.spreadPosition(spread, itm);
+                                const fm = this.pool.get(href)!;
+                                await fm.load(modules, await this.blobs.get(href)!.build(true));
+                                if(!this.peripherals.isScaled) // When scaled, positioning is screwed up, so wait to show
+                                    await fm.show(page); // Show/activate new frame
+                            } catch (error) {
+                                // Settled anyway, so showing the spread recovers from the failure instead of waiting on it
+                                console.warn(`Failed preloading ${href}`, error);
+                            }
                             this.delayedShow.delete(href);
                             done = true;
                             resolve();
