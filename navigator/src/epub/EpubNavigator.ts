@@ -1175,7 +1175,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this.notifyViewportChange(this.listeners.viewportChanged);
         this.listeners.positionChanged(this.currentLocation);
         const locatorForTimeline = progression.fragmentId
-            ? this.currentLocation.copyWithLocations({ fragments: [`#${progression.fragmentId}`] })
+            ? this.currentLocation.copyWithLocations({ fragments: [progression.fragmentId] })
             : this.currentLocation;
         this._visibleFragmentIds = progression.visibleFragmentIds ?? [];
         this._notifyTimelineChange(locatorForTimeline);
@@ -1345,8 +1345,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                         // so anchor previous/next on the two ends of the visible run instead of
                         // on `item` itself.
                         const ids = this._visibleFragmentIds;
-                        let first = (ids.length ? target.locate(this.currentLocation.copyWithLocations({ fragments: [`#${ids[0]}`] })) : undefined) ?? item;
-                        const last = (ids.length ? target.locate(this.currentLocation.copyWithLocations({ fragments: [`#${ids[ids.length - 1]}`] })) : undefined) ?? item;
+                        let first = (ids.length ? target.locate(this.currentLocation.copyWithLocations({ fragments: [ids[0]] })) : undefined) ?? item;
+                        const last = (ids.length ? target.locate(this.currentLocation.copyWithLocations({ fragments: [ids[ids.length - 1]] })) : undefined) ?? item;
                         // The current resource's own bare-href container(s) have no DOM anchor,
                         // so they never appear among visible fragment ids. Only when scrollTop is
                         // actually 0 (untracked content can precede the first fragment, and
