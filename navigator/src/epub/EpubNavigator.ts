@@ -1,4 +1,5 @@
 import { Layout, Link, Locator, LocatorText, Profile, Publication, ReadingProgression, Timeline, TimelineItem, getCssSelector, getHtmlId } from "@readium/shared";
+import { decodeFragmentComponent } from "@readium/helpers";
 import { Configurable, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../index.ts";
 import { FramePoolManager } from "./frame/FramePoolManager.ts";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager.ts";
@@ -312,7 +313,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 this._keyboardPeripherals,
                 (href) => this.pub.timeline.segmentsForHref(href)
                     .flatMap(item => item.references)
-                    .map(ref => { const h = ref.indexOf('#'); return h >= 0 ? ref.slice(h + 1) : ''; })
+                    .map(ref => { const h = ref.indexOf('#'); return h >= 0 ? decodeFragmentComponent(ref.slice(h + 1)) : ''; })
                     .filter(Boolean),
                 [...this._decorationResizeSelectors],
                 this._upgradeInsecureRequests
@@ -574,7 +575,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                         const origHref = element.attributes.getNamedItem("href")?.value!;
                         if (origHref.startsWith("#")) {
                             if (!this._navigationLocked) this.go(this.currentLocation.copyWithLocations({
-                                fragments: [origHref.substring(1)]
+                                fragments: [encodeURIComponent(decodeFragmentComponent(origHref.substring(1)))]
                             }), false, () => { });
                         } else if(
                             origHref.startsWith("http://") ||
@@ -1175,7 +1176,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this.notifyViewportChange(this.listeners.viewportChanged);
         this.listeners.positionChanged(this.currentLocation);
         const locatorForTimeline = progression.fragmentId
-            ? this.currentLocation.copyWithLocations({ fragments: [progression.fragmentId] })
+            ? this.currentLocation.copyWithLocations({ fragments: [encodeURIComponent(progression.fragmentId)] })
             : this.currentLocation;
         this._visibleFragmentIds = progression.visibleFragmentIds ?? [];
         this._notifyTimelineChange(locatorForTimeline);
@@ -1345,8 +1346,8 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                         // so anchor previous/next on the two ends of the visible run instead of
                         // on `item` itself.
                         const ids = this._visibleFragmentIds;
-                        let first = (ids.length ? target.locate(this.currentLocation.copyWithLocations({ fragments: [ids[0]] })) : undefined) ?? item;
-                        const last = (ids.length ? target.locate(this.currentLocation.copyWithLocations({ fragments: [ids[ids.length - 1]] })) : undefined) ?? item;
+                        let first = (ids.length ? target.locate(this.currentLocation.copyWithLocations({ fragments: [encodeURIComponent(ids[0])] })) : undefined) ?? item;
+                        const last = (ids.length ? target.locate(this.currentLocation.copyWithLocations({ fragments: [encodeURIComponent(ids[ids.length - 1])] })) : undefined) ?? item;
                         // The current resource's own bare-href container(s) have no DOM anchor,
                         // so they never appear among visible fragment ids. Only when scrollTop is
                         // actually 0 (untracked content can precede the first fragment, and

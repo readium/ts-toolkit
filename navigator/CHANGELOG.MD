@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The default `WebSpeechEngine` also has the voices of the reader's languages (`navigator.languages`), so `languageFallback` is called when none of the publication's languages has a voice, and `getVoices()` lists them too
 - Read aloud takes the reader's language as the publication's when its metadata has none, so `languageOverride` applies to it as to a metadata language
 
+### Fixed
+
+- Locators with a percent-encoded HTML id fragment, such as a table of contents link to a non-ASCII id, go to that element and update the current timeline item. Stored locators keep working. See [`@readium/shared`'s migration guide](../shared/docs/migration-fragment-encoding.md)
+
 ## [2.14.0] – 2026-10-23
 
 ### Added

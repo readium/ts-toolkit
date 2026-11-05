@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- `getHtmlId` returns the percent-decoded id, as `locations.fragments` holds percent-encoded fragments without a `#` prefix ([readium/architecture#198](https://github.com/readium/architecture/pull/198)). Decoded and `#`-prefixed fragments are still read, so stored locators keep working. See [`docs/migration-fragment-encoding.md`](docs/migration-fragment-encoding.md)
+- `Timeline.locate` matches an HTML id whether it is percent-encoded or not
+
 ## [2.8.0] – 2026-10-09
 
 ### Added

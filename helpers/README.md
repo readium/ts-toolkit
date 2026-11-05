@@ -1,11 +1,11 @@
 # @readium/helpers
 
-General-purpose browser helpers for Readium packages: color parsing/contrast utilities, OS/browser detection, and WICG Text Fragment parsing/resolution/generation.
+General-purpose browser helpers for Readium packages: color parsing/contrast utilities, OS/browser detection, URI fragment decoding, and WICG Text Fragment parsing/resolution/generation.
 
 ## Installation
 
 ```ts
-import { colorToRgba, checkContrast, isDarkColor, isLightColor, getContrastingTextColor, adjustColorForContrast, getLuminance, sML, sMLWithRequest, decodeTextFragmentDirective, processTextFragmentDirective, generateFragmentFromRange } from "@readium/helpers";
+import { colorToRgba, checkContrast, isDarkColor, isLightColor, getContrastingTextColor, adjustColorForContrast, getLuminance, sML, sMLWithRequest, decodeFragmentComponent, decodeTextFragmentDirective, processTextFragmentDirective, generateFragmentFromRange } from "@readium/helpers";
 ```
 
 ## Color utilities
@@ -44,6 +44,15 @@ sMLWithRequest.iOSRequest // "mobile" | "desktop" | undefined — iPadOS "Reques
 ```
 
 `sML` is a bundled subset of [sML.js](https://github.com/satorumurmur/sML) by Satoru Matsushima, MIT licensed. Falls back safely when `navigator` is unavailable (SSR).
+
+## URI fragments
+
+```ts
+// Percent-decodes one fragment component (e.g. an element id), keeping a malformed escape as-is
+decodeFragmentComponent("caf%C3%A9%20noir"): string // "café noir"
+```
+
+A structured fragment must be split on its delimiters before its components are decoded.
 
 ## Text Fragments
 

@@ -1,5 +1,5 @@
 import { DomRangePoint, getCssSelector, getDomRange, getTextFragment, Locator, LocatorLocations } from "@readium/shared";
-import { processTextFragmentDirective } from "@readium/helpers";
+import { decodeFragmentComponent, processTextFragmentDirective } from "@readium/helpers";
 import { TextQuoteAnchor } from "../vendor/hypothesis/anchoring/types.ts";
 
 function isReplacedLikeElement(element: Element): boolean {
@@ -127,7 +127,7 @@ export function rangeFromLocator(doc: Document, locator: Locator) {
 
             if (!element && locations.fragments) {
                 for (const htmlId of locations.fragments) {
-                    element = doc.getElementById(htmlId);
+                    element = doc.getElementById(decodeFragmentComponent(htmlId));
                     if (element) {
                         break;
                     }

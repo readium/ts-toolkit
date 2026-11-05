@@ -1,4 +1,5 @@
 export * from "./color.ts";
+export * from "./fragment.ts";
 export * from "./sML.ts";
 export * from "./text.ts";
 export * from "./textFragmentDirective.ts";
