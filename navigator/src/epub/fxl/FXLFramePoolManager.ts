@@ -602,7 +602,7 @@ export class FXLFramePoolManager {
 
             // Update current frame(s)
             const newFrames: FXLFrameManager[] = [];
-            let spreadError: unknown;
+            const spreadErrors: unknown[] = [];
             for (const s of spread) {
                 const newFrame = this.pool.get(s.href)!;
                 const source = this.blobs.get(s.href);
@@ -618,11 +618,11 @@ export class FXLFramePoolManager {
                 } catch (error) {
                     // A broken page must not keep the rest of its spread from showing
                     console.warn(`Failed showing ${s.href}`, error);
-                    spreadError = error;
+                    spreadErrors.push(error);
                 }
             }
-            if(spreadError !== undefined && newFrames.length === 0) {
-                reject(spreadError);
+            if(spreadErrors.length > 0 && newFrames.length === 0) {
+                reject(spreadErrors[0]);
                 return;
             }
 
