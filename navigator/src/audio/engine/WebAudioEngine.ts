@@ -340,6 +340,7 @@ export class WebAudioEngine implements AudioEngine {
    */
   public setPlaybackRate(rate: number, preservePitch: boolean): void {
     this.mediaElement.playbackRate = rate;
+    this.mediaElement.defaultPlaybackRate = rate;
     if (preservePitch) {
       if ('preservesPitch' in this.mediaElement) {
         (this.mediaElement as any).preservesPitch = true;
