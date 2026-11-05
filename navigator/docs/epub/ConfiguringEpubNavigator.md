@@ -116,23 +116,6 @@ const navigator = new EpubNavigator(
 
 This applies to both reflowable and fixed-layout publications.
 
-## Frame sandbox
-
-Each resource frame is created with `sandbox="allow-same-origin allow-scripts"`. The `frameSandbox` option replaces this value, for instance to drop `allow-scripts` when your publications don't need their own scripts: the Navigator drives the frames from the parent window.
-
-```js
-const navigator = new EpubNavigator(
-  myHTMLElement,
-  publication,
-  ...
-  configuration: {
-    frameSandbox: "allow-same-origin"
-  }
-);
-```
-
-Keep `allow-same-origin`: without it, the Navigator cannot access the frames. This applies to both reflowable and fixed-layout publications.
-
 ## Building a Settings Interface
 
 TBD.

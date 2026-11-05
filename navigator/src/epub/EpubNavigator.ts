@@ -36,7 +36,6 @@ export interface EpubNavigatorConfiguration {
     keyboardPeripherals?: IKeyboardPeripheralsConfig;
     decoratorConfig?: DecoratorConfig;
     upgradeInsecureRequests?: UpgradeInsecureRequests;
-    frameSandbox?: string;
 }
 
 export interface EpubNavigatorListeners {
@@ -112,7 +111,6 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     private readonly _contentProtection: IContentProtectionConfig;
     private readonly _keyboardPeripherals: IKeyboardPeripheralsConfig;
     private readonly _upgradeInsecureRequests: UpgradeInsecureRequests;
-    private readonly _frameSandbox?: string;
     private readonly _navigatorProtector: NavigatorProtector | null = null;
     private readonly _keyboardPeripheralsManager: KeyboardPeripherals | null = null;
     private readonly _suspiciousActivityListener: ((event: Event) => void) | null = null;
@@ -197,7 +195,6 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
         this._decoratorConfig = configuration.decoratorConfig || {};
         this._decorationResizeSelectors = new Set(this._decoratorConfig.resizeWatchSelectors ?? []);
         this._upgradeInsecureRequests = configuration.upgradeInsecureRequests ?? 'always';
-        this._frameSandbox = configuration.frameSandbox;
 
         // Merge keyboard peripherals
         this._keyboardPeripherals = this.mergeKeyboardPeripherals(
@@ -297,8 +294,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 this._contentProtection,
                 this._keyboardPeripherals,
                 [...this._decorationResizeSelectors],
-                this._upgradeInsecureRequests,
-                this._frameSandbox
+                this._upgradeInsecureRequests
             );
             this.framePool.listener = (key: CommsEventKey | ManagerEventKey, data: unknown) => {
                 this.eventListener(key, data);
@@ -319,8 +315,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                     .map(ref => { const h = ref.indexOf('#'); return h >= 0 ? ref.slice(h + 1) : ''; })
                     .filter(Boolean),
                 [...this._decorationResizeSelectors],
-                this._upgradeInsecureRequests,
-                this._frameSandbox
+                this._upgradeInsecureRequests
             );
         }
 

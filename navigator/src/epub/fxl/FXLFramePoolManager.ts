@@ -32,7 +32,6 @@ export class FXLFramePoolManager {
     private readonly keyboardPeripheralsConfig: IKeyboardPeripheralsConfig;
     private resizeWatchSelectors: string[];
     private readonly upgradeInsecureRequests: UpgradeInsecureRequests;
-    private readonly frameSandbox?: string;
 
     // NEW
     private readonly bookElement: HTMLDivElement;
@@ -61,7 +60,6 @@ export class FXLFramePoolManager {
         keyboardPeripheralsConfig?: IKeyboardPeripheralsConfig,
         resizeWatchSelectors: string[] = [],
         upgradeInsecureRequests?: UpgradeInsecureRequests,
-        frameSandbox?: string
     ) {
         this.container = container;
         this.positions = positions;
@@ -71,7 +69,6 @@ export class FXLFramePoolManager {
         this.keyboardPeripheralsConfig = keyboardPeripheralsConfig || [];
         this.resizeWatchSelectors = [...resizeWatchSelectors];
         this.upgradeInsecureRequests = upgradeInsecureRequests ?? 'always';
-        this.frameSandbox = frameSandbox;
         this.spreadPresentation = pub.metadata.otherMetadata?.spread || Spread.auto;
 
         if(this.pub.metadata.effectiveReadingProgression !== ReadingProgression.rtl && this.pub.metadata.effectiveReadingProgression !== ReadingProgression.ltr)
@@ -99,7 +96,7 @@ export class FXLFramePoolManager {
         const fragment = document.createDocumentFragment();
         this.pub.readingOrder.items.forEach((link) => {
             // Create <iframe>
-            const fm = new FXLFrameManager(this.peripherals, this.pub.metadata.effectiveReadingProgression, link.href, this.contentProtectionConfig, this.keyboardPeripheralsConfig, this.resizeWatchSelectors, this.frameSandbox);
+            const fm = new FXLFrameManager(this.peripherals, this.pub.metadata.effectiveReadingProgression, link.href, this.contentProtectionConfig, this.keyboardPeripheralsConfig, this.resizeWatchSelectors);
 
             this.pool.set(link.href, fm);
             fm.width = 100 / this.length * (link.properties?.otherProperties["orientation"] === Orientation.landscape || link.properties?.otherProperties["addBlank"] ? this.perPage : 1);
