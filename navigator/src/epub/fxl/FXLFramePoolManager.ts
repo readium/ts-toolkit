@@ -636,7 +636,7 @@ export class FXLFramePoolManager {
                     if(!source) continue; // This can get destroyed
 
                     try {
-                        await newFrame.load(modules, source.buildBlankFrame(size.width, size.height));
+                        await newFrame.load(modules, await source.buildBlankFrame(size.width, size.height));
                         await newFrame.show(this.spreadPosition(spread, s));
                         this.previousFrames.push(newFrame);
                         await newFrame.activate();

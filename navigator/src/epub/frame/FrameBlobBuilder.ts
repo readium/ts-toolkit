@@ -190,8 +190,7 @@ export default class FrameBlobBuilder {
     }
 
     /** Empty page of the given size, shown in place of a page that cannot be built */
-    public buildBlankFrame(width: number, height: number): string {
-        this.reset();
+    public async buildBlankFrame(width: number, height: number): Promise<string> {
         const doc = document.implementation.createHTMLDocument(this.item.title || this.item.href);
 
         const viewportMeta = doc.createElement("meta");
@@ -200,6 +199,12 @@ export default class FrameBlobBuilder {
         viewportMeta.dataset.readium = "true";
         doc.head.appendChild(viewportMeta);
 
+        // Injected like the page it replaces, so taps on it reach the navigator
+        if (this.injector) {
+            await this.injector.injectForDocument(doc, this.item);
+        }
+
+        this.reset();
         this.currentUrl = this.finalizeDOM(doc, this.pub.baseURL, this.item.toURL(this.baseURL) || "", MediaType.XHTML, true, undefined, this.upgradeInsecureRequests);
         return this.currentUrl;
     }
