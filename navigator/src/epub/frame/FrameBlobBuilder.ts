@@ -279,7 +279,7 @@ export default class FrameBlobBuilder {
             const b = doc.createElement("base");
             b.href = base;
             b.dataset.readium = "true";
-            doc.head.firstChild!.before(b);
+            doc.head.prepend(b);
         }
 
         // Add CSP with allowed domains
@@ -287,7 +287,7 @@ export default class FrameBlobBuilder {
         meta.httpEquiv = "Content-Security-Policy";
         meta.content = csp(domains, upgradeInsecureRequests, root);
         meta.dataset.readium = "true";
-        doc.head.firstChild!.before(meta);
+        doc.head.prepend(meta);
 
         // Make blob from doc
         return URL.createObjectURL(

@@ -75,7 +75,7 @@ export class WebPubBlobBuilder {
             const b = doc.createElement("base");
             b.href = base;
             b.dataset.readium = "true";
-            doc.head.firstChild!.before(b);
+            doc.head.prepend(b);
         }
 
         // Serialize properly based on content type
