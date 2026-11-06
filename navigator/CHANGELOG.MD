@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- In fixed-layout publications, frames unloaded after paging no longer throw when a keyboard peripheral condition changes, which kept read aloud from activating
+- In fixed-layout publications, paging back and forth quickly no longer leaves an unhandled `Offscreen load timeout` rejection
+- In WebPub, links to another resource with a fragment, such as `chapter.html#note`, go to that element instead of being reported as not in the reading order
 - Locators with a percent-encoded HTML id fragment, such as a table of contents link to a non-ASCII id, go to that element and update the current timeline item. Stored locators keep working. See [`@readium/shared`'s migration guide](../shared/docs/migration-fragment-encoding.md)
 
 ## [2.14.0] – 2026-10-23
