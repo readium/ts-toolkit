@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- For audio, `Timeline.locate` takes a reference without `t=` as the start of its track, instead of placing the beginning of the track in the next item
+
 ### Changed
 
 - `getHtmlId` returns the percent-decoded id, as `locations.fragments` holds percent-encoded fragments without a `#` prefix ([readium/architecture#198](https://github.com/readium/architecture/pull/198)). Decoded and `#`-prefixed fragments are still read, so stored locators keep working. See [`docs/migration-fragment-encoding.md`](docs/migration-fragment-encoding.md)
