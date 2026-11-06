@@ -707,6 +707,15 @@ describe('Timeline – locate()', () => {
     );
     expect(customTimeline.locate(locator('track2.mp3', { fragments: ['t=30'] }))?.title).toBe('Spanning Part');
   });
+  it('8.10 EPUB: matches a non-ASCII HTML ID, encoded, decoded or #-prefixed', () => {
+    const t = build(
+      ro({ href: 'chapter1.html', title: 'Chapter 1' }),
+      toc({ href: 'chapter1.html#caf%C3%A9%20noir', title: 'Café' }),
+    );
+    expect(t.locate(locator('chapter1.html', { fragments: ['caf%C3%A9%20noir'] }))?.title).toBe('Café');
+    expect(t.locate(locator('chapter1.html', { fragments: ['café noir'] }))?.title).toBe('Café');
+    expect(t.locate(locator('chapter1.html', { fragments: ['#café noir'] }))?.title).toBe('Café');
+  });
 });
 
 // ---------------------------------------------------------------------------

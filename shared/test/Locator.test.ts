@@ -1,4 +1,4 @@
-import { Link, LocatorLocations, Locator, LocatorText, getHtmlId, getTime } from '../src';
+import { Link, LocatorLocations, Locator, LocatorText, getFragmentParameters, getHtmlId, getTime } from '../src';
 
 describe('Locator Tests', () => {
   it('parse {Locator} minimal JSON', () => {
@@ -47,6 +47,22 @@ describe('Locator Tests', () => {
     expect(locator.href).toEqual('chapter.html');
     expect(locator.locations.fragments).toEqual(['section-2']);
     expect(getHtmlId(locator.locations)).toEqual('section-2');
+  });
+
+  it('getHtmlId decodes percent-encoded ids and reads decoded or #-prefixed ones', () => {
+    const htmlId = (fragment: string) => getHtmlId(new LocatorLocations({ fragments: [fragment] }));
+    expect(htmlId('caf%C3%A9%20noir')).toEqual('café noir');
+    expect(htmlId('café noir')).toEqual('café noir');
+    expect(htmlId('#caf%C3%A9%20noir')).toEqual('café noir');
+    expect(htmlId('#café noir')).toEqual('café noir');
+    expect(htmlId('100%done')).toEqual('100%done');
+    expect(htmlId('caf%C3%A9%done')).toEqual('café%done');
+    expect(htmlId('id=caf%C3%A9')).toEqual('café');
+  });
+
+  it('getFragmentParameters keeps structured values encoded', () => {
+    const fp = getFragmentParameters(new LocatorLocations({ fragments: [':~:text=Yes%2C%20please'] }));
+    expect(fp.get(':~:text')).toEqual('Yes%2C%20please');
   });
 
   it('normalize audio t= fragment into locations on construction', () => {

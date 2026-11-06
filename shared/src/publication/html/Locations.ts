@@ -1,7 +1,7 @@
 import { LocatorLocations } from '../Locator.ts';
 import { DomRange } from './DomRange.ts';
 import { parseNptTime } from '../../util/npt.ts';
-import { decodeTextFragmentDirective, TextFragmentDirective } from '@readium/helpers';
+import { decodeFragmentComponent, decodeTextFragmentDirective, TextFragmentDirective } from '@readium/helpers';
 
 // HTML extensions for LocatorLocations.
 // https://github.com/readium/architecture/blob/master/models/locators/extensions/html.md
@@ -49,7 +49,8 @@ export function getHtmlId(loc: LocatorLocations): string | undefined {
     if (fp.has('id')) f = fp.get('id');
     else if (fp.has('name')) f = fp.get('name');
   }
-  return f?.startsWith('#') ? f.slice(1) : f;
+  const id = f?.startsWith('#') ? f.slice(1) : f;
+  return id !== undefined ? decodeFragmentComponent(id) : undefined;
 }
 
 export function getPage(loc: LocatorLocations): number | undefined {

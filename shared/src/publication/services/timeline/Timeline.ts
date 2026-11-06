@@ -4,6 +4,7 @@ import { getHtmlId, getTime } from "../../html/Locations.ts";
 import { Profile } from "../../Profiles.ts";
 import { formatNptTime, isNptStartOfResource, parseNptTime } from "../../../util/npt.ts";
 import { TimelineItem } from "./TimelineItem.ts";
+import { decodeFragmentComponent } from "@readium/helpers";
 
 export interface PublicationLike {
     toc?: Links;
@@ -192,7 +193,10 @@ export class Timeline {
         if (htmlId) {
             const match = this.flat.find(item => {
                 if (!this.itemMatchesHref(item, href)) return false;
-                return item.references.some(ref => ref.split("#")[1] === htmlId);
+                return item.references.some(ref => {
+                    const fragment = ref.split("#")[1];
+                    return fragment !== undefined && decodeFragmentComponent(fragment) === htmlId;
+                });
             });
             if (match) return match;
         }
