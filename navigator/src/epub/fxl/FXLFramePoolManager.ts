@@ -572,8 +572,8 @@ export class FXLFramePoolManager {
                 // Show future offscreen frame in advance after a delay
                 // The added delay prevents this expensive operation from
                 // occuring during the sliding animation, to reduce lag
-                if(!this.delayedShow.has(href))
-                    this.delayedShow.set(href, new Promise((resolve, reject) => {
+                if(!this.delayedShow.has(href)) {
+                    const delayed: Promise<void> = new Promise((resolve, reject) => {
                         let done = false;
                         const t = window.setTimeout(async () => {
                             this.delayedTimeout.set(href, 0);
@@ -593,10 +593,13 @@ export class FXLFramePoolManager {
                             resolve();
                         }, OFFSCREEN_LOAD_DELAY);
                         setTimeout(() => {
-                            if(!done && this.delayedShow.has(href)) reject(`Offscreen load timeout: ${href}`);
+                            // A cancelled showing can be replaced for the same href, so only this one may time out
+                            if(!done && this.delayedShow.get(href) === delayed) reject(`Offscreen load timeout: ${href}`);
                         }, OFFSCREEN_LOAD_TIMEOUT);
                         this.delayedTimeout.set(href, t);
-                    }));
+                    });
+                    this.delayedShow.set(href, delayed);
+                }
             }
             try {
                 await Promise.all(creation.map(href => creator(href)));

@@ -396,9 +396,12 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
                                     }
                                 }
 
-                                const link = this.pub.readingOrder.findWithHref(hrefToCheck);
+                                const link = this.pub.readingOrder.findWithHref(hrefToCheck.split("#")[0]);
                                 if (link) {
-                                    if (!this._navigationLocked) this.goLink(link, false, () => { });
+                                    const fragment = new URL(origHref, BASE).hash.slice(1);
+                                    if (!this._navigationLocked) this.go(fragment
+                                        ? link.locator.copyWithLocations({ fragments: [fragment] })
+                                        : link.locator, false, () => { });
                                 } else {
                                     console.warn(`Internal link not found in readingOrder: ${hrefToCheck}`);
                                     this.listeners.handleLocator(new Link({

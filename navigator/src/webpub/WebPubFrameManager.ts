@@ -60,6 +60,7 @@ export class WebPubFrameManager {
                 this.loader = new Loader(wnd as ReadiumWindow, modules);
                 this.currModules = modules;
                 this.comms = undefined;
+                this.conditionBridge?.destroy();
                 try { res(wnd); } catch (error) {}
                 return;
             }
