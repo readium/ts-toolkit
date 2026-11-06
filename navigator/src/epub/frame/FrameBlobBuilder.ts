@@ -189,6 +189,29 @@ export default class FrameBlobBuilder {
         return this.finalizeDOM(doc, this.pub.baseURL, burl, link.mediaType, true, undefined, this.upgradeInsecureRequests);
     }
 
+    /** Empty page of the given size, shown in place of a page that cannot be built */
+    public async buildBlankFrame(width: number, height: number): Promise<string> {
+        const doc = document.implementation.createHTMLDocument(this.item.title || this.item.href);
+
+        const viewportMeta = doc.createElement("meta");
+        viewportMeta.name = "viewport";
+        viewportMeta.content = `width=${width}, height=${height}`;
+        viewportMeta.dataset.readium = "true";
+        doc.head.appendChild(viewportMeta);
+
+        // Injected like the page it replaces, so taps on it reach the navigator
+        if (this.injector) {
+            await this.injector.injectForDocument(doc, this.item.mediaType.isHTML ? this.item : new Link({
+                href: "readium-image-frame.xhtml",
+                type: MediaType.XHTML.string
+            }));
+        }
+
+        this.reset();
+        this.currentUrl = this.finalizeDOM(doc, this.pub.baseURL, this.item.toURL(this.baseURL) || "", MediaType.XHTML, true, undefined, this.upgradeInsecureRequests);
+        return this.currentUrl;
+    }
+
     private setProperties(cssProperties: { [key: string]: string }, doc: Document) {
         for (const key in cssProperties) {
             const value = cssProperties[key];
@@ -279,7 +302,7 @@ export default class FrameBlobBuilder {
             const b = doc.createElement("base");
             b.href = base;
             b.dataset.readium = "true";
-            doc.head.firstChild!.before(b);
+            doc.head.prepend(b);
         }
 
         // Add CSP with allowed domains
@@ -287,7 +310,7 @@ export default class FrameBlobBuilder {
         meta.httpEquiv = "Content-Security-Policy";
         meta.content = csp(domains, upgradeInsecureRequests, root);
         meta.dataset.readium = "true";
-        doc.head.firstChild!.before(meta);
+        doc.head.prepend(meta);
 
         // Make blob from doc
         return URL.createObjectURL(
