@@ -296,7 +296,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
     public eventListener(key: CommsEventKey | ManagerEventKey, data: unknown, sourceFrame?: WebPubFrameManager) {
         switch (key) {
             case "_pong":
-                this.listeners.frameLoaded(this.framePool.currentFrames[0]!.iframe.contentWindow!);
+                this.listeners.frameLoaded((sourceFrame ?? this.framePool.currentFrames[0]!).iframe.contentWindow!);
                 this.listeners.positionChanged(this.currentLocation);
                 this._notifyTimelineChange(this.currentLocation);
                 this._reapplyDecorationsToCurrentFrame();

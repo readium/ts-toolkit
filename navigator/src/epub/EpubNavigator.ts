@@ -493,7 +493,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     public eventListener(key: CommsEventKey | ManagerEventKey, data: unknown, sourceFrame?: FrameManager | FXLFrameManager) {
         switch (key) {
             case "_pong":
-                this.listeners.frameLoaded(this._cframes[0]!.iframe.contentWindow!);
+                this.listeners.frameLoaded((sourceFrame ?? this._cframes[0]!).iframe.contentWindow!);
                 this.listeners.positionChanged(this.currentLocation);
                 this._notifyTimelineChange(this.currentLocation);
                 if (sourceFrame) {
