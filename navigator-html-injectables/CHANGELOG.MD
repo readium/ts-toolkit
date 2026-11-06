@@ -5,11 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.10.1] – 2026-11-06
 
 ### Fixed
 
 - A locator's HTML id fragment is percent-decoded before looking up its element, so percent-encoded ids, such as non-ASCII ones, are found
+- Taps, clicks and the first visible locator no longer throw in frames where the injected CSS selector generator can't run, e.g. without `allow-scripts` or under a CSP
 
 ## [2.10.0] – 2026-11-04
 

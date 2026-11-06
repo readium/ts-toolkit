@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.15.0] – 2026-11-06
 
 ### Added
 
@@ -15,9 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Read aloud gives content in each of the publication's languages a voice of its own language, picked by `@readium/speech`'s `ReadiumSpeechNavigator`, and `settings.voice` has one for each of them before any is set
+- Read aloud gives content in each of the publication's languages a voice of its own language, picked by `@readium/speech` 0.19's `ReadiumSpeechNavigator`, and `settings.voice` has one for each of them before any is set
 - The default `WebSpeechEngine` also has the voices of the reader's languages (`navigator.languages`), so `languageFallback` is called when none of the publication's languages has a voice, and `getVoices()` lists them too
 - Read aloud takes the reader's language as the publication's when its metadata has none, so `languageOverride` applies to it as to a metadata language
+- The injected CSS selector generator is updated to `css-selector-generator` 3.9.4
 
 ### Fixed
 
@@ -25,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - In fixed-layout publications, paging back and forth quickly no longer leaves an unhandled `Offscreen load timeout` rejection
 - In WebPub, links to another resource with a fragment, such as `chapter.html#note`, go to that element instead of being reported as not in the reading order
 - Locators with a percent-encoded HTML id fragment, such as a table of contents link to a non-ASCII id, go to that element and update the current timeline item. Stored locators keep working. See [`@readium/shared`'s migration guide](../shared/docs/migration-fragment-encoding.md)
+- Taps, clicks and other frame events keep being reported when the shown frame is rebuilt while loading, e.g. when settings change as a resource opens
+- In fixed-layout publications, a page that fails to load is shown blank, sized like the rest of its spread, instead of keeping the spread from showing
+- In reflowable publications, moving to a resource that fails to load reports the failure instead of blocking further navigation
+- Resources whose `head` is empty, and empty WebPub HTML resources, open instead of failing
+- `AudioNavigator` seeks to the start of a track, e.g. going to time 0 of the current track, instead of staying where it is
+- `AudioNavigator` keeps its playback rate when the track changes, instead of going back to normal speed
 
 ## [2.14.0] – 2026-10-23
 
