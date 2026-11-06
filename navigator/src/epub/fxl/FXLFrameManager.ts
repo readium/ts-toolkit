@@ -99,6 +99,7 @@ export class FXLFrameManager {
                 this.loader = new Loader(wnd as ReadiumWindow, modules);
                 this.currModules = modules;
                 this.comms = undefined;
+                this.conditionBridge?.destroy();
                 try { res(wnd); this.loadPromise = undefined; } catch (error) {}
                 return;
             }
@@ -224,6 +225,7 @@ export class FXLFrameManager {
         this.comms?.halt();
         this.loader?.destroy();
         this.comms = undefined;
+        this.conditionBridge?.destroy();
         this.frame.blur();
         return new Promise<void>((res, rej) => {
             this.frame.addEventListener("load", () => {
