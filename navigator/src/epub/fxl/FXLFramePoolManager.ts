@@ -577,12 +577,17 @@ export class FXLFramePoolManager {
                         let done = false;
                         const t = window.setTimeout(async () => {
                             this.delayedTimeout.set(href, 0);
-                            const spread = this.makeSpread(this.reAlign(index));
-                            const page = this.spreadPosition(spread, itm);
-                            const fm = this.pool.get(href)!;
-                            await fm.load(modules, await this.blobs.get(href)!.build(true));
-                            if(!this.peripherals.isScaled) // When scaled, positioning is screwed up, so wait to show
-                                await fm.show(page); // Show/activate new frame
+                            try {
+                                const spread = this.makeSpread(this.reAlign(index));
+                                const page = this.spreadPosition(spread, itm);
+                                const fm = this.pool.get(href)!;
+                                await fm.load(modules, await this.blobs.get(href)!.build(true));
+                                if(!this.peripherals.isScaled) // When scaled, positioning is screwed up, so wait to show
+                                    await fm.show(page); // Show/activate new frame
+                            } catch (error) {
+                                // Settled anyway, so showing the spread recovers from the failure instead of waiting on it
+                                console.warn(`Failed preloading ${href}`, error);
+                            }
                             this.delayedShow.delete(href);
                             done = true;
                             resolve();
@@ -597,21 +602,52 @@ export class FXLFramePoolManager {
                 await Promise.all(creation.map(href => creator(href)));
             } catch (error) {
                 reject(error);
+                return;
             }
 
             // Update current frame(s)
             const newFrames: FXLFrameManager[] = [];
+            const spreadErrors: unknown[] = [];
+            const failedPages: typeof spread = [];
             for (const s of spread) {
                 const newFrame = this.pool.get(s.href)!;
                 const source = this.blobs.get(s.href);
                 if(!source) continue; // This can get destroyed
 
                 this.cancelShowing(s.href);
-                await newFrame.load(modules, await source.build(true)); // In order to ensure modules match the latest configuration
-                await newFrame.show(this.spreadPosition(spread, s)); // Show/activate new frame
-                this.previousFrames.push(newFrame);
-                await newFrame.activate();
-                newFrames.push(newFrame);
+                try {
+                    await newFrame.load(modules, await source.build(true)); // In order to ensure modules match the latest configuration
+                    await newFrame.show(this.spreadPosition(spread, s)); // Show/activate new frame
+                    this.previousFrames.push(newFrame);
+                    await newFrame.activate();
+                    newFrames.push(newFrame);
+                } catch (error) {
+                    console.warn(`Failed showing ${s.href}`, error);
+                    spreadErrors.push(error);
+                    failedPages.push(s);
+                }
+            }
+            if(newFrames.length > 0) {
+                // A broken page is shown blank, sized like the rest of its spread, so the spread keeps its geometry
+                const size = newFrames[0].loadPageSize();
+                for (const s of failedPages) {
+                    const newFrame = this.pool.get(s.href)!;
+                    const source = this.blobs.get(s.href);
+                    if(!source) continue; // This can get destroyed
+
+                    try {
+                        await newFrame.load(modules, await source.buildBlankFrame(size.width, size.height));
+                        await newFrame.show(this.spreadPosition(spread, s));
+                        this.previousFrames.push(newFrame);
+                        await newFrame.activate();
+                        newFrames.push(newFrame);
+                    } catch (error) {
+                        console.warn(`Failed showing a blank page for ${s.href}`, error);
+                    }
+                }
+            } else if(spreadErrors.length > 0) {
+                reject(spreadErrors[0]);
+                return;
             }
 
             // Unfocus previous frame(s)

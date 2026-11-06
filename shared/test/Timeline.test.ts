@@ -735,6 +735,15 @@ describe('Timeline – locate()', () => {
     expect(t.locate(locator('track1.mp3', { fragments: ['t=599'], progression: 0.99 }))?.title).toBe('Chapter 1, Part 2');
     expect(t.locate(locator('track2.mp3', { fragments: ['t=0'], progression: 0 }))?.title).toBe('Track 2');
     expect(t.locate(locator('track2.mp3', { fragments: ['t=5'], progression: 0.01 }))?.title).toBe('Track 2');
+
+  it('8.12 EPUB: matches a non-ASCII HTML ID, encoded, decoded or #-prefixed', () => {
+    const t = build(
+      ro({ href: 'chapter1.html', title: 'Chapter 1' }),
+      toc({ href: 'chapter1.html#caf%C3%A9%20noir', title: 'Café' }),
+    );
+    expect(t.locate(locator('chapter1.html', { fragments: ['caf%C3%A9%20noir'] }))?.title).toBe('Café');
+    expect(t.locate(locator('chapter1.html', { fragments: ['café noir'] }))?.title).toBe('Café');
+    expect(t.locate(locator('chapter1.html', { fragments: ['#café noir'] }))?.title).toBe('Café');
   });
 });
 
