@@ -475,10 +475,9 @@ export class Converter {
     return ["img", "svg", "audio", "video"].includes(tagName) || (tagName === "a" && !!el.getAttribute("href"));
   }
 
-  // Punctuation alongside doesn't count, e.g. the last period of <abbr><dfn>W.H.O</dfn>.</abbr>.
   private static isSoleContent(el: Element): boolean {
     for (let s = el.parentNode?.firstChild; s; s = s.nextSibling) {
-      if (s !== el && (s.nodeType === ELEMENT_NODE || (s.nodeType === TEXT_NODE && !/^[\s\p{P}]*$/u.test(s.nodeValue ?? "")))) return false;
+      if (s !== el && (s.nodeType === ELEMENT_NODE || (s.nodeType === TEXT_NODE && !/^\s*$/.test(s.nodeValue ?? "")))) return false;
     }
     return true;
   }

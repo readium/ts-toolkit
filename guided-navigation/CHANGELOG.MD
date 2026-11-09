@@ -11,10 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixtures for authored-language resolution (descriptions, `lang`/`xml:lang`, empty declarations, case-insensitive matching), roleless objects with a description, and inline MathML
 
+### Removed
+
+- The `abbreviation-nested-term-punctuation` fixture, whose markup authors don't write
+
 ### Fixed
 
 - A role repeated on a wrapper and its sole child, such as `chapter` on both `<body>` and `<section>`, is now kept on the wrapper only, instead of appearing twice or being removed together with the wrapper's own roles (e.g. `section` in nested sections)
-
 ## [1.2.3] – 2026-11-06
 
 ### Changed
