@@ -46,15 +46,15 @@ function isBlockNode(tagName: string, roles: GndRole[]): boolean {
 
 type SegmentKind = "text" | "break" | "placeholder";
 
-interface Segment {
+export interface Segment {
   kind: SegmentKind;
   text?: string;
   ctx?: SSMLContext;
   tag?: string;
   child?: NavObject;
   candidateID?: string;
-  // The words a placeholder adds to plain text, with the spaces at their edges in the source.
-  plain?: string;
+  // A placeholder's own pieces of the sentence's plain text, e.g. a link's words.
+  words?: Segment[];
 }
 
 /** Walks a DOM subtree, building the Guided Navigation object tree. */
@@ -111,10 +111,8 @@ export class Converter {
   // The plain-text string of the flow flushText() just flushed, read by
   // tail() right after calling it as the text-fragment candidate text.
   private lastFlowText: string | null = null;
-  // The plain text of every flow flushed so far, spaced as in the source, e.g. a link's words.
-  words = "";
-  // Whether the source separates the next flow's words from `words`: whitespace or a block boundary.
-  private wordsSeparated = false;
+  // When set, records the converted content's plain-text pieces in source order, across flows: a link's words.
+  words: Segment[] | null = null;
 
   constructor(xmlParsed: boolean) {
     this.xmlParsed = xmlParsed;
@@ -239,6 +237,7 @@ export class Converter {
       if (!this.current.noText && !this.textContext(el).abbr) {
         this.closeSegment();
         this.segments.push({ kind: "break" });
+        this.words?.push({ kind: "break" });
         this.flowEndsWithSpace = true;
       }
       return true;
@@ -313,7 +312,7 @@ export class Converter {
     }
 
     this.flushText();
-    if (!isInlineTag(tagName)) this.wordsSeparated = true;
+    if (!isInlineTag(tagName)) this.words?.push({ kind: "break" });
     this.descend(el, roles);
 
     const cur = this.current.object;
@@ -368,7 +367,7 @@ export class Converter {
     if (roles.includes("pagebreak")) return;
     if (isBlockNode(tagName, roles)) {
       this.flushText();
-      if (!isInlineTag(tagName)) this.wordsSeparated = true;
+      if (!isInlineTag(tagName)) this.words?.push({ kind: "break" });
       // A child block splits el's text into several flows; the last one alone doesn't represent el.
       if (this.current.hasChildBlock) {
         this.lastFlowRange = null;
@@ -414,7 +413,7 @@ export class Converter {
   private text(node: Node) {
     if (this.current.noText) return;
     const data = node.nodeValue ?? "";
-    if (this.textAcc.length === 0 && this.segments.length === 0 && /^\s/.test(data)) this.wordsSeparated = true;
+    this.words?.push({ kind: "text", text: normalizeWhitespace(data, false) });
     if (/^\s*$/.test(data)) {
       if (this.textAcc.length > 0 || this.segments.length > 0) {
         this.textAcc += normalizeWhitespace(data, this.flowEndsWithSpace);
@@ -515,8 +514,8 @@ export class Converter {
     this.flowLastOffset = 0;
   }
 
-  // `plain`: the object's words when they're part of the sentence it sits in, e.g. a link's.
-  placeholder(el: Element, tag: string, object: ObjBuilder, { candidateID, plain }: { candidateID?: string; plain?: string } = {}) {
+  // `words`: the object's pieces of plain text when they're part of the sentence it sits in, e.g. a link's.
+  placeholder(el: Element, tag: string, object: ObjBuilder, { candidateID, words }: { candidateID?: string; words?: Segment[] } = {}) {
     if (isEmptyObj(object)) return;
     const child = new NavObject();
     child.el = el;
@@ -532,14 +531,10 @@ export class Converter {
       tag,
       child,
       candidateID: candidateID ?? el.getAttribute("id") ?? undefined,
-      plain: plain ? Converter.withSourceSpaces(el, plain) : undefined,
+      words: words?.length ? words : undefined,
     });
+    this.words?.push(...(words?.length ? words : [{ kind: "placeholder" as const }]));
     this.flowEndsWithSpace = false;
-  }
-
-  private static withSourceSpaces(el: Element, words: string): string {
-    const source = el.textContent ?? "";
-    return `${/^\s/.test(source) ? " " : ""}${words}${/\s$/.test(source) ? " " : ""}`;
   }
 
   private flushText() {
@@ -555,8 +550,6 @@ export class Converter {
     this.lastFlowText = null;
 
     if (segments.length === 0) return;
-    const last = segments[segments.length - 1];
-    const endsSeparated = last.kind === "break" || (last.kind === "text" && /\s$/.test(last.text!));
 
     // Trim the edges of the flow.
     while (segments.length > 0) {
@@ -672,11 +665,10 @@ export class Converter {
     let sawBreak = false;
     let sawPlaceholder = false;
     let midSpace = false;
-    for (const seg of segments) {
-      const segText = seg.kind === "text" ? seg.text! : seg.plain;
-      if (segText !== undefined) {
-        const lead = segText.startsWith(" ");
-        const t = segText.replace(/^ +| +$/g, "");
+    for (const seg of segments.flatMap((s) => s.words ?? [s])) {
+      if (seg.kind === "text") {
+        const lead = seg.text!.startsWith(" ");
+        const t = seg.text!.replace(/^ +| +$/g, "");
         if (t === "") {
           midSpace = true;
           continue;
@@ -690,7 +682,7 @@ export class Converter {
         }
         if (join) plainB += " ";
         plainB += t;
-        prevTrail = segText.endsWith(" ");
+        prevTrail = seg.text!.endsWith(" ");
         sawBreak = false;
         sawPlaceholder = false;
         midSpace = false;
@@ -710,11 +702,6 @@ export class Converter {
     // redundant, mechanical derivative of the SSML, so it's left out.
     const hasPlaceholder = segments.some((s) => s.kind === "placeholder");
     this.lastFlowText = plainB.trim();
-    if (this.lastFlowText) {
-      if (this.words && this.wordsSeparated) this.words += " ";
-      this.words += this.lastFlowText;
-      this.wordsSeparated = endsSeparated;
-    }
     const text: TextBuilder = {
       plain: needSSML && !hasPlaceholder ? "" : plainB.trim(),
       ssml: "",

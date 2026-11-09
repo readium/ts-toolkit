@@ -9,7 +9,7 @@ import { normalizeWhitespace, textIsEmpty } from "./text.ts";
 import { type ObjBuilder, ariaSubstitutedBuilders, isHoistable, substitutedOwnSelectorBuilders } from "./object.ts";
 import { hasElementChild, isAncestorOf } from "./dom.ts";
 import { nodeLanguage } from "./language.ts";
-import { Converter } from "./converter.ts";
+import { Converter, type Segment } from "./converter.ts";
 import { selectorForElement, textrefForSelector } from "./selectorGenerator.ts";
 import { decodeIdFragment, detachSelfTextref } from "./textrefFragment.ts";
 
@@ -76,7 +76,7 @@ export function noteref(converter: Converter, el: Element, roles: GndRole[]): vo
 export function link(converter: Converter, el: Element, roles: GndRole[], aria: string | null, ariaLanguage: string): void {
   const { obj, words } = linkObject(converter, el, roles, aria, ariaLanguage);
   // A backlink is navigation, not part of the text it follows.
-  converter.placeholder(el, roles[0] ?? "link", obj, { plain: roles.includes("backlink") ? undefined : words });
+  converter.placeholder(el, roles[0] ?? "link", obj, { words: roles.includes("backlink") ? undefined : words });
 }
 
 // A glossref or biblioref: a link that also embeds its same-document target, like a noteref its footnote.
@@ -97,21 +97,21 @@ export function reference(converter: Converter, el: Element, roles: GndRole[], a
       if (children.length > 0) obj.children = [...(obj.children ?? []), ...children];
     }
   }
-  converter.placeholder(el, roles[0], obj, { plain: words });
+  converter.placeholder(el, roles[0], obj, { words });
 }
 
 // A link's content is converted like any other: its text, inline semantics and objects become the link's own.
-// `words`: what the link adds to the plain text of the sentence it sits in.
+// `words`: the link's pieces of the plain text of the sentence it sits in.
 function linkObject(
   converter: Converter,
   el: Element,
   roles: GndRole[],
   aria: string | null,
   ariaLanguage: string,
-): { obj: ObjBuilder; words: string | undefined } {
+): { obj: ObjBuilder; words: Segment[] } {
   const obj: ObjBuilder = {};
   if (roles.length > 0) obj.role = roles;
-  let words: string | undefined = aria ?? undefined;
+  const words: Segment[] = aria ? [{ kind: "text", text: aria }] : [];
   if (aria) {
     obj.text = { plain: aria, ssml: "", language: ariaLanguage };
     ariaSubstitutedBuilders.add(obj);
@@ -119,6 +119,7 @@ function linkObject(
     if (selector) substitutedOwnSelectorBuilders.set(obj, selector);
   } else {
     const sub = converter.spawnChild(el, 0);
+    sub.words = words;
     sub.convertChildren(el);
     const content = sub.resultBuilders();
     // A lone hoistable result is the content's own text; anything else is objects of its own.
@@ -128,7 +129,6 @@ function linkObject(
     } else if (content.length > 0) {
       obj.children = content;
     }
-    words = sub.words || undefined;
   }
   const href = el.getAttribute("href");
   if (href) obj.textref = href;
