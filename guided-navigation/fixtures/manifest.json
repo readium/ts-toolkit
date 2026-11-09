@@ -1470,6 +1470,16 @@
     }
   },
   {
+    "id": "link-containing-block-with-id",
+    "dir": "link-containing-block-with-id",
+    "role": "link",
+    "description": "A block with its own id inside a link stays the link's child, keeping that id",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "link-containing-image",
     "dir": "link-containing-image",
     "role": "link",

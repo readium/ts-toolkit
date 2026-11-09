@@ -1,0 +1,10 @@
+{
+  "id": "link-containing-block-with-id",
+  "description": "A block with its own id inside a link stays the link's child, keeping that id",
+  "role": "link",
+  "rolesCovered": [
+    "link"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

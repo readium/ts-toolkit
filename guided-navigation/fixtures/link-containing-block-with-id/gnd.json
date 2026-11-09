@@ -1,0 +1,21 @@
+{
+  "children": [
+    {
+      "id": "link1",
+      "children": [
+        {
+          "id": "ch2-teaser",
+          "text": {
+            "plain": "The storm arrives."
+          }
+        }
+      ],
+      "textref": "chapter2.xhtml"
+    }
+  ],
+  "text": {
+    "plain": "Next:",
+    "ssml": "Next: <readium:link id=\"link1\" />",
+    "language": "en"
+  }
+}

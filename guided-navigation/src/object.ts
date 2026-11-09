@@ -82,7 +82,7 @@ function isChildrenOnly(o: ObjBuilder): boolean {
 // own ref (e.g. an <a href>'s textref) is never hoisted — refs identify a
 // distinct target and merging them into the parent would silently discard
 // whichever of the two textrefs isn't kept.
-function isHoistable(o: ObjBuilder): boolean {
+export function isHoistable(o: ObjBuilder): boolean {
   return (
     !(o.role && o.role.length > 0) &&
     !o.id &&

@@ -6,7 +6,7 @@ import type { GndRole } from "./types.ts";
 import { ssmlAttrEscape } from "@readium/helpers";
 import { normalizedNodeText } from "./a11y.ts";
 import { normalizeWhitespace, textIsEmpty } from "./text.ts";
-import { type ObjBuilder, ariaSubstitutedBuilders, substitutedOwnSelectorBuilders } from "./object.ts";
+import { type ObjBuilder, ariaSubstitutedBuilders, isHoistable, substitutedOwnSelectorBuilders } from "./object.ts";
 import { hasElementChild, isAncestorOf } from "./dom.ts";
 import { nodeLanguage } from "./language.ts";
 import { Converter } from "./converter.ts";
@@ -81,8 +81,8 @@ export function link(converter: Converter, el: Element, roles: GndRole[], aria: 
     const sub = converter.spawnChild(el, 0);
     sub.convertChildren(el);
     const content = sub.resultBuilders();
-    // A lone result without a role is the content's own text; anything else is objects of its own.
-    if (content.length === 1 && content[0].text && !content[0].role) {
+    // A lone hoistable result is the content's own text; anything else is objects of its own.
+    if (content.length === 1 && content[0].text && isHoistable(content[0])) {
       obj.text = content[0].text;
       if (content[0].children) obj.children = content[0].children;
     } else if (content.length > 0) {
