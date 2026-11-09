@@ -910,6 +910,16 @@
     }
   },
   {
+    "id": "glossref-containing-pagebreak",
+    "dir": "glossref-containing-pagebreak",
+    "role": "glossref",
+    "description": "A pagebreak inside a glossref is the glossref's own child, its page number kept out of the glossref's text",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "glossref-epub-type",
     "dir": "glossref-epub-type",
     "role": "glossref",

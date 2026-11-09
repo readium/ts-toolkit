@@ -41,7 +41,7 @@ renaming, or removing a fixture.
 | `footnote` | `footnote-epub-type`, `footnote-role-aria`, `noteref-target-in-endnotes-epub-type`, `noteref-target-in-endnotes-role-aria` |
 | `foreword` | `foreword-epub-type`, `foreword-role-aria` |
 | `glossary` | `glossary-epub-type`, `glossary-role-aria` |
-| `glossref` | `glossref-epub-type`, `glossref-role-aria`, `glossref-role-aria-mid-sentence`, `glossref-sole-content`, `glossref-target-in-glossary-role-aria`, `glossref-target-percent-encoded` |
+| `glossref` | `glossref-containing-pagebreak`, `glossref-epub-type`, `glossref-role-aria`, `glossref-role-aria-mid-sentence`, `glossref-sole-content`, `glossref-target-in-glossary-role-aria`, `glossref-target-percent-encoded` |
 | `header` | `header-html-native` |
 | `heading` | `heading-html-native`, `heading-role-aria` |
 | `image` | `image-alt-html-native`, `image-no-description`, `image-role-aria`, `language-alt-inherited`, `language-alt-own-lang`, `language-labelledby-target`, `language-labelledby-target-aria-label`, `language-labelledby-target-switches`, `language-labelledby-targets-case`, `language-labelledby-targets-differ`, `language-undeclared-description` |
@@ -81,4 +81,4 @@ renaming, or removing a fixture.
 | `toc` | `toc-epub-type`, `toc-role-aria` |
 | `video` | `video-html-native`, `video-no-description` |
 
-254 fixtures across 73 roles.
+255 fixtures across 73 roles.

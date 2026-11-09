@@ -1,5 +1,5 @@
 import { normalizeWhitespace } from "./text.ts";
-import { extractNodeRoles, hasExplicitRole } from "./roles.ts";
+import { hasExplicitRole } from "./roles.ts";
 import { nodeLanguage, sharedLanguage } from "./language.ts";
 
 function nodeIsHidden(el: Element): boolean {
@@ -16,7 +16,7 @@ export interface NodeText {
 
 // Raw text of a subtree, adding each non-blank text node's language to `languages`. Explicit-role
 // descendants can be skipped: they're spoken separately, so their text would be doubled up.
-function nodeText(root: Node, excludeExplicitRoles: boolean, languages: Set<string>, excludePagebreaks = false): string {
+function nodeText(root: Node, excludeExplicitRoles: boolean, languages: Set<string>): string {
   let text = "";
   const walk = (n: Node, isRoot: boolean) => {
     if (n.nodeType === 3 /* TEXT_NODE */) {
@@ -26,27 +26,21 @@ function nodeText(root: Node, excludeExplicitRoles: boolean, languages: Set<stri
       return;
     }
     if (excludeExplicitRoles && n.nodeType === 1 /* ELEMENT_NODE */ && !isRoot && hasExplicitRole(n as Element)) return;
-    if (excludePagebreaks && n.nodeType === 1 /* ELEMENT_NODE */ && !isRoot && extractNodeRoles(n as Element).includes("pagebreak")) return;
     for (let c = n.firstChild; c; c = c.nextSibling) walk(c, false);
   };
   walk(root, true);
   return text;
 }
 
-function normalizedText(root: Node, excludeExplicitRoles: boolean, excludePagebreaks = false): NodeText {
+function normalizedText(root: Node, excludeExplicitRoles: boolean): NodeText {
   const languages = new Set<string>();
-  const text = normalizeWhitespace(nodeText(root, excludeExplicitRoles, languages, excludePagebreaks), true).trim();
+  const text = normalizeWhitespace(nodeText(root, excludeExplicitRoles, languages), true).trim();
   return { text, language: sharedLanguage(languages) };
 }
 
 /** Normalized (whitespace-coalesced and trimmed) text content of a node's subtree, and its language. */
 export function normalizedNodeText(el: Node): NodeText {
   return normalizedText(el, false);
-}
-
-/** Same as `normalizedNodeText`, excluding pagebreak descendants, whose page number isn't part of the text. */
-export function normalizedNodeTextExcludingPagebreaks(el: Node): NodeText {
-  return normalizedText(el, false, true);
 }
 
 /** Same as `normalizedNodeText`, excluding explicitly-role-bearing descendants. */

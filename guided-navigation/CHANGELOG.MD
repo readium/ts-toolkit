@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A role repeated on a wrapper and its sole child, such as `chapter` on both `<body>` and `<section>`, is now kept on the wrapper only, instead of appearing twice or being removed together with the wrapper's own roles (e.g. `section` in nested sections)
 - Plain text left out the words of a link, glossref or biblioref in its sentence, e.g. "The light passes through a at the top." It now keeps them; footnote references, backlinks, pagebreaks and media are still left out
-- A link's content was reduced to its raw text: a language shift or emphasis inside it was lost, a pagebreak's number ran into its words (e.g. "the long chap5ter"), and an image or pagebreak inside it was missing from the output. Its content is now converted like any other text, with its own `ssml` and `children`
+- The content of a link, glossref or biblioref was reduced to its raw text: a language shift or emphasis inside it was lost, a pagebreak's number ran into its words (e.g. "the long chap5ter"), and an image or pagebreak inside it was missing from the output. Its content is now converted like any other text, with its own `ssml` and `children`
 
 ## [1.2.3] – 2026-11-06
 
