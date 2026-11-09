@@ -1,0 +1,19 @@
+{
+  "children": [
+    {
+      "id": "link1",
+      "text": {
+        "plain": "the chapter on daily life at the lighthouse"
+      },
+      "textref": "chapter3.xhtml#logbooks"
+    }
+  ],
+  "role": [
+    "paragraph"
+  ],
+  "text": {
+    "plain": "The logbooks are described in the chapter on daily life at the lighthouse.",
+    "ssml": "The logbooks are described in <readium:link id=\"link1\" />.",
+    "language": "en"
+  }
+}

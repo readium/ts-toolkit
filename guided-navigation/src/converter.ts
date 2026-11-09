@@ -53,6 +53,8 @@ interface Segment {
   tag?: string;
   child?: NavObject;
   candidateID?: string;
+  // A link's words are part of the sentence, so plain text keeps them.
+  inPlain?: boolean;
 }
 
 /** Walks a DOM subtree, building the Guided Navigation object tree. */
@@ -506,7 +508,7 @@ export class Converter {
     this.flowLastOffset = 0;
   }
 
-  placeholder(el: Element, tag: string, object: ObjBuilder, candidateID?: string) {
+  placeholder(el: Element, tag: string, object: ObjBuilder, candidateID?: string, inPlain = false) {
     if (isEmptyObj(object)) return;
     const child = new NavObject();
     child.el = el;
@@ -522,6 +524,7 @@ export class Converter {
       tag,
       child,
       candidateID: candidateID ?? el.getAttribute("id") ?? undefined,
+      inPlain,
     });
     this.flowEndsWithSpace = false;
   }
@@ -654,9 +657,11 @@ export class Converter {
     let sawPlaceholder = false;
     let midSpace = false;
     for (const seg of segments) {
-      if (seg.kind === "text") {
-        const lead = seg.text!.startsWith(" ");
-        const t = seg.text!.replace(/^ +| +$/g, "");
+      const words = seg.inPlain ? plainWords(seg.child!) : undefined;
+      if (seg.kind === "text" || words) {
+        const segText = words ?? seg.text!;
+        const lead = segText.startsWith(" ");
+        const t = segText.replace(/^ +| +$/g, "");
         if (t === "") {
           midSpace = true;
           continue;
@@ -670,7 +675,7 @@ export class Converter {
         }
         if (join) plainB += " ";
         plainB += t;
-        prevTrail = seg.text!.endsWith(" ");
+        prevTrail = segText.endsWith(" ");
         sawBreak = false;
         sawPlaceholder = false;
         midSpace = false;
@@ -738,6 +743,14 @@ export class Converter {
       this.lastFlowRange = { first: [flowFirstNode, flowFirstOffset], last: [flowLastNode, flowLastOffset] };
     }
   }
+}
+
+// An embedded object's text, with the spaces at its edges in the source.
+function plainWords(child: NavObject): string | undefined {
+  const text = child.object.text?.plain;
+  if (!text) return undefined;
+  const source = child.el?.textContent ?? "";
+  return `${/^\s/.test(source) ? " " : ""}${text}${/\s$/.test(source) ? " " : ""}`;
 }
 
 // An abbreviation's expansion, "" when it has none.

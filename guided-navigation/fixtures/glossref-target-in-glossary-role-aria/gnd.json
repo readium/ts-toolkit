@@ -35,7 +35,7 @@
         "paragraph"
       ],
       "text": {
-        "plain": "The light passes through a at the top.",
+        "plain": "The light passes through a Fresnel lens at the top.",
         "ssml": "The light passes through a <readium:glossref id=\"glossref1\" /> at the top.",
         "language": "en"
       }

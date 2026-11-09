@@ -27,7 +27,7 @@
         "paragraph"
       ],
       "text": {
-        "plain": "Lighthouses were first electrified in the 1870s along the coast.",
+        "plain": "Lighthouses were first electrified in the 1870s (Smith, 1988) along the coast.",
         "ssml": "Lighthouses were first electrified in the 1870s (<readium:biblioref id=\"biblioref1\" />) along the coast.",
         "language": "en"
       }

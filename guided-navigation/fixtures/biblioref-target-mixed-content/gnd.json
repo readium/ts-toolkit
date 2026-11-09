@@ -16,7 +16,7 @@
                 }
               ],
               "text": {
-                "plain": "Author. Year",
+                "plain": "Author Title. Year",
                 "ssml": "Author <readium:link id=\"link1\" />. Year",
                 "language": "en"
               }
@@ -35,7 +35,7 @@
         "paragraph"
       ],
       "text": {
-        "plain": "See.",
+        "plain": "See 1.",
         "ssml": "See <readium:biblioref id=\"biblioref1\" />.",
         "language": "en"
       }
@@ -54,7 +54,7 @@
         "paragraph"
       ],
       "text": {
-        "plain": "Author. Year",
+        "plain": "Author Title. Year",
         "ssml": "Author <readium:link id=\"link2\" />. Year",
         "language": "en"
       }

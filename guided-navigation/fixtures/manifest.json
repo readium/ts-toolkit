@@ -1470,6 +1470,16 @@
     }
   },
   {
+    "id": "link-containing-pagebreak",
+    "dir": "link-containing-pagebreak",
+    "role": "link",
+    "description": "A page number inside a link stays out of the link's text and of the sentence's plain text",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "list-aria-posinset-setsize",
     "dir": "list-aria-posinset-setsize",
     "role": "list",

@@ -12,7 +12,7 @@
     "paragraph"
   ],
   "text": {
-    "plain": "Voir ici.",
+    "plain": "Voir le book ici.",
     "ssml": "Voir <readium:link id=\"link1\" /> ici.",
     "language": "fr"
   }

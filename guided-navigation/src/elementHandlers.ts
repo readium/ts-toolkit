@@ -4,7 +4,7 @@
 // on a sub-Converter of its own.
 import type { GndRole } from "./types.ts";
 import { ssmlAttrEscape } from "@readium/helpers";
-import { normalizedNodeText } from "./a11y.ts";
+import { normalizedNodeText, normalizedNodeTextExcludingPagebreaks } from "./a11y.ts";
 import { normalizeWhitespace, textIsEmpty } from "./text.ts";
 import { type ObjBuilder, ariaSubstitutedBuilders, substitutedOwnSelectorBuilders } from "./object.ts";
 import { hasElementChild, isAncestorOf } from "./dom.ts";
@@ -74,7 +74,8 @@ export function noteref(converter: Converter, el: Element, roles: GndRole[]): vo
 }
 
 export function link(converter: Converter, el: Element, roles: GndRole[], aria: string | null, ariaLanguage: string): void {
-  converter.placeholder(el, roles[0] ?? "link", linkObject(converter, el, roles, aria, ariaLanguage));
+  // A backlink is navigation, not part of the text it follows.
+  converter.placeholder(el, roles[0] ?? "link", linkObject(converter, el, roles, aria, ariaLanguage), undefined, !roles.includes("backlink"));
 }
 
 // A glossref or biblioref: a link that also embeds its same-document target, like a noteref its footnote.
@@ -95,7 +96,7 @@ export function reference(converter: Converter, el: Element, roles: GndRole[], a
       if (children.length > 0) obj.children = children;
     }
   }
-  converter.placeholder(el, roles[0], obj);
+  converter.placeholder(el, roles[0], obj, undefined, true);
 }
 
 function linkObject(converter: Converter, el: Element, roles: GndRole[], aria: string | null, ariaLanguage: string): ObjBuilder {
@@ -107,7 +108,7 @@ function linkObject(converter: Converter, el: Element, roles: GndRole[], aria: s
     const selector = selectorForElement(el, converter.selectorRoot, converter.selectorRootAnchor);
     if (selector) substitutedOwnSelectorBuilders.set(obj, selector);
   } else {
-    const { text, language } = normalizedNodeText(el);
+    const { text, language } = normalizedNodeTextExcludingPagebreaks(el);
     if (text) obj.text = { plain: text, ssml: "", language };
   }
   const href = el.getAttribute("href");
