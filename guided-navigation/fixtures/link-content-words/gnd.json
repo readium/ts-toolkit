@@ -1,0 +1,46 @@
+{
+  "children": [
+    {
+      "id": "link1",
+      "children": [
+        {
+          "text": {
+            "plain": "Chapter 3"
+          }
+        },
+        {
+          "role": [
+            "term"
+          ],
+          "text": {
+            "plain": "Lenses"
+          }
+        },
+        {
+          "text": {
+            "plain": ","
+          }
+        },
+        {
+          "role": [
+            "term"
+          ],
+          "text": {
+            "plain": "mirrors"
+          }
+        },
+        {
+          "text": {
+            "plain": "and prisms"
+          }
+        }
+      ],
+      "textref": "chapter3.xhtml"
+    }
+  ],
+  "text": {
+    "plain": "Next: Chapter 3 Lenses, mirrors and prisms",
+    "ssml": "Next: <readium:link id=\"link1\" />",
+    "language": "en"
+  }
+}

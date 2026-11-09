@@ -1,11 +1,11 @@
 {
-  "id": "link-containing-term",
-  "description": "A link whose content is a term keeps its words in the sentence's plain text",
+  "id": "link-content-conversion",
+  "description": "Every kind of link converts its content the same way, like any other text",
   "role": "link",
   "rolesCovered": [
     "paragraph",
     "link",
-    "term"
+    "glossref"
   ],
   "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
   "inputKind": "fragment"

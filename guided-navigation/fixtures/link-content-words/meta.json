@@ -1,6 +1,6 @@
 {
-  "id": "link-containing-block-with-id",
-  "description": "A block with its own id inside a link stays the link's child, keeping that id",
+  "id": "link-content-words",
+  "description": "A link's words in its sentence come from all of its content, spaced only where the source has whitespace or a block boundary",
   "role": "link",
   "rolesCovered": [
     "link"

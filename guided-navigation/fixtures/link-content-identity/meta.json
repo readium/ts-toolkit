@@ -1,0 +1,10 @@
+{
+  "id": "link-content-identity",
+  "description": "A link takes on its content only when that content has no identity of its own: a lone result with an id, description or ref stays its child",
+  "role": "link",
+  "rolesCovered": [
+    "link"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

@@ -910,16 +910,6 @@
     }
   },
   {
-    "id": "glossref-containing-pagebreak",
-    "dir": "glossref-containing-pagebreak",
-    "role": "glossref",
-    "description": "A pagebreak inside a glossref is the glossref's own child, its page number kept out of the glossref's text",
-    "files": {
-      "input": "input.html",
-      "gnd": "gnd.json"
-    }
-  },
-  {
     "id": "glossref-epub-type",
     "dir": "glossref-epub-type",
     "role": "glossref",
@@ -1480,16 +1470,6 @@
     }
   },
   {
-    "id": "link-containing-block-with-id",
-    "dir": "link-containing-block-with-id",
-    "role": "link",
-    "description": "A block with its own id inside a link stays the link's child, keeping that id",
-    "files": {
-      "input": "input.html",
-      "gnd": "gnd.json"
-    }
-  },
-  {
     "id": "link-containing-image",
     "dir": "link-containing-image",
     "role": "link",
@@ -1510,10 +1490,30 @@
     }
   },
   {
-    "id": "link-containing-term",
-    "dir": "link-containing-term",
+    "id": "link-content-conversion",
+    "dir": "link-content-conversion",
     "role": "link",
-    "description": "A link whose content is a term keeps its words in the sentence's plain text",
+    "description": "Every kind of link converts its content the same way, like any other text",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "link-content-identity",
+    "dir": "link-content-identity",
+    "role": "link",
+    "description": "A link takes on its content only when that content has no identity of its own: a lone result with an id, description or ref stays its child",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "link-content-words",
+    "dir": "link-content-words",
+    "role": "link",
+    "description": "A link's words in its sentence come from all of its content, spaced only where the source has whitespace or a block boundary",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"

@@ -128,7 +128,7 @@ function linkObject(
     } else if (content.length > 0) {
       obj.children = content;
     }
-    words = sub.flowTexts.join(" ") || undefined;
+    words = sub.words || undefined;
   }
   const href = el.getAttribute("href");
   if (href) obj.textref = href;

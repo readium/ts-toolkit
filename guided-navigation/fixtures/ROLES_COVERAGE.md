@@ -41,7 +41,7 @@ renaming, or removing a fixture.
 | `footnote` | `footnote-epub-type`, `footnote-role-aria`, `noteref-target-in-endnotes-epub-type`, `noteref-target-in-endnotes-role-aria` |
 | `foreword` | `foreword-epub-type`, `foreword-role-aria` |
 | `glossary` | `glossary-epub-type`, `glossary-role-aria` |
-| `glossref` | `glossref-containing-pagebreak`, `glossref-epub-type`, `glossref-role-aria`, `glossref-role-aria-mid-sentence`, `glossref-sole-content`, `glossref-target-in-glossary-role-aria`, `glossref-target-percent-encoded` |
+| `glossref` | `glossref-epub-type`, `glossref-role-aria`, `glossref-role-aria-mid-sentence`, `glossref-sole-content`, `glossref-target-in-glossary-role-aria`, `glossref-target-percent-encoded` |
 | `header` | `header-html-native` |
 | `heading` | `heading-html-native`, `heading-role-aria` |
 | `image` | `image-alt-html-native`, `image-no-description`, `image-role-aria`, `language-alt-inherited`, `language-alt-own-lang`, `language-labelledby-target`, `language-labelledby-target-aria-label`, `language-labelledby-target-switches`, `language-labelledby-targets-case`, `language-labelledby-targets-differ`, `language-undeclared-description` |
@@ -49,7 +49,7 @@ renaming, or removing a fixture.
 | `introduction` | `introduction-epub-type`, `introduction-role-aria` |
 | `landmarks` | `landmarks-epub-type` |
 | `language` | `language-block`, `language-block-empty-lang`, `language-document`, `language-empty-lang-stops-inheritance`, `language-inline-case-insensitive`, `language-inline-case-insensitive-ssml`, `language-inline-empty-lang`, `language-inline-empty-lang-formatted`, `language-inline-empty-lang-only`, `language-inline-empty-lang-undeclared`, `language-inline-lang-attribute`, `language-inline-nested`, `language-inline-repeated`, `language-inline-two-languages`, `language-xml-lang-empty-html-inherits`, `language-xml-lang-empty-html-lang-applies`, `language-xml-lang-empty-xhtml`, `language-xml-lang-over-lang` |
-| `link` | `language-link-switches`, `link-containing-block-with-id`, `link-containing-image`, `link-containing-pagebreak`, `link-containing-term` |
+| `link` | `language-link-switches`, `link-containing-image`, `link-containing-pagebreak`, `link-content-conversion`, `link-content-identity`, `link-content-words` |
 | `list` | `list-aria-posinset-setsize`, `list-epub-type`, `list-html-native`, `list-item-posinset-override`, `list-item-value-override`, `list-ordered-html-native`, `list-ordered-reversed`, `list-ordered-start`, `list-role-aria` |
 | `loa` | `loa-epub-type` |
 | `loi` | `loi-epub-type` |

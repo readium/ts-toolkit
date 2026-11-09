@@ -1,0 +1,31 @@
+{
+  "children": [
+    {
+      "id": "link1",
+      "text": {
+        "ssml": "<emphasis>coastal</emphasis> map",
+        "language": "en"
+      },
+      "textref": "map.xhtml"
+    },
+    {
+      "id": "glossref1",
+      "role": [
+        "glossref"
+      ],
+      "text": {
+        "ssml": "<emphasis>lantern</emphasis> room",
+        "language": "en"
+      },
+      "textref": "glossary.xhtml#lantern-room"
+    }
+  ],
+  "role": [
+    "paragraph"
+  ],
+  "text": {
+    "plain": "See the coastal map and the lantern room.",
+    "ssml": "See the <readium:link id=\"link1\" /> and the <readium:glossref id=\"glossref1\" />.",
+    "language": "en"
+  }
+}

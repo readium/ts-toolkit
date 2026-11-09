@@ -111,8 +111,10 @@ export class Converter {
   // The plain-text string of the flow flushText() just flushed, read by
   // tail() right after calling it as the text-fragment candidate text.
   private lastFlowText: string | null = null;
-  // The plain-text string of every flow flushed so far, in order, e.g. a link's words.
-  readonly flowTexts: string[] = [];
+  // The plain text of every flow flushed so far, spaced as in the source, e.g. a link's words.
+  words = "";
+  // Whether the source separates the next flow's words from `words`: whitespace or a block boundary.
+  private wordsSeparated = false;
 
   constructor(xmlParsed: boolean) {
     this.xmlParsed = xmlParsed;
@@ -311,6 +313,7 @@ export class Converter {
     }
 
     this.flushText();
+    if (!isInlineTag(tagName)) this.wordsSeparated = true;
     this.descend(el, roles);
 
     const cur = this.current.object;
@@ -365,6 +368,7 @@ export class Converter {
     if (roles.includes("pagebreak")) return;
     if (isBlockNode(tagName, roles)) {
       this.flushText();
+      if (!isInlineTag(tagName)) this.wordsSeparated = true;
       // A child block splits el's text into several flows; the last one alone doesn't represent el.
       if (this.current.hasChildBlock) {
         this.lastFlowRange = null;
@@ -410,6 +414,7 @@ export class Converter {
   private text(node: Node) {
     if (this.current.noText) return;
     const data = node.nodeValue ?? "";
+    if (this.textAcc.length === 0 && this.segments.length === 0 && /^\s/.test(data)) this.wordsSeparated = true;
     if (/^\s*$/.test(data)) {
       if (this.textAcc.length > 0 || this.segments.length > 0) {
         this.textAcc += normalizeWhitespace(data, this.flowEndsWithSpace);
@@ -550,6 +555,8 @@ export class Converter {
     this.lastFlowText = null;
 
     if (segments.length === 0) return;
+    const last = segments[segments.length - 1];
+    const endsSeparated = last.kind === "break" || (last.kind === "text" && /\s$/.test(last.text!));
 
     // Trim the edges of the flow.
     while (segments.length > 0) {
@@ -703,7 +710,11 @@ export class Converter {
     // redundant, mechanical derivative of the SSML, so it's left out.
     const hasPlaceholder = segments.some((s) => s.kind === "placeholder");
     this.lastFlowText = plainB.trim();
-    if (this.lastFlowText) this.flowTexts.push(this.lastFlowText);
+    if (this.lastFlowText) {
+      if (this.words && this.wordsSeparated) this.words += " ";
+      this.words += this.lastFlowText;
+      this.wordsSeparated = endsSeparated;
+    }
     const text: TextBuilder = {
       plain: needSSML && !hasPlaceholder ? "" : plainB.trim(),
       ssml: "",
