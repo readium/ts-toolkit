@@ -1500,6 +1500,16 @@
     }
   },
   {
+    "id": "link-containing-term",
+    "dir": "link-containing-term",
+    "role": "link",
+    "description": "A link whose content is a term keeps its words in the sentence's plain text",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "list-aria-posinset-setsize",
     "dir": "list-aria-posinset-setsize",
     "role": "list",

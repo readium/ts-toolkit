@@ -88,7 +88,7 @@ export function link(converter: Converter, el: Element, roles: GndRole[], aria: 
     } else if (content.length > 0) {
       obj.children = content;
     }
-    words = sub.lastFlowText ?? undefined;
+    words = sub.flowTexts.join(" ") || undefined;
   }
   // A backlink is navigation, not part of the text it follows.
   converter.placeholder(el, roles[0] ?? "link", obj, { plain: roles.includes("backlink") ? undefined : words });

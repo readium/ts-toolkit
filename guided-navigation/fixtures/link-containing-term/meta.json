@@ -1,0 +1,12 @@
+{
+  "id": "link-containing-term",
+  "description": "A link whose content is a term keeps its words in the sentence's plain text",
+  "role": "link",
+  "rolesCovered": [
+    "paragraph",
+    "link",
+    "term"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

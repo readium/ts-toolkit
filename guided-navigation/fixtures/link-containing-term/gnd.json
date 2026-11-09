@@ -1,0 +1,26 @@
+{
+  "children": [
+    {
+      "id": "link1",
+      "children": [
+        {
+          "role": [
+            "term"
+          ],
+          "text": {
+            "plain": "lens"
+          }
+        }
+      ],
+      "textref": "optics.xhtml"
+    }
+  ],
+  "role": [
+    "paragraph"
+  ],
+  "text": {
+    "plain": "A lens bends light.",
+    "ssml": "A <readium:link id=\"link1\" /> bends light.",
+    "language": "en"
+  }
+}

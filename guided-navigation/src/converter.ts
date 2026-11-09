@@ -109,8 +109,10 @@ export class Converter {
   // right after calling it to build a domRange for the block it closes.
   private lastFlowRange: { first: [Text, number]; last: [Text, number] } | null = null;
   // The plain-text string of the flow flushText() just flushed, read by
-  // tail() right after calling it, and by link() as a link's words.
-  lastFlowText: string | null = null;
+  // tail() right after calling it as the text-fragment candidate text.
+  private lastFlowText: string | null = null;
+  // The plain-text string of every flow flushed so far, in order, e.g. a link's words.
+  readonly flowTexts: string[] = [];
 
   constructor(xmlParsed: boolean) {
     this.xmlParsed = xmlParsed;
@@ -701,6 +703,7 @@ export class Converter {
     // redundant, mechanical derivative of the SSML, so it's left out.
     const hasPlaceholder = segments.some((s) => s.kind === "placeholder");
     this.lastFlowText = plainB.trim();
+    if (this.lastFlowText) this.flowTexts.push(this.lastFlowText);
     const text: TextBuilder = {
       plain: needSSML && !hasPlaceholder ? "" : plainB.trim(),
       ssml: "",
