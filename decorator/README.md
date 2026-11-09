@@ -2,6 +2,9 @@
 
 Renders visual annotations over text ranges in HTML content — highlights, underlines, strikethroughs, and more. Works on any HTML document.
 
+> [!WARNING]
+> Breaking changes can ship in minor versions. Patch versions never contain breaking changes. Use a tilde range (`~x.y.z`) rather than a caret range, and check the changelog before upgrading to a new minor version.
+
 ## Installation
 
 ```sh

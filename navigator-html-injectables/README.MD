@@ -2,6 +2,9 @@
 
 This package can be used either inside a reflowable (X)HTML or outside (in a javascript environment) to provide access and control over a resource from a navigator on any modern browser or embedded browser frame. This is a replacement for the javascript stubs found in the mobile SDKs, such as [this](https://github.com/readium/kotlin-toolkit/tree/develop/readium/navigator/src/main/assets/_scripts/src).
 
+> [!WARNING]
+> Breaking changes can ship in minor versions. Patch versions never contain breaking changes. Use a tilde range (`~x.y.z`) rather than a caret range, and check the changelog before upgrading to a new minor version.
+
 Special care should be taken to make the final produced build compatible with a set of browsers that are older than what you'd typically support on the web, since this SDK can be used in a mobile app's webview, which is an environment that tends to run on an outdated web engine.
 
 To build:

@@ -2,6 +2,9 @@
 
 General-purpose browser helpers for Readium packages: color parsing/contrast utilities, OS/browser detection, URI fragment decoding, and WICG Text Fragment parsing/resolution/generation.
 
+> [!WARNING]
+> Breaking changes can ship in minor versions. Patch versions never contain breaking changes. Use a tilde range (`~x.y.z`) rather than a caret range, and check the changelog before upgrading to a new minor version.
+
 ## Installation
 
 ```ts

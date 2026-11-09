@@ -2,6 +2,9 @@
 
 Shared models to be used across other Readium projects and implementations in Typescript.
 
+> [!WARNING]
+> Breaking changes can ship in minor versions. Patch versions never contain breaking changes. Use a tilde range (`~x.y.z`) rather than a caret range, and check the changelog before upgrading to a new minor version.
+
 To test: 
 
 ```sh

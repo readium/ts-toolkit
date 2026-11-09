@@ -2,6 +2,9 @@
 
 Generates [Guided Navigation](https://github.com/readium/guided-navigation) (GND) documents from HTML and XHTML, as [`@readium/shared`](https://www.npmjs.com/package/@readium/shared) `GuidedNavigationDocument`/`GuidedNavigationObject` instances.
 
+> [!WARNING]
+> Breaking changes can ship in minor versions. Patch versions never contain breaking changes. Use a tilde range (`~x.y.z`) rather than a caret range, and check the changelog before upgrading to a new minor version.
+
 ## Installation
 
 ```sh

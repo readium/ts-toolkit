@@ -2,6 +2,9 @@
 
 Next generation SDK for publications in Web Apps
 
+> [!WARNING]
+> Breaking changes can ship in minor versions. Patch versions never contain breaking changes. Use a tilde range (`~x.y.z`) rather than a caret range, and check each package's changelog before upgrading to a new minor version.
+
 ## Usage
 
 Three packages are made available by this repository, which are published on NPM.
