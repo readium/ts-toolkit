@@ -1,0 +1,12 @@
+{
+  "id": "link-containing-image",
+  "description": "An image inside a link is the link's own child, placed in the link's SSML",
+  "role": "link",
+  "rolesCovered": [
+    "paragraph",
+    "link",
+    "image"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

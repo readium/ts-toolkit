@@ -53,8 +53,8 @@ interface Segment {
   tag?: string;
   child?: NavObject;
   candidateID?: string;
-  // A link's words are part of the sentence, so plain text keeps them.
-  inPlain?: boolean;
+  // The words a placeholder adds to plain text, with the spaces at their edges in the source.
+  plain?: string;
 }
 
 /** Walks a DOM subtree, building the Guided Navigation object tree. */
@@ -109,8 +109,8 @@ export class Converter {
   // right after calling it to build a domRange for the block it closes.
   private lastFlowRange: { first: [Text, number]; last: [Text, number] } | null = null;
   // The plain-text string of the flow flushText() just flushed, read by
-  // tail() right after calling it as the text-fragment candidate text.
-  private lastFlowText: string | null = null;
+  // tail() right after calling it, and by link() as a link's words.
+  lastFlowText: string | null = null;
 
   constructor(xmlParsed: boolean) {
     this.xmlParsed = xmlParsed;
@@ -508,7 +508,8 @@ export class Converter {
     this.flowLastOffset = 0;
   }
 
-  placeholder(el: Element, tag: string, object: ObjBuilder, candidateID?: string, inPlain = false) {
+  // `plain`: the object's words when they're part of the sentence it sits in, e.g. a link's.
+  placeholder(el: Element, tag: string, object: ObjBuilder, { candidateID, plain }: { candidateID?: string; plain?: string } = {}) {
     if (isEmptyObj(object)) return;
     const child = new NavObject();
     child.el = el;
@@ -524,9 +525,14 @@ export class Converter {
       tag,
       child,
       candidateID: candidateID ?? el.getAttribute("id") ?? undefined,
-      inPlain,
+      plain: plain ? Converter.withSourceSpaces(el, plain) : undefined,
     });
     this.flowEndsWithSpace = false;
+  }
+
+  private static withSourceSpaces(el: Element, words: string): string {
+    const source = el.textContent ?? "";
+    return `${/^\s/.test(source) ? " " : ""}${words}${/\s$/.test(source) ? " " : ""}`;
   }
 
   private flushText() {
@@ -618,7 +624,8 @@ export class Converter {
         if (!textLangs.some((other) => sameLanguage(other, lang))) textLangs.push(lang);
       }
     }
-    let baseLang = declaredLanguage(this.current.el ?? null);
+    // A sub-conversion's own content is in the language of the element it converts.
+    let baseLang = declaredLanguage(this.current.el ?? this.allowNode);
     if (textLangs.length === 1) {
       baseLang = textLangs[0];
     }
@@ -657,9 +664,8 @@ export class Converter {
     let sawPlaceholder = false;
     let midSpace = false;
     for (const seg of segments) {
-      const words = seg.inPlain ? plainWords(seg.child!) : undefined;
-      if (seg.kind === "text" || words) {
-        const segText = words ?? seg.text!;
+      const segText = seg.kind === "text" ? seg.text! : seg.plain;
+      if (segText !== undefined) {
         const lead = segText.startsWith(" ");
         const t = segText.replace(/^ +| +$/g, "");
         if (t === "") {
@@ -743,14 +749,6 @@ export class Converter {
       this.lastFlowRange = { first: [flowFirstNode, flowFirstOffset], last: [flowLastNode, flowLastOffset] };
     }
   }
-}
-
-// An embedded object's text, with the spaces at its edges in the source.
-function plainWords(child: NavObject): string | undefined {
-  const text = child.object.text?.plain;
-  if (!text) return undefined;
-  const source = child.el?.textContent ?? "";
-  return `${/^\s/.test(source) ? " " : ""}${text}${/\s$/.test(source) ? " " : ""}`;
 }
 
 // An abbreviation's expansion, "" when it has none.

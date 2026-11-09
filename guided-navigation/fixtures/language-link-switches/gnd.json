@@ -3,7 +3,8 @@
     {
       "id": "link1",
       "text": {
-        "plain": "le book"
+        "ssml": "le <lang xml:lang=\"en\">book</lang>",
+        "language": "fr"
       },
       "textref": "b.html"
     }

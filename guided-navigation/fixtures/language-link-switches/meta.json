@@ -1,6 +1,6 @@
 {
   "id": "language-link-switches",
-  "description": "A link's text has no language when it switches language",
+  "description": "A language switch inside a link stays in the link's own SSML",
   "role": "link",
   "rolesCovered": [
     "paragraph",

@@ -1403,7 +1403,7 @@
     "id": "language-link-switches",
     "dir": "language-link-switches",
     "role": "link",
-    "description": "A link's text has no language when it switches language",
+    "description": "A language switch inside a link stays in the link's own SSML",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -1470,10 +1470,20 @@
     }
   },
   {
+    "id": "link-containing-image",
+    "dir": "link-containing-image",
+    "role": "link",
+    "description": "An image inside a link is the link's own child, placed in the link's SSML",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "link-containing-pagebreak",
     "dir": "link-containing-pagebreak",
     "role": "link",
-    "description": "A page number inside a link stays out of the link's text and of the sentence's plain text",
+    "description": "A pagebreak inside a link is the link's own child, its page number kept out of the link's text",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"

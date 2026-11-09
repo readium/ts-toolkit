@@ -4,7 +4,7 @@
 // on a sub-Converter of its own.
 import type { GndRole } from "./types.ts";
 import { ssmlAttrEscape } from "@readium/helpers";
-import { normalizedNodeText, normalizedNodeTextExcludingPagebreaks } from "./a11y.ts";
+import { normalizedNodeText } from "./a11y.ts";
 import { normalizeWhitespace, textIsEmpty } from "./text.ts";
 import { type ObjBuilder, ariaSubstitutedBuilders, substitutedOwnSelectorBuilders } from "./object.ts";
 import { hasElementChild, isAncestorOf } from "./dom.ts";
@@ -70,17 +70,37 @@ export function noteref(converter: Converter, el: Element, roles: GndRole[]): vo
     obj.children = [{ textref: href }];
   }
 
-  converter.placeholder(el, "noteref", obj, candidateID || undefined);
+  converter.placeholder(el, "noteref", obj, { candidateID: candidateID || undefined });
 }
 
+// A link's content is converted like any other: its text, inline semantics and objects become the link's own.
 export function link(converter: Converter, el: Element, roles: GndRole[], aria: string | null, ariaLanguage: string): void {
+  const obj = linkObject(converter, el, roles, aria, ariaLanguage);
+  let words = obj.text?.plain;
+  if (!aria) {
+    const sub = converter.spawnChild(el, 0);
+    sub.convertChildren(el);
+    const content = sub.resultBuilders();
+    // A lone result without a role is the content's own text; anything else is objects of its own.
+    if (content.length === 1 && content[0].text && !content[0].role) {
+      obj.text = content[0].text;
+      if (content[0].children) obj.children = content[0].children;
+    } else if (content.length > 0) {
+      obj.children = content;
+    }
+    words = sub.lastFlowText ?? undefined;
+  }
   // A backlink is navigation, not part of the text it follows.
-  converter.placeholder(el, roles[0] ?? "link", linkObject(converter, el, roles, aria, ariaLanguage), undefined, !roles.includes("backlink"));
+  converter.placeholder(el, roles[0] ?? "link", obj, { plain: roles.includes("backlink") ? undefined : words });
 }
 
 // A glossref or biblioref: a link that also embeds its same-document target, like a noteref its footnote.
 export function reference(converter: Converter, el: Element, roles: GndRole[], aria: string | null, ariaLanguage: string): void {
   const obj = linkObject(converter, el, roles, aria, ariaLanguage);
+  if (!aria) {
+    const { text, language } = normalizedNodeText(el);
+    if (text) obj.text = { plain: text, ssml: "", language };
+  }
   const href = el.getAttribute("href") ?? "";
   if (href.startsWith("#")) {
     const target = converter.ids.get(decodeIdFragment(href) ?? href.slice(1));
@@ -96,7 +116,7 @@ export function reference(converter: Converter, el: Element, roles: GndRole[], a
       if (children.length > 0) obj.children = children;
     }
   }
-  converter.placeholder(el, roles[0], obj, undefined, true);
+  converter.placeholder(el, roles[0], obj, { plain: obj.text?.plain });
 }
 
 function linkObject(converter: Converter, el: Element, roles: GndRole[], aria: string | null, ariaLanguage: string): ObjBuilder {
@@ -107,9 +127,6 @@ function linkObject(converter: Converter, el: Element, roles: GndRole[], aria: s
     ariaSubstitutedBuilders.add(obj);
     const selector = selectorForElement(el, converter.selectorRoot, converter.selectorRootAnchor);
     if (selector) substitutedOwnSelectorBuilders.set(obj, selector);
-  } else {
-    const { text, language } = normalizedNodeTextExcludingPagebreaks(el);
-    if (text) obj.text = { plain: text, ssml: "", language };
   }
   const href = el.getAttribute("href");
   if (href) obj.textref = href;
