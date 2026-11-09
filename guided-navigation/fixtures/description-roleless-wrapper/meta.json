@@ -1,0 +1,10 @@
+{
+  "id": "description-roleless-wrapper",
+  "description": "A roleless wrapper with a description is kept as an object, not spliced into its parent",
+  "role": "description",
+  "rolesCovered": [
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,22 @@
+{
+  "children": [
+    {
+      "id": "pagebreak1",
+      "role": [
+        "pagebreak"
+      ],
+      "text": {
+        "plain": "5",
+        "language": "fr"
+      }
+    }
+  ],
+  "role": [
+    "paragraph"
+  ],
+  "text": {
+    "plain": "Avant après.",
+    "ssml": "Avant <readium:pagebreak id=\"pagebreak1\" /> après.",
+    "language": "fr"
+  }
+}

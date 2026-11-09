@@ -1,0 +1,11 @@
+{
+  "id": "language-labelledby-targets-differ",
+  "description": "An aria-labelledby description has no language when its targets' languages differ",
+  "role": "image",
+  "rolesCovered": [
+    "paragraph",
+    "image"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

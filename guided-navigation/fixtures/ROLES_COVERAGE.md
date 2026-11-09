@@ -30,35 +30,37 @@ renaming, or removing a fixture.
 | `credits` | `credits-epub-type`, `credits-role-aria` |
 | `dedication` | `dedication-epub-type`, `dedication-role-aria` |
 | `definition` | `definition-epub-type`, `definition-html-native`, `definition-role-aria` |
+| `description` | `description-roleless-lone-child`, `description-roleless-wrapper` |
 | `details` | `details-html-native`, `details-summary-html-native` |
 | `endnotes` | `endnotes-epub-type`, `endnotes-role-aria` |
 | `epigraph` | `epigraph-epub-type`, `epigraph-role-aria` |
 | `epilogue` | `epilogue-epub-type`, `epilogue-role-aria` |
 | `errata` | `errata-epub-type`, `errata-role-aria` |
 | `example` | `example-epub-type`, `example-role-aria` |
-| `figure` | `figure-basic-html-native`, `figure-basic-role-aria`, `figure-caption-element-html-native`, `figure-caption-element-role-aria`, `figure-caption-html-native`, `figure-caption-role-aria`, `figure-credit-nested-in-aria-labelledby-caption`, `figure-credit-nested-in-caption`, `figure-credit-role-aria`, `figure-describedby`, `figure-epub-type`, `figure-no-description` |
+| `figure` | `figure-basic-html-native`, `figure-basic-role-aria`, `figure-caption-element-html-native`, `figure-caption-element-role-aria`, `figure-caption-html-native`, `figure-caption-role-aria`, `figure-credit-nested-in-aria-labelledby-caption`, `figure-credit-nested-in-caption`, `figure-credit-role-aria`, `figure-describedby`, `figure-epub-type`, `figure-no-description`, `language-describedby-shared`, `language-figcaption`, `language-figcaption-credit`, `language-figcaption-switches`, `language-figcaption-switches-throughout` |
 | `footnote` | `footnote-epub-type`, `footnote-role-aria`, `noteref-target-in-endnotes-epub-type`, `noteref-target-in-endnotes-role-aria` |
 | `foreword` | `foreword-epub-type`, `foreword-role-aria` |
 | `glossary` | `glossary-epub-type`, `glossary-role-aria` |
 | `glossref` | `glossref-epub-type`, `glossref-role-aria`, `glossref-role-aria-mid-sentence`, `glossref-sole-content`, `glossref-target-in-glossary-role-aria`, `glossref-target-percent-encoded` |
 | `header` | `header-html-native` |
 | `heading` | `heading-html-native`, `heading-role-aria` |
-| `image` | `image-alt-html-native`, `image-no-description`, `image-role-aria` |
+| `image` | `image-alt-html-native`, `image-no-description`, `image-role-aria`, `language-alt-inherited`, `language-alt-own-lang`, `language-labelledby-target`, `language-labelledby-target-aria-label`, `language-labelledby-target-switches`, `language-labelledby-targets-case`, `language-labelledby-targets-differ`, `language-undeclared-description` |
 | `index` | `index-epub-type`, `index-role-aria` |
 | `introduction` | `introduction-epub-type`, `introduction-role-aria` |
 | `landmarks` | `landmarks-epub-type` |
-| `language` | `language-block`, `language-document`, `language-inline-lang-attribute`, `language-inline-nested`, `language-inline-repeated`, `language-inline-two-languages` |
+| `language` | `language-block`, `language-block-empty-lang`, `language-document`, `language-empty-lang-stops-inheritance`, `language-inline-case-insensitive`, `language-inline-case-insensitive-ssml`, `language-inline-empty-lang`, `language-inline-empty-lang-formatted`, `language-inline-empty-lang-only`, `language-inline-empty-lang-undeclared`, `language-inline-lang-attribute`, `language-inline-nested`, `language-inline-repeated`, `language-inline-two-languages`, `language-xml-lang-empty-html-inherits`, `language-xml-lang-empty-html-lang-applies`, `language-xml-lang-empty-xhtml`, `language-xml-lang-over-lang` |
+| `link` | `language-link-switches` |
 | `list` | `list-aria-posinset-setsize`, `list-epub-type`, `list-html-native`, `list-item-posinset-override`, `list-item-value-override`, `list-ordered-html-native`, `list-ordered-reversed`, `list-ordered-start`, `list-role-aria` |
 | `loa` | `loa-epub-type` |
 | `loi` | `loi-epub-type` |
 | `lot` | `lot-epub-type` |
 | `lov` | `lov-epub-type` |
 | `main` | `main-html-native`, `main-role-aria` |
-| `math` | `math-html-native`, `math-no-description`, `math-role-aria` |
+| `math` | `math-html-native`, `math-inline`, `math-no-description`, `math-role-aria` |
 | `navigation` | `navigation-html-native`, `navigation-role-aria` |
 | `noteref` | `noteref-after-closing-straight-quote`, `noteref-after-closing-straight-quote-split`, `noteref-enclosed-across-formatting`, `noteref-enclosed-adjacent-pairs`, `noteref-enclosed-adjacent-text`, `noteref-enclosed-before-formatting`, `noteref-enclosed-guillemets-french`, `noteref-enclosed-quotes-chinese`, `noteref-enclosed-quotes-german`, `noteref-enclosed-quotes-swedish`, `noteref-enclosed-straight-quotes`, `noteref-in-lone-block`, `noteref-role-aria`, `noteref-target-malformed-escape`, `noteref-target-percent-encoded` |
 | `notice` | `notice-epub-type`, `notice-role-aria` |
-| `pagebreak` | `pagebreak-epub-type`, `pagebreak-role-aria` |
+| `pagebreak` | `language-pagebreak-label`, `pagebreak-epub-type`, `pagebreak-role-aria` |
 | `pagelist` | `pagelist-epub-type`, `pagelist-role-aria` |
 | `paragraph` | `paragraph-basic` |
 | `part` | `part-epub-type`, `part-role-aria` |
@@ -79,4 +81,4 @@ renaming, or removing a fixture.
 | `toc` | `toc-epub-type`, `toc-role-aria` |
 | `video` | `video-html-native`, `video-no-description` |
 
-216 fixtures across 71 roles.
+246 fixtures across 73 roles.

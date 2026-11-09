@@ -1,0 +1,11 @@
+{
+  "id": "language-empty-lang-stops-inheritance",
+  "description": "An empty lang declaration stops inheritance, leaving an image's alt with no language",
+  "role": "language",
+  "rolesCovered": [
+    "paragraph",
+    "image"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

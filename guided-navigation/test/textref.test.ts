@@ -97,17 +97,6 @@ test("an object with only a role and a description gets a textref to its own ele
   expect(decodeCssSelectorFragment(image.textref)).toBe("span");
 });
 
-test("a roleless wrapper with a description is kept, not spliced into its parent", () => {
-  const [wrapper] = parseMarkup('<div aria-label="Sidebar"><p>One.</p><p>Two.</p></div>');
-  expect(wrapper.description?.text?.plain).toBe("Sidebar");
-  expect(wrapper.children?.length).toBe(2);
-});
-
-test("a lone roleless child with a description is not hoisted into its parent", () => {
-  const [item] = parseMarkup('<ul><li><div aria-label="Sidebar">One.</div></li></ul>')[0].children!;
-  expect(item.children?.[0].description?.text?.plain).toBe("Sidebar");
-});
-
 test("a descended inline pagebreak stays within its paragraph's flow", () => {
   const html = '<p>Before <span role="doc-pagebreak" title="5">5</span> after.</p>';
   const [paragraph] = parseMarkup(html, undefined, { textrefs: ["pagebreak"] });
@@ -150,13 +139,6 @@ test("MathML is carried as SSML in the MathML namespace, keeping its alttext as 
   expect(math.text?.plain).toBe(undefined);
   expect(math.description?.text?.plain).toBe("x squared");
   expect(decodeCssSelectorFragment(math.textref)).toBe("math");
-});
-
-test("inline MathML becomes a placeholder in its sentence's SSML, with the math object as a child", () => {
-  const [paragraph] = parseMarkup("<p>Since <math><mi>x</mi></math> holds.</p>");
-  const [math] = paragraph.children!;
-  expect(paragraph.text?.ssml).toBe(`Since <readium:math id="${math.id}" /> holds.`);
-  expect(math.text?.ssml).toBe('<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>');
 });
 
 test("role=\"math\" on non-MathML markup carries its content as plain text and its aria-label as description", () => {

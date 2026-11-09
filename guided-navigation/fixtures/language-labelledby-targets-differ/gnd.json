@@ -1,0 +1,35 @@
+{
+  "children": [
+    {
+      "id": "a",
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Un chat",
+        "language": "fr"
+      }
+    },
+    {
+      "id": "b",
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "and a dog",
+        "language": "en"
+      }
+    },
+    {
+      "imgref": "a.png",
+      "role": [
+        "image"
+      ],
+      "description": {
+        "text": {
+          "plain": "Un chat and a dog"
+        }
+      }
+    }
+  ]
+}

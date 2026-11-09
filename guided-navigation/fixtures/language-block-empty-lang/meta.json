@@ -1,0 +1,10 @@
+{
+  "id": "language-block-empty-lang",
+  "description": "A block in an empty lang declaration isn't defaulted to English, while its inline shifts are kept in SSML",
+  "role": "language",
+  "rolesCovered": [
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

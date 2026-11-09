@@ -1,0 +1,25 @@
+{
+  "children": [
+    {
+      "imgref": "a.png",
+      "role": [
+        "image"
+      ],
+      "description": {
+        "text": {
+          "plain": "Un chien",
+          "language": "fr"
+        }
+      }
+    }
+  ],
+  "role": [
+    "figure"
+  ],
+  "description": {
+    "text": {
+      "plain": "A dog",
+      "language": "en"
+    }
+  }
+}

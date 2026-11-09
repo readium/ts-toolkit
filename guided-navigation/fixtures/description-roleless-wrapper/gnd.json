@@ -1,0 +1,25 @@
+{
+  "children": [
+    {
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "One."
+      }
+    },
+    {
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Two."
+      }
+    }
+  ],
+  "description": {
+    "text": {
+      "plain": "Sidebar"
+    }
+  }
+}

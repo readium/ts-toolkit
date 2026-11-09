@@ -1,0 +1,49 @@
+{
+  "children": [
+    {
+      "id": "a",
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Eine",
+        "language": "de"
+      }
+    },
+    {
+      "id": "b",
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Katze",
+        "language": "de"
+      }
+    },
+    {
+      "children": [
+        {
+          "imgref": "a.png",
+          "role": [
+            "image"
+          ],
+          "description": {
+            "text": {
+              "plain": "x",
+              "language": "fr"
+            }
+          }
+        }
+      ],
+      "role": [
+        "figure"
+      ],
+      "description": {
+        "text": {
+          "plain": "Eine Katze",
+          "language": "de"
+        }
+      }
+    }
+  ]
+}

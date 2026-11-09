@@ -1,0 +1,11 @@
+{
+  "id": "language-figcaption",
+  "description": "A figure's implicit caption description is in the caption's language",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "image"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

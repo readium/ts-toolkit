@@ -1,0 +1,41 @@
+{
+  "children": [
+    {
+      "imgref": "a.png",
+      "role": [
+        "image"
+      ],
+      "description": {
+        "text": {
+          "plain": "x",
+          "language": "fr"
+        }
+      }
+    },
+    {
+      "children": [
+        {
+          "role": [
+            "credit"
+          ],
+          "text": {
+            "plain": "Photo: Jane",
+            "language": "en"
+          }
+        }
+      ],
+      "role": [
+        "caption"
+      ]
+    }
+  ],
+  "role": [
+    "figure"
+  ],
+  "description": {
+    "text": {
+      "plain": "Un chat",
+      "language": "fr"
+    }
+  }
+}

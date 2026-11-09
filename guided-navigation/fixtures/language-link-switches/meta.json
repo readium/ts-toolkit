@@ -1,0 +1,11 @@
+{
+  "id": "language-link-switches",
+  "description": "A link's text has no language when it switches language",
+  "role": "link",
+  "rolesCovered": [
+    "paragraph",
+    "link"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

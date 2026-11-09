@@ -1,0 +1,10 @@
+{
+  "id": "language-inline-case-insensitive-ssml",
+  "description": "Inline language declarations differing only in case are not tagged as shifts in SSML produced for other reasons",
+  "role": "language",
+  "rolesCovered": [
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

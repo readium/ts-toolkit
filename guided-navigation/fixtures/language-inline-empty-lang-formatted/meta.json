@@ -1,0 +1,10 @@
+{
+  "id": "language-inline-empty-lang-formatted",
+  "description": "Formatted text only in an empty lang declaration has no language",
+  "role": "language",
+  "rolesCovered": [
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}
