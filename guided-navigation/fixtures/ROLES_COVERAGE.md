@@ -19,9 +19,9 @@ renaming, or removing a fixture.
 | `backlink` | `backlink-epub-type`, `backlink-role-aria` |
 | `bibliography` | `bibliography-epub-type`, `bibliography-role-aria` |
 | `biblioref` | `biblioref-epub-type`, `biblioref-role-aria`, `biblioref-target-descendant-ids`, `biblioref-target-in-bibliography-role-aria`, `biblioref-target-mixed-content` |
-| `blockquote` | `blockquote-html-native`, `blockquote-role-aria` |
+| `blockquote` | `blockquote-html-native`, `blockquote-role-aria`, `nested-blockquote` |
 | `body` | `body-html-native` |
-| `chapter` | `chapter-epub-type`, `chapter-role-aria` |
+| `chapter` | `chapter-epub-type`, `chapter-role-aria`, `redundant-role-body-chapter`, `redundant-role-nested-chapter` |
 | `colophon` | `colophon-epub-type`, `colophon-role-aria` |
 | `complementary` | `complementary-role-aria` |
 | `conclusion` | `conclusion-epub-type`, `conclusion-role-aria` |
@@ -71,14 +71,14 @@ renaming, or removing a fixture.
 | `pullquote` | `pullquote-epub-type`, `pullquote-role-aria` |
 | `qna` | `qna-epub-type`, `qna-role-aria` |
 | `region` | `region-role-aria` |
-| `section` | `section-html-native` |
+| `section` | `nested-section`, `section-html-native` |
 | `separator` | `separator-html-native`, `separator-role-aria`, `separator-with-glyphs` |
 | `subtitle` | `subtitle-epub-type`, `subtitle-role-aria` |
 | `summary` | `summary-html-native` |
 | `table` | `table-caption`, `table-caption-element-html-native`, `table-caption-role-aria`, `table-cell-abbreviation`, `table-cell-noteref`, `table-colspan-html-native`, `table-colspan-role-aria`, `table-epub-type`, `table-html-native`, `table-in-role-none-wrapper`, `table-nested-html-native`, `table-nested-role-aria`, `table-no-headers`, `table-role-aria`, `table-rowgroup-role-aria`, `table-rowspan-html-native`, `table-rowspan-role-aria`, `table-sectioning`, `table-th-no-scope` |
-| `term` | `term-epub-type`, `term-html-native`, `term-role-aria` |
+| `term` | `term-epub-type`, `term-html-native`, `term-role-aria`, `term-span-in-dt` |
 | `tip` | `tip-epub-type`, `tip-role-aria` |
 | `toc` | `toc-epub-type`, `toc-role-aria` |
 | `video` | `video-html-native`, `video-no-description` |
 
-246 fixtures across 73 roles.
+251 fixtures across 73 roles.

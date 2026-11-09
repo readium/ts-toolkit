@@ -1,0 +1,11 @@
+{
+  "id": "nested-blockquote",
+  "description": "A blockquote whose sole child is another blockquote, a quotation within a quotation: both keep the blockquote role",
+  "role": "blockquote",
+  "rolesCovered": [
+    "blockquote",
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

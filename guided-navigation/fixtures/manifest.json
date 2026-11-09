@@ -1700,6 +1700,26 @@
     }
   },
   {
+    "id": "nested-blockquote",
+    "dir": "nested-blockquote",
+    "role": "blockquote",
+    "description": "A blockquote whose sole child is another blockquote, a quotation within a quotation: both keep the blockquote role",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "nested-section",
+    "dir": "nested-section",
+    "role": "section",
+    "description": "A section whose sole child is another section: both keep the section role",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "noteref-after-closing-straight-quote",
     "dir": "noteref-after-closing-straight-quote",
     "role": "noteref",
@@ -2060,6 +2080,26 @@
     }
   },
   {
+    "id": "redundant-role-body-chapter",
+    "dir": "redundant-role-body-chapter",
+    "role": "chapter",
+    "description": "A chapter whose body and sole section both declare it via epub:type: the body keeps the role, the section doesn't repeat it",
+    "files": {
+      "input": "input.xhtml",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "redundant-role-nested-chapter",
+    "dir": "redundant-role-nested-chapter",
+    "role": "chapter",
+    "description": "A chapter section whose sole child section declares chapter again via epub:type: the outer section keeps it, the inner one stays a section",
+    "files": {
+      "input": "input.xhtml",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "region-role-aria",
     "dir": "region-role-aria",
     "role": "region",
@@ -2394,6 +2434,16 @@
     "dir": "term-role-aria",
     "role": "term",
     "description": "term role via explicit ARIA role=\"term\"",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "term-span-in-dt",
+    "dir": "term-span-in-dt",
+    "role": "term",
+    "description": "A glossary term whose dt wraps a span with role=\"term\": the term is marked once, on the dt",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
