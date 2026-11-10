@@ -11,8 +11,13 @@ export interface Rect {
 }
 
 export function getTextClientRects(range: Range, skipTags: string[]): Rect[] {
+    return getTextNodeClientRects(range, skipTags).flatMap(({ rects }) => rects);
+}
+
+/** The client rects of each text node in a range, in document order, clipped to the range. */
+export function getTextNodeClientRects(range: Range, skipTags: string[]): { node: Node; rects: Rect[] }[] {
     const upperTags = skipTags.map(t => t.toUpperCase());
-    const rects: Rect[] = [];
+    const nodes: { node: Node; rects: Rect[] }[] = [];
 
     const ancestor = range.commonAncestorContainer;
     // TreeWalker only visits descendants, never the root itself. If the common
@@ -43,15 +48,14 @@ export function getTextClientRects(range: Range, skipTags: string[]): Rect[] {
                     textRange.setStart(range.startContainer, range.startOffset);
                 if (textRange.compareBoundaryPoints(Range.END_TO_END, range) > 0)
                     textRange.setEnd(range.endContainer, range.endOffset);
-                for (const r of textRange.getClientRects()) {
-                    rects.push({ left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height });
-                }
+                const rects = Array.from(textRange.getClientRects(), r => ({ left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height }));
+                nodes.push({ node, rects });
             }
         }
         node = walker.nextNode();
     }
 
-    return rects;
+    return nodes;
 }
 
 export function getClientRectsNoOverlap(
@@ -168,7 +172,7 @@ function mergeTouchingRects(
     return rects;
 }
 
-function getBoundingRect(rect1: Rect, rect2: Rect) {
+export function getBoundingRect(rect1: Rect, rect2: Rect) {
     const left = Math.min(rect1.left, rect2.left);
     const right = Math.max(rect1.right, rect2.right);
     const top = Math.min(rect1.top, rect2.top);

@@ -3,7 +3,7 @@ import { IComms } from "../comms/comms.ts";
 import { Module } from "./Module.ts";
 import { rangeFromLocator } from "../helpers/locator.ts";
 import { ModuleName } from "./ModuleLibrary.ts";
-import { Rect, getClientRectsNoOverlap, getTextClientRects, rectContainsPoint } from "../helpers/rect.ts";
+import { Rect, getBoundingRect, getClientRectsNoOverlap, getTextClientRects, getTextNodeClientRects, rectContainsPoint } from "../helpers/rect.ts";
 import { getProperty } from "../helpers/css.ts";
 import { isDarkColor, getContrastingTextColor, adjustColorForContrast, colorToRgba } from "@readium/helpers";
 import { hasRTLDirection, isVerticalWriting, makeWritingContext, OVERLAY_Z_INDEX, WritingContext } from "../helpers/document.ts";
@@ -131,6 +131,8 @@ const canNativeHighlight = () => ("Highlight" in window);
 const cannotNativeHighlight = ["IMG", "IMAGE", "AUDIO", "VIDEO", "SVG"];
 // Elements whose boxes text-node rects leave out.
 const replacedContentTags = [...cannotNativeHighlight, "IFRAME", "OBJECT", "EMBED", "CANVAS"];
+// Text of a range in one column, or in a column-spanning element: a run is text in the same container, outside or inside the same spanner.
+type FragmentPart = { text: Rect; column?: Rect; run: number; vertical: boolean };
 // Elements that trigger WebKit's CSS Custom Highlight repaint bug on removal.
 const webkitRepaintProneTags = new Set(["SUP", "SUB", "SMALL", "CODE"]);
 const outlineStrokeWidth = 2;
@@ -144,6 +146,7 @@ class DecorationGroup {
     private _activatable = false;
     private _hoverable = false;
     private hoveredItem: DecorationItem | undefined = undefined;
+    private hoveredFragment = 0;
     public readonly experimentalHighlights: boolean = false;
     private readonly notTextFlag: Map<string, boolean> | undefined;
     private readonly _tintSubKeys = new Map<string, string>(); // (type::adjustedTint) → subKey
@@ -196,7 +199,7 @@ class DecorationGroup {
     set hoverable(value: boolean) {
         this._hoverable = value;
         if (!value && this.hoveredItem) {
-            const leaveRect = this.hoveredItem.range.getBoundingClientRect();
+            const leaveRect = this.hoveredBounds(this.hoveredItem);
             const pixelRatio = this.wnd.devicePixelRatio;
             this.comms.send("decoration_pointer_leave", {
                 decorationId: this.hoveredItem.decoration.id,
@@ -289,7 +292,7 @@ class DecorationGroup {
 
         this.items.push(item);
         this.layout(item);
-        item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, this.scaledExpand(item.decoration.style) + this.hitGap()));
+        item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(DecorationGroup.rangeBoxes(item.range), false, false, this.scaledExpand(item.decoration.style) + this.hitGap()));
         this.renderLayout([item]);
     }
 
@@ -493,7 +496,7 @@ class DecorationGroup {
         const pixelRatio = this.wnd.devicePixelRatio;
 
         for (const item of this.items) {
-            let hitRect: DOMRect | undefined;
+            let hitRect: Rect | undefined;
 
             if (item.decoration.style.type === DecorationStyleType.Template) {
                 // Templates can be positioned anywhere (e.g. a margin sidemark), so hit-test
@@ -510,7 +513,8 @@ class DecorationGroup {
                 // valid across column/scroll navigation.
                 for (const rect of item.hitRects) {
                     if (rectContainsPoint(rect, docX, docY, 0)) {
-                        hitRect = item.range.getBoundingClientRect();
+                        const bounds = DecorationGroup.fragmentBounds(item.range);
+                        hitRect = bounds[DecorationGroup.fragmentIndex(bounds, DecorationGroup.pointRect(e), makeWritingContext(this.wnd))];
                         break;
                     }
                 }
@@ -539,7 +543,8 @@ class DecorationGroup {
         const pixelRatio = this.wnd.devicePixelRatio;
 
         let hitItem: DecorationItem | undefined;
-        let hitRect: DOMRect | undefined;
+        let hitRect: Rect | undefined;
+        let hitFragment = 0;
 
         for (const item of this.items) {
             if (item.decoration.style.type === DecorationStyleType.Template) {
@@ -555,7 +560,6 @@ class DecorationGroup {
                 for (const rect of item.hitRects) {
                     if (rectContainsPoint(rect, docX, docY, 0)) {
                         hitItem = item;
-                        hitRect = item.range.getBoundingClientRect();
                         break;
                     }
                 }
@@ -566,9 +570,16 @@ class DecorationGroup {
 
         if (hitItem === this.hoveredItem) return;
 
+        if (hitItem) {
+            const bounds = DecorationGroup.fragmentBounds(hitItem.range);
+            hitFragment = DecorationGroup.fragmentIndex(bounds, DecorationGroup.pointRect(e), makeWritingContext(this.wnd));
+            // Templates report their rendered element instead.
+            hitRect ??= bounds[hitFragment];
+        }
+
         if (this.hoveredItem) {
             const connected = this.hoveredItem.range.commonAncestorContainer.isConnected;
-            const leaveRect = connected ? this.hoveredItem.range.getBoundingClientRect() : null;
+            const leaveRect = connected ? this.hoveredBounds(this.hoveredItem) : null;
             this.comms.send("decoration_pointer_leave", {
                 decorationId: this.hoveredItem.decoration.id,
                 group: this.name,
@@ -583,6 +594,7 @@ class DecorationGroup {
         }
 
         this.hoveredItem = hitItem;
+        this.hoveredFragment = hitFragment;
 
         if (hitItem && hitRect) {
             this.comms.send("decoration_pointer_enter", {
@@ -614,7 +626,7 @@ class DecorationGroup {
             this.currentRender = this.wnd.requestAnimationFrame(() => {
                 this.items.forEach(i => {
                     this.layout(i);
-                    i.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(i.range, false, false, this.scaledExpand(i.decoration.style) + this.hitGap()));
+                    i.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(DecorationGroup.rangeBoxes(i.range), false, false, this.scaledExpand(i.decoration.style) + this.hitGap()));
                 });
                 this.renderLayout(this.items);
             });
@@ -642,7 +654,7 @@ class DecorationGroup {
                 this.layout(item);
                 relaidOut.push(item);
             }
-            item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, this.scaledExpand(item.decoration.style) + this.hitGap()), ctx);
+            item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(DecorationGroup.rangeBoxes(item.range), false, false, this.scaledExpand(item.decoration.style) + this.hitGap()), ctx);
         });
         if (relaidOut.length) this.renderLayout(relaidOut);
     }
@@ -697,25 +709,24 @@ class DecorationGroup {
                 console.warn('Vertical writing detected: caretPositionFromPoint has known bugs, falling back to original range');
                 sub.add(item.range);
             } else {
-                const boundingRect = item.range.getBoundingClientRect();
-                // Page snaps to the full page inline extent; Bounds/layout:Bounds uses the actual bounding rect.
-                let inlineOrigin: number;
-                let inlineExtent: number;
-                if (width === DecorationWidth.Page) {
-                    const snap = Math.floor(ctx.inlineStart(boundingRect) / ctx.pageInlineSize) * ctx.pageInlineSize;
-                    inlineOrigin = snap;
-                    inlineExtent = ctx.pageInlineSize;
-                } else {
-                    inlineOrigin = ctx.inlineStart(boundingRect);
-                    inlineExtent = ctx.inlineSize(boundingRect);
-                }
+                // The range starts in its first fragment and ends in its last.
+                const bounds = DecorationGroup.fragmentBounds(item.range);
+                const first = bounds[0];
+                const last = bounds[bounds.length - 1];
                 // Right-to-left lines start on the right.
                 const ancestor = item.range.commonAncestorContainer;
                 const textElement = ancestor.nodeType === Node.ELEMENT_NODE ? ancestor as Element : ancestor.parentElement!;
                 const rtl = hasRTLDirection(this.wnd, textElement);
-                const [lineStart, lineEnd] = rtl ? [inlineOrigin + inlineExtent, inlineOrigin] : [inlineOrigin, inlineOrigin + inlineExtent];
-                const startCaret = caretPositionFromPoint(lineStart, ctx.blockStart(boundingRect) + 1);
-                const endCaret = caretPositionFromPoint(lineEnd, ctx.blockStart(boundingRect) + ctx.blockSize(boundingRect) - 1);
+                // Page snaps to the full page inline extent; Bounds/layout:Bounds uses the actual bounding rect.
+                const lineEdges = (fragment: Rect): [number, number] => {
+                    const inlineOrigin = width === DecorationWidth.Page
+                        ? Math.floor(ctx.inlineStart(fragment) / ctx.pageInlineSize) * ctx.pageInlineSize
+                        : ctx.inlineStart(fragment);
+                    const inlineExtent = width === DecorationWidth.Page ? ctx.pageInlineSize : ctx.inlineSize(fragment);
+                    return rtl ? [inlineOrigin + inlineExtent, inlineOrigin] : [inlineOrigin, inlineOrigin + inlineExtent];
+                };
+                const startCaret = caretPositionFromPoint(lineEdges(first)[0], ctx.blockStart(first) + 1);
+                const endCaret = caretPositionFromPoint(lineEdges(last)[1], ctx.blockStart(last) + ctx.blockSize(last) - 1);
                 const expandedRange = this.wnd.document.createRange();
                 if (startCaret && endCaret) {
                     expandedRange.setStart(startCaret.offsetNode, startCaret.offset);
@@ -827,8 +838,8 @@ class DecorationGroup {
     /**
      * Positions a single overlay element according to the decoration's width mode.
      */
-    private positionElement(item: DecorationItem, ctx: WritingContext, iz: number, element: HTMLElement, rect: Rect, boundingRect: DOMRect, inlineInset = 0) {
-        const [inlineStart, blockStart, inlineSize, blockSize] = this.overlayBox(item, ctx, rect, boundingRect, inlineInset);
+    private positionElement(item: DecorationItem, ctx: WritingContext, iz: number, element: HTMLElement, rect: Rect, bounds: Rect[], inlineInset = 0) {
+        const [inlineStart, blockStart, inlineSize, blockSize] = this.overlayBox(item, ctx, rect, bounds, inlineInset);
         ctx.applyPosition(element, inlineStart, blockStart, inlineSize, blockSize, iz);
     }
 
@@ -836,7 +847,7 @@ class DecorationGroup {
      * Logical box (inline start, block start, inline size, block size) in document
      * coordinates that an overlay rect occupies under the decoration's width mode.
      */
-    private overlayBox(item: DecorationItem, ctx: WritingContext, rect: Rect, boundingRect: DOMRect, inlineInset = 0): [number, number, number, number] {
+    private overlayBox(item: DecorationItem, ctx: WritingContext, rect: Rect, bounds: Rect[], inlineInset = 0): [number, number, number, number] {
         const w = item.decoration?.style?.width;
         const r = rect;
         switch (w) {
@@ -848,11 +859,157 @@ class DecorationGroup {
                 const snap = Math.floor(ctx.inlineStart(r) / ctx.pageInlineSize) * ctx.pageInlineSize;
                 return [snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.pageInlineSize - 2 * inlineInset, ctx.blockSize(r)];
             }
-            case DecorationWidth.Bounds:
-                return [ctx.inlineStart(boundingRect) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(boundingRect), ctx.blockSize(r)];
+            case DecorationWidth.Bounds: {
+                const fragment = bounds[DecorationGroup.fragmentIndex(bounds, r, ctx)];
+                return [ctx.inlineStart(fragment) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(fragment), ctx.blockSize(r)];
+            }
             default:
                 return [ctx.inlineStart(r) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(r), ctx.blockSize(r)];
         }
+    }
+
+    /** Bounding rects of a range, one per column it runs across in multi-column containers, in document order. */
+    private static fragmentBounds(range: Range): Rect[] {
+        const parts = DecorationGroup.fragmentParts(range);
+        const boxes = DecorationGroup.rangeBoxes(range);
+        // With a multi-column element held whole, the range's bounding rect would cover all its columns.
+        if (!parts.length || (parts.length < 2 && !Array.isArray(boxes))) return [range.getBoundingClientRect()];
+
+        // Images and other element boxes, which text rects leave out, widen the part they're in.
+        for (const box of Array.isArray(boxes) ? boxes : Array.from(boxes.getClientRects())) {
+            if (!box.width && !box.height) continue;
+            // A block box can be wider than its text, so the part it holds comes first; then the part of the
+            // content it's in, as parts before and after a nested multi-column element share a column.
+            const part = parts.find(p => rectContainsPoint(box, ...DecorationGroup.center(p.column ?? p.text), 0))
+                ?? parts.find(p => rectContainsPoint(p.text, ...DecorationGroup.center(box), 0))
+                ?? parts.find(p => rectContainsPoint(p.column ?? p.text, ...DecorationGroup.center(box), 0));
+            if (part) part.text = getBoundingRect(part.text, box);
+            else parts.push({ text: box, run: 0, vertical: false });
+        }
+        return parts.map(p => p.text);
+    }
+
+    /**
+     * Text of a range, in one part per column it runs across in multi-column containers, in document order.
+     * A line's column is the box holding it among the ones the container's child reports, one per column.
+     */
+    private static fragmentParts(range: Range): FragmentPart[] {
+        const wnd = range.startContainer.ownerDocument?.defaultView;
+        if (!wnd) return [];
+        const styles = new Map<Element, CSSStyleDeclaration>();
+        const style = (el: Element) => styles.get(el) ?? styles.set(el, wnd.getComputedStyle(el)).get(el)!;
+        const childBoxes = new Map<Node, Rect[]>();
+        // Text directly in the container has no element of its own, so its line boxes stand in for it.
+        const boxesOf = (child: Node) => {
+            let boxes = childBoxes.get(child);
+            if (!boxes) {
+                const textRange = child.ownerDocument!.createRange();
+                textRange.selectNode(child);
+                const source = child.nodeType === Node.ELEMENT_NODE ? child as Element : textRange;
+                childBoxes.set(child, boxes = Array.from(source.getClientRects()));
+            }
+            return boxes;
+        };
+        const center = DecorationGroup.center;
+
+        const parts: FragmentPart[] = [];
+        const overlap = (a: FragmentPart, b: Rect) => a.vertical ? a.column!.top < b.bottom && b.top < a.column!.bottom : a.column!.left < b.right && b.left < a.column!.right;
+        let run = 0;
+        let previous: [Element | null, Element | null] | undefined;
+        // Content without text, such as an image or an empty block, takes up a column all the same.
+        const textless = DecorationGroup.rangeElements(range).textless.map(node => ({ node: node as Node, rects: DecorationGroup.plainRects(node.getClientRects()) }));
+        const contents = [...getTextNodeClientRects(range, ["rt", "rp"]), ...textless]
+            .sort((a, b) => a.node.compareDocumentPosition(b.node) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
+        for (const { node, rects } of contents) {
+            let child: Node = node, container: Element | null = null;
+            let spanner: Element | null = node.nodeType === Node.ELEMENT_NODE && style(node as Element).columnSpan === "all" ? node as Element : null;
+            for (let el = node.parentElement; el; child = el, el = el.parentElement) {
+                const s = style(el);
+                if (s.columnCount !== "auto" || s.columnWidth !== "auto") { container = el; break; }
+                if (s.columnSpan === "all") spanner = el;
+            }
+            if (!container) spanner = null;
+            if (!previous || previous[0] !== container || previous[1] !== spanner) run++;
+            previous = [container, spanner];
+            const vertical = !!container && !style(container).writingMode.startsWith("horizontal");
+            for (const rect of rects) {
+                if (!rect.width && !rect.height) continue;
+                const column = container && !spanner ? boxesOf(child).find(b => rectContainsPoint(b, ...center(rect), 0)) ?? rect : undefined;
+                const part = parts.find(p => p.run === run && (column && p.column ? overlap(p, column) : !column && !p.column));
+                if (!part) parts.push({ text: rect, column, run, vertical });
+                else {
+                    part.text = getBoundingRect(part.text, rect);
+                    if (column) part.column = getBoundingRect(part.column!, column);
+                }
+            }
+        }
+        // A child box wider than its column, for one, can make two parts overlap.
+        for (let merged = true; merged;) {
+            merged = false;
+            for (let i = 0; i < parts.length && !merged; i++) {
+                const j = parts.findIndex((q, k) => k > i && q.run === parts[i].run && !!q.column && !!parts[i].column && overlap(parts[i], q.column));
+                if (j < 0) continue;
+                parts[i].text = getBoundingRect(parts[i].text, parts[j].text);
+                parts[i].column = getBoundingRect(parts[i].column!, parts[j].column!);
+                parts.splice(j, 1);
+                merged = true;
+            }
+        }
+        return parts;
+    }
+
+    /**
+     * A range's boxes, without those of the elements it holds whole that lay out columns or hold one that does,
+     * which run across those columns. The range itself when it holds none.
+     */
+    private static rangeBoxes(range: Range): Range | Rect[] {
+        const { textless, columns } = DecorationGroup.rangeElements(range);
+        if (!columns.length) return range;
+        const leftOut = columns.flatMap(el => DecorationGroup.plainRects(el.getClientRects()));
+        const same = (a: Rect, b: Rect) => Math.abs(a.left - b.left) < 0.5 && Math.abs(a.top - b.top) < 0.5 && Math.abs(a.right - b.right) < 0.5 && Math.abs(a.bottom - b.bottom) < 0.5;
+        const kept = DecorationGroup.plainRects(range.getClientRects()).filter(box => !leftOut.some(r => same(r, box)));
+        // A left-out element box stood for its content without text too, unlike its text, which has rects of its own.
+        return [...kept, ...textless.flatMap(el => DecorationGroup.plainRects(el.getClientRects()))];
+    }
+
+    private static center(r: Rect): readonly [number, number] {
+        return [(r.left + r.right) / 2, (r.top + r.bottom) / 2];
+    }
+
+    /** Index of the bounds holding a rect's center, or else the nearest along the inline axis, then the block axis. */
+    private static fragmentIndex(bounds: Rect[], rect: Rect, ctx: WritingContext): number {
+        const x = (rect.left + rect.right) / 2, y = (rect.top + rect.bottom) / 2;
+        const holding = bounds.findIndex(b => rectContainsPoint(b, x, y, 0));
+        if (holding >= 0) return holding;
+        const gap = (start: number, size: number, p: number) => Math.max(0, start - p, p - start - size);
+        const distance = (b: Rect) => [
+            gap(ctx.inlineStart(b), ctx.inlineSize(b), ctx.isVertical ? y : x),
+            gap(ctx.blockStart(b), ctx.blockSize(b), ctx.isVertical ? x : y),
+        ];
+        let best = 0;
+        bounds.forEach((b, i) => {
+            const [inline, block] = distance(b), [bestInline, bestBlock] = distance(bounds[best]);
+            if (inline < bestInline || (inline === bestInline && block < bestBlock)) best = i;
+        });
+        return best;
+    }
+
+    private static pointRect(e: PointerEvent): Rect {
+        return { left: e.clientX, right: e.clientX, top: e.clientY, bottom: e.clientY, width: 0, height: 0 };
+    }
+
+    /** Fragment bounds for the styles drawn from them, as measuring them walks the decoration's text. */
+    private static drawnBounds(item: DecorationItem): Rect[] {
+        const style = item.decoration?.style;
+        return style?.layout === DecorationLayout.Bounds || style?.width === DecorationWidth.Bounds
+            ? DecorationGroup.fragmentBounds(item.range)
+            : [];
+    }
+
+    /** Bounds of the fragment the pointer entered, so leaving reports the same rect as entering. */
+    private hoveredBounds(item: DecorationItem): Rect {
+        const bounds = DecorationGroup.fragmentBounds(item.range);
+        return bounds[Math.min(this.hoveredFragment, bounds.length - 1)];
     }
 
     /** Boxes of the images and other replaced content in a range, which text-node rects leave out. */
@@ -861,9 +1018,50 @@ class DecorationGroup {
         if (ancestor.nodeType !== Node.ELEMENT_NODE) return [];
         return Array.from((ancestor as Element).querySelectorAll(replacedContentTags.join(", ").toLowerCase()))
             .filter(element => range.intersectsNode(element))
-            .flatMap(element => Array.from(element.getClientRects()))
-            // Plain objects, since getClientRectsNoOverlap adjusts rects in place.
-            .map(({ left, right, top, bottom, width, height }) => ({ left, right, top, bottom, width, height }));
+            .flatMap(element => DecorationGroup.plainRects(element.getClientRects()));
+    }
+
+    /**
+     * Elements of a range whose boxes text-node rects don't account for: the outermost ones without text inside,
+     * and the ones it holds whole that lay out columns or hold one that does.
+     */
+    private static rangeElements(range: Range): { textless: Element[]; columns: Element[] } {
+        const ancestor = range.commonAncestorContainer;
+        const doc = ancestor.ownerDocument;
+        const wnd = doc?.defaultView;
+        if (ancestor.nodeType !== Node.ELEMENT_NODE || !wnd) return { textless: [], columns: [] };
+        const walker = doc.createTreeWalker(ancestor, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+            acceptNode: node => range.intersectsNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT,
+        });
+        const elements: Element[] = [];
+        const withText = new Set<Node>(), withColumns = new Set<Node>();
+        const mark = (from: Node | null, set: Set<Node>) => {
+            for (let node = from; node && node !== ancestor && !set.has(node); node = node.parentNode) set.add(node);
+        };
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+            if (node.nodeType !== Node.ELEMENT_NODE) {
+                if (node.textContent!.trim()) mark(node.parentNode, withText);
+                continue;
+            }
+            elements.push(node as Element);
+            const s = wnd.getComputedStyle(node as Element);
+            if (s.columnCount !== "auto" || s.columnWidth !== "auto") mark(node, withColumns);
+        }
+        // Elements laying out columns have their content measured instead, column by column.
+        let outermost: Element | undefined;
+        const textless = elements.filter(el => !withText.has(el) && !withColumns.has(el) && !outermost?.contains(el) && (outermost = el));
+        const elementRange = doc.createRange();
+        const columns = elements.filter(el => {
+            if (!withColumns.has(el)) return false;
+            elementRange.selectNode(el);
+            return range.compareBoundaryPoints(Range.START_TO_START, elementRange) <= 0 && range.compareBoundaryPoints(Range.END_TO_END, elementRange) >= 0;
+        });
+        return { textless, columns };
+    }
+
+    /** Plain objects, since getClientRectsNoOverlap adjusts rects in place. */
+    private static plainRects(rects: DOMRectList): Rect[] {
+        return Array.from(rects, ({ left, right, top, bottom, width, height }) => ({ left, right, top, bottom, width, height }));
     }
 
     /**
@@ -1005,11 +1203,11 @@ class DecorationGroup {
      * SVG path data outlining the overlay rects as one shape per run of adjacent lines,
      * `offset` outside them. Coordinates are in the shadow host's (document) space.
      */
-    private outlinePath(item: DecorationItem, ctx: WritingContext, iz: number, rects: Rect[], boundingRect: DOMRect, inlineInset: number, offset: number, wave: number): string {
+    private outlinePath(item: DecorationItem, ctx: WritingContext, iz: number, rects: Rect[], bounds: Rect[], inlineInset: number, offset: number, wave: number): string {
         // Block coordinates are negated in vertical-rl so lines always progress towards larger values.
         const flip = ctx.isVertical && !ctx.isVertLR ? -1 : 1;
         const boxes = rects.map(rect => {
-            const [inlineStart, blockStart, inlineSize, blockSize] = this.overlayBox(item, ctx, rect, boundingRect, inlineInset).map(v => v * iz);
+            const [inlineStart, blockStart, inlineSize, blockSize] = this.overlayBox(item, ctx, rect, bounds, inlineInset).map(v => v * iz);
             const inlineEnd = inlineStart + inlineSize;
             const blockEnd = blockStart + blockSize;
             return flip === 1
@@ -1082,17 +1280,16 @@ class DecorationGroup {
      * (one rect for Bounds layout, one per merged client rect for Boxes layout).
      * Shared between the full build path (layout) and the cheap reposition path.
      */
-    private computeOverlayRects(item: DecorationItem, ctx: WritingContext, boundingRect: DOMRect, expand: number): Rect[] {
+    private computeOverlayRects(item: DecorationItem, ctx: WritingContext, bounds: Rect[], expand: number): Rect[] {
         if (item.decoration?.style?.layout === DecorationLayout.Bounds) {
-            const boundsRect: Rect = expand ? {
-                left:   boundingRect.left   - expand,
-                right:  boundingRect.right  + expand,
-                top:    boundingRect.top    - expand,
-                bottom: boundingRect.bottom + expand,
-                width:  boundingRect.width  + expand * 2,
-                height: boundingRect.height + expand * 2,
-            } : boundingRect;
-            return [boundsRect];
+            return bounds.map(boundsRect => expand ? {
+                left:   boundsRect.left   - expand,
+                right:  boundsRect.right  + expand,
+                top:    boundsRect.top    - expand,
+                bottom: boundsRect.bottom + expand,
+                width:  boundsRect.width  + expand * 2,
+                height: boundsRect.height + expand * 2,
+            } : boundsRect);
         }
 
         // Fall back to "boxes" value for layout.
@@ -1105,7 +1302,7 @@ class DecorationGroup {
         const isWavyStrike = isStrikethrough && (decoStyle as BuiltinDecorationStyle).lineStyle === DecorationLineStyle.Wavy;
         // Styles drawing lines or strokes use text-node rects plus images and the like, so Ruby (rt/rp) doesn't
         // get its own segment above the base text; a range without text keeps its own boxes.
-        let rectSource: Range | Rect[] = item.range;
+        let rectSource: Range | Rect[] | undefined;
         let replacedRects: Rect[] = [];
         if (isLineDecoration || decoType === DecorationStyleType.Outline || decoType === DecorationStyleType.HighlightUnderline) {
             const textRects = getTextClientRects(item.range, ["rt", "rp"]);
@@ -1114,6 +1311,7 @@ class DecorationGroup {
                 rectSource = isLineDecoration ? textRects : [...textRects, ...replacedRects];
             }
         }
+        rectSource ??= DecorationGroup.rangeBoxes(item.range);
         // Line decorations are expanded after thinning below, so expand isn't merged in here.
         // Like CSS text decorations, their lines keep the base text's position; raised runs and images only lengthen them.
         let clientRects = DecorationGroup.mergeLineRects(getClientRectsNoOverlap(
@@ -1172,20 +1370,20 @@ class DecorationGroup {
 
         const iz = 1 / this.effectiveZoom();
         const expand = this.scaledExpand(decoStyle);
-        const boundingRect = item.range.getBoundingClientRect();
+        const bounds = DecorationGroup.drawnBounds(item);
         const outline = this.outlineMetrics(item);
         const outlineInset = outline.inset;
 
-        const rects = this.computeOverlayRects(item, ctx, boundingRect, expand);
+        const rects = this.computeOverlayRects(item, ctx, bounds, expand);
         if (DecorationGroup.isShapeOutline(decoStyle)) {
-            item.container.querySelector("path")?.setAttribute("d", this.outlinePath(item, ctx, iz, rects, boundingRect, outlineInset, outlineOffset + outline.stroke / 2 + outline.wave, outline.wave));
+            item.container.querySelector("path")?.setAttribute("d", this.outlinePath(item, ctx, iz, rects, bounds, outlineInset, outlineOffset + outline.stroke / 2 + outline.wave, outline.wave));
             return true;
         }
         const children = Array.from(item.container.children) as HTMLElement[];
         if (children.length !== rects.length) return false;
 
         children.forEach((el, i) => {
-            this.positionElement(item, ctx, iz, el, rects[i], boundingRect, outlineInset);
+            this.positionElement(item, ctx, iz, el, rects[i], bounds, outlineInset);
             this.sizeStrikethroughPattern(item, ctx, iz, el, rects[i]);
         });
         return true;
@@ -1213,7 +1411,7 @@ class DecorationGroup {
         const iz = 1 / this.effectiveZoom();
 
         const expand = this.scaledExpand(item.decoration.style);
-        const boundingRect = item.range.getBoundingClientRect();
+        const bounds = DecorationGroup.drawnBounds(item);
 
         const decoStyle = item.decoration.style;
         const outline = this.outlineMetrics(item);
@@ -1277,7 +1475,7 @@ class DecorationGroup {
                     path.setAttribute("stroke-linecap", "round");
                 }
                 // SVG centres the stroke on the path, so half of it, plus any wave amplitude, is added to the outline offset.
-                path.setAttribute("d", this.outlinePath(item, ctx, iz, this.computeOverlayRects(item, ctx, boundingRect, expand), boundingRect, outlineInset, outlineOffset + outline.stroke / 2 + outline.wave, outline.wave));
+                path.setAttribute("d", this.outlinePath(item, ctx, iz, this.computeOverlayRects(item, ctx, bounds, expand), bounds, outlineInset, outlineOffset + outline.stroke / 2 + outline.wave, outline.wave));
                 svg.append(path);
                 itemContainer.append(svg);
                 item.container = itemContainer;
@@ -1369,11 +1567,11 @@ class DecorationGroup {
             elementTemplate = template.content.firstElementChild!;
         }
 
-        const rects = this.computeOverlayRects(item, ctx, boundingRect, expand);
+        const rects = this.computeOverlayRects(item, ctx, bounds, expand);
         for (const posRect of rects) {
             const el = elementTemplate.cloneNode(true) as HTMLDivElement;
             el.style.setProperty("pointer-events", "none");
-            this.positionElement(item, ctx, iz, el, posRect, boundingRect, outlineInset);
+            this.positionElement(item, ctx, iz, el, posRect, bounds, outlineInset);
             this.sizeStrikethroughPattern(item, ctx, iz, el, posRect);
             itemContainer.append(el);
         }
@@ -1525,13 +1723,13 @@ class DecorationGroup {
             const width  = style.width  ?? DecorationWidth.Wrap;
             const ex     = this.scaledExpand(style);
 
-            const boundingRect = item.range.getBoundingClientRect();
+            const bounds = DecorationGroup.drawnBounds(item);
 
-            // For Bounds layout the hole is a single bounding rect; expand it directly.
+            // For Bounds layout the hole is a bounding rect per fragment; expand it directly.
             // For Boxes layout, merge rects first with expand baked in (same as highlights).
             const baseRects: Rect[] = layout === DecorationLayout.Bounds
-                ? [ex ? { left: boundingRect.left - ex, top: boundingRect.top - ex, right: boundingRect.right + ex, bottom: boundingRect.bottom + ex, width: boundingRect.width + ex * 2, height: boundingRect.height + ex * 2 } : boundingRect]
-                : getClientRectsNoOverlap(item.range, false, false, ex);
+                ? bounds.map(b => ex ? { left: b.left - ex, top: b.top - ex, right: b.right + ex, bottom: b.bottom + ex, width: b.width + ex * 2, height: b.height + ex * 2 } : b)
+                : getClientRectsNoOverlap(DecorationGroup.rangeBoxes(item.range), false, false, ex);
 
             for (const rect of baseRects) {
                 let hole: DOMRect;
@@ -1547,7 +1745,8 @@ class DecorationGroup {
                         break;
                     }
                     case DecorationWidth.Bounds: {
-                        hole = ctx.toRect(ctx.inlineStart(boundingRect), ctx.blockStart(rect), ctx.inlineSize(boundingRect), ctx.blockSize(rect));
+                        const fragment = bounds[DecorationGroup.fragmentIndex(bounds, rect, ctx)];
+                        hole = ctx.toRect(ctx.inlineStart(fragment), ctx.blockStart(rect), ctx.inlineSize(fragment), ctx.blockSize(rect));
                         break;
                     }
                     default:

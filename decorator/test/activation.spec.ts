@@ -56,3 +56,46 @@ for (const mode of [...writingModes, { name: "vertical-rl-positioned", query: "w
         });
     }
 }
+
+// Each event reports the box of the part, here the column, under the pointer, instead of one box over both columns.
+test("across columns", async ({ page }) => {
+    await page.goto("/chapter.html?type=highlight&events");
+    await settle(page);
+    const { points, half, pixelRatio } = await page.evaluate(() => {
+        const p = document.getElementById("split")!;
+        const text = p.firstChild as Text;
+        const range = document.createRange();
+        const start = text.data.indexOf(p.dataset.highlight!);
+        range.setStart(text, start);
+        range.setEnd(text, start + p.dataset.highlight!.length);
+        const rects = Array.from(range.getClientRects());
+        const center = (r: DOMRect) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+        return { points: [center(rects[0]), center(rects[rects.length - 1])], half: innerWidth / 2, pixelRatio: devicePixelRatio };
+    });
+
+    for (const point of points) {
+        await page.mouse.move(1, 1);
+        await page.mouse.move(point.x, point.y, { steps: 4 });
+        await page.mouse.click(point.x, point.y);
+        await page.mouse.move(1, 1, { steps: 4 });
+    }
+    await settle(page);
+
+    const events = (await page.evaluate(() => window.decorationEvents!)).map(({ type, rect }) => ({
+        type,
+        rect: { left: rect!.left / pixelRatio, top: rect!.top / pixelRatio, right: (rect!.left + rect!.width) / pixelRatio, bottom: (rect!.top + rect!.height) / pixelRatio },
+    }));
+    expect(events.map(e => e.type)).toEqual(["enter", "activated", "leave", "enter", "activated", "leave"]);
+    points.forEach((point, i) => {
+        const part = events.slice(i * 3, i * 3 + 3);
+        for (const { rect } of part) {
+            expect(rect).toEqual(part[0].rect);
+            expect(point.x).toBeGreaterThan(rect.left);
+            expect(point.x).toBeLessThan(rect.right);
+            expect(point.y).toBeGreaterThan(rect.top);
+            expect(point.y).toBeLessThan(rect.bottom);
+            if (i === 0) expect(rect.right).toBeLessThanOrEqual(half);
+            else expect(rect.left).toBeGreaterThanOrEqual(half);
+        }
+    });
+});
