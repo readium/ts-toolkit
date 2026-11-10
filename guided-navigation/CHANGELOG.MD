@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Fixtures for authored-language resolution (descriptions, `lang`/`xml:lang`, empty declarations, case-insensitive matching), roleless objects with a description, and inline MathML
+- Fixtures for authored-language resolution (descriptions, `lang`/`xml:lang`, empty declarations, case-insensitive matching), roleless objects with a description, inline MathML, roles repeated on a wrapper and its sole child, and link content
 
 ### Changed
 
@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Punctuation an abbreviation holds alongside its term, such as the period of `<abbr title="Doctor"><dfn>Dr</dfn>.</abbr>`, is now part of the term's expansion, `<sub alias="Doctor">Dr.</sub>`, instead of an object of its own
+- Punctuation an abbreviation holds alongside the element carrying its text, such as the period of `<abbr title="Doctor"><dfn>Dr</dfn>.</abbr>`, is now part of the expansion, `<sub alias="Doctor">Dr.</sub>`, instead of an object of its own
 - A role repeated on a wrapper and its sole child, such as `chapter` on both `<body>` and `<section>`, is now kept on the wrapper only, instead of appearing twice or being removed together with the wrapper's own roles (e.g. `section` in nested sections)
 - Plain text left out the words of a link, glossref or biblioref in its sentence, e.g. "The light passes through a at the top." It now keeps them; footnote references, backlinks, pagebreaks and media are still left out
 - The content of a link, glossref or biblioref was reduced to its raw text: a language shift or emphasis inside it was lost, a pagebreak's number ran into its words (e.g. "the long chap5ter"), and an image or pagebreak inside it was missing from the output. Its content is now converted like any other text, with its own `ssml` and `children`
