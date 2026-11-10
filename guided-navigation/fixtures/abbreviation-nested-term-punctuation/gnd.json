@@ -1,0 +1,26 @@
+{
+  "children": [
+    {
+      "text": {
+        "plain": "Ask"
+      }
+    },
+    {
+      "role": [
+        "term"
+      ],
+      "text": {
+        "ssml": "<sub alias=\"Doctor\">Dr.</sub>",
+        "language": "en"
+      }
+    },
+    {
+      "text": {
+        "plain": "Watson."
+      }
+    }
+  ],
+  "role": [
+    "paragraph"
+  ]
+}

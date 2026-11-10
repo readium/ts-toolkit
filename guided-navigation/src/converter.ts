@@ -33,6 +33,7 @@ const MATHML_NS = "http://www.w3.org/1998/Math/MathML";
 
 const TEXT_NODE = 3;
 const ELEMENT_NODE = 1;
+const DOCUMENT_POSITION_FOLLOWING = 4;
 
 // These elements are normally treated as inline (text flows through them
 // without opening their own object), but when they carry a role of their own
@@ -197,7 +198,8 @@ export class Converter {
 
   private walk(node: Node) {
     if (node.nodeType === TEXT_NODE) {
-      this.text(node);
+      // Punctuation belonging to an object is taken in by that object's own walk.
+      if (!Converter.punctuationOwner(node)) this.text(node);
       return;
     }
     if (node.nodeType !== ELEMENT_NODE) return;
@@ -206,7 +208,11 @@ export class Converter {
     const parent = this.current;
     const wasSkip = this.head(el);
     if (!wasSkip) {
+      const punctuation = this.current !== parent && this.current.el === el ? Converter.ownPunctuation(el) : [];
+      const isBefore = (n: Node) => (n.compareDocumentPosition(el) & DOCUMENT_POSITION_FOLLOWING) !== 0;
+      for (const n of punctuation) if (isBefore(n)) this.text(n);
       for (let c = el.firstChild; c; c = c.nextSibling) this.walk(c);
+      for (const n of punctuation) if (!isBefore(n)) this.text(n);
     }
     this.tail(el, wasSkip, parent);
   }
@@ -444,17 +450,18 @@ export class Converter {
     // An abbreviation's text is replaced by its expansion as a whole, so it wins over any formatting inside it.
     // It applies only if all its text is in one object, so its alias is never repeated or misplaced.
     // The outermost one wins, its expansion covering any nested inside it.
-    let abbr: SSMLContext | undefined;
-    for (let p = node.parentElement, enclosing = false; p; p = p.parentElement) {
-      const alias = abbreviationExpansion(p);
-      if (alias) {
-        if (!enclosing && Converter.containsObject(p)) break;
-        abbr = { lang: declaredLanguage(p), tag: "sub", attrs: { alias }, abbr: p };
+    const owner = Converter.punctuationOwner(node);
+    let abbr = owner ? Converter.abbreviationOver(owner) : null;
+    if (!owner) {
+      let p = node.parentElement;
+      for (; p && p !== this.current.el; p = p.parentElement) {
+        if (!abbreviationExpansion(p)) continue;
+        if (Converter.containsObject(p)) break;
+        abbr = p;
       }
-      if (p === this.current.el) enclosing = true;
-      if (enclosing && !Converter.isSoleContent(p)) break;
+      if (p && p === this.current.el) abbr = Converter.abbreviationOver(p) ?? abbr;
     }
-    if (abbr) return abbr;
+    if (abbr) return { lang: declaredLanguage(abbr), tag: "sub", attrs: { alias: abbreviationExpansion(abbr) }, abbr };
     const ctx: SSMLContext = { lang: declaredLanguage(node.parentElement), tag: "" };
     for (let p = node.parentElement; p && p !== this.current.el; p = p.parentElement) {
       const [tag, attrs] = convertElementToSSMLTag(p.tagName.toLowerCase());
@@ -483,9 +490,46 @@ export class Converter {
     return ["img", "svg", "audio", "video"].includes(tagName) || (tagName === "a" && !!el.getAttribute("href"));
   }
 
+  // The outermost abbreviation whose text is all in obj, apart from punctuation alongside it.
+  private static abbreviationOver(obj: Element): Element | null {
+    let abbr: Element | null = null;
+    for (let p: Element | null = obj; p; p = p.parentElement) {
+      if (abbreviationExpansion(p)) abbr = p;
+      if (!Converter.isSoleContent(p)) break;
+    }
+    return abbr;
+  }
+
+  // The object an abbreviation holds as its whole content, when node is punctuation alongside it: part of its text.
+  private static punctuationOwner(node: Node): Element | null {
+    const data = node.nodeValue ?? "";
+    if (node.nodeType !== TEXT_NODE || !/\S/.test(data) || !/^[\s\p{P}]*$/u.test(data)) return null;
+    for (let obj = node.parentElement?.firstElementChild ?? null; obj && Converter.isSoleContent(obj); obj = obj.firstElementChild) {
+      const tagName = obj.tagName.toLowerCase();
+      const roles = extractNodeRoles(obj);
+      if (skippedElements.has(tagName) || Converter.isPlaceholder(obj, tagName, roles) || !extractNodeAria(obj)[1]) return null;
+      if (isBlockNode(tagName, roles)) return Converter.abbreviationOver(obj)?.contains(node) ? obj : null;
+    }
+    return null;
+  }
+
+  // The punctuation alongside el that its abbreviation holds, in document order.
+  private static ownPunctuation(el: Element): Node[] {
+    const abbr = Converter.abbreviationOver(el);
+    const found: Node[] = [];
+    const collect = (n: Node) => {
+      if (n === el) return;
+      if (n.nodeType === TEXT_NODE && Converter.punctuationOwner(n) === el) found.push(n);
+      for (let c = n.firstChild; c; c = c.nextSibling) collect(c);
+    };
+    if (abbr) collect(abbr);
+    return found;
+  }
+
+  // Punctuation alongside doesn't count, e.g. the period of <abbr><dfn>Dr</dfn>.</abbr>.
   private static isSoleContent(el: Element): boolean {
     for (let s = el.parentNode?.firstChild; s; s = s.nextSibling) {
-      if (s !== el && (s.nodeType === ELEMENT_NODE || (s.nodeType === TEXT_NODE && !/^\s*$/.test(s.nodeValue ?? "")))) return false;
+      if (s !== el && (s.nodeType === ELEMENT_NODE || (s.nodeType === TEXT_NODE && !/^[\s\p{P}]*$/u.test(s.nodeValue ?? "")))) return false;
     }
     return true;
   }
