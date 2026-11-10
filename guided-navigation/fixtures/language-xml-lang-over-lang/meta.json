@@ -1,0 +1,11 @@
+{
+  "id": "language-xml-lang-over-lang",
+  "description": "xml:lang wins over lang on the same element",
+  "role": "language",
+  "rolesCovered": [
+    "paragraph",
+    "image"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

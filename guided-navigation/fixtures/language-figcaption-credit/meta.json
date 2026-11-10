@@ -1,0 +1,12 @@
+{
+  "id": "language-figcaption-credit",
+  "description": "A figure's caption description language ignores a credit spoken separately",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "image",
+    "credit"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "redundant-role-body-chapter",
+  "description": "A chapter whose body and sole section both declare it via epub:type: the body keeps the role, the section doesn't repeat it",
+  "role": "chapter",
+  "rolesCovered": [
+    "body",
+    "section",
+    "chapter",
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/epub-ssv-11/",
+  "inputKind": "document"
+}

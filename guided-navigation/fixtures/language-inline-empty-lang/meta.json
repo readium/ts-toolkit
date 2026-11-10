@@ -1,0 +1,10 @@
+{
+  "id": "language-inline-empty-lang",
+  "description": "An empty lang declaration inside a known language is an explicit language shift in SSML",
+  "role": "language",
+  "rolesCovered": [
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

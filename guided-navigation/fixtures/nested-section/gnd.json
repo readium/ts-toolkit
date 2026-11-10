@@ -1,0 +1,22 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "role": [
+            "paragraph"
+          ],
+          "text": {
+            "plain": "The keeper climbed the stairs."
+          }
+        }
+      ],
+      "role": [
+        "section"
+      ]
+    }
+  ],
+  "role": [
+    "section"
+  ]
+}

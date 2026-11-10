@@ -1,0 +1,30 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "role": [
+                "paragraph"
+              ],
+              "text": {
+                "plain": "It was a dark and stormy night."
+              }
+            }
+          ],
+          "role": [
+            "section"
+          ]
+        }
+      ],
+      "role": [
+        "section",
+        "chapter"
+      ]
+    }
+  ],
+  "role": [
+    "body"
+  ]
+}

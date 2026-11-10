@@ -1,0 +1,9 @@
+{
+  "role": [
+    "paragraph"
+  ],
+  "text": {
+    "ssml": "Hello <lang xml:lang=\"\">xyz</lang> end.",
+    "language": "en"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "text": {
+            "plain": "One."
+          },
+          "description": {
+            "text": {
+              "plain": "Sidebar"
+            }
+          }
+        }
+      ],
+      "role": [
+        "listItem"
+      ]
+    }
+  ],
+  "role": [
+    "list"
+  ]
+}

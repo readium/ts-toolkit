@@ -1,0 +1,23 @@
+{
+  "children": [
+    {
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Text."
+      }
+    },
+    {
+      "imgref": "a.png",
+      "role": [
+        "image"
+      ],
+      "description": {
+        "text": {
+          "plain": "A cat"
+        }
+      }
+    }
+  ]
+}

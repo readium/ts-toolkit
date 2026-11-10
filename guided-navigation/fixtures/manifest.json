@@ -93,7 +93,7 @@
     "id": "abbreviation-nested-term-punctuation",
     "dir": "abbreviation-nested-term-punctuation",
     "role": "abbreviation",
-    "description": "An abbr wrapping a term and punctuation outside it still expands that term's text",
+    "description": "An abbr wrapping a term and its period expands them together: the period is part of the term's expansion",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -594,6 +594,26 @@
     "dir": "definition-role-aria",
     "role": "definition",
     "description": "definition role via explicit ARIA role=\"definition\"",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "description-roleless-lone-child",
+    "dir": "description-roleless-lone-child",
+    "role": "description",
+    "description": "A lone roleless child with a description is not hoisted into its parent",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "description-roleless-wrapper",
+    "dir": "description-roleless-wrapper",
+    "role": "description",
+    "description": "A roleless wrapper with a description is kept as an object, not spliced into its parent",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -1130,6 +1150,26 @@
     }
   },
   {
+    "id": "language-alt-inherited",
+    "dir": "language-alt-inherited",
+    "role": "image",
+    "description": "An image's alt is in the language inherited by its element",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-alt-own-lang",
+    "dir": "language-alt-own-lang",
+    "role": "image",
+    "description": "An image's alt is in the language its own element declares",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "language-block",
     "dir": "language-block",
     "role": "language",
@@ -1140,10 +1180,140 @@
     }
   },
   {
+    "id": "language-block-empty-lang",
+    "dir": "language-block-empty-lang",
+    "role": "language",
+    "description": "A block in an empty lang declaration isn't defaulted to English, while its inline shifts are kept in SSML",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-describedby-shared",
+    "dir": "language-describedby-shared",
+    "role": "figure",
+    "description": "An aria-describedby description is in its targets' shared language",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "language-document",
     "dir": "language-document",
     "role": "language",
     "description": "A paragraph in a document whose <html lang> differs from the default, with no inline language shift or other SSML trigger",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-empty-lang-stops-inheritance",
+    "dir": "language-empty-lang-stops-inheritance",
+    "role": "language",
+    "description": "An empty lang declaration stops inheritance, leaving an image's alt with no language",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-figcaption",
+    "dir": "language-figcaption",
+    "role": "figure",
+    "description": "A figure's implicit caption description is in the caption's language",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-figcaption-credit",
+    "dir": "language-figcaption-credit",
+    "role": "figure",
+    "description": "A figure's caption description language ignores a credit spoken separately",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-figcaption-switches",
+    "dir": "language-figcaption-switches",
+    "role": "figure",
+    "description": "A figure's caption description has no language when its text switches language",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-figcaption-switches-throughout",
+    "dir": "language-figcaption-switches-throughout",
+    "role": "figure",
+    "description": "A figure's caption description is in the language its text switches to throughout",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-inline-case-insensitive",
+    "dir": "language-inline-case-insensitive",
+    "role": "language",
+    "description": "Inline language declarations differing only in case from the block's are the same language: no SSML shift",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-inline-case-insensitive-ssml",
+    "dir": "language-inline-case-insensitive-ssml",
+    "role": "language",
+    "description": "Inline language declarations differing only in case are not tagged as shifts in SSML produced for other reasons",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-inline-empty-lang",
+    "dir": "language-inline-empty-lang",
+    "role": "language",
+    "description": "An empty lang declaration inside a known language is an explicit language shift in SSML",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-inline-empty-lang-formatted",
+    "dir": "language-inline-empty-lang-formatted",
+    "role": "language",
+    "description": "Formatted text only in an empty lang declaration has no language",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-inline-empty-lang-only",
+    "dir": "language-inline-empty-lang-only",
+    "role": "language",
+    "description": "Text only in an empty lang declaration has no language",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-inline-empty-lang-undeclared",
+    "dir": "language-inline-empty-lang-undeclared",
+    "role": "language",
+    "description": "An empty lang declaration is a language shift in SSML even when no language is declared around it",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -1184,6 +1354,176 @@
     "dir": "language-inline-two-languages",
     "role": "language",
     "description": "A paragraph with two different inline foreign-language phrases",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-labelledby-target",
+    "dir": "language-labelledby-target",
+    "role": "image",
+    "description": "An aria-labelledby description is in its target's language",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-labelledby-target-aria-label",
+    "dir": "language-labelledby-target-aria-label",
+    "role": "image",
+    "description": "An aria-labelledby target's own aria-label is in that target's language",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-labelledby-target-switches",
+    "dir": "language-labelledby-target-switches",
+    "role": "image",
+    "description": "An aria-labelledby description has no language when its text switches language inside a target",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-labelledby-targets-case",
+    "dir": "language-labelledby-targets-case",
+    "role": "image",
+    "description": "An aria-labelledby description is in its targets' language when their declarations differ only in case",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-labelledby-targets-differ",
+    "dir": "language-labelledby-targets-differ",
+    "role": "image",
+    "description": "An aria-labelledby description has no language when its targets' languages differ",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-link-switches",
+    "dir": "language-link-switches",
+    "role": "link",
+    "description": "A language switch inside a link stays in the link's own SSML",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-pagebreak-label",
+    "dir": "language-pagebreak-label",
+    "role": "pagebreak",
+    "description": "A pagebreak's label is in its element's language",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-undeclared-description",
+    "dir": "language-undeclared-description",
+    "role": "image",
+    "description": "An image's alt has no language when none is declared",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-xml-lang-empty-html-inherits",
+    "dir": "language-xml-lang-empty-html-inherits",
+    "role": "language",
+    "description": "An empty xml:lang has no effect in HTML, so the inherited language applies",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-xml-lang-empty-html-lang-applies",
+    "dir": "language-xml-lang-empty-html-lang-applies",
+    "role": "language",
+    "description": "An empty xml:lang has no effect in HTML, so lang on the same element applies",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-xml-lang-empty-xhtml",
+    "dir": "language-xml-lang-empty-xhtml",
+    "role": "language",
+    "description": "An empty xml:lang in XHTML makes the language unknown, over lang on the same element",
+    "files": {
+      "input": "input.xhtml",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "language-xml-lang-over-lang",
+    "dir": "language-xml-lang-over-lang",
+    "role": "language",
+    "description": "xml:lang wins over lang on the same element",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "link-containing-image",
+    "dir": "link-containing-image",
+    "role": "link",
+    "description": "An image inside a link is the link's own child, placed in the link's SSML",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "link-containing-pagebreak",
+    "dir": "link-containing-pagebreak",
+    "role": "link",
+    "description": "A pagebreak inside a link is the link's own child, its page number kept out of the link's text",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "link-content-conversion",
+    "dir": "link-content-conversion",
+    "role": "link",
+    "description": "Every kind of link converts its content the same way, like any other text",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "link-content-identity",
+    "dir": "link-content-identity",
+    "role": "link",
+    "description": "A link takes on its content only when that content has no identity of its own: a lone result with an id, description or ref stays its child",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "link-content-words",
+    "dir": "link-content-words",
+    "role": "link",
+    "description": "A link's words in its sentence come from all of its content, spaced only where the source has whitespace or a block boundary",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -1360,6 +1700,16 @@
     }
   },
   {
+    "id": "math-inline",
+    "dir": "math-inline",
+    "role": "math",
+    "description": "Inline MathML in a sentence becomes a placeholder in the sentence's SSML, with the math object as a child",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "math-no-description",
     "dir": "math-no-description",
     "role": "math",
@@ -1394,6 +1744,26 @@
     "dir": "navigation-role-aria",
     "role": "navigation",
     "description": "navigation role via explicit ARIA role=\"navigation\"",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "nested-blockquote",
+    "dir": "nested-blockquote",
+    "role": "blockquote",
+    "description": "A blockquote whose sole child is another blockquote, a quotation within a quotation: both keep the blockquote role",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "nested-section",
+    "dir": "nested-section",
+    "role": "section",
+    "description": "A section whose sole child is another section: both keep the section role",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -1760,6 +2130,26 @@
     }
   },
   {
+    "id": "redundant-role-body-chapter",
+    "dir": "redundant-role-body-chapter",
+    "role": "chapter",
+    "description": "A chapter whose body and sole section both declare it via epub:type: the body keeps the role, the section doesn't repeat it",
+    "files": {
+      "input": "input.xhtml",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "redundant-role-nested-chapter",
+    "dir": "redundant-role-nested-chapter",
+    "role": "chapter",
+    "description": "A chapter section whose sole child section declares chapter again via epub:type: the outer section keeps it, the inner one stays a section",
+    "files": {
+      "input": "input.xhtml",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "region-role-aria",
     "dir": "region-role-aria",
     "role": "region",
@@ -2094,6 +2484,16 @@
     "dir": "term-role-aria",
     "role": "term",
     "description": "term role via explicit ARIA role=\"term\"",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "term-span-in-dt",
+    "dir": "term-span-in-dt",
+    "role": "term",
+    "description": "A glossary term whose dt wraps a span with role=\"term\": the term is marked once, on the dt",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"

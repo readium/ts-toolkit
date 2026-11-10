@@ -1,0 +1,25 @@
+{
+  "children": [
+    {
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "Texte.",
+        "language": "fr"
+      }
+    },
+    {
+      "imgref": "a.png",
+      "role": [
+        "image"
+      ],
+      "description": {
+        "text": {
+          "plain": "Katze",
+          "language": "de"
+        }
+      }
+    }
+  ]
+}

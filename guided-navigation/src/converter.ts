@@ -33,6 +33,7 @@ const MATHML_NS = "http://www.w3.org/1998/Math/MathML";
 
 const TEXT_NODE = 3;
 const ELEMENT_NODE = 1;
+const DOCUMENT_POSITION_FOLLOWING = 4;
 
 // These elements are normally treated as inline (text flows through them
 // without opening their own object), but when they carry a role of their own
@@ -46,13 +47,15 @@ function isBlockNode(tagName: string, roles: GndRole[]): boolean {
 
 type SegmentKind = "text" | "break" | "placeholder";
 
-interface Segment {
+export interface Segment {
   kind: SegmentKind;
   text?: string;
   ctx?: SSMLContext;
   tag?: string;
   child?: NavObject;
   candidateID?: string;
+  // A placeholder's own pieces of the sentence's plain text, e.g. a link's words.
+  words?: Segment[];
 }
 
 /** Walks a DOM subtree, building the Guided Navigation object tree. */
@@ -109,6 +112,8 @@ export class Converter {
   // The plain-text string of the flow flushText() just flushed, read by
   // tail() right after calling it as the text-fragment candidate text.
   private lastFlowText: string | null = null;
+  // When set, records the converted content's plain-text pieces in source order, across flows: a link's words.
+  words: Segment[] | null = null;
 
   constructor(xmlParsed: boolean) {
     this.xmlParsed = xmlParsed;
@@ -193,7 +198,8 @@ export class Converter {
 
   private walk(node: Node) {
     if (node.nodeType === TEXT_NODE) {
-      this.text(node);
+      // Punctuation belonging to an object is taken in by that object's own walk.
+      if (!Converter.punctuationOwner(node)) this.text(node);
       return;
     }
     if (node.nodeType !== ELEMENT_NODE) return;
@@ -202,7 +208,11 @@ export class Converter {
     const parent = this.current;
     const wasSkip = this.head(el);
     if (!wasSkip) {
+      const punctuation = this.current !== parent && this.current.el === el ? Converter.ownPunctuation(el) : [];
+      const isBefore = (n: Node) => (n.compareDocumentPosition(el) & DOCUMENT_POSITION_FOLLOWING) !== 0;
+      for (const n of punctuation) if (isBefore(n)) this.text(n);
       for (let c = el.firstChild; c; c = c.nextSibling) this.walk(c);
+      for (const n of punctuation) if (!isBefore(n)) this.text(n);
     }
     this.tail(el, wasSkip, parent);
   }
@@ -233,6 +243,7 @@ export class Converter {
       if (!this.current.noText && !this.textContext(el).abbr) {
         this.closeSegment();
         this.segments.push({ kind: "break" });
+        this.words?.push({ kind: "break" });
         this.flowEndsWithSpace = true;
       }
       return true;
@@ -307,6 +318,7 @@ export class Converter {
     }
 
     this.flushText();
+    if (!isInlineTag(tagName)) this.words?.push({ kind: "break" });
     this.descend(el, roles);
 
     const cur = this.current.object;
@@ -361,6 +373,7 @@ export class Converter {
     if (roles.includes("pagebreak")) return;
     if (isBlockNode(tagName, roles)) {
       this.flushText();
+      if (!isInlineTag(tagName)) this.words?.push({ kind: "break" });
       // A child block splits el's text into several flows; the last one alone doesn't represent el.
       if (this.current.hasChildBlock) {
         this.lastFlowRange = null;
@@ -406,6 +419,7 @@ export class Converter {
   private text(node: Node) {
     if (this.current.noText) return;
     const data = node.nodeValue ?? "";
+    this.words?.push({ kind: "text", text: normalizeWhitespace(data, false) });
     if (/^\s*$/.test(data)) {
       if (this.textAcc.length > 0 || this.segments.length > 0) {
         this.textAcc += normalizeWhitespace(data, this.flowEndsWithSpace);
@@ -436,17 +450,18 @@ export class Converter {
     // An abbreviation's text is replaced by its expansion as a whole, so it wins over any formatting inside it.
     // It applies only if all its text is in one object, so its alias is never repeated or misplaced.
     // The outermost one wins, its expansion covering any nested inside it.
-    let abbr: SSMLContext | undefined;
-    for (let p = node.parentElement, enclosing = false; p; p = p.parentElement) {
-      const alias = abbreviationExpansion(p);
-      if (alias) {
-        if (!enclosing && Converter.containsObject(p)) break;
-        abbr = { lang: declaredLanguage(p), tag: "sub", attrs: { alias }, abbr: p };
+    const owner = Converter.punctuationOwner(node);
+    let abbr = owner ? Converter.abbreviationOver(owner) : null;
+    if (!owner) {
+      let p = node.parentElement;
+      for (; p && p !== this.current.el; p = p.parentElement) {
+        if (!abbreviationExpansion(p)) continue;
+        if (Converter.containsObject(p)) break;
+        abbr = p;
       }
-      if (p === this.current.el) enclosing = true;
-      if (enclosing && !Converter.isSoleContent(p)) break;
+      if (p && p === this.current.el) abbr = Converter.abbreviationOver(p) ?? abbr;
     }
-    if (abbr) return abbr;
+    if (abbr) return { lang: declaredLanguage(abbr), tag: "sub", attrs: { alias: abbreviationExpansion(abbr) }, abbr };
     const ctx: SSMLContext = { lang: declaredLanguage(node.parentElement), tag: "" };
     for (let p = node.parentElement; p && p !== this.current.el; p = p.parentElement) {
       const [tag, attrs] = convertElementToSSMLTag(p.tagName.toLowerCase());
@@ -475,7 +490,45 @@ export class Converter {
     return ["img", "svg", "audio", "video"].includes(tagName) || (tagName === "a" && !!el.getAttribute("href"));
   }
 
-  // Punctuation alongside doesn't count, e.g. the last period of <abbr><dfn>W.H.O</dfn>.</abbr>.
+  // The outermost abbreviation whose text is all in obj, apart from punctuation alongside it.
+  private static abbreviationOver(obj: Element): Element | null {
+    let abbr: Element | null = null;
+    for (let p: Element | null = obj; p; p = p.parentElement) {
+      if (abbreviationExpansion(p)) abbr = p;
+      if (!Converter.isSoleContent(p)) break;
+    }
+    return abbr;
+  }
+
+  // The innermost object an abbreviation holds as its whole content, when node is punctuation alongside it:
+  // the object whose text carries the expansion, so the punctuation joins it there.
+  private static punctuationOwner(node: Node): Element | null {
+    const data = node.nodeValue ?? "";
+    if (node.nodeType !== TEXT_NODE || !/\S/.test(data) || !/^[\s\p{P}]*$/u.test(data)) return null;
+    let owner: Element | null = null;
+    for (let obj = node.parentElement?.firstElementChild ?? null; obj && Converter.isSoleContent(obj); obj = obj.firstElementChild) {
+      const tagName = obj.tagName.toLowerCase();
+      const roles = extractNodeRoles(obj);
+      if (skippedElements.has(tagName) || Converter.isPlaceholder(obj, tagName, roles) || !extractNodeAria(obj)[1]) break;
+      if (isBlockNode(tagName, roles)) owner = obj;
+    }
+    return owner && Converter.abbreviationOver(owner)?.contains(node) ? owner : null;
+  }
+
+  // The punctuation alongside el that its abbreviation holds, in document order.
+  private static ownPunctuation(el: Element): Node[] {
+    const abbr = Converter.abbreviationOver(el);
+    const found: Node[] = [];
+    const collect = (n: Node) => {
+      if (n === el) return;
+      if (n.nodeType === TEXT_NODE && Converter.punctuationOwner(n) === el) found.push(n);
+      for (let c = n.firstChild; c; c = c.nextSibling) collect(c);
+    };
+    if (abbr) collect(abbr);
+    return found;
+  }
+
+  // Punctuation alongside doesn't count, e.g. the period of <abbr><dfn>Dr</dfn>.</abbr>.
   private static isSoleContent(el: Element): boolean {
     for (let s = el.parentNode?.firstChild; s; s = s.nextSibling) {
       if (s !== el && (s.nodeType === ELEMENT_NODE || (s.nodeType === TEXT_NODE && !/^[\s\p{P}]*$/u.test(s.nodeValue ?? "")))) return false;
@@ -507,7 +560,8 @@ export class Converter {
     this.flowLastOffset = 0;
   }
 
-  placeholder(el: Element, tag: string, object: ObjBuilder, candidateID?: string) {
+  // `words`: the object's pieces of plain text when they're part of the sentence it sits in, e.g. a link's.
+  placeholder(el: Element, tag: string, object: ObjBuilder, { candidateID, words }: { candidateID?: string; words?: Segment[] } = {}) {
     if (isEmptyObj(object)) return;
     const child = new NavObject();
     child.el = el;
@@ -523,7 +577,9 @@ export class Converter {
       tag,
       child,
       candidateID: candidateID ?? el.getAttribute("id") ?? undefined,
+      words: words?.length ? words : undefined,
     });
+    this.words?.push(...(words?.length ? words : [{ kind: "placeholder" as const }]));
     this.flowEndsWithSpace = false;
   }
 
@@ -616,7 +672,8 @@ export class Converter {
         if (!textLangs.some((other) => sameLanguage(other, lang))) textLangs.push(lang);
       }
     }
-    let baseLang = declaredLanguage(this.current.el ?? null);
+    // A sub-conversion's own content is in the language of the element it converts.
+    let baseLang = declaredLanguage(this.current.el ?? this.allowNode);
     if (textLangs.length === 1) {
       baseLang = textLangs[0];
     }
@@ -654,7 +711,7 @@ export class Converter {
     let sawBreak = false;
     let sawPlaceholder = false;
     let midSpace = false;
-    for (const seg of segments) {
+    for (const seg of segments.flatMap((s) => s.words ?? [s])) {
       if (seg.kind === "text") {
         const lead = seg.text!.startsWith(" ");
         const t = seg.text!.replace(/^ +| +$/g, "");

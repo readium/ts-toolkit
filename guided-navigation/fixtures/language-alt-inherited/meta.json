@@ -1,0 +1,11 @@
+{
+  "id": "language-alt-inherited",
+  "description": "An image's alt is in the language inherited by its element",
+  "role": "image",
+  "rolesCovered": [
+    "paragraph",
+    "image"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

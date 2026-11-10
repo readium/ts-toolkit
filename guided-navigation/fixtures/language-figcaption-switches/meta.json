@@ -1,0 +1,11 @@
+{
+  "id": "language-figcaption-switches",
+  "description": "A figure's caption description has no language when its text switches language",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "image"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

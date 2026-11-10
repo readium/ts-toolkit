@@ -21,7 +21,7 @@
                     "paragraph"
                   ],
                   "text": {
-                    "plain": "Entry.",
+                    "plain": "Entry book.",
                     "ssml": "Entry <readium:link id=\"link1\" />.",
                     "language": "en"
                   }
@@ -45,7 +45,7 @@
         "paragraph"
       ],
       "text": {
-        "plain": "See.",
+        "plain": "See 1.",
         "ssml": "See <readium:biblioref id=\"biblioref1\" />.",
         "language": "en"
       }
@@ -70,7 +70,7 @@
                 "paragraph"
               ],
               "text": {
-                "plain": "Entry.",
+                "plain": "Entry book.",
                 "ssml": "Entry <readium:link id=\"lnk\" />.",
                 "language": "en"
               }

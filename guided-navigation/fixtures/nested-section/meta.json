@@ -1,0 +1,11 @@
+{
+  "id": "nested-section",
+  "description": "A section whose sole child is another section: both keep the section role",
+  "role": "section",
+  "rolesCovered": [
+    "section",
+    "paragraph"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/blob/main/roles.md",
+  "inputKind": "fragment"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "redundant-role-nested-chapter",
+  "description": "A chapter section whose sole child section declares chapter again via epub:type: the outer section keeps it, the inner one stays a section",
+  "role": "chapter",
+  "rolesCovered": [
+    "body",
+    "section",
+    "chapter",
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/epub-ssv-11/",
+  "inputKind": "document"
+}

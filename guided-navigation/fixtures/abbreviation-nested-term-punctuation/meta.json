@@ -1,6 +1,6 @@
 {
   "id": "abbreviation-nested-term-punctuation",
-  "description": "An abbr wrapping a term and punctuation outside it still expands that term's text",
+  "description": "An abbr wrapping a term and its period expands them together: the period is part of the term's expansion",
   "role": "abbreviation",
   "rolesCovered": [
     "abbreviation",

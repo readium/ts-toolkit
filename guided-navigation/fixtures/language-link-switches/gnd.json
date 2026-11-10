@@ -1,0 +1,20 @@
+{
+  "children": [
+    {
+      "id": "link1",
+      "text": {
+        "ssml": "le <lang xml:lang=\"en\">book</lang>",
+        "language": "fr"
+      },
+      "textref": "b.html"
+    }
+  ],
+  "role": [
+    "paragraph"
+  ],
+  "text": {
+    "plain": "Voir le book ici.",
+    "ssml": "Voir <readium:link id=\"link1\" /> ici.",
+    "language": "fr"
+  }
+}

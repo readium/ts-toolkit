@@ -1,0 +1,22 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "role": [
+            "paragraph"
+          ],
+          "text": {
+            "plain": "The light must never go out."
+          }
+        }
+      ],
+      "role": [
+        "blockquote"
+      ]
+    }
+  ],
+  "role": [
+    "blockquote"
+  ]
+}

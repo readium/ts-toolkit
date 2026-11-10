@@ -1,0 +1,32 @@
+{
+  "children": [
+    {
+      "id": "l",
+      "role": [
+        "paragraph"
+      ],
+      "text": {
+        "plain": "x",
+        "language": "de"
+      },
+      "description": {
+        "text": {
+          "plain": "Eine Katze",
+          "language": "de"
+        }
+      }
+    },
+    {
+      "imgref": "a.png",
+      "role": [
+        "image"
+      ],
+      "description": {
+        "text": {
+          "plain": "Eine Katze",
+          "language": "de"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "id": "link-containing-pagebreak",
+  "description": "A pagebreak inside a link is the link's own child, its page number kept out of the link's text",
+  "role": "link",
+  "rolesCovered": [
+    "paragraph",
+    "link",
+    "pagebreak"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

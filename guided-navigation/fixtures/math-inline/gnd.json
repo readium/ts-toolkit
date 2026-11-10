@@ -1,0 +1,22 @@
+{
+  "children": [
+    {
+      "id": "math1",
+      "role": [
+        "math"
+      ],
+      "text": {
+        "ssml": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>x</mi></math>"
+      },
+      "textref": "#css(math)"
+    }
+  ],
+  "role": [
+    "paragraph"
+  ],
+  "text": {
+    "plain": "Since holds.",
+    "ssml": "Since <readium:math id=\"math1\" /> holds.",
+    "language": "en"
+  }
+}

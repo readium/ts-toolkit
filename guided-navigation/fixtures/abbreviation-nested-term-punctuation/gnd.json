@@ -1,11 +1,8 @@
 {
-  "role": [
-    "paragraph"
-  ],
   "children": [
     {
       "text": {
-        "plain": "The"
+        "plain": "Ask"
       }
     },
     {
@@ -13,14 +10,17 @@
         "term"
       ],
       "text": {
-        "ssml": "<sub alias=\"World Health Organization\">W.H.O</sub>",
+        "ssml": "<sub alias=\"Doctor\">Dr.</sub>",
         "language": "en"
       }
     },
     {
       "text": {
-        "plain": ". said."
+        "plain": "Watson."
       }
     }
+  ],
+  "role": [
+    "paragraph"
   ]
 }

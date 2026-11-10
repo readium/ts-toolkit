@@ -1,0 +1,11 @@
+{
+  "id": "language-xml-lang-empty-html-lang-applies",
+  "description": "An empty xml:lang has no effect in HTML, so lang on the same element applies",
+  "role": "language",
+  "rolesCovered": [
+    "paragraph",
+    "image"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

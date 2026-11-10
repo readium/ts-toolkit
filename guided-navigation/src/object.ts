@@ -1,5 +1,6 @@
 import { GuidedNavigationDescription, GuidedNavigationObject, GuidedNavigationText } from "@readium/shared";
 import type { GndRole } from "./types.ts";
+import { nonSelfNestingRoles } from "./roles.ts";
 import { type TextBuilder, textIsEmpty, finalizeText } from "./text.ts";
 import { detachSelfTextref } from "./textrefFragment.ts";
 
@@ -81,7 +82,7 @@ function isChildrenOnly(o: ObjBuilder): boolean {
 // own ref (e.g. an <a href>'s textref) is never hoisted — refs identify a
 // distinct target and merging them into the parent would silently discard
 // whichever of the two textrefs isn't kept.
-function isHoistable(o: ObjBuilder): boolean {
+export function isHoistable(o: ObjBuilder): boolean {
   return (
     !(o.role && o.role.length > 0) &&
     !o.id &&
@@ -116,17 +117,13 @@ export class NavObject {
     }
     if (finalChildren.length > 0) result.children = finalChildren;
 
-    // A wrapper whose own role is entirely redundant with its sole child's
-    // role (e.g. <dt><dfn>term</dfn></dt> naming one term twice) sheds that
-    // role — the child already carries it. Excludes "presentation": unlike
-    // every other role, it cascades from an ancestor onto real structural
-    // descendants (HTML-AAM's presentational-table rule) rather than
-    // marking the same entity twice, so identical nesting there is genuine.
+    // A sole child repeating its wrapper's non-self-nesting role (<dt><dfn>) sheds it, leaving it to the wrapper.
+    // "presentation" cascades onto genuinely distinct descendants, so it never marks one entity twice.
     if (result.role?.length && result.children?.length === 1 && !result.role.includes("presentation")) {
       const child = result.children[0];
-      if (child.role?.length && result.role.every((role) => child.role!.includes(role))) {
-        delete result.role;
-      }
+      const wrapperRoles = result.role;
+      child.role = child.role?.filter((role) => !(nonSelfNestingRoles.has(role) && wrapperRoles.includes(role)));
+      if (!child.role?.length) delete child.role;
     }
 
     // Hoist a lone child with no role/id/ref into the object itself: its text

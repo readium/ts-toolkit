@@ -1,0 +1,11 @@
+{
+  "id": "language-pagebreak-label",
+  "description": "A pagebreak's label is in its element's language",
+  "role": "pagebreak",
+  "rolesCovered": [
+    "paragraph",
+    "pagebreak"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

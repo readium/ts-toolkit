@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor versions (marked **Breaking:**). Patch versions never contain breaking changes.
 
+## [1.2.4] – 2026-11-10
+
+### Added
+
+- Fixtures for authored-language resolution (descriptions, `lang`/`xml:lang`, empty declarations, case-insensitive matching), roleless objects with a description, inline MathML, roles repeated on a wrapper and its sole child, and link content
+
+### Changed
+
+- The `abbreviation-nested-term-punctuation` fixture uses an abbreviated title mid-sentence, `Dr.`, instead of markup authors don't write
+
+### Fixed
+
+- Punctuation an abbreviation holds alongside the element carrying its text, such as the period of `<abbr title="Doctor"><dfn>Dr</dfn>.</abbr>`, is now part of the expansion, `<sub alias="Doctor">Dr.</sub>`, instead of an object of its own
+- A role repeated on a wrapper and its sole child, such as `chapter` on both `<body>` and `<section>`, is now kept on the wrapper only, instead of appearing twice or being removed together with the wrapper's own roles (e.g. `section` in nested sections)
+- Plain text left out the words of a link, glossref or biblioref in its sentence, e.g. "The light passes through a at the top." It now keeps them; footnote references, backlinks, pagebreaks and media are still left out
+- The content of a link, glossref or biblioref was reduced to its raw text: a language shift or emphasis inside it was lost, a pagebreak's number ran into its words (e.g. "the long chap5ter"), and an image or pagebreak inside it was missing from the output. Its content is now converted like any other text, with its own `ssml` and `children`
+
 ## [1.2.3] – 2026-11-06
 
 ### Changed
