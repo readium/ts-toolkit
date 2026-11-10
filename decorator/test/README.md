@@ -11,7 +11,7 @@ pnpm test:serve
 - `index.html` is an explorer: pick a style, writing mode, direction, column count and zoom, and the URL keeps them so a case can be shared. `--host` exposes it on the local network to test on mobile devices.
 - `grid.html?type=<type>` renders every layout, width and line style of one decoration type, on plain text and on text with `sup`, `code` and ruby. These are the pages the automated tests screenshot. It also takes `wm` (writing mode), `dir=rtl`, `zoom`, `positioned` (a positioned root element) and `activatable` (records activated decorations in `window.activatedDecorations`). With `cols` (paginated columns), it shows a single case in column 2, picked with `layout` and `width`.
 - `chapter.html?type=<type>` paginates the first chapter of _Moby-Dick_ in two columns and decorates the first paragraph split across them. It takes `layout`, `width`, `cols` and `events` (records decoration events in `window.decorationEvents`).
-- `layouts.html` decorates tables, flex rows, floats and text across columns, in a paginated root with `cols`, and otherwise in multi-column elements: through an element, the whole element by its selector, with an image filling a column, across a spanning element, right-to-left and vertical. It takes `type`, `layout` and `width`.
+- `layouts.html` decorates tables, flex rows, floats and text across columns, in a paginated root with `cols`, and otherwise in multi-column elements: through an element, the whole element by its selector, with an image or an empty block filling a column, across a spanning element, right-to-left and vertical. It takes `type`, `layout` and `width`.
 
 ## Automated
 

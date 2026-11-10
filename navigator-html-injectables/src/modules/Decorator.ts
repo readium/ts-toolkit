@@ -913,9 +913,9 @@ class DecorationGroup {
         const overlap = (a: FragmentPart, b: Rect) => a.vertical ? a.column!.top < b.bottom && b.top < a.column!.bottom : a.column!.left < b.right && b.left < a.column!.right;
         let run = 0;
         let previous: [Element | null, Element | null] | undefined;
-        // Replaced content has no text, but takes up a column all the same.
-        const replaced = DecorationGroup.replacedContentElements(range).map(node => ({ node: node as Node, rects: DecorationGroup.plainRects(node.getClientRects()) }));
-        const contents = [...getTextNodeClientRects(range, ["rt", "rp"]), ...replaced]
+        // Content without text, such as an image or an empty block, takes up a column all the same.
+        const textless = DecorationGroup.textlessElements(range).map(node => ({ node: node as Node, rects: DecorationGroup.plainRects(node.getClientRects()) }));
+        const contents = [...getTextNodeClientRects(range, ["rt", "rp"]), ...textless]
             .sort((a, b) => a.node.compareDocumentPosition(b.node) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
         for (const { node, rects } of contents) {
             let child: Node = node, container: Element | null = null, spanner: Element | null = null;
@@ -962,8 +962,8 @@ class DecorationGroup {
         if (parts.length < 2) return range;
         const boxes = DecorationGroup.plainRects(range.getClientRects());
         const kept = boxes.filter(box => parts.filter(p => rectContainsPoint(box, ...DecorationGroup.center(p.column ?? p.text), 0)).length < 2);
-        // A left-out element box stood for its replaced content too, unlike its text, which has rects of its own.
-        return kept.length < boxes.length ? [...kept, ...DecorationGroup.replacedContentRects(range)] : kept;
+        // A left-out element box stood for its content without text too, unlike its text, which has rects of its own.
+        return kept.length < boxes.length ? [...kept, ...DecorationGroup.textlessElements(range).flatMap(el => DecorationGroup.plainRects(el.getClientRects()))] : kept;
     }
 
     /** Whether a range holds the whole of a multi-column element, whose box then runs across its columns. */
@@ -1027,15 +1027,29 @@ class DecorationGroup {
 
     /** Boxes of the images and other replaced content in a range, which text-node rects leave out. */
     private static replacedContentRects(range: Range): Rect[] {
-        return DecorationGroup.replacedContentElements(range).flatMap(element => DecorationGroup.plainRects(element.getClientRects()));
-    }
-
-    /** The images and other replaced content in a range. */
-    private static replacedContentElements(range: Range): Element[] {
         const ancestor = range.commonAncestorContainer;
         if (ancestor.nodeType !== Node.ELEMENT_NODE) return [];
         return Array.from((ancestor as Element).querySelectorAll(replacedContentTags.join(", ").toLowerCase()))
-            .filter(element => range.intersectsNode(element));
+            .filter(element => range.intersectsNode(element))
+            .flatMap(element => DecorationGroup.plainRects(element.getClientRects()));
+    }
+
+    /** The outermost elements of a range without any text inside, whose boxes text-node rects leave out. */
+    private static textlessElements(range: Range): Element[] {
+        const ancestor = range.commonAncestorContainer;
+        if (ancestor.nodeType !== Node.ELEMENT_NODE) return [];
+        const walker = ancestor.ownerDocument!.createTreeWalker(ancestor, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+            acceptNode: node => range.intersectsNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT,
+        });
+        const elements: Element[] = [];
+        const withText = new Set<Node>();
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+            if (node.nodeType === Node.ELEMENT_NODE) elements.push(node as Element);
+            else if (node.textContent!.trim())
+                for (let el = node.parentNode; el && el !== ancestor && !withText.has(el); el = el.parentNode) withText.add(el);
+        }
+        let outermost: Element | undefined;
+        return elements.filter(el => !withText.has(el) && !outermost?.contains(el) && (outermost = el));
     }
 
     /** Plain objects, since getClientRectsNoOverlap adjusts rects in place. */
