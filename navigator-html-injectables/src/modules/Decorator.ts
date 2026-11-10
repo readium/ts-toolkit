@@ -934,6 +934,8 @@ class DecorationGroup {
         // Images and other element boxes, which text rects leave out, widen the part they're in.
         for (const box of Array.from(range.getClientRects())) {
             if (!box.width && !box.height) continue;
+            // A box holding several parts, such as a whole multi-column element, belongs to none of them.
+            if (parts.filter(p => rectContainsPoint(box, ...center(p.column ?? p.text), 0)).length > 1) continue;
             const part = parts.find(p => rectContainsPoint(p.column ?? p.text, ...center(box), 0));
             if (part) part.text = getBoundingRect(part.text, box);
             else parts.push({ text: box, run: 0, vertical: false });

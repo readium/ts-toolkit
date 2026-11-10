@@ -31,6 +31,7 @@ const cases: [string, string][] = params.has("cols")
         ["Table, no columns", table],
         ["Across the columns of an element", `<div class="columns short"><p>${en} ${en}</p></div>`],
         ["Into an element's columns", `<p>${en}</p><div class="columns short"><p>${en} ${en}</p></div>`],
+        ["Through an element's columns", `<p>${en}</p><div class="columns short"><p>${en} ${en}</p></div><p>${en}</p>`],
         ["Across a spanning element", `<div class="columns"><p>${en}</p><p class="spanner">Spanning all columns</p><p>${en}</p></div>`],
         ["Table in a column of an element", `<div class="columns">${table}<p>${en}</p></div>`],
         ["Text directly in an element's columns", `<div class="columns short">${en} ${en}</div>`],
