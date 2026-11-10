@@ -9,7 +9,8 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 
 ### Fixed
 
-- Decorations with `layout: bounds` or `width: bounds` that run across columns are drawn per column, instead of covering both columns, or only the first one with `width: page`
+- Decorations with `layout: bounds` or `width: bounds` whose text is split across the layout are drawn per part, instead of as one box covering all parts and the space between them, or only the first part with `width: page`
+- The `rect` of a decoration's activation and hover events is the box of the part under the pointer when its text is split across the layout, instead of one rect covering all parts
 
 ## [2.10.1] – 2026-11-06
 

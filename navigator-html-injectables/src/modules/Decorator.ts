@@ -144,6 +144,7 @@ class DecorationGroup {
     private _activatable = false;
     private _hoverable = false;
     private hoveredItem: DecorationItem | undefined = undefined;
+    private hoveredFragment = 0;
     public readonly experimentalHighlights: boolean = false;
     private readonly notTextFlag: Map<string, boolean> | undefined;
     private readonly _tintSubKeys = new Map<string, string>(); // (type::adjustedTint) → subKey
@@ -196,7 +197,7 @@ class DecorationGroup {
     set hoverable(value: boolean) {
         this._hoverable = value;
         if (!value && this.hoveredItem) {
-            const leaveRect = this.hoveredItem.range.getBoundingClientRect();
+            const leaveRect = this.hoveredBounds(this.hoveredItem);
             const pixelRatio = this.wnd.devicePixelRatio;
             this.comms.send("decoration_pointer_leave", {
                 decorationId: this.hoveredItem.decoration.id,
@@ -493,7 +494,7 @@ class DecorationGroup {
         const pixelRatio = this.wnd.devicePixelRatio;
 
         for (const item of this.items) {
-            let hitRect: DOMRect | undefined;
+            let hitRect: Rect | undefined;
 
             if (item.decoration.style.type === DecorationStyleType.Template) {
                 // Templates can be positioned anywhere (e.g. a margin sidemark), so hit-test
@@ -510,7 +511,9 @@ class DecorationGroup {
                 // valid across column/scroll navigation.
                 for (const rect of item.hitRects) {
                     if (rectContainsPoint(rect, docX, docY, 0)) {
-                        hitRect = item.range.getBoundingClientRect();
+                        const ctx = makeWritingContext(this.wnd);
+                        const bounds = DecorationGroup.fragmentBounds(item.range, ctx);
+                        hitRect = bounds[DecorationGroup.fragmentAt(bounds, ctx, e.clientX, e.clientY)];
                         break;
                     }
                 }
@@ -539,7 +542,8 @@ class DecorationGroup {
         const pixelRatio = this.wnd.devicePixelRatio;
 
         let hitItem: DecorationItem | undefined;
-        let hitRect: DOMRect | undefined;
+        let hitRect: Rect | undefined;
+        let hitFragment = 0;
 
         for (const item of this.items) {
             if (item.decoration.style.type === DecorationStyleType.Template) {
@@ -554,8 +558,11 @@ class DecorationGroup {
             } else {
                 for (const rect of item.hitRects) {
                     if (rectContainsPoint(rect, docX, docY, 0)) {
+                        const ctx = makeWritingContext(this.wnd);
+                        const bounds = DecorationGroup.fragmentBounds(item.range, ctx);
                         hitItem = item;
-                        hitRect = item.range.getBoundingClientRect();
+                        hitFragment = DecorationGroup.fragmentAt(bounds, ctx, e.clientX, e.clientY);
+                        hitRect = bounds[hitFragment];
                         break;
                     }
                 }
@@ -568,7 +575,7 @@ class DecorationGroup {
 
         if (this.hoveredItem) {
             const connected = this.hoveredItem.range.commonAncestorContainer.isConnected;
-            const leaveRect = connected ? this.hoveredItem.range.getBoundingClientRect() : null;
+            const leaveRect = connected ? this.hoveredBounds(this.hoveredItem) : null;
             this.comms.send("decoration_pointer_leave", {
                 decorationId: this.hoveredItem.decoration.id,
                 group: this.name,
@@ -583,6 +590,7 @@ class DecorationGroup {
         }
 
         this.hoveredItem = hitItem;
+        this.hoveredFragment = hitFragment;
 
         if (hitItem && hitRect) {
             this.comms.send("decoration_pointer_enter", {
@@ -697,7 +705,7 @@ class DecorationGroup {
                 console.warn('Vertical writing detected: caretPositionFromPoint has known bugs, falling back to original range');
                 sub.add(item.range);
             } else {
-                // The range starts in its first fragment, such as a column, and ends in its last.
+                // The range starts in its first fragment and ends in its last.
                 const bounds = DecorationGroup.fragmentBounds(item.range, ctx);
                 const first = bounds[0];
                 const last = bounds[bounds.length - 1];
@@ -857,7 +865,7 @@ class DecorationGroup {
     }
 
     /**
-     * Bounding rects of a range, one per fragment (such as a column) it runs across: its text starts a new
+     * Bounding rects of a range, one per fragment of the layout it runs across: its text starts a new
      * fragment when a line ends before the previous one starts in the block direction.
      */
     private static fragmentBounds(range: Range, ctx: WritingContext): Rect[] {
@@ -889,6 +897,19 @@ class DecorationGroup {
             if (overlap > bestOverlap) [best, bestOverlap] = [i, overlap];
         });
         return best;
+    }
+
+    /** Index of the bounds nearest a client point along the inline axis, which fragments follow each other on. */
+    private static fragmentAt(bounds: Rect[], ctx: WritingContext, x: number, y: number): number {
+        const p = ctx.isVertical ? y : x;
+        const distance = (b: Rect) => Math.max(0, ctx.inlineStart(b) - p, p - ctx.inlineStart(b) - ctx.inlineSize(b));
+        return bounds.reduce((best, b, i) => distance(b) < distance(bounds[best]) ? i : best, 0);
+    }
+
+    /** Bounds of the fragment the pointer entered, so leaving reports the same rect as entering. */
+    private hoveredBounds(item: DecorationItem): Rect {
+        const bounds = DecorationGroup.fragmentBounds(item.range, makeWritingContext(this.wnd));
+        return bounds[Math.min(this.hoveredFragment, bounds.length - 1)];
     }
 
     /** Boxes of the images and other replaced content in a range, which text-node rects leave out. */
