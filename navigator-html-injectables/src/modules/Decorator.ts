@@ -877,7 +877,9 @@ class DecorationGroup {
         const boxes = DecorationGroup.rangeBoxes(range, parts);
         for (const box of Array.isArray(boxes) ? boxes : Array.from(boxes.getClientRects())) {
             if (!box.width && !box.height) continue;
-            const part = parts.find(p => rectContainsPoint(p.column ?? p.text, ...DecorationGroup.center(box), 0));
+            // A block box can be wider than its text, so the part it holds comes first.
+            const part = parts.find(p => rectContainsPoint(box, ...DecorationGroup.center(p.column ?? p.text), 0))
+                ?? parts.find(p => rectContainsPoint(p.column ?? p.text, ...DecorationGroup.center(box), 0));
             if (part) part.text = getBoundingRect(part.text, box);
             else parts.push({ text: box, run: 0, vertical: false });
         }
@@ -911,7 +913,11 @@ class DecorationGroup {
         const overlap = (a: FragmentPart, b: Rect) => a.vertical ? a.column!.top < b.bottom && b.top < a.column!.bottom : a.column!.left < b.right && b.left < a.column!.right;
         let run = 0;
         let previous: [Element | null, Element | null] | undefined;
-        for (const { node, rects } of getTextNodeClientRects(range, ["rt", "rp"])) {
+        // Replaced content has no text, but takes up a column all the same.
+        const replaced = DecorationGroup.replacedContentElements(range).map(node => ({ node: node as Node, rects: DecorationGroup.plainRects(node.getClientRects()) }));
+        const contents = [...getTextNodeClientRects(range, ["rt", "rp"]), ...replaced]
+            .sort((a, b) => a.node.compareDocumentPosition(b.node) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
+        for (const { node, rects } of contents) {
             let child: Node = node, container: Element | null = null, spanner: Element | null = null;
             for (let el = node.parentElement; el; child = el, el = el.parentElement) {
                 const s = style(el);
@@ -954,9 +960,10 @@ class DecorationGroup {
      */
     private static rangeBoxes(range: Range, parts = DecorationGroup.holdsMultiColumn(range) ? DecorationGroup.fragmentParts(range) : []): Range | Rect[] {
         if (parts.length < 2) return range;
-        // Plain objects, since getClientRectsNoOverlap adjusts rects in place.
-        return Array.from(range.getClientRects(), ({ left, right, top, bottom, width, height }) => ({ left, right, top, bottom, width, height }))
-            .filter(box => parts.filter(p => rectContainsPoint(box, ...DecorationGroup.center(p.column ?? p.text), 0)).length < 2);
+        const boxes = DecorationGroup.plainRects(range.getClientRects());
+        const kept = boxes.filter(box => parts.filter(p => rectContainsPoint(box, ...DecorationGroup.center(p.column ?? p.text), 0)).length < 2);
+        // A left-out element box stood for its replaced content too, unlike its text, which has rects of its own.
+        return kept.length < boxes.length ? [...kept, ...DecorationGroup.replacedContentRects(range)] : kept;
     }
 
     /** Whether a range holds the whole of a multi-column element, whose box then runs across its columns. */
@@ -1020,13 +1027,20 @@ class DecorationGroup {
 
     /** Boxes of the images and other replaced content in a range, which text-node rects leave out. */
     private static replacedContentRects(range: Range): Rect[] {
+        return DecorationGroup.replacedContentElements(range).flatMap(element => DecorationGroup.plainRects(element.getClientRects()));
+    }
+
+    /** The images and other replaced content in a range. */
+    private static replacedContentElements(range: Range): Element[] {
         const ancestor = range.commonAncestorContainer;
         if (ancestor.nodeType !== Node.ELEMENT_NODE) return [];
         return Array.from((ancestor as Element).querySelectorAll(replacedContentTags.join(", ").toLowerCase()))
-            .filter(element => range.intersectsNode(element))
-            .flatMap(element => Array.from(element.getClientRects()))
-            // Plain objects, since getClientRectsNoOverlap adjusts rects in place.
-            .map(({ left, right, top, bottom, width, height }) => ({ left, right, top, bottom, width, height }));
+            .filter(element => range.intersectsNode(element));
+    }
+
+    /** Plain objects, since getClientRectsNoOverlap adjusts rects in place. */
+    private static plainRects(rects: DOMRectList): Rect[] {
+        return Array.from(rects, ({ left, right, top, bottom, width, height }) => ({ left, right, top, bottom, width, height }));
     }
 
     /**

@@ -34,6 +34,7 @@ const cases: [string, string, string?][] = params.has("cols")
         ["Into an element's columns", `<p>${en}</p><div class="columns short"><p>${en} ${en}</p></div>`],
         ["Through an element's columns", `<p>${en}</p><div class="columns short"><p>${en} ${en}</p></div><p>${en}</p>`],
         ["An element's columns, whole", `<div class="columns short"><p>${en} ${en}</p></div>`, ".columns"],
+        ["An element's columns with an image, whole", `<div class="columns short"><img alt=""><p>${en}</p></div>`, ".columns"],
         ["Across a spanning element", `<div class="columns"><p>${en}</p><p class="spanner">Spanning all columns</p><p>${en}</p></div>`],
         ["Table in a column of an element", `<div class="columns">${table}<p>${en}</p></div>`],
         ["Text directly in an element's columns", `<div class="columns short">${en} ${en}</div>`],
