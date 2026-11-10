@@ -48,7 +48,8 @@ export function bindsToPrevious(text: string, lang: string | undefined): boolean
   return !(marksFor(lang).opening.has(text[0]) && text.length > 1 && !/[\s\p{P}]/u.test(text[1]));
 }
 
-// Takes dropped objects out of plain text, with any bracket or quote pair they leave empty.
+/** Takes each `DROPPED` out of plain text in `lang`, with any bracket or quote pair left enclosing only fillers (spaces, commas, other `DROPPED`).
+ * Spaces around what's removed collapse to one, dropped at either end of the text and before binding punctuation; no space is added where there was none. */
 export function removeDropped(plain: string, lang: string | undefined): string {
   const { pairs, opening, closing } = marksFor(lang);
   for (let i = plain.indexOf(DROPPED); i !== -1; i = plain.indexOf(DROPPED, i + 1)) {

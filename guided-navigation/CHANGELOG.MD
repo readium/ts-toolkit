@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor versions (marked **Breaking:**). Patch versions never contain breaking changes.
 
+## [Unreleased]
+
+### Added
+
+- `removeDropped` and `DROPPED` are exported, to remove the bracket or quote pairs that objects left out of plain text leave empty, per language, like GND does for `text.plain`, e.g. `前（）後` → `前後`
+
 ## [1.2.4] – 2026-11-10
 
 ### Added
