@@ -27,12 +27,34 @@ document.fonts.ready.then(() => {
     // Leaving out a few words at both ends starts and ends the decoration mid-line.
     const words = split.textContent!.split(" ");
     const highlight = words.slice(5, -5).join(" ");
+    split.dataset.highlight = highlight;
 
-    createController().applyDecorations([
+    const controller = createController();
+    controller.applyDecorations([
         decorationFor("split", "#split", highlight, {
             type,
             layout: (params.get("layout") ?? DecorationLayout.Boxes) as DecorationLayout,
             width: (params.get("width") ?? DecorationWidth.Wrap) as DecorationWidth,
         }),
     ], "chapter");
+
+    if (params.has("events")) {
+        const events: DecorationEvent[] = window.decorationEvents = [];
+        controller.registerDecorationObserver("chapter", {
+            onDecorationActivated: ({ rect }) => (events.push({ type: "activated", rect }), true),
+            onDecorationPointerEnter: ({ rect }) => { events.push({ type: "enter", rect }); },
+            onDecorationPointerLeave: ({ rect }) => { events.push({ type: "leave", rect }); },
+        });
+    }
 });
+
+interface DecorationEvent {
+    type: "activated" | "enter" | "leave";
+    rect?: { top: number; left: number; width: number; height: number };
+}
+
+declare global {
+    interface Window {
+        decorationEvents?: DecorationEvent[];
+    }
+}

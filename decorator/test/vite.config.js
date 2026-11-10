@@ -18,6 +18,7 @@ export default defineConfig({
         index: resolve(import.meta.dirname, "index.html"),
         grid: resolve(import.meta.dirname, "grid.html"),
         chapter: resolve(import.meta.dirname, "chapter.html"),
+        layouts: resolve(import.meta.dirname, "layouts.html"),
       },
     },
   },

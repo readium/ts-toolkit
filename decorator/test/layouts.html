@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Decorations across layouts</title>
+  <style>
+    html { background: #fff; color: #000; }
+    body { margin: 0; padding: 24px 32px; font: 16px/1.5 serif; }
+    section { margin-block-end: 24px; }
+    h2 { margin: 0 0 4px; font: bold 12px/1.4 sans-serif; color: #555; }
+    p { margin: 0; }
+    td { vertical-align: top; padding: 0 8px 0 0; }
+    .flex { display: flex; gap: 16px; }
+    .flex p { flex: 1; }
+    .float img { float: inline-end; inline-size: 96px; block-size: 72px; background: #ccc; }
+    .columns { column-count: 2; column-gap: 32px; inline-size: 640px; }
+    .short { block-size: 96px; }
+    .spanner { column-span: all; margin: 4px 0; font: bold 14px/1.4 sans-serif; }
+    .vertical { writing-mode: vertical-rl; column-count: 2; column-gap: 32px; width: 160px; height: 320px; }
+  </style>
+</head>
+<body>
+  <main></main>
+  <script type="module" src="./layouts.ts"></script>
+</body>
+</html>

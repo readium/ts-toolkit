@@ -3,7 +3,7 @@ import { IComms } from "../comms/comms.ts";
 import { Module } from "./Module.ts";
 import { rangeFromLocator } from "../helpers/locator.ts";
 import { ModuleName } from "./ModuleLibrary.ts";
-import { Rect, getBoundingRect, getClientRectsNoOverlap, getTextClientRects, rectContainsPoint } from "../helpers/rect.ts";
+import { Rect, getBoundingRect, getClientRectsNoOverlap, getTextClientRects, getTextNodeClientRects, rectContainsPoint } from "../helpers/rect.ts";
 import { getProperty } from "../helpers/css.ts";
 import { isDarkColor, getContrastingTextColor, adjustColorForContrast, colorToRgba } from "@readium/helpers";
 import { hasRTLDirection, isVerticalWriting, makeWritingContext, OVERLAY_Z_INDEX, WritingContext } from "../helpers/document.ts";
@@ -511,9 +511,8 @@ class DecorationGroup {
                 // valid across column/scroll navigation.
                 for (const rect of item.hitRects) {
                     if (rectContainsPoint(rect, docX, docY, 0)) {
-                        const ctx = makeWritingContext(this.wnd);
-                        const bounds = DecorationGroup.fragmentBounds(item.range, ctx);
-                        hitRect = bounds[DecorationGroup.fragmentAt(bounds, ctx, e.clientX, e.clientY)];
+                        const bounds = DecorationGroup.fragmentBounds(item.range);
+                        hitRect = bounds[DecorationGroup.fragmentIndex(bounds, DecorationGroup.pointRect(e), makeWritingContext(this.wnd))];
                         break;
                     }
                 }
@@ -558,11 +557,7 @@ class DecorationGroup {
             } else {
                 for (const rect of item.hitRects) {
                     if (rectContainsPoint(rect, docX, docY, 0)) {
-                        const ctx = makeWritingContext(this.wnd);
-                        const bounds = DecorationGroup.fragmentBounds(item.range, ctx);
                         hitItem = item;
-                        hitFragment = DecorationGroup.fragmentAt(bounds, ctx, e.clientX, e.clientY);
-                        hitRect = bounds[hitFragment];
                         break;
                     }
                 }
@@ -572,6 +567,12 @@ class DecorationGroup {
         }
 
         if (hitItem === this.hoveredItem) return;
+
+        if (hitItem && !hitRect) {
+            const bounds = DecorationGroup.fragmentBounds(hitItem.range);
+            hitFragment = DecorationGroup.fragmentIndex(bounds, DecorationGroup.pointRect(e), makeWritingContext(this.wnd));
+            hitRect = bounds[hitFragment];
+        }
 
         if (this.hoveredItem) {
             const connected = this.hoveredItem.range.commonAncestorContainer.isConnected;
@@ -706,7 +707,7 @@ class DecorationGroup {
                 sub.add(item.range);
             } else {
                 // The range starts in its first fragment and ends in its last.
-                const bounds = DecorationGroup.fragmentBounds(item.range, ctx);
+                const bounds = DecorationGroup.fragmentBounds(item.range);
                 const first = bounds[0];
                 const last = bounds[bounds.length - 1];
                 // Right-to-left lines start on the right.
@@ -856,7 +857,7 @@ class DecorationGroup {
                 return [snap + ctx.inlineScrollOffset + inlineInset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.pageInlineSize - 2 * inlineInset, ctx.blockSize(r)];
             }
             case DecorationWidth.Bounds: {
-                const fragment = bounds[Math.max(0, DecorationGroup.fragmentIndex(bounds, r, ctx))];
+                const fragment = bounds[DecorationGroup.fragmentIndex(bounds, r, ctx)];
                 return [ctx.inlineStart(fragment) + ctx.inlineScrollOffset, ctx.blockStart(r) + ctx.blockScrollOffset, ctx.inlineSize(fragment), ctx.blockSize(r)];
             }
             default:
@@ -865,50 +866,113 @@ class DecorationGroup {
     }
 
     /**
-     * Bounding rects of a range, one per fragment of the layout it runs across: its text starts a new
-     * fragment when a line ends before the previous one starts in the block direction.
+     * Bounding rects of a range, one per column it runs across in multi-column containers, in document order.
+     * A line's column is the box holding it among the ones the container's child reports, one per column.
      */
-    private static fragmentBounds(range: Range, ctx: WritingContext): Rect[] {
-        // vertical-rl lines progress leftwards.
-        const blockFrom = (r: Rect) => ctx.isVertical && !ctx.isVertLR ? -r.right : ctx.blockStart(r);
-        const fragments: Rect[] = [];
-        let previous: Rect | undefined;
-        for (const rect of getTextClientRects(range, ["rt", "rp"])) {
-            if (!rect.width && !rect.height) continue;
-            if (!previous || blockFrom(rect) + ctx.blockSize(rect) <= blockFrom(previous)) fragments.push(rect);
-            else fragments[fragments.length - 1] = getBoundingRect(fragments[fragments.length - 1], rect);
-            previous = rect;
+    private static fragmentBounds(range: Range): Rect[] {
+        const wnd = range.startContainer.ownerDocument?.defaultView;
+        if (!wnd) return [range.getBoundingClientRect()];
+        const styles = new Map<Element, CSSStyleDeclaration>();
+        const style = (el: Element) => styles.get(el) ?? styles.set(el, wnd.getComputedStyle(el)).get(el)!;
+        const childBoxes = new Map<Node, Rect[]>();
+        // Text directly in the container has no element of its own, so its line boxes stand in for it.
+        const boxesOf = (child: Node) => {
+            let boxes = childBoxes.get(child);
+            if (!boxes) {
+                const textRange = child.ownerDocument!.createRange();
+                textRange.selectNode(child);
+                const source = child.nodeType === Node.ELEMENT_NODE ? child as Element : textRange;
+                childBoxes.set(child, boxes = Array.from(source.getClientRects()));
+            }
+            return boxes;
+        };
+        const center = (r: Rect) => [(r.left + r.right) / 2, (r.top + r.bottom) / 2] as const;
+
+        // A run is text in the same container, outside or inside the same column-spanning element.
+        type Part = { text: Rect; column?: Rect; run: number; vertical: boolean };
+        const parts: Part[] = [];
+        const overlap = (a: Part, b: Rect) => a.vertical ? a.column!.top < b.bottom && b.top < a.column!.bottom : a.column!.left < b.right && b.left < a.column!.right;
+        let run = 0;
+        let previous: [Element | null, Element | null] | undefined;
+        for (const { node, rects } of getTextNodeClientRects(range, ["rt", "rp"])) {
+            let child: Node = node, container: Element | null = null, spanner: Element | null = null;
+            for (let el = node.parentElement; el; child = el, el = el.parentElement) {
+                const s = style(el);
+                if (s.columnCount !== "auto" || s.columnWidth !== "auto") { container = el; break; }
+                if (s.columnSpan === "all") spanner = el;
+            }
+            if (!container) spanner = null;
+            if (!previous || previous[0] !== container || previous[1] !== spanner) run++;
+            previous = [container, spanner];
+            const vertical = !!container && !style(container).writingMode.startsWith("horizontal");
+            for (const rect of rects) {
+                if (!rect.width && !rect.height) continue;
+                const column = container && !spanner ? boxesOf(child).find(b => rectContainsPoint(b, ...center(rect), 0)) ?? rect : undefined;
+                const part = parts.find(p => p.run === run && (column && p.column ? overlap(p, column) : !column && !p.column));
+                if (!part) parts.push({ text: rect, column, run, vertical });
+                else {
+                    part.text = getBoundingRect(part.text, rect);
+                    if (column) part.column = getBoundingRect(part.column!, column);
+                }
+            }
         }
-        if (fragments.length < 2) return [range.getBoundingClientRect()];
-        // Element and replaced boxes, which text rects leave out, widen the fragment they're in.
+        // A child box wider than its column, for one, can make two parts overlap.
+        for (let merged = true; merged;) {
+            merged = false;
+            for (let i = 0; i < parts.length && !merged; i++) {
+                const j = parts.findIndex((q, k) => k > i && q.run === parts[i].run && !!q.column && !!parts[i].column && overlap(parts[i], q.column));
+                if (j < 0) continue;
+                parts[i].text = getBoundingRect(parts[i].text, parts[j].text);
+                parts[i].column = getBoundingRect(parts[i].column!, parts[j].column!);
+                parts.splice(j, 1);
+                merged = true;
+            }
+        }
+        if (parts.length < 2) return [range.getBoundingClientRect()];
+
+        // Images and other element boxes, which text rects leave out, widen the part they're in.
         for (const box of Array.from(range.getClientRects())) {
-            const i = DecorationGroup.fragmentIndex(fragments, box, ctx);
-            if (i >= 0) fragments[i] = getBoundingRect(fragments[i], box);
+            if (!box.width && !box.height) continue;
+            const part = parts.find(p => rectContainsPoint(p.column ?? p.text, ...center(box), 0));
+            if (part) part.text = getBoundingRect(part.text, box);
+            else parts.push({ text: box, run: 0, vertical: false });
         }
-        return fragments;
+        return parts.map(p => p.text);
     }
 
-    /** Index of the fragment a rect overlaps most along the inline axis, which fragments follow each other on; -1 if none. */
-    private static fragmentIndex(fragments: Rect[], rect: Rect, ctx: WritingContext): number {
-        let best = -1, bestOverlap = 0;
-        fragments.forEach((fragment, i) => {
-            const overlap = Math.min(ctx.inlineStart(fragment) + ctx.inlineSize(fragment), ctx.inlineStart(rect) + ctx.inlineSize(rect))
-                - Math.max(ctx.inlineStart(fragment), ctx.inlineStart(rect));
-            if (overlap > bestOverlap) [best, bestOverlap] = [i, overlap];
+    /** Index of the bounds holding a rect's center, or else the nearest along the inline axis, then the block axis. */
+    private static fragmentIndex(bounds: Rect[], rect: Rect, ctx: WritingContext): number {
+        const x = (rect.left + rect.right) / 2, y = (rect.top + rect.bottom) / 2;
+        const holding = bounds.findIndex(b => rectContainsPoint(b, x, y, 0));
+        if (holding >= 0) return holding;
+        const gap = (start: number, size: number, p: number) => Math.max(0, start - p, p - start - size);
+        const distance = (b: Rect) => [
+            gap(ctx.inlineStart(b), ctx.inlineSize(b), ctx.isVertical ? y : x),
+            gap(ctx.blockStart(b), ctx.blockSize(b), ctx.isVertical ? x : y),
+        ];
+        let best = 0;
+        bounds.forEach((b, i) => {
+            const [inline, block] = distance(b), [bestInline, bestBlock] = distance(bounds[best]);
+            if (inline < bestInline || (inline === bestInline && block < bestBlock)) best = i;
         });
         return best;
     }
 
-    /** Index of the bounds nearest a client point along the inline axis, which fragments follow each other on. */
-    private static fragmentAt(bounds: Rect[], ctx: WritingContext, x: number, y: number): number {
-        const p = ctx.isVertical ? y : x;
-        const distance = (b: Rect) => Math.max(0, ctx.inlineStart(b) - p, p - ctx.inlineStart(b) - ctx.inlineSize(b));
-        return bounds.reduce((best, b, i) => distance(b) < distance(bounds[best]) ? i : best, 0);
+    private static pointRect(e: PointerEvent): Rect {
+        return { left: e.clientX, right: e.clientX, top: e.clientY, bottom: e.clientY, width: 0, height: 0 };
+    }
+
+    /** Fragment bounds for the styles drawn from them, as measuring them walks the decoration's text. */
+    private static drawnBounds(item: DecorationItem): Rect[] {
+        const style = item.decoration?.style;
+        return style?.layout === DecorationLayout.Bounds || style?.width === DecorationWidth.Bounds
+            ? DecorationGroup.fragmentBounds(item.range)
+            : [];
     }
 
     /** Bounds of the fragment the pointer entered, so leaving reports the same rect as entering. */
     private hoveredBounds(item: DecorationItem): Rect {
-        const bounds = DecorationGroup.fragmentBounds(item.range, makeWritingContext(this.wnd));
+        const bounds = DecorationGroup.fragmentBounds(item.range);
         return bounds[Math.min(this.hoveredFragment, bounds.length - 1)];
     }
 
@@ -1228,7 +1292,7 @@ class DecorationGroup {
 
         const iz = 1 / this.effectiveZoom();
         const expand = this.scaledExpand(decoStyle);
-        const bounds = DecorationGroup.fragmentBounds(item.range, ctx);
+        const bounds = DecorationGroup.drawnBounds(item);
         const outline = this.outlineMetrics(item);
         const outlineInset = outline.inset;
 
@@ -1269,7 +1333,7 @@ class DecorationGroup {
         const iz = 1 / this.effectiveZoom();
 
         const expand = this.scaledExpand(item.decoration.style);
-        const bounds = DecorationGroup.fragmentBounds(item.range, ctx);
+        const bounds = DecorationGroup.drawnBounds(item);
 
         const decoStyle = item.decoration.style;
         const outline = this.outlineMetrics(item);
@@ -1581,7 +1645,7 @@ class DecorationGroup {
             const width  = style.width  ?? DecorationWidth.Wrap;
             const ex     = this.scaledExpand(style);
 
-            const bounds = DecorationGroup.fragmentBounds(item.range, ctx);
+            const bounds = DecorationGroup.drawnBounds(item);
 
             // For Bounds layout the hole is a bounding rect per fragment; expand it directly.
             // For Boxes layout, merge rects first with expand baked in (same as highlights).
@@ -1603,7 +1667,7 @@ class DecorationGroup {
                         break;
                     }
                     case DecorationWidth.Bounds: {
-                        const fragment = bounds[Math.max(0, DecorationGroup.fragmentIndex(bounds, rect, ctx))];
+                        const fragment = bounds[DecorationGroup.fragmentIndex(bounds, rect, ctx)];
                         hole = ctx.toRect(ctx.inlineStart(fragment), ctx.blockStart(rect), ctx.inlineSize(fragment), ctx.blockSize(rect));
                         break;
                     }
