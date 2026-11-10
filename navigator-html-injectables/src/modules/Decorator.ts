@@ -568,10 +568,11 @@ class DecorationGroup {
 
         if (hitItem === this.hoveredItem) return;
 
-        if (hitItem && !hitRect) {
+        if (hitItem) {
             const bounds = DecorationGroup.fragmentBounds(hitItem.range);
             hitFragment = DecorationGroup.fragmentIndex(bounds, DecorationGroup.pointRect(e), makeWritingContext(this.wnd));
-            hitRect = bounds[hitFragment];
+            // Templates report their rendered element instead.
+            hitRect ??= bounds[hitFragment];
         }
 
         if (this.hoveredItem) {
