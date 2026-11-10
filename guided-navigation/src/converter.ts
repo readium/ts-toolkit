@@ -500,17 +500,19 @@ export class Converter {
     return abbr;
   }
 
-  // The object an abbreviation holds as its whole content, when node is punctuation alongside it: part of its text.
+  // The innermost object an abbreviation holds as its whole content, when node is punctuation alongside it:
+  // the object whose text carries the expansion, so the punctuation joins it there.
   private static punctuationOwner(node: Node): Element | null {
     const data = node.nodeValue ?? "";
     if (node.nodeType !== TEXT_NODE || !/\S/.test(data) || !/^[\s\p{P}]*$/u.test(data)) return null;
+    let owner: Element | null = null;
     for (let obj = node.parentElement?.firstElementChild ?? null; obj && Converter.isSoleContent(obj); obj = obj.firstElementChild) {
       const tagName = obj.tagName.toLowerCase();
       const roles = extractNodeRoles(obj);
-      if (skippedElements.has(tagName) || Converter.isPlaceholder(obj, tagName, roles) || !extractNodeAria(obj)[1]) return null;
-      if (isBlockNode(tagName, roles)) return Converter.abbreviationOver(obj)?.contains(node) ? obj : null;
+      if (skippedElements.has(tagName) || Converter.isPlaceholder(obj, tagName, roles) || !extractNodeAria(obj)[1]) break;
+      if (isBlockNode(tagName, roles)) owner = obj;
     }
-    return null;
+    return owner && Converter.abbreviationOver(owner)?.contains(node) ? owner : null;
   }
 
   // The punctuation alongside el that its abbreviation holds, in document order.
