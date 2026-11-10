@@ -871,14 +871,17 @@ class DecorationGroup {
     /** Bounding rects of a range, one per column it runs across in multi-column containers, in document order. */
     private static fragmentBounds(range: Range): Rect[] {
         const parts = DecorationGroup.fragmentParts(range);
-        if (parts.length < 2) return [range.getBoundingClientRect()];
+        const boxes = DecorationGroup.rangeBoxes(range);
+        // With a multi-column element held whole, the range's bounding rect would cover all its columns.
+        if (!parts.length || (parts.length < 2 && !Array.isArray(boxes))) return [range.getBoundingClientRect()];
 
         // Images and other element boxes, which text rects leave out, widen the part they're in.
-        const boxes = DecorationGroup.rangeBoxes(range, parts);
         for (const box of Array.isArray(boxes) ? boxes : Array.from(boxes.getClientRects())) {
             if (!box.width && !box.height) continue;
-            // A block box can be wider than its text, so the part it holds comes first.
+            // A block box can be wider than its text, so the part it holds comes first; then the part of the
+            // content it's in, as parts before and after a nested multi-column element share a column.
             const part = parts.find(p => rectContainsPoint(box, ...DecorationGroup.center(p.column ?? p.text), 0))
+                ?? parts.find(p => rectContainsPoint(p.text, ...DecorationGroup.center(box), 0))
                 ?? parts.find(p => rectContainsPoint(p.column ?? p.text, ...DecorationGroup.center(box), 0));
             if (part) part.text = getBoundingRect(part.text, box);
             else parts.push({ text: box, run: 0, vertical: false });
@@ -914,11 +917,12 @@ class DecorationGroup {
         let run = 0;
         let previous: [Element | null, Element | null] | undefined;
         // Content without text, such as an image or an empty block, takes up a column all the same.
-        const textless = DecorationGroup.textlessElements(range).map(node => ({ node: node as Node, rects: DecorationGroup.plainRects(node.getClientRects()) }));
+        const textless = DecorationGroup.rangeElements(range).textless.map(node => ({ node: node as Node, rects: DecorationGroup.plainRects(node.getClientRects()) }));
         const contents = [...getTextNodeClientRects(range, ["rt", "rp"]), ...textless]
             .sort((a, b) => a.node.compareDocumentPosition(b.node) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
         for (const { node, rects } of contents) {
-            let child: Node = node, container: Element | null = null, spanner: Element | null = null;
+            let child: Node = node, container: Element | null = null;
+            let spanner: Element | null = node.nodeType === Node.ELEMENT_NODE && style(node as Element).columnSpan === "all" ? node as Element : null;
             for (let el = node.parentElement; el; child = el, el = el.parentElement) {
                 const s = style(el);
                 if (s.columnCount !== "auto" || s.columnWidth !== "auto") { container = el; break; }
@@ -955,34 +959,17 @@ class DecorationGroup {
     }
 
     /**
-     * A range's boxes, without those holding several of its column parts, such as a whole multi-column element's.
-     * The range itself when nothing needs leaving out. Columns are only measured when the range holds such an element.
+     * A range's boxes, without those of the elements it holds whole that lay out columns or hold one that does,
+     * which run across those columns. The range itself when it holds none.
      */
-    private static rangeBoxes(range: Range, parts = DecorationGroup.holdsMultiColumn(range) ? DecorationGroup.fragmentParts(range) : []): Range | Rect[] {
-        if (parts.length < 2) return range;
-        const boxes = DecorationGroup.plainRects(range.getClientRects());
-        const kept = boxes.filter(box => parts.filter(p => rectContainsPoint(box, ...DecorationGroup.center(p.column ?? p.text), 0)).length < 2);
+    private static rangeBoxes(range: Range): Range | Rect[] {
+        const { textless, columns } = DecorationGroup.rangeElements(range);
+        if (!columns.length) return range;
+        const leftOut = columns.flatMap(el => DecorationGroup.plainRects(el.getClientRects()));
+        const same = (a: Rect, b: Rect) => Math.abs(a.left - b.left) < 0.5 && Math.abs(a.top - b.top) < 0.5 && Math.abs(a.right - b.right) < 0.5 && Math.abs(a.bottom - b.bottom) < 0.5;
+        const kept = DecorationGroup.plainRects(range.getClientRects()).filter(box => !leftOut.some(r => same(r, box)));
         // A left-out element box stood for its content without text too, unlike its text, which has rects of its own.
-        return kept.length < boxes.length ? [...kept, ...DecorationGroup.textlessElements(range).flatMap(el => DecorationGroup.plainRects(el.getClientRects()))] : kept;
-    }
-
-    /** Whether a range holds the whole of a multi-column element, whose box then runs across its columns. */
-    private static holdsMultiColumn(range: Range): boolean {
-        const ancestor = range.commonAncestorContainer;
-        const doc = ancestor.ownerDocument;
-        const wnd = doc?.defaultView;
-        if (ancestor.nodeType !== Node.ELEMENT_NODE || !wnd) return false;
-        const walker = doc.createTreeWalker(ancestor, NodeFilter.SHOW_ELEMENT, {
-            acceptNode: node => range.intersectsNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT,
-        });
-        const elementRange = doc.createRange();
-        for (let el = walker.nextNode() as Element | null; el; el = walker.nextNode() as Element | null) {
-            const s = wnd.getComputedStyle(el);
-            if (s.columnCount === "auto" && s.columnWidth === "auto") continue;
-            elementRange.selectNode(el);
-            if (range.compareBoundaryPoints(Range.START_TO_START, elementRange) <= 0 && range.compareBoundaryPoints(Range.END_TO_END, elementRange) >= 0) return true;
-        }
-        return false;
+        return [...kept, ...textless.flatMap(el => DecorationGroup.plainRects(el.getClientRects()))];
     }
 
     private static center(r: Rect): readonly [number, number] {
@@ -1034,22 +1021,42 @@ class DecorationGroup {
             .flatMap(element => DecorationGroup.plainRects(element.getClientRects()));
     }
 
-    /** The outermost elements of a range without any text inside, whose boxes text-node rects leave out. */
-    private static textlessElements(range: Range): Element[] {
+    /**
+     * Elements of a range whose boxes text-node rects don't account for: the outermost ones without text inside,
+     * and the ones it holds whole that lay out columns or hold one that does.
+     */
+    private static rangeElements(range: Range): { textless: Element[]; columns: Element[] } {
         const ancestor = range.commonAncestorContainer;
-        if (ancestor.nodeType !== Node.ELEMENT_NODE) return [];
-        const walker = ancestor.ownerDocument!.createTreeWalker(ancestor, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+        const doc = ancestor.ownerDocument;
+        const wnd = doc?.defaultView;
+        if (ancestor.nodeType !== Node.ELEMENT_NODE || !wnd) return { textless: [], columns: [] };
+        const walker = doc.createTreeWalker(ancestor, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
             acceptNode: node => range.intersectsNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT,
         });
         const elements: Element[] = [];
-        const withText = new Set<Node>();
+        const withText = new Set<Node>(), withColumns = new Set<Node>();
+        const mark = (from: Node | null, set: Set<Node>) => {
+            for (let node = from; node && node !== ancestor && !set.has(node); node = node.parentNode) set.add(node);
+        };
         for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-            if (node.nodeType === Node.ELEMENT_NODE) elements.push(node as Element);
-            else if (node.textContent!.trim())
-                for (let el = node.parentNode; el && el !== ancestor && !withText.has(el); el = el.parentNode) withText.add(el);
+            if (node.nodeType !== Node.ELEMENT_NODE) {
+                if (node.textContent!.trim()) mark(node.parentNode, withText);
+                continue;
+            }
+            elements.push(node as Element);
+            const s = wnd.getComputedStyle(node as Element);
+            if (s.columnCount !== "auto" || s.columnWidth !== "auto") mark(node, withColumns);
         }
+        // Elements laying out columns have their content measured instead, column by column.
         let outermost: Element | undefined;
-        return elements.filter(el => !withText.has(el) && !outermost?.contains(el) && (outermost = el));
+        const textless = elements.filter(el => !withText.has(el) && !withColumns.has(el) && !outermost?.contains(el) && (outermost = el));
+        const elementRange = doc.createRange();
+        const columns = elements.filter(el => {
+            if (!withColumns.has(el)) return false;
+            elementRange.selectNode(el);
+            return range.compareBoundaryPoints(Range.START_TO_START, elementRange) <= 0 && range.compareBoundaryPoints(Range.END_TO_END, elementRange) >= 0;
+        });
+        return { textless, columns };
     }
 
     /** Plain objects, since getClientRectsNoOverlap adjusts rects in place. */

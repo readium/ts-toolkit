@@ -27,6 +27,7 @@ const cases: [string, string, string?][] = params.has("cols")
         ["Flex row in a column", flex],
         ["Float in a column", float],
         ["Across columns", `<p>${Array(6).fill(en).join(" ")}</p>`],
+        ["Through an element's columns in a column", `<p>${en}</p><div class="columns fluid short"><p>${en} ${en}</p></div><p>${en}</p>`],
     ]
     : [
         ["Table, no columns", table],
@@ -36,6 +37,9 @@ const cases: [string, string, string?][] = params.has("cols")
         ["An element's columns, whole", `<div class="columns short"><p>${en} ${en}</p></div>`, ".columns"],
         ["An element's columns with an image, whole", `<div class="columns short"><img alt=""><p>${en}</p></div>`, ".columns"],
         ["An element's columns with an empty block, whole", `<div class="columns short"><div class="block"></div><p>${en}</p></div>`, ".columns"],
+        ["An element's columns of empty blocks, whole", `<div class="columns short"><div class="block"></div><div class="block"></div></div>`, ".columns"],
+        ["An element's columns with one line, whole", `<div class="columns"><p>${en.slice(0, 30)}</p></div>`, ".columns"],
+        ["Across a spanning empty block", `<div class="columns"><p>${en}</p><div class="block spanner"></div><p>${en}</p></div>`],
         ["Across a spanning element", `<div class="columns"><p>${en}</p><p class="spanner">Spanning all columns</p><p>${en}</p></div>`],
         ["Table in a column of an element", `<div class="columns">${table}<p>${en}</p></div>`],
         ["Text directly in an element's columns", `<div class="columns short">${en} ${en}</div>`],
