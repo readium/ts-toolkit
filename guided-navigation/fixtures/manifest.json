@@ -110,6 +110,26 @@
     }
   },
   {
+    "id": "abbreviation-period-mid-sentence",
+    "dir": "abbreviation-period-mid-sentence",
+    "role": "abbreviation",
+    "description": "An abbreviation's final period doesn't end the sentence",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "abbreviation-period-sentence-end",
+    "dir": "abbreviation-period-sentence-end",
+    "role": "abbreviation",
+    "description": "An abbreviation's own final period also ends the sentence; its expansion is the sub's alias",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "abbreviation-spanning-terms",
     "dir": "abbreviation-spanning-terms",
     "role": "abbreviation",
@@ -2264,6 +2284,16 @@
     "dir": "table-cell-abbreviation",
     "role": "table",
     "description": "An abbr inside a row header and a data cell stays a sub in that cell's own text",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "table-cell-link",
+    "dir": "table-cell-link",
+    "role": "link",
+    "description": "A link in a table cell; the cell's plain keeps the link's words",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
