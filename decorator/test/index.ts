@@ -93,5 +93,14 @@ for (const [label, query] of variants) {
     }
     nav.append(line);
 }
+const chapter = document.createElement("div");
+chapter.append("Chapter in 2 columns: ");
+for (const type of types) {
+    const link = document.createElement("a");
+    link.href = `chapter.html?type=${type}`;
+    link.textContent = type;
+    chapter.append(link);
+}
+nav.append(chapter);
 
 render();

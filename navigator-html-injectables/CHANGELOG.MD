@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor versions (marked **Breaking:**). Patch versions never contain breaking changes.
 
+## [Unreleased]
+
+### Fixed
+
+- Decorations with `layout: bounds` or `width: bounds` that run across columns are drawn per column, instead of covering both columns, or only the first one with `width: page`
+
 ## [2.10.1] – 2026-11-06
 
 ### Fixed
