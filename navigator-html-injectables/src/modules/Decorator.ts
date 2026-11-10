@@ -131,6 +131,8 @@ const canNativeHighlight = () => ("Highlight" in window);
 const cannotNativeHighlight = ["IMG", "IMAGE", "AUDIO", "VIDEO", "SVG"];
 // Elements whose boxes text-node rects leave out.
 const replacedContentTags = [...cannotNativeHighlight, "IFRAME", "OBJECT", "EMBED", "CANVAS"];
+// Text of a range in one column, or in a column-spanning element: a run is text in the same container, outside or inside the same spanner.
+type FragmentPart = { text: Rect; column?: Rect; run: number; vertical: boolean };
 // Elements that trigger WebKit's CSS Custom Highlight repaint bug on removal.
 const webkitRepaintProneTags = new Set(["SUP", "SUB", "SMALL", "CODE"]);
 const outlineStrokeWidth = 2;
@@ -290,7 +292,7 @@ class DecorationGroup {
 
         this.items.push(item);
         this.layout(item);
-        item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, this.scaledExpand(item.decoration.style) + this.hitGap()));
+        item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(DecorationGroup.rangeBoxes(item.range), false, false, this.scaledExpand(item.decoration.style) + this.hitGap()));
         this.renderLayout([item]);
     }
 
@@ -624,7 +626,7 @@ class DecorationGroup {
             this.currentRender = this.wnd.requestAnimationFrame(() => {
                 this.items.forEach(i => {
                     this.layout(i);
-                    i.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(i.range, false, false, this.scaledExpand(i.decoration.style) + this.hitGap()));
+                    i.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(DecorationGroup.rangeBoxes(i.range), false, false, this.scaledExpand(i.decoration.style) + this.hitGap()));
                 });
                 this.renderLayout(this.items);
             });
@@ -652,7 +654,7 @@ class DecorationGroup {
                 this.layout(item);
                 relaidOut.push(item);
             }
-            item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(item.range, false, false, this.scaledExpand(item.decoration.style) + this.hitGap()), ctx);
+            item.hitRects = this.clientRectsToDocCoords(getClientRectsNoOverlap(DecorationGroup.rangeBoxes(item.range), false, false, this.scaledExpand(item.decoration.style) + this.hitGap()), ctx);
         });
         if (relaidOut.length) this.renderLayout(relaidOut);
     }
@@ -866,13 +868,29 @@ class DecorationGroup {
         }
     }
 
+    /** Bounding rects of a range, one per column it runs across in multi-column containers, in document order. */
+    private static fragmentBounds(range: Range): Rect[] {
+        const parts = DecorationGroup.fragmentParts(range);
+        if (parts.length < 2) return [range.getBoundingClientRect()];
+
+        // Images and other element boxes, which text rects leave out, widen the part they're in.
+        const boxes = DecorationGroup.rangeBoxes(range, parts);
+        for (const box of Array.isArray(boxes) ? boxes : Array.from(boxes.getClientRects())) {
+            if (!box.width && !box.height) continue;
+            const part = parts.find(p => rectContainsPoint(p.column ?? p.text, ...DecorationGroup.center(box), 0));
+            if (part) part.text = getBoundingRect(part.text, box);
+            else parts.push({ text: box, run: 0, vertical: false });
+        }
+        return parts.map(p => p.text);
+    }
+
     /**
-     * Bounding rects of a range, one per column it runs across in multi-column containers, in document order.
+     * Text of a range, in one part per column it runs across in multi-column containers, in document order.
      * A line's column is the box holding it among the ones the container's child reports, one per column.
      */
-    private static fragmentBounds(range: Range): Rect[] {
+    private static fragmentParts(range: Range): FragmentPart[] {
         const wnd = range.startContainer.ownerDocument?.defaultView;
-        if (!wnd) return [range.getBoundingClientRect()];
+        if (!wnd) return [];
         const styles = new Map<Element, CSSStyleDeclaration>();
         const style = (el: Element) => styles.get(el) ?? styles.set(el, wnd.getComputedStyle(el)).get(el)!;
         const childBoxes = new Map<Node, Rect[]>();
@@ -887,12 +905,10 @@ class DecorationGroup {
             }
             return boxes;
         };
-        const center = (r: Rect) => [(r.left + r.right) / 2, (r.top + r.bottom) / 2] as const;
+        const center = DecorationGroup.center;
 
-        // A run is text in the same container, outside or inside the same column-spanning element.
-        type Part = { text: Rect; column?: Rect; run: number; vertical: boolean };
-        const parts: Part[] = [];
-        const overlap = (a: Part, b: Rect) => a.vertical ? a.column!.top < b.bottom && b.top < a.column!.bottom : a.column!.left < b.right && b.left < a.column!.right;
+        const parts: FragmentPart[] = [];
+        const overlap = (a: FragmentPart, b: Rect) => a.vertical ? a.column!.top < b.bottom && b.top < a.column!.bottom : a.column!.left < b.right && b.left < a.column!.right;
         let run = 0;
         let previous: [Element | null, Element | null] | undefined;
         for (const { node, rects } of getTextNodeClientRects(range, ["rt", "rp"])) {
@@ -929,18 +945,41 @@ class DecorationGroup {
                 merged = true;
             }
         }
-        if (parts.length < 2) return [range.getBoundingClientRect()];
+        return parts;
+    }
 
-        // Images and other element boxes, which text rects leave out, widen the part they're in.
-        for (const box of Array.from(range.getClientRects())) {
-            if (!box.width && !box.height) continue;
-            // A box holding several parts, such as a whole multi-column element, belongs to none of them.
-            if (parts.filter(p => rectContainsPoint(box, ...center(p.column ?? p.text), 0)).length > 1) continue;
-            const part = parts.find(p => rectContainsPoint(p.column ?? p.text, ...center(box), 0));
-            if (part) part.text = getBoundingRect(part.text, box);
-            else parts.push({ text: box, run: 0, vertical: false });
+    /**
+     * A range's boxes, without those holding several of its column parts, such as a whole multi-column element's.
+     * The range itself when nothing needs leaving out. Columns are only measured when the range holds such an element.
+     */
+    private static rangeBoxes(range: Range, parts = DecorationGroup.holdsMultiColumn(range) ? DecorationGroup.fragmentParts(range) : []): Range | Rect[] {
+        if (parts.length < 2) return range;
+        // Plain objects, since getClientRectsNoOverlap adjusts rects in place.
+        return Array.from(range.getClientRects(), ({ left, right, top, bottom, width, height }) => ({ left, right, top, bottom, width, height }))
+            .filter(box => parts.filter(p => rectContainsPoint(box, ...DecorationGroup.center(p.column ?? p.text), 0)).length < 2);
+    }
+
+    /** Whether a range holds the whole of a multi-column element, whose box then runs across its columns. */
+    private static holdsMultiColumn(range: Range): boolean {
+        const ancestor = range.commonAncestorContainer;
+        const doc = ancestor.ownerDocument;
+        const wnd = doc?.defaultView;
+        if (ancestor.nodeType !== Node.ELEMENT_NODE || !wnd) return false;
+        const walker = doc.createTreeWalker(ancestor, NodeFilter.SHOW_ELEMENT, {
+            acceptNode: node => range.intersectsNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT,
+        });
+        const elementRange = doc.createRange();
+        for (let el = walker.nextNode() as Element | null; el; el = walker.nextNode() as Element | null) {
+            const s = wnd.getComputedStyle(el);
+            if (s.columnCount === "auto" && s.columnWidth === "auto") continue;
+            elementRange.selectNode(el);
+            if (range.compareBoundaryPoints(Range.START_TO_START, elementRange) <= 0 && range.compareBoundaryPoints(Range.END_TO_END, elementRange) >= 0) return true;
         }
-        return parts.map(p => p.text);
+        return false;
+    }
+
+    private static center(r: Rect): readonly [number, number] {
+        return [(r.left + r.right) / 2, (r.top + r.bottom) / 2];
     }
 
     /** Index of the bounds holding a rect's center, or else the nearest along the inline axis, then the block axis. */
@@ -1228,7 +1267,7 @@ class DecorationGroup {
         const isWavyStrike = isStrikethrough && (decoStyle as BuiltinDecorationStyle).lineStyle === DecorationLineStyle.Wavy;
         // Styles drawing lines or strokes use text-node rects plus images and the like, so Ruby (rt/rp) doesn't
         // get its own segment above the base text; a range without text keeps its own boxes.
-        let rectSource: Range | Rect[] = item.range;
+        let rectSource: Range | Rect[] | undefined;
         let replacedRects: Rect[] = [];
         if (isLineDecoration || decoType === DecorationStyleType.Outline || decoType === DecorationStyleType.HighlightUnderline) {
             const textRects = getTextClientRects(item.range, ["rt", "rp"]);
@@ -1237,6 +1276,7 @@ class DecorationGroup {
                 rectSource = isLineDecoration ? textRects : [...textRects, ...replacedRects];
             }
         }
+        rectSource ??= DecorationGroup.rangeBoxes(item.range);
         // Line decorations are expanded after thinning below, so expand isn't merged in here.
         // Like CSS text decorations, their lines keep the base text's position; raised runs and images only lengthen them.
         let clientRects = DecorationGroup.mergeLineRects(getClientRectsNoOverlap(
@@ -1654,7 +1694,7 @@ class DecorationGroup {
             // For Boxes layout, merge rects first with expand baked in (same as highlights).
             const baseRects: Rect[] = layout === DecorationLayout.Bounds
                 ? bounds.map(b => ex ? { left: b.left - ex, top: b.top - ex, right: b.right + ex, bottom: b.bottom + ex, width: b.width + ex * 2, height: b.height + ex * 2 } : b)
-                : getClientRectsNoOverlap(item.range, false, false, ex);
+                : getClientRectsNoOverlap(DecorationGroup.rangeBoxes(item.range), false, false, ex);
 
             for (const rect of baseRects) {
                 let hole: DOMRect;

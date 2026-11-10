@@ -20,7 +20,8 @@ const flex = `<div class="flex"><p>${en}</p><p>${en.slice(0, 90)}</p></div>`;
 const float = `<div class="float"><p><img alt="">${en} ${en}</p></div>`;
 
 // With `cols`, the root is paginated in columns, as in the navigator: everything is laid out in its child, body.
-const cases: [string, string][] = params.has("cols")
+// A case with a selector decorates that element whole, as a locator without text does.
+const cases: [string, string, string?][] = params.has("cols")
     ? [
         ["Table in a column", table],
         ["Flex row in a column", flex],
@@ -32,6 +33,7 @@ const cases: [string, string][] = params.has("cols")
         ["Across the columns of an element", `<div class="columns short"><p>${en} ${en}</p></div>`],
         ["Into an element's columns", `<p>${en}</p><div class="columns short"><p>${en} ${en}</p></div>`],
         ["Through an element's columns", `<p>${en}</p><div class="columns short"><p>${en} ${en}</p></div><p>${en}</p>`],
+        ["An element's columns, whole", `<div class="columns short"><p>${en} ${en}</p></div>`, ".columns"],
         ["Across a spanning element", `<div class="columns"><p>${en}</p><p class="spanner">Spanning all columns</p><p>${en}</p></div>`],
         ["Table in a column of an element", `<div class="columns">${table}<p>${en}</p></div>`],
         ["Text directly in an element's columns", `<div class="columns short">${en} ${en}</div>`],
@@ -48,7 +50,7 @@ const style = {
 document.title = `Decorations across layouts: ${type}`;
 
 const main = document.querySelector("main")!;
-const decorations = cases.map(([label, html], i) => {
+const decorations = cases.map(([label, html, selector], i) => {
     const section = document.createElement("section");
     const heading = document.createElement("h2");
     heading.textContent = label;
@@ -57,6 +59,7 @@ const decorations = cases.map(([label, html], i) => {
     content.innerHTML = html;
     section.append(heading, content);
     main.append(section);
+    if (selector) return decorationFor(content.id, `#${content.id} ${selector}`, "", style);
     // Leaving out a few characters at both ends starts and ends the decoration mid-line.
     const text = content.textContent!;
     return decorationFor(content.id, `#${content.id}`, text.slice(12, -12), style);

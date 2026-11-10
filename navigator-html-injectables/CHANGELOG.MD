@@ -11,6 +11,7 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 
 - Decorations with `layout: bounds` or `width: bounds` whose text is split across the layout are drawn per part, instead of as one box covering all parts and the space between them, or only the first part with `width: page`
 - The `rect` of a decoration's activation and hover events is the box of the part under the pointer when its text is split across the layout, instead of one rect covering all parts
+- Decorations holding a whole multi-column element, such as one located by its selector, no longer draw, mask or react to the pointer over the box of that element, which covers all its columns and the space between them
 
 ## [2.10.1] – 2026-11-06
 
