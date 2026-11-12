@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor versions (marked **Breaking:**). Patch versions never contain breaking changes.
 
+## [1.3.0] – 2026-11-12
+
+### Added
+
+- `removeDropped` and `DROPPED` are exported, to remove the bracket or quote pairs that objects left out of plain text leave empty, per language, like `text.plain` does, e.g. `前（）後` → `前後`
+- Fixtures for an abbreviation's final period, mid-sentence and at sentence end, and for a link in a table cell
+
 ## [1.2.4] – 2026-11-10
 
 ### Added

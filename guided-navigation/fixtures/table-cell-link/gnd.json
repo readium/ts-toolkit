@@ -1,0 +1,48 @@
+{
+  "role": [
+    "table"
+  ],
+  "children": [
+    {
+      "role": [
+        "row"
+      ],
+      "children": [
+        {
+          "role": [
+            "columnheader"
+          ],
+          "text": {
+            "plain": "Keeper"
+          }
+        }
+      ]
+    },
+    {
+      "role": [
+        "row"
+      ],
+      "children": [
+        {
+          "role": [
+            "cell"
+          ],
+          "text": {
+            "plain": "Henry Winstanley himself",
+            "ssml": "Henry <readium:link id=\"link1\" /> himself",
+            "language": "en"
+          },
+          "children": [
+            {
+              "id": "link1",
+              "text": {
+                "plain": "Winstanley"
+              },
+              "textref": "c.html"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

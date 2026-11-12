@@ -1,0 +1,11 @@
+{
+  "id": "abbreviation-period-sentence-end",
+  "description": "An abbreviation's own final period also ends the sentence; its expansion is the sub's alias",
+  "role": "abbreviation",
+  "rolesCovered": [
+    "paragraph",
+    "abbreviation"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

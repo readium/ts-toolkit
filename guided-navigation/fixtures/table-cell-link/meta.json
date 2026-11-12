@@ -1,0 +1,14 @@
+{
+  "id": "table-cell-link",
+  "description": "A link in a table cell; the cell's plain keeps the link's words",
+  "role": "link",
+  "rolesCovered": [
+    "table",
+    "row",
+    "columnheader",
+    "cell",
+    "link"
+  ],
+  "sourceRef": "https://github.com/readium/guided-navigation/tree/main/examples/read-aloud",
+  "inputKind": "fragment"
+}

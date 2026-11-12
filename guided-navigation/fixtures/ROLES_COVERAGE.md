@@ -7,7 +7,7 @@ renaming, or removing a fixture.
 
 | Role | Fixtures |
 | --- | --- |
-| `abbreviation` | `abbreviation-acronym-html-native`, `abbreviation-before-formatting`, `abbreviation-before-image`, `abbreviation-html-native`, `abbreviation-language`, `abbreviation-line-break`, `abbreviation-nested`, `abbreviation-nested-emphasis`, `abbreviation-nested-term`, `abbreviation-nested-term-punctuation`, `abbreviation-no-title`, `abbreviation-spanning-terms`, `abbreviation-with-image`, `abbreviation-with-svg-and-math` |
+| `abbreviation` | `abbreviation-acronym-html-native`, `abbreviation-before-formatting`, `abbreviation-before-image`, `abbreviation-html-native`, `abbreviation-language`, `abbreviation-line-break`, `abbreviation-nested`, `abbreviation-nested-emphasis`, `abbreviation-nested-term`, `abbreviation-nested-term-punctuation`, `abbreviation-no-title`, `abbreviation-period-mid-sentence`, `abbreviation-period-sentence-end`, `abbreviation-spanning-terms`, `abbreviation-with-image`, `abbreviation-with-svg-and-math` |
 | `abstract` | `abstract-epub-type`, `abstract-role-aria` |
 | `accessible-name` | `accessible-name-labelledby-aria-hidden`, `accessible-name-labelledby-hidden-attribute` |
 | `acknowledgments` | `acknowledgments-epub-type`, `acknowledgments-role-aria` |
@@ -49,7 +49,7 @@ renaming, or removing a fixture.
 | `introduction` | `introduction-epub-type`, `introduction-role-aria` |
 | `landmarks` | `landmarks-epub-type` |
 | `language` | `language-block`, `language-block-empty-lang`, `language-document`, `language-empty-lang-stops-inheritance`, `language-inline-case-insensitive`, `language-inline-case-insensitive-ssml`, `language-inline-empty-lang`, `language-inline-empty-lang-formatted`, `language-inline-empty-lang-only`, `language-inline-empty-lang-undeclared`, `language-inline-lang-attribute`, `language-inline-nested`, `language-inline-repeated`, `language-inline-two-languages`, `language-xml-lang-empty-html-inherits`, `language-xml-lang-empty-html-lang-applies`, `language-xml-lang-empty-xhtml`, `language-xml-lang-over-lang` |
-| `link` | `language-link-switches`, `link-containing-image`, `link-containing-pagebreak`, `link-content-conversion`, `link-content-identity`, `link-content-words` |
+| `link` | `language-link-switches`, `link-containing-image`, `link-containing-pagebreak`, `link-content-conversion`, `link-content-identity`, `link-content-words`, `table-cell-link` |
 | `list` | `list-aria-posinset-setsize`, `list-epub-type`, `list-html-native`, `list-item-posinset-override`, `list-item-value-override`, `list-ordered-html-native`, `list-ordered-reversed`, `list-ordered-start`, `list-role-aria` |
 | `loa` | `loa-epub-type` |
 | `loi` | `loi-epub-type` |
@@ -81,4 +81,4 @@ renaming, or removing a fixture.
 | `toc` | `toc-epub-type`, `toc-role-aria` |
 | `video` | `video-html-native`, `video-no-description` |
 
-256 fixtures across 73 roles.
+259 fixtures across 73 roles.
