@@ -13,7 +13,7 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 
 ### Added
 
-- Fixture for a figure whose figcaption holds headings and paragraphs, from a fixed-layout comic page
+- Fixtures for a figure whose figcaption holds headings and paragraphs, from a fixed-layout comic page, a figure and a table with an `aria-label` and a caption, and a table labelled by its own caption
 
 ## [1.3.0] – 2026-11-12
 

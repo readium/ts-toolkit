@@ -760,6 +760,16 @@
     }
   },
   {
+    "id": "figure-aria-label-caption",
+    "dir": "figure-aria-label-caption",
+    "role": "figure",
+    "description": "A figure with an aria-label and a figcaption — the label becomes the figure's description and replaces its content, figcaption included",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "figure-basic-html-native",
     "dir": "figure-basic-html-native",
     "role": "figure",
@@ -2260,10 +2270,30 @@
     }
   },
   {
+    "id": "table-aria-label-caption",
+    "dir": "table-aria-label-caption",
+    "role": "table",
+    "description": "A table with an aria-label and a <caption> — the label becomes the table's description and the caption stays a caption child",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "table-caption",
     "dir": "table-caption",
     "role": "table",
     "description": "A table with an accessible name via aria-label — the {description} branch of table's own announcement template. A native <caption> stays a caption child instead (see table-caption-element-html-native)",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "table-caption-aria-labelledby",
+    "dir": "table-caption-aria-labelledby",
+    "role": "table",
+    "description": "A table labelled via aria-labelledby by its own <caption> — the caption text becomes the table's description, and the caption is still read as a caption child",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
