@@ -1,11 +1,9 @@
 {
-  "role": [
-    "audio"
-  ],
-  "audioref": "foghorn-recording.mp3",
+  "role": ["audio"],
   "description": {
     "text": {
       "plain": "Foghorn recording from the 1962 restoration"
     }
-  }
+  },
+  "audioref": "foghorn-recording.mp3"
 }

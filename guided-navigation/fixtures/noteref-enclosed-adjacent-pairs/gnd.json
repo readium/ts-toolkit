@@ -1,108 +1,84 @@
 {
   "children": [
     {
+      "role": ["paragraph"],
+      "text": {
+        "language": "en",
+        "plain": "Text, after.",
+        "ssml": "Text (<readium:noteref id=\"n\" />) (<readium:noteref id=\"m\" />), after."
+      },
       "children": [
         {
+          "role": ["noteref"],
           "id": "n",
-          "children": [
-            {
-              "role": [
-                "aside",
-                "footnote"
-              ],
-              "text": {
-                "plain": "Note."
-              }
-            }
-          ],
-          "role": [
-            "noteref"
-          ],
           "text": {
             "plain": "1"
-          }
-        },
-        {
-          "id": "m",
+          },
           "children": [
             {
-              "role": [
-                "aside",
-                "footnote"
-              ],
+              "role": ["aside", "footnote"],
               "text": {
                 "plain": "Note."
               }
             }
-          ],
-          "role": [
-            "noteref"
-          ],
+          ]
+        },
+        {
+          "role": ["noteref"],
+          "id": "m",
           "text": {
             "plain": "2"
-          }
+          },
+          "children": [
+            {
+              "role": ["aside", "footnote"],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ]
         }
-      ],
-      "role": [
-        "paragraph"
-      ],
-      "text": {
-        "plain": "Text, after.",
-        "ssml": "Text (<readium:noteref id=\"n\" />) (<readium:noteref id=\"m\" />), after.",
-        "language": "en"
-      }
+      ]
     },
     {
+      "role": ["paragraph"],
+      "text": {
+        "language": "en",
+        "plain": "Text more.",
+        "ssml": "Text (<readium:noteref id=\"o\" />) (<readium:noteref id=\"p\" />) more."
+      },
       "children": [
         {
+          "role": ["noteref"],
           "id": "o",
-          "children": [
-            {
-              "role": [
-                "aside",
-                "footnote"
-              ],
-              "text": {
-                "plain": "Note."
-              }
-            }
-          ],
-          "role": [
-            "noteref"
-          ],
           "text": {
             "plain": "3"
-          }
-        },
-        {
-          "id": "p",
+          },
           "children": [
             {
-              "role": [
-                "aside",
-                "footnote"
-              ],
+              "role": ["aside", "footnote"],
               "text": {
                 "plain": "Note."
               }
             }
-          ],
-          "role": [
-            "noteref"
-          ],
+          ]
+        },
+        {
+          "role": ["noteref"],
+          "id": "p",
           "text": {
             "plain": "4"
-          }
+          },
+          "children": [
+            {
+              "role": ["aside", "footnote"],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ]
         }
-      ],
-      "role": [
-        "paragraph"
-      ],
-      "text": {
-        "plain": "Text more.",
-        "ssml": "Text (<readium:noteref id=\"o\" />) (<readium:noteref id=\"p\" />) more.",
-        "language": "en"
-      }
+      ]
     }
   ]
 }

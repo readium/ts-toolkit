@@ -1,67 +1,53 @@
 {
   "children": [
     {
+      "role": ["paragraph"],
+      "text": {
+        "language": "en",
+        "plain": "The light passes through a Fresnel lens at the top.",
+        "ssml": "The light passes through a <readium:glossref id=\"glossref1\" /> at the top."
+      },
       "children": [
         {
+          "role": ["glossref"],
           "id": "glossref1",
+          "textref": "#fresnel-lens",
+          "text": {
+            "plain": "Fresnel lens"
+          },
           "children": [
             {
-              "role": [
-                "term"
-              ],
+              "role": ["term"],
               "text": {
                 "plain": "Fresnel lens"
               }
             },
             {
-              "role": [
-                "definition"
-              ],
+              "role": ["definition"],
               "text": {
                 "plain": "A compact lens for focusing light."
               }
             }
-          ],
-          "role": [
-            "glossref"
-          ],
-          "text": {
-            "plain": "Fresnel lens"
-          },
-          "textref": "#fresnel-lens"
+          ]
         }
-      ],
-      "role": [
-        "paragraph"
-      ],
-      "text": {
-        "plain": "The light passes through a Fresnel lens at the top.",
-        "ssml": "The light passes through a <readium:glossref id=\"glossref1\" /> at the top.",
-        "language": "en"
-      }
+      ]
     },
     {
+      "role": ["glossary"],
       "children": [
         {
+          "role": ["term"],
           "id": "fresnel-lens",
-          "role": [
-            "term"
-          ],
           "text": {
             "plain": "Fresnel lens"
           }
         },
         {
-          "role": [
-            "definition"
-          ],
+          "role": ["definition"],
           "text": {
             "plain": "A compact lens for focusing light."
           }
         }
-      ],
-      "role": [
-        "glossary"
       ]
     }
   ]

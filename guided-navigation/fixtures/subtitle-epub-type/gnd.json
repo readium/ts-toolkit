@@ -1,15 +1,11 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
+      "role": ["subtitle"],
       "text": {
         "plain": "A History of Coastal Lights"
-      },
-      "role": [
-        "subtitle"
-      ]
+      }
     }
   ]
 }

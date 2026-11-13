@@ -1,23 +1,14 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
-      "role": [
-        "navigation",
-        "lot"
-      ],
+      "role": ["navigation", "lot"],
       "children": [
         {
-          "role": [
-            "list"
-          ],
+          "role": ["list"],
           "children": [
             {
-              "role": [
-                "listItem"
-              ],
+              "role": ["listItem"],
               "children": [
                 {
                   "textref": "appendix.xhtml#table1",
@@ -28,9 +19,7 @@
               ]
             },
             {
-              "role": [
-                "listItem"
-              ],
+              "role": ["listItem"],
               "children": [
                 {
                   "textref": "appendix.xhtml#table2",

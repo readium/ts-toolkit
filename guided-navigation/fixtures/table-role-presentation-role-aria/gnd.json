@@ -1,35 +1,25 @@
 {
-  "role": [
-    "presentation"
-  ],
+  "role": ["presentation"],
   "children": [
     {
-      "role": [
-        "row"
-      ],
+      "role": ["row"],
       "children": [
         {
+          "role": ["columnheader"],
           "text": {
             "plain": "Name"
-          },
-          "role": [
-            "columnheader"
-          ]
+          }
         }
       ]
     },
     {
-      "role": [
-        "row"
-      ],
+      "role": ["row"],
       "children": [
         {
+          "role": ["cell"],
           "text": {
             "plain": "Ada"
-          },
-          "role": [
-            "cell"
-          ]
+          }
         }
       ]
     }

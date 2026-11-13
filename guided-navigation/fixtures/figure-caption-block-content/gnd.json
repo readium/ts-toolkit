@@ -1,38 +1,28 @@
 {
-  "role": [
-    "figure"
-  ],
+  "role": ["figure"],
   "children": [
     {
-      "imgref": "page1.jpg",
-      "role": [
-        "image"
-      ],
+      "role": ["image"],
       "description": {
         "text": {
           "plain": "Page 1"
         }
-      }
+      },
+      "imgref": "page1.jpg"
     },
     {
-      "role": [
-        "caption"
-      ],
+      "role": ["caption"],
       "children": [
         {
+          "role": ["heading1"],
           "id": "page1-panel1",
-          "role": [
-            "heading1"
-          ],
           "text": {
             "plain": "Panel 1"
           }
         },
         {
+          "role": ["paragraph"],
           "id": "page1-panel1-description",
-          "role": [
-            "paragraph"
-          ],
           "text": {
             "plain": "Pepper walks away from the house of the witches of Chaosah."
           }

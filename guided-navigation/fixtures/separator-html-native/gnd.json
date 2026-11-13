@@ -1,23 +1,17 @@
 {
   "children": [
     {
-      "role": [
-        "paragraph"
-      ],
+      "role": ["paragraph"],
       "text": {
         "plain": "Section one."
       }
     },
     {
-      "role": [
-        "separator"
-      ],
+      "role": ["separator"],
       "textref": "#css(hr)"
     },
     {
-      "role": [
-        "paragraph"
-      ],
+      "role": ["paragraph"],
       "text": {
         "plain": "Section two."
       }

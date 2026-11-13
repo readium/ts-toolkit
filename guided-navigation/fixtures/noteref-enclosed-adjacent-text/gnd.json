@@ -1,34 +1,27 @@
 {
+  "role": ["paragraph"],
+  "text": {
+    "language": "ja",
+    "plain": "前後",
+    "ssml": "前（<readium:noteref id=\"n\" />）後"
+  },
   "children": [
     {
+      "role": ["noteref"],
       "id": "n",
+      "text": {
+        "language": "ja",
+        "plain": "1"
+      },
       "children": [
         {
-          "role": [
-            "aside",
-            "footnote"
-          ],
+          "role": ["aside", "footnote"],
           "text": {
-            "plain": "注",
-            "language": "ja"
+            "language": "ja",
+            "plain": "注"
           }
         }
-      ],
-      "role": [
-        "noteref"
-      ],
-      "text": {
-        "plain": "1",
-        "language": "ja"
-      }
+      ]
     }
-  ],
-  "role": [
-    "paragraph"
-  ],
-  "text": {
-    "plain": "前後",
-    "ssml": "前（<readium:noteref id=\"n\" />）後",
-    "language": "ja"
-  }
+  ]
 }

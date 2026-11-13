@@ -1,67 +1,53 @@
 {
   "children": [
     {
+      "role": ["paragraph"],
+      "text": {
+        "language": "en",
+        "plain": "A café nearby.",
+        "ssml": "A <readium:glossref id=\"glossref1\" /> nearby."
+      },
       "children": [
         {
+          "role": ["glossref"],
           "id": "glossref1",
+          "textref": "#caf%C3%A9",
+          "text": {
+            "plain": "café"
+          },
           "children": [
             {
-              "role": [
-                "term"
-              ],
+              "role": ["term"],
               "text": {
                 "plain": "café"
               }
             },
             {
-              "role": [
-                "definition"
-              ],
+              "role": ["definition"],
               "text": {
                 "plain": "A coffee shop."
               }
             }
-          ],
-          "role": [
-            "glossref"
-          ],
-          "text": {
-            "plain": "café"
-          },
-          "textref": "#caf%C3%A9"
+          ]
         }
-      ],
-      "role": [
-        "paragraph"
-      ],
-      "text": {
-        "plain": "A café nearby.",
-        "ssml": "A <readium:glossref id=\"glossref1\" /> nearby.",
-        "language": "en"
-      }
+      ]
     },
     {
+      "role": ["glossary"],
       "children": [
         {
+          "role": ["term"],
           "id": "café",
-          "role": [
-            "term"
-          ],
           "text": {
             "plain": "café"
           }
         },
         {
-          "role": [
-            "definition"
-          ],
+          "role": ["definition"],
           "text": {
             "plain": "A coffee shop."
           }
         }
-      ],
-      "role": [
-        "glossary"
       ]
     }
   ]

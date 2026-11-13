@@ -1,9 +1,7 @@
 {
-  "role": [
-    "paragraph"
-  ],
+  "role": ["paragraph"],
   "text": {
-    "plain": "Hello world end.",
-    "language": "en"
+    "language": "en",
+    "plain": "Hello world end."
   }
 }

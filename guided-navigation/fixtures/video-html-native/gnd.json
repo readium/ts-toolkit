@@ -1,11 +1,9 @@
 {
-  "role": [
-    "video"
-  ],
-  "videoref": "lamp-mechanism.mp4",
+  "role": ["video"],
   "description": {
     "text": {
       "plain": "The lamp mechanism rotating at dusk"
     }
-  }
+  },
+  "videoref": "lamp-mechanism.mp4"
 }

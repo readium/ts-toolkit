@@ -1,43 +1,31 @@
 {
-  "role": [
-    "table"
-  ],
+  "role": ["table"],
   "children": [
     {
-      "role": [
-        "caption"
-      ],
+      "role": ["caption"],
       "text": {
         "plain": "Team roster"
       }
     },
     {
-      "role": [
-        "row"
-      ],
+      "role": ["row"],
       "children": [
         {
+          "role": ["columnheader"],
           "text": {
             "plain": "Name"
-          },
-          "role": [
-            "columnheader"
-          ]
+          }
         }
       ]
     },
     {
-      "role": [
-        "row"
-      ],
+      "role": ["row"],
       "children": [
         {
+          "role": ["cell"],
           "text": {
             "plain": "Ada"
-          },
-          "role": [
-            "cell"
-          ]
+          }
         }
       ]
     }

@@ -1,20 +1,14 @@
 {
-  "role": [
-    "figure"
-  ],
+  "role": ["figure"],
   "children": [
     {
-      "role": [
-        "preformatted"
-      ],
+      "role": ["preformatted"],
       "text": {
         "plain": "/\\_/\\ ( o.o ) ^"
       }
     },
     {
-      "role": [
-        "caption"
-      ],
+      "role": ["caption"],
       "text": {
         "plain": "ASCII Art of a cat face"
       }

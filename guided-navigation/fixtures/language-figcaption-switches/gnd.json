@@ -1,28 +1,22 @@
 {
+  "role": ["figure"],
   "children": [
     {
-      "imgref": "a.png",
-      "role": [
-        "image"
-      ],
+      "role": ["image"],
       "description": {
         "text": {
-          "plain": "x",
-          "language": "fr"
+          "language": "fr",
+          "plain": "x"
         }
-      }
+      },
+      "imgref": "a.png"
     },
     {
-      "role": [
-        "caption"
-      ],
+      "role": ["caption"],
       "text": {
-        "ssml": "Le <lang xml:lang=\"en\">cat</lang> dort",
-        "language": "fr"
+        "language": "fr",
+        "ssml": "Le <lang xml:lang=\"en\">cat</lang> dort"
       }
     }
-  ],
-  "role": [
-    "figure"
   ]
 }

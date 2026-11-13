@@ -1,9 +1,7 @@
 {
-  "role": [
-    "backlink"
-  ],
+  "role": ["backlink"],
+  "textref": "#ref1",
   "text": {
     "plain": "Return to reference"
-  },
-  "textref": "#ref1"
+  }
 }

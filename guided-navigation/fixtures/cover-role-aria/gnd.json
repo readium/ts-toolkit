@@ -1,12 +1,9 @@
 {
-  "role": [
-    "image",
-    "cover"
-  ],
-  "imgref": "cover.jpg",
+  "role": ["image", "cover"],
   "description": {
     "text": {
       "plain": "Lighthouses of the Atlantic, by J. Smith"
     }
-  }
+  },
+  "imgref": "cover.jpg"
 }

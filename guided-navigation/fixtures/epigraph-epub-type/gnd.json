@@ -1,15 +1,11 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
+      "role": ["epigraph"],
       "text": {
         "plain": "A lighthouse is a compromise with the sea. — Anonymous"
-      },
-      "role": [
-        "epigraph"
-      ]
+      }
     }
   ]
 }

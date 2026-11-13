@@ -1,32 +1,24 @@
 {
+  "role": ["table"],
   "children": [
     {
+      "role": ["row"],
       "children": [
         {
-          "role": [
-            "rowheader"
-          ],
+          "role": ["rowheader"],
           "text": {
-            "ssml": "<sub alias=\"World Health Organization\">WHO</sub>",
-            "language": "en"
+            "language": "en",
+            "ssml": "<sub alias=\"World Health Organization\">WHO</sub>"
           }
         },
         {
-          "role": [
-            "cell"
-          ],
+          "role": ["cell"],
           "text": {
-            "ssml": "Leads the <sub alias=\"International Health Regulations\">IHR</sub> work",
-            "language": "en"
+            "language": "en",
+            "ssml": "Leads the <sub alias=\"International Health Regulations\">IHR</sub> work"
           }
         }
-      ],
-      "role": [
-        "row"
       ]
     }
-  ],
-  "role": [
-    "table"
   ]
 }

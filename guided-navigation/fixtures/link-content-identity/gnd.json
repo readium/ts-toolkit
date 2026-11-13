@@ -1,7 +1,13 @@
 {
+  "text": {
+    "language": "en",
+    "plain": "Next: The storm arrives.",
+    "ssml": "Next: <readium:link id=\"link1\" />"
+  },
   "children": [
     {
       "id": "link1",
+      "textref": "chapter2.xhtml",
       "children": [
         {
           "id": "ch2-teaser",
@@ -9,13 +15,7 @@
             "plain": "The storm arrives."
           }
         }
-      ],
-      "textref": "chapter2.xhtml"
+      ]
     }
-  ],
-  "text": {
-    "plain": "Next: The storm arrives.",
-    "ssml": "Next: <readium:link id=\"link1\" />",
-    "language": "en"
-  }
+  ]
 }

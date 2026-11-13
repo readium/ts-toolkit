@@ -1,16 +1,12 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
+      "role": ["biblioref"],
       "textref": "#smith1988",
       "text": {
         "plain": "See Smith, 1988"
-      },
-      "role": [
-        "biblioref"
-      ]
+      }
     }
   ]
 }

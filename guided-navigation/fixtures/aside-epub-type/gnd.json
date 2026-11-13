@@ -1,15 +1,11 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
+      "role": ["aside"],
       "text": {
         "plain": "A tangential note, set apart from the main text."
-      },
-      "role": [
-        "aside"
-      ]
+      }
     }
   ]
 }

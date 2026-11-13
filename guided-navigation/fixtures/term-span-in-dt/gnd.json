@@ -1,24 +1,18 @@
 {
+  "role": ["glossary"],
   "children": [
     {
+      "role": ["term"],
       "id": "lens",
-      "role": [
-        "term"
-      ],
       "text": {
         "plain": "Lens"
       }
     },
     {
-      "role": [
-        "definition"
-      ],
+      "role": ["definition"],
       "text": {
         "plain": "A piece of glass that focuses light."
       }
     }
-  ],
-  "role": [
-    "glossary"
   ]
 }

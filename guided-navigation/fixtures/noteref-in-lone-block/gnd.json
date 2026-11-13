@@ -1,29 +1,24 @@
 {
+  "text": {
+    "language": "en",
+    "plain": "Text here.",
+    "ssml": "Text \"<readium:noteref id=\"n\" />\" here."
+  },
   "children": [
     {
+      "role": ["noteref"],
       "id": "n",
+      "text": {
+        "plain": "1"
+      },
       "children": [
         {
-          "role": [
-            "aside",
-            "footnote"
-          ],
+          "role": ["aside", "footnote"],
           "text": {
             "plain": "Note."
           }
         }
-      ],
-      "role": [
-        "noteref"
-      ],
-      "text": {
-        "plain": "1"
-      }
+      ]
     }
-  ],
-  "text": {
-    "plain": "Text here.",
-    "ssml": "Text \"<readium:noteref id=\"n\" />\" here.",
-    "language": "en"
-  }
+  ]
 }

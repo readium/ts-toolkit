@@ -1,13 +1,8 @@
 {
-  "role": [
-    "section",
-    "part"
-  ],
+  "role": ["section", "part"],
   "children": [
     {
-      "role": [
-        "heading1"
-      ],
+      "role": ["heading1"],
       "text": {
         "plain": "Title of the part"
       }

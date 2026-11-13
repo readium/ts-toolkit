@@ -1,18 +1,11 @@
 {
-  "role": [
-    "navigation",
-    "pagelist"
-  ],
+  "role": ["navigation", "pagelist"],
   "children": [
     {
-      "role": [
-        "list"
-      ],
+      "role": ["list"],
       "children": [
         {
-          "role": [
-            "listItem"
-          ],
+          "role": ["listItem"],
           "children": [
             {
               "textref": "#pg1",
@@ -23,9 +16,7 @@
           ]
         },
         {
-          "role": [
-            "listItem"
-          ],
+          "role": ["listItem"],
           "children": [
             {
               "textref": "#pg2",
@@ -36,9 +27,7 @@
           ]
         },
         {
-          "role": [
-            "listItem"
-          ],
+          "role": ["listItem"],
           "children": [
             {
               "textref": "#pg3",

@@ -1,15 +1,11 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
+      "role": ["afterword"],
       "text": {
         "plain": "Years later, the last lighthouse keeper reflects on automation."
-      },
-      "role": [
-        "afterword"
-      ]
+      }
     }
   ]
 }

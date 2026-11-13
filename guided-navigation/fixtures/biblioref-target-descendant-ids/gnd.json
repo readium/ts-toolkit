@@ -1,89 +1,74 @@
 {
   "children": [
     {
+      "role": ["paragraph"],
+      "text": {
+        "language": "en",
+        "plain": "See 1.",
+        "ssml": "See <readium:biblioref id=\"biblioref1\" />."
+      },
       "children": [
         {
+          "role": ["biblioref"],
           "id": "biblioref1",
-          "children": [
-            {
-              "children": [
-                {
-                  "children": [
-                    {
-                      "id": "link1",
-                      "text": {
-                        "plain": "book"
-                      },
-                      "textref": "book.html"
-                    }
-                  ],
-                  "role": [
-                    "paragraph"
-                  ],
-                  "text": {
-                    "plain": "Entry book.",
-                    "ssml": "Entry <readium:link id=\"link1\" />.",
-                    "language": "en"
-                  }
-                }
-              ],
-              "role": [
-                "listItem"
-              ]
-            }
-          ],
-          "role": [
-            "biblioref"
-          ],
+          "textref": "#entry",
           "text": {
             "plain": "1"
           },
-          "textref": "#entry"
+          "children": [
+            {
+              "role": ["listItem"],
+              "children": [
+                {
+                  "role": ["paragraph"],
+                  "text": {
+                    "language": "en",
+                    "plain": "Entry book.",
+                    "ssml": "Entry <readium:link id=\"link1\" />."
+                  },
+                  "children": [
+                    {
+                      "id": "link1",
+                      "textref": "book.html",
+                      "text": {
+                        "plain": "book"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
-      ],
-      "role": [
-        "paragraph"
-      ],
-      "text": {
-        "plain": "See 1.",
-        "ssml": "See <readium:biblioref id=\"biblioref1\" />.",
-        "language": "en"
-      }
+      ]
     },
     {
+      "role": ["list", "bibliography"],
       "children": [
         {
+          "role": ["listItem"],
           "id": "entry",
           "children": [
             {
+              "role": ["paragraph"],
               "id": "details",
+              "text": {
+                "language": "en",
+                "plain": "Entry book.",
+                "ssml": "Entry <readium:link id=\"lnk\" />."
+              },
               "children": [
                 {
                   "id": "lnk",
+                  "textref": "book.html",
                   "text": {
                     "plain": "book"
-                  },
-                  "textref": "book.html"
+                  }
                 }
-              ],
-              "role": [
-                "paragraph"
-              ],
-              "text": {
-                "plain": "Entry book.",
-                "ssml": "Entry <readium:link id=\"lnk\" />.",
-                "language": "en"
-              }
+              ]
             }
-          ],
-          "role": [
-            "listItem"
           ]
         }
-      ],
-      "role": [
-        "list",
-        "bibliography"
       ]
     }
   ]

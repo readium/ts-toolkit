@@ -1,28 +1,22 @@
 {
+  "role": ["figure"],
   "children": [
     {
-      "imgref": "a.png",
-      "role": [
-        "image"
-      ],
+      "role": ["image"],
       "description": {
         "text": {
-          "plain": "Un chien",
-          "language": "fr"
+          "language": "fr",
+          "plain": "Un chien"
         }
-      }
+      },
+      "imgref": "a.png"
     },
     {
-      "role": [
-        "caption"
-      ],
+      "role": ["caption"],
       "text": {
-        "plain": "A dog",
-        "language": "en"
+        "language": "en",
+        "plain": "A dog"
       }
     }
-  ],
-  "role": [
-    "figure"
   ]
 }

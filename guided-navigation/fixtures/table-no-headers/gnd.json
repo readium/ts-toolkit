@@ -1,51 +1,37 @@
 {
-  "role": [
-    "table"
-  ],
+  "role": ["table"],
   "children": [
     {
-      "role": [
-        "row"
-      ],
+      "role": ["row"],
       "children": [
         {
+          "role": ["cell"],
           "text": {
             "plain": "Ada"
-          },
-          "role": [
-            "cell"
-          ]
+          }
         },
         {
+          "role": ["cell"],
           "text": {
             "plain": "Engineer"
-          },
-          "role": [
-            "cell"
-          ]
+          }
         }
       ]
     },
     {
-      "role": [
-        "row"
-      ],
+      "role": ["row"],
       "children": [
         {
+          "role": ["cell"],
           "text": {
             "plain": "Grace"
-          },
-          "role": [
-            "cell"
-          ]
+          }
         },
         {
+          "role": ["cell"],
           "text": {
             "plain": "Admiral"
-          },
-          "role": [
-            "cell"
-          ]
+          }
         }
       ]
     }

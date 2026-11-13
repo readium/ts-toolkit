@@ -1,9 +1,7 @@
 {
   "children": [
     {
-      "role": [
-        "paragraph"
-      ],
+      "role": ["paragraph"],
       "text": {
         "language": "en",
         "plain": "Into speech. see glossary entry",
@@ -20,9 +18,7 @@
       ]
     },
     {
-      "role": [
-        "paragraph"
-      ],
+      "role": ["paragraph"],
       "text": {
         "plain": "synthesized speech can be created."
       }

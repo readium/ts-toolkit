@@ -1,13 +1,9 @@
 {
-  "role": [
-    "figure"
-  ],
+  "role": ["figure"],
   "children": [
     {
-      "imgref": "unlabeled-chart.png",
-      "role": [
-        "image"
-      ]
+      "role": ["image"],
+      "imgref": "unlabeled-chart.png"
     }
   ]
 }

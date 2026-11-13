@@ -1,124 +1,98 @@
 {
   "children": [
     {
+      "role": ["paragraph"],
+      "text": {
+        "language": "de",
+        "plain": "Das Wort hier, dort.",
+        "ssml": "Das Wort „<readium:noteref id=\"n\" />“ hier, »<readium:noteref id=\"m\" />« dort."
+      },
       "children": [
         {
+          "role": ["noteref"],
           "id": "n",
+          "text": {
+            "language": "de",
+            "plain": "1"
+          },
           "children": [
             {
-              "role": [
-                "aside",
-                "footnote"
-              ],
+              "role": ["aside", "footnote"],
               "text": {
                 "plain": "Note."
               }
             }
-          ],
-          "role": [
-            "noteref"
-          ],
-          "text": {
-            "plain": "1",
-            "language": "de"
-          }
+          ]
         },
         {
+          "role": ["noteref"],
           "id": "m",
+          "text": {
+            "language": "de",
+            "plain": "2"
+          },
           "children": [
             {
-              "role": [
-                "aside",
-                "footnote"
-              ],
+              "role": ["aside", "footnote"],
               "text": {
                 "plain": "Note."
               }
             }
-          ],
-          "role": [
-            "noteref"
-          ],
-          "text": {
-            "plain": "2",
-            "language": "de"
-          }
+          ]
         }
-      ],
-      "role": [
-        "paragraph"
-      ],
-      "text": {
-        "plain": "Das Wort hier, dort.",
-        "ssml": "Das Wort „<readium:noteref id=\"n\" />“ hier, »<readium:noteref id=\"m\" />« dort.",
-        "language": "de"
-      }
+      ]
     },
     {
-      "children": [
-        {
-          "id": "o",
-          "children": [
-            {
-              "role": [
-                "aside",
-                "footnote"
-              ],
-              "text": {
-                "plain": "Note."
-              }
-            }
-          ],
-          "role": [
-            "noteref"
-          ],
-          "text": {
-            "plain": "3",
-            "language": "de"
-          }
-        }
-      ],
-      "role": [
-        "paragraph"
-      ],
+      "role": ["paragraph"],
       "text": {
+        "language": "de",
         "plain": "Er sagt «Hallo» «Welt».",
-        "ssml": "Er sagt «Hallo»<readium:noteref id=\"o\" /> «Welt».",
-        "language": "de"
-      }
-    },
-    {
+        "ssml": "Er sagt «Hallo»<readium:noteref id=\"o\" /> «Welt»."
+      },
       "children": [
         {
-          "id": "p",
+          "role": ["noteref"],
+          "id": "o",
+          "text": {
+            "language": "de",
+            "plain": "3"
+          },
           "children": [
             {
-              "role": [
-                "aside",
-                "footnote"
-              ],
+              "role": ["aside", "footnote"],
               "text": {
                 "plain": "Note."
               }
             }
-          ],
-          "role": [
-            "noteref"
-          ],
-          "text": {
-            "plain": "4",
-            "language": "de"
-          }
+          ]
         }
-      ],
-      "role": [
-        "paragraph"
-      ],
+      ]
+    },
+    {
+      "role": ["paragraph"],
       "text": {
+        "language": "de",
         "plain": "Er sagt »Hallo« »Welt«.",
-        "ssml": "Er sagt »Hallo«<readium:noteref id=\"p\" /> »Welt«.",
-        "language": "de"
-      }
+        "ssml": "Er sagt »Hallo«<readium:noteref id=\"p\" /> »Welt«."
+      },
+      "children": [
+        {
+          "role": ["noteref"],
+          "id": "p",
+          "text": {
+            "language": "de",
+            "plain": "4"
+          },
+          "children": [
+            {
+              "role": ["aside", "footnote"],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

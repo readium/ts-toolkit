@@ -1,35 +1,31 @@
 {
+  "role": ["paragraph"],
+  "text": {
+    "language": "en",
+    "plain": "See the coastal map for locations.",
+    "ssml": "See the <readium:link id=\"link1\" /> for locations."
+  },
   "children": [
     {
       "id": "link1",
-      "text": {
-        "plain": "coastal map",
-        "ssml": "<readium:image id=\"image1\" /> coastal map",
-        "language": "en"
-      },
       "textref": "map.xhtml",
+      "text": {
+        "language": "en",
+        "plain": "coastal map",
+        "ssml": "<readium:image id=\"image1\" /> coastal map"
+      },
       "children": [
         {
+          "role": ["image"],
           "id": "image1",
-          "imgref": "images/lighthouse.png",
-          "role": [
-            "image"
-          ],
           "description": {
             "text": {
               "plain": "Lighthouse"
             }
-          }
+          },
+          "imgref": "images/lighthouse.png"
         }
       ]
     }
-  ],
-  "role": [
-    "paragraph"
-  ],
-  "text": {
-    "plain": "See the coastal map for locations.",
-    "ssml": "See the <readium:link id=\"link1\" /> for locations.",
-    "language": "en"
-  }
+  ]
 }
