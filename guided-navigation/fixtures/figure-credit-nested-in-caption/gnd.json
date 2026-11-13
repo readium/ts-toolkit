@@ -21,6 +21,11 @@
       "children": [
         {
           "text": {
+            "plain": "Computer and speech synthesiser housing used by Stephen Hawking in 1999"
+          }
+        },
+        {
+          "text": {
             "plain": "Photo: Science Museum London, CC BY-SA 2.0."
           },
           "role": [
@@ -29,10 +34,5 @@
         }
       ]
     }
-  ],
-  "description": {
-    "text": {
-      "plain": "Computer and speech synthesiser housing used by Stephen Hawking in 1999"
-    }
-  }
+  ]
 }

@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor versions (marked **Breaking:**). Patch versions never contain breaking changes.
 
+## [Unreleased]
+
+### Changed
+
+- **Breaking:** a `<figcaption>` or table `<caption>` is no longer folded into its figure's or table's `description`. It stays a `caption` object, so a caption holding headings and paragraphs keeps their text instead of flattening it into one description. A figure or table still gets a `description` from `aria-label`, `aria-labelledby` or `aria-describedby`
+
+### Added
+
+- Fixture for a figure whose figcaption holds headings and paragraphs, from a fixed-layout comic page
+
 ## [1.3.0] – 2026-11-12
 
 ### Added

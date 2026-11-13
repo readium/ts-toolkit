@@ -11,15 +11,18 @@
           "language": "fr"
         }
       }
+    },
+    {
+      "role": [
+        "caption"
+      ],
+      "text": {
+        "plain": "A dog",
+        "language": "en"
+      }
     }
   ],
   "role": [
     "figure"
-  ],
-  "description": {
-    "text": {
-      "plain": "A dog",
-      "language": "en"
-    }
-  }
+  ]
 }

@@ -32,20 +32,11 @@ function nodeText(root: Node, excludeExplicitRoles: boolean, languages: Set<stri
   return text;
 }
 
-function normalizedText(root: Node, excludeExplicitRoles: boolean): NodeText {
-  const languages = new Set<string>();
-  const text = normalizeWhitespace(nodeText(root, excludeExplicitRoles, languages), true).trim();
-  return { text, language: sharedLanguage(languages) };
-}
-
 /** Normalized (whitespace-coalesced and trimmed) text content of a node's subtree, and its language. */
 export function normalizedNodeText(el: Node): NodeText {
-  return normalizedText(el, false);
-}
-
-/** Same as `normalizedNodeText`, excluding explicitly-role-bearing descendants. */
-export function normalizedNodeTextExcludingExplicitRoles(el: Node): NodeText {
-  return normalizedText(el, true);
+  const languages = new Set<string>();
+  const text = normalizeWhitespace(nodeText(el, false, languages), true).trim();
+  return { text, language: sharedLanguage(languages) };
 }
 
 /**

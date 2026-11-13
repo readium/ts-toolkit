@@ -4,7 +4,6 @@ import { extractNodeRoles, hasExplicitRole } from "./roles.ts";
 import {
   extractNodeAria,
   normalizedNodeText,
-  normalizedNodeTextExcludingExplicitRoles,
   convertElementToSSMLTag,
   skippedElements,
 } from "./a11y.ts";
@@ -88,11 +87,6 @@ export class Converter {
 
   private root = new NavObject();
   private current = this.root;
-
-  // Captions whose text was already folded into a table's `description` —
-  // only these specific elements go silent, not the whole table (rows/cells
-  // still need their own text).
-  private foldedCaptions = new Set<Element>();
 
   private segments: Segment[] = [];
   private textAcc = "";
@@ -180,12 +174,11 @@ export class Converter {
   }
 
   // An explicit-role descendant is content in its own right and skips
-  // inherited `noText` — except `caption`, always the already-folded source.
+  // inherited `noText` — except `caption`, which the figure's ARIA name replaces.
   private descend(el: Element, roles: GndRole[]) {
     const node = new NavObject();
     node.el = el;
-    node.noText =
-      this.foldedCaptions.has(el) || ((!hasExplicitRole(el) || roles.includes("caption")) && this.current.noText);
+    node.noText = (!hasExplicitRole(el) || roles.includes("caption")) && this.current.noText;
     this.current.children.push(node);
     this.current.hasChildBlock = true;
     this.current = node;
@@ -328,41 +321,11 @@ export class Converter {
       if (roles.includes("figure")) {
         this.current.noText = true;
       }
-    } else if (roles.includes("figure")) {
-      const caption = this.implicitCaptionOf(el);
-      if (caption) {
-        // Not suppressed — walked normally so a nested explicit-role
-        // descendant (e.g. a credit) still speaks.
-        const { text, language } = normalizedNodeTextExcludingExplicitRoles(caption);
-        if (text) {
-          setDescription(cur, text, language);
-          this.current.noText = true;
-        }
-      }
-    } else if (roles.includes("table")) {
-      const caption = this.implicitCaptionOf(el);
-      if (caption) {
-        const { text, language } = normalizedNodeTextExcludingExplicitRoles(caption);
-        if (text) {
-          setDescription(cur, text, language);
-          this.foldedCaptions.add(caption);
-        }
-      }
     }
     const id = el.getAttribute("id");
     if (id) cur.id = id;
 
     return false;
-  }
-
-  // HTML-AAM implicit name: a table/figure with no explicit ARIA name folds
-  // its native/ARIA caption child's text in as its own description instead
-  // of speaking that child separately.
-  private implicitCaptionOf(el: Element): Element | null {
-    for (let c = el.firstElementChild; c; c = c.nextElementSibling) {
-      if (extractNodeRoles(c).includes("caption") && !c.getAttribute("aria-labelledby")) return c;
-    }
-    return null;
   }
 
   private tail(el: Element, wasSkip: boolean, parent: NavObject) {

@@ -15,6 +15,12 @@
     {
       "children": [
         {
+          "text": {
+            "plain": "Un chat",
+            "language": "fr"
+          }
+        },
+        {
           "role": [
             "credit"
           ],
@@ -31,11 +37,5 @@
   ],
   "role": [
     "figure"
-  ],
-  "description": {
-    "text": {
-      "plain": "Un chat",
-      "language": "fr"
-    }
-  }
+  ]
 }

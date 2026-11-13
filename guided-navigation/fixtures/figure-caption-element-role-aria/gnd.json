@@ -2,10 +2,22 @@
   "role": [
     "figure"
   ],
-  "textref": "#css(div%3Anth-child(1))",
-  "description": {
-    "text": {
-      "plain": "ASCII Art of a cat face"
+  "children": [
+    {
+      "role": [
+        "preformatted"
+      ],
+      "text": {
+        "plain": "/\\_/\\ ( o.o ) ^"
+      }
+    },
+    {
+      "role": [
+        "caption"
+      ],
+      "text": {
+        "plain": "ASCII Art of a cat face"
+      }
     }
-  }
+  ]
 }

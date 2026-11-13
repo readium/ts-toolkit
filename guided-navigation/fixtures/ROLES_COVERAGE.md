@@ -37,7 +37,7 @@ renaming, or removing a fixture.
 | `epilogue` | `epilogue-epub-type`, `epilogue-role-aria` |
 | `errata` | `errata-epub-type`, `errata-role-aria` |
 | `example` | `example-epub-type`, `example-role-aria` |
-| `figure` | `figure-basic-html-native`, `figure-basic-role-aria`, `figure-caption-element-html-native`, `figure-caption-element-role-aria`, `figure-caption-html-native`, `figure-caption-role-aria`, `figure-credit-nested-in-aria-labelledby-caption`, `figure-credit-nested-in-caption`, `figure-credit-role-aria`, `figure-describedby`, `figure-epub-type`, `figure-no-description`, `language-describedby-shared`, `language-figcaption`, `language-figcaption-credit`, `language-figcaption-switches`, `language-figcaption-switches-throughout` |
+| `figure` | `figure-basic-html-native`, `figure-basic-role-aria`, `figure-caption-block-content`, `figure-caption-element-html-native`, `figure-caption-element-role-aria`, `figure-caption-html-native`, `figure-caption-role-aria`, `figure-credit-nested-in-aria-labelledby-caption`, `figure-credit-nested-in-caption`, `figure-credit-role-aria`, `figure-describedby`, `figure-epub-type`, `figure-no-description`, `language-describedby-shared`, `language-figcaption`, `language-figcaption-credit`, `language-figcaption-switches`, `language-figcaption-switches-throughout` |
 | `footnote` | `footnote-epub-type`, `footnote-role-aria`, `noteref-target-in-endnotes-epub-type`, `noteref-target-in-endnotes-role-aria` |
 | `foreword` | `foreword-epub-type`, `foreword-role-aria` |
 | `glossary` | `glossary-epub-type`, `glossary-role-aria` |
@@ -81,4 +81,4 @@ renaming, or removing a fixture.
 | `toc` | `toc-epub-type`, `toc-role-aria` |
 | `video` | `video-html-native`, `video-no-description` |
 
-259 fixtures across 73 roles.
+260 fixtures across 73 roles.

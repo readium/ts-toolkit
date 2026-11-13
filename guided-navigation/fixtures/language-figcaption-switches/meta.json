@@ -1,6 +1,6 @@
 {
   "id": "language-figcaption-switches",
-  "description": "A figure's caption description has no language when its text switches language",
+  "description": "A figure's caption marks its language switch in SSML",
   "role": "figure",
   "rolesCovered": [
     "figure",

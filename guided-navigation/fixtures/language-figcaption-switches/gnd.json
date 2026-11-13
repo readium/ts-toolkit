@@ -11,14 +11,18 @@
           "language": "fr"
         }
       }
+    },
+    {
+      "role": [
+        "caption"
+      ],
+      "text": {
+        "ssml": "Le <lang xml:lang=\"en\">cat</lang> dort",
+        "language": "fr"
+      }
     }
   ],
   "role": [
     "figure"
-  ],
-  "description": {
-    "text": {
-      "plain": "Le cat dort"
-    }
-  }
+  ]
 }

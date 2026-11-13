@@ -2,12 +2,15 @@
   "role": [
     "table"
   ],
-  "description": {
-    "text": {
-      "plain": "Team roster"
-    }
-  },
   "children": [
+    {
+      "role": [
+        "caption"
+      ],
+      "text": {
+        "plain": "Team roster"
+      }
+    },
     {
       "role": [
         "row"

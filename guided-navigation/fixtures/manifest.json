@@ -780,10 +780,20 @@
     }
   },
   {
+    "id": "figure-caption-block-content",
+    "dir": "figure-caption-block-content",
+    "role": "figure",
+    "description": "A figure whose figcaption holds a heading and a paragraph, as on a fixed-layout comic page. The figcaption stays a caption child whose blocks keep their own text, and the figure gets no description",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "figure-caption-element-html-native",
     "dir": "figure-caption-element-html-native",
     "role": "figure",
-    "description": "A native <figure><figcaption> with no explicit aria-labelledby — the figcaption's text folds into the figure's own description (HTML-AAM implicit name), and the figcaption is not spoken as a separate child. Contrast with figure-caption-html-native, which has an explicit aria-labelledby pointing at the same figcaption.",
+    "description": "A native <figure><figcaption> with no explicit aria-labelledby — the figcaption stays a separate child with role \"caption\", and the figure gets no description. Contrast with figure-caption-html-native, which has an explicit aria-labelledby pointing at the same figcaption.",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -793,7 +803,7 @@
     "id": "figure-caption-element-role-aria",
     "dir": "figure-caption-element-role-aria",
     "role": "figure",
-    "description": "A role=\"figure\" with a role=\"caption\" child and no explicit aria-labelledby — the caption's text folds into the figure's own description, same as the native <figcaption> case, and isn't spoken as a separate child.",
+    "description": "A role=\"figure\" with a role=\"caption\" child and no explicit aria-labelledby — the caption stays a separate child with role \"caption\", same as the native <figcaption> case.",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -833,7 +843,7 @@
     "id": "figure-credit-nested-in-caption",
     "dir": "figure-credit-nested-in-caption",
     "role": "figure",
-    "description": "A figure with an implicit (figcaption) caption whose credit is nested inside it as a role=\"doc-credit\" span, rather than a sibling",
+    "description": "A figure with a figcaption and no aria-labelledby, whose credit is nested inside the figcaption as a role=\"doc-credit\" span, rather than a sibling",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -843,7 +853,7 @@
     "id": "figure-credit-role-aria",
     "dir": "figure-credit-role-aria",
     "role": "figure",
-    "description": "A figure with an implicit (figcaption) caption and a sibling credit line, via explicit ARIA role=\"doc-credit\" on a <p>",
+    "description": "A figure with a figcaption and no aria-labelledby, and a sibling credit line, via explicit ARIA role=\"doc-credit\" on a <p>",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -1243,7 +1253,7 @@
     "id": "language-figcaption",
     "dir": "language-figcaption",
     "role": "figure",
-    "description": "A figure's implicit caption description is in the caption's language",
+    "description": "A figure's caption is in the caption's language",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -1253,7 +1263,7 @@
     "id": "language-figcaption-credit",
     "dir": "language-figcaption-credit",
     "role": "figure",
-    "description": "A figure's caption description language ignores a credit spoken separately",
+    "description": "A figure's caption text and its nested credit each keep their own language",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -1263,7 +1273,7 @@
     "id": "language-figcaption-switches",
     "dir": "language-figcaption-switches",
     "role": "figure",
-    "description": "A figure's caption description has no language when its text switches language",
+    "description": "A figure's caption marks its language switch in SSML",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -1273,7 +1283,7 @@
     "id": "language-figcaption-switches-throughout",
     "dir": "language-figcaption-switches-throughout",
     "role": "figure",
-    "description": "A figure's caption description is in the language its text switches to throughout",
+    "description": "A figure's caption is in the language its text switches to throughout",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -2253,7 +2263,7 @@
     "id": "table-caption",
     "dir": "table-caption",
     "role": "table",
-    "description": "A table with an accessible name via aria-label — the {description} branch of table's own announcement template. Uses aria-label rather than a native <caption> element since native <caption>/<figcaption> implicit accessible-name folding is not yet implemented (see CONTEXTUALIZATION_PLAN.md)",
+    "description": "A table with an accessible name via aria-label — the {description} branch of table's own announcement template. A native <caption> stays a caption child instead (see table-caption-element-html-native)",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -2263,7 +2273,7 @@
     "id": "table-caption-element-html-native",
     "dir": "table-caption-element-html-native",
     "role": "table",
-    "description": "A native <table><caption> with no explicit aria-labelledby — the caption becomes a separate child node with role \"caption\", not folded into the table's own description field. Directly demonstrates the caption-folding gap noted in CONTEXTUALIZATION_PLAN.md: table.md's spec assumes <caption> \"can end up in description\", but that implicit association isn't implemented. Contrast with table-caption (which uses explicit aria-label and does populate description) and table-caption-role-aria (the same un-folded-caption behavior via role=\"caption\")",
+    "description": "A native <table><caption> with no explicit aria-labelledby — the caption becomes a separate child node with role \"caption\", not folded into the table's own description. Contrast with table-caption (explicit aria-label, which populates description) and table-caption-role-aria (the same via role=\"caption\")",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
