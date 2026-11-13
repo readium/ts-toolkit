@@ -11,7 +11,6 @@
         {
           "role": ["biblioref"],
           "id": "biblioref1",
-          "textref": "#smith1988",
           "text": {
             "plain": "Smith, 1988"
           },

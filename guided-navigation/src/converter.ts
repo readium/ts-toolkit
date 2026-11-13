@@ -254,12 +254,11 @@ export class Converter {
       return true;
     }
     if (tagName === "a" && el.getAttribute("href")) {
-      // Any other link — a backlink, or a plain navigational
-      // link with no specific role (e.g. a TOC entry) — carries its href as
-      // textref. When it's the sole content of its enclosing block (the usual
-      // case for list items), the hoist rule promotes it onto that block;
-      // otherwise it becomes an inline SSML placeholder like any other
-      // embedded object.
+      // Any other link — a backlink, or a plain navigational link with no
+      // specific role (e.g. a TOC entry). When it's the sole content of its
+      // enclosing block (the usual case for list items), the hoist rule
+      // promotes it onto that block; otherwise it becomes an inline SSML
+      // placeholder like any other embedded object.
       link(this, el, roles, aria, ariaLanguage);
       return true;
     }
@@ -526,6 +525,9 @@ export class Converter {
   // `words`: the object's pieces of plain text when they're part of the sentence it sits in, e.g. a link's.
   placeholder(el: Element, tag: string, object: ObjBuilder, { candidateID, words }: { candidateID?: string; words?: Segment[] } = {}) {
     if (isEmptyObj(object)) return;
+    if (!object.textref && this.selectorPredicate?.(object.role ?? [])) {
+      object.textref = textrefForSelector(selectorForElement(el, this.selectorRoot, this.selectorRootAnchor), el);
+    }
     const child = new NavObject();
     child.el = el;
     child.object = object;

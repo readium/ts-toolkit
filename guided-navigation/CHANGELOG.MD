@@ -9,11 +9,14 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 
 ### Changed
 
+- **Breaking:** a `textref` always references the object's own content, as in the Guided Navigation specification. Links, backlinks, glossrefs and bibliorefs no longer carry their `href` as `textref`; a link that is the only content of a list item or block becomes that object's text
+- **Breaking:** `decodeTextref` reads a bare or href-qualified `#id` as the object's own content whether or not the object has an `id`, so documents whose objects have none are located
+- Links, note references, images, audio and video get a `textref` to their own element when `textrefs` covers their role, like blocks
 - **Breaking:** a `<figcaption>` or table `<caption>` is no longer folded into its figure's or table's `description`. It stays a `caption` object, so a caption holding headings and paragraphs keeps their text instead of flattening it into one description. A figure or table still gets a `description` from `aria-label`, `aria-labelledby` or `aria-describedby`
 
 ### Added
 
-- Fixtures for a figure whose figcaption holds headings and paragraphs, from a fixed-layout comic page, a figure and a table with an `aria-label` and a caption, and a table labelled by its own caption
+- Fixtures for a figure whose figcaption holds headings and paragraphs, a figure and a table with an `aria-label` and a caption, and a table labelled by its own caption
 
 ## [1.3.0] – 2026-11-12
 

@@ -11,7 +11,6 @@
         {
           "role": ["biblioref"],
           "id": "biblioref1",
-          "textref": "#entry",
           "text": {
             "plain": "1"
           },
@@ -29,7 +28,6 @@
                   "children": [
                     {
                       "id": "link1",
-                      "textref": "book.html",
                       "text": {
                         "plain": "book"
                       }
@@ -60,7 +58,6 @@
               "children": [
                 {
                   "id": "lnk",
-                  "textref": "book.html",
                   "text": {
                     "plain": "book"
                   }

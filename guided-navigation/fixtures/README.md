@@ -130,12 +130,12 @@ Roles whose roles.md definition is "a list of links to X" or "a collection
 of X" (`landmarks`, `loa`, `loi`, `lot`, `lov`, `pagelist`, `toc`, `index`,
 `bibliography`, `glossary`, `endnotes`, `credits`) are modeled as an actual
 `list`/`listItem` structure, not a flat text blob — because that's what they
-are. A `listItem` that links to a target elsewhere in the work carries a
-`textref` alongside its visible `text`, reusing the same field the
-footnote/endnote fixtures already use for cross-references:
+are. A `listItem` holding a link carries the link's visible `text`; the
+link's destination isn't kept, since a `textref` always references the
+object's own content:
 
 ```jsonc
-{ "role": ["listItem"], "text": { "plain": "Cover" }, "textref": "cover.xhtml" }
+{ "role": ["listItem"], "text": { "plain": "Cover" } }
 ```
 
 ## `manifest.json`

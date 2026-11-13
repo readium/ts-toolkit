@@ -9,7 +9,6 @@
     {
       "role": ["glossref"],
       "id": "glossref1",
-      "textref": "#gloss-front-end",
       "text": {
         "plain": "front-end"
       }
@@ -17,7 +16,6 @@
     {
       "role": ["glossref"],
       "id": "glossref2",
-      "textref": "#gloss-back-end",
       "text": {
         "plain": "back-end"
       }

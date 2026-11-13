@@ -25,7 +25,6 @@
           "children": [
             {
               "id": "link1",
-              "textref": "c.html",
               "text": {
                 "plain": "Winstanley"
               }

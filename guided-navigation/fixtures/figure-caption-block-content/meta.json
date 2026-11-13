@@ -1,6 +1,6 @@
 {
   "id": "figure-caption-block-content",
-  "description": "A figure whose figcaption holds a heading and a paragraph, as on a fixed-layout comic page. The figcaption stays a caption child whose blocks keep their own text, and the figure gets no description",
+  "description": "A figure whose figcaption holds a heading and a paragraph. The figcaption stays a caption child whose blocks keep their own text, and the figure gets no description",
   "role": "figure",
   "rolesCovered": [
     "figure",
@@ -9,6 +9,6 @@
     "heading1",
     "paragraph"
   ],
-  "sourceRef": "https://publication-server.readium.org/webpub/Z3M6Ly9yZWFkaXVtLXBsYXlncm91bmQtZmlsZXMvZGVtby90ZXh0LWFuZC1hdWRpby5lcHVi/EPUB/page1.xhtml",
+  "sourceRef": "https://www.w3.org/TR/html-aam-1.0/",
   "inputKind": "fragment"
 }

@@ -5,7 +5,6 @@
       "children": [
         {
           "role": ["glossref"],
-          "textref": "#fresnel-lens",
           "text": {
             "plain": "Fresnel lens"
           },

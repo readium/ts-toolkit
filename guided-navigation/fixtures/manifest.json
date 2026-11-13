@@ -793,7 +793,7 @@
     "id": "figure-caption-block-content",
     "dir": "figure-caption-block-content",
     "role": "figure",
-    "description": "A figure whose figcaption holds a heading and a paragraph, as on a fixed-layout comic page. The figcaption stays a caption child whose blocks keep their own text, and the figure gets no description",
+    "description": "A figure whose figcaption holds a heading and a paragraph. The figcaption stays a caption child whose blocks keep their own text, and the figure gets no description",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"
@@ -1013,7 +1013,7 @@
     "id": "glossref-target-percent-encoded",
     "dir": "glossref-target-percent-encoded",
     "role": "glossref",
-    "description": "A glossref whose href is percent-encoded still finds its target, and keeps its href as authored",
+    "description": "A glossref whose href is percent-encoded still finds its target",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"

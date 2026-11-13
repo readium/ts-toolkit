@@ -9,25 +9,15 @@
           "children": [
             {
               "role": ["listItem"],
-              "children": [
-                {
-                  "textref": "chapter1.xhtml#fig1",
-                  "text": {
-                    "plain": "Figure 1. Lighthouse cross-section"
-                  }
-                }
-              ]
+              "text": {
+                "plain": "Figure 1. Lighthouse cross-section"
+              }
             },
             {
               "role": ["listItem"],
-              "children": [
-                {
-                  "textref": "chapter2.xhtml#fig2",
-                  "text": {
-                    "plain": "Figure 2. Fresnel lens diagram"
-                  }
-                }
-              ]
+              "text": {
+                "plain": "Figure 2. Fresnel lens diagram"
+              }
             }
           ]
         }

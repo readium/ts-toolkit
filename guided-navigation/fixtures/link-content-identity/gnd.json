@@ -7,7 +7,6 @@
   "children": [
     {
       "id": "link1",
-      "textref": "chapter2.xhtml",
       "children": [
         {
           "id": "ch2-teaser",

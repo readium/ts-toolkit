@@ -8,7 +8,6 @@
   "children": [
     {
       "id": "link1",
-      "textref": "map.xhtml",
       "text": {
         "language": "en",
         "ssml": "<emphasis>coastal</emphasis> map"
@@ -17,7 +16,6 @@
     {
       "role": ["glossref"],
       "id": "glossref1",
-      "textref": "glossary.xhtml#lantern-room",
       "text": {
         "language": "en",
         "ssml": "<emphasis>lantern</emphasis> room"

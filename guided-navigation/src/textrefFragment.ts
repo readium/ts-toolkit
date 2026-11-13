@@ -15,14 +15,6 @@ export function encodeCssSelectorFragment(selector: string): string {
   return `${CSS_PREFIX}${encodeURIComponent(selector)}${CSS_SUFFIX}`;
 }
 
-// Without id as its own, node's bare "#id" textref would decode as a link, so it's re-expressed as that id's selector.
-export function detachSelfTextref(node: { textref?: string }, id: string) {
-  const fragment = `#${encodeURIComponent(id)}`;
-  if (node.textref === fragment || node.textref?.startsWith(`${fragment}:~:`)) {
-    node.textref = encodeCssSelectorFragment(`#${CSS.escape(id)}`) + node.textref.slice(fragment.length);
-  }
-}
-
 export function decodeCssSelectorFragment(textref: string | undefined): string | undefined {
   if (!textref || !textref.startsWith(CSS_PREFIX) || !textref.endsWith(CSS_SUFFIX)) return undefined;
   return decodeURIComponent(textref.slice(CSS_PREFIX.length, -CSS_SUFFIX.length));
@@ -148,14 +140,12 @@ export function decodeIdFragment(base: string): string | undefined {
   }
 }
 
-// Decodes a reference to a node's own content, distinguishing it from a
-// navigational textref (link href, noteref target). A textref is
+// Decodes a textref, which always references the node's own content. A textref is
 // "[href]#fragment", the href naming the resource when present (e.g.
-// "chapter.xhtml#css(...)"). "#css(...)"/"#domrange(...)" fragments are
-// always self-references; a bare "#id" only is when it matches the node's
-// own id. A ":~:text=..." suffix can accompany any of the above, or stand
+// "chapter.xhtml#css(...)"); the fragment is "#css(...)", "#domrange(...)" or a
+// bare "#id". A ":~:text=..." suffix can accompany any of the above, or stand
 // alone, so it's decoded separately and merged into the result.
-export function decodeTextref(node: { id?: string; textref?: string } | undefined): DecodedTextref | undefined {
+export function decodeTextref(node: { textref?: string } | undefined): DecodedTextref | undefined {
   const textref = node?.textref;
   if (!textref) return undefined;
 
@@ -175,8 +165,9 @@ export function decodeTextref(node: { id?: string; textref?: string } | undefine
     const decoded = decodeCssSelectorFragment(fragment);
     if (decoded !== undefined) {
       cssSelector = decoded;
-    } else if (node.id && decodeIdFragment(fragment) === node.id) {
-      cssSelector = `#${CSS.escape(node.id)}`;
+    } else {
+      const id = decodeIdFragment(fragment);
+      if (id) cssSelector = `#${CSS.escape(id)}`;
     }
   }
 

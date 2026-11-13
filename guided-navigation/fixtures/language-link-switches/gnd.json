@@ -8,7 +8,6 @@
   "children": [
     {
       "id": "link1",
-      "textref": "b.html",
       "text": {
         "language": "fr",
         "ssml": "le <lang xml:lang=\"en\">book</lang>"
