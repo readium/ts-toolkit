@@ -48,28 +48,48 @@ export function bindsToPrevious(text: string, lang: string | undefined): boolean
   return !(marksFor(lang).opening.has(text[0]) && text.length > 1 && !/[\s\p{P}]/u.test(text[1]));
 }
 
+/** Which characters of plain text in `lang` `removeDropped` takes out, as a mask of the same length.
+ * A collapsed pair owns its marks and fillers; where spaces collapse to one, the first space is the one kept. */
+export function droppedMask(plain: string, lang: string | undefined): boolean[] {
+  const { pairs, opening, closing } = marksFor(lang);
+  let text = plain;
+  // Indices in `plain` behind each character of `text`.
+  const sources: number[][] = Array.from({ length: plain.length }, (_, i) => [i]);
+  for (let i = text.indexOf(DROPPED); i !== -1; i = text.indexOf(DROPPED, i + 1)) {
+    let start = i;
+    let end = i + 1;
+    while (start > 0 && FILLER.test(text[start - 1])) start--;
+    while (end < text.length && FILLER.test(text[end])) end++;
+    const open = text[start - 1];
+    const close = text[end];
+    if (open === undefined || close === undefined || !pairs.has(open + close)) continue;
+    // A mark that both opens and closes must be placed as the one it is here.
+    if (closing.has(open) && start > 1 && !/[\s\p{Ps}\p{Pi}\p{Pd}]/u.test(text[start - 2])) continue;
+    if (opening.has(close) && end < text.length - 1 && !/[\s\p{P}]/u.test(text[end + 1])) continue;
+    // The pair becomes one dropped object, which may leave an enclosing pair empty in turn.
+    text = text.slice(0, start - 1) + DROPPED + text.slice(end + 1);
+    sources.splice(start - 1, end - start + 2, sources.slice(start - 1, end + 1).flat());
+    i = start - 2;
+  }
+  const mask: boolean[] = new Array(plain.length).fill(false);
+  // A space is kept only where there was one around the dropped objects, and never before binding punctuation.
+  for (const match of text.matchAll(/ *\u0000[\u0000 ]*/g)) {
+    const offset = match.index;
+    const end = offset + match[0].length;
+    const rest = text.slice(end);
+    const kept = offset > 0 && rest !== "" && match[0].includes(" ") && !bindsToPrevious(rest, lang) ? text.indexOf(" ", offset) : -1;
+    for (let j = offset; j < end; j++) {
+      if (j !== kept) for (const source of sources[j]) mask[source] = true;
+    }
+  }
+  return mask;
+}
+
 /** Takes each `DROPPED` out of plain text in `lang`, with any bracket or quote pair left enclosing only fillers (spaces, commas, other `DROPPED`).
  * Spaces around what's removed collapse to one, dropped at either end of the text and before binding punctuation; no space is added where there was none. */
 export function removeDropped(plain: string, lang: string | undefined): string {
-  const { pairs, opening, closing } = marksFor(lang);
-  for (let i = plain.indexOf(DROPPED); i !== -1; i = plain.indexOf(DROPPED, i + 1)) {
-    let start = i;
-    let end = i + 1;
-    while (start > 0 && FILLER.test(plain[start - 1])) start--;
-    while (end < plain.length && FILLER.test(plain[end])) end++;
-    const open = plain[start - 1];
-    const close = plain[end];
-    if (open === undefined || close === undefined || !pairs.has(open + close)) continue;
-    // A mark that both opens and closes must be placed as the one it is here.
-    if (closing.has(open) && start > 1 && !/[\s\p{Ps}\p{Pi}\p{Pd}]/u.test(plain[start - 2])) continue;
-    if (opening.has(close) && end < plain.length - 1 && !/[\s\p{P}]/u.test(plain[end + 1])) continue;
-    // The pair becomes one dropped object, which may leave an enclosing pair empty in turn.
-    plain = plain.slice(0, start - 1) + DROPPED + plain.slice(end + 1);
-    i = start - 2;
-  }
-  // A space is kept only where there was one around the dropped objects, and never before binding punctuation.
-  return plain.replace(/ *\u0000[\u0000 ]*/g, (match: string, offset: number) => {
-    const rest = plain.slice(offset + match.length);
-    return offset > 0 && rest !== "" && match.includes(" ") && !bindsToPrevious(rest, lang) ? " " : "";
-  });
+  const mask = droppedMask(plain, lang);
+  let result = "";
+  for (let i = 0; i < plain.length; i++) if (!mask[i]) result += plain[i];
+  return result;
 }

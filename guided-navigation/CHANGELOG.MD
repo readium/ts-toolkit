@@ -16,6 +16,7 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 
 ### Added
 
+- `droppedMask` is exported, telling which characters of plain text `removeDropped` takes out, to map its result back onto marked-up source, e.g. only `(␀)` in `(␀)(`
 - Fixtures for a figure whose figcaption holds headings and paragraphs, a figure and a table with an `aria-label` and a caption, and a table labelled by its own caption
 
 ## [1.3.0] – 2026-11-12
