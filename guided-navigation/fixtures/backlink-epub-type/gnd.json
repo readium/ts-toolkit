@@ -1,16 +1,11 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
-      "textref": "#ref1",
+      "role": ["backlink"],
       "text": {
         "plain": "Return to reference"
-      },
-      "role": [
-        "backlink"
-      ]
+      }
     }
   ]
 }

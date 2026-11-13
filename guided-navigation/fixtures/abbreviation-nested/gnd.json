@@ -1,9 +1,7 @@
 {
-  "role": [
-    "paragraph"
-  ],
+  "role": ["paragraph"],
   "text": {
-    "ssml": "The <sub alias=\"United States of America\">USA</sub> today.",
-    "language": "en"
+    "language": "en",
+    "ssml": "The <sub alias=\"United States of America\">USA</sub> today."
   }
 }

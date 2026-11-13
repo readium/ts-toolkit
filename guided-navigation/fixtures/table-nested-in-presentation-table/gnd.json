@@ -1,8 +1,11 @@
 {
+  "role": ["presentation"],
   "children": [
     {
+      "role": ["presentation"],
       "children": [
         {
+          "role": ["presentation"],
           "children": [
             {
               "text": {
@@ -10,54 +13,35 @@
               }
             },
             {
+              "role": ["table"],
               "children": [
                 {
+                  "role": ["row"],
                   "children": [
                     {
-                      "role": [
-                        "columnheader"
-                      ],
+                      "role": ["columnheader"],
                       "text": {
                         "plain": "Name"
                       }
                     }
-                  ],
-                  "role": [
-                    "row"
                   ]
                 },
                 {
+                  "role": ["row"],
                   "children": [
                     {
-                      "role": [
-                        "cell"
-                      ],
+                      "role": ["cell"],
                       "text": {
                         "plain": "Ada"
                       }
                     }
-                  ],
-                  "role": [
-                    "row"
                   ]
                 }
-              ],
-              "role": [
-                "table"
               ]
             }
-          ],
-          "role": [
-            "presentation"
           ]
         }
-      ],
-      "role": [
-        "presentation"
       ]
     }
-  ],
-  "role": [
-    "presentation"
   ]
 }

@@ -1,6 +1,6 @@
 {
   "id": "glossref-target-percent-encoded",
-  "description": "A glossref whose href is percent-encoded still finds its target, and keeps its href as authored",
+  "description": "A glossref whose href is percent-encoded still finds its target",
   "role": "glossref",
   "rolesCovered": [
     "glossref",

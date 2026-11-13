@@ -1,63 +1,54 @@
 {
   "children": [
     {
+      "role": ["paragraph"],
+      "text": {
+        "language": "en",
+        "plain": "See 1.",
+        "ssml": "See <readium:biblioref id=\"biblioref1\" />."
+      },
       "children": [
         {
+          "role": ["biblioref"],
           "id": "biblioref1",
+          "text": {
+            "plain": "1"
+          },
           "children": [
             {
+              "text": {
+                "language": "en",
+                "plain": "Author Title. Year",
+                "ssml": "Author <readium:link id=\"link1\" />. Year"
+              },
               "children": [
                 {
                   "id": "link1",
                   "text": {
                     "plain": "Title"
-                  },
-                  "textref": "book.html"
+                  }
                 }
-              ],
-              "text": {
-                "plain": "Author Title. Year",
-                "ssml": "Author <readium:link id=\"link1\" />. Year",
-                "language": "en"
-              }
+              ]
             }
-          ],
-          "role": [
-            "biblioref"
-          ],
-          "text": {
-            "plain": "1"
-          },
-          "textref": "#entry"
+          ]
         }
-      ],
-      "role": [
-        "paragraph"
-      ],
-      "text": {
-        "plain": "See 1.",
-        "ssml": "See <readium:biblioref id=\"biblioref1\" />.",
-        "language": "en"
-      }
+      ]
     },
     {
+      "role": ["paragraph"],
+      "text": {
+        "language": "en",
+        "plain": "Author Title. Year",
+        "ssml": "Author <readium:link id=\"link2\" />. Year"
+      },
       "children": [
         {
           "id": "link2",
           "text": {
             "plain": "Title"
-          },
-          "textref": "book.html"
+          }
         }
-      ],
-      "role": [
-        "paragraph"
-      ],
-      "text": {
-        "plain": "Author Title. Year",
-        "ssml": "Author <readium:link id=\"link2\" />. Year",
-        "language": "en"
-      }
+      ]
     }
   ]
 }

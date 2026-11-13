@@ -1,17 +1,13 @@
 {
   "children": [
     {
-      "role": [
-        "paragraph"
-      ],
+      "role": ["paragraph"],
       "text": {
         "plain": "Before the divider."
       }
     },
     {
-      "role": [
-        "paragraph"
-      ],
+      "role": ["paragraph"],
       "text": {
         "plain": "After the divider."
       }

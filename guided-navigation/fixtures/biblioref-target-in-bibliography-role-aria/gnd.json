@@ -1,58 +1,45 @@
 {
   "children": [
     {
+      "role": ["paragraph"],
+      "text": {
+        "language": "en",
+        "plain": "Lighthouses were first electrified in the 1870s (Smith, 1988) along the coast.",
+        "ssml": "Lighthouses were first electrified in the 1870s (<readium:biblioref id=\"biblioref1\" />) along the coast."
+      },
       "children": [
         {
+          "role": ["biblioref"],
           "id": "biblioref1",
-          "children": [
-            {
-              "role": [
-                "listItem"
-              ],
-              "text": {
-                "plain": "Smith, J. Lighthouses of the Atlantic. 1988."
-              }
-            }
-          ],
-          "role": [
-            "biblioref"
-          ],
           "text": {
             "plain": "Smith, 1988"
           },
-          "textref": "#smith1988"
-        }
-      ],
-      "role": [
-        "paragraph"
-      ],
-      "text": {
-        "plain": "Lighthouses were first electrified in the 1870s (Smith, 1988) along the coast.",
-        "ssml": "Lighthouses were first electrified in the 1870s (<readium:biblioref id=\"biblioref1\" />) along the coast.",
-        "language": "en"
-      }
-    },
-    {
-      "children": [
-        {
           "children": [
             {
-              "id": "smith1988",
-              "role": [
-                "listItem"
-              ],
+              "role": ["listItem"],
               "text": {
                 "plain": "Smith, J. Lighthouses of the Atlantic. 1988."
               }
             }
-          ],
-          "role": [
-            "list"
           ]
         }
-      ],
-      "role": [
-        "bibliography"
+      ]
+    },
+    {
+      "role": ["bibliography"],
+      "children": [
+        {
+          "role": ["list"],
+          "children": [
+            {
+              "role": ["listItem"],
+              "id": "smith1988",
+              "text": {
+                "plain": "Smith, J. Lighthouses of the Atlantic. 1988."
+              }
+            }
+          ]
+        }
       ]
     }
   ]

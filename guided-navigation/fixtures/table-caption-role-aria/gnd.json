@@ -1,25 +1,20 @@
 {
-  "role": [
-    "table"
-  ],
-  "description": {
-    "text": {
-      "plain": "Team roster"
-    }
-  },
+  "role": ["table"],
   "children": [
     {
-      "role": [
-        "row"
-      ],
+      "role": ["caption"],
+      "text": {
+        "plain": "Team roster"
+      }
+    },
+    {
+      "role": ["row"],
       "children": [
         {
+          "role": ["columnheader"],
           "text": {
             "plain": "Name"
-          },
-          "role": [
-            "columnheader"
-          ]
+          }
         }
       ]
     }

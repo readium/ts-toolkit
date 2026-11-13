@@ -1,31 +1,23 @@
 {
-  "role": [
-    "list"
-  ],
+  "role": ["list"],
   "children": [
     {
+      "role": ["listItem"],
       "text": {
         "plain": "First item"
-      },
-      "role": [
-        "listItem"
-      ]
+      }
     },
     {
+      "role": ["listItem"],
       "text": {
         "plain": "Second item"
-      },
-      "role": [
-        "listItem"
-      ]
+      }
     },
     {
+      "role": ["listItem"],
       "text": {
         "plain": "Third item"
-      },
-      "role": [
-        "listItem"
-      ]
+      }
     }
   ]
 }

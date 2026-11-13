@@ -1,45 +1,35 @@
 {
+  "role": ["table"],
   "children": [
     {
+      "role": ["row"],
       "children": [
         {
+          "role": ["cell"],
+          "text": {
+            "language": "en",
+            "plain": "Engineer and writer",
+            "ssml": "Engineer<readium:noteref id=\"n1\" /> and writer"
+          },
           "children": [
             {
+              "role": ["noteref"],
               "id": "n1",
+              "text": {
+                "plain": "1"
+              },
               "children": [
                 {
-                  "role": [
-                    "footnote"
-                  ],
+                  "role": ["footnote"],
                   "text": {
                     "plain": "First published in 1843."
                   }
                 }
-              ],
-              "role": [
-                "noteref"
-              ],
-              "text": {
-                "plain": "1"
-              }
+              ]
             }
-          ],
-          "role": [
-            "cell"
-          ],
-          "text": {
-            "plain": "Engineer and writer",
-            "ssml": "Engineer<readium:noteref id=\"n1\" /> and writer",
-            "language": "en"
-          }
+          ]
         }
-      ],
-      "role": [
-        "row"
       ]
     }
-  ],
-  "role": [
-    "table"
   ]
 }

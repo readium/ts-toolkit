@@ -1,7 +1,5 @@
 {
-  "role": [
-    "paragraph"
-  ],
+  "role": ["paragraph"],
   "text": {
     "ssml": "<emphasis>xyz</emphasis>"
   }

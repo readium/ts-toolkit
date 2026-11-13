@@ -1,6 +1,4 @@
 {
-  "videoref": "clockwork.mp4",
-  "role": [
-    "video"
-  ]
+  "role": ["video"],
+  "videoref": "clockwork.mp4"
 }

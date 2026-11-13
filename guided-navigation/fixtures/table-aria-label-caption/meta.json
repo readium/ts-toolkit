@@ -1,0 +1,13 @@
+{
+  "id": "table-aria-label-caption",
+  "description": "A table with an aria-label and a <caption> — the label becomes the table's description and the caption stays a caption child",
+  "role": "table",
+  "rolesCovered": [
+    "table",
+    "caption",
+    "row",
+    "cell"
+  ],
+  "sourceRef": "https://www.w3.org/TR/html-aam-1.0/",
+  "inputKind": "fragment"
+}

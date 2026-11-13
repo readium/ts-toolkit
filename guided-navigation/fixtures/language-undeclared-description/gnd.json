@@ -1,23 +1,19 @@
 {
   "children": [
     {
-      "role": [
-        "paragraph"
-      ],
+      "role": ["paragraph"],
       "text": {
         "plain": "Text."
       }
     },
     {
-      "imgref": "a.png",
-      "role": [
-        "image"
-      ],
+      "role": ["image"],
       "description": {
         "text": {
           "plain": "A cat"
         }
-      }
+      },
+      "imgref": "a.png"
     }
   ]
 }

@@ -1,70 +1,56 @@
 {
   "children": [
     {
+      "role": ["paragraph"],
+      "text": {
+        "language": "sv",
+        "plain": "Ordet här.",
+        "ssml": "Ordet ”<readium:noteref id=\"n\" />” här."
+      },
       "children": [
         {
+          "role": ["noteref"],
           "id": "n",
+          "text": {
+            "language": "sv",
+            "plain": "1"
+          },
           "children": [
             {
-              "role": [
-                "aside",
-                "footnote"
-              ],
+              "role": ["aside", "footnote"],
               "text": {
                 "plain": "Note."
               }
             }
-          ],
-          "role": [
-            "noteref"
-          ],
-          "text": {
-            "plain": "1",
-            "language": "sv"
-          }
+          ]
         }
-      ],
-      "role": [
-        "paragraph"
-      ],
-      "text": {
-        "plain": "Ordet här.",
-        "ssml": "Ordet ”<readium:noteref id=\"n\" />” här.",
-        "language": "sv"
-      }
+      ]
     },
     {
+      "role": ["paragraph"],
+      "text": {
+        "language": "sv",
+        "plain": "Han sa ”hej” ”nästa”.",
+        "ssml": "Han sa ”hej”<readium:noteref id=\"m\" /> ”nästa”."
+      },
       "children": [
         {
+          "role": ["noteref"],
           "id": "m",
+          "text": {
+            "language": "sv",
+            "plain": "2"
+          },
           "children": [
             {
-              "role": [
-                "aside",
-                "footnote"
-              ],
+              "role": ["aside", "footnote"],
               "text": {
                 "plain": "Note."
               }
             }
-          ],
-          "role": [
-            "noteref"
-          ],
-          "text": {
-            "plain": "2",
-            "language": "sv"
-          }
+          ]
         }
-      ],
-      "role": [
-        "paragraph"
-      ],
-      "text": {
-        "plain": "Han sa ”hej” ”nästa”.",
-        "ssml": "Han sa ”hej”<readium:noteref id=\"m\" /> ”nästa”.",
-        "language": "sv"
-      }
+      ]
     }
   ]
 }

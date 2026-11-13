@@ -1,9 +1,7 @@
 {
-  "role": [
-    "paragraph"
-  ],
+  "role": ["paragraph"],
   "text": {
-    "ssml": "Hello <lang xml:lang=\"fr\">bonjour</lang> and <lang xml:lang=\"es\">hola</lang> there.",
-    "language": "en"
+    "language": "en",
+    "ssml": "Hello <lang xml:lang=\"fr\">bonjour</lang> and <lang xml:lang=\"es\">hola</lang> there."
   }
 }

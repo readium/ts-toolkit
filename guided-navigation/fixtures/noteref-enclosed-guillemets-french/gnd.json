@@ -1,103 +1,82 @@
 {
   "children": [
     {
-      "children": [
-        {
-          "id": "n",
-          "children": [
-            {
-              "role": [
-                "aside",
-                "footnote"
-              ],
-              "text": {
-                "plain": "Note."
-              }
-            }
-          ],
-          "role": [
-            "noteref"
-          ],
-          "text": {
-            "plain": "1",
-            "language": "fr"
-          }
-        }
-      ],
-      "role": [
-        "paragraph"
-      ],
+      "role": ["paragraph"],
       "text": {
+        "language": "fr",
         "plain": "Le mot ici.",
-        "ssml": "Le mot « <readium:noteref id=\"n\" /> » ici.",
-        "language": "fr"
-      }
-    },
-    {
+        "ssml": "Le mot « <readium:noteref id=\"n\" /> » ici."
+      },
       "children": [
         {
-          "id": "m",
+          "role": ["noteref"],
+          "id": "n",
+          "text": {
+            "language": "fr",
+            "plain": "1"
+          },
           "children": [
             {
-              "role": [
-                "aside",
-                "footnote"
-              ],
+              "role": ["aside", "footnote"],
               "text": {
                 "plain": "Note."
               }
             }
-          ],
-          "role": [
-            "noteref"
-          ],
-          "text": {
-            "plain": "2",
-            "language": "fr"
-          }
+          ]
         }
-      ],
-      "role": [
-        "paragraph"
-      ],
+      ]
+    },
+    {
+      "role": ["paragraph"],
       "text": {
+        "language": "fr",
         "plain": "Il dit « bonjour » « suite ».",
-        "ssml": "Il dit « bonjour » <readium:noteref id=\"m\" /> « suite ».",
-        "language": "fr"
-      }
-    },
-    {
+        "ssml": "Il dit « bonjour » <readium:noteref id=\"m\" /> « suite »."
+      },
       "children": [
         {
-          "id": "o",
+          "role": ["noteref"],
+          "id": "m",
+          "text": {
+            "language": "fr",
+            "plain": "2"
+          },
           "children": [
             {
-              "role": [
-                "aside",
-                "footnote"
-              ],
+              "role": ["aside", "footnote"],
               "text": {
                 "plain": "Note."
               }
             }
-          ],
-          "role": [
-            "noteref"
-          ],
-          "text": {
-            "plain": "3",
-            "language": "fr"
-          }
+          ]
         }
-      ],
-      "role": [
-        "paragraph"
-      ],
+      ]
+    },
+    {
+      "role": ["paragraph"],
       "text": {
+        "language": "fr",
         "plain": "Il dit « bonjour » et part.",
-        "ssml": "Il dit « bonjour <readium:noteref id=\"o\" /> » et part.",
-        "language": "fr"
-      }
+        "ssml": "Il dit « bonjour <readium:noteref id=\"o\" /> » et part."
+      },
+      "children": [
+        {
+          "role": ["noteref"],
+          "id": "o",
+          "text": {
+            "language": "fr",
+            "plain": "3"
+          },
+          "children": [
+            {
+              "role": ["aside", "footnote"],
+              "text": {
+                "plain": "Note."
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

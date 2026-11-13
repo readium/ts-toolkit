@@ -1,44 +1,23 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
-      "role": [
-        "navigation",
-        "lov"
-      ],
+      "role": ["navigation", "lov"],
       "children": [
         {
-          "role": [
-            "list"
-          ],
+          "role": ["list"],
           "children": [
             {
-              "role": [
-                "listItem"
-              ],
-              "children": [
-                {
-                  "textref": "chapter1.xhtml#video1",
-                  "text": {
-                    "plain": "Video 1. Lamp mechanism in motion"
-                  }
-                }
-              ]
+              "role": ["listItem"],
+              "text": {
+                "plain": "Video 1. Lamp mechanism in motion"
+              }
             },
             {
-              "role": [
-                "listItem"
-              ],
-              "children": [
-                {
-                  "textref": "chapter3.xhtml#video2",
-                  "text": {
-                    "plain": "Video 2. Automation retrofit"
-                  }
-                }
-              ]
+              "role": ["listItem"],
+              "text": {
+                "plain": "Video 2. Automation retrofit"
+              }
             }
           ]
         }

@@ -1,6 +1,6 @@
 {
   "id": "language-figcaption",
-  "description": "A figure's implicit caption description is in the caption's language",
+  "description": "A figure's caption is in the caption's language",
   "role": "figure",
   "rolesCovered": [
     "figure",

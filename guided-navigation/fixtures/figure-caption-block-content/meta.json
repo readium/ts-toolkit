@@ -1,0 +1,14 @@
+{
+  "id": "figure-caption-block-content",
+  "description": "A figure whose figcaption holds a heading and a paragraph. The figcaption stays a caption child whose blocks keep their own text, and the figure gets no description",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "image",
+    "caption",
+    "heading1",
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/html-aam-1.0/",
+  "inputKind": "fragment"
+}

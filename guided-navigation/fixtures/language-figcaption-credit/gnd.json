@@ -1,41 +1,33 @@
 {
+  "role": ["figure"],
   "children": [
     {
-      "imgref": "a.png",
-      "role": [
-        "image"
-      ],
+      "role": ["image"],
       "description": {
         "text": {
-          "plain": "x",
-          "language": "fr"
+          "language": "fr",
+          "plain": "x"
         }
-      }
+      },
+      "imgref": "a.png"
     },
     {
+      "role": ["caption"],
       "children": [
         {
-          "role": [
-            "credit"
-          ],
           "text": {
-            "plain": "Photo: Jane",
-            "language": "en"
+            "language": "fr",
+            "plain": "Un chat"
+          }
+        },
+        {
+          "role": ["credit"],
+          "text": {
+            "language": "en",
+            "plain": "Photo: Jane"
           }
         }
-      ],
-      "role": [
-        "caption"
       ]
     }
-  ],
-  "role": [
-    "figure"
-  ],
-  "description": {
-    "text": {
-      "plain": "Un chat",
-      "language": "fr"
-    }
-  }
+  ]
 }

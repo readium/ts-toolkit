@@ -1,0 +1,12 @@
+{
+  "id": "figure-aria-label-caption",
+  "description": "A figure with an aria-label and a figcaption — the label becomes the figure's description and replaces its content, figcaption included",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "image",
+    "caption"
+  ],
+  "sourceRef": "https://www.w3.org/TR/html-aam-1.0/",
+  "inputKind": "fragment"
+}

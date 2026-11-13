@@ -1,25 +1,21 @@
 {
+  "description": {
+    "text": {
+      "plain": "Sidebar"
+    }
+  },
   "children": [
     {
-      "role": [
-        "paragraph"
-      ],
+      "role": ["paragraph"],
       "text": {
         "plain": "One."
       }
     },
     {
-      "role": [
-        "paragraph"
-      ],
+      "role": ["paragraph"],
       "text": {
         "plain": "Two."
       }
     }
-  ],
-  "description": {
-    "text": {
-      "plain": "Sidebar"
-    }
-  }
+  ]
 }

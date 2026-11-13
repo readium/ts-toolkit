@@ -1,15 +1,11 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
+      "role": ["preface"],
       "text": {
         "plain": "This edition adds a chapter on automation."
-      },
-      "role": [
-        "preface"
-      ]
+      }
     }
   ]
 }

@@ -1,24 +1,20 @@
 {
   "children": [
     {
-      "role": [
-        "paragraph"
-      ],
+      "role": ["paragraph"],
       "text": {
-        "plain": "Text.",
-        "language": "de"
+        "language": "de",
+        "plain": "Text."
       }
     },
     {
-      "imgref": "a.png",
-      "role": [
-        "image"
-      ],
+      "role": ["image"],
       "description": {
         "text": {
           "plain": "Unknown"
         }
-      }
+      },
+      "imgref": "a.png"
     }
   ]
 }

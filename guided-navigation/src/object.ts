@@ -2,7 +2,6 @@ import { GuidedNavigationDescription, GuidedNavigationObject, GuidedNavigationTe
 import type { GndRole } from "./types.ts";
 import { nonSelfNestingRoles } from "./roles.ts";
 import { type TextBuilder, textIsEmpty, finalizeText } from "./text.ts";
-import { detachSelfTextref } from "./textrefFragment.ts";
 
 export interface ObjBuilder {
   id?: string;
@@ -33,8 +32,7 @@ const contentFreeRoles: readonly GndRole[] = ["math", "separator"];
 export const ariaSubstitutedBuilders = new WeakSet<ObjBuilder>();
 const ariaSubstitutedNodes = new WeakSet<GuidedNavigationObject>();
 
-// A substituted link's own CSS selector — its `textref` is its href, which
-// never resolves to an on-page location, so this is its fallback box (set only by link()).
+// A substituted link's own CSS selector, its box when no textref locates it (set only by link()).
 export const substitutedOwnSelectorBuilders = new WeakMap<ObjBuilder, string>();
 const substitutedOwnSelectorNodes = new WeakMap<GuidedNavigationObject, string>();
 
@@ -79,11 +77,11 @@ function isChildrenOnly(o: ObjBuilder): boolean {
 // A lone child with no role/id/ref of its own: its text is hoisted into the
 // parent object directly, e.g. a paragraph wrapping plain emphasis becomes
 // {role, text} rather than nesting an anonymous child. A child carrying its
-// own ref (e.g. an <a href>'s textref) is never hoisted — refs identify a
-// distinct target and merging them into the parent would silently discard
-// whichever of the two textrefs isn't kept.
+// own ref is never hoisted: merging would discard one of the two refs.
+// Substituted text isn't on the page, so it never becomes its parent's text.
 export function isHoistable(o: ObjBuilder): boolean {
   return (
+    !ariaSubstitutedBuilders.has(o) &&
     !(o.role && o.role.length > 0) &&
     !o.id &&
     !o.description &&
@@ -141,10 +139,6 @@ export class NavObject {
       const textref = selfTextref(this.el);
       if (textref) result.textref = textref;
     }
-    // An object given another id than its element's references that element by selector.
-    const ownId = this.el?.getAttribute("id");
-    if (ownId && result.id !== ownId) detachSelfTextref(result, ownId);
-
     return result;
   }
 }

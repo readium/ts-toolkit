@@ -1,9 +1,7 @@
 {
-  "role": [
-    "paragraph"
-  ],
+  "role": ["paragraph"],
   "text": {
-    "ssml": "Hello world <emphasis>end</emphasis>.",
-    "language": "en-us"
+    "language": "en-us",
+    "ssml": "Hello world <emphasis>end</emphasis>."
   }
 }

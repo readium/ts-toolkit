@@ -1,25 +1,21 @@
 {
   "children": [
     {
+      "role": ["paragraph"],
       "id": "l",
-      "role": [
-        "paragraph"
-      ],
       "text": {
-        "ssml": "Un <lang xml:lang=\"en\">cat</lang>",
-        "language": "fr"
+        "language": "fr",
+        "ssml": "Un <lang xml:lang=\"en\">cat</lang>"
       }
     },
     {
-      "imgref": "a.png",
-      "role": [
-        "image"
-      ],
+      "role": ["image"],
       "description": {
         "text": {
           "plain": "Un cat"
         }
-      }
+      },
+      "imgref": "a.png"
     }
   ]
 }

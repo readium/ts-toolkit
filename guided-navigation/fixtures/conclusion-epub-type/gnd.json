@@ -1,15 +1,11 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
+      "role": ["conclusion"],
       "text": {
         "plain": "Lighthouses remain a symbol of safe passage."
-      },
-      "role": [
-        "conclusion"
-      ]
+      }
     }
   ]
 }

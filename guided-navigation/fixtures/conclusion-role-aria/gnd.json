@@ -1,7 +1,5 @@
 {
-  "role": [
-    "conclusion"
-  ],
+  "role": ["conclusion"],
   "text": {
     "plain": "Lighthouses remain a symbol of safe passage."
   }
