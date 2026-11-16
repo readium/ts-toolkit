@@ -2,6 +2,7 @@ import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
 import { Comms } from "../comms/comms.ts";
 import { Module } from "./Module.ts";
 import { ReadiumWindow, nearestInteractiveElement } from "../helpers/dom.ts";
+import { extractNodeRoles } from "@readium/guided-navigation";
 import { rangeFromLocator } from "../helpers/locator.ts";
 import { getClientRectsNoOverlap, rectContainsPoint } from "../helpers/rect.ts";
 import { BulkCopyProtector, BulkCopyProtectionOptions } from "../protection/BulkCopyProtector.ts";
@@ -28,10 +29,12 @@ export interface FrameClickEvent {
 
 /**
  * From the target outwards, the first rule matching an element decides: `container` makes it the container, else the walk stops.
- * The outermost container wins. It starts at the nearest run of preceding siblings matching `startAt`, if any.
+ * An element matches with the GND `role` and, if any, `selector`. The outermost container wins.
+ * It starts at the nearest run of preceding siblings with the GND role `startAt`, if any.
  */
 export interface PointedPieceRule {
-    selector: string;
+    role: string;
+    selector?: string;
     startAt?: string;
     container: boolean;
     /** Replaces `container` when the request's `current` piece starts in the element, from `startAt` on. */
@@ -545,7 +548,8 @@ export class Peripherals extends Module {
     private containerRange(target: Element, rules: PointedPieceRule[], current?: Range): Range | undefined {
         let container: Range | undefined;
         for (let element: Element | null = target; element; element = element.parentElement) {
-            const rule = rules.find(rule => Peripherals.matches(element!, rule.selector));
+            const roles = extractNodeRoles(element);
+            const rule = rules.find(rule => roles.includes(rule.role) && (!rule.selector || Peripherals.matches(element!, rule.selector)));
             if (!rule) continue;
             const range = this.ruleRange(element, rule);
             const isCurrent = current !== undefined && range.comparePoint(current.startContainer, current.startOffset) === 0;
@@ -555,14 +559,16 @@ export class Peripherals extends Module {
         return container;
     }
 
-    // The element, from the nearest run of preceding siblings matching the rule's `startAt`, if any.
+    // The element, from the nearest run of preceding siblings with the rule's `startAt` role, if any.
     private ruleRange(element: Element, rule: PointedPieceRule): Range {
         const range = this.wnd.document.createRange();
         range.selectNode(element);
-        if (rule.startAt) {
+        const startAt = rule.startAt;
+        if (startAt) {
+            const starts = (sibling: Element) => extractNodeRoles(sibling).includes(startAt);
             let previous = element.previousElementSibling;
-            while (previous && !Peripherals.matches(previous, rule.startAt)) previous = previous.previousElementSibling;
-            while (previous && Peripherals.matches(previous, rule.startAt)) {
+            while (previous && !starts(previous)) previous = previous.previousElementSibling;
+            while (previous && starts(previous)) {
                 range.setStartBefore(previous);
                 previous = previous.previousElementSibling;
             }

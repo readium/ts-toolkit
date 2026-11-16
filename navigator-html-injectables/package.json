@@ -48,6 +48,7 @@
     "node": ">=24"
   },
   "dependencies": {
+    "@readium/guided-navigation": "workspace:*",
     "@readium/helpers": "workspace:*",
     "@readium/shared": "workspace:*"
   },

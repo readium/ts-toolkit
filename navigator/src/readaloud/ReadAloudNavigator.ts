@@ -272,7 +272,8 @@ export class ReadAloudNavigator {
         if (!this._settings.readFromPointer || event.interactiveElement || !event.onContent || !this.navigator.findPointedPiece) return false;
         this.awaitedHref = undefined;
         const playing = this.state === "playing";
-        const rules: PointedPieceRule[] = this.readFromPointerRules.map(({ selector, startAt, idle, playing: whilePlaying, active }) => ({
+        const rules: PointedPieceRule[] = this.readFromPointerRules.map(({ role, selector, startAt, idle, playing: whilePlaying, active }) => ({
+            role,
             selector,
             startAt,
             container: (playing ? whilePlaying : idle) === "container",

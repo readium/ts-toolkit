@@ -160,6 +160,9 @@ importers:
 
   navigator-html-injectables:
     dependencies:
+      '@readium/guided-navigation':
+        specifier: workspace:*
+        version: link:../guided-navigation
       '@readium/helpers':
         specifier: workspace:*
         version: link:../helpers
