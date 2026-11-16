@@ -26,6 +26,16 @@ export interface FrameClickEvent {
     y: number;
 }
 
+/**
+ * From the target outwards, the first rule matching an element decides: `container` makes it the container, else the walk stops.
+ * The outermost container wins. It starts at the nearest run of preceding siblings matching `startAt`, if any.
+ */
+export interface PointedPieceRule {
+    selector: string;
+    startAt?: string;
+    container: boolean;
+}
+
 // A piece is `[text, cssSelector]`, as `go_text` takes it.
 export interface PointedPieceRequest {
     id: string;
@@ -33,6 +43,7 @@ export interface PointedPieceRequest {
     x: number;
     y: number;
     pieces: [unknown, string | undefined][];
+    rules?: PointedPieceRule[];
 }
 
 export interface PointedPieceResponse {
@@ -518,14 +529,58 @@ export class Peripherals extends Module {
         return false;
     }
 
-    // The first piece under the point, else the first one containing the targeted element (e.g. an image).
-    private pointedPiece({ cssSelector, x, y, pieces }: PointedPieceRequest): number {
+    // Invalid selectors match nothing.
+    private static matches(element: Element, selector: string): boolean {
+        try {
+            return element.matches(selector);
+        } catch {
+            return false;
+        }
+    }
+
+    // The container `rules` resolve `target` to, as a range.
+    private containerRange(target: Element, rules: PointedPieceRule[]): Range | undefined {
+        let container: { element: Element; rule: PointedPieceRule } | undefined;
+        for (let element: Element | null = target; element; element = element.parentElement) {
+            const rule = rules.find(rule => Peripherals.matches(element!, rule.selector));
+            if (!rule) continue;
+            if (!rule.container) break;
+            container = { element, rule };
+        }
+        if (!container) return undefined;
+        const range = this.wnd.document.createRange();
+        range.selectNode(container.element);
+        const startAt = container.rule.startAt;
+        if (startAt) {
+            let previous = container.element.previousElementSibling;
+            while (previous && !Peripherals.matches(previous, startAt)) previous = previous.previousElementSibling;
+            while (previous && Peripherals.matches(previous, startAt)) {
+                range.setStartBefore(previous);
+                previous = previous.previousElementSibling;
+            }
+        }
+        return range;
+    }
+
+    /**
+     * The first piece starting in the container `rules` resolve the targeted element to, if any.
+     * Else the innermost piece under the point, else the innermost one containing the targeted element (e.g. an image).
+     */
+    private pointedPiece({ cssSelector, x, y, pieces, rules }: PointedPieceRequest): number {
         const target = this.wnd.document.querySelector(cssSelector);
         if (!target) return -1;
         const targetRange = this.wnd.document.createRange();
         targetRange.selectNode(target);
+        const container = rules?.length ? this.containerRange(target, rules) : undefined;
         const pixelRatio = this.wnd.devicePixelRatio;
-        let containing = -1;
+        const within = (outer: Range, inner: Range) =>
+            outer.compareBoundaryPoints(Range.START_TO_START, inner) <= 0 &&
+            outer.compareBoundaryPoints(Range.END_TO_END, inner) >= 0;
+        // Contextualization entries are located on their whole container, so a nested piece is the more precise one.
+        const innermost = (best: { index: number; range: Range } | undefined, index: number, range: Range) =>
+            !best || (within(best.range, range) && !within(range, best.range)) ? { index, range } : best;
+        let pointed: { index: number; range: Range } | undefined;
+        let containing: { index: number; range: Range } | undefined;
         for (let i = 0; i < pieces.length; i++) {
             const [text, selector] = pieces[i];
             const range = rangeFromLocator(this.wnd.document, new Locator({
@@ -536,15 +591,14 @@ export class Peripherals extends Module {
                     otherLocations: new Map([["cssSelector", selector]])
                 }) : undefined
             }));
-            if (!range || !range.intersectsNode(target)) continue;
-            if (getClientRectsNoOverlap(range, false).some(rect => rectContainsPoint(rect, x / pixelRatio, y / pixelRatio, 0))) return i;
-            if (
-                containing === -1 &&
-                range.compareBoundaryPoints(Range.START_TO_START, targetRange) <= 0 &&
-                range.compareBoundaryPoints(Range.END_TO_END, targetRange) >= 0
-            ) containing = i;
+            if (!range) continue;
+            if (container?.comparePoint(range.startContainer, range.startOffset) === 0) return i;
+            if (!range.intersectsNode(target)) continue;
+            if (getClientRectsNoOverlap(range, false).some(rect => rectContainsPoint(rect, x / pixelRatio, y / pixelRatio, 0)))
+                pointed = innermost(pointed, i, range);
+            else if (within(range, targetRange)) containing = innermost(containing, i, range);
         }
-        return containing;
+        return (pointed ?? containing)?.index ?? -1;
     }
 
     private registerPointedPiece() {
