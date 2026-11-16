@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor versions (marked **Breaking:**). Patch versions never contain breaking changes.
 
+## [Unreleased]
+
+### Added
+
+- `RTL_LANGUAGES`, the primary language subtags of languages written right to left, as listed by Readium CSS
+
+### Changed
+
+- `effectiveReadingProgression` is `rtl` for every language in `RTL_LANGUAGES`, e.g. Urdu, Pashto or Yiddish, not only Arabic, Persian and Hebrew
+
 ## [2.9.0] – 2026-11-06
 
 ### Fixed

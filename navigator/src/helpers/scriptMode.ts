@@ -1,4 +1,4 @@
-import { Metadata, ReadingProgression } from "@readium/shared";
+import { Metadata, ReadingProgression, RTL_LANGUAGES } from "@readium/shared";
 
 export type ScriptMode = 'ltr' | 'rtl' | 'cjk-horizontal' | 'cjk-vertical' | 'mongolian-vertical';
 
@@ -11,9 +11,8 @@ export type ScriptMode = 'ltr' | 'rtl' | 'cjk-horizontal' | 'cjk-vertical' | 'mo
  * - For CJK (zh/ja/ko): both language AND explicit reading progression are
  *   required. CJK vertical = explicit rtl + CJK language. CJK horizontal =
  *   CJK language with ltr or unset progression.
- * - For RTL (ar/fa/he): language wins. If the primary language is a RTL
- *   script, RTL mode is applied regardless of the explicit progression
- *   direction declared in the OPF.
+ * - For RTL (primary subtag in `RTL_LANGUAGES`): language wins. RTL mode is
+ *   applied regardless of the explicit progression direction declared in the OPF.
  * - For Mongolian (mn): Traditional Mongolian script (mn-Mong) uses
  *   writing-mode: vertical-lr. Cyrillic Mongolian (mn-Cyrl) is standard LTR.
  *   An explicit script subtag is required; bare `mn` defaults to LTR.
@@ -40,12 +39,9 @@ export function getScriptMode(metadata: Metadata): ScriptMode {
         // Requires an explicit Mong script subtag; mn-Cyrl and bare mn stay LTR.
         if (primaryLang.startsWith('mn-mong')) return 'mongolian-vertical';
 
-        // RTL: language is authoritative. ar/fa/he → rtl regardless of
+        // RTL: language is authoritative, regardless of
         // what the OPF says about page-progression-direction.
-        const isRTLScript = primaryLang.startsWith('ar') ||
-                            primaryLang.startsWith('fa') ||
-                            primaryLang.startsWith('he');
-        if (isRTLScript) return 'rtl';
+        if (RTL_LANGUAGES.has(primaryLang.split('-')[0])) return 'rtl';
     }
 
     return 'ltr';
