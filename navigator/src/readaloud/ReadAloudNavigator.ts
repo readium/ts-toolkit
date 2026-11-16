@@ -1,5 +1,5 @@
 import { Layout, Locator, Profile, getCssSelector } from "@readium/shared";
-import { FrameClickEvent, PointedPieceRule, TextLayout, TextLineStarts } from "@readium/navigator-html-injectables";
+import { FrameClickEvent, TextLayout, TextLineStarts } from "@readium/navigator-html-injectables";
 import {
     createLocator,
     extractLangRegionFromBCP47,
@@ -25,7 +25,6 @@ import type { DivinaSettings } from "../divina/preferences/index.ts";
 import { GuidedNavigationProvider, PublicationGuidedNavigationProvider } from "./GuidedNavigationProvider.ts";
 import { GO_TIMEOUT, GuidedNavigationPool, ReadingUnit, ReadingUnits } from "./ReadingUnit.ts";
 import { SpeechProgress } from "./SpeechProgress.ts";
-import { ReadFromPointerRule, defaultReadFromPointerRules } from "./ReadFromPointerRules.ts";
 import {
     IReadAloudDefaults,
     IReadAloudPreferences,
@@ -71,11 +70,6 @@ export interface ReadAloudConfiguration {
     defaults?: IReadAloudDefaults;
     /** Whether the screen is kept awake while playing, where the browser grants a screen wake lock. Defaults to true. */
     keepAwake?: boolean;
-    /**
-     * From the pressed element outwards, the first rule matching an element decides; `exact` stops there.
-     * The outermost `container` is read from its start. Defaults to `defaultReadFromPointerRules`.
-     */
-    readFromPointerRules?: ReadFromPointerRule[];
 }
 
 interface TurningPosition {
@@ -135,7 +129,6 @@ export class ReadAloudNavigator {
     private _detached = false;
     private navigationLocked = false;
     private readonly keepAwake: boolean;
-    private readonly readFromPointerRules: ReadFromPointerRule[];
     private wakeLockWanted = false;
     private wakeLock?: Promise<WakeLockSentinel | undefined>;
     // The resource the spoken text was last shown in, to tell when the reader moves to another.
@@ -175,14 +168,13 @@ export class ReadAloudNavigator {
             readonly settings?: Readonly<EpubSettings> | Readonly<WebPubSettings> | Readonly<DivinaSettings>;
             watchTextLayout?(locators: Locator[], cb: (layout: TextLayout) => void): () => void;
             watchViewport?(cb: (viewport: VisualNavigatorViewport) => void): () => void;
-            findPointedPiece?(event: FrameClickEvent, pieces: Locator[], rules?: PointedPieceRule[]): Promise<Locator | undefined>;
+            findPointedPiece?(event: FrameClickEvent, pieces: Locator[]): Promise<Locator | undefined>;
             lockNavigation?(locked: boolean): void;
         },
         private readonly listeners: ReadAloudListeners = {},
         configuration: ReadAloudConfiguration = {}
     ) {
         this.keepAwake = configuration.keepAwake ?? true;
-        this.readFromPointerRules = configuration.readFromPointerRules ?? defaultReadFromPointerRules;
         this.pool = new GuidedNavigationPool(navigator.publication, configuration.provider ?? new PublicationGuidedNavigationProvider(navigator.publication));
         this.units = new ReadingUnits(navigator);
         this._preferences = new ReadAloudPreferences(configuration.preferences);
@@ -265,17 +257,13 @@ export class ReadAloudNavigator {
 
     /**
      * Starts reading from the utterance under a click or tap in a displayed resource, loading that resource when needed.
-     * Some content is read from its start, following the `readFromPointerRules` configuration.
      * Resolves false when the `readFromPointer` preference is off, or the press isn't on content read aloud, or is on an interactive element, so the caller handles it.
      */
     async readFromPointer(event: FrameClickEvent): Promise<boolean> {
         if (!this._settings.readFromPointer || event.interactiveElement || !event.onContent || !this.navigator.findPointedPiece) return false;
         this.awaitedHref = undefined;
-        const playing = this.state === "playing";
-        const rules: PointedPieceRule[] = this.readFromPointerRules.map(({ selector, startAt, idle, playing: whilePlaying }) =>
-            ({ selector, startAt, container: (playing ? whilePlaying : idle) === "container" }));
         const unit = this.unit;
-        const index = unit ? await this.pointedIndex(event, this.speech.getContentQueue(), rules) : -1;
+        const index = unit ? await this.pointedIndex(event, this.speech.getContentQueue()) : -1;
         if (unit && index >= 0) {
             this.attach();
             return this.loadUnit(() => unit, () => index);
@@ -285,7 +273,7 @@ export class ReadAloudNavigator {
         if (unit?.links.some(link => link.href.split("#")[0] === href)) return false;
         this.attach();
         return this.loadUnit(() => this.units.around(href), async queue => {
-            const index = await this.pointedIndex(event, queue, rules);
+            const index = await this.pointedIndex(event, queue);
             return index >= 0 ? index : this.startIndex(queue, this.navigator.currentLocator);
         });
     }
@@ -789,10 +777,10 @@ export class ReadAloudNavigator {
     }
 
     // The index in `queue` of the utterance under the press, or -1.
-    private async pointedIndex(event: FrameClickEvent, queue: ReadiumSpeechUtterance[], rules: PointedPieceRule[]): Promise<number> {
+    private async pointedIndex(event: FrameClickEvent, queue: ReadiumSpeechUtterance[]): Promise<number> {
         const pieces = queue.flatMap((utterance, index) => this.piecesOf(utterance).map(piece => ({ index, locator: this.locatorFor(piece) })))
             .filter((piece): piece is { index: number; locator: Locator } => piece.locator !== undefined);
-        const found = await this.navigator.findPointedPiece?.(event, pieces.map(piece => piece.locator), rules);
+        const found = await this.navigator.findPointedPiece?.(event, pieces.map(piece => piece.locator));
         return pieces.find(piece => piece.locator === found)?.index ?? -1;
     }
 

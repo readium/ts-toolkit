@@ -3,7 +3,7 @@ import { decodeFragmentComponent } from "@readium/helpers";
 import { Configurable, ConfigurableSettings, LineLengths, ProgressionRange, VisualNavigator, VisualNavigatorViewport } from "../index.ts";
 import { FramePoolManager } from "./frame/FramePoolManager.ts";
 import { FXLFramePoolManager } from "./fxl/FXLFramePoolManager.ts";
-import { CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FXLModules, ModuleLibrary, ModuleName, ReflowableModules, BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent, KeyboardPeripheralEvent, TextLayout, PointedPieceRequest, PointedPieceResponse, PointedPieceRule } from "@readium/navigator-html-injectables";
+import { CommsEventKey, ContextMenuEvent, DecorationActivatedEvent, DecorationPointerEnterData, DecorationPointerLeaveData, FXLModules, ModuleLibrary, ModuleName, ReflowableModules, BasicTextSelection, FrameClickEvent, SuspiciousActivityEvent, KeyboardPeripheralEvent, TextLayout, PointedPieceRequest, PointedPieceResponse } from "@readium/navigator-html-injectables";
 import { Decoration, OnDecorationActivatedEvent, OnDecorationPointerEnterEvent, OnDecorationPointerLeaveEvent, DecorationObserver, DecorableNavigator, DecoratorConfig, decorationsEqual, resolveDecorationForWire, supportsDecorationStyle as canRenderDecorationStyle, DecorationStyleType } from "../decorations/index.ts";
 import * as path from "path-browserify";
 import { FXLFrameManager } from "./fxl/FXLFrameManager.ts";
@@ -934,11 +934,10 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
     }
 
     /**
-     * Returns the first of `pieces` starting in the container `rules` resolve the element `event` targets to, if any,
-     * else the innermost under its point, else the innermost containing that element,
+     * Returns the first of `pieces` under the point of `event`, else the first containing the element it targets,
      * in the resource of the frame it comes from. Undefined when none does.
      */
-    public async findPointedPiece(event: FrameClickEvent, pieces: Locator[], rules?: PointedPieceRule[]): Promise<Locator | undefined> {
+    public async findPointedPiece(event: FrameClickEvent, pieces: Locator[]): Promise<Locator | undefined> {
         const frames = this._cframes.filter(f => !!f) as (FrameManager | FXLFrameManager)[];
         const i = frames.findIndex(frame => frame.source === event.targetFrameSrc);
         const href = i >= 0 ? this.viewport.readingOrder[i] : undefined;
@@ -956,8 +955,7 @@ export class EpubNavigator extends VisualNavigator implements Configurable<Confi
                 cssSelector: event.cssSelector!,
                 x: event.x - this._spreadOffsetX(event.targetFrameSrc),
                 y: event.y,
-                pieces: candidates.map(piece => [piece.text?.serialize(), getCssSelector(piece.locations)]),
-                rules
+                pieces: candidates.map(piece => [piece.text?.serialize(), getCssSelector(piece.locations)])
             };
             // The reply is posted before the ack, so a pending request on ack got no reply.
             const sent = frames[i].msg?.send("pointed_piece", request, () => resolve(-1));
