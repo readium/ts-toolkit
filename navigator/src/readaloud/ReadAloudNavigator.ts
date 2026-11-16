@@ -175,7 +175,7 @@ export class ReadAloudNavigator {
             readonly settings?: Readonly<EpubSettings> | Readonly<WebPubSettings> | Readonly<DivinaSettings>;
             watchTextLayout?(locators: Locator[], cb: (layout: TextLayout) => void): () => void;
             watchViewport?(cb: (viewport: VisualNavigatorViewport) => void): () => void;
-            findPointedPiece?(event: FrameClickEvent, pieces: Locator[], rules?: PointedPieceRule[]): Promise<Locator | undefined>;
+            findPointedPiece?(event: FrameClickEvent, pieces: Locator[], rules?: PointedPieceRule[], current?: Locator): Promise<Locator | undefined>;
             lockNavigation?(locked: boolean): void;
         },
         private readonly listeners: ReadAloudListeners = {},
@@ -272,10 +272,17 @@ export class ReadAloudNavigator {
         if (!this._settings.readFromPointer || event.interactiveElement || !event.onContent || !this.navigator.findPointedPiece) return false;
         this.awaitedHref = undefined;
         const playing = this.state === "playing";
-        const rules: PointedPieceRule[] = this.readFromPointerRules.map(({ selector, startAt, idle, playing: whilePlaying }) =>
-            ({ selector, startAt, container: (playing ? whilePlaying : idle) === "container" }));
+        const rules: PointedPieceRule[] = this.readFromPointerRules.map(({ selector, startAt, idle, playing: whilePlaying, active }) => ({
+            selector,
+            startAt,
+            container: (playing ? whilePlaying : idle) === "container",
+            currentContainer: playing ? (active ?? whilePlaying) === "container" : undefined
+        }));
+        const current = playing ? this.speech.getCurrentContent() : undefined;
+        const currentPiece = current && this.piecesOf(current)[0];
+        const currentLocator = currentPiece ? this.locatorFor(currentPiece) : undefined;
         const unit = this.unit;
-        const index = unit ? await this.pointedIndex(event, this.speech.getContentQueue(), rules) : -1;
+        const index = unit ? await this.pointedIndex(event, this.speech.getContentQueue(), rules, currentLocator) : -1;
         if (unit && index >= 0) {
             this.attach();
             return this.loadUnit(() => unit, () => index);
@@ -789,10 +796,10 @@ export class ReadAloudNavigator {
     }
 
     // The index in `queue` of the utterance under the press, or -1.
-    private async pointedIndex(event: FrameClickEvent, queue: ReadiumSpeechUtterance[], rules: PointedPieceRule[]): Promise<number> {
+    private async pointedIndex(event: FrameClickEvent, queue: ReadiumSpeechUtterance[], rules: PointedPieceRule[], current?: Locator): Promise<number> {
         const pieces = queue.flatMap((utterance, index) => this.piecesOf(utterance).map(piece => ({ index, locator: this.locatorFor(piece) })))
             .filter((piece): piece is { index: number; locator: Locator } => piece.locator !== undefined);
-        const found = await this.navigator.findPointedPiece?.(event, pieces.map(piece => piece.locator), rules);
+        const found = await this.navigator.findPointedPiece?.(event, pieces.map(piece => piece.locator), rules, current);
         return pieces.find(piece => piece.locator === found)?.index ?? -1;
     }
 

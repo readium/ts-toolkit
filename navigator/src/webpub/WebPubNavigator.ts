@@ -695,7 +695,7 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
      * else the innermost under its point, else the innermost containing that element,
      * in the resource of the frame it comes from. Undefined when none does.
      */
-    public async findPointedPiece(event: FrameClickEvent, pieces: Locator[], rules?: PointedPieceRule[]): Promise<Locator | undefined> {
+    public async findPointedPiece(event: FrameClickEvent, pieces: Locator[], rules?: PointedPieceRule[], current?: Locator): Promise<Locator | undefined> {
         const frames = this.framePool.currentFrames.filter(f => !!f) as WebPubFrameManager[];
         const i = frames.findIndex(frame => frame.source === event.targetFrameSrc);
         const href = i >= 0 ? this.viewport.readingOrder[i] : undefined;
@@ -714,7 +714,8 @@ export class WebPubNavigator extends VisualNavigator implements Configurable<Web
                 x: event.x,
                 y: event.y,
                 pieces: candidates.map(piece => [piece.text?.serialize(), getCssSelector(piece.locations)]),
-                rules
+                rules,
+                current: current?.href.split("#")[0] === href ? [current.text?.serialize(), getCssSelector(current.locations)] : undefined
             };
             // The reply is posted before the ack, so a pending request on ack got no reply.
             const sent = frames[i].msg?.send("pointed_piece", request, () => resolve(-1));

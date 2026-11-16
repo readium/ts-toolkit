@@ -34,6 +34,8 @@ export interface PointedPieceRule {
     selector: string;
     startAt?: string;
     container: boolean;
+    /** Replaces `container` when the request's `current` piece starts in the element, from `startAt` on. */
+    currentContainer?: boolean;
 }
 
 // A piece is `[text, cssSelector]`, as `go_text` takes it.
@@ -44,6 +46,7 @@ export interface PointedPieceRequest {
     y: number;
     pieces: [unknown, string | undefined][];
     rules?: PointedPieceRule[];
+    current?: [unknown, string | undefined];
 }
 
 export interface PointedPieceResponse {
@@ -539,22 +542,27 @@ export class Peripherals extends Module {
     }
 
     // The container `rules` resolve `target` to, as a range.
-    private containerRange(target: Element, rules: PointedPieceRule[]): Range | undefined {
-        let container: { element: Element; rule: PointedPieceRule } | undefined;
+    private containerRange(target: Element, rules: PointedPieceRule[], current?: Range): Range | undefined {
+        let container: Range | undefined;
         for (let element: Element | null = target; element; element = element.parentElement) {
             const rule = rules.find(rule => Peripherals.matches(element!, rule.selector));
             if (!rule) continue;
-            if (!rule.container) break;
-            container = { element, rule };
+            const range = this.ruleRange(element, rule);
+            const isCurrent = current !== undefined && range.comparePoint(current.startContainer, current.startOffset) === 0;
+            if (!(isCurrent ? rule.currentContainer ?? rule.container : rule.container)) break;
+            container = range;
         }
-        if (!container) return undefined;
+        return container;
+    }
+
+    // The element, from the nearest run of preceding siblings matching the rule's `startAt`, if any.
+    private ruleRange(element: Element, rule: PointedPieceRule): Range {
         const range = this.wnd.document.createRange();
-        range.selectNode(container.element);
-        const startAt = container.rule.startAt;
-        if (startAt) {
-            let previous = container.element.previousElementSibling;
-            while (previous && !Peripherals.matches(previous, startAt)) previous = previous.previousElementSibling;
-            while (previous && Peripherals.matches(previous, startAt)) {
+        range.selectNode(element);
+        if (rule.startAt) {
+            let previous = element.previousElementSibling;
+            while (previous && !Peripherals.matches(previous, rule.startAt)) previous = previous.previousElementSibling;
+            while (previous && Peripherals.matches(previous, rule.startAt)) {
                 range.setStartBefore(previous);
                 previous = previous.previousElementSibling;
             }
@@ -562,16 +570,27 @@ export class Peripherals extends Module {
         return range;
     }
 
+    private pieceRange([text, selector]: [unknown, string | undefined]): Range | undefined {
+        return rangeFromLocator(this.wnd.document, new Locator({
+            href: this.wnd.location.href,
+            type: "text/html",
+            text: LocatorText.deserialize(text),
+            locations: selector ? new LocatorLocations({
+                otherLocations: new Map([["cssSelector", selector]])
+            }) : undefined
+        })) ?? undefined;
+    }
+
     /**
      * The first piece starting in the container `rules` resolve the targeted element to, if any.
      * Else the innermost piece under the point, else the innermost one containing the targeted element (e.g. an image).
      */
-    private pointedPiece({ cssSelector, x, y, pieces, rules }: PointedPieceRequest): number {
+    private pointedPiece({ cssSelector, x, y, pieces, rules, current }: PointedPieceRequest): number {
         const target = this.wnd.document.querySelector(cssSelector);
         if (!target) return -1;
         const targetRange = this.wnd.document.createRange();
         targetRange.selectNode(target);
-        const container = rules?.length ? this.containerRange(target, rules) : undefined;
+        const container = rules?.length ? this.containerRange(target, rules, current && this.pieceRange(current)) : undefined;
         const pixelRatio = this.wnd.devicePixelRatio;
         const within = (outer: Range, inner: Range) =>
             outer.compareBoundaryPoints(Range.START_TO_START, inner) <= 0 &&
@@ -582,15 +601,7 @@ export class Peripherals extends Module {
         let pointed: { index: number; range: Range } | undefined;
         let containing: { index: number; range: Range } | undefined;
         for (let i = 0; i < pieces.length; i++) {
-            const [text, selector] = pieces[i];
-            const range = rangeFromLocator(this.wnd.document, new Locator({
-                href: this.wnd.location.href,
-                type: "text/html",
-                text: LocatorText.deserialize(text),
-                locations: selector ? new LocatorLocations({
-                    otherLocations: new Map([["cssSelector", selector]])
-                }) : undefined
-            }));
+            const range = this.pieceRange(pieces[i]);
             if (!range) continue;
             if (container?.comparePoint(range.startContainer, range.startOffset) === 0) return i;
             if (!range.intersectsNode(target)) continue;
