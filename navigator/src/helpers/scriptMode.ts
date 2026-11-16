@@ -24,10 +24,8 @@ export function getScriptMode(metadata: Metadata): ScriptMode {
     const progression = metadata.readingProgression;
 
     if (primaryLang) {
-        const isCJK = primaryLang.startsWith('zh') ||
-                      primaryLang.startsWith('ja') ||
-                      primaryLang.startsWith('ko');
-        if (isCJK) {
+        const subtag = primaryLang.split('-')[0];
+        if (subtag === 'zh' || subtag === 'ja' || subtag === 'ko') {
             // Vertical requires explicit rtl progression. If progression
             // conflicts (e.g. ltr) we fall back to horizontal.
             return progression === ReadingProgression.rtl
@@ -41,7 +39,7 @@ export function getScriptMode(metadata: Metadata): ScriptMode {
 
         // RTL: language is authoritative, regardless of
         // what the OPF says about page-progression-direction.
-        if (RTL_LANGUAGES.has(primaryLang.split('-')[0])) return 'rtl';
+        if (RTL_LANGUAGES.has(subtag)) return 'rtl';
     }
 
     return 'ltr';

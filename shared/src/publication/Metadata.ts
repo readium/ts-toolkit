@@ -383,13 +383,13 @@ export class Metadata {
       return ReadingProgression.ltr;
     }
 
-    const primaryLang = this.languages[0].toLowerCase();
+    const [lang, next] = this.languages[0].toLowerCase().split('-');
 
-    if (primaryLang === 'zh-hant' || primaryLang === 'zh-tw') {
+    if (lang === 'zh' && (next === 'hant' || next === 'tw')) {
       return ReadingProgression.rtl;
     }
 
-    return RTL_LANGUAGES.has(primaryLang.split('-')[0])
+    return RTL_LANGUAGES.has(lang)
       ? ReadingProgression.rtl
       : ReadingProgression.ltr;
   }

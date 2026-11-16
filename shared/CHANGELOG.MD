@@ -14,6 +14,7 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 ### Changed
 
 - `effectiveReadingProgression` is `rtl` for every language in `RTL_LANGUAGES`, e.g. Urdu, Pashto or Yiddish, not only Arabic, Persian and Hebrew
+- `effectiveReadingProgression` is `rtl` for Traditional Chinese with more subtags, such as `zh-Hant-TW` or `zh-Hant-HK`, not only `zh-Hant` and `zh-TW`
 
 ## [2.9.0] – 2026-11-06
 
