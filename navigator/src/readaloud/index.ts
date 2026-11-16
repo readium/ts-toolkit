@@ -1,5 +1,6 @@
 export * from './GuidedNavigationProvider.ts';
 export * from './ReadAloudNavigator.ts';
+export * from './ReadFromPointerRules.ts';
 export * from './preferences/index.ts';
 export {
     defaultContextualizations,

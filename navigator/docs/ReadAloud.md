@@ -81,6 +81,19 @@ Voices are listed with `getVoices()`, and set with the `voice` preference. `getL
 
 `readFromPointer(event)` starts reading from the utterance under a click or tap in a displayed resource. Call it from the navigator's `tap` and `click` listeners while reading aloud is on. It loads the pressed resource when it isn't the one being read, for instance after pausing and turning pages.
 
+Some content is read from its start rather than from the pressed utterance: a figure, unless the press is on its caption, and math, always; a table, an epigraph, a pullquote, a quote with a `footer` attribution and a definition, from its term, unless playing. Change this with the `readFromPointerRules` configuration. From the pressed element outwards, the first rule matching an element decides, and the outermost `container` is read from its start:
+
+```ts
+const readAloud = new ReadAloudNavigator(navigator, listeners, {
+  readFromPointerRules: [
+    ...defaultReadFromPointerRules,
+    { selector: "aside", idle: "container", playing: "exact" }
+  ]
+});
+```
+
+An empty list reads from the pressed utterance everywhere.
+
 It resolves `false`, leaving playback untouched, when the `readFromPointer` preference is off, or the press is on a link or another interactive element, on empty space, or on content that isn't read aloud. Handle the event as usual then:
 
 ```ts
