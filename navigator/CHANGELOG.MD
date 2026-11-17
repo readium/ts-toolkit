@@ -16,6 +16,12 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 - `readFromPointer()` reads a figure, unless the press is on its caption, and math from their start. It reads a table, an epigraph, a pullquote, a quote with a `footer` attribution and a definition, from its term, from their start too, unless that content is the one being played
 - `readFromPointer()` starts from the innermost utterance under the press, so an utterance nested in a larger one is the one read
 - `findPointedPiece()` on `EpubNavigator` and `WebPubNavigator` takes optional `rules` and `current` arguments
+- Publications whose primary language is written right to left, e.g. Urdu, Pashto or Yiddish, get the RTL Readium CSS stylesheets and `dir="rtl"`, not only Arabic, Persian and Hebrew
+
+### Fixed
+
+- Languages whose code only starts like an RTL one, such as Mapudungun (`arn`) or Herero (`her`), no longer get the RTL stylesheets and `dir="rtl"`
+- Languages whose code only starts like a CJK one, such as Konkani (`kok`) or Zhuang (`zha`), no longer get the CJK stylesheets and writing mode
 
 ## [2.15.0] – 2026-11-06
 

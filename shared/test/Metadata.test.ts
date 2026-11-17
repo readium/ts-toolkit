@@ -512,6 +512,27 @@ describe('Metadata Tests', () => {
     ).toEqual(ReadingProgression.ltr);
   });
 
+  it('effectiveReadingProgression is rtl for every RTL primary subtag', () => {
+    for (const lang of ['ar-EG', 'fa', 'per', 'fas', 'he', 'iw', 'yi', 'ur-PK', 'ps', 'sd', 'ckb', 'ug', 'dv', 'syr']) {
+      expect(createMetadata({ languages: [lang] }).effectiveReadingProgression).toEqual(ReadingProgression.rtl);
+    }
+  });
+
+  it('effectiveReadingProgression is rtl for Traditional Chinese with a region', () => {
+    for (const lang of ['zh-Hant-TW', 'zh-Hant-HK', 'zh-TW']) {
+      expect(createMetadata({ languages: [lang] }).effectiveReadingProgression).toEqual(ReadingProgression.rtl);
+    }
+    for (const lang of ['zh', 'zh-Hans', 'zh-Hans-TW', 'zh-CN']) {
+      expect(createMetadata({ languages: [lang] }).effectiveReadingProgression).toEqual(ReadingProgression.ltr);
+    }
+  });
+
+  it('effectiveReadingProgression matches the primary subtag, not a prefix', () => {
+    for (const lang of ['arn', 'fat', 'her', 'urh']) {
+      expect(createMetadata({ languages: [lang] }).effectiveReadingProgression).toEqual(ReadingProgression.ltr);
+    }
+  });
+
   it('effectiveReadingProgression ignores multiple languages', () => {
     expect(
       createMetadata({

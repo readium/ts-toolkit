@@ -14,7 +14,7 @@ import { Contributors } from './Contributor.ts';
 import { Layout } from './Layout.ts';
 import { LocalizedString } from './LocalizedString.ts';
 import { Profile } from './Profiles.ts';
-import { ReadingProgression } from './ReadingProgression.ts';
+import { ReadingProgression, RTL_LANGUAGES } from './ReadingProgression.ts';
 import { Subjects } from './Subject.ts';
 import { Accessibility } from './accessibility/Accessibility.ts';
 import { TDM } from './TDM.ts';
@@ -383,24 +383,14 @@ export class Metadata {
       return ReadingProgression.ltr;
     }
 
-    const primaryLang = this.languages[0].toLowerCase();
+    const [lang, next] = this.languages[0].toLowerCase().split('-');
 
-    if (primaryLang === 'zh-hant' || primaryLang === 'zh-tw') {
+    if (lang === 'zh' && (next === 'hant' || next === 'tw')) {
       return ReadingProgression.rtl;
     }
 
-    // The region is ignored for ar, fa and he.
-    const lang = primaryLang.split('-')[0];
-
-    switch (lang) {
-      case 'ar':
-        return ReadingProgression.rtl;
-      case 'fa':
-        return ReadingProgression.rtl;
-      case 'he':
-        return ReadingProgression.rtl;
-      default:
-        return ReadingProgression.ltr;
-    }
+    return RTL_LANGUAGES.has(lang)
+      ? ReadingProgression.rtl
+      : ReadingProgression.ltr;
   }
 }
