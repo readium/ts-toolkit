@@ -1,3 +1,4 @@
+import { isAriaSubstituted } from "../src/object.ts";
 import { parseMarkup } from "../src/converter.ts";
 import {
   encodeCssSelectorFragment,
@@ -154,13 +155,25 @@ test("an object with text next to a role-only sibling still gets no textref with
   expect(last.textref).toBe(undefined);
 });
 
-test("a link's own href textref is never clobbered by, nor clobbers, the parent's generated reference", () => {
-  const input = '<ul><li><a href="chapter1.xhtml">Chapter 1</a></li></ul>';
-  const [list] = parseMarkup(input, undefined, { textrefs: ["listItem"] });
+test("a link's textref locates the link itself, never its href", () => {
+  const [p] = parseMarkup('<p>See <a role="doc-backlink" href="chapter1.xhtml#s1">back</a>.</p>', undefined, { textrefs: true });
+  const [link] = p.children!;
+  expect(link.textref).not.toContain("chapter1");
+  expect(decodeTextref(link)?.cssSelector).toBeTruthy();
+});
+
+test("an ARIA-labelled link that is its block's sole content stays an object of its own", () => {
+  const [p] = parseMarkup('<p><a href="x.xhtml" aria-label="Go">Cover</a></p>');
+  expect(p.text).toBe(undefined);
+  expect(isAriaSubstituted(p.children![0])).toBe(true);
+});
+
+test("a list item's sole link becomes the item's own text", () => {
+  const [list] = parseMarkup('<ul><li><a href="chapter1.xhtml">Chapter 1</a></li></ul>', undefined, { textrefs: ["listItem"] });
   const [item] = list.children!;
-  expect(decodeCssSelectorFragment(item.textref)?.length ? true : false).toBe(true);
-  const [link] = item.children!;
-  expect(link.textref).toBe("chapter1.xhtml");
+  expect(item.text?.plain).toBe("Chapter 1");
+  expect(item.children).toBe(undefined);
+  expect(decodeCssSelectorFragment(item.textref)).toBeTruthy();
 });
 
 test("encodeCssSelectorFragment/decodeCssSelectorFragment round-trip", () => {
@@ -187,7 +200,7 @@ test("decodeDomRangeFragment returns undefined for an unrelated or malformed tex
   expect(decodeDomRangeFragment(undefined)).toBe(undefined);
 });
 
-test("decodeTextref prefers domRange, then css(), then a self-matching bare #id", () => {
+test("decodeTextref prefers domRange, then css(), then a bare #id", () => {
   const domRange = { start: { cssSelector: "p", textNodeIndex: 0, charOffset: 0 } };
   expect(decodeTextref({ textref: encodeDomRangeFragment(domRange) })).toEqual({
     cssSelector: "p",
@@ -205,9 +218,10 @@ test("decodeTextref prefers domRange's container over start's own selector — s
   });
 });
 
-test("decodeTextref ignores a navigational textref that isn't this node's own id", () => {
+test("decodeTextref reads a bare #id as the node's own content, whatever the node's id", () => {
+  expect(decodeTextref({ textref: "#note1" })).toEqual({ cssSelector: "#note1" });
+  expect(decodeTextref({ id: "par1", textref: "#note1" })).toEqual({ cssSelector: "#note1" });
   expect(decodeTextref({ textref: "chapter1.xhtml" })).toBe(undefined);
-  expect(decodeTextref({ id: "par1", textref: "#note1" })).toBe(undefined);
   expect(decodeTextref(undefined)).toBe(undefined);
 });
 
@@ -415,20 +429,21 @@ test("decodeTextref splits an href from a self-referencing fragment", () => {
   expect(decodeTextref({ id: "p12", textref: "chapter.xhtml#p12" })).toEqual({ href: "chapter.xhtml", cssSelector: "#p12" });
 });
 
-test("decodeTextref ignores href-qualified navigational textrefs", () => {
-  expect(decodeTextref({ textref: "endnotes.xhtml#note2" })).toBe(undefined);
-  expect(decodeTextref({ id: "p1", textref: "chapter.xhtml#p2" })).toBe(undefined);
-  expect(decodeTextref({ textref: "chapter.xhtml" })).toBe(undefined);
+test("decodeTextref locates an object without an id by its href-qualified #id", () => {
+  expect(decodeTextref({ textref: "chapter.xhtml#p1" })).toEqual({ href: "chapter.xhtml", cssSelector: "#p1" });
+  expect(decodeTextref({ id: "p1", textref: "chapter.xhtml#p2" })).toEqual({ href: "chapter.xhtml", cssSelector: "#p2" });
 });
 
-test("decodeTextref ignores a link's href even when the link has a role", () => {
+test("landmark links get a textref locating themselves, not their destination", () => {
   const [landmarks] = parseMarkup(
     '<ol xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><li><a epub:type="toc" href="#toc">Contents</a></li><li><a epub:type="bodymatter" href="chapter.xhtml">Start</a></li></ol>',
     "application/xhtml+xml",
+    { textrefs: true },
   );
   const links = landmarks.children?.flatMap((li) => li.children ?? [li]) ?? [];
-  expect(links.map((l) => l.textref)).toEqual(["#toc", "chapter.xhtml"]);
-  for (const link of links) expect(decodeTextref(link)).toBe(undefined);
+  expect(links.map((l) => l.textref)).not.toContain("#toc");
+  expect(links.map((l) => l.textref)).not.toContain("chapter.xhtml");
+  for (const link of links) expect(decodeTextref(link)?.cssSelector).toBeTruthy();
 });
 
 test("decodeTextref keeps the href alongside a text-fragment directive", () => {
@@ -472,9 +487,8 @@ test("parseMarkup with href qualifies every ref, and the textrefs decode back wi
   );
   expect(nodes[0].textref).toBe("OEBPS/chapter.xhtml#p1");
   expect(decodeTextref(nodes[0])).toEqual({ href: "OEBPS/chapter.xhtml", cssSelector: "#p1" });
-  const link = nodes[0].children?.find((c) => c.textref?.includes("notes"));
-  expect(link?.textref).toBe("OEBPS/notes.xhtml#n1");
-  expect(decodeTextref(link)).toBe(undefined);
+  const link = nodes[0].children?.find((c) => c.text?.plain === "note");
+  expect(link?.textref).toBe(undefined);
   const second = decodeTextref(nodes[1]);
   expect(second?.href).toBe("OEBPS/chapter.xhtml");
   expect(second?.cssSelector).toBeTruthy();
@@ -501,7 +515,7 @@ test("an embedded target without its id keeps its text-fragment suffix", () => {
   const html = '<p>See <a role="doc-biblioref" href="#smith1988">Smith</a>.</p><ul role="doc-bibliography"><li id="smith1988">Smith, J. 1988.</li></ul>';
   const [p] = parseMarkup(html, undefined, { textrefs: { roles: true, textFragment: true } });
   const entry = p.children![0].children![0];
-  expect(entry.textref).toMatch(/^#css\(%23smith1988\):~:text=/);
+  expect(entry.textref).toMatch(/^#smith1988:~:text=/);
   expect(decodeTextref(entry)?.cssSelector).toBe("#smith1988");
 });
 

@@ -1,4 +1,5 @@
 {
+  "role": ["paragraph"],
   "children": [
     {
       "text": {
@@ -6,12 +7,10 @@
       }
     },
     {
-      "role": [
-        "term"
-      ],
+      "role": ["term"],
       "text": {
-        "ssml": "<sub alias=\"Doctor\">Dr.</sub>",
-        "language": "en"
+        "language": "en",
+        "ssml": "<sub alias=\"Doctor\">Dr.</sub>"
       }
     },
     {
@@ -19,8 +18,5 @@
         "plain": "Watson."
       }
     }
-  ],
-  "role": [
-    "paragraph"
   ]
 }

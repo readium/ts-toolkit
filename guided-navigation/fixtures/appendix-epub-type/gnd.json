@@ -1,16 +1,11 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
+      "role": ["section", "appendix"],
       "text": {
         "plain": "A table of lighthouse construction dates referenced in the text."
-      },
-      "role": [
-        "section",
-        "appendix"
-      ]
+      }
     }
   ]
 }

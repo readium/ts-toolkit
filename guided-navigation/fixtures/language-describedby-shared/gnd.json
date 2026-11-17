@@ -1,49 +1,41 @@
 {
   "children": [
     {
+      "role": ["paragraph"],
       "id": "a",
-      "role": [
-        "paragraph"
-      ],
       "text": {
-        "plain": "Eine",
-        "language": "de"
+        "language": "de",
+        "plain": "Eine"
       }
     },
     {
+      "role": ["paragraph"],
       "id": "b",
-      "role": [
-        "paragraph"
-      ],
       "text": {
-        "plain": "Katze",
-        "language": "de"
+        "language": "de",
+        "plain": "Katze"
       }
     },
     {
-      "children": [
-        {
-          "imgref": "a.png",
-          "role": [
-            "image"
-          ],
-          "description": {
-            "text": {
-              "plain": "x",
-              "language": "fr"
-            }
-          }
-        }
-      ],
-      "role": [
-        "figure"
-      ],
+      "role": ["figure"],
       "description": {
         "text": {
-          "plain": "Eine Katze",
-          "language": "de"
+          "language": "de",
+          "plain": "Eine Katze"
         }
-      }
+      },
+      "children": [
+        {
+          "role": ["image"],
+          "description": {
+            "text": {
+              "language": "fr",
+              "plain": "x"
+            }
+          },
+          "imgref": "a.png"
+        }
+      ]
     }
   ]
 }

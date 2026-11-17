@@ -1,57 +1,29 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
-      "role": [
-        "navigation",
-        "toc"
-      ],
+      "role": ["navigation", "toc"],
       "children": [
         {
-          "role": [
-            "list"
-          ],
+          "role": ["list"],
           "children": [
             {
-              "role": [
-                "listItem"
-              ],
-              "children": [
-                {
-                  "textref": "chapter1.xhtml",
-                  "text": {
-                    "plain": "Chapter One"
-                  }
-                }
-              ]
+              "role": ["listItem"],
+              "text": {
+                "plain": "Chapter One"
+              }
             },
             {
-              "role": [
-                "listItem"
-              ],
-              "children": [
-                {
-                  "textref": "chapter2.xhtml",
-                  "text": {
-                    "plain": "Chapter Two"
-                  }
-                }
-              ]
+              "role": ["listItem"],
+              "text": {
+                "plain": "Chapter Two"
+              }
             },
             {
-              "role": [
-                "listItem"
-              ],
-              "children": [
-                {
-                  "textref": "chapter3.xhtml",
-                  "text": {
-                    "plain": "Chapter Three"
-                  }
-                }
-              ]
+              "role": ["listItem"],
+              "text": {
+                "plain": "Chapter Three"
+              }
             }
           ]
         }

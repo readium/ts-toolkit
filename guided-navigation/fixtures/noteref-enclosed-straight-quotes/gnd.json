@@ -1,32 +1,25 @@
 {
+  "role": ["paragraph"],
+  "text": {
+    "language": "en",
+    "plain": "The word here.",
+    "ssml": "The word \"<readium:noteref id=\"n\" />\" here."
+  },
   "children": [
     {
+      "role": ["noteref"],
       "id": "n",
+      "text": {
+        "plain": "1"
+      },
       "children": [
         {
-          "role": [
-            "aside",
-            "footnote"
-          ],
+          "role": ["aside", "footnote"],
           "text": {
             "plain": "Note."
           }
         }
-      ],
-      "role": [
-        "noteref"
-      ],
-      "text": {
-        "plain": "1"
-      }
+      ]
     }
-  ],
-  "role": [
-    "paragraph"
-  ],
-  "text": {
-    "plain": "The word here.",
-    "ssml": "The word \"<readium:noteref id=\"n\" />\" here.",
-    "language": "en"
-  }
+  ]
 }

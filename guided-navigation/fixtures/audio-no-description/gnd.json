@@ -1,6 +1,4 @@
 {
-  "audioref": "rain-sound.mp3",
-  "role": [
-    "audio"
-  ]
+  "role": ["audio"],
+  "audioref": "rain-sound.mp3"
 }

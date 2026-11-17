@@ -1,6 +1,6 @@
 {
   "id": "figure-caption-element-role-aria",
-  "description": "A role=\"figure\" with a role=\"caption\" child and no explicit aria-labelledby — the caption's text folds into the figure's own description, same as the native <figcaption> case, and isn't spoken as a separate child.",
+  "description": "A role=\"figure\" with a role=\"caption\" child and no explicit aria-labelledby — the caption stays a separate child with role \"caption\", same as the native <figcaption> case.",
   "role": "figure",
   "rolesCovered": [
     "figure",

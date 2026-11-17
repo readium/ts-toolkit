@@ -1,23 +1,17 @@
 {
-  "role": [
-    "list"
-  ],
+  "role": ["list"],
   "children": [
     {
+      "role": ["listItem"],
       "text": {
         "plain": "Normal item"
-      },
-      "role": [
-        "listItem"
-      ]
+      }
     },
     {
+      "role": ["presentation"],
       "text": {
         "plain": "Stripped item"
-      },
-      "role": [
-        "presentation"
-      ]
+      }
     }
   ]
 }

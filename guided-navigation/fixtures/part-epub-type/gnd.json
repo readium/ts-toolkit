@@ -1,21 +1,14 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
-      "role": [
-        "section",
-        "part"
-      ],
+      "role": ["section", "part"],
       "children": [
         {
+          "role": ["heading1"],
           "text": {
             "plain": "Title of the part"
-          },
-          "role": [
-            "heading1"
-          ]
+          }
         }
       ]
     }

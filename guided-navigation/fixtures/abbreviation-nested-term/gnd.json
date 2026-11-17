@@ -1,15 +1,11 @@
 {
-  "role": [
-    "paragraph"
-  ],
+  "role": ["paragraph"],
   "children": [
     {
-      "role": [
-        "term"
-      ],
+      "role": ["term"],
       "text": {
-        "ssml": "<sub alias=\"World Health Organization\">WHO</sub>",
-        "language": "en"
+        "language": "en",
+        "ssml": "<sub alias=\"World Health Organization\">WHO</sub>"
       }
     },
     {

@@ -1,44 +1,23 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
-      "role": [
-        "navigation",
-        "loa"
-      ],
+      "role": ["navigation", "loa"],
       "children": [
         {
-          "role": [
-            "list"
-          ],
+          "role": ["list"],
           "children": [
             {
-              "role": [
-                "listItem"
-              ],
-              "children": [
-                {
-                  "textref": "chapter1.xhtml#audio1",
-                  "text": {
-                    "plain": "Audio 1. Foghorn recording"
-                  }
-                }
-              ]
+              "role": ["listItem"],
+              "text": {
+                "plain": "Audio 1. Foghorn recording"
+              }
             },
             {
-              "role": [
-                "listItem"
-              ],
-              "children": [
-                {
-                  "textref": "chapter2.xhtml#audio2",
-                  "text": {
-                    "plain": "Audio 2. Keeper's log reading"
-                  }
-                }
-              ]
+              "role": ["listItem"],
+              "text": {
+                "plain": "Audio 2. Keeper's log reading"
+              }
             }
           ]
         }

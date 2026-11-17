@@ -1,12 +1,8 @@
 {
-  "role": [
-    "details"
-  ],
+  "role": ["details"],
   "children": [
     {
-      "role": [
-        "summary"
-      ],
+      "role": ["summary"],
       "text": {
         "plain": "Click to expand"
       }

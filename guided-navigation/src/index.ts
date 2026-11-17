@@ -14,4 +14,4 @@ export {
 export type { DomRangeJSON, DecodedTextref } from "./textrefFragment.ts";
 export { isAriaSubstituted, substitutedOwnSelector } from "./object.ts";
 export { extractNodeRoles } from "./roles.ts";
-export { DROPPED, removeDropped } from "./emptyPairs.ts";
+export { DROPPED, droppedMask, removeDropped } from "./emptyPairs.ts";

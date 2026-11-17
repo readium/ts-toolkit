@@ -1,0 +1,13 @@
+{
+  "id": "table-caption-aria-labelledby",
+  "description": "A table labelled via aria-labelledby by its own <caption> — the caption text becomes the table's description, and the caption is still read as a caption child",
+  "role": "table",
+  "rolesCovered": [
+    "table",
+    "caption",
+    "row",
+    "cell"
+  ],
+  "sourceRef": "https://www.w3.org/TR/html-aam-1.0/",
+  "inputKind": "fragment"
+}
