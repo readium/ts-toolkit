@@ -5,12 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor versions (marked **Breaking:**). Patch versions never contain breaking changes.
 
-## [Unreleased]
+## [1.4.0] – 2026-11-17
 
 ### Changed
 
 - **Breaking:** a `textref` always references the object's own content, as in the Guided Navigation specification. Links, backlinks, glossrefs and bibliorefs no longer carry their `href` as `textref`; a link that is the only content of a list item or block becomes that object's text
-- **Breaking:** `decodeTextref` reads a bare or href-qualified `#id` as the object's own content whether or not the object has an `id`, so documents whose objects have none are located
+- **Breaking:** `decodeTextref` takes `{ textref }` only. It reads a bare or href-qualified `#id` as the object's own content whether or not the object has an `id`, so documents whose objects have none are located
 - Links, note references, images, audio and video get a `textref` to their own element when `textrefs` covers their role, like blocks
 - **Breaking:** a `<figcaption>` or table `<caption>` is no longer folded into its figure's or table's `description`. It stays a `caption` object, so a caption holding headings and paragraphs keeps their text instead of flattening it into one description. A figure or table still gets a `description` from `aria-label`, `aria-labelledby` or `aria-describedby`
 
