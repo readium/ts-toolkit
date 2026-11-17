@@ -1,22 +1,18 @@
 {
+  "role": ["paragraph"],
+  "text": {
+    "language": "fr",
+    "plain": "Avant après.",
+    "ssml": "Avant <readium:pagebreak id=\"pagebreak1\" /> après."
+  },
   "children": [
     {
+      "role": ["pagebreak"],
       "id": "pagebreak1",
-      "role": [
-        "pagebreak"
-      ],
       "text": {
-        "plain": "5",
-        "language": "fr"
+        "language": "fr",
+        "plain": "5"
       }
     }
-  ],
-  "role": [
-    "paragraph"
-  ],
-  "text": {
-    "plain": "Avant après.",
-    "ssml": "Avant <readium:pagebreak id=\"pagebreak1\" /> après.",
-    "language": "fr"
-  }
+  ]
 }

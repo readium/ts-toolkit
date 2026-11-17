@@ -1,7 +1,5 @@
 {
-  "role": [
-    "header"
-  ],
+  "role": ["header"],
   "text": {
     "plain": "Chapter One"
   }

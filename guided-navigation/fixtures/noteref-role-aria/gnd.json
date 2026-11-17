@@ -1,7 +1,5 @@
 {
-  "role": [
-    "noteref"
-  ],
+  "role": ["noteref"],
   "text": {
     "plain": "12"
   },

@@ -1,50 +1,33 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
-      "role": [
-        "section",
-        "endnotes"
-      ],
+      "role": ["section", "endnotes"],
       "children": [
         {
-          "role": [
-            "list"
-          ],
+          "role": ["list"],
           "children": [
             {
-              "role": [
-                "listItem"
-              ],
+              "role": ["listItem"],
               "children": [
                 {
+                  "role": ["aside", "footnote"],
                   "id": "note1",
                   "text": {
                     "plain": "See introduction for background."
-                  },
-                  "role": [
-                    "aside",
-                    "footnote"
-                  ]
+                  }
                 }
               ]
             },
             {
-              "role": [
-                "listItem"
-              ],
+              "role": ["listItem"],
               "children": [
                 {
+                  "role": ["aside", "footnote"],
                   "id": "note2",
                   "text": {
                     "plain": "See chapter three for details."
-                  },
-                  "role": [
-                    "aside",
-                    "footnote"
-                  ]
+                  }
                 }
               ]
             }

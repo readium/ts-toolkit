@@ -1,20 +1,14 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
-      "role": [
-        "glossary"
-      ],
+      "role": ["glossary"],
       "children": [
         {
+          "role": ["term"],
           "text": {
             "plain": "lighthouse"
-          },
-          "role": [
-            "term"
-          ]
+          }
         }
       ]
     }

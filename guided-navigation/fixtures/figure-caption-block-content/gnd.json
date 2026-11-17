@@ -1,0 +1,33 @@
+{
+  "role": ["figure"],
+  "children": [
+    {
+      "role": ["image"],
+      "description": {
+        "text": {
+          "plain": "Page 1"
+        }
+      },
+      "imgref": "page1.jpg"
+    },
+    {
+      "role": ["caption"],
+      "children": [
+        {
+          "role": ["heading1"],
+          "id": "page1-panel1",
+          "text": {
+            "plain": "Panel 1"
+          }
+        },
+        {
+          "role": ["paragraph"],
+          "id": "page1-panel1-description",
+          "text": {
+            "plain": "Pepper walks away from the house of the witches of Chaosah."
+          }
+        }
+      ]
+    }
+  ]
+}

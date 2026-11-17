@@ -1,9 +1,7 @@
 {
-  "role": [
-    "paragraph"
-  ],
+  "role": ["paragraph"],
   "text": {
-    "ssml": "The <sub alias=\"World Health Organization\">WHO</sub> <emphasis>said</emphasis> so.",
-    "language": "en"
+    "language": "en",
+    "ssml": "The <sub alias=\"World Health Organization\">WHO</sub> <emphasis>said</emphasis> so."
   }
 }

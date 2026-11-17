@@ -1,15 +1,11 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
+      "role": ["notice"],
       "text": {
         "plain": "Caution: the tower stairs are uneven."
-      },
-      "role": [
-        "notice"
-      ]
+      }
     }
   ]
 }

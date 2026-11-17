@@ -1,17 +1,11 @@
 {
-  "role": [
-    "table"
-  ],
+  "role": ["table"],
   "children": [
     {
-      "role": [
-        "row"
-      ],
+      "role": ["row"],
       "children": [
         {
-          "role": [
-            "columnheader"
-          ],
+          "role": ["columnheader"],
           "text": {
             "plain": "Keeper"
           }
@@ -19,26 +13,21 @@
       ]
     },
     {
-      "role": [
-        "row"
-      ],
+      "role": ["row"],
       "children": [
         {
-          "role": [
-            "cell"
-          ],
+          "role": ["cell"],
           "text": {
+            "language": "en",
             "plain": "Henry Winstanley himself",
-            "ssml": "Henry <readium:link id=\"link1\" /> himself",
-            "language": "en"
+            "ssml": "Henry <readium:link id=\"link1\" /> himself"
           },
           "children": [
             {
               "id": "link1",
               "text": {
                 "plain": "Winstanley"
-              },
-              "textref": "c.html"
+              }
             }
           ]
         }

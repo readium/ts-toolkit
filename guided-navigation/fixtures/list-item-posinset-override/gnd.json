@@ -1,31 +1,23 @@
 {
-  "role": [
-    "list"
-  ],
+  "role": ["list"],
   "children": [
     {
+      "role": ["listItem"],
       "text": {
         "plain": "One"
-      },
-      "role": [
-        "listItem"
-      ]
+      }
     },
     {
+      "role": ["listItem"],
       "text": {
         "plain": "Ninety-nine"
-      },
-      "role": [
-        "listItem"
-      ]
+      }
     },
     {
+      "role": ["listItem"],
       "text": {
         "plain": "Three"
-      },
-      "role": [
-        "listItem"
-      ]
+      }
     }
   ]
 }

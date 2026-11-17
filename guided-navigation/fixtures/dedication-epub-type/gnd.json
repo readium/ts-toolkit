@@ -1,15 +1,11 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
+      "role": ["dedication"],
       "text": {
         "plain": "For every keeper who lit the lamp at dusk."
-      },
-      "role": [
-        "dedication"
-      ]
+      }
     }
   ]
 }

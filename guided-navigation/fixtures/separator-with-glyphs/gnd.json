@@ -1,25 +1,19 @@
 {
   "children": [
     {
-      "role": [
-        "paragraph"
-      ],
+      "role": ["paragraph"],
       "text": {
         "plain": "Before."
       }
     },
     {
-      "role": [
-        "separator"
-      ],
+      "role": ["separator"],
       "text": {
         "plain": "* * *"
       }
     },
     {
-      "role": [
-        "paragraph"
-      ],
+      "role": ["paragraph"],
       "text": {
         "plain": "After."
       }

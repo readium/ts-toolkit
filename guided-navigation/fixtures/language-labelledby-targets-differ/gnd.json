@@ -1,35 +1,29 @@
 {
   "children": [
     {
+      "role": ["paragraph"],
       "id": "a",
-      "role": [
-        "paragraph"
-      ],
       "text": {
-        "plain": "Un chat",
-        "language": "fr"
+        "language": "fr",
+        "plain": "Un chat"
       }
     },
     {
+      "role": ["paragraph"],
       "id": "b",
-      "role": [
-        "paragraph"
-      ],
       "text": {
-        "plain": "and a dog",
-        "language": "en"
+        "language": "en",
+        "plain": "and a dog"
       }
     },
     {
-      "imgref": "a.png",
-      "role": [
-        "image"
-      ],
+      "role": ["image"],
       "description": {
         "text": {
           "plain": "Un chat and a dog"
         }
-      }
+      },
+      "imgref": "a.png"
     }
   ]
 }

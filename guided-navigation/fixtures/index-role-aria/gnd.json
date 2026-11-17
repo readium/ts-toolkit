@@ -1,38 +1,20 @@
 {
-  "role": [
-    "index"
-  ],
+  "role": ["index"],
   "children": [
     {
-      "role": [
-        "list"
-      ],
+      "role": ["list"],
       "children": [
         {
-          "role": [
-            "listItem"
-          ],
-          "children": [
-            {
-              "textref": "chapter1.xhtml#fresnel",
-              "text": {
-                "plain": "Fresnel lens"
-              }
-            }
-          ]
+          "role": ["listItem"],
+          "text": {
+            "plain": "Fresnel lens"
+          }
         },
         {
-          "role": [
-            "listItem"
-          ],
-          "children": [
-            {
-              "textref": "chapter3.xhtml#keepers",
-              "text": {
-                "plain": "Keepers"
-              }
-            }
-          ]
+          "role": ["listItem"],
+          "text": {
+            "plain": "Keepers"
+          }
         }
       ]
     }

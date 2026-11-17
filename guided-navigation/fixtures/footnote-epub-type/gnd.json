@@ -1,35 +1,26 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
+      "role": ["paragraph"],
       "text": {
         "language": "en",
         "plain": "This text has a footnote in the middle of a sentence.",
         "ssml": "This text has a footnote <readium:noteref id=\"note1\" /> in the middle of a sentence."
       },
-      "role": [
-        "paragraph"
-      ],
       "children": [
         {
+          "role": ["noteref"],
           "id": "note1",
           "text": {
             "plain": "[1]"
           },
-          "role": [
-            "noteref"
-          ],
           "children": [
             {
+              "role": ["aside", "footnote"],
               "text": {
                 "plain": "Text of the footnote."
-              },
-              "role": [
-                "aside",
-                "footnote"
-              ]
+              }
             }
           ]
         }

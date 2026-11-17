@@ -1,0 +1,19 @@
+{
+  "role": ["figure"],
+  "description": {
+    "text": {
+      "plain": "A cat face"
+    }
+  },
+  "children": [
+    {
+      "role": ["image"],
+      "description": {
+        "text": {
+          "plain": "A cat"
+        }
+      },
+      "imgref": "cat.png"
+    }
+  ]
+}

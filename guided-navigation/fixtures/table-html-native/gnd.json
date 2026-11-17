@@ -1,25 +1,17 @@
 {
-  "role": [
-    "table"
-  ],
+  "role": ["table"],
   "children": [
     {
-      "role": [
-        "row"
-      ],
+      "role": ["row"],
       "children": [
         {
-          "role": [
-            "columnheader"
-          ],
+          "role": ["columnheader"],
           "text": {
             "plain": "Name"
           }
         },
         {
-          "role": [
-            "columnheader"
-          ],
+          "role": ["columnheader"],
           "text": {
             "plain": "Role"
           }
@@ -27,22 +19,16 @@
       ]
     },
     {
-      "role": [
-        "row"
-      ],
+      "role": ["row"],
       "children": [
         {
-          "role": [
-            "rowheader"
-          ],
+          "role": ["rowheader"],
           "text": {
             "plain": "Ada"
           }
         },
         {
-          "role": [
-            "cell"
-          ],
+          "role": ["cell"],
           "text": {
             "plain": "Engineer"
           }
@@ -50,22 +36,16 @@
       ]
     },
     {
-      "role": [
-        "row"
-      ],
+      "role": ["row"],
       "children": [
         {
-          "role": [
-            "rowheader"
-          ],
+          "role": ["rowheader"],
           "text": {
             "plain": "Grace"
           }
         },
         {
-          "role": [
-            "cell"
-          ],
+          "role": ["cell"],
           "text": {
             "plain": "Admiral"
           }

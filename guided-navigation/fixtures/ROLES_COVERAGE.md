@@ -37,7 +37,7 @@ renaming, or removing a fixture.
 | `epilogue` | `epilogue-epub-type`, `epilogue-role-aria` |
 | `errata` | `errata-epub-type`, `errata-role-aria` |
 | `example` | `example-epub-type`, `example-role-aria` |
-| `figure` | `figure-basic-html-native`, `figure-basic-role-aria`, `figure-caption-element-html-native`, `figure-caption-element-role-aria`, `figure-caption-html-native`, `figure-caption-role-aria`, `figure-credit-nested-in-aria-labelledby-caption`, `figure-credit-nested-in-caption`, `figure-credit-role-aria`, `figure-describedby`, `figure-epub-type`, `figure-no-description`, `language-describedby-shared`, `language-figcaption`, `language-figcaption-credit`, `language-figcaption-switches`, `language-figcaption-switches-throughout` |
+| `figure` | `figure-aria-label-caption`, `figure-basic-html-native`, `figure-basic-role-aria`, `figure-caption-block-content`, `figure-caption-element-html-native`, `figure-caption-element-role-aria`, `figure-caption-html-native`, `figure-caption-role-aria`, `figure-credit-nested-in-aria-labelledby-caption`, `figure-credit-nested-in-caption`, `figure-credit-role-aria`, `figure-describedby`, `figure-epub-type`, `figure-no-description`, `language-describedby-shared`, `language-figcaption`, `language-figcaption-credit`, `language-figcaption-switches`, `language-figcaption-switches-throughout` |
 | `footnote` | `footnote-epub-type`, `footnote-role-aria`, `noteref-target-in-endnotes-epub-type`, `noteref-target-in-endnotes-role-aria` |
 | `foreword` | `foreword-epub-type`, `foreword-role-aria` |
 | `glossary` | `glossary-epub-type`, `glossary-role-aria` |
@@ -75,10 +75,10 @@ renaming, or removing a fixture.
 | `separator` | `separator-html-native`, `separator-role-aria`, `separator-with-glyphs` |
 | `subtitle` | `subtitle-epub-type`, `subtitle-role-aria` |
 | `summary` | `summary-html-native` |
-| `table` | `table-caption`, `table-caption-element-html-native`, `table-caption-role-aria`, `table-cell-abbreviation`, `table-cell-noteref`, `table-colspan-html-native`, `table-colspan-role-aria`, `table-epub-type`, `table-html-native`, `table-in-role-none-wrapper`, `table-nested-html-native`, `table-nested-role-aria`, `table-no-headers`, `table-role-aria`, `table-rowgroup-role-aria`, `table-rowspan-html-native`, `table-rowspan-role-aria`, `table-sectioning`, `table-th-no-scope` |
+| `table` | `table-aria-label-caption`, `table-caption`, `table-caption-aria-labelledby`, `table-caption-element-html-native`, `table-caption-role-aria`, `table-cell-abbreviation`, `table-cell-noteref`, `table-colspan-html-native`, `table-colspan-role-aria`, `table-epub-type`, `table-html-native`, `table-in-role-none-wrapper`, `table-nested-html-native`, `table-nested-role-aria`, `table-no-headers`, `table-role-aria`, `table-rowgroup-role-aria`, `table-rowspan-html-native`, `table-rowspan-role-aria`, `table-sectioning`, `table-th-no-scope` |
 | `term` | `term-epub-type`, `term-html-native`, `term-role-aria`, `term-span-in-dt` |
 | `tip` | `tip-epub-type`, `tip-role-aria` |
 | `toc` | `toc-epub-type`, `toc-role-aria` |
 | `video` | `video-html-native`, `video-no-description` |
 
-259 fixtures across 73 roles.
+263 fixtures across 73 roles.

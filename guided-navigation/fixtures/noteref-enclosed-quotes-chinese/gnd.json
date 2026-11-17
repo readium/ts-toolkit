@@ -1,44 +1,34 @@
 {
   "children": [
     {
+      "role": ["paragraph"],
+      "text": {
+        "language": "zh",
+        "plain": "前后",
+        "ssml": "前“<readium:noteref id=\"n\" />”后"
+      },
       "children": [
         {
+          "role": ["noteref"],
           "id": "n",
+          "text": {
+            "language": "zh",
+            "plain": "1"
+          },
           "children": [
             {
-              "role": [
-                "aside",
-                "footnote"
-              ],
+              "role": ["aside", "footnote"],
               "text": {
                 "plain": "Note."
               }
             }
-          ],
-          "role": [
-            "noteref"
-          ],
-          "text": {
-            "plain": "1",
-            "language": "zh"
-          }
+          ]
         }
-      ],
-      "role": [
-        "paragraph"
-      ],
-      "text": {
-        "plain": "前后",
-        "ssml": "前“<readium:noteref id=\"n\" />”后",
-        "language": "zh"
-      }
+      ]
     },
     {
+      "role": ["aside", "footnote"],
       "id": "m",
-      "role": [
-        "aside",
-        "footnote"
-      ],
       "text": {
         "plain": "Note."
       }

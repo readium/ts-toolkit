@@ -1,57 +1,29 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
-      "role": [
-        "navigation",
-        "landmarks"
-      ],
+      "role": ["navigation", "landmarks"],
       "children": [
         {
-          "role": [
-            "list"
-          ],
+          "role": ["list"],
           "children": [
             {
-              "role": [
-                "listItem"
-              ],
-              "children": [
-                {
-                  "textref": "cover.xhtml",
-                  "text": {
-                    "plain": "Cover"
-                  }
-                }
-              ]
+              "role": ["listItem"],
+              "text": {
+                "plain": "Cover"
+              }
             },
             {
-              "role": [
-                "listItem"
-              ],
-              "children": [
-                {
-                  "textref": "toc.xhtml",
-                  "text": {
-                    "plain": "Table of Contents"
-                  }
-                }
-              ]
+              "role": ["listItem"],
+              "text": {
+                "plain": "Table of Contents"
+              }
             },
             {
-              "role": [
-                "listItem"
-              ],
-              "children": [
-                {
-                  "textref": "chapter1.xhtml",
-                  "text": {
-                    "plain": "Start of Content"
-                  }
-                }
-              ]
+              "role": ["listItem"],
+              "text": {
+                "plain": "Start of Content"
+              }
             }
           ]
         }
