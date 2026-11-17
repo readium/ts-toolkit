@@ -544,6 +544,12 @@ export class Peripherals extends Module {
         }
     }
 
+    // Whether `inner` starts in `outer`. Its end is excluded: a piece starting there belongs to the next sibling.
+    private static startsIn(outer: Range, inner: Range): boolean {
+        return outer.comparePoint(inner.startContainer, inner.startOffset) === 0 &&
+            !(inner.startContainer === outer.endContainer && inner.startOffset === outer.endOffset);
+    }
+
     // The container `rules` resolve `target` to, as a range.
     private containerRange(target: Element, rules: PointedPieceRule[], current?: Range): Range | undefined {
         let container: Range | undefined;
@@ -552,7 +558,7 @@ export class Peripherals extends Module {
             const rule = rules.find(rule => roles.includes(rule.role) && (!rule.selector || Peripherals.matches(element!, rule.selector)));
             if (!rule) continue;
             const range = this.ruleRange(element, rule);
-            const isCurrent = current !== undefined && range.comparePoint(current.startContainer, current.startOffset) === 0;
+            const isCurrent = current !== undefined && Peripherals.startsIn(range, current);
             if (!(isCurrent ? rule.currentContainer ?? rule.container : rule.container)) break;
             container = range;
         }
@@ -609,7 +615,7 @@ export class Peripherals extends Module {
         for (let i = 0; i < pieces.length; i++) {
             const range = this.pieceRange(pieces[i]);
             if (!range) continue;
-            if (container?.comparePoint(range.startContainer, range.startOffset) === 0) return i;
+            if (container && Peripherals.startsIn(container, range)) return i;
             if (!range.intersectsNode(target)) continue;
             if (getClientRectsNoOverlap(range, false).some(rect => rectContainsPoint(rect, x / pixelRatio, y / pixelRatio, 0)))
                 pointed = innermost(pointed, i, range);
