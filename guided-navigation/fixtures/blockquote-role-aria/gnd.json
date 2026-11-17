@@ -1,8 +1,6 @@
 {
+  "role": ["blockquote"],
   "text": {
     "plain": "To be, or not to be, that is the question."
-  },
-  "role": [
-    "blockquote"
-  ]
+  }
 }

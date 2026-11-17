@@ -1,33 +1,23 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
-      "role": [
-        "table"
-      ],
+      "role": ["table"],
       "children": [
         {
-          "role": [
-            "row"
-          ],
+          "role": ["row"],
           "children": [
             {
+              "role": ["cell"],
               "text": {
                 "plain": "Ada"
-              },
-              "role": [
-                "cell"
-              ]
+              }
             },
             {
+              "role": ["cell"],
               "text": {
                 "plain": "Engineer"
-              },
-              "role": [
-                "cell"
-              ]
+              }
             }
           ]
         }

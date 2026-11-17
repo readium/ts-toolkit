@@ -1,6 +1,4 @@
 {
-  "imgref": "unlabeled.jpg",
-  "role": [
-    "image"
-  ]
+  "role": ["image"],
+  "imgref": "unlabeled.jpg"
 }

@@ -1,15 +1,11 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
+      "role": ["epilogue"],
       "text": {
         "plain": "The lamp still turns, though no one climbs the stairs anymore."
-      },
-      "role": [
-        "epilogue"
-      ]
+      }
     }
   ]
 }

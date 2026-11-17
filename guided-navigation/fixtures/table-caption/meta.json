@@ -1,6 +1,6 @@
 {
   "id": "table-caption",
-  "description": "A table with an accessible name via aria-label — the {description} branch of table's own announcement template. Uses aria-label rather than a native <caption> element since native <caption>/<figcaption> implicit accessible-name folding is not yet implemented (see CONTEXTUALIZATION_PLAN.md)",
+  "description": "A table with an accessible name via aria-label — the {description} branch of table's own announcement template. A native <caption> stays a caption child instead (see table-caption-element-html-native)",
   "role": "table",
   "rolesCovered": [
     "table",

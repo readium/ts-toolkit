@@ -1,30 +1,22 @@
 {
+  "role": ["presentation"],
   "children": [
     {
+      "role": ["presentation"],
       "children": [
         {
-          "role": [
-            "cell"
-          ],
+          "role": ["cell"],
           "text": {
             "plain": "Ada"
           }
         },
         {
-          "role": [
-            "presentation"
-          ],
+          "role": ["presentation"],
           "text": {
             "plain": "Lovelace"
           }
         }
-      ],
-      "role": [
-        "presentation"
       ]
     }
-  ],
-  "role": [
-    "presentation"
   ]
 }

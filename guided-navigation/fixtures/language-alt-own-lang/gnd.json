@@ -1,25 +1,21 @@
 {
   "children": [
     {
-      "role": [
-        "paragraph"
-      ],
+      "role": ["paragraph"],
       "text": {
-        "plain": "Texte.",
-        "language": "fr"
+        "language": "fr",
+        "plain": "Texte."
       }
     },
     {
-      "imgref": "a.png",
-      "role": [
-        "image"
-      ],
+      "role": ["image"],
       "description": {
         "text": {
-          "plain": "A cat",
-          "language": "en"
+          "language": "en",
+          "plain": "A cat"
         }
-      }
+      },
+      "imgref": "a.png"
     }
   ]
 }

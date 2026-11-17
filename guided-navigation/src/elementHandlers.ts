@@ -11,7 +11,7 @@ import { hasElementChild, isAncestorOf } from "./dom.ts";
 import { nodeLanguage } from "./language.ts";
 import { Converter, type Segment } from "./converter.ts";
 import { selectorForElement, textrefForSelector } from "./selectorGenerator.ts";
-import { decodeIdFragment, detachSelfTextref } from "./textrefFragment.ts";
+import { decodeIdFragment } from "./textrefFragment.ts";
 
 // Returns true if el's children should still be descended into (a
 // pagebreak with element children of its own, in HTML parsing).
@@ -61,7 +61,7 @@ export function noteref(converter: Converter, el: Element, roles: GndRole[]): vo
         // The target's own id already carries its meaning via this
         // noteref's own id — repeating it on the embedded content would
         // be redundant.
-        for (const c of children) removeId(c);
+        for (const c of children) delete c.id;
         obj.children = children;
       }
     }
@@ -130,22 +130,13 @@ function linkObject(
       obj.children = content;
     }
   }
-  const href = el.getAttribute("href");
-  if (href) obj.textref = href;
   return { obj, words };
-}
-
-function removeId(obj: ObjBuilder) {
-  const id = obj.id;
-  if (id === undefined) return;
-  delete obj.id;
-  detachSelfTextref(obj, id);
 }
 
 // Removes the ids a copy repeats from its original, keeping placeholders', allocated unique and referenced by their parent's SSML.
 function removeCopiedIds(objs: ObjBuilder[], parent?: ObjBuilder) {
   for (const obj of objs) {
-    if (obj.id === undefined || !parent?.text?.ssml.includes(`id="${ssmlAttrEscape(obj.id)}"`)) removeId(obj);
+    if (obj.id === undefined || !parent?.text?.ssml.includes(`id="${ssmlAttrEscape(obj.id)}"`)) delete obj.id;
     if (obj.children) removeCopiedIds(obj.children, obj);
   }
 }

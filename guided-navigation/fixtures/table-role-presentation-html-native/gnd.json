@@ -1,35 +1,25 @@
 {
-  "role": [
-    "presentation"
-  ],
+  "role": ["presentation"],
   "children": [
     {
-      "role": [
-        "presentation"
-      ],
+      "role": ["presentation"],
       "children": [
         {
+          "role": ["presentation"],
           "text": {
             "plain": "Name"
-          },
-          "role": [
-            "presentation"
-          ]
+          }
         }
       ]
     },
     {
-      "role": [
-        "presentation"
-      ],
+      "role": ["presentation"],
       "children": [
         {
+          "role": ["presentation"],
           "text": {
             "plain": "Ada"
-          },
-          "role": [
-            "presentation"
-          ]
+          }
         }
       ]
     }

@@ -1,24 +1,17 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
-      "role": [
-        "section",
-        "cover"
-      ],
+      "role": ["section", "cover"],
       "children": [
         {
-          "imgref": "cover.jpg",
-          "role": [
-            "image"
-          ],
+          "role": ["image"],
           "description": {
             "text": {
               "plain": "Lighthouses of the Atlantic, by J. Smith"
             }
-          }
+          },
+          "imgref": "cover.jpg"
         }
       ]
     }

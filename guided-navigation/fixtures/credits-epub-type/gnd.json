@@ -1,45 +1,31 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
-      "role": [
-        "credits"
-      ],
+      "role": ["credits"],
       "children": [
         {
-          "role": [
-            "list"
-          ],
+          "role": ["list"],
           "children": [
             {
-              "role": [
-                "listItem"
-              ],
+              "role": ["listItem"],
               "children": [
                 {
+                  "role": ["credit"],
                   "text": {
                     "plain": "Cover photograph by A. Keeper."
-                  },
-                  "role": [
-                    "credit"
-                  ]
+                  }
                 }
               ]
             },
             {
-              "role": [
-                "listItem"
-              ],
+              "role": ["listItem"],
               "children": [
                 {
+                  "role": ["credit"],
                   "text": {
                     "plain": "Maps by B. Cartographer."
-                  },
-                  "role": [
-                    "credit"
-                  ]
+                  }
                 }
               ]
             }

@@ -6,33 +6,28 @@
       }
     },
     {
+      "text": {
+        "language": "en",
+        "plain": "world\" \"next\"",
+        "ssml": "world\"<readium:noteref id=\"n\" /> \"next\""
+      },
       "children": [
         {
+          "role": ["noteref"],
           "id": "n",
+          "text": {
+            "plain": "1"
+          },
           "children": [
             {
-              "role": [
-                "aside",
-                "footnote"
-              ],
+              "role": ["aside", "footnote"],
               "text": {
                 "plain": "Note."
               }
             }
-          ],
-          "role": [
-            "noteref"
-          ],
-          "text": {
-            "plain": "1"
-          }
+          ]
         }
-      ],
-      "text": {
-        "plain": "world\" \"next\"",
-        "ssml": "world\"<readium:noteref id=\"n\" /> \"next\"",
-        "language": "en"
-      }
+      ]
     }
   ]
 }

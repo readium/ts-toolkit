@@ -1,7 +1,5 @@
 {
-  "role": [
-    "paragraph"
-  ],
+  "role": ["paragraph"],
   "text": {
     "plain": "xyz"
   }

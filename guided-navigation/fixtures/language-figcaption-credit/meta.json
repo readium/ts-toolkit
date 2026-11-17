@@ -1,6 +1,6 @@
 {
   "id": "language-figcaption-credit",
-  "description": "A figure's caption description language ignores a credit spoken separately",
+  "description": "A figure's caption text and its nested credit each keep their own language",
   "role": "figure",
   "rolesCovered": [
     "figure",

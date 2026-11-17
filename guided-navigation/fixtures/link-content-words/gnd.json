@@ -1,4 +1,9 @@
 {
+  "text": {
+    "language": "en",
+    "plain": "Next: Chapter 3 Lenses, mirrors and prisms",
+    "ssml": "Next: <readium:link id=\"link1\" />"
+  },
   "children": [
     {
       "id": "link1",
@@ -9,9 +14,7 @@
           }
         },
         {
-          "role": [
-            "term"
-          ],
+          "role": ["term"],
           "text": {
             "plain": "Lenses"
           }
@@ -22,9 +25,7 @@
           }
         },
         {
-          "role": [
-            "term"
-          ],
+          "role": ["term"],
           "text": {
             "plain": "mirrors"
           }
@@ -34,13 +35,7 @@
             "plain": "and prisms"
           }
         }
-      ],
-      "textref": "chapter3.xhtml"
+      ]
     }
-  ],
-  "text": {
-    "plain": "Next: Chapter 3 Lenses, mirrors and prisms",
-    "ssml": "Next: <readium:link id=\"link1\" />",
-    "language": "en"
-  }
+  ]
 }

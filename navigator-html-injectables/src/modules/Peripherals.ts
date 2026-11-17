@@ -2,6 +2,7 @@ import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
 import { Comms } from "../comms/comms.ts";
 import { Module } from "./Module.ts";
 import { ReadiumWindow, nearestInteractiveElement } from "../helpers/dom.ts";
+import { extractNodeRoles } from "@readium/guided-navigation";
 import { rangeFromLocator } from "../helpers/locator.ts";
 import { getClientRectsNoOverlap, rectContainsPoint } from "../helpers/rect.ts";
 import { BulkCopyProtector, BulkCopyProtectionOptions } from "../protection/BulkCopyProtector.ts";
@@ -26,6 +27,20 @@ export interface FrameClickEvent {
     y: number;
 }
 
+/**
+ * From the target outwards, the first rule matching an element decides: `container` makes it the container, else the walk stops.
+ * An element matches with the GND `role` and, if any, `selector`. The outermost container wins.
+ * It starts at the nearest run of preceding siblings with the GND role `startAt`, if any.
+ */
+export interface PointedPieceRule {
+    role: string;
+    selector?: string;
+    startAt?: string;
+    container: boolean;
+    /** Replaces `container` when the request's `current` piece starts in the element, from `startAt` on. */
+    currentContainer?: boolean;
+}
+
 // A piece is `[text, cssSelector]`, as `go_text` takes it.
 export interface PointedPieceRequest {
     id: string;
@@ -33,6 +48,8 @@ export interface PointedPieceRequest {
     x: number;
     y: number;
     pieces: [unknown, string | undefined][];
+    rules?: PointedPieceRule[];
+    current?: [unknown, string | undefined];
 }
 
 export interface PointedPieceResponse {
@@ -518,33 +535,93 @@ export class Peripherals extends Module {
         return false;
     }
 
-    // The first piece under the point, else the first one containing the targeted element (e.g. an image).
-    private pointedPiece({ cssSelector, x, y, pieces }: PointedPieceRequest): number {
+    // Invalid selectors match nothing.
+    private static matches(element: Element, selector: string): boolean {
+        try {
+            return element.matches(selector);
+        } catch {
+            return false;
+        }
+    }
+
+    // Whether `inner` starts in `outer`. Its end is excluded: a piece starting there belongs to the next sibling.
+    private static startsIn(outer: Range, inner: Range): boolean {
+        return outer.comparePoint(inner.startContainer, inner.startOffset) === 0 &&
+            !(inner.startContainer === outer.endContainer && inner.startOffset === outer.endOffset);
+    }
+
+    // The container `rules` resolve `target` to, as a range.
+    private containerRange(target: Element, rules: PointedPieceRule[], current?: Range): Range | undefined {
+        let container: Range | undefined;
+        for (let element: Element | null = target; element; element = element.parentElement) {
+            const roles = extractNodeRoles(element);
+            const rule = rules.find(rule => roles.includes(rule.role) && (!rule.selector || Peripherals.matches(element!, rule.selector)));
+            if (!rule) continue;
+            const range = this.ruleRange(element, rule);
+            const isCurrent = current !== undefined && Peripherals.startsIn(range, current);
+            if (!(isCurrent ? rule.currentContainer ?? rule.container : rule.container)) break;
+            container = range;
+        }
+        return container;
+    }
+
+    // The element, from the nearest run of preceding siblings with the rule's `startAt` role, if any.
+    private ruleRange(element: Element, rule: PointedPieceRule): Range {
+        const range = this.wnd.document.createRange();
+        range.selectNode(element);
+        const startAt = rule.startAt;
+        if (startAt) {
+            const starts = (sibling: Element) => extractNodeRoles(sibling).includes(startAt);
+            let previous = element.previousElementSibling;
+            while (previous && !starts(previous)) previous = previous.previousElementSibling;
+            while (previous && starts(previous)) {
+                range.setStartBefore(previous);
+                previous = previous.previousElementSibling;
+            }
+        }
+        return range;
+    }
+
+    private pieceRange([text, selector]: [unknown, string | undefined]): Range | undefined {
+        return rangeFromLocator(this.wnd.document, new Locator({
+            href: this.wnd.location.href,
+            type: "text/html",
+            text: LocatorText.deserialize(text),
+            locations: selector ? new LocatorLocations({
+                otherLocations: new Map([["cssSelector", selector]])
+            }) : undefined
+        })) ?? undefined;
+    }
+
+    /**
+     * The first piece starting in the container `rules` resolve the targeted element to, if any.
+     * Else the innermost piece under the point, else the innermost one containing the targeted element (e.g. an image).
+     */
+    private pointedPiece({ cssSelector, x, y, pieces, rules, current }: PointedPieceRequest): number {
         const target = this.wnd.document.querySelector(cssSelector);
         if (!target) return -1;
         const targetRange = this.wnd.document.createRange();
         targetRange.selectNode(target);
+        const container = rules?.length ? this.containerRange(target, rules, current && this.pieceRange(current)) : undefined;
         const pixelRatio = this.wnd.devicePixelRatio;
-        let containing = -1;
+        const within = (outer: Range, inner: Range) =>
+            outer.compareBoundaryPoints(Range.START_TO_START, inner) <= 0 &&
+            outer.compareBoundaryPoints(Range.END_TO_END, inner) >= 0;
+        // Contextualization entries are located on their whole container, so a nested piece is the more precise one.
+        const innermost = (best: { index: number; range: Range } | undefined, index: number, range: Range) =>
+            !best || (within(best.range, range) && !within(range, best.range)) ? { index, range } : best;
+        let pointed: { index: number; range: Range } | undefined;
+        let containing: { index: number; range: Range } | undefined;
         for (let i = 0; i < pieces.length; i++) {
-            const [text, selector] = pieces[i];
-            const range = rangeFromLocator(this.wnd.document, new Locator({
-                href: this.wnd.location.href,
-                type: "text/html",
-                text: LocatorText.deserialize(text),
-                locations: selector ? new LocatorLocations({
-                    otherLocations: new Map([["cssSelector", selector]])
-                }) : undefined
-            }));
-            if (!range || !range.intersectsNode(target)) continue;
-            if (getClientRectsNoOverlap(range, false).some(rect => rectContainsPoint(rect, x / pixelRatio, y / pixelRatio, 0))) return i;
-            if (
-                containing === -1 &&
-                range.compareBoundaryPoints(Range.START_TO_START, targetRange) <= 0 &&
-                range.compareBoundaryPoints(Range.END_TO_END, targetRange) >= 0
-            ) containing = i;
+            const range = this.pieceRange(pieces[i]);
+            if (!range) continue;
+            if (container && Peripherals.startsIn(container, range)) return i;
+            if (!range.intersectsNode(target)) continue;
+            if (getClientRectsNoOverlap(range, false).some(rect => rectContainsPoint(rect, x / pixelRatio, y / pixelRatio, 0)))
+                pointed = innermost(pointed, i, range);
+            else if (within(range, targetRange)) containing = innermost(containing, i, range);
         }
-        return containing;
+        return (pointed ?? containing)?.index ?? -1;
     }
 
     private registerPointedPiece() {

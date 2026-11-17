@@ -1,16 +1,12 @@
 {
-  "role": [
-    "body"
-  ],
+  "role": ["body"],
   "children": [
     {
+      "role": ["paragraph"],
       "text": {
         "language": "fr",
         "plain": "Bonjour, comment allez-vous ?"
-      },
-      "role": [
-        "paragraph"
-      ]
+      }
     }
   ]
 }

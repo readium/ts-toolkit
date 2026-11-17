@@ -1,6 +1,6 @@
 {
   "id": "figure-credit-role-aria",
-  "description": "A figure with an implicit (figcaption) caption and a sibling credit line, via explicit ARIA role=\"doc-credit\" on a <p>",
+  "description": "A figure with a figcaption and no aria-labelledby, and a sibling credit line, via explicit ARIA role=\"doc-credit\" on a <p>",
   "role": "figure",
   "rolesCovered": [
     "figure",

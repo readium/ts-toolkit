@@ -1,22 +1,16 @@
 {
+  "role": ["section"],
   "children": [
     {
+      "role": ["section"],
       "children": [
         {
-          "role": [
-            "paragraph"
-          ],
+          "role": ["paragraph"],
           "text": {
             "plain": "The keeper climbed the stairs."
           }
         }
-      ],
-      "role": [
-        "section"
       ]
     }
-  ],
-  "role": [
-    "section"
   ]
 }

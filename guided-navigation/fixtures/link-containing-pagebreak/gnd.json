@@ -1,33 +1,28 @@
 {
+  "role": ["paragraph"],
+  "text": {
+    "language": "en",
+    "plain": "The logbooks are described in the chapter on daily life at the lighthouse.",
+    "ssml": "The logbooks are described in <readium:link id=\"link1\" />."
+  },
   "children": [
     {
       "id": "link1",
       "text": {
+        "language": "en",
         "plain": "the chapter on daily life at the lighthouse",
-        "ssml": "the chapter on daily life at the <readium:pagebreak id=\"page12\" />lighthouse",
-        "language": "en"
+        "ssml": "the chapter on daily life at the <readium:pagebreak id=\"page12\" />lighthouse"
       },
-      "textref": "chapter3.xhtml#logbooks",
       "children": [
         {
+          "role": ["pagebreak"],
           "id": "page12",
-          "role": [
-            "pagebreak"
-          ],
+          "textref": "#page12",
           "text": {
             "plain": "12"
-          },
-          "textref": "#page12"
+          }
         }
       ]
     }
-  ],
-  "role": [
-    "paragraph"
-  ],
-  "text": {
-    "plain": "The logbooks are described in the chapter on daily life at the lighthouse.",
-    "ssml": "The logbooks are described in <readium:link id=\"link1\" />.",
-    "language": "en"
-  }
+  ]
 }

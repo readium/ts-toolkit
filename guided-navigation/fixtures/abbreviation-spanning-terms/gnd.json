@@ -1,12 +1,8 @@
 {
-  "role": [
-    "paragraph"
-  ],
+  "role": ["paragraph"],
   "children": [
     {
-      "role": [
-        "term"
-      ],
+      "role": ["term"],
       "text": {
         "plain": "A"
       }
@@ -17,9 +13,7 @@
       }
     },
     {
-      "role": [
-        "term"
-      ],
+      "role": ["term"],
       "text": {
         "plain": "B"
       }

@@ -1,0 +1,28 @@
+{
+  "role": ["table"],
+  "description": {
+    "text": {
+      "plain": "Team roster"
+    }
+  },
+  "children": [
+    {
+      "role": ["caption"],
+      "id": "roster",
+      "text": {
+        "plain": "Team roster"
+      }
+    },
+    {
+      "role": ["row"],
+      "children": [
+        {
+          "role": ["cell"],
+          "text": {
+            "plain": "Ada"
+          }
+        }
+      ]
+    }
+  ]
+}

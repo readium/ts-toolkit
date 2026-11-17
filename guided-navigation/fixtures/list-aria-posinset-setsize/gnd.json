@@ -1,15 +1,11 @@
 {
-  "role": [
-    "list"
-  ],
+  "role": ["list"],
   "children": [
     {
+      "role": ["listItem"],
       "text": {
         "plain": "Fifth of seven"
-      },
-      "role": [
-        "listItem"
-      ]
+      }
     }
   ]
 }
