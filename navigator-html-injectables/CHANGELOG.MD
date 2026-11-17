@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor versions (marked **Breaking:**). Patch versions never contain breaking changes.
 
+## [Unreleased]
+
+### Added
+
+- `pointed_piece` takes `rules`, of type `PointedPieceRule`, to resolve the pressed element to a container whose first piece is returned, matched by Guided Navigation role and an optional CSS selector, and the `current` piece, for rules that apply while it plays in that container
+
+### Changed
+
+- `pointed_piece` returns the innermost piece under the point, or containing the pressed element, instead of the first, so a piece nested in a larger one is found
+- Depends on `@readium/guided-navigation`
+
 ## [2.10.2] – 2026-11-10
 
 ### Fixed

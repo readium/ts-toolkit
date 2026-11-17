@@ -16,6 +16,7 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 
 ### Added
 
+- `extractNodeRoles` is exported, giving the Guided Navigation roles of an element from its tag, ARIA `role` and `epub:type`
 - `droppedMask` is exported, telling which characters of plain text `removeDropped` takes out, to map its result back onto marked-up source, e.g. only `(␀)` in `(␀)(`
 - Fixtures for a figure whose figcaption holds headings and paragraphs, a figure and a table with an `aria-label` and a caption, and a table labelled by its own caption
 

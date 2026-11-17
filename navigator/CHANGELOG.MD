@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor versions (marked **Breaking:**). Patch versions never contain breaking changes.
 
+## [Unreleased]
+
+### Added
+
+- `readFromPointerRules` read-aloud configuration, with `defaultReadFromPointerRules` and the `ReadFromPointerRule` type, telling which content `readFromPointer()` reads from its start rather than from the pressed utterance, by Guided Navigation role and an optional CSS selector, when idle, playing, or playing in that content
+
+### Changed
+
+- `readFromPointer()` reads a figure, unless the press is on its caption, and math from their start. It reads a table, an epigraph, a pullquote, a quote with a `footer` attribution and a definition, from its term, from their start too, unless that content is the one being played
+- `readFromPointer()` starts from the innermost utterance under the press, so an utterance nested in a larger one is the one read
+- `findPointedPiece()` on `EpubNavigator` and `WebPubNavigator` takes optional `rules` and `current` arguments
+
 ## [2.15.0] – 2026-11-06
 
 ### Added
