@@ -21,7 +21,7 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 - `readFromPointer()` starts from the innermost utterance under the press, so an utterance nested in a larger one is the one read
 - `findPointedPiece()` on `EpubNavigator` and `WebPubNavigator` takes optional `rules` and `current` arguments
 - Read aloud uses `@readium/speech` 0.20: a figure is labelled only by `aria-label`, `aria-labelledby` or `aria-describedby`, announced as "Figure: {{ description }}", and an unlabelled one is now announced too, as "Figure.". Its `<figcaption>` no longer labels it but is read as content
-- **Breaking:** the `languageOverride` read-aloud preference is renamed `publicationLanguage`, as it is the language the publication is in, not an entry of `@readium/speech`'s `languageOverrides`
+- **Breaking:** the `languageOverride` read-aloud preference is renamed `primaryLanguageOverride`, as it corrects the publication's primary language, not an entry of `@readium/speech`'s `languageOverrides`
 - **Breaking:** `on()` on the re-exported `ReadiumSpeechPlaybackEngine` is generic, its events' `detail` typed per event type instead of `any`
 
 ## [2.15.0] – 2026-11-06
