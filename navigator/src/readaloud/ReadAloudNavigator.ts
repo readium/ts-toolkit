@@ -7,7 +7,7 @@ import {
     LocatorOptions,
     ReadiumSpeechNavigator,
     ReadiumSpeechPlaybackEngine,
-    ReadiumSpeechPlaybackEvent,
+    ReadiumSpeechNavigatorEvent,
     ReadiumSpeechPlaybackState,
     ReadiumSpeechUtterance,
     ReadiumSpeechVoice,
@@ -470,7 +470,7 @@ export class ReadAloudNavigator {
     }
 
     private listen() {
-        const on = (type: ReadiumSpeechPlaybackEvent["type"], handler: (event: ReadiumSpeechPlaybackEvent) => void) => {
+        const on = <T extends ReadiumSpeechNavigatorEvent["type"]>(type: T, handler: (event: ReadiumSpeechNavigatorEvent<T>) => void) => {
             this.unsubscribers.push(this.speech.on(type, event => {
                 handler(event);
                 this.notifyState();
