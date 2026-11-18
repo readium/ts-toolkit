@@ -10,6 +10,7 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 ### Added
 
 - `readFromPointerRules` read-aloud configuration, with `defaultReadFromPointerRules` and the `ReadFromPointerRule` type, telling which content `readFromPointer()` reads from its start rather than from the pressed utterance, by Guided Navigation role and an optional CSS selector, when idle, playing, or playing in that content
+- `interruptionValues` is exported, the values each role in the `interruptions` read-aloud preference takes, `"never"`, `"inline"` and `"after"`
 
 ### Changed
 

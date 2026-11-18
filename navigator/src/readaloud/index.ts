@@ -6,6 +6,7 @@ export {
     defaultContextualizations,
     extractLangRegionFromBCP47,
     interruptionRoles,
+    interruptionValues,
     skippableRoles,
     filterByLanguages,
     filterOutNoveltyVoices,
