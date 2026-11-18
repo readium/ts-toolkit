@@ -20,7 +20,7 @@ export {
     sortVoicesByRegions,
     valueForLanguage
 } from "@readium/speech";
-export type { ExtractionFormat, Interruption, LanguageMode, ReadiumSpeechPlaybackEngine, ReadiumSpeechPlaybackState, ReadiumSpeechVoice, Segmentation, SpeechSettings, VerbosityPreset, VoicePreference } from "@readium/speech";
+export type { ExtractionFormat, Interruption, LanguageMode, ReadiumSpeechBoundaryDetail, ReadiumSpeechPlaybackEngine, ReadiumSpeechPlaybackEvent, ReadiumSpeechPlaybackEventDetails, ReadiumSpeechPlaybackState, ReadiumSpeechVoice, Segmentation, SpeechSettings, VerbosityPreset, VoicePreference } from "@readium/speech";
 export type {
     BooleanPreference as SpeechBooleanPreference,
     EnumPreference as SpeechEnumPreference,
