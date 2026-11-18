@@ -62,6 +62,25 @@ const readAloud = new ReadAloudNavigator(navigator, listeners, {
 
 The engine is used as given: its voices aren't limited to the publication's languages. See [`@readium/speech`](https://github.com/readium/speech)'s documentation for its engines and their options, including falling back from one to another.
 
+## Customizing announcements and sentences
+
+The `contextualizationOverrides` and `segmentationOverrides` configurations are given to `@readium/speech` as they are, and set once, when the `ReadAloudNavigator` is created:
+
+```ts
+const readAloud = new ReadAloudNavigator(navigator, listeners, {
+  // Rewords the announcement of a figure without a label
+  contextualizationOverrides: {
+    contextualizations: { figure: { inline: { unlabelled: "Illustration." } } }
+  },
+  // Abbreviations that don't end a sentence, added to the built-in ones
+  segmentationOverrides: {
+    suppressions: { en: ["Fig."] }
+  }
+});
+```
+
+A custom `segmenter` is given only the `suppressions` of this configuration: apply `builtInSuppressions` in it to keep the built-in ones. See [`contextualizationOverrides`](https://github.com/readium/speech/blob/main/docs/Playback.md#contextualizationoverrides) and [`segmentationOverrides`](https://github.com/readium/speech/blob/main/docs/Playback.md#segmentationoverrides) in `@readium/speech`'s documentation.
+
 ## Playback
 
 ```ts

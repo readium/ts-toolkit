@@ -3,6 +3,7 @@ export * from './ReadAloudNavigator.ts';
 export * from './ReadFromPointerRules.ts';
 export * from './preferences/index.ts';
 export {
+    builtInSuppressions,
     defaultContextualizations,
     extractLangRegionFromBCP47,
     interruptionRoles,
@@ -20,7 +21,7 @@ export {
     sortVoicesByRegions,
     valueForLanguage
 } from "@readium/speech";
-export type { ExtractionFormat, Interruption, LanguageMode, ReadiumSpeechBoundaryDetail, ReadiumSpeechPlaybackEngine, ReadiumSpeechPlaybackEvent, ReadiumSpeechPlaybackEventDetails, ReadiumSpeechPlaybackState, ReadiumSpeechVoice, Segmentation, SpeechSettings, VerbosityPreset, VoicePreference } from "@readium/speech";
+export type { ContextualizationOverrides, ExtractionFormat, Interruption, LanguageMode, ReadiumSpeechBoundaryDetail, ReadiumSpeechPlaybackEngine, ReadiumSpeechPlaybackEvent, ReadiumSpeechPlaybackEventDetails, ReadiumSpeechPlaybackState, ReadiumSpeechVoice, Segmentation, SegmentationOverrides, SentenceSegmenter, SpeechSettings, VerbosityPreset, VoicePreference } from "@readium/speech";
 export type {
     BooleanPreference as SpeechBooleanPreference,
     EnumPreference as SpeechEnumPreference,

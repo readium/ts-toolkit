@@ -1,6 +1,7 @@
 import { Layout, Locator, Profile, getCssSelector } from "@readium/shared";
 import { FrameClickEvent, PointedPieceRule, TextLayout, TextLineStarts } from "@readium/navigator-html-injectables";
 import {
+    ContextualizationOverrides,
     createLocator,
     extractLangRegionFromBCP47,
     filterByLanguages,
@@ -12,6 +13,7 @@ import {
     ReadiumSpeechUtterance,
     ReadiumSpeechVoice,
     resolveUtteranceLocate,
+    SegmentationOverrides,
     sortVoicesByRegions,
     SpeechPreferences,
     WebSpeechEngine,
@@ -76,6 +78,10 @@ export interface ReadAloudConfiguration {
      * The outermost `container` is read from its start. Defaults to `defaultReadFromPointerRules`.
      */
     readFromPointerRules?: ReadFromPointerRule[];
+    /** Wording, shapes and placeholders of announcements, as `@readium/speech`'s `ReadiumSpeechNavigator` takes them. */
+    contextualizationOverrides?: ContextualizationOverrides;
+    /** Sentence suppressions and segmenter, as `@readium/speech`'s `ReadiumSpeechNavigator` takes them. */
+    segmentationOverrides?: SegmentationOverrides;
 }
 
 interface TurningPosition {
@@ -200,6 +206,8 @@ export class ReadAloudNavigator {
         }
         this.speech = new ReadiumSpeechNavigator(this.engine, {
             languages: contentLanguages,
+            contextualizationOverrides: configuration.contextualizationOverrides,
+            segmentationOverrides: configuration.segmentationOverrides,
             preferences: ReadAloudNavigator.speechPreferences(this._preferences, contentLanguages[0]),
             defaults: ReadAloudNavigator.speechPreferences({
                 ...this._defaults.speech,
