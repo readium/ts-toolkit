@@ -569,7 +569,7 @@ export class ReadAloudNavigator {
             this.clearBreak();
             this.progress.reset();
             this.clearHighlights();
-            this.listeners.error?.(event.detail ?? event);
+            this.listeners.error?.(event.detail);
         });
         on("stop", () => {
             this.clearBreak();

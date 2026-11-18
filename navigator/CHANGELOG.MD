@@ -13,6 +13,7 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 - `interruptionValues` is exported, the values each role in the `interruptions` read-aloud preference takes, `"never"`, `"inline"` and `"after"`
 - `ReadiumSpeechPlaybackEvent`, `ReadiumSpeechPlaybackEventDetails` and `ReadiumSpeechBoundaryDetail` are exported, to type a listener given to `ReadiumSpeechPlaybackEngine`'s `on()`
 - `contextualizationOverrides` and `segmentationOverrides` read-aloud configurations, given to `@readium/speech` as they are, to reword announcements and change how sentences are split. `builtInSuppressions` and the `ContextualizationOverrides`, `SegmentationOverrides` and `SentenceSegmenter` types are exported
+- `ErrorEventDetail` is exported, what the `error` read-aloud listener receives when the engine fails to speak
 
 ### Changed
 

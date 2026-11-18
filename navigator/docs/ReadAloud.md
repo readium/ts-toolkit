@@ -27,6 +27,8 @@ const readAloud = new ReadAloudNavigator(navigator, {
 
 It speaks with `@readium/speech`'s `WebSpeechEngine`, with the voices of the publication's languages and the reader's.
 
+`error` receives an `ErrorEventDetail` when the engine fails to speak, its `recoverable` being `true` when the engine never reached its server or API, e.g. offline, or what was thrown when a resource can't be loaded for reading.
+
 An utterance can run across several resources, for instance a sentence continuing on the next page of a fixed layout, so `utteranceChanged` receives one locator per resource.
 
 What is read at once, and what is highlighted, depends on the navigator:
