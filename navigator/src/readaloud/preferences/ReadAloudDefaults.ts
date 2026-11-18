@@ -8,7 +8,7 @@ export class ReadAloudDefaults {
   /** Defaults of the speech fields, validated by speech itself. */
   speech: IReadAloudPreferences;
   autoPause: ReadAloudAutoPause;
-  languageOverride: string | null;
+  publicationLanguage: string | null;
   startInViewport: boolean;
   keepCentered: boolean;
   detachable: boolean;
@@ -17,11 +17,11 @@ export class ReadAloudDefaults {
   wordStyle: ReadAloudDecorationStyle;
 
   constructor(defaults: IReadAloudDefaults = {}) {
-    const { autoPause, languageOverride, startInViewport, keepCentered, detachable, readFromPointer, utteranceStyle, wordStyle, ...speech } = defaults;
+    const { autoPause, publicationLanguage, startInViewport, keepCentered, detachable, readFromPointer, utteranceStyle, wordStyle, ...speech } = defaults;
     // Sentences are only joined across objects, and so across pages, in sentence segmentation with `reconstruct`.
     this.speech = { segmentation: "sentence", skip: ["pagebreak"], ...speech };
     this.autoPause = ensureEnumValue<ReadAloudAutoPause>(autoPause, ReadAloudAutoPause) || ReadAloudAutoPause.none;
-    this.languageOverride = ensureString(languageOverride) ?? null;
+    this.publicationLanguage = ensureString(publicationLanguage) ?? null;
     this.startInViewport = ensureBoolean(startInViewport) ?? false;
     this.keepCentered = ensureBoolean(keepCentered) ?? false;
     this.detachable = ensureBoolean(detachable) ?? true;

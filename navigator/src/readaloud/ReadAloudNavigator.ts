@@ -193,7 +193,7 @@ export class ReadAloudNavigator {
             this.engine = configuration.engine;
         } else {
             const engine = new WebSpeechEngine();
-            const languages = this.publicationLanguages(this._preferences.languageOverride ?? this._defaults.languageOverride);
+            const languages = this.publicationLanguages(this._preferences.publicationLanguage ?? this._defaults.publicationLanguage);
             // The speech navigator's own initialize() shares this one
             void engine.initialize({ languages: this.scopedLanguages(languages) }).catch(() => {});
             this.engine = engine;
@@ -204,7 +204,7 @@ export class ReadAloudNavigator {
             defaults: ReadAloudNavigator.speechPreferences({
                 ...this._defaults.speech,
                 autoPause: this._defaults.autoPause,
-                languageOverride: this._defaults.languageOverride
+                publicationLanguage: this._defaults.publicationLanguage
             }, contentLanguages[0]),
         });
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
@@ -395,14 +395,14 @@ export class ReadAloudNavigator {
         const voices = await this.speech.getVoices();
         const languages = options.languages?.length ? options.languages : undefined;
         const filtered = languages ? filterByLanguages(voices, languages) : voices;
-        const publicationLanguages = this.publicationLanguages(this._settings.languageOverride);
+        const publicationLanguages = this.publicationLanguages(this._settings.publicationLanguage);
         const preferred = languages
             ?? (publicationLanguages.length ? publicationLanguages : [...(navigator.languages ?? ["en"])]);
         return sortVoicesByRegions(preferred, filtered);
     }
 
     /**
-     * The base languages voices can be had in, e.g. for `languageOverride`, without loading their voices.
+     * The base languages voices can be had in, e.g. for `publicationLanguage`, without loading their voices.
      * With an engine given in the configuration, those of its voices.
      */
     async getLanguages(): Promise<string[]> {
@@ -413,9 +413,9 @@ export class ReadAloudNavigator {
         return manager.getBrowserLanguages().map(language => language.code);
     }
 
-    /** The publication's languages, `languageOverride` in place of the primary one when set. */
+    /** The publication's languages, `publicationLanguage` in place of the primary one when set. */
     getPublicationLanguages(): string[] {
-        return this.publicationLanguages(this._settings.languageOverride);
+        return this.publicationLanguages(this._settings.publicationLanguage);
     }
 
     get settings(): Readonly<ReadAloudSettings> {
@@ -1356,19 +1356,19 @@ export class ReadAloudNavigator {
     }
 
     // The override comes first, in place of the metadata's primary language it corrects.
-    private publicationLanguages(languageOverride: string | null): string[] {
+    private publicationLanguages(publicationLanguage: string | null): string[] {
         const languages = this.navigator.publication.metadata.languages ?? [];
-        return languageOverride ? [languageOverride, ...languages.slice(1)] : languages;
+        return publicationLanguage ? [publicationLanguage, ...languages.slice(1)] : languages;
     }
 
     // Speech knows nothing of pages and spreads, so it never auto-pauses at them itself.
     private static speechPreferences(preferences: IReadAloudPreferences, contentLanguage: string): SpeechPreferences {
-        const { autoPause, languageOverride, startInViewport, keepCentered, detachable, readFromPointer, utteranceStyle, wordStyle, ...speech } = preferences;
+        const { autoPause, publicationLanguage, startInViewport, keepCentered, detachable, readFromPointer, utteranceStyle, wordStyle, ...speech } = preferences;
         const ownScope = autoPause === ReadAloudAutoPause.page || autoPause === ReadAloudAutoPause.spread;
         return new SpeechPreferences({
             ...speech,
             autoPause: ownScope ? ReadAloudAutoPause.none : autoPause,
-            languageOverrides: languageOverride ? { [contentLanguage]: languageOverride } : null
+            languageOverrides: publicationLanguage ? { [contentLanguage]: publicationLanguage } : null
         });
     }
 

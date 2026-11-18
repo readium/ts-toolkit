@@ -33,11 +33,11 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
    * @param layout How the publication is displayed: `Layout.reflowable` for columns, `Layout.scrolled` when scrolled.
    */
   constructor(initialPreferences: ReadAloudPreferences, settings: ReadAloudSettings, speechEditor: () => SpeechPreferencesEditor, layout: Layout) {
-    const { languageOverride, startInViewport, keepCentered, detachable, readFromPointer } = initialPreferences;
+    const { publicationLanguage, startInViewport, keepCentered, detachable, readFromPointer } = initialPreferences;
     this.speechEditor = speechEditor;
     this.own = new ReadAloudPreferences({
       autoPause: initialPreferences.autoPause,
-      languageOverride,
+      publicationLanguage,
       startInViewport,
       keepCentered,
       detachable,
@@ -57,7 +57,7 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
     return new ReadAloudPreferences({
       ...this.speech.preferences,
       autoPause: this.own.autoPause,
-      languageOverride: this.own.languageOverride,
+      publicationLanguage: this.own.publicationLanguage,
       startInViewport: this.own.startInViewport,
       keepCentered: this.own.keepCentered,
       detachable: this.own.detachable,
@@ -71,7 +71,7 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
     this.speech.clear();
     this.own = new ReadAloudPreferences({
       autoPause: null,
-      languageOverride: null,
+      publicationLanguage: null,
       startInViewport: null,
       keepCentered: null,
       detachable: null,
@@ -114,13 +114,13 @@ export class ReadAloudPreferencesEditor implements IPreferencesEditor {
     });
   }
 
-  get languageOverride(): Preference<string> {
+  get publicationLanguage(): Preference<string> {
     return new Preference<string>({
-      initialValue: this.own.languageOverride,
-      effectiveValue: this.settings.languageOverride,
+      initialValue: this.own.publicationLanguage,
+      effectiveValue: this.settings.publicationLanguage,
       isEffective: true,
       onChange: (newValue) => {
-        this.updatePreference("languageOverride", newValue ?? null);
+        this.updatePreference("publicationLanguage", newValue ?? null);
       }
     });
   }
