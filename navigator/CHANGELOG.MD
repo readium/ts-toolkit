@@ -15,6 +15,7 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 - `contextualizationOverrides` and `segmentationOverrides` read-aloud configurations, given to `@readium/speech` as they are, to reword announcements and change how sentences are split. `builtInSuppressions` and the `ContextualizationOverrides`, `SegmentationOverrides` and `SentenceSegmenter` types are exported
 - `ErrorEventDetail` is exported, what the `error` read-aloud listener receives when the engine fails to speak
 - `substitutions` read-aloud configuration, given to `@readium/speech` as it is, to change how ASCII imitations of symbols, e.g. "(c)", are read, a `null` rule removing a built-in one. `builtInSubstitutions` and the `SubstitutionTable` and `SubstitutionRule` types are exported
+- `AudioMediaElementSetup` is exported, the type of the `mediaElementSetup` audio navigator configuration
 
 ### Changed
 

@@ -64,6 +64,8 @@ export interface IAudioContentProtectionConfig extends IContentProtectionConfig 
     disableRemotePlayback?: boolean;
 }
 
+export type AudioMediaElementSetup = (element: HTMLMediaElement) => void | Promise<void>;
+
 export interface AudioNavigatorConfiguration {
     preferences: IAudioPreferences;
     defaults: IAudioDefaults;
@@ -78,7 +80,7 @@ export interface AudioNavigatorConfiguration {
      * the promise settles; a rejection is forwarded to the error listener and
      * loading proceeds anyway.
      */
-    mediaElementSetup?: (element: HTMLMediaElement) => void | Promise<void>;
+    mediaElementSetup?: AudioMediaElementSetup;
 
     /**
      * When provided, media bytes reach the playback element through Media
