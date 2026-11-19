@@ -14,6 +14,7 @@ import {
     ReadiumSpeechVoice,
     resolveUtteranceLocate,
     SegmentationOverrides,
+    SubstitutionTable,
     sortVoicesByRegions,
     SpeechPreferences,
     WebSpeechEngine,
@@ -82,6 +83,8 @@ export interface ReadAloudConfiguration {
     contextualizationOverrides?: ContextualizationOverrides;
     /** Sentence suppressions and segmenter, as `@readium/speech`'s `ReadiumSpeechNavigator` takes them. */
     segmentationOverrides?: SegmentationOverrides;
+    /** Rewrites of ASCII imitations of symbols, merged by key over `builtInSubstitutions`, a `null` rule removing one, as `@readium/speech`'s `ReadiumSpeechNavigator` takes them. */
+    substitutions?: SubstitutionTable;
 }
 
 interface TurningPosition {
@@ -208,6 +211,7 @@ export class ReadAloudNavigator {
             languages: contentLanguages,
             contextualizationOverrides: configuration.contextualizationOverrides,
             segmentationOverrides: configuration.segmentationOverrides,
+            substitutions: configuration.substitutions,
             preferences: ReadAloudNavigator.speechPreferences(this._preferences, contentLanguages[0]),
             defaults: ReadAloudNavigator.speechPreferences({
                 ...this._defaults.speech,

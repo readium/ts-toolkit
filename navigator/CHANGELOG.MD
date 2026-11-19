@@ -14,13 +14,14 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 - `ReadiumSpeechPlaybackEvent`, `ReadiumSpeechPlaybackEventDetails` and `ReadiumSpeechBoundaryDetail` are exported, to type a listener given to `ReadiumSpeechPlaybackEngine`'s `on()`
 - `contextualizationOverrides` and `segmentationOverrides` read-aloud configurations, given to `@readium/speech` as they are, to reword announcements and change how sentences are split. `builtInSuppressions` and the `ContextualizationOverrides`, `SegmentationOverrides` and `SentenceSegmenter` types are exported
 - `ErrorEventDetail` is exported, what the `error` read-aloud listener receives when the engine fails to speak
+- `substitutions` read-aloud configuration, given to `@readium/speech` as it is, to change how ASCII imitations of symbols, e.g. "(c)", are read, a `null` rule removing a built-in one. `builtInSubstitutions` and the `SubstitutionTable` and `SubstitutionRule` types are exported
 
 ### Changed
 
 - `readFromPointer()` reads a figure, unless the press is on its caption, and math from their start. It reads a table, an epigraph, a pullquote, a quote with a `footer` attribution and a definition, from its term, from their start too, unless that content is the one being played
 - `readFromPointer()` starts from the innermost utterance under the press, so an utterance nested in a larger one is the one read
 - `findPointedPiece()` on `EpubNavigator` and `WebPubNavigator` takes optional `rules` and `current` arguments
-- Read aloud uses `@readium/speech` 0.20: a figure is labelled only by `aria-label`, `aria-labelledby` or `aria-describedby`, announced as "Figure: {{ description }}", and an unlabelled one is now announced too, as "Figure.". Its `<figcaption>` no longer labels it but is read as content
+- Read aloud uses `@readium/speech` 0.21: a figure is labelled only by `aria-label`, `aria-labelledby` or `aria-describedby`, announced as "Figure: {{ description }}", and an unlabelled one is now announced too, as "Figure.". Its `<figcaption>` no longer labels it but is read as content
 - **Breaking:** the `languageOverride` read-aloud preference is renamed `primaryLanguageOverride`, as it corrects the publication's primary language, not an entry of `@readium/speech`'s `languageOverrides`
 - **Breaking:** `on()` on the re-exported `ReadiumSpeechPlaybackEngine` is generic, its events' `detail` typed per event type instead of `any`
 
