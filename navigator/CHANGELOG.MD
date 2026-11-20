@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor versions (marked **Breaking:**). Patch versions never contain breaking changes.
 
+## [2.16.1] – 2026-11-20
+
+### Fixed
+
+- An announcement, e.g. of a heading, is no longer highlighted or followed, as it has nothing on the page
+
 ## [2.16.0] – 2026-11-20
 
 ### Added
