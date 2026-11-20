@@ -129,6 +129,8 @@ export class ReadAloudNavigator {
     private _preferencesEditor: ReadAloudPreferencesEditor | null = null;
     private utteranceLocators: Locator[] = [];
     private wordLocator?: Locator;
+    // Unhighlighted while text with nothing on the page is spoken, `wordLocator` still telling where reading is.
+    private wordHidden = false;
     // Where playback resumes after pausing at a page or spread, which speech knows nothing about.
     private pausedBefore?: PausedPosition;
     // Auto-paused before this fixed-layout page, not displayed then: playback resumes once the reader turns to it.
@@ -512,18 +514,22 @@ export class ReadAloudNavigator {
         on("boundary", event => {
             // Voices listed without boundaries may still send them, but unreliably (e.g. out of order after a pause).
             if (!this.sendsBoundaries()) return;
-            // Some voices report zero-length boundaries, which would highlight the whole element.
-            if (event.detail?.name !== "word" || !event.detail.word?.trim()) return;
+            if (event.detail?.name !== "word") return;
             // A word with nothing on the page, e.g. an inline page number, ends the previous word's highlight.
             if (!event.detail.locate) {
-                this.wordLocator = undefined;
-                this.decorate();
+                if (event.detail.charLength > 0) {
+                    this.wordHidden = true;
+                    this.decorate();
+                }
                 return;
             }
+            // Some voices report zero-length boundaries, which would highlight the whole element.
+            if (!event.detail.word?.trim()) return;
             const locate = event.detail.locate as LocatorOptions;
             const locator = this.locatorFor(locate);
             if (!locator) return;
             this.wordLocator = locator;
+            this.wordHidden = false;
             this.decorate();
             const word = this.wordPoint(locate);
             if (word && this.isHidden(word)) {
@@ -1053,7 +1059,7 @@ export class ReadAloudNavigator {
 
     private decorate() {
         this.applyDecorations(UTTERANCE_GROUP, this.utteranceLocators, this._settings.utteranceStyle);
-        this.applyDecorations(WORD_GROUP, this.wordLocator ? [this.wordLocator] : [], this._settings.wordStyle);
+        this.applyDecorations(WORD_GROUP, this.wordLocator && !this.wordHidden ? [this.wordLocator] : [], this._settings.wordStyle);
     }
 
     private applyDecorations(group: string, locators: Locator[], style: ReadAloudDecorationStyle) {
