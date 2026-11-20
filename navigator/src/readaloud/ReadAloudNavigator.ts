@@ -1028,6 +1028,8 @@ export class ReadAloudNavigator {
     }
 
     private locatorsOf(utterance: ReadiumSpeechUtterance): Locator[] {
+        // Speech locates an announcement on what it announces, but it has nothing on the page to highlight or follow.
+        if (resolveUtteranceSourceText(utterance) === undefined) return [];
         return this.piecesOf(utterance)
             .map(piece => this.locatorFor(piece))
             .filter((locator): locator is Locator => locator !== undefined);
