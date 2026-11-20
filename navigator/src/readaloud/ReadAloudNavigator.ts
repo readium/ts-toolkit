@@ -13,6 +13,7 @@ import {
     ReadiumSpeechUtterance,
     ReadiumSpeechVoice,
     resolveUtteranceLocate,
+    resolveUtteranceSourceText,
     SegmentationOverrides,
     SubstitutionTable,
     sortVoicesByRegions,
@@ -748,6 +749,7 @@ export class ReadAloudNavigator {
         const href = from.href.split("#")[0];
         const selector = from.locations ? getCssSelector(from.locations) : undefined;
         const quote = from.text?.highlight?.trim().slice(0, 40);
+        const pageQuote = quote && ReadAloudNavigator.collapsed(quote);
         let first = -1;
         let bySelector = -1;
         let byText = -1;
@@ -759,7 +761,7 @@ export class ReadAloudNavigator {
             const selected = selector ? pieces.filter(piece => piece.cssSelector === selector) : [];
             if (selected.some(piece => !quote || piece.text?.highlight?.includes(quote))) return i;
             if (bySelector === -1 && selected.length > 0) bySelector = i;
-            if (byText === -1 && quote && (queue[i].plain ?? "").includes(quote)) byText = i;
+            if (byText === -1 && pageQuote && ReadAloudNavigator.collapsed(resolveUtteranceSourceText(queue[i]) ?? queue[i].plain ?? "").includes(pageQuote)) byText = i;
         }
         if (bySelector !== -1) return bySelector;
         return byText !== -1 ? byText : Math.max(first, 0);

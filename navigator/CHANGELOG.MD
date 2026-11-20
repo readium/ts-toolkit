@@ -26,6 +26,11 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 - **Breaking:** the `languageOverride` read-aloud preference is renamed `primaryLanguageOverride`, as it corrects the publication's primary language, not an entry of `@readium/speech`'s `languageOverrides`
 - **Breaking:** `on()` on the re-exported `ReadiumSpeechPlaybackEngine` is generic, its events' `detail` typed per event type instead of `any`
 
+### Fixed
+
+- With `@readium/speech` 0.22, a word spoken in place of a substitution's text, e.g. "carbon" in "carbon dioxide" for "CO2", highlights that text, and a word of an aria label read in place of its element highlights that element, instead of the previous word staying highlighted
+- `play()` from a locator with only a text quote, such as a selection's, starts at the utterance holding that text when it's spoken otherwise, e.g. "1/2" as "½" or an abbreviation with its expansion, or when the utterance is SSML, instead of at the resource's first utterance
+
 ## [2.15.0] – 2026-11-06
 
 ### Added
