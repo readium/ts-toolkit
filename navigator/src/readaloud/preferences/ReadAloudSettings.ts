@@ -16,7 +16,7 @@ export class ReadAloudSettings implements ConfigurableSettings {
   pauseDuration: number;
   voice: VoicePreference | null;
   autoPause: ReadAloudAutoPause;
-  languageOverride: string | null;
+  primaryLanguageOverride: string | null;
   startInViewport: boolean;
   keepCentered: boolean;
   detachable: boolean;
@@ -42,7 +42,7 @@ export class ReadAloudSettings implements ConfigurableSettings {
     this.pauseDuration = speech.pauseDuration;
     this.voice = speech.voice;
     this.autoPause = preferences.autoPause ?? defaults.autoPause;
-    this.languageOverride = preferences.languageOverride ?? defaults.languageOverride;
+    this.primaryLanguageOverride = preferences.primaryLanguageOverride ?? defaults.primaryLanguageOverride;
     this.startInViewport = preferences.startInViewport ?? defaults.startInViewport;
     this.keepCentered = preferences.keepCentered ?? defaults.keepCentered;
     this.detachable = preferences.detachable ?? defaults.detachable;

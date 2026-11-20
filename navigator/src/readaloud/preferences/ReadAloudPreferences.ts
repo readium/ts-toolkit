@@ -35,7 +35,7 @@ export interface IReadAloudPreferences {
   voice?: VoicePreference | null,
   autoPause?: ReadAloudAutoPause | null,
   /** BCP 47 tag of the language the publication is actually in, when its metadata is wrong */
-  languageOverride?: string | null,
+  primaryLanguageOverride?: string | null,
   startInViewport?: boolean | null,
   keepCentered?: boolean | null,
   detachable?: boolean | null,
@@ -61,7 +61,7 @@ export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPr
   pauseDuration?: number | null;
   voice?: VoicePreference | null;
   autoPause?: ReadAloudAutoPause | null;
-  languageOverride?: string | null;
+  primaryLanguageOverride?: string | null;
   startInViewport?: boolean | null;
   keepCentered?: boolean | null;
   detachable?: boolean | null;
@@ -73,7 +73,7 @@ export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPr
   wordStyle?: ReadAloudDecorationStyle | null;
 
   constructor(preferences: IReadAloudPreferences = {}) {
-    const { languageOverride, startInViewport, keepCentered, detachable, readFromPointer, ...speechPreferences } = preferences;
+    const { primaryLanguageOverride, startInViewport, keepCentered, detachable, readFromPointer, ...speechPreferences } = preferences;
     const speech = new SpeechPreferences({ ...speechPreferences, autoPause: undefined });
     this.format = speech.format;
     this.interruptions = speech.interruptions;
@@ -86,7 +86,7 @@ export class ReadAloudPreferences implements ConfigurablePreferences<ReadAloudPr
     this.pauseDuration = speech.pauseDuration;
     this.voice = speech.voice;
     this.autoPause = ensureEnumValue<ReadAloudAutoPause>(preferences.autoPause, ReadAloudAutoPause);
-    this.languageOverride = ensureString(languageOverride);
+    this.primaryLanguageOverride = ensureString(primaryLanguageOverride);
     this.startInViewport = ensureBoolean(startInViewport);
     this.keepCentered = ensureBoolean(keepCentered);
     this.detachable = ensureBoolean(detachable);

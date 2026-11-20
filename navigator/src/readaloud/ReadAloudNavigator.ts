@@ -1,17 +1,21 @@
 import { Layout, Locator, Profile, getCssSelector } from "@readium/shared";
 import { FrameClickEvent, PointedPieceRule, TextLayout, TextLineStarts } from "@readium/navigator-html-injectables";
 import {
+    ContextualizationOverrides,
     createLocator,
     extractLangRegionFromBCP47,
     filterByLanguages,
     LocatorOptions,
     ReadiumSpeechNavigator,
     ReadiumSpeechPlaybackEngine,
-    ReadiumSpeechPlaybackEvent,
+    ReadiumSpeechNavigatorEvent,
     ReadiumSpeechPlaybackState,
     ReadiumSpeechUtterance,
     ReadiumSpeechVoice,
     resolveUtteranceLocate,
+    resolveUtteranceSourceText,
+    SegmentationOverrides,
+    SubstitutionTable,
     sortVoicesByRegions,
     SpeechPreferences,
     WebSpeechEngine,
@@ -76,6 +80,12 @@ export interface ReadAloudConfiguration {
      * The outermost `container` is read from its start. Defaults to `defaultReadFromPointerRules`.
      */
     readFromPointerRules?: ReadFromPointerRule[];
+    /** Wording, shapes and placeholders of announcements, as `@readium/speech`'s `ReadiumSpeechNavigator` takes them. */
+    contextualizationOverrides?: ContextualizationOverrides;
+    /** Sentence suppressions and segmenter, as `@readium/speech`'s `ReadiumSpeechNavigator` takes them. */
+    segmentationOverrides?: SegmentationOverrides;
+    /** Rewrites of ASCII imitations of symbols, merged by key over `builtInSubstitutions`, a `null` rule removing one, as `@readium/speech`'s `ReadiumSpeechNavigator` takes them. */
+    substitutions?: SubstitutionTable;
 }
 
 interface TurningPosition {
@@ -119,6 +129,8 @@ export class ReadAloudNavigator {
     private _preferencesEditor: ReadAloudPreferencesEditor | null = null;
     private utteranceLocators: Locator[] = [];
     private wordLocator?: Locator;
+    // Unhighlighted while text with nothing on the page is spoken, `wordLocator` still telling where reading is.
+    private wordHidden = false;
     // Where playback resumes after pausing at a page or spread, which speech knows nothing about.
     private pausedBefore?: PausedPosition;
     // Auto-paused before this fixed-layout page, not displayed then: playback resumes once the reader turns to it.
@@ -193,18 +205,21 @@ export class ReadAloudNavigator {
             this.engine = configuration.engine;
         } else {
             const engine = new WebSpeechEngine();
-            const languages = this.publicationLanguages(this._preferences.languageOverride ?? this._defaults.languageOverride);
+            const languages = this.publicationLanguages(this._preferences.primaryLanguageOverride ?? this._defaults.primaryLanguageOverride);
             // The speech navigator's own initialize() shares this one
             void engine.initialize({ languages: this.scopedLanguages(languages) }).catch(() => {});
             this.engine = engine;
         }
         this.speech = new ReadiumSpeechNavigator(this.engine, {
             languages: contentLanguages,
+            contextualizationOverrides: configuration.contextualizationOverrides,
+            segmentationOverrides: configuration.segmentationOverrides,
+            substitutions: configuration.substitutions,
             preferences: ReadAloudNavigator.speechPreferences(this._preferences, contentLanguages[0]),
             defaults: ReadAloudNavigator.speechPreferences({
                 ...this._defaults.speech,
                 autoPause: this._defaults.autoPause,
-                languageOverride: this._defaults.languageOverride
+                primaryLanguageOverride: this._defaults.primaryLanguageOverride
             }, contentLanguages[0]),
         });
         this._settings = new ReadAloudSettings(this.speech.settings, this._preferences, this._defaults);
@@ -395,14 +410,14 @@ export class ReadAloudNavigator {
         const voices = await this.speech.getVoices();
         const languages = options.languages?.length ? options.languages : undefined;
         const filtered = languages ? filterByLanguages(voices, languages) : voices;
-        const publicationLanguages = this.publicationLanguages(this._settings.languageOverride);
+        const publicationLanguages = this.publicationLanguages(this._settings.primaryLanguageOverride);
         const preferred = languages
             ?? (publicationLanguages.length ? publicationLanguages : [...(navigator.languages ?? ["en"])]);
         return sortVoicesByRegions(preferred, filtered);
     }
 
     /**
-     * The base languages voices can be had in, e.g. for `languageOverride`, without loading their voices.
+     * The base languages voices can be had in, e.g. for `primaryLanguageOverride`, without loading their voices.
      * With an engine given in the configuration, those of its voices.
      */
     async getLanguages(): Promise<string[]> {
@@ -413,9 +428,9 @@ export class ReadAloudNavigator {
         return manager.getBrowserLanguages().map(language => language.code);
     }
 
-    /** The publication's languages, `languageOverride` in place of the primary one when set. */
+    /** The publication's languages, `primaryLanguageOverride` in place of the primary one when set. */
     getPublicationLanguages(): string[] {
-        return this.publicationLanguages(this._settings.languageOverride);
+        return this.publicationLanguages(this._settings.primaryLanguageOverride);
     }
 
     get settings(): Readonly<ReadAloudSettings> {
@@ -470,7 +485,7 @@ export class ReadAloudNavigator {
     }
 
     private listen() {
-        const on = (type: ReadiumSpeechPlaybackEvent["type"], handler: (event: ReadiumSpeechPlaybackEvent) => void) => {
+        const on = <T extends ReadiumSpeechNavigatorEvent["type"]>(type: T, handler: (event: ReadiumSpeechNavigatorEvent<T>) => void) => {
             this.unsubscribers.push(this.speech.on(type, event => {
                 handler(event);
                 this.notifyState();
@@ -499,12 +514,22 @@ export class ReadAloudNavigator {
         on("boundary", event => {
             // Voices listed without boundaries may still send them, but unreliably (e.g. out of order after a pause).
             if (!this.sendsBoundaries()) return;
+            if (event.detail?.name !== "word") return;
+            // A word with nothing on the page, e.g. an inline page number, ends the previous word's highlight.
+            if (!event.detail.locate) {
+                if (event.detail.charLength > 0) {
+                    this.wordHidden = true;
+                    this.decorate();
+                }
+                return;
+            }
             // Some voices report zero-length boundaries, which would highlight the whole element.
-            if (event.detail?.name !== "word" || !event.detail.locate || !event.detail.word?.trim()) return;
+            if (!event.detail.word?.trim()) return;
             const locate = event.detail.locate as LocatorOptions;
             const locator = this.locatorFor(locate);
             if (!locator) return;
             this.wordLocator = locator;
+            this.wordHidden = false;
             this.decorate();
             const word = this.wordPoint(locate);
             if (word && this.isHidden(word)) {
@@ -561,7 +586,7 @@ export class ReadAloudNavigator {
             this.clearBreak();
             this.progress.reset();
             this.clearHighlights();
-            this.listeners.error?.(event.detail ?? event);
+            this.listeners.error?.(event.detail);
         });
         on("stop", () => {
             this.clearBreak();
@@ -736,6 +761,7 @@ export class ReadAloudNavigator {
         const href = from.href.split("#")[0];
         const selector = from.locations ? getCssSelector(from.locations) : undefined;
         const quote = from.text?.highlight?.trim().slice(0, 40);
+        const pageQuote = quote && ReadAloudNavigator.collapsed(quote);
         let first = -1;
         let bySelector = -1;
         let byText = -1;
@@ -747,7 +773,7 @@ export class ReadAloudNavigator {
             const selected = selector ? pieces.filter(piece => piece.cssSelector === selector) : [];
             if (selected.some(piece => !quote || piece.text?.highlight?.includes(quote))) return i;
             if (bySelector === -1 && selected.length > 0) bySelector = i;
-            if (byText === -1 && quote && (queue[i].plain ?? "").includes(quote)) byText = i;
+            if (byText === -1 && pageQuote && ReadAloudNavigator.collapsed(resolveUtteranceSourceText(queue[i]) ?? queue[i].plain ?? "").includes(pageQuote)) byText = i;
         }
         if (bySelector !== -1) return bySelector;
         return byText !== -1 ? byText : Math.max(first, 0);
@@ -1033,7 +1059,7 @@ export class ReadAloudNavigator {
 
     private decorate() {
         this.applyDecorations(UTTERANCE_GROUP, this.utteranceLocators, this._settings.utteranceStyle);
-        this.applyDecorations(WORD_GROUP, this.wordLocator ? [this.wordLocator] : [], this._settings.wordStyle);
+        this.applyDecorations(WORD_GROUP, this.wordLocator && !this.wordHidden ? [this.wordLocator] : [], this._settings.wordStyle);
     }
 
     private applyDecorations(group: string, locators: Locator[], style: ReadAloudDecorationStyle) {
@@ -1233,7 +1259,20 @@ export class ReadAloudNavigator {
         if (index === undefined) return undefined;
         // Speech trims a whole element's text, where the document's may start with whitespace.
         const lead = piece!.text?.highlight ? 0 : Number(/^\s/.test(this.lines[index]?.text ?? ""));
-        return { piece: index, offset: lead + ReadAloudNavigator.collapsed(text.before ?? "").length };
+        // In a whole element, the word's quote counts from its run (e.g. after an abbreviation), found in the document's text nearest
+        // where `offsets` starts it, as that leaves out text of other nodes, like a footnote reference.
+        const run = piece!.text?.highlight ? undefined : utterance.offsets?.find(offset => offset.locate.cssSelector === locate.cssSelector && offset.locate.text?.highlight === whole);
+        let start = lead;
+        if (run) {
+            const line = ReadAloudNavigator.collapsed(this.lines[index]?.text ?? "");
+            const quote = ReadAloudNavigator.collapsed(whole);
+            let found = -1;
+            for (let i = line.indexOf(quote); i >= 0; i = line.indexOf(quote, i + 1)) {
+                if (found < 0 || Math.abs(i - run.start) < Math.abs(found - run.start)) found = i;
+            }
+            start = found >= 0 ? found : lead + run.start;
+        }
+        return { piece: index, offset: start + ReadAloudNavigator.collapsed(text.before ?? "").length };
     }
 
     // A piece's text, taken from the document when the piece is a whole element given without it.
@@ -1356,19 +1395,19 @@ export class ReadAloudNavigator {
     }
 
     // The override comes first, in place of the metadata's primary language it corrects.
-    private publicationLanguages(languageOverride: string | null): string[] {
+    private publicationLanguages(primaryLanguageOverride: string | null): string[] {
         const languages = this.navigator.publication.metadata.languages ?? [];
-        return languageOverride ? [languageOverride, ...languages.slice(1)] : languages;
+        return primaryLanguageOverride ? [primaryLanguageOverride, ...languages.slice(1)] : languages;
     }
 
     // Speech knows nothing of pages and spreads, so it never auto-pauses at them itself.
     private static speechPreferences(preferences: IReadAloudPreferences, contentLanguage: string): SpeechPreferences {
-        const { autoPause, languageOverride, startInViewport, keepCentered, detachable, readFromPointer, utteranceStyle, wordStyle, ...speech } = preferences;
+        const { autoPause, primaryLanguageOverride, startInViewport, keepCentered, detachable, readFromPointer, utteranceStyle, wordStyle, ...speech } = preferences;
         const ownScope = autoPause === ReadAloudAutoPause.page || autoPause === ReadAloudAutoPause.spread;
         return new SpeechPreferences({
             ...speech,
             autoPause: ownScope ? ReadAloudAutoPause.none : autoPause,
-            languageOverrides: languageOverride ? { [contentLanguage]: languageOverride } : null
+            languageOverrides: primaryLanguageOverride ? { [contentLanguage]: primaryLanguageOverride } : null
         });
     }
 

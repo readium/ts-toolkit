@@ -5,17 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor versions (marked **Breaking:**). Patch versions never contain breaking changes.
 
-## [Unreleased]
+## [2.16.0] – 2026-11-20
 
 ### Added
 
 - `readFromPointerRules` read-aloud configuration, with `defaultReadFromPointerRules` and the `ReadFromPointerRule` type, telling which content `readFromPointer()` reads from its start rather than from the pressed utterance, by Guided Navigation role and an optional CSS selector, when idle, playing, or playing in that content
+- `interruptionValues` is exported, the values each role in the `interruptions` read-aloud preference takes, `"never"`, `"inline"` and `"after"`
+- `ReadiumSpeechPlaybackEvent`, `ReadiumSpeechPlaybackEventDetails` and `ReadiumSpeechBoundaryDetail` are exported, to type a listener given to `ReadiumSpeechPlaybackEngine`'s `on()`
+- `contextualizationOverrides` and `segmentationOverrides` read-aloud configurations, given to `@readium/speech` as they are, to reword announcements and change how sentences are split. `builtInSuppressions` and the `ContextualizationOverrides`, `SegmentationOverrides` and `SentenceSegmenter` types are exported
+- `ErrorEventDetail` is exported, what the `error` read-aloud listener receives when the engine fails to speak
+- `substitutions` read-aloud configuration, given to `@readium/speech` as it is, to change how ASCII imitations of symbols, e.g. "(c)", are read, a `null` rule removing a built-in one. `builtInSubstitutions` and the `SubstitutionTable` and `SubstitutionRule` types are exported
+- `AudioMediaElementSetup` is exported, the type of the `mediaElementSetup` audio navigator configuration
 
 ### Changed
 
 - `readFromPointer()` reads a figure, unless the press is on its caption, and math from their start. It reads a table, an epigraph, a pullquote, a quote with a `footer` attribution and a definition, from its term, from their start too, unless that content is the one being played
 - `readFromPointer()` starts from the innermost utterance under the press, so an utterance nested in a larger one is the one read
 - `findPointedPiece()` on `EpubNavigator` and `WebPubNavigator` takes optional `rules` and `current` arguments
+- Read aloud uses `@readium/speech` 0.21: a figure is labelled only by `aria-label`, `aria-labelledby` or `aria-describedby`, announced as "Figure: {{ description }}", and an unlabelled one is now announced too, as "Figure.". Its `<figcaption>` no longer labels it but is read as content
+- **Breaking:** the `languageOverride` read-aloud preference is renamed `primaryLanguageOverride`, as it corrects the publication's primary language, not an entry of `@readium/speech`'s `languageOverrides`
+- **Breaking:** `on()` on the re-exported `ReadiumSpeechPlaybackEngine` is generic, its events' `detail` typed per event type instead of `any`
+
+### Fixed
+
+- With `@readium/speech` 0.22, a word spoken in place of a substitution's text, e.g. "carbon" in "carbon dioxide" for "CO2", highlights that text, and a word of an aria label read in place of its element highlights that element, instead of the previous word staying highlighted
+- `play()` from a locator with only a text quote, such as a selection's, starts at the utterance holding that text when it's spoken otherwise, e.g. "1/2" as "½" or an abbreviation with its expansion, or when the utterance is SSML, instead of at the resource's first utterance
+- A spoken word with nothing on the page, e.g. an inline page number or an image's text alternative, clears the word highlight instead of leaving the previous word highlighted
+- Without sentence segmentation, a word after an abbreviation or a footnote reference, or of an abbreviation's expansion, is followed where it is in its element, instead of at the element's start, which could turn the page while it's in view
 
 ## [2.15.0] – 2026-11-06
 
