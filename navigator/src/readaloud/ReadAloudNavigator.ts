@@ -513,7 +513,13 @@ export class ReadAloudNavigator {
             // Voices listed without boundaries may still send them, but unreliably (e.g. out of order after a pause).
             if (!this.sendsBoundaries()) return;
             // Some voices report zero-length boundaries, which would highlight the whole element.
-            if (event.detail?.name !== "word" || !event.detail.locate || !event.detail.word?.trim()) return;
+            if (event.detail?.name !== "word" || !event.detail.word?.trim()) return;
+            // A word with nothing on the page, e.g. an inline page number, ends the previous word's highlight.
+            if (!event.detail.locate) {
+                this.wordLocator = undefined;
+                this.decorate();
+                return;
+            }
             const locate = event.detail.locate as LocatorOptions;
             const locator = this.locatorFor(locate);
             if (!locator) return;
