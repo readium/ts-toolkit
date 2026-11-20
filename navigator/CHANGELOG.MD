@@ -31,6 +31,7 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 - With `@readium/speech` 0.22, a word spoken in place of a substitution's text, e.g. "carbon" in "carbon dioxide" for "CO2", highlights that text, and a word of an aria label read in place of its element highlights that element, instead of the previous word staying highlighted
 - `play()` from a locator with only a text quote, such as a selection's, starts at the utterance holding that text when it's spoken otherwise, e.g. "1/2" as "½" or an abbreviation with its expansion, or when the utterance is SSML, instead of at the resource's first utterance
 - A spoken word with nothing on the page, e.g. an inline page number or an image's text alternative, clears the word highlight instead of leaving the previous word highlighted
+- Without sentence segmentation, a word after an abbreviation or a footnote reference, or of an abbreviation's expansion, is followed where it is in its element, instead of at the element's start, which could turn the page while it's in view
 
 ## [2.15.0] – 2026-11-06
 
