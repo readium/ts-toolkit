@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor versions (marked **Breaking:**). Patch versions never contain breaking changes.
 
+## [Unreleased]
+
+### Changed
+
+- Publications whose primary language is written right to left, e.g. Urdu, Pashto or Yiddish, get the RTL Readium CSS stylesheets and `dir="rtl"`, not only Arabic, Persian and Hebrew
+
+### Fixed
+
+- Languages whose code only starts like an RTL one, such as Mapudungun (`arn`) or Herero (`her`), no longer get the RTL stylesheets and `dir="rtl"`
+- Languages whose code only starts like a CJK one, such as Konkani (`kok`) or Zhuang (`zha`), no longer get the CJK stylesheets and writing mode
+- Traditional Chinese publications without a `page-progression-direction`, e.g. `zh-Hant` or `zh-TW`, get the vertical CJK stylesheets matching their RTL reading progression, instead of the horizontal ones
+
 ## [2.16.1] – 2026-11-20
 
 ### Fixed

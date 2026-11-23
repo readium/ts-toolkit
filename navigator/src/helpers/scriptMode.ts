@@ -1,4 +1,4 @@
-import { Metadata, ReadingProgression } from "@readium/shared";
+import { Metadata, ReadingProgression, RTL_LANGUAGES } from "@readium/shared";
 
 export type ScriptMode = 'ltr' | 'rtl' | 'cjk-horizontal' | 'cjk-vertical' | 'mongolian-vertical';
 
@@ -8,30 +8,22 @@ export type ScriptMode = 'ltr' | 'rtl' | 'cjk-horizontal' | 'cjk-vertical' | 'mo
  * Rules:
  * - Only the first language in the array is used. A Latin book containing
  *   some Japanese is still Latin.
- * - For CJK (zh/ja/ko): both language AND explicit reading progression are
- *   required. CJK vertical = explicit rtl + CJK language. CJK horizontal =
- *   CJK language with ltr or unset progression.
- * - For RTL (ar/fa/he): language wins. If the primary language is a RTL
- *   script, RTL mode is applied regardless of the explicit progression
- *   direction declared in the OPF.
+ * - For CJK (zh/ja/ko): CJK vertical = CJK language + effective rtl
+ *   progression, either declared or inferred (e.g. zh-Hant). CJK horizontal
+ *   otherwise.
+ * - For RTL (primary subtag in `RTL_LANGUAGES`): language wins. RTL mode is
+ *   applied regardless of the explicit progression direction declared in the OPF.
  * - For Mongolian (mn): Traditional Mongolian script (mn-Mong) uses
  *   writing-mode: vertical-lr. Cyrillic Mongolian (mn-Cyrl) is standard LTR.
  *   An explicit script subtag is required; bare `mn` defaults to LTR.
  */
 export function getScriptMode(metadata: Metadata): ScriptMode {
     const primaryLang = metadata.languages?.[0]?.toLowerCase();
-    // Use explicit readingProgression only — effectiveReadingProgression
-    // auto-detects from language, which would create circular logic here.
-    const progression = metadata.readingProgression;
 
     if (primaryLang) {
-        const isCJK = primaryLang.startsWith('zh') ||
-                      primaryLang.startsWith('ja') ||
-                      primaryLang.startsWith('ko');
-        if (isCJK) {
-            // Vertical requires explicit rtl progression. If progression
-            // conflicts (e.g. ltr) we fall back to horizontal.
-            return progression === ReadingProgression.rtl
+        const subtag = primaryLang.split('-')[0];
+        if (subtag === 'zh' || subtag === 'ja' || subtag === 'ko') {
+            return metadata.effectiveReadingProgression === ReadingProgression.rtl
                 ? 'cjk-vertical'
                 : 'cjk-horizontal';
         }
@@ -40,12 +32,9 @@ export function getScriptMode(metadata: Metadata): ScriptMode {
         // Requires an explicit Mong script subtag; mn-Cyrl and bare mn stay LTR.
         if (primaryLang.startsWith('mn-mong')) return 'mongolian-vertical';
 
-        // RTL: language is authoritative. ar/fa/he → rtl regardless of
+        // RTL: language is authoritative, regardless of
         // what the OPF says about page-progression-direction.
-        const isRTLScript = primaryLang.startsWith('ar') ||
-                            primaryLang.startsWith('fa') ||
-                            primaryLang.startsWith('he');
-        if (isRTLScript) return 'rtl';
+        if (RTL_LANGUAGES.has(subtag)) return 'rtl';
     }
 
     return 'ltr';
