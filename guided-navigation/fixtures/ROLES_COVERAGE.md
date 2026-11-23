@@ -21,6 +21,7 @@ renaming, or removing a fixture.
 | `biblioref` | `biblioref-epub-type`, `biblioref-role-aria`, `biblioref-target-descendant-ids`, `biblioref-target-in-bibliography-role-aria`, `biblioref-target-mixed-content` |
 | `blockquote` | `blockquote-html-native`, `blockquote-role-aria`, `nested-blockquote` |
 | `body` | `body-html-native` |
+| `bubble` | `bubble-epub-type` |
 | `chapter` | `chapter-epub-type`, `chapter-role-aria`, `redundant-role-body-chapter`, `redundant-role-nested-chapter` |
 | `colophon` | `colophon-epub-type`, `colophon-role-aria` |
 | `complementary` | `complementary-role-aria` |
@@ -62,6 +63,8 @@ renaming, or removing a fixture.
 | `notice` | `notice-epub-type`, `notice-role-aria` |
 | `pagebreak` | `language-pagebreak-label`, `pagebreak-epub-type`, `pagebreak-role-aria` |
 | `pagelist` | `pagelist-epub-type`, `pagelist-role-aria` |
+| `panel` | `panel-epub-type`, `panel-role-img-labelled` |
+| `panelGroup` | `panel-group-epub-type` |
 | `paragraph` | `paragraph-basic` |
 | `part` | `part-epub-type`, `part-role-aria` |
 | `preface` | `preface-epub-type`, `preface-role-aria` |
@@ -73,6 +76,7 @@ renaming, or removing a fixture.
 | `region` | `region-role-aria` |
 | `section` | `nested-section`, `section-html-native` |
 | `separator` | `separator-html-native`, `separator-role-aria`, `separator-with-glyphs` |
+| `sound` | `sound-epub-type` |
 | `subtitle` | `subtitle-epub-type`, `subtitle-role-aria` |
 | `summary` | `summary-html-native` |
 | `table` | `table-aria-label-caption`, `table-caption`, `table-caption-aria-labelledby`, `table-caption-element-html-native`, `table-caption-role-aria`, `table-cell-abbreviation`, `table-cell-noteref`, `table-colspan-html-native`, `table-colspan-role-aria`, `table-epub-type`, `table-html-native`, `table-in-role-none-wrapper`, `table-nested-html-native`, `table-nested-role-aria`, `table-no-headers`, `table-role-aria`, `table-rowgroup-role-aria`, `table-rowspan-html-native`, `table-rowspan-role-aria`, `table-sectioning`, `table-th-no-scope` |
@@ -81,4 +85,4 @@ renaming, or removing a fixture.
 | `toc` | `toc-epub-type`, `toc-role-aria` |
 | `video` | `video-html-native`, `video-no-description` |
 
-263 fixtures across 73 roles.
+268 fixtures across 77 roles.

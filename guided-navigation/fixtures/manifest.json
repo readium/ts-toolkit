@@ -440,6 +440,16 @@
     }
   },
   {
+    "id": "bubble-epub-type",
+    "dir": "bubble-epub-type",
+    "role": "bubble",
+    "description": "bubble role via epub:type=\"balloon\" on a <p>",
+    "files": {
+      "input": "input.xhtml",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "chapter-epub-type",
     "dir": "chapter-epub-type",
     "role": "chapter",
@@ -2040,6 +2050,36 @@
     }
   },
   {
+    "id": "panel-epub-type",
+    "dir": "panel-epub-type",
+    "role": "panel",
+    "description": "A comic panel via epub:type=\"panel\" on a labelled region <section>, holding a description and a balloon",
+    "files": {
+      "input": "input.xhtml",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "panel-group-epub-type",
+    "dir": "panel-group-epub-type",
+    "role": "panelGroup",
+    "description": "panelGroup role via epub:type=\"panel-group\" on a <div> grouping two panels",
+    "files": {
+      "input": "input.xhtml",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "panel-role-img-labelled",
+    "dir": "panel-role-img-labelled",
+    "role": "panel",
+    "description": "A panel with role=\"img\" and an aria-label — the label becomes its description and its balloon is kept, unlike an image",
+    "files": {
+      "input": "input.xhtml",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "paragraph-basic",
     "dir": "paragraph-basic",
     "role": "paragraph",
@@ -2236,6 +2276,16 @@
     "description": "separator role whose visible content is a decorative glyph run (\"* * *\"), not meaningful text",
     "files": {
       "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "sound-epub-type",
+    "dir": "sound-epub-type",
+    "role": "sound",
+    "description": "sound role via epub:type=\"sound-area\" on a <p>",
+    "files": {
+      "input": "input.xhtml",
       "gnd": "gnd.json"
     }
   },

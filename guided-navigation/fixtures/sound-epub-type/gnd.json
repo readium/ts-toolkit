@@ -1,0 +1,11 @@
+{
+  "role": ["body"],
+  "children": [
+    {
+      "role": ["paragraph", "sound"],
+      "text": {
+        "plain": "Crash!"
+      }
+    }
+  ]
+}

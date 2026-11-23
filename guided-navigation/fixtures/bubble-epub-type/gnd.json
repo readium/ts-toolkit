@@ -1,0 +1,11 @@
+{
+  "role": ["body"],
+  "children": [
+    {
+      "role": ["paragraph", "bubble"],
+      "text": {
+        "plain": "The keeper says: \"Nearly there.\""
+      }
+    }
+  ]
+}

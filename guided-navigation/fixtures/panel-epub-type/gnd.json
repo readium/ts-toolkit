@@ -1,0 +1,27 @@
+{
+  "role": ["body"],
+  "children": [
+    {
+      "role": ["section", "region", "panel"],
+      "description": {
+        "text": {
+          "plain": "Panel 2"
+        }
+      },
+      "children": [
+        {
+          "role": ["paragraph"],
+          "text": {
+            "plain": "The keeper climbs the last steps of the lighthouse, lantern in hand."
+          }
+        },
+        {
+          "role": ["paragraph", "bubble"],
+          "text": {
+            "plain": "The keeper says: \"Nearly there.\""
+          }
+        }
+      ]
+    }
+  ]
+}

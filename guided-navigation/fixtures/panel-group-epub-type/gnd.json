@@ -1,0 +1,32 @@
+{
+  "role": ["body"],
+  "children": [
+    {
+      "role": ["panelGroup"],
+      "children": [
+        {
+          "role": ["panel"],
+          "children": [
+            {
+              "role": ["paragraph"],
+              "text": {
+                "plain": "The lamp flickers."
+              }
+            }
+          ]
+        },
+        {
+          "role": ["panel"],
+          "children": [
+            {
+              "role": ["paragraph"],
+              "text": {
+                "plain": "The lamp goes dark."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
