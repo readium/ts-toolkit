@@ -22,6 +22,7 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 
 - Languages whose code only starts like an RTL one, such as Mapudungun (`arn`) or Herero (`her`), no longer get the RTL stylesheets and `dir="rtl"`
 - Languages whose code only starts like a CJK one, such as Konkani (`kok`) or Zhuang (`zha`), no longer get the CJK stylesheets and writing mode
+- Traditional Chinese publications without a `page-progression-direction`, e.g. `zh-Hant` or `zh-TW`, get the vertical CJK stylesheets matching their RTL reading progression, instead of the horizontal ones
 
 ## [2.15.0] – 2026-11-06
 
