@@ -1,0 +1,24 @@
+{
+  "role": ["table"],
+  "children": [
+    {
+      "role": ["caption"],
+      "id": "roster",
+      "text": {
+        "language": "en",
+        "ssml": "Team <emphasis>roster</emphasis>"
+      }
+    },
+    {
+      "role": ["row"],
+      "children": [
+        {
+          "role": ["cell"],
+          "text": {
+            "plain": "Ada"
+          }
+        }
+      ]
+    }
+  ]
+}

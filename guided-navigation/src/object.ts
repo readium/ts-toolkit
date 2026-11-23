@@ -99,6 +99,9 @@ export class NavObject {
   children: NavObject[] = [];
   noText = false;
   hasChildBlock = false;
+  // The caption child that names this object: its text is dropped when plain, the description holding it,
+  // else the description is, so the name is only output once. Its explicit-role children stay either way.
+  namingCaption?: Element;
 
   // `selfTextref` references this object's own element, for objects that would otherwise lack the schema's required content.
   finalize(selfTextref?: (el: Element) => string | undefined): ObjBuilder {
@@ -106,6 +109,17 @@ export class NavObject {
     const finalChildren: ObjBuilder[] = [];
     for (const child of this.children) {
       const res = child.finalize(selfTextref);
+      if (child.el && child.el === this.namingCaption && !isEmptyObj(res)) {
+        // Its own text: the caption's, and its role-less children's when explicit-role ones split it.
+        const ownText = res.children?.filter((c) => !c.role?.length) ?? [];
+        if ([res, ...ownText].some((o) => o.text?.ssml)) {
+          delete result.description;
+          delete result.descriptionLanguage;
+        } else {
+          delete res.text;
+          res.children = res.children?.filter((c) => c.role?.length);
+        }
+      }
       if (isEmptyObj(res)) continue;
       if (isChildrenOnly(res)) {
         finalChildren.push(...(res.children ?? []));

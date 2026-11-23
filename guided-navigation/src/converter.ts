@@ -174,11 +174,12 @@ export class Converter {
   }
 
   // An explicit-role descendant is content in its own right and skips
-  // inherited `noText` — except `caption`, which the figure's ARIA name replaces.
+  // inherited `noText` — except `caption`, which the figure's ARIA name replaces, unless it's that name.
   private descend(el: Element, roles: GndRole[]) {
     const node = new NavObject();
     node.el = el;
-    node.noText = (!hasExplicitRole(el) || roles.includes("caption")) && this.current.noText;
+    node.noText =
+      this.current.namingCaption !== el && (!hasExplicitRole(el) || roles.includes("caption")) && this.current.noText;
     this.current.children.push(node);
     this.current.hasChildBlock = true;
     this.current = node;
@@ -317,6 +318,7 @@ export class Converter {
     if (roles.length > 0) cur.role = roles;
     if (aria) {
       setDescription(cur, aria, ariaLanguage);
+      this.current.namingCaption = Converter.namingCaption(el, roles);
       if (roles.includes("figure")) {
         this.current.noText = true;
       }
@@ -450,6 +452,15 @@ export class Converter {
   private static isPlaceholder(el: Element, tagName: string, roles: GndRole[]): boolean {
     if (roles.includes("pagebreak") || Converter.actsAsImage(roles) || roles.includes("math")) return true;
     return ["img", "svg", "audio", "video"].includes(tagName) || (tagName === "a" && !!el.getAttribute("href"));
+  }
+
+  // A figure's or table's own caption, when it's what aria-labelledby names it by.
+  private static namingCaption(el: Element, roles: GndRole[]): Element | undefined {
+    if (!roles.includes("figure") && !roles.includes("table")) return undefined;
+    const ids = new Set((el.getAttribute("aria-labelledby") ?? "").trim().split(/\s+/).filter(Boolean));
+    if (ids.size !== 1) return undefined;
+    const target = el.ownerDocument.getElementById([...ids][0]);
+    return target?.parentElement === el && extractNodeRoles(target).includes("caption") ? target : undefined;
   }
 
   // A comic panel holds its bubbles: an image role on it doesn't replace its content.

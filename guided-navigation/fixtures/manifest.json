@@ -800,6 +800,16 @@
     }
   },
   {
+    "id": "figure-caption-aria-labelledby-language",
+    "dir": "figure-caption-aria-labelledby-language",
+    "role": "figure",
+    "description": "A figure labelled via aria-labelledby by its own <figcaption> holding a language change — the figcaption is kept as content, with its markup, and the figure gets no description",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "figure-caption-block-content",
     "dir": "figure-caption-block-content",
     "role": "figure",
@@ -2343,7 +2353,17 @@
     "id": "table-caption-aria-labelledby",
     "dir": "table-caption-aria-labelledby",
     "role": "table",
-    "description": "A table labelled via aria-labelledby by its own <caption> — the caption text becomes the table's description, and the caption is still read as a caption child",
+    "description": "A table labelled via aria-labelledby by its own plain-text <caption> — the caption text becomes the table's description, and the caption isn't output again",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "table-caption-aria-labelledby-emphasis",
+    "dir": "table-caption-aria-labelledby-emphasis",
+    "role": "table",
+    "description": "A table labelled via aria-labelledby by its own <caption> holding emphasis — the caption is kept as content, with its markup, and the table gets no description",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"

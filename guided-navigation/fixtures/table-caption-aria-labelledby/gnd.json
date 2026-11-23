@@ -7,13 +7,6 @@
   },
   "children": [
     {
-      "role": ["caption"],
-      "id": "roster",
-      "text": {
-        "plain": "Team roster"
-      }
-    },
-    {
       "role": ["row"],
       "children": [
         {
