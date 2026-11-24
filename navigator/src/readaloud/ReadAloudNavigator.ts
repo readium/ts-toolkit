@@ -1,4 +1,4 @@
-import { Layout, Locator, Profile, getCssSelector } from "@readium/shared";
+import { Layout, Locator, LocatorText, Profile, getCssSelector } from "@readium/shared";
 import { FrameClickEvent, PointedPieceRule, TextLayout, TextLineStarts } from "@readium/navigator-html-injectables";
 import {
     ContextualizationOverrides,
@@ -109,6 +109,7 @@ interface SpokenPoint {
 
 const UTTERANCE_GROUP = "readaloud-utterance";
 const WORD_GROUP = "readaloud-word";
+const WORD_CONTEXT_LENGTH = 32;
 // Subpixel scrolling and rounding of the reported line starts.
 const LAYOUT_TOLERANCE = 1;
 
@@ -1061,7 +1062,24 @@ export class ReadAloudNavigator {
 
     private decorate() {
         this.applyDecorations(UTTERANCE_GROUP, this.utteranceLocators, this._settings.utteranceStyle);
-        this.applyDecorations(WORD_GROUP, this.wordLocator && !this.wordHidden ? [this.wordLocator] : [], this._settings.wordStyle);
+        this.applyDecorations(WORD_GROUP, this.wordLocator && !this.wordHidden ? [ReadAloudNavigator.withShortContext(this.wordLocator)] : [], this._settings.wordStyle);
+    }
+
+    // A word's context can run over its whole element, and anchoring scores every match of the word against it.
+    private static withShortContext(locator: Locator): Locator {
+        const text = locator.text;
+        if (!text) return locator;
+        return new Locator({
+            href: locator.href,
+            type: locator.type,
+            title: locator.title,
+            locations: locator.locations,
+            text: new LocatorText({
+                before: text.before?.slice(-WORD_CONTEXT_LENGTH),
+                highlight: text.highlight,
+                after: text.after?.slice(0, WORD_CONTEXT_LENGTH),
+            }),
+        });
     }
 
     private applyDecorations(group: string, locators: Locator[], style: ReadAloudDecorationStyle) {
@@ -1249,7 +1267,7 @@ export class ReadAloudNavigator {
         return index === undefined ? undefined : { piece: index, offset: 0 };
     }
 
-    // A word comes as its offset's locate, its text split around the word within the offset's quote, context included.
+    // A word comes as its offset's locate, quoted with the offset's `before` and the text up to it, and the text after it and the offset's `after`.
     private wordPoint(locate: LocatorOptions): SpokenPoint | undefined {
         const utterance = this.speech.getCurrentContent();
         const text = locate.text;
@@ -1257,7 +1275,7 @@ export class ReadAloudNavigator {
         const before = text.before ?? "";
         const after = text.after ?? "";
         const holds = (quote?: LocatorOptions["text"]) => !!quote?.highlight && before.startsWith(quote.before ?? "") && after.endsWith(quote.after ?? "")
-            && (quote.before ?? "") + quote.highlight + (quote.after ?? "") === before + (text.highlight ?? "") + after;
+            && before.length + (text.highlight?.length ?? 0) + after.length - (quote.before?.length ?? 0) - (quote.after?.length ?? 0) === quote.highlight.length;
         const pieces = this.piecesOf(utterance).filter(piece => piece.cssSelector === locate.cssSelector);
         const piece = pieces.find(piece => holds(piece.text)) ?? pieces.find(piece => !piece.text?.highlight);
         const index = piece && this.watchedPieces.get(piece);
