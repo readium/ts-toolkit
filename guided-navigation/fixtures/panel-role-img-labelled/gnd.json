@@ -1,0 +1,21 @@
+{
+  "role": ["body"],
+  "children": [
+    {
+      "role": ["image", "panel"],
+      "description": {
+        "text": {
+          "plain": "The keeper at the top of the stairs"
+        }
+      },
+      "children": [
+        {
+          "role": ["paragraph", "bubble"],
+          "text": {
+            "plain": "The keeper says: \"Nearly there.\""
+          }
+        }
+      ]
+    }
+  ]
+}

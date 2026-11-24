@@ -1,0 +1,10 @@
+{
+  "id": "sound-epub-type",
+  "description": "sound role via epub:type=\"sound-area\" on a <p>",
+  "role": "sound",
+  "rolesCovered": [
+    "sound"
+  ],
+  "sourceRef": "https://www.w3.org/TR/epub-ssv-11/#sec-comics",
+  "inputKind": "document"
+}

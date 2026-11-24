@@ -1,0 +1,11 @@
+{
+  "id": "panel-group-epub-type",
+  "description": "panelGroup role via epub:type=\"panel-group\" on a <div> grouping two panels",
+  "role": "panelGroup",
+  "rolesCovered": [
+    "panelGroup",
+    "panel"
+  ],
+  "sourceRef": "https://www.w3.org/TR/epub-ssv-11/#sec-comics",
+  "inputKind": "document"
+}

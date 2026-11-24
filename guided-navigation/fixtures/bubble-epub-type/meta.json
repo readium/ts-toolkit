@@ -1,0 +1,10 @@
+{
+  "id": "bubble-epub-type",
+  "description": "bubble role via epub:type=\"balloon\" on a <p>",
+  "role": "bubble",
+  "rolesCovered": [
+    "bubble"
+  ],
+  "sourceRef": "https://www.w3.org/TR/epub-ssv-11/#sec-comics",
+  "inputKind": "document"
+}

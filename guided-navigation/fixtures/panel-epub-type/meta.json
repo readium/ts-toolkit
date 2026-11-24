@@ -1,0 +1,13 @@
+{
+  "id": "panel-epub-type",
+  "description": "A comic panel via epub:type=\"panel\" on a labelled region <section>, holding a description and a balloon",
+  "role": "panel",
+  "rolesCovered": [
+    "panel",
+    "bubble",
+    "region",
+    "section"
+  ],
+  "sourceRef": "https://www.w3.org/TR/epub-ssv-11/#sec-comics",
+  "inputKind": "document"
+}

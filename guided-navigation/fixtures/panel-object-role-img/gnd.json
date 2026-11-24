@@ -1,0 +1,14 @@
+{
+  "role": ["body"],
+  "children": [
+    {
+      "role": ["image", "panel"],
+      "description": {
+        "text": {
+          "plain": "The keeper at the top of the stairs"
+        }
+      },
+      "textref": "#css(object)"
+    }
+  ]
+}

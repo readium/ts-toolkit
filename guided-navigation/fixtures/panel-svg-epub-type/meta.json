@@ -1,0 +1,11 @@
+{
+  "id": "panel-svg-epub-type",
+  "description": "A comic panel via epub:type=\"panel\" on an <svg> — it stays an image placeholder described by its label, its inner SVG text not read",
+  "role": "panel",
+  "rolesCovered": [
+    "panel",
+    "image"
+  ],
+  "sourceRef": "https://www.w3.org/TR/epub-ssv-11/#sec-comics",
+  "inputKind": "document"
+}

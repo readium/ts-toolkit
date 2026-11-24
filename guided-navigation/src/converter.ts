@@ -286,7 +286,7 @@ export class Converter {
       this.placeholder(el, tagName, obj);
       return true;
     }
-    if (roles.includes("image") || roles.includes("math")) {
+    if (Converter.actsAsImage(tagName, roles) || roles.includes("math")) {
       // Elements acting as images without being one, e.g. <span role="img">:
       // their content is replaced by their accessible name.
       const obj: ObjBuilder = { role: roles };
@@ -448,8 +448,14 @@ export class Converter {
 
   // What head() embeds as a placeholder in the flow, rather than descending into.
   private static isPlaceholder(el: Element, tagName: string, roles: GndRole[]): boolean {
-    if (roles.includes("pagebreak") || roles.includes("image") || roles.includes("math")) return true;
+    if (roles.includes("pagebreak") || Converter.actsAsImage(tagName, roles) || roles.includes("math")) return true;
     return ["img", "svg", "audio", "video"].includes(tagName) || (tagName === "a" && !!el.getAttribute("href"));
+  }
+
+  // A block comic panel holds its bubbles: an image role on it doesn't replace its content, unless it's an <svg>.
+  private static actsAsImage(tagName: string, roles: GndRole[]): boolean {
+    const isPanel = roles.includes("panel") || roles.includes("panelGroup");
+    return roles.includes("image") && (tagName === "svg" || !isPanel || !isBlockNode(tagName, roles));
   }
 
   // The outermost abbreviation whose text is all in obj, apart from punctuation alongside it.

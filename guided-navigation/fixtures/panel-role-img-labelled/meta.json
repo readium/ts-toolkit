@@ -1,0 +1,12 @@
+{
+  "id": "panel-role-img-labelled",
+  "description": "A panel with role=\"img\" and an aria-label — the label becomes its description and its balloon is kept, unlike an image",
+  "role": "panel",
+  "rolesCovered": [
+    "panel",
+    "image",
+    "bubble"
+  ],
+  "sourceRef": "https://www.w3.org/TR/epub-ssv-11/#sec-comics",
+  "inputKind": "document"
+}
