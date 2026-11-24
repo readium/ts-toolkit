@@ -136,8 +136,8 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@readium/speech':
-        specifier: ^0.22.0
-        version: 0.22.0(typescript@5.9.3)
+        specifier: ^0.24.0
+        version: 0.24.0(typescript@5.9.3)
     devDependencies:
       '@readium/css':
         specifier: ^2.0.5
@@ -1218,8 +1218,8 @@ packages:
   '@readium/css@2.0.5':
     resolution: {integrity: sha512-rQWeDFSS9UfRTFFdWIhlko0jtkL9dOfNTqFjgMumlguromsyHC9/lGmbWDde7deEeE5ns+yBOSGKixMU0wqZ4A==}
 
-  '@readium/speech@0.22.0':
-    resolution: {integrity: sha512-LajaHjX3akJJkcad0xO06WM36QAT0OZGT5HfoBTyJdTKQCxuWv82XXPBpRoMYZuGcw3X4QVHzq88FfYE6RtflA==}
+  '@readium/speech@0.24.0':
+    resolution: {integrity: sha512-V/jD8rDfzQjGyr4PW5pQ1XoQzCGsgzOYn41RrMUbW+eBAtsYcBSsVHlBvBa7inaCdYfl8o9Yc4yBrWr1Lxer0A==}
     engines: {node: '>=24'}
 
   '@rollup/rollup-android-arm-eabi@4.55.2':
@@ -3987,7 +3987,7 @@ snapshots:
 
   '@readium/css@2.0.5': {}
 
-  '@readium/speech@0.22.0(typescript@5.9.3)':
+  '@readium/speech@0.24.0(typescript@5.9.3)':
     dependencies:
       '@readium/decorator': link:decorator
       '@readium/guided-navigation': link:guided-navigation

@@ -1249,32 +1249,36 @@ export class ReadAloudNavigator {
         return index === undefined ? undefined : { piece: index, offset: 0 };
     }
 
-    // A word comes as its piece's locate with the text split around it.
+    // A word comes as its offset's locate, its text split around the word within the offset's quote, context included.
     private wordPoint(locate: LocatorOptions): SpokenPoint | undefined {
         const utterance = this.speech.getCurrentContent();
         const text = locate.text;
         if (!utterance || !text) return undefined;
-        const whole = (text.before ?? "") + (text.highlight ?? "") + (text.after ?? "");
+        const before = text.before ?? "";
+        const after = text.after ?? "";
+        const holds = (quote?: LocatorOptions["text"]) => !!quote?.highlight && before.startsWith(quote.before ?? "") && after.endsWith(quote.after ?? "")
+            && (quote.before ?? "") + quote.highlight + (quote.after ?? "") === before + (text.highlight ?? "") + after;
         const pieces = this.piecesOf(utterance).filter(piece => piece.cssSelector === locate.cssSelector);
-        const piece = pieces.find(piece => piece.text?.highlight === whole) ?? pieces.find(piece => !piece.text?.highlight);
+        const piece = pieces.find(piece => holds(piece.text)) ?? pieces.find(piece => !piece.text?.highlight);
         const index = piece && this.watchedPieces.get(piece);
         if (index === undefined) return undefined;
         // Speech trims a whole element's text, where the document's may start with whitespace.
         const lead = piece!.text?.highlight ? 0 : Number(/^\s/.test(this.lines[index]?.text ?? ""));
         // In a whole element, the word's quote counts from its run (e.g. after an abbreviation), found in the document's text nearest
         // where `offsets` starts it, as that leaves out text of other nodes, like a footnote reference.
-        const run = piece!.text?.highlight ? undefined : utterance.offsets?.find(offset => offset.locate.cssSelector === locate.cssSelector && offset.locate.text?.highlight === whole);
+        const run = piece!.text?.highlight ? undefined : utterance.offsets?.find(offset => offset.locate.cssSelector === locate.cssSelector && holds(offset.locate.text));
         let start = lead;
         if (run) {
             const line = ReadAloudNavigator.collapsed(this.lines[index]?.text ?? "");
-            const quote = ReadAloudNavigator.collapsed(whole);
+            const quote = ReadAloudNavigator.collapsed(run.locate.text!.highlight!);
             let found = -1;
             for (let i = line.indexOf(quote); i >= 0; i = line.indexOf(quote, i + 1)) {
                 if (found < 0 || Math.abs(i - run.start) < Math.abs(found - run.start)) found = i;
             }
             start = found >= 0 ? found : lead + run.start;
         }
-        return { piece: index, offset: start + ReadAloudNavigator.collapsed(text.before ?? "").length };
+        const within = (run?.locate.text ?? piece!.text)?.before?.length ?? 0;
+        return { piece: index, offset: start + ReadAloudNavigator.collapsed(before.slice(within)).length };
     }
 
     // A piece's text, taken from the document when the piece is a whole element given without it.
