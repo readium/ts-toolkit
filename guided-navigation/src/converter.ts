@@ -3,7 +3,6 @@ import type { GndRole } from "./types.ts";
 import { extractNodeRoles, hasExplicitRole } from "./roles.ts";
 import {
   extractNodeAria,
-  labelledByName,
   normalizedNodeText,
   convertElementToSSMLTag,
   skippedElements,
@@ -176,13 +175,10 @@ export class Converter {
 
   // An explicit-role descendant is content in its own right and skips
   // inherited `noText` — except `caption`, which the figure's ARIA name replaces.
-  // A naming caption's text is left to the name when it's plain.
   private descend(el: Element, roles: GndRole[]) {
     const node = new NavObject();
     node.el = el;
-    const naming = this.current.namingCaption;
-    node.noText =
-      naming?.el === el ? naming.plain : (!hasExplicitRole(el) || roles.includes("caption")) && this.current.noText;
+    node.noText = (!hasExplicitRole(el) || roles.includes("caption")) && this.current.noText;
     this.current.children.push(node);
     this.current.hasChildBlock = true;
     this.current = node;
@@ -321,17 +317,6 @@ export class Converter {
     if (roles.length > 0) cur.role = roles;
     if (aria) {
       setDescription(cur, aria, ariaLanguage);
-      const caption = this.namingCaption(el, roles);
-      if (caption) {
-        // An ancestor's name already silences the caption, as all of its text.
-        const plain = this.current.noText || this.captionIsName(caption, aria, ariaLanguage);
-        this.current.namingCaption = { el: caption, plain };
-        // The caption says more than the name, e.g. with a noteref: the caption is output instead.
-        if (!plain) {
-          delete cur.description;
-          delete cur.descriptionLanguage;
-        }
-      }
       if (roles.includes("figure")) {
         this.current.noText = true;
       }
@@ -465,32 +450,6 @@ export class Converter {
   private static isPlaceholder(el: Element, tagName: string, roles: GndRole[]): boolean {
     if (roles.includes("pagebreak") || Converter.actsAsImage(tagName, roles) || roles.includes("math")) return true;
     return ["img", "svg", "audio", "video"].includes(tagName) || (tagName === "a" && !!el.getAttribute("href"));
-  }
-
-  // A figure's or table's own caption, when its text is what aria-labelledby names it by, the caption not being named otherwise.
-  private namingCaption(el: Element, roles: GndRole[]): Element | undefined {
-    if (!roles.includes("figure") && !roles.includes("table")) return undefined;
-    const ids = new Set((el.getAttribute("aria-labelledby") ?? "").trim().split(/\s+/).filter(Boolean));
-    if (ids.size !== 1) return undefined;
-    const target = el.ownerDocument.getElementById([...ids][0]);
-    if (target?.parentElement !== el || target.getAttribute("aria-label") || target.hasAttribute("aria-labelledby")) return undefined;
-    return extractNodeRoles(target).includes("caption") && labelledByName(el) ? target : undefined;
-  }
-
-  // Whether caption, as converted on its own, is only `name`, as one plain text flow in `language`.
-  // Also when the caption isn't output as an object of its own to say the name instead, e.g. as a noteref's target.
-  private captionIsName(caption: Element, name: string, language: string): boolean {
-    if (this.suppressed.has(caption)) return true;
-    // Copies, so the probe skips the same noteref targets without affecting this conversion.
-    const probe = new Converter(this.xmlParsed);
-    probe.ids = new Map(this.ids);
-    probe.suppressed = new Set(this.suppressed);
-    probe.convert(caption);
-    const node = probe.root.children[0];
-    if (!node || node.el !== caption) return true;
-    const flows = node.nameFlows(language);
-    if (flows === undefined) return false;
-    return flows.length === 0 || (flows.length === 1 && normalizeWhitespace(flows[0], true).trim() === name);
   }
 
   // A comic panel holds its bubbles: an image role on it doesn't replace its content, unless it's an <svg>.

@@ -800,126 +800,6 @@
     }
   },
   {
-    "id": "figure-caption-aria-labelledby-aria-label-fallback",
-    "dir": "figure-caption-aria-labelledby-aria-label-fallback",
-    "role": "figure",
-    "description": "A figure labelled via aria-labelledby by its own <figcaption> holding only an image, whose alt text the converter's name computation doesn't take — the name falls back to the figure's aria-label, which stays its description",
-    "files": {
-      "input": "input.html",
-      "gnd": "gnd.json"
-    }
-  },
-  {
-    "id": "figure-caption-aria-labelledby-credit-wrapper",
-    "dir": "figure-caption-aria-labelledby-credit-wrapper",
-    "role": "figure",
-    "description": "A figure labelled via aria-labelledby by its own plain-text <figcaption>, whose credit sits in a wrapper — the caption text becomes the figure's description, and the credit is kept",
-    "files": {
-      "input": "input.html",
-      "gnd": "gnd.json"
-    }
-  },
-  {
-    "id": "figure-caption-aria-labelledby-inline-credit",
-    "dir": "figure-caption-aria-labelledby-inline-credit",
-    "role": "figure",
-    "description": "A figure labelled via aria-labelledby by its own <figcaption>, holding an inline credit the name leaves out — the figcaption is kept as content, credit included, and the figure gets no description",
-    "files": {
-      "input": "input.html",
-      "gnd": "gnd.json"
-    }
-  },
-  {
-    "id": "figure-caption-aria-labelledby-language",
-    "dir": "figure-caption-aria-labelledby-language",
-    "role": "figure",
-    "description": "A figure labelled via aria-labelledby by its own <figcaption> holding a language change — the figcaption is kept as content, with its markup, and the figure gets no description",
-    "files": {
-      "input": "input.html",
-      "gnd": "gnd.json"
-    }
-  },
-  {
-    "id": "figure-caption-aria-labelledby-link",
-    "dir": "figure-caption-aria-labelledby-link",
-    "role": "figure",
-    "description": "A figure labelled via aria-labelledby by its own <figcaption>, holding only a link — the figcaption is kept as content, with the link's emphasized text as its own, and the figure gets no description",
-    "files": {
-      "input": "input.html",
-      "gnd": "gnd.json"
-    }
-  },
-  {
-    "id": "figure-caption-aria-labelledby-nested-in-labelled-figure",
-    "dir": "figure-caption-aria-labelledby-nested-in-labelled-figure",
-    "role": "figure",
-    "description": "A figure named by its own <figcaption> holding emphasis, nested in a figure with an aria-label — the outer name replaces all of its text, so the inner figure keeps its description",
-    "files": {
-      "input": "input.html",
-      "gnd": "gnd.json"
-    }
-  },
-  {
-    "id": "figure-caption-aria-labelledby-noteref",
-    "dir": "figure-caption-aria-labelledby-noteref",
-    "role": "figure",
-    "description": "A figure labelled via aria-labelledby by its own <figcaption> holding a noteref — the figcaption is kept as content, with the noteref and its footnote, and the figure gets no description",
-    "files": {
-      "input": "input.html",
-      "gnd": "gnd.json"
-    }
-  },
-  {
-    "id": "figure-caption-aria-labelledby-noteref-target",
-    "dir": "figure-caption-aria-labelledby-noteref-target",
-    "role": "figure",
-    "description": "A figure labelled via aria-labelledby by its own <figcaption>, which a noteref elsewhere targets — the figcaption is read at the noteref, so the figure keeps its description",
-    "files": {
-      "input": "input.html",
-      "gnd": "gnd.json"
-    }
-  },
-  {
-    "id": "figure-caption-aria-labelledby-noteref-target-descendant",
-    "dir": "figure-caption-aria-labelledby-noteref-target-descendant",
-    "role": "figure",
-    "description": "A figure labelled via aria-labelledby by its own <figcaption>, whose paragraph a noteref elsewhere targets — the paragraph is read at the noteref, so the figure keeps its description",
-    "files": {
-      "input": "input.html",
-      "gnd": "gnd.json"
-    }
-  },
-  {
-    "id": "figure-caption-aria-labelledby-paragraph-emphasis",
-    "dir": "figure-caption-aria-labelledby-paragraph-emphasis",
-    "role": "figure",
-    "description": "A figure labelled via aria-labelledby by its own <figcaption>, whose paragraph holds emphasis — the figcaption is kept as content, with its markup, and the figure gets no description",
-    "files": {
-      "input": "input.html",
-      "gnd": "gnd.json"
-    }
-  },
-  {
-    "id": "figure-caption-aria-labelledby-paragraph-languages",
-    "dir": "figure-caption-aria-labelledby-paragraph-languages",
-    "role": "figure",
-    "description": "A figure labelled via aria-labelledby by its own <figcaption>, whose paragraphs are in different languages — the figcaption is kept as content, with each paragraph's language, and the figure gets no description",
-    "files": {
-      "input": "input.html",
-      "gnd": "gnd.json"
-    }
-  },
-  {
-    "id": "figure-caption-aria-labelledby-paragraphs",
-    "dir": "figure-caption-aria-labelledby-paragraphs",
-    "role": "figure",
-    "description": "A figure labelled via aria-labelledby by its own <figcaption> of two plain paragraphs, which the name runs together — the figcaption is kept as content, and the figure gets no description",
-    "files": {
-      "input": "input.html",
-      "gnd": "gnd.json"
-    }
-  },
-  {
     "id": "figure-caption-block-content",
     "dir": "figure-caption-block-content",
     "role": "figure",
@@ -2473,17 +2353,7 @@
     "id": "table-caption-aria-labelledby",
     "dir": "table-caption-aria-labelledby",
     "role": "table",
-    "description": "A table labelled via aria-labelledby by its own plain-text <caption> — the caption text becomes the table's description, and the caption isn't output again",
-    "files": {
-      "input": "input.html",
-      "gnd": "gnd.json"
-    }
-  },
-  {
-    "id": "table-caption-aria-labelledby-emphasis",
-    "dir": "table-caption-aria-labelledby-emphasis",
-    "role": "table",
-    "description": "A table labelled via aria-labelledby by its own <caption> holding emphasis — the caption is kept as content, with its markup, and the table gets no description",
+    "description": "A table labelled via aria-labelledby by its own <caption> — the caption text becomes the table's description, and the caption is still read as a caption child",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"

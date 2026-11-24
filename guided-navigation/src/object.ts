@@ -1,7 +1,6 @@
 import { GuidedNavigationDescription, GuidedNavigationObject, GuidedNavigationText } from "@readium/shared";
 import type { GndRole } from "./types.ts";
-import { sameLanguage } from "./language.ts";
-import { hasExplicitRole, nonSelfNestingRoles } from "./roles.ts";
+import { nonSelfNestingRoles } from "./roles.ts";
 import { type TextBuilder, textIsEmpty, finalizeText } from "./text.ts";
 
 export interface ObjBuilder {
@@ -100,8 +99,6 @@ export class NavObject {
   children: NavObject[] = [];
   noText = false;
   hasChildBlock = false;
-  // The caption child that names this object, whose text is only output when it says more than that name.
-  namingCaption?: { el: Element; plain: boolean };
 
   // `selfTextref` references this object's own element, for objects that would otherwise lack the schema's required content.
   finalize(selfTextref?: (el: Element) => string | undefined): ObjBuilder {
@@ -143,25 +140,6 @@ export class NavObject {
       if (textref) result.textref = textref;
     }
     return result;
-  }
-
-  // The plain text flows of the content an accessible name is built from, down to (not into) explicit-role descendants,
-  // `undefined` when that content holds more: markup, another language than `language`, or an object, e.g. a link.
-  nameFlows(language: string): string[] | undefined {
-    const flows: string[] = [];
-    for (const child of this.children) {
-      const o = child.object;
-      if (!child.el) {
-        if (child.children.length > 0 || o.text?.ssml || !sameLanguage(o.text?.language ?? "", language)) return undefined;
-        flows.push(o.text?.plain ?? "");
-      } else if (!hasExplicitRole(child.el)) {
-        if (o.text || o.imgref || o.audioref || o.videoref || o.description) return undefined;
-        const inner = child.nameFlows(language);
-        if (inner === undefined) return undefined;
-        flows.push(...inner);
-      }
-    }
-    return flows;
   }
 }
 
