@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor versions (marked **Breaking:**). Patch versions never contain breaking changes.
 
+## [1.4.4] – 2026-11-24
+
+### Changed
+
+- Republished against `@readium/navigator-html-injectables@2.11.1`
+
 ## [1.4.3] – 2026-11-17
 
 ### Changed
