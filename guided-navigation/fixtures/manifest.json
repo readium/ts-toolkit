@@ -2070,6 +2070,16 @@
     }
   },
   {
+    "id": "panel-object-role-img",
+    "dir": "panel-object-role-img",
+    "role": "panel",
+    "description": "A comic panel via epub:type=\"panel\" on an inline <object> with role=\"img\" — it stays an image placeholder described by its label, its fallback content not read",
+    "files": {
+      "input": "input.xhtml",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "panel-role-img-labelled",
     "dir": "panel-role-img-labelled",
     "role": "panel",

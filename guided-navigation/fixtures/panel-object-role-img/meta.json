@@ -1,0 +1,11 @@
+{
+  "id": "panel-object-role-img",
+  "description": "A comic panel via epub:type=\"panel\" on an inline <object> with role=\"img\" — it stays an image placeholder described by its label, its fallback content not read",
+  "role": "panel",
+  "rolesCovered": [
+    "panel",
+    "image"
+  ],
+  "sourceRef": "https://www.w3.org/TR/epub-ssv-11/#sec-comics",
+  "inputKind": "document"
+}

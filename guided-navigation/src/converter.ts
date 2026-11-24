@@ -452,10 +452,10 @@ export class Converter {
     return ["img", "svg", "audio", "video"].includes(tagName) || (tagName === "a" && !!el.getAttribute("href"));
   }
 
-  // A comic panel holds its bubbles: an image role on it doesn't replace its content, unless it's an <svg>.
+  // A block comic panel holds its bubbles: an image role on it doesn't replace its content, unless it's an <svg>.
   private static actsAsImage(tagName: string, roles: GndRole[]): boolean {
     const isPanel = roles.includes("panel") || roles.includes("panelGroup");
-    return roles.includes("image") && (tagName === "svg" || !isPanel);
+    return roles.includes("image") && (tagName === "svg" || !isPanel || !isBlockNode(tagName, roles));
   }
 
   // The outermost abbreviation whose text is all in obj, apart from punctuation alongside it.
