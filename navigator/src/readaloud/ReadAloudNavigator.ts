@@ -1276,7 +1276,7 @@ export class ReadAloudNavigator {
         const before = text.before ?? "";
         const after = text.after ?? "";
         const holds = (quote?: LocatorOptions["text"]) => !!quote?.highlight && before.startsWith(quote.before ?? "") && after.endsWith(quote.after ?? "")
-            && before.length + (text.highlight?.length ?? 0) + after.length - (quote.before?.length ?? 0) - (quote.after?.length ?? 0) === quote.highlight.length;
+            && before.slice(quote.before?.length ?? 0) + (text.highlight ?? "") + after.slice(0, after.length - (quote.after?.length ?? 0)) === quote.highlight;
         const pieces = this.piecesOf(utterance).filter(piece => piece.cssSelector === locate.cssSelector);
         const piece = pieces.find(piece => holds(piece.text)) ?? pieces.find(piece => !piece.text?.highlight);
         const index = piece && this.watchedPieces.get(piece);
