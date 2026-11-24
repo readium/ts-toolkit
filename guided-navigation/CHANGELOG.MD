@@ -10,11 +10,11 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 ### Added
 
 - Comics roles from `epub:type`: `balloon` gives `bubble`, `panel` gives `panel`, `panel-group` gives `panelGroup`, and `sound-area` gives `sound`
-- Fixtures for a panel, a bubble, a sound, a panel group, a panel with `role="img"`, and a panel on an `<svg>`
+- Fixtures for a panel, a bubble, a sound, a panel group, a panel with `role="img"`, a panel on an `<object>`, and a panel on an `<svg>`
 
 ### Changed
 
-- A panel with `role="img"`, other than an `<svg>`, keeps its content, e.g. its bubbles, instead of being replaced by its label like an image
+- A block panel with `role="img"`, other than an `<svg>`, keeps its content, e.g. its bubbles, instead of being replaced by its label like an image
 
 ## [1.4.0] – 2026-11-17
 
