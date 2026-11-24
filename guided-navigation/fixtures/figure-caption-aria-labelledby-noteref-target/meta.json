@@ -1,0 +1,13 @@
+{
+  "id": "figure-caption-aria-labelledby-noteref-target",
+  "description": "A figure labelled via aria-labelledby by its own <figcaption>, which a noteref elsewhere targets — the figcaption is read at the noteref, so the figure keeps its description",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "caption",
+    "noteref",
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/html-aam-1.0/",
+  "inputKind": "fragment"
+}

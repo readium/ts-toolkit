@@ -1,0 +1,13 @@
+{
+  "id": "figure-caption-aria-labelledby-paragraph-languages",
+  "description": "A figure labelled via aria-labelledby by its own <figcaption>, whose paragraphs are in different languages — the figcaption is kept as content, with each paragraph's language, and the figure gets no description",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "image",
+    "caption",
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/html-aam-1.0/",
+  "inputKind": "fragment"
+}

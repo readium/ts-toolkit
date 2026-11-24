@@ -1,0 +1,25 @@
+{
+  "role": ["figure"],
+  "description": {
+    "text": {
+      "plain": "A cat on a mat"
+    }
+  },
+  "children": [
+    {
+      "role": ["caption"],
+      "id": "cat-caption",
+      "children": [
+        {
+          "role": ["image"],
+          "description": {
+            "text": {
+              "plain": "Ada's signature"
+            }
+          },
+          "imgref": "signature.png"
+        }
+      ]
+    }
+  ]
+}

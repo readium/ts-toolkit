@@ -1,0 +1,34 @@
+{
+  "role": ["figure"],
+  "children": [
+    {
+      "role": ["image"],
+      "description": {
+        "text": {
+          "plain": "A cat"
+        }
+      },
+      "imgref": "cat.png"
+    },
+    {
+      "role": ["caption"],
+      "id": "cat-caption",
+      "children": [
+        {
+          "role": ["paragraph"],
+          "text": {
+            "language": "en",
+            "plain": "A cat"
+          }
+        },
+        {
+          "role": ["paragraph"],
+          "text": {
+            "language": "fr",
+            "plain": "Un chat"
+          }
+        }
+      ]
+    }
+  ]
+}

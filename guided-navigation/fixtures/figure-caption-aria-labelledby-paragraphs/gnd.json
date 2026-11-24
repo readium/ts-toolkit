@@ -1,0 +1,32 @@
+{
+  "role": ["figure"],
+  "children": [
+    {
+      "role": ["image"],
+      "description": {
+        "text": {
+          "plain": "A cat"
+        }
+      },
+      "imgref": "cat.png"
+    },
+    {
+      "role": ["caption"],
+      "id": "cat-caption",
+      "children": [
+        {
+          "role": ["paragraph"],
+          "text": {
+            "plain": "A cat"
+          }
+        },
+        {
+          "role": ["paragraph"],
+          "text": {
+            "plain": "on a mat"
+          }
+        }
+      ]
+    }
+  ]
+}

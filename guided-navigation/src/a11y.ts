@@ -39,6 +39,34 @@ export function normalizedNodeText(el: Node): NodeText {
   return { text, language: sharedLanguage(languages) };
 }
 
+/** The accessible name `aria-labelledby` gives el (AccName 2.B), `null` when it gives none. */
+export function labelledByName(el: Element): NodeText | null {
+  const labelledBy = (el.getAttribute("aria-labelledby") ?? "").trim();
+  if (!labelledBy) return null;
+  const ids = [...new Set(labelledBy.split(/\s+/).filter(Boolean))];
+  const doc = el.ownerDocument;
+  const labelNodes = ids
+    .map((id) => doc.getElementById(id))
+    .filter((n): n is HTMLElement => n !== null);
+  if (labelNodes.length === 0) return null;
+
+  let text = "";
+  const languages = new Set<string>();
+  // Directly-referenced label nodes count even when hidden (AccName 2.A).
+  labelNodes.forEach((n, i) => {
+    const label = n.getAttribute("aria-label");
+    if (label) {
+      text += label;
+      languages.add(nodeLanguage(n));
+    } else {
+      text += nodeText(n, true, languages);
+    }
+    if (i < labelNodes.length - 1) text += " ";
+  });
+  const normalized = normalizeWhitespace(text, true).trim();
+  return normalized !== "" ? { text: normalized, language: sharedLanguage(languages) } : null;
+}
+
 /**
  * Computes the text that becomes a node's `GuidedNavigationObject.description`, and
  * whether the node is visible in the first place. Follows the AccName
@@ -54,34 +82,8 @@ export function extractNodeAria(el: Element): [string | null, boolean, string] {
   }
 
   // 2.B
-  const labelledBy = (el.getAttribute("aria-labelledby") ?? "").trim();
-  if (labelledBy) {
-    const ids = [...new Set(labelledBy.split(/\s+/).filter(Boolean))];
-    const doc = el.ownerDocument;
-    const labelNodes = ids
-      .map((id) => doc.getElementById(id))
-      .filter((n): n is HTMLElement => n !== null);
-
-    if (labelNodes.length > 0) {
-      let text = "";
-      const languages = new Set<string>();
-      // Directly-referenced label nodes count even when hidden (AccName 2.A).
-      labelNodes.forEach((n, i) => {
-        const label = n.getAttribute("aria-label");
-        if (label) {
-          text += label;
-          languages.add(nodeLanguage(n));
-        } else {
-          text += nodeText(n, true, languages);
-        }
-        if (i < labelNodes.length - 1) text += " ";
-      });
-      const normalized = normalizeWhitespace(text, true).trim();
-      if (normalized !== "") {
-        return [normalized, true, sharedLanguage(languages)];
-      }
-    }
-  }
+  const labelled = labelledByName(el);
+  if (labelled) return [labelled.text, true, labelled.language];
 
   // 2.C
   const label = normalizeWhitespace(el.getAttribute("aria-label") ?? "", true).trim();

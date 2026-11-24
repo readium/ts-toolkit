@@ -1,0 +1,14 @@
+{
+  "role": ["body"],
+  "children": [
+    {
+      "role": ["image", "panel"],
+      "description": {
+        "text": {
+          "plain": "Panel 1"
+        }
+      },
+      "textref": "#css(svg)"
+    }
+  ]
+}

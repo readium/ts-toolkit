@@ -1,0 +1,13 @@
+{
+  "id": "figure-caption-aria-labelledby-paragraphs",
+  "description": "A figure labelled via aria-labelledby by its own <figcaption> of two plain paragraphs, which the name runs together — the figcaption is kept as content, and the figure gets no description",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "image",
+    "caption",
+    "paragraph"
+  ],
+  "sourceRef": "https://www.w3.org/TR/html-aam-1.0/",
+  "inputKind": "fragment"
+}

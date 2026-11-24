@@ -1,0 +1,12 @@
+{
+  "id": "figure-caption-aria-labelledby-inline-credit",
+  "description": "A figure labelled via aria-labelledby by its own <figcaption>, holding an inline credit the name leaves out — the figcaption is kept as content, credit included, and the figure gets no description",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "image",
+    "caption"
+  ],
+  "sourceRef": "https://www.w3.org/TR/html-aam-1.0/",
+  "inputKind": "fragment"
+}

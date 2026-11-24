@@ -1,5 +1,6 @@
 import { GuidedNavigationDescription, GuidedNavigationObject, GuidedNavigationText } from "@readium/shared";
 import type { GndRole } from "./types.ts";
+import { sameLanguage } from "./language.ts";
 import { hasExplicitRole, nonSelfNestingRoles } from "./roles.ts";
 import { type TextBuilder, textIsEmpty, finalizeText } from "./text.ts";
 
@@ -99,15 +100,14 @@ export class NavObject {
   children: NavObject[] = [];
   noText = false;
   hasChildBlock = false;
-  // The caption child that names this object.
-  namingCaption?: Element;
+  // The caption child that names this object, whose text is only output when it says more than that name.
+  namingCaption?: { el: Element; plain: boolean };
 
   // `selfTextref` references this object's own element, for objects that would otherwise lack the schema's required content.
   finalize(selfTextref?: (el: Element) => string | undefined): ObjBuilder {
     const result = this.object;
     const finalChildren: ObjBuilder[] = [];
     for (const child of this.children) {
-      if (child.el && child.el === this.namingCaption) this.outputNameOnce(child);
       const res = child.finalize(selfTextref);
       if (isEmptyObj(res)) continue;
       if (isChildrenOnly(res)) {
@@ -145,20 +145,23 @@ export class NavObject {
     return result;
   }
 
-  // The name is the description's when it's plain text, else the caption's, whose markup (e.g. a noteref) it would lose.
-  private outputNameOnce(caption: NavObject) {
-    const flows = caption.nameFlows();
-    if (flows.some((flow) => flow.object.text?.ssml)) {
-      delete this.object.description;
-      delete this.object.descriptionLanguage;
-    } else {
-      for (const flow of flows) delete flow.object.text;
+  // The plain text flows of the content an accessible name is built from, down to (not into) explicit-role descendants,
+  // `undefined` when that content holds more: markup, another language than `language`, or an object, e.g. a link.
+  nameFlows(language: string): string[] | undefined {
+    const flows: string[] = [];
+    for (const child of this.children) {
+      const o = child.object;
+      if (!child.el) {
+        if (child.children.length > 0 || o.text?.ssml || !sameLanguage(o.text?.language ?? "", language)) return undefined;
+        flows.push(o.text?.plain ?? "");
+      } else if (!hasExplicitRole(child.el)) {
+        if (o.text || o.imgref || o.audioref || o.videoref || o.description) return undefined;
+        const inner = child.nameFlows(language);
+        if (inner === undefined) return undefined;
+        flows.push(...inner);
+      }
     }
-  }
-
-  // The text flows an accessible name is built from: down to, not into, explicit-role descendants.
-  private nameFlows(): NavObject[] {
-    return this.children.flatMap((child) => (!child.el ? [child] : hasExplicitRole(child.el) ? [] : child.nameFlows()));
+    return flows;
   }
 }
 

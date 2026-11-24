@@ -10,12 +10,12 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 ### Added
 
 - Comics roles from `epub:type`: `balloon` gives `bubble`, `panel` gives `panel`, `panel-group` gives `panelGroup`, and `sound-area` gives `sound`
-- Fixtures for a panel, a bubble, a sound, a panel group, a panel with `role="img"`, a figure and a table named by their own caption holding markup, a figure named by a caption whose paragraph holds emphasis, and a figure named by a plain caption whose credit sits in a wrapper
+- Fixtures for a panel, a bubble, a sound, a panel group, a panel with `role="img"`, a figure and a table named by their own caption holding markup, and figures named by a caption whose paragraph holds emphasis, whose paragraphs are in different languages, holding only a link, of two plain paragraphs, plain with its credit in a wrapper, holding an inline credit, with no name text of its own, nested in a figure with an `aria-label`, holding a noteref, targeted by a noteref, or holding a noteref's target, and for a panel on an `<svg>`
 
 ### Changed
 
-- **Breaking:** a figure or table named by its own caption through `aria-labelledby` gets that name only once. A plain-text caption is left out, its text being the `description`. A caption with markup, e.g. a note reference, emphasis or a language change, is kept, and the figure or table has no `description`
-- A panel with `role="img"` keeps its content, e.g. its bubbles, instead of being replaced by its label like an image
+- **Breaking:** a figure or table named by its own caption through `aria-labelledby` gets that name only once. A plain-text caption is left out, its text being the `description`. A caption that says more than the name, e.g. with a note reference, emphasis, a link, text in different languages or text the name leaves out, is kept, and the figure or table has no `description`. A caption with its own `aria-label` or `aria-labelledby`, named from elsewhere, or within a figure whose own name replaces its text, is unchanged
+- A panel with `role="img"`, other than an `<svg>`, keeps its content, e.g. its bubbles, instead of being replaced by its label like an image
 
 ## [1.4.0] – 2026-11-17
 

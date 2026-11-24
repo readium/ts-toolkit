@@ -1,0 +1,39 @@
+{
+  "children": [
+    {
+      "role": ["paragraph"],
+      "text": {
+        "language": "en",
+        "plain": "See the caption.",
+        "ssml": "See the caption<readium:noteref id=\"cat-line\" />."
+      },
+      "children": [
+        {
+          "role": ["noteref"],
+          "id": "cat-line",
+          "text": {
+            "plain": "1"
+          },
+          "children": [
+            {
+              "role": ["paragraph"],
+              "text": {
+                "language": "en",
+                "ssml": "A cat on a <emphasis>mat</emphasis>"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "role": ["figure"],
+      "description": {
+        "text": {
+          "plain": "A cat on a mat"
+        }
+      },
+      "textref": "#css(figure)"
+    }
+  ]
+}
