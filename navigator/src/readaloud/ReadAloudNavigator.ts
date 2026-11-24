@@ -1066,6 +1066,7 @@ export class ReadAloudNavigator {
     }
 
     // A word's context can run over its whole element, and anchoring scores every match of the word against it.
+    // Cut to the 32 characters the injectables' vendored text quote anchoring gives its own quotes.
     private static withShortContext(locator: Locator): Locator {
         const text = locator.text;
         if (!text) return locator;
