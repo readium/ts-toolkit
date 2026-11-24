@@ -800,10 +800,30 @@
     }
   },
   {
+    "id": "figure-caption-aria-labelledby-credit-wrapper",
+    "dir": "figure-caption-aria-labelledby-credit-wrapper",
+    "role": "figure",
+    "description": "A figure labelled via aria-labelledby by its own plain-text <figcaption>, whose credit sits in a wrapper — the caption text becomes the figure's description, and the credit is kept",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
     "id": "figure-caption-aria-labelledby-language",
     "dir": "figure-caption-aria-labelledby-language",
     "role": "figure",
     "description": "A figure labelled via aria-labelledby by its own <figcaption> holding a language change — the figcaption is kept as content, with its markup, and the figure gets no description",
+    "files": {
+      "input": "input.html",
+      "gnd": "gnd.json"
+    }
+  },
+  {
+    "id": "figure-caption-aria-labelledby-paragraph-emphasis",
+    "dir": "figure-caption-aria-labelledby-paragraph-emphasis",
+    "role": "figure",
+    "description": "A figure labelled via aria-labelledby by its own <figcaption>, whose paragraph holds emphasis — the figcaption is kept as content, with its markup, and the figure gets no description",
     "files": {
       "input": "input.html",
       "gnd": "gnd.json"

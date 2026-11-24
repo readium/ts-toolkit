@@ -1,0 +1,27 @@
+{
+  "role": ["figure"],
+  "children": [
+    {
+      "role": ["image"],
+      "description": {
+        "text": {
+          "plain": "A cat"
+        }
+      },
+      "imgref": "cat.png"
+    },
+    {
+      "role": ["caption"],
+      "id": "cat-caption",
+      "children": [
+        {
+          "role": ["paragraph"],
+          "text": {
+            "language": "en",
+            "ssml": "A cat on a <emphasis>mat</emphasis>"
+          }
+        }
+      ]
+    }
+  ]
+}

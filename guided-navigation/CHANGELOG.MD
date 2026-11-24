@@ -10,7 +10,7 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 ### Added
 
 - Comics roles from `epub:type`: `balloon` gives `bubble`, `panel` gives `panel`, `panel-group` gives `panelGroup`, and `sound-area` gives `sound`
-- Fixtures for a panel, a bubble, a sound, a panel group, a panel with `role="img"`, and a figure and a table named by their own caption holding markup
+- Fixtures for a panel, a bubble, a sound, a panel group, a panel with `role="img"`, a figure and a table named by their own caption holding markup, a figure named by a caption whose paragraph holds emphasis, and a figure named by a plain caption whose credit sits in a wrapper
 
 ### Changed
 

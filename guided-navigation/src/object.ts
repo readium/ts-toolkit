@@ -1,6 +1,6 @@
 import { GuidedNavigationDescription, GuidedNavigationObject, GuidedNavigationText } from "@readium/shared";
 import type { GndRole } from "./types.ts";
-import { nonSelfNestingRoles } from "./roles.ts";
+import { hasExplicitRole, nonSelfNestingRoles } from "./roles.ts";
 import { type TextBuilder, textIsEmpty, finalizeText } from "./text.ts";
 
 export interface ObjBuilder {
@@ -99,8 +99,7 @@ export class NavObject {
   children: NavObject[] = [];
   noText = false;
   hasChildBlock = false;
-  // The caption child that names this object: its text is dropped when plain, the description holding it,
-  // else the description is, so the name is only output once. Its explicit-role children stay either way.
+  // The caption child that names this object.
   namingCaption?: Element;
 
   // `selfTextref` references this object's own element, for objects that would otherwise lack the schema's required content.
@@ -108,18 +107,8 @@ export class NavObject {
     const result = this.object;
     const finalChildren: ObjBuilder[] = [];
     for (const child of this.children) {
+      if (child.el && child.el === this.namingCaption) this.outputNameOnce(child);
       const res = child.finalize(selfTextref);
-      if (child.el && child.el === this.namingCaption && !isEmptyObj(res)) {
-        // Its own text: the caption's, and its role-less children's when explicit-role ones split it.
-        const ownText = res.children?.filter((c) => !c.role?.length) ?? [];
-        if ([res, ...ownText].some((o) => o.text?.ssml)) {
-          delete result.description;
-          delete result.descriptionLanguage;
-        } else {
-          delete res.text;
-          res.children = res.children?.filter((c) => c.role?.length);
-        }
-      }
       if (isEmptyObj(res)) continue;
       if (isChildrenOnly(res)) {
         finalChildren.push(...(res.children ?? []));
@@ -154,6 +143,22 @@ export class NavObject {
       if (textref) result.textref = textref;
     }
     return result;
+  }
+
+  // The name is the description's when it's plain text, else the caption's, whose markup (e.g. a noteref) it would lose.
+  private outputNameOnce(caption: NavObject) {
+    const flows = caption.nameFlows();
+    if (flows.some((flow) => flow.object.text?.ssml)) {
+      delete this.object.description;
+      delete this.object.descriptionLanguage;
+    } else {
+      for (const flow of flows) delete flow.object.text;
+    }
+  }
+
+  // The text flows an accessible name is built from: down to, not into, explicit-role descendants.
+  private nameFlows(): NavObject[] {
+    return this.children.flatMap((child) => (!child.el ? [child] : hasExplicitRole(child.el) ? [] : child.nameFlows()));
   }
 }
 

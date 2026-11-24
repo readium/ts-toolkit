@@ -1,0 +1,13 @@
+{
+  "id": "figure-caption-aria-labelledby-credit-wrapper",
+  "description": "A figure labelled via aria-labelledby by its own plain-text <figcaption>, whose credit sits in a wrapper — the caption text becomes the figure's description, and the credit is kept",
+  "role": "figure",
+  "rolesCovered": [
+    "figure",
+    "image",
+    "caption",
+    "credit"
+  ],
+  "sourceRef": "https://www.w3.org/TR/html-aam-1.0/",
+  "inputKind": "fragment"
+}
