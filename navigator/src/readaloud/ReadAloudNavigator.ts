@@ -1,4 +1,4 @@
-import { Layout, Locator, Profile, getCssSelector } from "@readium/shared";
+import { Layout, Locator, LocatorText, Profile, getCssSelector } from "@readium/shared";
 import { FrameClickEvent, PointedPieceRule, TextLayout, TextLineStarts } from "@readium/navigator-html-injectables";
 import {
     ContextualizationOverrides,
@@ -109,6 +109,7 @@ interface SpokenPoint {
 
 const UTTERANCE_GROUP = "readaloud-utterance";
 const WORD_GROUP = "readaloud-word";
+const WORD_CONTEXT_LENGTH = 32;
 // Subpixel scrolling and rounding of the reported line starts.
 const LAYOUT_TOLERANCE = 1;
 
@@ -532,12 +533,13 @@ export class ReadAloudNavigator {
             this.wordHidden = false;
             this.decorate();
             const word = this.wordPoint(locate);
+            const short = ReadAloudNavigator.withShortContext(locator);
             if (word && this.isHidden(word)) {
                 const center = this.centerPoint();
-                const target = center ? this.pointLocator(center) : locator;
+                const target = center ? this.pointLocator(center) : short;
                 if (target && this.follow(target)) this.turnedInUtterance = true;
             }
-            this.listeners.wordChanged?.(locator, event.detail.word ?? "");
+            this.listeners.wordChanged?.(short, event.detail.word ?? "");
         });
         on("pause", () => {
             this.clearBreak();
@@ -1061,7 +1063,25 @@ export class ReadAloudNavigator {
 
     private decorate() {
         this.applyDecorations(UTTERANCE_GROUP, this.utteranceLocators, this._settings.utteranceStyle);
-        this.applyDecorations(WORD_GROUP, this.wordLocator && !this.wordHidden ? [this.wordLocator] : [], this._settings.wordStyle);
+        this.applyDecorations(WORD_GROUP, this.wordLocator && !this.wordHidden ? [ReadAloudNavigator.withShortContext(this.wordLocator)] : [], this._settings.wordStyle);
+    }
+
+    // A word's context can run over its whole element, and anchoring scores every match of the word against it.
+    // Cut to the 32 characters the injectables' vendored text quote anchoring gives its own quotes.
+    private static withShortContext(locator: Locator): Locator {
+        const text = locator.text;
+        if (!text) return locator;
+        return new Locator({
+            href: locator.href,
+            type: locator.type,
+            title: locator.title,
+            locations: locator.locations,
+            text: new LocatorText({
+                before: text.before?.slice(-WORD_CONTEXT_LENGTH),
+                highlight: text.highlight,
+                after: text.after?.slice(0, WORD_CONTEXT_LENGTH),
+            }),
+        });
     }
 
     private applyDecorations(group: string, locators: Locator[], style: ReadAloudDecorationStyle) {
@@ -1249,32 +1269,36 @@ export class ReadAloudNavigator {
         return index === undefined ? undefined : { piece: index, offset: 0 };
     }
 
-    // A word comes as its piece's locate with the text split around it.
+    // A word comes as its offset's locate, quoted with the offset's `before` and the text up to it, and the text after it and the offset's `after`.
     private wordPoint(locate: LocatorOptions): SpokenPoint | undefined {
         const utterance = this.speech.getCurrentContent();
         const text = locate.text;
         if (!utterance || !text) return undefined;
-        const whole = (text.before ?? "") + (text.highlight ?? "") + (text.after ?? "");
+        const before = text.before ?? "";
+        const after = text.after ?? "";
+        const holds = (quote?: LocatorOptions["text"]) => !!quote?.highlight && before.startsWith(quote.before ?? "") && after.endsWith(quote.after ?? "")
+            && before.slice(quote.before?.length ?? 0) + (text.highlight ?? "") + after.slice(0, after.length - (quote.after?.length ?? 0)) === quote.highlight;
         const pieces = this.piecesOf(utterance).filter(piece => piece.cssSelector === locate.cssSelector);
-        const piece = pieces.find(piece => piece.text?.highlight === whole) ?? pieces.find(piece => !piece.text?.highlight);
+        const piece = pieces.find(piece => holds(piece.text)) ?? pieces.find(piece => !piece.text?.highlight);
         const index = piece && this.watchedPieces.get(piece);
         if (index === undefined) return undefined;
         // Speech trims a whole element's text, where the document's may start with whitespace.
         const lead = piece!.text?.highlight ? 0 : Number(/^\s/.test(this.lines[index]?.text ?? ""));
         // In a whole element, the word's quote counts from its run (e.g. after an abbreviation), found in the document's text nearest
         // where `offsets` starts it, as that leaves out text of other nodes, like a footnote reference.
-        const run = piece!.text?.highlight ? undefined : utterance.offsets?.find(offset => offset.locate.cssSelector === locate.cssSelector && offset.locate.text?.highlight === whole);
+        const run = piece!.text?.highlight ? undefined : utterance.offsets?.find(offset => offset.locate.cssSelector === locate.cssSelector && holds(offset.locate.text));
         let start = lead;
         if (run) {
             const line = ReadAloudNavigator.collapsed(this.lines[index]?.text ?? "");
-            const quote = ReadAloudNavigator.collapsed(whole);
+            const quote = ReadAloudNavigator.collapsed(run.locate.text!.highlight!);
             let found = -1;
             for (let i = line.indexOf(quote); i >= 0; i = line.indexOf(quote, i + 1)) {
                 if (found < 0 || Math.abs(i - run.start) < Math.abs(found - run.start)) found = i;
             }
             start = found >= 0 ? found : lead + run.start;
         }
-        return { piece: index, offset: start + ReadAloudNavigator.collapsed(text.before ?? "").length };
+        const within = (run?.locate.text ?? piece!.text)?.before?.length ?? 0;
+        return { piece: index, offset: start + ReadAloudNavigator.collapsed(before.slice(within)).length };
     }
 
     // A piece's text, taken from the document when the piece is a whole element given without it.
@@ -1300,11 +1324,12 @@ export class ReadAloudNavigator {
         const highlight = piece && this.pieceText(piece, point.piece);
         if (!piece || !highlight) return undefined;
         const at = ReadAloudNavigator.rawOffset(highlight, point.offset);
-        return this.locatorFor({
+        const locator = this.locatorFor({
             ...piece,
             domRange: undefined,
             text: { before: highlight.slice(0, at), highlight: highlight.slice(at, at + 1), after: highlight.slice(at + 1) },
         });
+        return locator && ReadAloudNavigator.withShortContext(locator);
     }
 
     // Times the turn to the next line or column to follow, for voices without word boundaries.

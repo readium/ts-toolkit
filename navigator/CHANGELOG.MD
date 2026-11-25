@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor versions (marked **Breaking:**). Patch versions never contain breaking changes.
 
+## [2.17.0] – 2026-11-25
+
+### Changed
+
+- Read aloud uses `@readium/speech` 0.24: comics panels, panel groups, speech bubbles and sounds are announced, and a node's description is read after its announcement and before its content, instead of after its content
+- `wordChanged` gives the word with up to 32 characters of text before and after it
+
+### Fixed
+
+- A spoken word in a sentence its element repeats, e.g. "He ran. He ran.", is highlighted where it's read, instead of in the first sentence
+
 ## [2.16.1] – 2026-11-20
 
 ### Fixed
