@@ -10,6 +10,7 @@ and versions follow `MAJOR.MINOR.PATCH`, but breaking changes can ship in minor 
 ### Changed
 
 - Read aloud uses `@readium/speech` 0.24: comics panels, panel groups, speech bubbles and sounds are announced, and a node's description is read after its announcement and before its content, instead of after its content
+- `wordChanged` gives the word with up to 32 characters of text before and after it
 
 ### Fixed
 

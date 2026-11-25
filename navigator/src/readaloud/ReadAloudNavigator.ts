@@ -533,12 +533,13 @@ export class ReadAloudNavigator {
             this.wordHidden = false;
             this.decorate();
             const word = this.wordPoint(locate);
+            const short = ReadAloudNavigator.withShortContext(locator);
             if (word && this.isHidden(word)) {
                 const center = this.centerPoint();
-                const target = center ? this.pointLocator(center) : locator;
+                const target = center ? this.pointLocator(center) : short;
                 if (target && this.follow(target)) this.turnedInUtterance = true;
             }
-            this.listeners.wordChanged?.(locator, event.detail.word ?? "");
+            this.listeners.wordChanged?.(short, event.detail.word ?? "");
         });
         on("pause", () => {
             this.clearBreak();
@@ -1323,11 +1324,12 @@ export class ReadAloudNavigator {
         const highlight = piece && this.pieceText(piece, point.piece);
         if (!piece || !highlight) return undefined;
         const at = ReadAloudNavigator.rawOffset(highlight, point.offset);
-        return this.locatorFor({
+        const locator = this.locatorFor({
             ...piece,
             domRange: undefined,
             text: { before: highlight.slice(0, at), highlight: highlight.slice(at, at + 1), after: highlight.slice(at + 1) },
         });
+        return locator && ReadAloudNavigator.withShortContext(locator);
     }
 
     // Times the turn to the next line or column to follow, for voices without word boundaries.
